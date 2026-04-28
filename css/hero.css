@@ -1,0 +1,43 @@
+.hero {
+  height: 100vh;
+  background-image: url('../Image/hero.png');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  padding: 0 8%;
+}
+.hero-content h2 {
+  font-family: var(--serif);
+  font-size: 64px;
+  font-weight: 300;
+  line-height: 1.1;
+  color: var(--dark);
+  letter-spacing: 2px;
+}
+
+.hero-content p {
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--dark);
+  margin-top: 20px;
+  margin-bottom: 32px;
+}
+
+.hero-btn {
+  display: inline-block;
+  padding: 14px 36px;
+  border: 1px solid var(--dark);
+  color: var(--dark);
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.hero-btn:hover {
+  background: var(--dark);
+  color: var(--warm-white);
+}

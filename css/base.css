@@ -1,0 +1,21 @@
+*, *::before, *::after {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+}
+:root {
+  --cream: #f5f0e8;
+  --warm-white: #faf8f4;
+  --dark: #2a2218;
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'Jost', sans-serif;
+  --border: #e8e2d6;
+  --muted: #8a8278;
+}
+body{
+  background: var(--warm-white);
+  font-family: var(--sans);
+  font-weight: 300;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
