@@ -17,16 +17,18 @@ function renderProducts(filter) {
 
   grid.innerHTML = filtered.map(function(product) {
     return `
-      <div class="product-card">
-        <div class="product-img"></div>
-        <div class="product-info">
-          <h3>${product.name}</h3>
-          <p>${product.colour} · XS–XL</p>
-          <span>€${product.price}.00</span>
-          <button class="add-to-cart" onclick="addToCart('${product.name}', ${product.price})">Add to cart</button>
-        </div>
-      </div>
-    `;
+  <div class="product-card">
+    <a href="product.html?id=${product.id}">
+      <div class="product-img"></div>
+    </a>
+    <div class="product-info">
+      <a href="product.html?id=${product.id}"><h3>${product.name}</h3></a>
+      <p>${product.colour} · XS–XL</p>
+      <span>€${product.price}.00</span>
+      <button class="add-to-cart" onclick="addToCart('${product.name}', ${product.price})">Add to cart</button>
+    </div>
+  </div>
+`;
   }).join('');
 }
 
