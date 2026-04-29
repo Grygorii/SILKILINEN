@@ -38,6 +38,23 @@
       <a href="#">Contact</a>
     </nav>
   </div>
+  <div class="cart-overlay" id="cartOverlay"></div>
+
+<div class="cart-panel" id="cartPanel">
+  <div class="cart-panel-header">
+    <h3>Your cart</h3>
+    <button class="cart-close" id="cartClose">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems">
+  </div>
+  <div class="cart-footer" id="cartFooter">
+    <div class="cart-total">
+      <span>Total</span>
+      <span id="cartTotal">€0.00</span>
+    </div>
+    <button class="cart-checkout">Checkout</button>
+  </div>
+</div>
 <section class="hero" id="hero">
   <div class="hero-content">
     <h2>Pure silk,</h2>
@@ -59,7 +76,7 @@
         <h3>Silk brief</h3>
         <p>Ivory · XS–XL</p>
         <span>€38.00</span>
-        <button class="add-to-cart">Add to cart</button>
+        <button class="add-to-cart" onclick="addToCart('Silk brief', 38)">Add to cart</button>
       </div>
     </div>
 
@@ -69,7 +86,7 @@
         <h3>Lace trim thong</h3>
         <p>Blush · XS–XL</p>
         <span>€34.00</span>
-        <button class="add-to-cart">Add to cart</button>
+        <button class="add-to-cart" onclick="addToCart('Lace trim thong', 34)">Add to cart</button>
       </div>
     </div>
 
@@ -79,7 +96,7 @@
         <h3>High waist brief</h3>
         <p>Midnight · S–XL</p>
         <span>€42.00</span>
-        <button class="add-to-cart">Add to cart</button>
+        <button class="add-to-cart" onclick="addToCart('High waist brief', 42)">Add to cart</button>
       </div>
     </div>
 
@@ -90,7 +107,7 @@
         <h3>Silk bralette set</h3>
         <p>Ivory · XS–L</p>
         <span>€78.00</span>
-        <button class="add-to-cart">Add to cart</button>
+        <button class="add-to-cart" onclick="addToCart('Silk bralette set', 78)">Add to cart</button>
       </div>
     </div>
 
@@ -133,5 +150,6 @@
   </div>
 </footer>
   <script src="js/menu.js"></script>
+  <script src="js/cart.js"></script>
 </body>
 </html>
