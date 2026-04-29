@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <title>About — SILKILINEN</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/about.css">
+</head>
+<body>
+
+  <nav id="mainNav">
+    <div class="nav-hamburger" id="hamburger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <div class="nav-logo">
+      <h1>SILKILINEN</h1>
+      <p>Silk &amp; Linen</p>
+    </div>
+    <div class="nav-cart">
+      <p>Cart (0)</p>
+    </div>
+  </nav>
+
+  <div class="menu-overlay" id="menuOverlay"></div>
+  <div class="side-menu" id="sideMenu">
+    <button class="menu-close" id="menuClose">✕</button>
+    <nav class="menu-links">
+      <a href="index.html">Home</a>
+      <a href="shop.html">Shop</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+
+  <div class="cart-overlay" id="cartOverlay"></div>
+  <div class="cart-panel" id="cartPanel">
+    <div class="cart-panel-header">
+      <h3>Your cart</h3>
+      <button class="cart-close" id="cartClose">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-footer" id="cartFooter">
+      <div class="cart-total">
+        <span>Total</span>
+        <span id="cartTotal">€0.00</span>
+      </div>
+      <button class="cart-checkout">Checkout</button>
+    </div>
+  </div>
+
+  <section class="about">
+    <div class="about-hero">
+      <h1>Our story.</h1>
+      <p>Born in Dublin, made for everywhere.</p>
+    </div>
+    <div class="about-content">
+      <div class="about-block">
+        <h2>Why silk?</h2>
+        <p>Silk is one of nature's most remarkable fabrics. It's naturally temperature regulating, hypoallergenic, and incredibly gentle on skin. We believe every woman deserves to feel that luxury every single day.</p>
+      </div>
+      <div class="about-block">
+        <h2>Our promise</h2>
+        <p>Every piece in our collection is made from Grade 6A mulberry silk — the highest quality available. No shortcuts, no compromises. Just pure, beautiful silk delivered to your door from Dublin, Ireland.</p>
+      </div>
+      <div class="about-block">
+        <h2>Worldwide shipping</h2>
+        <p>We ship to over 50 countries worldwide. Every order is carefully packaged and shipped with love. Because you deserve to receive something that feels as special as it looks.</p>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/menu.js"></script>
+  <script src="js/cart.js"></script>
+</body>
+</html>

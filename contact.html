@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <title>Contact — SILKILINEN</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/contact.css">
+</head>
+<body>
+
+  <nav id="mainNav">
+    <div class="nav-hamburger" id="hamburger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <div class="nav-logo">
+      <h1>SILKILINEN</h1>
+      <p>Silk &amp; Linen</p>
+    </div>
+    <div class="nav-cart">
+      <p>Cart (0)</p>
+    </div>
+  </nav>
+
+  <div class="menu-overlay" id="menuOverlay"></div>
+  <div class="side-menu" id="sideMenu">
+    <button class="menu-close" id="menuClose">✕</button>
+    <nav class="menu-links">
+      <a href="index.html">Home</a>
+      <a href="shop.html">Shop</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+
+  <div class="cart-overlay" id="cartOverlay"></div>
+  <div class="cart-panel" id="cartPanel">
+    <div class="cart-panel-header">
+      <h3>Your cart</h3>
+      <button class="cart-close" id="cartClose">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-footer" id="cartFooter">
+      <div class="cart-total">
+        <span>Total</span>
+        <span id="cartTotal">€0.00</span>
+      </div>
+      <button class="cart-checkout">Checkout</button>
+    </div>
+  </div>
+
+  <section class="contact">
+    <div class="contact-header">
+      <h1>Get in touch.</h1>
+      <p>We'd love to hear from you.</p>
+    </div>
+    <div class="contact-inner">
+      <div class="contact-info">
+        <div class="contact-block">
+          <h3>Email</h3>
+          <p>hello@silkilinen.com</p>
+        </div>
+        <div class="contact-block">
+          <h3>Based in</h3>
+          <p>Dublin, Ireland</p>
+        </div>
+        <div class="contact-block">
+          <h3>Shipping</h3>
+          <p>Worldwide</p>
+        </div>
+      </div>
+      <div class="contact-form">
+        <input type="text" placeholder="Your name">
+        <input type="email" placeholder="Email address">
+        <textarea rows="6" placeholder="Your message"></textarea>
+        <button class="contact-btn">Send message</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/menu.js"></script>
+  <script src="js/cart.js"></script>
+</body>
+</html>
