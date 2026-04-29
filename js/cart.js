@@ -41,11 +41,17 @@ cartOverlay.addEventListener('click', function() {
 function renderCart() {
   cartItemsEl.innerHTML = '';
   
-  if (cart.length === 0) {
-    cartItemsEl.innerHTML = '<p style="color: var(--muted); font-size: 13px;">Your cart is empty.</p>';
-    cartTotalEl.textContent = '€0.00';
-    return;
-  }
+if (cart.length === 0) {
+  cartItemsEl.innerHTML = `
+    <div class="cart-empty">
+      <p>Your cart is empty.</p>
+      <p>Discover our collection and find something you love.</p>
+      <button onclick="document.getElementById('cartPanel').classList.remove('open'); document.getElementById('cartOverlay').classList.remove('open');" class="cart-empty-btn">Shop now</button>
+    </div>
+  `;
+  cartTotalEl.textContent = '€0.00';
+  return;
+}
 
 
   let total = 0;
