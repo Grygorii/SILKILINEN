@@ -142,3 +142,17 @@
   border-color: var(--dark);
   color: var(--warm-white);
 }
+.product-colours {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.colour-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--cream);
+  display: inline-block;
+}

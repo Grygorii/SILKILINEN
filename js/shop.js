@@ -24,7 +24,11 @@ function renderProducts(products) {
         </a>
         <div class="product-info">
           <a href="product.html?id=${product._id}"><h3>${product.name}</h3></a>
-          <p>${product.colour}</p>
+          <div class="product-colours">
+            ${product.colours.map(function(colour) {
+              return `<span class="colour-dot" title="${colour}"></span>`;
+            }).join('')}
+          </div>
           <span>€${product.price}.00</span>
           <button class="add-to-cart" onclick="addToCart('${product.name}', ${product.price})">Add to cart</button>
         </div>
