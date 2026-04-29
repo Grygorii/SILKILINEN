@@ -88,3 +88,57 @@
   background: var(--dark);
   color: var(--warm-white);
 }
+
+.shop-page {
+  padding: 60px 6%;
+}
+
+.shop-header {
+  margin-bottom: 40px;
+}
+
+.shop-header h2 {
+  font-family: var(--serif);
+  font-size: 36px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.shop-header p {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.shop-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  background: none;
+  border: 1px solid var(--border);
+  padding: 8px 20px;
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--muted);
+}
+
+.filter-btn:hover {
+  border-color: var(--dark);
+  color: var(--dark);
+}
+
+.filter-btn.active {
+  background: var(--dark);
+  border-color: var(--dark);
+  color: var(--warm-white);
+}
