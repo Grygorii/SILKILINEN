@@ -38,19 +38,27 @@ function renderCart() {
     return;
   }
 
+
   let total = 0;
 
   cart.forEach(function(item) {
     total += item.price;
     cartItemsEl.innerHTML += `
-      <div class="cart-item">
-        <div class="cart-item-info">
-          <p class="cart-item-name">${item.name}</p>
-          <p class="cart-item-price">€${item.price}.00</p>
-        </div>
-      </div>
-    `;
+  <div class="cart-item">
+    <div class="cart-item-img"></div>
+    <div class="cart-item-info">
+      <p class="cart-item-name">${item.name}</p>
+      <p class="cart-item-price">€${item.price}.00</p>
+    </div>
+    <button class="cart-item-remove" onclick="removeFromCart(${cart.indexOf(item)})">✕</button>
+  </div>
+`;
   });
 
   cartTotalEl.textContent = '€' + total + '.00';
+}
+  function removeFromCart(index) {
+  cart.splice(index, 1);
+  updateCartCount();
+  renderCart();
 }
