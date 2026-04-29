@@ -1,8 +1,12 @@
 let cart = [];
+if (localStorage.getItem('cart')) {
+  cart = JSON.parse(localStorage.getItem('cart'));
+}
 const cartCount = document.querySelector('.nav-cart p');
 
 function updateCartCount() {
   cartCount.textContent = 'Cart (' + cart.length + ')';
+  localStorage.setItem('cart', JSON.stringify(cart));
 }
 function addToCart(name, price) {
   const existing = cart.find(function(item) {
@@ -91,3 +95,4 @@ function changeQty(name, change) {
   updateCartCount();
   renderCart();
 }
+updateCartCount();
