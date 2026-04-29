@@ -5,7 +5,16 @@ function updateCartCount() {
   cartCount.textContent = 'Cart (' + cart.length + ')';
 }
 function addToCart(name, price) {
-  cart.push({ name: name, price: price });
+  const existing = cart.find(function(item) {
+    return item.name === name;
+  });
+
+  if (existing) {
+    existing.quantity += 1;
+  } else {
+    cart.push({ name: name, price: price, quantity: 1 });
+  }
+
   updateCartCount();
 }
 const cartPanel = document.getElementById('cartPanel');
@@ -42,13 +51,18 @@ function renderCart() {
   let total = 0;
 
   cart.forEach(function(item) {
-    total += item.price;
+    total += item.price * item.quantity;
     cartItemsEl.innerHTML += `
   <div class="cart-item">
     <div class="cart-item-img"></div>
     <div class="cart-item-info">
       <p class="cart-item-name">${item.name}</p>
-      <p class="cart-item-price">€${item.price}.00</p>
+      <p class="cart-item-price">€${item.price * item.quantity}.00</p>
+      <div class="cart-item-qty">
+        <button onclick="changeQty('${item.name}', -1)">−</button>
+        <span>${item.quantity}</span>
+        <button onclick="changeQty('${item.name}', 1)">+</button>
+      </div>
     </div>
     <button class="cart-item-remove" onclick="removeFromCart(${cart.indexOf(item)})">✕</button>
   </div>
@@ -59,6 +73,15 @@ function renderCart() {
 }
   function removeFromCart(index) {
   cart.splice(index, 1);
+  updateCartCount();
+  renderCart();
+}
+function changeQty(name, change) {
+  const item = cart.find(function(i) { return i.name === name; });
+  item.quantity += change;
+  if (item.quantity === 0) {
+    cart.splice(cart.indexOf(item), 1);
+  }
   updateCartCount();
   renderCart();
 }
