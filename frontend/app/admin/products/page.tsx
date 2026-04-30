@@ -9,6 +9,7 @@ type Product = {
   price: number;
   category: string;
   colours: string[];
+  image: string;
 };
 
 export default function AdminProductsPage() {
@@ -50,6 +51,7 @@ export default function AdminProductsPage() {
           <table className={styles.table}>
             <thead>
               <tr>
+                <th>Image</th>
                 <th>Name</th>
                 <th>Category</th>
                 <th>Price</th>
@@ -60,13 +62,34 @@ export default function AdminProductsPage() {
             <tbody>
               {products.map(product => (
                 <tr key={product._id}>
+                  <td>
+  {product.image ? (
+    <img src={product.image} alt={product.name} className={styles.thumbnail} />
+  ) : (
+    <div className={styles.noImage}>No image</div>
+  )}
+</td>
                   <td>{product.name}</td>
                   <td>{product.category}</td>
                   <td>€{product.price}</td>
                   <td>{product.colours.join(', ')}</td>
                   <td>
                     <a href={`/admin/products/${product._id}`} className={styles.editBtn}>Edit</a>
-                  </td>
+                    <button 
+    className={styles.deleteBtn}
+    onClick={async () => {
+      if (confirm('Delete this product?')) {
+        await fetch(`https://silkilinen-production.up.railway.app/api/products/${product._id}`, {
+          method: 'DELETE'
+        });
+        setProducts(products.filter(p => p._id !== product._id));
+      }
+    }}
+  >
+    Delete
+  </button>
+</td>
+                  
                 </tr>
               ))}
             </tbody>
