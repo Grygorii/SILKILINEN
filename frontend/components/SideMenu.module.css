@@ -1,0 +1,60 @@
+.overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 200;
+}
+
+.overlayOpen {
+  display: block;
+}
+
+.menu {
+  position: fixed;
+  top: 0;
+  left: -400px;
+  width: 320px;
+  height: 100%;
+  background: var(--warm-white);
+  z-index: 300;
+  padding: 40px 32px;
+  transition: left 0.3s ease;
+}
+
+.menuOpen {
+  left: 0;
+}
+
+.close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--dark);
+  margin-bottom: 40px;
+  display: block;
+}
+
+.links {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.links a {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 28px;
+  font-weight: 300;
+  color: var(--dark);
+  letter-spacing: 2px;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.links a:hover {
+  opacity: 0.6;
+}
