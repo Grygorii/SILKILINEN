@@ -1,0 +1,49 @@
+.page {
+  padding: 60px 6%;
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.placeholder {
+  background: var(--cream);
+  height: 600px;
+}
+
+.back {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  text-decoration: none;
+  margin-bottom: 24px;
+  transition: color 0.2s ease;
+}
+
+.back:hover {
+  color: var(--dark);
+}
+
+.info h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 42px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+.price {
+  font-size: 22px;
+  margin-bottom: 24px;
+}
+
+.description {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.9;
+  margin-bottom: 32px;
+}

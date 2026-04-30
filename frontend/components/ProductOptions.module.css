@@ -1,0 +1,58 @@
+.picker {
+  margin-bottom: 24px;
+}
+
+.picker p {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  color: var(--muted);
+}
+
+.options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  background: none;
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--muted);
+}
+
+.btn:hover {
+  border-color: var(--dark);
+  color: var(--dark);
+}
+
+.active {
+  background: var(--dark);
+  color: #faf8f4;
+  border-color: var(--dark);
+}
+
+.addToCart {
+  width: 100%;
+  padding: 16px;
+  background: var(--dark);
+  color: #faf8f4;
+  border: none;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+  margin-top: 8px;
+}
+
+.addToCart:hover {
+  opacity: 0.8;
+}
