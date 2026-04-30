@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useCart } from '@/context/CartContext';
 import styles from './ProductOptions.module.css';
 
 type Props = {
@@ -13,6 +14,17 @@ type Props = {
 export default function ProductOptions({ colours, sizes, productName, price }: Props) {
   const [selectedColour, setSelectedColour] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
+  const { addToCart } = useCart();
+
+  function handleAddToCart() {
+    addToCart({
+      name: productName,
+      price,
+      colour: selectedColour,
+      size: selectedSize,
+      quantity: 1,
+    });
+  }
 
   return (
     <div>
@@ -48,7 +60,7 @@ export default function ProductOptions({ colours, sizes, productName, price }: P
         </div>
       )}
 
-      <button className={styles.addToCart}>
+      <button className={styles.addToCart} onClick={handleAddToCart}>
         Add to cart
       </button>
     </div>
