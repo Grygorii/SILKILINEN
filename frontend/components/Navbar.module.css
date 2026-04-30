@@ -1,0 +1,52 @@
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 40px;
+  background: var(--warm-white);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+}
+
+.logo h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 4px;
+  color: var(--dark);
+}
+
+.logo p {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.hamburger span {
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: var(--dark);
+  transition: all 0.3s ease;
+}
+
+.cart {
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--dark);
+  cursor: pointer;
+}
