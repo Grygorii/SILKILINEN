@@ -1,0 +1,75 @@
+.filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+.filterBtn {
+  background: none;
+  border: 1px solid var(--border);
+  padding: 8px 20px;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--muted);
+}
+
+.filterBtn:hover {
+  border-color: var(--dark);
+  color: var(--dark);
+}
+
+.active {
+  background: var(--dark);
+  border-color: var(--dark);
+  color: #faf8f4;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+.card {
+  text-decoration: none;
+  color: var(--dark);
+  cursor: pointer;
+}
+
+.cardImg {
+  background: var(--cream);
+  height: 320px;
+  margin-bottom: 16px;
+  transition: opacity 0.3s ease;
+}
+
+.card:hover .cardImg {
+  opacity: 0.85;
+}
+
+.cardInfo h3 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 18px;
+  font-weight: 400;
+  margin-bottom: 8px;
+}
+
+.colours {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.colourDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--cream);
+  display: inline-block;
+}
