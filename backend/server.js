@@ -2,17 +2,22 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const productRoutes = require('./routes/products');
+const authRoutes = require('./routes/auth');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3001', 'https://silkilinen.vercel.app'],
+  credentials: true,
+}));
 app.use(express.json());
+app.use(cookieParser());
 app.use('/api/products', productRoutes);
-console.log('Products route registered');
+app.use('/api/auth', authRoutes);
 
 mongoose.connect(process.env.MONGODB_URI)
-
   .then(function() {
     console.log('Connected to MongoDB');
   })

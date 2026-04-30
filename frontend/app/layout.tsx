@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import AnnouncementBar from "@/components/AnnouncementBar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import { CartProvider } from "@/context/CartContext";
 import "./globals.css";
 
@@ -22,10 +22,7 @@ export default function RootLayout({
       </head>
       <body>
         <CartProvider>
-          <AnnouncementBar />
-          <Navbar />
           {children}
-          <Footer />
         </CartProvider>
       </body>
     </html>
