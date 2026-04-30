@@ -1,13 +1,13 @@
+/* ── Layout ─────────────────────────────────────── */
 .layout {
-  display: grid;
-  grid-template-columns: 260px 1fr;
   min-height: 100vh;
 }
 
+/* ── Sidebar ─────────────────────────────────────── */
 .sidebar {
   background: var(--dark);
   color: var(--warm-white);
-  padding: 32px 24px;
+  padding: 32px 20px;
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -15,10 +15,12 @@
   left: 0;
   width: 260px;
   height: 100vh;
+  overflow-y: auto;
 }
 
 .sidebarLogo {
-  margin-bottom: 48px;
+  margin-bottom: 40px;
+  padding: 0 4px;
 }
 
 .sidebarLogo h1 {
@@ -33,55 +35,74 @@
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: #9a9690;
+  color: #7a7670;
 }
 
+/* ── Nav ─────────────────────────────────────────── */
 .sidebarNav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   flex: 1;
 }
 
 .navItem {
-  display: block;
-  padding: 12px 16px;
-  color: #c8c4be;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  color: #b0aca6;
   text-decoration: none;
-  font-size: 14px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  font-size: 13.5px;
+  border-radius: 6px;
+  border-left: 2px solid transparent;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .navItem:hover {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.07);
   color: var(--warm-white);
 }
 
 .active {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.11);
   color: var(--warm-white);
+  border-left-color: var(--rose);
+}
+
+/* ── Sign-out ─────────────────────────────────────── */
+.sidebarDivider {
+  height: 1px;
+  background: #2e2b27;
+  margin: 16px 0 8px;
 }
 
 .logout {
-  display: block;
-  padding: 12px 16px;
-  color: #9a9690;
-  text-decoration: none;
-  font-size: 13px;
-  border-top: 1px solid #2e2b27;
-  padding-top: 20px;
-  margin-top: 20px;
-  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: #7a7670;
+  font-family: 'Jost', sans-serif;
+  font-size: 13.5px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .logout:hover {
-  color: var(--warm-white);
+  background: rgba(255, 255, 255, 0.07);
+  color: #c0392b;
 }
 
+/* ── Main content ─────────────────────────────────── */
 .main {
+  margin-left: 260px;
   padding: 48px;
   background: var(--cream);
   min-height: 100vh;
-  margin-left: 260px;
 }

@@ -1,4 +1,3 @@
-const JWT_SECRET = 'silkilinen_super_secret_key';
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
@@ -6,7 +5,6 @@ const User = require('../models/User');
 
 router.post('/login', async function(req, res) {
   try {
-    console.log('JWT_SECRET in auth:', process.env.JWT_SECRET ? 'loaded' : 'MISSING');
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
@@ -20,10 +18,10 @@ router.post('/login', async function(req, res) {
     }
 
     const token = jwt.sign(
-  { userId: user._id, role: user.role },
-  JWT_SECRET,
-  { expiresIn: '7d' }
-);
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
 
     res.cookie('token', token, {
       httpOnly: true,

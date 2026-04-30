@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /d/Programming/Course_*/Silkilinen/backend -maxdepth 2 -type f \\\\\\( -name \"*.js\" -o -name \"*.json\" \\\\\\) ! -path \"*/node_modules/*\")",
+      "Bash(find /d/Programming/Course_*/Silkilinen/frontend -maxdepth 3 -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" -o -name \"*.json\" -o -name \"*.css\" \\\\\\) ! -path \"*/node_modules/*\" ! -path \"*/.next/*\")"
+    ]
+  }
+}

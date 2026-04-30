@@ -1,4 +1,5 @@
 import styles from './AdminLayout.module.css';
+import LogoutButton from './LogoutButton';
 
 type Props = {
   children: React.ReactNode;
@@ -19,7 +20,8 @@ export default function AdminLayout({ children, active }: Props) {
           <a href="/admin/orders" className={`${styles.navItem} ${active === 'orders' ? styles.active : ''}`}>📦 Orders</a>
           <a href="/admin/settings" className={`${styles.navItem} ${active === 'settings' ? styles.active : ''}`}>⚙️ Settings</a>
         </nav>
-        <a href="/admin/login" className={styles.logout}>Sign out</a>
+        <div className={styles.sidebarDivider} />
+        <LogoutButton />
       </aside>
       <main className={styles.main}>
         {children}

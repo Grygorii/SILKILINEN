@@ -35,51 +35,71 @@ export default function AdminProductsPage() {
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Image</th>
-              <th>Name</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Colours</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map(product => (
-              <tr key={product._id}>
-                <td>
-                  {product.image ? (
-                    <img src={product.image} alt={product.name} className={styles.thumbnail} />
-                  ) : (
-                    <div className={styles.noImage}>No image</div>
-                  )}
-                </td>
-                <td>{product.name}</td>
-                <td>{product.category}</td>
-                <td>€{product.price}</td>
-                <td>{product.colours.join(', ')}</td>
-                <td>
-                  <a href={`/admin/products/${product._id}`} className={styles.editBtn}>Edit</a>
-                  <button
-                    className={styles.deleteBtn}
-                    onClick={async () => {
-                      if (confirm('Delete this product?')) {
-                        await fetch(`https://silkilinen-production.up.railway.app/api/products/${product._id}`, {
-                          method: 'DELETE'
-                        });
-                        setProducts(products.filter(p => p._id !== product._id));
-                      }
-                    }}
-                  >
-                    Delete
-                  </button>
-                </td>
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <colgroup>
+              <col /><col /><col /><col /><col /><col />
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Colours</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {products.map(product => (
+                <tr key={product._id}>
+                  <td>
+                    {product.image ? (
+                      <img src={product.image} alt={product.name} className={styles.thumbnail} />
+                    ) : (
+                      <div className={styles.noImage}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" />
+                          <circle cx="8.5" cy="8.5" r="1.5" />
+                          <path d="M21 15l-5-5L5 21" />
+                        </svg>
+                      </div>
+                    )}
+                  </td>
+                  <td>{product.name}</td>
+                  <td>{product.category}</td>
+                  <td>€{product.price}</td>
+                  <td>
+                    <div className={styles.colourTags}>
+                      {product.colours.map(c => (
+                        <span key={c} className={styles.colourTag}>{c}</span>
+                      ))}
+                    </div>
+                  </td>
+                  <td>
+                    <div className={styles.actions}>
+                      <a href={`/admin/products/${product._id}`} className={styles.editBtn}>Edit</a>
+                      <button
+                        className={styles.deleteBtn}
+                        onClick={async () => {
+                          if (confirm('Delete this product?')) {
+                            await fetch(`https://silkilinen-production.up.railway.app/api/products/${product._id}`, {
+                              method: 'DELETE',
+                              credentials: 'include',
+                            });
+                            setProducts(products.filter(p => p._id !== product._id));
+                          }
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </AdminLayout>
   );

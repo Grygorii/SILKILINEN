@@ -6,6 +6,8 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const productRoutes = require('./routes/products');
 const authRoutes = require('./routes/auth');
+const checkoutRoutes = require('./routes/checkout');
+const webhookRoutes = require('./routes/webhook');
 
 const app = express();
 
@@ -13,18 +15,20 @@ app.use(cors({
   origin: ['http://localhost:3001', 'https://silkilinen.vercel.app'],
   credentials: true,
 }));
-app.use(express.json());
 app.use(cookieParser());
+
+// Webhook must be mounted before express.json() — Stripe needs the raw request body
+// to verify the STRIPE_WEBHOOK_SECRET signature.
+app.use('/api/webhook', webhookRoutes);
+
+app.use(express.json());
 app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/checkout', checkoutRoutes);
 
 mongoose.connect(process.env.MONGODB_URI)
-  .then(function() {
-    console.log('Connected to MongoDB');
-  })
-  .catch(function(err) {
-    console.log('MongoDB connection error:', err);
-  });
+  .then(function() { console.log('Connected to MongoDB'); })
+  .catch(function(err) { console.error('MongoDB connection error:', err); });
 
 app.get('/', function(req, res) {
   res.send('Silkilinen backend is running');

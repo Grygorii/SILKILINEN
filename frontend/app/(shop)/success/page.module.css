@@ -1,0 +1,50 @@
+.page {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 6%;
+}
+
+.inner {
+  text-align: center;
+  max-width: 480px;
+}
+
+.icon {
+  color: #5a9e6f;
+  margin-bottom: 24px;
+}
+
+.inner h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 36px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  color: var(--dark);
+  margin-bottom: 16px;
+}
+
+.inner p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin-bottom: 32px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 14px 36px;
+  border: 1px solid var(--dark);
+  color: var(--dark);
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  background: var(--dark);
+  color: var(--warm-white);
+}

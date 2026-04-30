@@ -14,9 +14,13 @@ type Props = {
 export default function ProductOptions({ colours, sizes, productName, price }: Props) {
   const [selectedColour, setSelectedColour] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
+  const [error, setError] = useState('');
   const { addToCart } = useCart();
 
   function handleAddToCart() {
+    if (!selectedColour) { setError('Please select a colour'); return; }
+    if (sizes.length > 0 && !selectedSize) { setError('Please select a size'); return; }
+    setError('');
     addToCart({
       name: productName,
       price,
@@ -35,7 +39,7 @@ export default function ProductOptions({ colours, sizes, productName, price }: P
             <button
               key={colour}
               className={`${styles.btn} ${selectedColour === colour ? styles.active : ''}`}
-              onClick={() => setSelectedColour(colour)}
+              onClick={() => { setSelectedColour(colour); setError(''); }}
             >
               {colour}
             </button>
@@ -51,7 +55,7 @@ export default function ProductOptions({ colours, sizes, productName, price }: P
               <button
                 key={size}
                 className={`${styles.btn} ${selectedSize === size ? styles.active : ''}`}
-                onClick={() => setSelectedSize(size)}
+                onClick={() => { setSelectedSize(size); setError(''); }}
               >
                 {size}
               </button>
@@ -59,6 +63,8 @@ export default function ProductOptions({ colours, sizes, productName, price }: P
           </div>
         </div>
       )}
+
+      {error && <p style={{ color: '#c0392b', fontSize: '12px', marginBottom: '8px' }}>{error}</p>}
 
       <button className={styles.addToCart} onClick={handleAddToCart}>
         Add to cart

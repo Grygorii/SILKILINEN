@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/product');
 const { upload } = require('../utils/cloudinary');
+const { requireAuth } = require('../middleware/auth');
 
 router.get('/', async function(req, res) {
   try {
@@ -15,39 +16,45 @@ router.get('/', async function(req, res) {
 router.get('/:id', async function(req, res) {
   try {
     const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-router.post('/upload', upload.single('image'), function(req, res) {
+
+router.post('/upload', requireAuth, upload.single('image'), function(req, res) {
   try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     res.json({ url: req.file.path });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-router.post('/', async function(req, res) {
+
+router.post('/', requireAuth, async function(req, res) {
   try {
     const product = await Product.create(req.body);
-    res.json(product);
+    res.status(201).json(product);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 });
 
-router.put('/:id', async function(req, res) {
+router.put('/:id', requireAuth, async function(req, res) {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 });
 
-router.delete('/:id', async function(req, res) {
+router.delete('/:id', requireAuth, async function(req, res) {
   try {
-    await Product.findByIdAndDelete(req.params.id);
+    const product = await Product.findByIdAndDelete(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });

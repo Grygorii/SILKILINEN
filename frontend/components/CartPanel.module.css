@@ -168,6 +168,18 @@
   transition: opacity 0.3s ease;
 }
 
-.checkout:hover {
+.checkout:hover:not(:disabled) {
   opacity: 0.8;
+}
+
+.checkout:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error {
+  font-size: 12px;
+  color: #c0392b;
+  margin-bottom: 10px;
+  text-align: center;
 }
