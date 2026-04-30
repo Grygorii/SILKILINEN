@@ -1,0 +1,61 @@
+.footer {
+  background: var(--dark);
+  color: var(--warm-white);
+  padding: 64px 6% 32px;
+  margin-top: 80px;
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 48px;
+  margin-bottom: 48px;
+}
+
+.brand h3 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 4px;
+  margin-bottom: 16px;
+}
+
+.brand p {
+  font-size: 13px;
+  color: #9a9690;
+  line-height: 1.8;
+}
+
+.col h4 {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #9a9690;
+  margin-bottom: 20px;
+}
+
+.col a {
+  display: block;
+  font-size: 13px;
+  color: #c8c4be;
+  text-decoration: none;
+  margin-bottom: 10px;
+  transition: color 0.2s ease;
+}
+
+.col a:hover {
+  color: var(--warm-white);
+}
+
+.bottom {
+  border-top: 1px solid #2e2b27;
+  padding-top: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bottom p {
+  font-size: 12px;
+  color: #6a6660;
+}

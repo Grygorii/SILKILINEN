@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { CartProvider } from "@/context/CartContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Silkilinen — Pure Silk & Linen Intimates",
-  description: "Handpicked silk and linen intimates, shipped worldwide from Ireland.",
+  description: "Handpicked silk and linen intimates, shipped worldwide from Dublin, Ireland.",
 };
 
 export default function RootLayout({
@@ -20,8 +22,10 @@ export default function RootLayout({
       </head>
       <body>
         <CartProvider>
+          <AnnouncementBar />
           <Navbar />
           {children}
+          <Footer />
         </CartProvider>
       </body>
     </html>
