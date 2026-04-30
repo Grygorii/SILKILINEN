@@ -1,0 +1,78 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import styles from './page.module.css';
+
+type Product = {
+  _id: string;
+  name: string;
+  price: number;
+  category: string;
+  colours: string[];
+};
+
+export default function AdminProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('https://silkilinen-production.up.railway.app/api/products')
+      .then(res => res.json())
+      .then(data => {
+        setProducts(data);
+        setLoading(false);
+      });
+  }, []);
+
+  return (
+    <div className={styles.layout}>
+      <aside className={styles.sidebar}>
+        <div className={styles.sidebarLogo}>
+          <h1>SILKILINEN</h1>
+          <p>Admin Panel</p>
+        </div>
+        <nav className={styles.sidebarNav}>
+          <a href="/admin" className={styles.navItem}>📊 Dashboard</a>
+          <a href="/admin/products" className={`${styles.navItem} ${styles.active}`}>👗 Products</a>
+          <a href="/admin/orders" className={styles.navItem}>📦 Orders</a>
+          <a href="/admin/settings" className={styles.navItem}>⚙️ Settings</a>
+        </nav>
+        <a href="/admin/login" className={styles.logout}>Sign out</a>
+      </aside>
+      <main className={styles.main}>
+        <div className={styles.header}>
+          <h2>Products</h2>
+          <a href="/admin/products/new" className={styles.addBtn}>+ Add product</a>
+        </div>
+        {loading ? (
+          <p>Loading...</p>
+        ) : (
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Colours</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map(product => (
+                <tr key={product._id}>
+                  <td>{product.name}</td>
+                  <td>{product.category}</td>
+                  <td>€{product.price}</td>
+                  <td>{product.colours.join(', ')}</td>
+                  <td>
+                    <a href={`/admin/products/${product._id}`} className={styles.editBtn}>Edit</a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </main>
+    </div>
+  );
+}
