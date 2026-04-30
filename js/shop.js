@@ -1,6 +1,6 @@
 async function loadProducts(filter = 'all') {
   try {
-    const response = await fetch('http://localhost:3000/api/products');
+    const response = await fetch('https://silkilinen-production.up.railway.app/api/products');
     const products = await response.json();
 
     const filtered = filter === 'all'

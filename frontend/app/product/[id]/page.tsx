@@ -2,7 +2,7 @@ import styles from './page.module.css';
 import ProductOptions from '@/components/ProductOptions';
 
 async function getProduct(id: string) {
-  const res = await fetch(`http://localhost:3000/api/products/${id}`);
+  const res = await fetch(`https://silkilinen-production.up.railway.app/api/products/${id}`);
   const product = await res.json();
   return product;
 }
