@@ -3,7 +3,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import CookieConsent from "@/components/CookieConsent";
+import NewsletterPopup from "@/components/NewsletterPopup";
 import { CartProvider } from "@/context/CartContext";
+import { WishlistProvider } from "@/context/WishlistContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,10 +24,13 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
       </head>
       <body>
-        <CartProvider>
-          {children}
-          <CookieConsent />
-        </CartProvider>
+        <WishlistProvider>
+          <CartProvider>
+            {children}
+            <CookieConsent />
+            <NewsletterPopup />
+          </CartProvider>
+        </WishlistProvider>
       </body>
     </html>
   );

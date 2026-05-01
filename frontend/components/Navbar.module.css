@@ -12,6 +12,10 @@
   z-index: 100;
 }
 
+.logoLink {
+  text-decoration: none;
+}
+
 .logo h1 {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 22px;
@@ -43,6 +47,24 @@
   transition: all 0.3s ease;
 }
 
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.wishlistLink {
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #c0392b;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.wishlistLink:hover {
+  opacity: 0.7;
+}
+
 .cart {
   font-size: 13px;
   letter-spacing: 1.5px;
@@ -51,10 +73,15 @@
   cursor: pointer;
 }
 
+@media (max-width: 600px) {
+  .nav {
+    top: 30px;
+  }
+}
+
 @media (max-width: 480px) {
   .nav {
     padding: 16px 20px;
-    top: 34px;
   }
 
   .logo h1 {

@@ -10,8 +10,34 @@
   left: 0;
   right: 0;
   z-index: 150;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message {
+  transition: opacity 0.4s ease;
+  margin: 0;
+}
+
+.visible {
+  opacity: 1;
+}
+
+.hidden {
+  opacity: 0;
 }
 
 .bar strong {
   font-weight: 500;
+}
+
+@media (max-width: 600px) {
+  .bar {
+    font-size: 11px;
+    padding: 6px 16px;
+    min-height: 30px;
+    letter-spacing: 0.5px;
+  }
 }

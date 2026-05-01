@@ -8,6 +8,11 @@ const productSchema = new mongoose.Schema({
   colours: [String],
   image: String,
   sizes: [String],
+  stockLevel: { type: Number, default: null },
+  metaTitle: { type: String, trim: true },
+  metaDescription: { type: String, trim: true },
+  slug: { type: String, trim: true },
+  altText: { type: String, trim: true },
 });
 
 module.exports = mongoose.model('Product', productSchema);

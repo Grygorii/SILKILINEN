@@ -5,9 +5,74 @@ const Order = require('../models/Order');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
 
+const EU_COUNTRIES = new Set([
+  'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU',
+  'IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE',
+]);
+
+function getShippingOption(country) {
+  if (country === 'IE') {
+    return {
+      shipping_rate_data: {
+        type: 'fixed_amount',
+        fixed_amount: { amount: 499, currency: 'eur' },
+        display_name: 'Standard Shipping — Ireland',
+        delivery_estimate: {
+          minimum: { unit: 'business_day', value: 3 },
+          maximum: { unit: 'business_day', value: 5 },
+        },
+      },
+    };
+  }
+  if (EU_COUNTRIES.has(country)) {
+    return {
+      shipping_rate_data: {
+        type: 'fixed_amount',
+        fixed_amount: { amount: 999, currency: 'eur' },
+        display_name: 'Standard Shipping — EU',
+        delivery_estimate: {
+          minimum: { unit: 'business_day', value: 5 },
+          maximum: { unit: 'business_day', value: 10 },
+        },
+      },
+    };
+  }
+  if (['GB','US','CA','AU','NZ','CH','NO'].includes(country)) {
+    return {
+      shipping_rate_data: {
+        type: 'fixed_amount',
+        fixed_amount: { amount: 1499, currency: 'eur' },
+        display_name: 'Standard Shipping — International',
+        delivery_estimate: {
+          minimum: { unit: 'business_day', value: 7 },
+          maximum: { unit: 'business_day', value: 14 },
+        },
+      },
+    };
+  }
+  return {
+    shipping_rate_data: {
+      type: 'fixed_amount',
+      fixed_amount: { amount: 1999, currency: 'eur' },
+      display_name: 'Standard Shipping — Worldwide',
+      delivery_estimate: {
+        minimum: { unit: 'business_day', value: 10 },
+        maximum: { unit: 'business_day', value: 21 },
+      },
+    },
+  };
+}
+
+// All countries we ship to
+const ALLOWED_COUNTRIES = [
+  'IE','GB','US','CA','AU','NZ','DE','FR','IT','ES','NL','BE','AT',
+  'PL','SE','DK','NO','FI','PT','CH','GR','HU','CZ','SK','RO','BG',
+  'HR','CY','EE','LV','LT','LU','MT','SI',
+];
+
 router.post('/', async function(req, res) {
   try {
-    const { items } = req.body;
+    const { items, country } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Cart is empty' });
@@ -18,6 +83,8 @@ router.post('/', async function(req, res) {
         return res.status(400).json({ error: 'Invalid cart item' });
       }
     }
+
+    const shippingOption = getShippingOption(country || '');
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -35,50 +102,15 @@ router.post('/', async function(req, res) {
       mode: 'payment',
       billing_address_collection: 'required',
       shipping_address_collection: {
-        allowed_countries: ['IE', 'GB', 'US', 'CA', 'AU', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'PL', 'SE', 'DK', 'NO', 'FI', 'PT', 'CH'],
+        allowed_countries: ALLOWED_COUNTRIES,
       },
-      shipping_options: [
-        {
-          shipping_rate_data: {
-            type: 'fixed_amount',
-            fixed_amount: { amount: 499, currency: 'eur' },
-            display_name: 'Standard Shipping — Ireland',
-            delivery_estimate: {
-              minimum: { unit: 'business_day', value: 3 },
-              maximum: { unit: 'business_day', value: 5 },
-            },
-          },
-        },
-        {
-          shipping_rate_data: {
-            type: 'fixed_amount',
-            fixed_amount: { amount: 999, currency: 'eur' },
-            display_name: 'Standard Shipping — EU',
-            delivery_estimate: {
-              minimum: { unit: 'business_day', value: 5 },
-              maximum: { unit: 'business_day', value: 10 },
-            },
-          },
-        },
-        {
-          shipping_rate_data: {
-            type: 'fixed_amount',
-            fixed_amount: { amount: 1499, currency: 'eur' },
-            display_name: 'Standard Shipping — International',
-            delivery_estimate: {
-              minimum: { unit: 'business_day', value: 7 },
-              maximum: { unit: 'business_day', value: 14 },
-            },
-          },
-        },
-      ],
+      shipping_options: [shippingOption],
       allow_promotion_codes: true,
       phone_number_collection: { enabled: true },
       success_url: `${FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${FRONTEND_URL}/cancel`,
     });
 
-    // Save a pending order so the webhook can enrich it without hitting Stripe metadata limits.
     await Order.create({
       stripeSessionId: session.id,
       items: items.map(({ name, price, colour, size, quantity }) => ({ name, price, colour, size, quantity })),

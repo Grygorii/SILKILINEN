@@ -51,6 +51,27 @@
   font-weight: 400;
 }
 
+.stockIn {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #4a7c59;
+  margin-bottom: 16px;
+}
+
+.stockLow {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #b5631a;
+  margin-bottom: 16px;
+}
+
+.stockOut {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #c0392b;
+  margin-bottom: 16px;
+}
+
 .sizeGuideLink {
   display: inline-block;
   font-size: 11px;

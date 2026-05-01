@@ -41,14 +41,21 @@
   display: flex;
   flex-direction: column;
   color: var(--dark);
+  position: relative;
+}
+
+/* Full-card overlay link — sits beneath interactive elements */
+.cardOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.card:hover .cardImg {
+  opacity: 0.88;
 }
 
 /* ── Image ────────────────────────────────────────── */
-
-.cardImgLink {
-  display: block;
-  text-decoration: none;
-}
 
 .cardImg {
   position: relative;
@@ -56,10 +63,6 @@
   height: 320px;
   overflow: hidden;
   transition: opacity 0.3s ease;
-}
-
-.cardImgLink:hover .cardImg {
-  opacity: 0.88;
 }
 
 .viewBtn {
@@ -81,9 +84,36 @@
   pointer-events: none;
 }
 
-.cardImgLink:hover .viewBtn {
+.card:hover .viewBtn {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+.heartBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(250, 248, 244, 0.88);
+  border: none;
+  font-size: 18px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--muted);
+  transition: color 0.2s ease;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+.heartBtn:hover {
+  color: var(--dark);
+}
+
+.heartActive {
+  color: #c0392b;
 }
 
 /* ── Info ─────────────────────────────────────────── */
@@ -93,22 +123,21 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .cardName {
-  text-decoration: none;
-  color: var(--dark);
-}
-
-.cardName h3 {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 18px;
   font-weight: 400;
   margin-bottom: 8px;
   transition: opacity 0.2s ease;
+  color: var(--dark);
 }
 
-.cardName:hover h3 {
+.card:hover .cardName {
   opacity: 0.65;
 }
 
@@ -135,6 +164,7 @@
   justify-content: space-between;
   gap: 12px;
   margin-top: auto;
+  pointer-events: auto;
 }
 
 .price {

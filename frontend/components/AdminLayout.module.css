@@ -18,6 +18,11 @@
   overflow-y: auto;
 }
 
+.sidebarLogoLink {
+  text-decoration: none;
+  color: inherit;
+}
+
 .sidebarLogo {
   margin-bottom: 40px;
   padding: 0 4px;

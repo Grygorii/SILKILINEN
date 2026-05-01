@@ -1,26 +1,193 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from 'recharts';
 import AdminLayout from '@/components/AdminLayout';
 import styles from './page.module.css';
 
+const API = process.env.NEXT_PUBLIC_API_URL;
+
+type Stats = {
+  revenueThisMonth: number;
+  revenueLastMonth: number;
+  revenueChange: number | null;
+  ordersThisMonth: number;
+  ordersLastMonth: number;
+  ordersChange: number | null;
+  aov: number;
+  totalOrders: number;
+  recentOrders: {
+    _id: string;
+    customerEmail: string;
+    customerName: string;
+    total: number;
+    status: string;
+    createdAt: string;
+  }[];
+  topProducts: { name: string; qty: number }[];
+  salesChart: { date: string; revenue: number }[];
+  geoDistribution: { country: string; count: number }[];
+};
+
+function Change({ value }: { value: number | null }) {
+  if (value === null) return <span className={styles.changeMuted}>No data yet</span>;
+  const sign = value >= 0 ? '+' : '';
+  const cls = value >= 0 ? styles.changePos : styles.changeNeg;
+  return <span className={`${styles.metricChange} ${cls}`}>{sign}{value.toFixed(1)}% vs last month</span>;
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const cls = status === 'paid' ? styles.statusPaid : status === 'pending' ? styles.statusPending : styles.statusFailed;
+  return <span className={`${styles.statusBadge} ${cls}`}>{status}</span>;
+}
+
+function fmt(n: number) {
+  return `€${n.toFixed(2)}`;
+}
+
+function shortDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
+}
+
+function chartTick(date: string) {
+  const d = new Date(date);
+  return d.getDate() % 5 === 1 ? `${d.getDate()}/${d.getMonth() + 1}` : '';
+}
+
 export default function AdminDashboard() {
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API}/api/orders/stats`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { setStats(data); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const maxGeo = stats?.geoDistribution?.[0]?.count ?? 1;
+
   return (
     <AdminLayout active="dashboard">
       <div className={styles.header}>
         <h2>Dashboard</h2>
       </div>
-      <div className={styles.stats}>
-        <div className={styles.stat}>
-          <span>10</span>
-          <p>Products</p>
-        </div>
-        <div className={styles.stat}>
-          <span>0</span>
-          <p>Orders</p>
-        </div>
-        <div className={styles.stat}>
-          <span>€0</span>
-          <p>Revenue</p>
-        </div>
-      </div>
+
+      {loading && <p className={styles.loading}>Loading…</p>}
+
+      {!loading && stats && (
+        <>
+          {/* ── Row 1: Key metrics ── */}
+          <div className={styles.section}>
+            <p className={styles.sectionTitle}>This month</p>
+            <div className={styles.metricsRow}>
+              <div className={styles.metricCard}>
+                <p className={styles.metricLabel}>Revenue</p>
+                <p className={styles.metricValue}>{fmt(stats.revenueThisMonth)}</p>
+                <Change value={stats.revenueChange} />
+              </div>
+              <div className={styles.metricCard}>
+                <p className={styles.metricLabel}>Orders</p>
+                <p className={styles.metricValue}>{stats.ordersThisMonth}</p>
+                <Change value={stats.ordersChange} />
+              </div>
+              <div className={styles.metricCard}>
+                <p className={styles.metricLabel}>Avg order value</p>
+                <p className={styles.metricValue}>{fmt(stats.aov)}</p>
+                <span className={styles.changeMuted}>All time</span>
+              </div>
+              <div className={styles.metricCard}>
+                <p className={styles.metricLabel}>Total orders</p>
+                <p className={styles.metricValue}>{stats.totalOrders}</p>
+                <span className={styles.changeMuted}>All time</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Row 2: Sales chart + top products ── */}
+          <div className={`${styles.section} ${styles.twoCol}`}>
+            <div className={styles.card}>
+              <p className={styles.cardTitle}>Revenue — last 30 days</p>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={stats.salesChart} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e8e4de" />
+                  <XAxis dataKey="date" tickFormatter={chartTick} tick={{ fontSize: 10, fill: '#9a9690' }} />
+                  <YAxis tick={{ fontSize: 10, fill: '#9a9690' }} tickFormatter={v => `€${v}`} />
+                  <Tooltip formatter={(v: number) => [`€${v.toFixed(2)}`, 'Revenue']} labelFormatter={shortDate} />
+                  <Line type="monotone" dataKey="revenue" stroke="#2a2825" strokeWidth={1.5} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className={styles.card}>
+              <p className={styles.cardTitle}>Top products this month</p>
+              {stats.topProducts.length === 0 ? (
+                <p className={styles.loading}>No sales yet this month.</p>
+              ) : (
+                <ul className={styles.topList}>
+                  {stats.topProducts.map((p, i) => (
+                    <li key={i} className={styles.topItem}>
+                      <span className={styles.topName}>{p.name}</span>
+                      <span className={styles.topQty}>{p.qty} sold</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          {/* ── Row 3: Recent orders + geo ── */}
+          <div className={`${styles.section} ${styles.twoCol}`}>
+            <div className={styles.card}>
+              <p className={styles.cardTitle}>Recent orders</p>
+              <table className={styles.miniTable}>
+                <thead>
+                  <tr>
+                    <th>Customer</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.recentOrders.map(o => (
+                    <tr key={o._id}>
+                      <td>{o.customerName || o.customerEmail || 'Guest'}</td>
+                      <td>{fmt(o.total ?? 0)}</td>
+                      <td><StatusBadge status={o.status} /></td>
+                      <td>{shortDate(o.createdAt)}</td>
+                    </tr>
+                  ))}
+                  {stats.recentOrders.length === 0 && (
+                    <tr><td colSpan={4} style={{ color: 'var(--muted)' }}>No paid orders yet.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className={styles.card}>
+              <p className={styles.cardTitle}>Orders by country</p>
+              {stats.geoDistribution.length === 0 ? (
+                <p className={styles.loading}>No data yet.</p>
+              ) : (
+                <ul className={styles.geoList}>
+                  {stats.geoDistribution.map(g => (
+                    <li key={g.country} className={styles.geoItem}>
+                      <span style={{ minWidth: 32, fontSize: 12 }}>{g.country}</span>
+                      <div className={styles.geoBar}>
+                        <div className={styles.geoFill} style={{ width: `${(g.count / maxGeo) * 100}%` }} />
+                      </div>
+                      <span className={styles.geoCount}>{g.count}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </AdminLayout>
   );
 }

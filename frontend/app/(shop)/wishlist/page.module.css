@@ -1,0 +1,147 @@
+.page {
+  padding: 60px 6% 80px;
+}
+
+.inner {
+  max-width: 900px;
+}
+
+.header {
+  margin-bottom: 48px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.header h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 42px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.header p {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.empty {
+  text-align: center;
+  padding: 60px 0;
+}
+
+.empty p {
+  font-size: 16px;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+.shopLink {
+  font-size: 13px;
+  color: var(--dark);
+  text-decoration: underline;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+}
+
+.imgLink {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.img {
+  background: var(--cream);
+  height: 280px;
+  transition: opacity 0.2s ease;
+}
+
+.imgLink:hover .img {
+  opacity: 0.85;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.name {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--dark);
+  text-decoration: none;
+}
+
+.name:hover {
+  opacity: 0.7;
+}
+
+.price {
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.viewBtn {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--dark);
+  border: 1px solid var(--dark);
+  padding: 8px 16px;
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.viewBtn:hover {
+  background: var(--dark);
+  color: var(--warm-white);
+}
+
+.removeBtn {
+  background: none;
+  border: none;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 0;
+}
+
+.removeBtn:hover {
+  color: #c0392b;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

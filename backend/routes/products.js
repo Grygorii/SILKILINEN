@@ -214,6 +214,28 @@ router.post('/', requireAuth, async function(req, res) {
   }
 });
 
+router.get('/related/:id', async function(req, res) {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+
+    let related = await Product.find({
+      _id: { $ne: product._id },
+      category: product.category,
+    }).limit(4);
+
+    if (related.length < 4) {
+      const ids = [product._id, ...related.map(p => p._id)];
+      const extras = await Product.find({ _id: { $nin: ids } }).limit(4 - related.length);
+      related = [...related, ...extras];
+    }
+
+    res.json(related);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/:id', async function(req, res) {
   try {
     const product = await Product.findById(req.params.id);

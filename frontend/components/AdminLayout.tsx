@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import styles from './AdminLayout.module.css';
 import LogoutButton from './LogoutButton';
 
@@ -26,10 +27,12 @@ export default function AdminLayout({ children, active }: Props) {
         >
           ✕
         </button>
-        <div className={styles.sidebarLogo}>
-          <h1>SILKILINEN</h1>
-          <p>Admin Panel</p>
-        </div>
+        <Link href="/" className={styles.sidebarLogoLink}>
+          <div className={styles.sidebarLogo}>
+            <h1>SILKILINEN</h1>
+            <p>Admin Panel</p>
+          </div>
+        </Link>
         <nav className={styles.sidebarNav}>
           <a href="/admin" className={`${styles.navItem} ${active === 'dashboard' ? styles.active : ''}`}>📊 Dashboard</a>
           <a href="/admin/products" className={`${styles.navItem} ${active === 'products' ? styles.active : ''}`}>👗 Products</a>
