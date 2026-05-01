@@ -18,7 +18,7 @@ export default function Footer() {
         <div className={styles.col}>
           <h4>Info</h4>
           <a href="/about">About us</a>
-          <a href="/contact">Contact</a>
+          <a href="/reviews">Reviews</a>
           <a href="/shipping">Shipping &amp; Returns</a>
           <a href="/contact">Contact</a>
         </div>

@@ -1,0 +1,259 @@
+.page {
+  padding: 60px 6% 80px;
+}
+
+.inner {
+  max-width: 1100px;
+}
+
+/* ── Header ───────────────────────────────────────── */
+
+.header {
+  margin-bottom: 48px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--border);
+}
+
+.header h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 42px;
+  font-weight: 400;
+  color: var(--dark);
+  margin-bottom: 36px;
+  letter-spacing: 1px;
+}
+
+/* ── Summary ──────────────────────────────────────── */
+
+.summary {
+  display: flex;
+  gap: 64px;
+  align-items: flex-start;
+}
+
+.avgBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 120px;
+}
+
+.avgNumber {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 56px;
+  font-weight: 300;
+  color: var(--dark);
+  line-height: 1;
+}
+
+.avgTotal {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ── Star distribution ────────────────────────────── */
+
+.distBlock {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 440px;
+}
+
+.distRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 2px;
+  transition: background 0.15s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.distRow:hover {
+  background: var(--cream);
+}
+
+.distRowActive {
+  background: var(--cream);
+  outline: 1px solid var(--border);
+}
+
+.distLabel {
+  font-size: 12px;
+  color: #c8a96e;
+  width: 24px;
+  flex-shrink: 0;
+}
+
+.distBar {
+  flex: 1;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.distFill {
+  height: 100%;
+  background: #c8a96e;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.distCount {
+  font-size: 12px;
+  color: var(--muted);
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Stars ────────────────────────────────────────── */
+
+.stars {
+  color: #c8a96e;
+  letter-spacing: 1px;
+}
+
+.starsSM { font-size: 13px; }
+.starsMD { font-size: 15px; }
+.starsLG { font-size: 22px; }
+
+/* ── Filter bar ───────────────────────────────────── */
+
+.filterBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  margin-bottom: 28px;
+  font-size: 13px;
+  color: var(--dark);
+}
+
+.clearFilter {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  letter-spacing: 0.5px;
+}
+
+.clearFilter:hover {
+  color: var(--dark);
+}
+
+/* ── Review grid ──────────────────────────────────── */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.card {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #2d7d47;
+  background: #eaf7ee;
+  padding: 3px 8px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.message {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 15px;
+  color: var(--dark);
+  line-height: 1.75;
+  flex: 1;
+}
+
+.noMessage {
+  font-size: 13px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.cardMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.name {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--dark);
+}
+
+.date {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.muted {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ── Mobile ───────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .summary {
+    flex-direction: column;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 540px) {
+  .header h1 {
+    font-size: 32px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .avgNumber {
+    font-size: 44px;
+  }
+}

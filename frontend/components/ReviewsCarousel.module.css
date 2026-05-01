@@ -1,0 +1,134 @@
+.root {
+  width: 100%;
+}
+
+/* ── Desktop infinite scroll ─────────────────────── */
+
+.desktopTrack {
+  overflow: hidden;
+  display: block;
+}
+
+.track {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+  animation: scroll linear infinite;
+}
+
+.trackPaused {
+  animation-play-state: paused;
+}
+
+@keyframes scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── Card ────────────────────────────────────────── */
+
+.card {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stars {
+  font-size: 14px;
+  color: #c8a96e;
+  letter-spacing: 2px;
+}
+
+.message {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--dark);
+  line-height: 1.7;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.name {
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--dark);
+}
+
+.date {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ── Mobile single-card ──────────────────────────── */
+
+.mobileTrack {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.mobileTrack .card {
+  width: 100%;
+  max-width: 360px;
+}
+
+.mobileNav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.arrow {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--dark);
+  width: 36px;
+  height: 36px;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.arrow:hover {
+  background: var(--cream);
+}
+
+.mobileCount {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  min-width: 48px;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .desktopTrack {
+    display: none;
+  }
+
+  .mobileTrack {
+    display: flex;
+  }
+}
