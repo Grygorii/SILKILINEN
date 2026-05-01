@@ -1,0 +1,174 @@
+.header {
+  margin-bottom: 40px;
+}
+
+.header h2 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--dark);
+}
+
+.section {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  padding: 32px;
+  margin-bottom: 28px;
+}
+
+.sectionTitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--dark);
+  margin-bottom: 24px;
+}
+
+.muted {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ── Users table ─────────────────────────────────── */
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border);
+}
+
+.table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--dark);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.youBadge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  vertical-align: middle;
+}
+
+.actionCell {
+  text-align: right;
+  width: 80px;
+}
+
+.deleteBtn {
+  background: none;
+  border: none;
+  color: #b03a2e;
+  font-size: 12px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.deleteBtn:hover {
+  text-decoration: underline;
+}
+
+/* ── Create form ─────────────────────────────────── */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field label {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.field input {
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  background: var(--cream);
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  color: var(--dark);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.field input:focus {
+  border-color: var(--dark);
+}
+
+.submitBtn {
+  align-self: flex-start;
+  background: var(--dark);
+  color: var(--warm-white);
+  border: none;
+  padding: 13px 32px;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.submitBtn:hover {
+  opacity: 0.8;
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error {
+  font-size: 13px;
+  color: #b03a2e;
+}
+
+.success {
+  font-size: 13px;
+  color: #2d7d47;
+}

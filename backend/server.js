@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth');
 const checkoutRoutes = require('./routes/checkout');
 const webhookRoutes = require('./routes/webhook');
 const ordersRoutes = require('./routes/orders');
+const usersRoutes = require('./routes/users');
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/orders', ordersRoutes);
+app.use('/api/users', usersRoutes);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(function() { console.log('Connected to MongoDB'); })
