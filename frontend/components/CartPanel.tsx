@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import styles from './CartPanel.module.css';
 
-const API = 'https://silkilinen-production.up.railway.app';
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 type Props = {
   isOpen: boolean;

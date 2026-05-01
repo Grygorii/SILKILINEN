@@ -8,6 +8,7 @@ const productRoutes = require('./routes/products');
 const authRoutes = require('./routes/auth');
 const checkoutRoutes = require('./routes/checkout');
 const webhookRoutes = require('./routes/webhook');
+const ordersRoutes = require('./routes/orders');
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use(express.json());
 app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/checkout', checkoutRoutes);
+app.use('/api/orders', ordersRoutes);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(function() { console.log('Connected to MongoDB'); })

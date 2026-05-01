@@ -1,7 +1,7 @@
 import ProductGrid from '@/components/ProductGrid';
 
 async function getProducts() {
-  const res = await fetch('https://silkilinen-production.up.railway.app/api/products');
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products`, { cache: 'no-store' });
   const products = await res.json();
   return products;
 }

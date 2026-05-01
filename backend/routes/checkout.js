@@ -33,6 +33,11 @@ router.post('/', async function(req, res) {
         quantity: item.quantity,
       })),
       mode: 'payment',
+      billing_address_collection: 'required',
+      shipping_address_collection: {
+        allowed_countries: ['IE', 'GB', 'US', 'CA', 'AU', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'PL', 'SE', 'DK', 'NO', 'FI', 'PT', 'CH'],
+      },
+      phone_number_collection: { enabled: true },
       success_url: `${FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${FRONTEND_URL}/cancel`,
     });

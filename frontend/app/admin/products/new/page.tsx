@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
 import styles from './page.module.css';
 
-const API = 'https://silkilinen-production.up.railway.app';
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function NewProductPage() {
   const router = useRouter();

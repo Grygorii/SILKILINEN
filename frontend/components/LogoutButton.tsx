@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import styles from './AdminLayout.module.css';
 
-const API = 'https://silkilinen-production.up.railway.app';
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function LogoutButton() {
   const router = useRouter();

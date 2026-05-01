@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import styles from './page.module.css';
 
+const API = process.env.NEXT_PUBLIC_API_URL;
+
 type Product = {
   _id: string;
   name: string;
@@ -18,7 +20,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('https://silkilinen-production.up.railway.app/api/products')
+    fetch(`${API}/api/products`)
       .then(res => res.json())
       .then(data => {
         setProducts(data);
@@ -83,7 +85,7 @@ export default function AdminProductsPage() {
                         className={styles.deleteBtn}
                         onClick={async () => {
                           if (confirm('Delete this product?')) {
-                            await fetch(`https://silkilinen-production.up.railway.app/api/products/${product._id}`, {
+                            await fetch(`${API}/api/products/${product._id}`, {
                               method: 'DELETE',
                               credentials: 'include',
                             });

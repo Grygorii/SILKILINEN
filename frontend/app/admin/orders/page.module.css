@@ -1,0 +1,197 @@
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.header h2 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--dark);
+}
+
+.count {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.loading,
+.empty {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ── Table ───────────────────────────────────────── */
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  table-layout: fixed;
+}
+
+.table th {
+  text-align: left;
+  padding: 14px 20px;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 14px 20px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  color: var(--dark);
+  vertical-align: middle;
+}
+
+/* ── Summary rows ────────────────────────────────── */
+
+.summaryRow {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.summaryRow:hover td,
+.summaryRowOpen td {
+  background: var(--cream);
+}
+
+.dateCell {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.customerName {
+  display: block;
+  font-size: 13px;
+  color: var(--dark);
+}
+
+.customerEmail {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ── Status badge ────────────────────────────────── */
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 2px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.badgePaid    { background: #eaf7ee; color: #2d7d47; }
+.badgePending { background: var(--cream); color: var(--muted); border: 1px solid var(--border); }
+.badgeFailed  { background: #fdf0ef; color: #b03a2e; }
+
+/* ── Chevron ─────────────────────────────────────── */
+
+.chevronCell {
+  text-align: right;
+  padding-right: 16px;
+}
+
+.chevron {
+  color: var(--muted);
+  transition: transform 0.2s ease;
+  display: block;
+  margin-left: auto;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ── Expanded detail row ─────────────────────────── */
+
+.detailRow td {
+  padding: 0;
+  border-bottom: 2px solid var(--border);
+  background: #f9f6f1;
+}
+
+.detail {
+  padding: 24px 28px;
+}
+
+.detailMeta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.metaBlock h4 {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 400;
+  margin-bottom: 8px;
+}
+
+.metaBlock p {
+  font-size: 13px;
+  color: var(--dark);
+  line-height: 1.7;
+}
+
+.sessionId {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 4px;
+  word-break: break-all;
+}
+
+/* ── Items sub-table ─────────────────────────────── */
+
+.itemsTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+}
+
+.itemsTable th {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+}
+
+.itemsTable td {
+  padding: 10px 16px;
+  font-size: 13px;
+  color: var(--dark);
+  border-bottom: 1px solid var(--border);
+}
+
+.itemsTable tr:last-child td {
+  border-bottom: none;
+}

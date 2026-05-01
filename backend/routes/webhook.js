@@ -18,11 +18,22 @@ router.post('/', express.raw({ type: 'application/json' }), async function(req, 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     try {
+      const addr = session.shipping_details?.address ?? session.customer_details?.address ?? null;
       await Order.findOneAndUpdate(
         { stripeSessionId: session.id },
         {
           status: 'paid',
           customerEmail: session.customer_details?.email ?? null,
+          customerName: session.customer_details?.name ?? null,
+          customerPhone: session.customer_details?.phone ?? null,
+          shippingAddress: addr ? {
+            line1: addr.line1,
+            line2: addr.line2 ?? null,
+            city: addr.city,
+            state: addr.state ?? null,
+            postalCode: addr.postal_code,
+            country: addr.country,
+          } : null,
         }
       );
     } catch (err) {
