@@ -33,6 +33,7 @@ export default function AdminLayout({ children, active }: Props) {
         <nav className={styles.sidebarNav}>
           <a href="/admin" className={`${styles.navItem} ${active === 'dashboard' ? styles.active : ''}`}>📊 Dashboard</a>
           <a href="/admin/products" className={`${styles.navItem} ${active === 'products' ? styles.active : ''}`}>👗 Products</a>
+          <a href="/admin/import" className={`${styles.navItem} ${active === 'import' ? styles.active : ''}`}>📥 Import products</a>
           <a href="/admin/orders" className={`${styles.navItem} ${active === 'orders' ? styles.active : ''}`}>📦 Orders</a>
           <a href="/admin/settings" className={`${styles.navItem} ${active === 'settings' ? styles.active : ''}`}>⚙️ Settings</a>
         </nav>
