@@ -1,5 +1,10 @@
 import styles from './page.module.css';
 
+export const metadata = {
+  title: 'About Us — SILKILINEN',
+  description: 'The story behind SILKILINEN — pure silk and linen intimates made for everyday luxury, shipped worldwide from Dublin, Ireland.',
+};
+
 export default function AboutPage() {
   return (
     <main className={styles.page}>

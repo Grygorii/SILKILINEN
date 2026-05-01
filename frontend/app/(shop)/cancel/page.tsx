@@ -1,5 +1,10 @@
 import styles from './page.module.css';
 
+export const metadata = {
+  title: 'Payment Cancelled — SILKILINEN',
+  description: 'Your payment was cancelled. No charge was made. Return to the shop whenever you are ready.',
+};
+
 export default function CancelPage() {
   return (
     <main className={styles.page}>

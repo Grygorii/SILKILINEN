@@ -38,6 +38,42 @@
   border-color: var(--dark);
 }
 
+.selectedLabel {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--dark);
+  font-weight: 500;
+}
+
+.error {
+  color: #c0392b;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.swatchBtn {
+  padding: 4px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.swatch {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.swatchBtn.active .swatch {
+  outline: 2px solid var(--dark);
+  outline-offset: 2px;
+}
+
 .addToCart {
   width: 100%;
   padding: 16px;

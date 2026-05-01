@@ -6,7 +6,11 @@ export default function Footer() {
       <div className={styles.inner}>
         <div className={styles.brand}>
           <h3>SILKILINEN</h3>
-          <p>Pure silk & linen intimates,<br />shipped worldwide from Dublin.</p>
+          <p>Pure silk &amp; linen intimates,<br />shipped worldwide from Dublin.</p>
+          <p className={styles.address}>
+            Dublin, Ireland<br />
+            <a href="mailto:hello@silkilinen.com">hello@silkilinen.com</a>
+          </p>
         </div>
         <div className={styles.col}>
           <h4>Shop</h4>
@@ -19,19 +23,20 @@ export default function Footer() {
           <h4>Info</h4>
           <a href="/about">About us</a>
           <a href="/reviews">Reviews</a>
-          <a href="/shipping">Shipping &amp; Returns</a>
+          <a href="/shipping">Shipping</a>
+          <a href="/size-guide">Size guide</a>
           <a href="/contact">Contact</a>
         </div>
         <div className={styles.col}>
-          <h4>Follow us</h4>
-          <a href="#">Instagram</a>
-          <a href="#">Pinterest</a>
-          <a href="#">TikTok</a>
+          <h4>Legal</h4>
+          <a href="/privacy-policy">Privacy policy</a>
+          <a href="/terms">Terms &amp; conditions</a>
+          <a href="/returns">Returns &amp; refunds</a>
         </div>
       </div>
       <div className={styles.bottom}>
-        <p>© 2025 Silkilinen. All rights reserved.</p>
-        <p>Dublin, Ireland · Worldwide shipping</p>
+        <p>© {new Date().getFullYear()} SILKILINEN. All rights reserved.</p>
+        <p>Registered in Dublin, Ireland · VAT included in all prices</p>
       </div>
     </footer>
   );

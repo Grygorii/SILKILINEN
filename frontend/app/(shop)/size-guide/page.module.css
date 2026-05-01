@@ -1,0 +1,33 @@
+.tableWrap {
+  overflow-x: auto;
+  margin-bottom: 10px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 600px;
+}
+
+.table th,
+.table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.table thead th {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--dark);
+  background: var(--cream);
+}
+
+.table tbody tr:hover {
+  background: var(--cream);
+}

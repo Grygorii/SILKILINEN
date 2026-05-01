@@ -1,5 +1,10 @@
 import ProductGrid from '@/components/ProductGrid';
 
+export const metadata = {
+  title: 'Shop — SILKILINEN',
+  description: 'Browse the full SILKILINEN collection of pure silk and linen intimates. Robes, slips, dresses and sets, shipped worldwide from Dublin.',
+};
+
 async function getProducts() {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products`, { cache: 'no-store' });
   const products = await res.json();

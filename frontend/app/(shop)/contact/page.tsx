@@ -1,5 +1,10 @@
 import styles from './page.module.css';
 
+export const metadata = {
+  title: 'Contact — SILKILINEN',
+  description: 'Get in touch with SILKILINEN. Email us at hello@silkilinen.com — we respond within one business day.',
+};
+
 export default function ContactPage() {
   return (
     <main className={styles.page}>

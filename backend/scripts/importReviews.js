@@ -1,21 +1,8 @@
 /**
- * One-time script: imports Etsy reviews from backend/data/reviews.json into MongoDB.
+ * One-time import: reads backend/data/reviews.json and inserts reviews into MongoDB.
+ * Run: cd backend && node scripts/importReviews.js
  *
- * Place your Etsy review JSON file at:  backend/data/reviews.json
- * Then run: cd backend && node scripts/importReviews.js
- *
- * Expected JSON format (any of these field names are accepted):
- *   reviewer  : "Buyer", "Name", "Reviewer", "Author"
- *   message   : "Review", "Message", "Comments", "Body"
- *   starRating: "Rating", "Star Rating", "Stars", "Score"
- *   dateReviewed: "Date", "Date Created", "Created", "Date Reviewed"
- *   orderId   : "Order ID", "OrderID", "orderId", "order_id"
- *
- * Example:
- *   [
- *     { "Buyer": "Sarah M.", "Review": "Gorgeous quality!", "Rating": 5, "Date": "Dec 14, 2023", "Order ID": "12345678" },
- *     ...
- *   ]
+ * Expected field names: reviewer, date_reviewed, star_rating, message, order_id
  */
 
 require('dotenv').config();
@@ -26,39 +13,10 @@ const Review = require('../models/Review');
 
 const DATA_PATH = path.join(__dirname, '../data/reviews.json');
 
-function pick(obj, candidates) {
-  for (const key of candidates) {
-    const val = obj[key];
-    if (val !== undefined && val !== null && String(val).trim() !== '') return val;
-  }
-  return null;
-}
-
-function mapRow(row) {
-  const reviewer = pick(row, ['Buyer', 'buyer', 'Name', 'name', 'Reviewer', 'reviewer', 'Author', 'author']) || 'Anonymous';
-  const message  = pick(row, ['Review', 'review', 'Message', 'message', 'Comments', 'comments', 'Body', 'body', 'Text', 'text']) || '';
-  const rating   = pick(row, ['Rating', 'rating', 'Star Rating', 'starRating', 'Stars', 'stars', 'Score', 'score']);
-  const date     = pick(row, ['Date', 'date', 'Date Created', 'dateCreated', 'Created', 'created', 'Date Reviewed', 'dateReviewed', 'ReviewDate']);
-  const orderId  = pick(row, ['Order ID', 'orderId', 'order_id', 'OrderID', 'orderid']);
-
-  const parsed = {
-    reviewer:     String(reviewer).trim(),
-    message:      String(message).trim(),
-    starRating:   Math.min(5, Math.max(1, parseInt(rating) || 5)),
-    dateReviewed: date ? new Date(date) : new Date(),
-    orderId:      orderId ? parseInt(String(orderId).replace(/\D/g, '')) || undefined : undefined,
-    source:       'etsy',
-    verified:     true,
-  };
-
-  if (isNaN(parsed.dateReviewed.getTime())) parsed.dateReviewed = new Date();
-  return parsed;
-}
-
 async function run() {
   if (!fs.existsSync(DATA_PATH)) {
-    console.error(`\n  reviews.json not found at: ${DATA_PATH}`);
-    console.error('  Place your Etsy reviews JSON file there and re-run this script.\n');
+    console.error(`\n  File not found: ${DATA_PATH}`);
+    console.error('  Place reviews.json in backend/data/ and re-run.\n');
     process.exit(1);
   }
 
@@ -68,19 +26,30 @@ async function run() {
     process.exit(1);
   }
 
+  console.log(`Found ${raw.length} records. Connecting to MongoDB…`);
   await mongoose.connect(process.env.MONGODB_URI);
-  console.log('Connected to MongoDB');
-
-  // Show detected field names from first row
-  const sample = raw[0];
-  console.log('\nDetected fields in first row:', Object.keys(sample).join(', '));
-
-  const docs = raw.map(mapRow).filter(d => d.starRating >= 1 && d.reviewer);
+  console.log('Connected.\n');
 
   let inserted = 0;
   let skipped  = 0;
+  let invalid  = 0;
 
-  for (const doc of docs) {
+  for (const row of raw) {
+    const starRating = parseInt(row.star_rating);
+    if (!row.reviewer || isNaN(starRating)) { invalid++; continue; }
+
+    const doc = {
+      reviewer:     String(row.reviewer).trim(),
+      message:      row.message ? String(row.message).trim() : '',
+      starRating:   Math.min(5, Math.max(1, starRating)),
+      dateReviewed: row.date_reviewed ? new Date(row.date_reviewed) : new Date(),
+      orderId:      row.order_id ? parseInt(String(row.order_id).replace(/\D/g, '')) || undefined : undefined,
+      source:       'etsy',
+      verified:     true,
+    };
+
+    if (isNaN(doc.dateReviewed.getTime())) doc.dateReviewed = new Date();
+
     const exists = doc.orderId
       ? await Review.findOne({ orderId: doc.orderId })
       : await Review.findOne({ reviewer: doc.reviewer, message: doc.message });
@@ -91,8 +60,12 @@ async function run() {
     inserted++;
   }
 
-  console.log(`\nDone — inserted: ${inserted}, skipped (duplicates): ${skipped}`);
+  console.log(`Done.`);
+  console.log(`  Inserted : ${inserted}`);
+  console.log(`  Skipped  : ${skipped} (duplicates)`);
+  if (invalid) console.log(`  Invalid  : ${invalid} (missing reviewer or star_rating)`);
+
   await mongoose.connection.close();
 }
 
-run().catch(err => { console.error(err); process.exit(1); });
+run().catch(err => { console.error(err.message); process.exit(1); });

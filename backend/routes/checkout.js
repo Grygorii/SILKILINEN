@@ -72,6 +72,7 @@ router.post('/', async function(req, res) {
           },
         },
       ],
+      allow_promotion_codes: true,
       phone_number_collection: { enabled: true },
       success_url: `${FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${FRONTEND_URL}/cancel`,

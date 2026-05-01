@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
+import { colourToHex } from '@/lib/colours';
 import styles from './ProductOptions.module.css';
 
 type Props = {
@@ -33,17 +34,29 @@ export default function ProductOptions({ colours, sizes, productName, price }: P
   return (
     <div>
       <div className={styles.picker}>
-        <p>Colour</p>
+        <p>Colour{selectedColour ? <span className={styles.selectedLabel}> — {selectedColour}</span> : ''}</p>
         <div className={styles.options}>
-          {colours.map(colour => (
-            <button
-              key={colour}
-              className={`${styles.btn} ${selectedColour === colour ? styles.active : ''}`}
-              onClick={() => { setSelectedColour(colour); setError(''); }}
-            >
-              {colour}
-            </button>
-          ))}
+          {colours.map(colour => {
+            const hex = colourToHex(colour);
+            return (
+              <button
+                key={colour}
+                title={colour}
+                aria-label={colour}
+                className={`${styles.btn} ${hex ? styles.swatchBtn : ''} ${selectedColour === colour ? styles.active : ''}`}
+                onClick={() => { setSelectedColour(colour); setError(''); }}
+              >
+                {hex ? (
+                  <span
+                    className={styles.swatch}
+                    style={{ background: hex }}
+                  />
+                ) : (
+                  colour
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -64,7 +77,7 @@ export default function ProductOptions({ colours, sizes, productName, price }: P
         </div>
       )}
 
-      {error && <p style={{ color: '#c0392b', fontSize: '12px', marginBottom: '8px' }}>{error}</p>}
+      {error && <p className={styles.error}>{error}</p>}
 
       <button className={styles.addToCart} onClick={handleAddToCart}>
         Add to cart
