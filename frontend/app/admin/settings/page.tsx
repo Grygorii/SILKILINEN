@@ -26,7 +26,7 @@ export default function SettingsPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
@@ -51,7 +51,7 @@ export default function SettingsPage() {
       setFormError('Password must be at least 8 characters');
       return;
     }
-    if (password !== confirm) {
+    if (password !== confirmPassword) {
       setFormError('Passwords do not match');
       return;
     }
@@ -72,7 +72,7 @@ export default function SettingsPage() {
       setUsers(prev => [...prev, data]);
       setEmail('');
       setPassword('');
-      setConfirm('');
+      setConfirmPassword('');
       setFormSuccess(`Admin account created for ${data.email}`);
     } catch {
       setFormError('Something went wrong');
@@ -184,8 +184,8 @@ export default function SettingsPage() {
               <label>Confirm password</label>
               <input
                 type="password"
-                value={confirm}
-                onChange={e => setConfirm(e.target.value)}
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
                 placeholder="Repeat password"
                 required
               />
