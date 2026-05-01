@@ -1,6 +1,12 @@
 const { Resend } = require('resend');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazily initialised so the module loads without crashing when RESEND_API_KEY is not yet set.
+let _resend = null;
+function getResend() {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
+  return _resend;
+}
+
 // onboarding@resend.dev works for free-tier test sends (to your own Resend account email only).
 // Set RESEND_FROM_EMAIL to "SILKILINEN <orders@silkilinen.com>" once domain is verified in Resend.
 const FROM = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
@@ -130,7 +136,7 @@ function buildHtml({ order, isAdmin }) {
 async function sendOrderConfirmation(order) {
   if (!process.env.RESEND_API_KEY || !order.customerEmail) return;
   const id = shortId(order._id);
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to: order.customerEmail,
     subject: `Your SILKILINEN order #${id} is confirmed`,
@@ -142,7 +148,7 @@ async function sendAdminOrderNotification(order) {
   if (!process.env.RESEND_API_KEY || !ADMIN_EMAIL) return;
   const id = shortId(order._id);
   const grandTotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0) + (order.shippingCost || 0);
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to: ADMIN_EMAIL,
     subject: `New order #${id} — €${grandTotal.toFixed(2)}`,
