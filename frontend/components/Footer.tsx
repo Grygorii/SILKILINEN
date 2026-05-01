@@ -19,8 +19,8 @@ export default function Footer() {
           <h4>Info</h4>
           <a href="/about">About us</a>
           <a href="/contact">Contact</a>
-          <a href="#">Shipping</a>
-          <a href="#">Returns</a>
+          <a href="/shipping">Shipping &amp; Returns</a>
+          <a href="/contact">Contact</a>
         </div>
         <div className={styles.col}>
           <h4>Follow us</h4>

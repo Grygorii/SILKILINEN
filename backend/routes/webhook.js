@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Order = require('../models/Order');
+const { sendOrderConfirmation, sendAdminOrderNotification } = require('../services/email');
 
 // express.raw() is applied here so this route receives the raw buffer Stripe needs
 // for signature verification — do NOT add express.json() before this route in server.js.
@@ -19,7 +20,23 @@ router.post('/', express.raw({ type: 'application/json' }), async function(req, 
     const session = event.data.object;
     try {
       const addr = session.shipping_details?.address ?? session.customer_details?.address ?? null;
-      await Order.findOneAndUpdate(
+
+      // Resolve shipping rate display name if a shipping option was chosen
+      let shippingMethod = null;
+      let shippingCost = 0;
+      if (session.shipping_cost) {
+        shippingCost = (session.shipping_cost.amount_total ?? 0) / 100;
+        if (session.shipping_cost.shipping_rate) {
+          try {
+            const rate = await stripe.shippingRates.retrieve(session.shipping_cost.shipping_rate);
+            shippingMethod = rate.display_name ?? null;
+          } catch {
+            // non-critical — store cost without method name
+          }
+        }
+      }
+
+      const updatedOrder = await Order.findOneAndUpdate(
         { stripeSessionId: session.id },
         {
           status: 'paid',
@@ -34,8 +51,18 @@ router.post('/', express.raw({ type: 'application/json' }), async function(req, 
             postalCode: addr.postal_code,
             country: addr.country,
           } : null,
-        }
+          shippingCost,
+          shippingMethod,
+        },
+        { new: true }
       );
+
+      if (updatedOrder) {
+        await Promise.allSettled([
+          sendOrderConfirmation(updatedOrder),
+          sendAdminOrderNotification(updatedOrder),
+        ]);
+      }
     } catch (err) {
       console.error('Failed to update order:', err.message);
     }

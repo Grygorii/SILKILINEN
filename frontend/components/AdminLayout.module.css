@@ -106,3 +106,74 @@
   background: var(--cream);
   min-height: 100vh;
 }
+
+/* ── Mobile hamburger (hidden on desktop) ─────────── */
+.mobileMenuBtn {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+
+.mobileMenuBtn span {
+  display: block;
+  width: 22px;
+  height: 1px;
+  background: var(--dark);
+}
+
+/* ── Sidebar close (hidden on desktop) ────────────── */
+.sidebarClose {
+  display: none;
+  background: none;
+  border: none;
+  color: #7a7670;
+  font-size: 16px;
+  cursor: pointer;
+  align-self: flex-end;
+  padding: 0;
+  margin-bottom: 24px;
+}
+
+/* ── Mobile overlay ───────────────────────────────── */
+.mobileOverlay {
+  display: none;
+}
+
+/* ── Mobile breakpoint ────────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-260px);
+    transition: transform 0.3s ease;
+    z-index: 500;
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  .sidebarClose {
+    display: block;
+  }
+
+  .mobileOverlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 400;
+  }
+
+  .main {
+    margin-left: 0;
+    padding: 24px 20px;
+  }
+
+  .mobileMenuBtn {
+    display: flex;
+  }
+}

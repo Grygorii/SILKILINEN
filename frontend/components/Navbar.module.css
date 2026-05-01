@@ -50,3 +50,14 @@
   color: var(--dark);
   cursor: pointer;
 }
+
+@media (max-width: 480px) {
+  .nav {
+    padding: 16px 20px;
+    top: 34px;
+  }
+
+  .logo h1 {
+    font-size: 18px;
+  }
+}

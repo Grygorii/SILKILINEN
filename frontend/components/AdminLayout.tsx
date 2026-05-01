@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import styles from './AdminLayout.module.css';
 import LogoutButton from './LogoutButton';
 
@@ -7,9 +10,22 @@ type Props = {
 };
 
 export default function AdminLayout({ children, active }: Props) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className={styles.layout}>
-      <aside className={styles.sidebar}>
+      {sidebarOpen && (
+        <div className={styles.mobileOverlay} onClick={() => setSidebarOpen(false)} />
+      )}
+
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
+        <button
+          className={styles.sidebarClose}
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Close menu"
+        >
+          ✕
+        </button>
         <div className={styles.sidebarLogo}>
           <h1>SILKILINEN</h1>
           <p>Admin Panel</p>
@@ -23,7 +39,17 @@ export default function AdminLayout({ children, active }: Props) {
         <div className={styles.sidebarDivider} />
         <LogoutButton />
       </aside>
+
       <main className={styles.main}>
+        <button
+          className={styles.mobileMenuBtn}
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open menu"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
         {children}
       </main>
     </div>

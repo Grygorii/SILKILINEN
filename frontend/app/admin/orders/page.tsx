@@ -32,6 +32,8 @@ type Order = {
   shippingAddress: ShippingAddress | null;
   items: OrderItem[];
   total: number;
+  shippingCost: number;
+  shippingMethod: string | null;
   status: 'pending' | 'paid' | 'failed';
   createdAt: string;
 };
@@ -133,7 +135,7 @@ export default function AdminOrdersPage() {
                       </td>
                       <td>{formatAddress(order.shippingAddress)}</td>
                       <td>{order.items.length} {order.items.length === 1 ? 'item' : 'items'}</td>
-                      <td>€{order.total?.toFixed(2) ?? '—'}</td>
+                      <td>€{((order.total ?? 0) + (order.shippingCost ?? 0)).toFixed(2)}</td>
                       <td>
                         <span className={`${styles.badge} ${badgeClass}`}>{order.status}</span>
                       </td>
@@ -167,7 +169,11 @@ export default function AdminOrdersPage() {
                               </div>
                               <div className={styles.metaBlock}>
                                 <h4>Order</h4>
-                                <p>Total — €{order.total?.toFixed(2) ?? '—'}</p>
+                                <p>Items — €{order.total?.toFixed(2) ?? '—'}</p>
+                                {(order.shippingCost ?? 0) > 0 && (
+                                  <p>Shipping{order.shippingMethod ? ` (${order.shippingMethod})` : ''} — €{order.shippingCost.toFixed(2)}</p>
+                                )}
+                                <p>Total — €{((order.total ?? 0) + (order.shippingCost ?? 0)).toFixed(2)}</p>
                                 <p>Status — {order.status}</p>
                                 <p className={styles.sessionId}>
                                   {order.stripeSessionId}

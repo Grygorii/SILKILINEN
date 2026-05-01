@@ -58,3 +58,28 @@
   color: var(--muted);
   font-size: 14px;
 }
+
+@media (max-width: 768px) {
+  .inner {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .placeholder {
+    height: 380px;
+  }
+
+  .info h1 {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 40px 5%;
+  }
+
+  .placeholder {
+    height: 300px;
+  }
+}

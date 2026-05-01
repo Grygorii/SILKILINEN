@@ -183,3 +183,15 @@
   margin-bottom: 10px;
   text-align: center;
 }
+
+@media (max-width: 480px) {
+  .panel {
+    width: 100%;
+    right: -100%;
+  }
+
+  .checkout {
+    min-height: 52px;
+    font-size: 12px;
+  }
+}

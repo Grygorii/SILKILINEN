@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AnnouncementBar from "@/components/AnnouncementBar";
+import CookieConsent from "@/components/CookieConsent";
 import { CartProvider } from "@/context/CartContext";
 import "./globals.css";
 
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body>
         <CartProvider>
           {children}
+          <CookieConsent />
         </CartProvider>
       </body>
     </html>

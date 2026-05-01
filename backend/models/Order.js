@@ -21,6 +21,8 @@ const orderSchema = new mongoose.Schema({
     quantity: { type: Number },
   }],
   total: { type: Number },
+  shippingCost: { type: Number, default: 0 },
+  shippingMethod: { type: String },
   status: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
 }, { timestamps: true });
 
