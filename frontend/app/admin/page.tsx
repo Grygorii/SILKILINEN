@@ -115,7 +115,7 @@ export default function AdminDashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e8e4de" />
                   <XAxis dataKey="date" tickFormatter={chartTick} tick={{ fontSize: 10, fill: '#9a9690' }} />
                   <YAxis tick={{ fontSize: 10, fill: '#9a9690' }} tickFormatter={v => `€${v}`} />
-                  <Tooltip formatter={(v: number) => [`€${v.toFixed(2)}`, 'Revenue']} labelFormatter={shortDate} />
+                  <Tooltip formatter={(v) => [`€${Number(v ?? 0).toFixed(2)}`, 'Revenue']} labelFormatter={(label) => shortDate(String(label))} />
                   <Line type="monotone" dataKey="revenue" stroke="#2a2825" strokeWidth={1.5} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
