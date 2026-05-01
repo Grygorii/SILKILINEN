@@ -11,8 +11,21 @@ const webhookRoutes = require('./routes/webhook');
 
 const app = express();
 
+const ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://silkilinen.vercel.app',
+  'https://silkilinen-git-master-grishakinzerskyi-1780s-projects.vercel.app',
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+];
+
 app.use(cors({
-  origin: ['http://localhost:3001', 'https://silkilinen.vercel.app'],
+  origin: function(origin, callback) {
+    // Allow requests with no origin (e.g. curl, Stripe webhooks, same-origin)
+    if (!origin) return callback(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
   credentials: true,
 }));
 app.use(cookieParser());
