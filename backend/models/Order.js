@@ -24,6 +24,7 @@ const orderSchema = new mongoose.Schema({
   shippingCost: { type: Number, default: 0 },
   shippingMethod: { type: String },
   status: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
+  customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

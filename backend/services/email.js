@@ -156,4 +156,61 @@ async function sendAdminOrderNotification(order) {
   });
 }
 
-module.exports = { sendOrderConfirmation, sendAdminOrderNotification };
+async function sendMagicLink({ email, link }) {
+  if (!process.env.RESEND_API_KEY) return;
+  await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: 'Sign in to your SILKILINEN account',
+    html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:40px 16px;">
+<tr><td align="center">
+<table cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;">
+<tr><td style="background:#1a1916;padding:32px 40px;text-align:center;">
+<p style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;letter-spacing:6px;color:#faf8f4;">SILKILINEN</p>
+<p style="margin:8px 0 0;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#7a7670;">Silk &amp; Linen Intimates</p>
+</td></tr>
+<tr><td style="background:#faf8f4;padding:48px 40px;text-align:center;">
+<p style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1916;">Your sign-in link</p>
+<p style="margin:0 0 36px;font-size:13px;color:#5a5650;line-height:1.8;">Click the button below to sign in. This link expires in 15 minutes and can only be used once.</p>
+<a href="${link}" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Sign in to your account</a>
+<p style="margin:36px 0 0;font-size:11px;color:#8a8680;">If you didn't request this, you can safely ignore this email.</p>
+</td></tr>
+<tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
+<p style="margin:0;font-size:11px;color:#aca8a2;">Dublin, Ireland &nbsp;·&nbsp; hello@silkilinen.com</p>
+</td></tr>
+</table></td></tr></table></body></html>`,
+  });
+}
+
+async function sendWelcome({ email, firstName }) {
+  if (!process.env.RESEND_API_KEY) return;
+  const name = firstName || 'there';
+  await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: 'Welcome to SILKILINEN — a gift for you',
+    html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:40px 16px;">
+<tr><td align="center">
+<table cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;">
+<tr><td style="background:#1a1916;padding:32px 40px;text-align:center;">
+<p style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;letter-spacing:6px;color:#faf8f4;">SILKILINEN</p>
+<p style="margin:8px 0 0;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#7a7670;">Silk &amp; Linen Intimates</p>
+</td></tr>
+<tr><td style="background:#faf8f4;padding:48px 40px;">
+<p style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1916;">Welcome, ${name}</p>
+<p style="margin:0 0 24px;font-size:13px;color:#5a5650;line-height:1.8;">Thank you for joining SILKILINEN. Every piece we make is crafted by hand in Dublin from pure silk and linen — made to be worn, felt, and loved.</p>
+<p style="margin:0 0 36px;font-size:13px;color:#5a5650;line-height:1.8;">As a welcome gift, use code <strong style="color:#1a1916;letter-spacing:1px;">SILK10</strong> at checkout for 10% off your first order.</p>
+<a href="https://silkilinen.vercel.app/shop" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Shop the collection</a>
+</td></tr>
+<tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
+<p style="margin:0;font-size:11px;color:#aca8a2;">Dublin, Ireland &nbsp;·&nbsp; hello@silkilinen.com</p>
+</td></tr>
+</table></td></tr></table></body></html>`,
+  });
+}
+
+module.exports = { sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome };

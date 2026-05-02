@@ -41,6 +41,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   function addToCart(item: CartItem) {
     trackAddToCart({ name: item.name, price: item.price });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cartItemAdded', { detail: item.name }));
+    }
     setCart(prev => {
       const existing = prev.find(i => i.name === item.name && i.colour === item.colour && i.size === item.size);
       if (existing) {

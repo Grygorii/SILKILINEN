@@ -1,0 +1,140 @@
+.page {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+}
+
+.inner {
+  width: 100%;
+  max-width: 400px;
+}
+
+.title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 36px;
+  font-weight: 400;
+  color: var(--dark);
+  margin-bottom: 6px;
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 36px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--dark);
+}
+
+.field input {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  color: var(--dark);
+  outline: none;
+  width: 100%;
+}
+
+.field input:focus {
+  border-color: var(--dark);
+}
+
+.btn {
+  padding: 13px 24px;
+  background: var(--dark);
+  color: var(--warm-white);
+  border: none;
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  margin-top: 4px;
+}
+
+.btn:hover:not(:disabled) { opacity: 0.8; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.error {
+  font-size: 13px;
+  color: #c0392b;
+  padding: 10px 14px;
+  background: #fdf0ee;
+  border: 1px solid #f5c6c0;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.googleWrap {
+  display: flex;
+  justify-content: center;
+}
+
+.sentBox {
+  text-align: center;
+  padding: 32px 24px;
+  border: 1px solid var(--border);
+  background: var(--warm-white);
+}
+
+.sentIcon {
+  font-size: 36px;
+  margin-bottom: 12px;
+}
+
+.sentTitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 22px;
+  color: var(--dark);
+  margin-bottom: 10px;
+}
+
+.sentText {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 28px;
+  line-height: 1.6;
+}

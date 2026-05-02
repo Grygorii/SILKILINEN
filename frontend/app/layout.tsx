@@ -5,9 +5,13 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import CookieConsent from "@/components/CookieConsent";
 import NewsletterPopup from "@/components/NewsletterPopup";
 import AnalyticsLoader from "@/components/AnalyticsLoader";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
+import { CustomerProvider } from "@/context/CustomerContext";
 import "./globals.css";
+
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 
 export const metadata: Metadata = {
   title: "Silkilinen — Pure Silk & Linen Intimates",
@@ -25,14 +29,18 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
       </head>
       <body>
-        <WishlistProvider>
-          <CartProvider>
-            {children}
-            <CookieConsent />
-            <NewsletterPopup />
-            <AnalyticsLoader />
-          </CartProvider>
-        </WishlistProvider>
+        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+          <CustomerProvider>
+            <WishlistProvider>
+              <CartProvider>
+                {children}
+                <CookieConsent />
+                <NewsletterPopup />
+                <AnalyticsLoader />
+              </CartProvider>
+            </WishlistProvider>
+          </CustomerProvider>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );
