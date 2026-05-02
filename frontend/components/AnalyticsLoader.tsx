@@ -6,7 +6,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
-const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID;
+const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || 'wkxxtbufn3';
 
 export default function AnalyticsLoader() {
   const [consented, setConsented] = useState(false);
