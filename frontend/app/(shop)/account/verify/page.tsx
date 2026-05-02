@@ -2,14 +2,14 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCustomer } from '@/context/CustomerContext';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-export default function VerifyPage() {
+function VerifyContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { refresh } = useCustomer();
@@ -51,5 +51,13 @@ export default function VerifyPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={<div className={styles.page}><div className={styles.spinner} /></div>}>
+      <VerifyContent />
+    </Suspense>
   );
 }
