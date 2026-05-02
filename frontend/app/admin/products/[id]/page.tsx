@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
+import AiPhotoshoot from '@/components/AiPhotoshoot';
 import styles from '../new/page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -181,6 +182,13 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           {loading ? 'Saving…' : 'Save changes'}
         </button>
       </form>
+      {productId && (
+        <AiPhotoshoot
+          productId={productId}
+          productCategory={form.category}
+          onPhotoApproved={(url) => setImageUrl(url)}
+        />
+      )}
     </AdminLayout>
   );
 }

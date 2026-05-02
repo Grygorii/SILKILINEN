@@ -12,6 +12,8 @@ const ordersRoutes = require('./routes/orders');
 const usersRoutes = require('./routes/users');
 const reviewsRoutes = require('./routes/reviews');
 const newsletterRoutes = require('./routes/newsletter');
+const aiModelsRoutes = require('./routes/aiModels');
+const aiPhotosRoutes = require('./routes/aiPhotos');
 
 const app = express();
 
@@ -46,6 +48,8 @@ app.use('/api/orders', ordersRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/reviews', reviewsRoutes);
 app.use('/api/newsletter', newsletterRoutes);
+app.use('/api/ai-models', aiModelsRoutes);
+app.use('/api/ai-photos', aiPhotosRoutes);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(function() { console.log('Connected to MongoDB'); })
