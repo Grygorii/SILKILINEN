@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -13,6 +13,12 @@ export default function Navbar() {
   const { count: wishlistCount } = useWishlist();
   const [cartOpen, setCartOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setCartOpen(true);
+    window.addEventListener('openCart', handler);
+    return () => window.removeEventListener('openCart', handler);
+  }, []);
 
   return (
     <>

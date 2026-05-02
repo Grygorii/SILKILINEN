@@ -1,0 +1,59 @@
+.section {
+  padding: 0 6% 80px;
+}
+
+.title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--dark);
+  letter-spacing: 1px;
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 16px;
+  border: 1px solid var(--border);
+  text-decoration: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.tile:hover {
+  border-color: var(--dark);
+  background: var(--cream);
+}
+
+.label {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--dark);
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .tile {
+    padding: 28px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

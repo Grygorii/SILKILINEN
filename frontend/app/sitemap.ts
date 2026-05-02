@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { BLOG_POSTS } from '@/lib/blogPosts';
 
 const BASE = 'https://silkilinen.vercel.app';
 
@@ -37,5 +38,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [...staticPages, ...productPages];
+  const blogPages: MetadataRoute.Sitemap = [
+    { url: `${BASE}/blog`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
+    ...BLOG_POSTS.map(post => ({
+      url: `${BASE}/blog/${post.slug}`,
+      lastModified: new Date(post.date),
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+    })),
+  ];
+
+  return [...staticPages, ...blogPages, ...productPages];
 }

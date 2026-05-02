@@ -1,5 +1,11 @@
 import styles from './page.module.css';
 import ReviewsCarousel, { type ReviewData } from '@/components/ReviewsCarousel';
+import NewArrivals from '@/components/NewArrivals';
+import CategoryTiles from '@/components/CategoryTiles';
+import StorySection from '@/components/StorySection';
+import BlogTeaser from '@/components/BlogTeaser';
+import NewsletterBand from '@/components/NewsletterBand';
+import InstagramGrid from '@/components/InstagramGrid';
 
 async function getReviews(): Promise<ReviewData[]> {
   try {
@@ -7,7 +13,7 @@ async function getReviews(): Promise<ReviewData[]> {
       next: { revalidate: 3600 },
     });
     if (!res.ok) return [];
-    return await res.json();
+    return res.json();
   } catch {
     return [];
   }
@@ -34,6 +40,12 @@ export default async function Home() {
         </div>
       </section>
 
+      <NewArrivals />
+
+      <CategoryTiles />
+
+      <StorySection />
+
       {withMessage.length > 0 && (
         <section className={styles.reviews}>
           <div className={styles.reviewsHeader}>
@@ -51,6 +63,12 @@ export default async function Home() {
           </div>
         </section>
       )}
+
+      <BlogTeaser />
+
+      <NewsletterBand />
+
+      <InstagramGrid />
     </main>
   );
 }

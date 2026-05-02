@@ -95,6 +95,19 @@ router.get('/stats', requireAuth, async function(req, res) {
   }
 });
 
+router.get('/recent-activity', async function(req, res) {
+  try {
+    const orders = await Order.find({ status: 'paid' }).sort({ createdAt: -1 }).limit(10);
+    const activity = orders.map(o => ({
+      item: o.items?.[0]?.name || 'a product',
+      createdAt: o.createdAt,
+    }));
+    res.json(activity);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/', requireAuth, async function(req, res) {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });

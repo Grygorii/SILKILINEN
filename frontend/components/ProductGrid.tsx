@@ -68,9 +68,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
 
           return (
             <div key={product._id} className={styles.card}>
-              {/* Full-card link underneath all content */}
-              <Link href={`/product/${product._id}`} className={styles.cardOverlay} aria-label={product.name} />
-
+              {/* Image area */}
               <div className={styles.cardImg}>
                 <button
                   className={`${styles.heartBtn} ${isWished(product._id) ? styles.heartActive : ''}`}
@@ -82,6 +80,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
                 <span className={styles.viewBtn}>View product</span>
               </div>
 
+              {/* Info area */}
               <div className={styles.cardInfo}>
                 <h3 className={styles.cardName}>{product.name}</h3>
                 <div className={styles.colours}>
@@ -107,6 +106,18 @@ export default function ProductGrid({ products }: { products: Product[] }) {
                   </button>
                 </div>
               </div>
+
+              {/*
+                Overlay placed LAST in DOM so it stacks above image + info.
+                z-index: 1 sits above both. heartBtn and cardBottom use z-index: 2
+                via pointer-events: auto + position: relative.
+              */}
+              <Link
+                href={`/product/${product._id}`}
+                className={styles.cardOverlay}
+                aria-label={`View ${product.name}`}
+                tabIndex={-1}
+              />
             </div>
           );
         })}

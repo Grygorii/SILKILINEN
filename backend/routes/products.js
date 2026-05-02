@@ -142,7 +142,11 @@ function csvToProducts(records, platform) {
 
 router.get('/', async function(req, res) {
   try {
-    const products = await Product.find();
+    const { sort, limit } = req.query;
+    let query = Product.find();
+    if (sort === '-createdAt') query = query.sort({ createdAt: -1 });
+    if (limit) query = query.limit(parseInt(limit, 10));
+    const products = await query;
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });

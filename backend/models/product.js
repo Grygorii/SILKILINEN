@@ -13,6 +13,6 @@ const productSchema = new mongoose.Schema({
   metaDescription: { type: String, trim: true },
   slug: { type: String, trim: true },
   altText: { type: String, trim: true },
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);
