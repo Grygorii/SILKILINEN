@@ -1,12 +1,31 @@
 'use client';
 
 import { useState } from 'react';
-import { GoogleLogin } from '@react-oauth/google';
 import { useCustomer } from '@/context/CustomerContext';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+
+// Lazy-load GoogleLogin only when a client ID exists, so missing env var never crashes the page
+let GoogleLogin: React.ComponentType<{
+  onSuccess: (r: { credential?: string }) => void;
+  onError: () => void;
+  theme?: string;
+  size?: string;
+  width?: string;
+  text?: string;
+}> | null = null;
+
+if (GOOGLE_CLIENT_ID) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    GoogleLogin = require('@react-oauth/google').GoogleLogin;
+  } catch {
+    GoogleLogin = null;
+  }
+}
 
 export default function SignInPage() {
   const { refresh } = useCustomer();
@@ -15,6 +34,11 @@ export default function SignInPage() {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[SignIn] NEXT_PUBLIC_GOOGLE_CLIENT_ID:', GOOGLE_CLIENT_ID || '(not set)');
+    console.log('[SignIn] NEXT_PUBLIC_API_URL:', API || '(not set)');
+  }
 
   async function handleMagicLink(e: React.FormEvent) {
     e.preventDefault();
@@ -90,23 +114,26 @@ export default function SignInPage() {
               </button>
             </form>
 
-            <div className={styles.divider}><span>or</span></div>
-
-            <div className={styles.googleWrap}>
-              <GoogleLogin
-                onSuccess={r => r.credential && handleGoogle(r.credential)}
-                onError={() => setError('Google sign-in failed')}
-                theme="outline"
-                size="large"
-                width="100%"
-                text="continue_with"
-              />
-            </div>
+            {GoogleLogin && (
+              <>
+                <div className={styles.divider}><span>or</span></div>
+                <div className={styles.googleWrap}>
+                  <GoogleLogin
+                    onSuccess={r => r.credential && handleGoogle(r.credential)}
+                    onError={() => setError('Google sign-in failed')}
+                    theme="outline"
+                    size="large"
+                    width="100%"
+                    text="continue_with"
+                  />
+                </div>
+              </>
+            )}
           </>
         )}
 
         <p className={styles.hint}>
-          No password needed — we use secure magic links and Google Sign-In.
+          No password needed — we use secure magic links{GOOGLE_CLIENT_ID ? ' and Google Sign-In' : ''}.
         </p>
       </div>
     </div>
