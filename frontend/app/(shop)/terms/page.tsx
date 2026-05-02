@@ -42,7 +42,7 @@ export default function TermsPage() {
         <section className={styles.section}>
           <h2>3. Prices and payment</h2>
           <p>
-            All prices are displayed in Euro (€). Prices include VAT where applicable under Irish law.
+            All prices are displayed in Euro (€). SILKILINEN operates below the Irish VAT registration threshold and does not charge VAT — prices shown are final.
             We accept all major debit and credit cards via Stripe. Payment is taken at the time of order.
           </p>
           <p>

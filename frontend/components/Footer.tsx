@@ -56,7 +56,7 @@ export default function Footer() {
       </div>
       <div className={styles.bottom}>
         <p>© {new Date().getFullYear()} SILKILINEN. All rights reserved.</p>
-        <p>Registered in Dublin, Ireland · VAT included in all prices</p>
+        <p>Registered in Dublin, Ireland · VAT not applicable — small business exemption (Ireland)</p>
       </div>
     </footer>
   );

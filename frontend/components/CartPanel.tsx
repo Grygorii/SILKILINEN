@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
+import { trackBeginCheckout } from '@/lib/analytics';
 import styles from './CartPanel.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -19,6 +20,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   async function handleCheckout() {
+    trackBeginCheckout(subtotal, cart.reduce((n, i) => n + i.quantity, 0));
     setLoading(true);
     setError('');
     try {
@@ -86,7 +88,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
             <button className={styles.checkout} onClick={handleCheckout} disabled={loading}>
               {loading ? 'Redirecting…' : 'Checkout'}
             </button>
-            <p className={styles.vatNote}>VAT included · Secure checkout via Stripe</p>
+            <p className={styles.vatNote}>Secure checkout via Stripe</p>
           </div>
         )}
       </div>

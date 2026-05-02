@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import AdminLayout from '@/components/AdminLayout';
 import styles from './page.module.css';
@@ -203,6 +203,104 @@ export default function AdminDashboard() {
                   ))}
                 </ul>
               )}
+            </div>
+          </div>
+
+          {/* ── Customer Insights ── */}
+          <div className={styles.section}>
+            <p className={styles.sectionTitle}>Customer insights</p>
+
+            {/* Funnel + setup checklist */}
+            <div className={`${styles.twoCol} ${styles.insightsRow}`}>
+              <div className={styles.card}>
+                <p className={styles.cardTitle}>Conversion funnel</p>
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart
+                    layout="vertical"
+                    data={[
+                      { stage: 'Visitors', count: 0 },
+                      { stage: 'Product views', count: 0 },
+                      { stage: 'Added to cart', count: 0 },
+                      { stage: 'Checkout started', count: 0 },
+                      { stage: 'Purchased', count: s.totalOrders },
+                    ]}
+                    margin={{ top: 0, right: 24, left: 100, bottom: 0 }}
+                  >
+                    <XAxis type="number" tick={{ fontSize: 10, fill: '#9a9690' }} />
+                    <YAxis type="category" dataKey="stage" tick={{ fontSize: 11, fill: '#9a9690' }} width={96} />
+                    <Tooltip formatter={(v) => (Number(v) > 0 ? [v, 'Orders'] : ['—', 'Connect GA4'])} />
+                    <Bar dataKey="count" fill="#2a2825" radius={[0, 2, 2, 0]} minPointSize={2} />
+                  </BarChart>
+                </ResponsiveContainer>
+                <p className={styles.funnelNote}>Upper funnel (visitors → cart) requires Google Analytics 4.</p>
+              </div>
+
+              <div className={styles.card}>
+                <p className={styles.cardTitle}>Analytics setup</p>
+                <ul className={styles.setupList}>
+                  <li className={styles.setupItem}>
+                    <span className={process.env.NEXT_PUBLIC_GA_ID ? styles.setupDone : styles.setupTodo}>
+                      {process.env.NEXT_PUBLIC_GA_ID ? '✓' : '○'}
+                    </span>
+                    <div>
+                      <span className={styles.setupLabel}>Google Analytics 4</span>
+                      {!process.env.NEXT_PUBLIC_GA_ID && (
+                        <span className={styles.setupHint}>Add NEXT_PUBLIC_GA_ID to Vercel env vars</span>
+                      )}
+                    </div>
+                  </li>
+                  <li className={styles.setupItem}>
+                    <span className={process.env.NEXT_PUBLIC_CLARITY_ID ? styles.setupDone : styles.setupTodo}>
+                      {process.env.NEXT_PUBLIC_CLARITY_ID ? '✓' : '○'}
+                    </span>
+                    <div>
+                      <span className={styles.setupLabel}>Microsoft Clarity</span>
+                      {!process.env.NEXT_PUBLIC_CLARITY_ID && (
+                        <span className={styles.setupHint}>Add NEXT_PUBLIC_CLARITY_ID to Vercel env vars</span>
+                      )}
+                    </div>
+                  </li>
+                  <li className={styles.setupItem}>
+                    <span className={styles.setupDone}>✓</span>
+                    <span className={styles.setupLabel}>Vercel Analytics</span>
+                  </li>
+                  <li className={styles.setupItem}>
+                    <span className={styles.setupDone}>✓</span>
+                    <span className={styles.setupLabel}>Order event tracking (internal)</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Quick links */}
+            <div className={styles.quickLinks}>
+              <a
+                href="https://analytics.google.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.quickLink}
+              >
+                <span className={styles.qlIcon}>📊</span>
+                <span>Google Analytics</span>
+              </a>
+              <a
+                href="https://clarity.microsoft.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.quickLink}
+              >
+                <span className={styles.qlIcon}>🎥</span>
+                <span>Session recordings</span>
+              </a>
+              <a
+                href="https://vercel.com/analytics"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.quickLink}
+              >
+                <span className={styles.qlIcon}>⚡</span>
+                <span>Speed insights</span>
+              </a>
             </div>
           </div>
         </>

@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import CookieConsent from "@/components/CookieConsent";
 import NewsletterPopup from "@/components/NewsletterPopup";
+import AnalyticsLoader from "@/components/AnalyticsLoader";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import "./globals.css";
@@ -29,6 +30,7 @@ export default function RootLayout({
             {children}
             <CookieConsent />
             <NewsletterPopup />
+            <AnalyticsLoader />
           </CartProvider>
         </WishlistProvider>
       </body>

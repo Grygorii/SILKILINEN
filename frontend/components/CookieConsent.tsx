@@ -16,11 +16,13 @@ export default function CookieConsent() {
 
   function accept() {
     localStorage.setItem(STORAGE_KEY, 'all');
+    window.dispatchEvent(new Event('cookieConsentChanged'));
     setVisible(false);
   }
 
   function essential() {
     localStorage.setItem(STORAGE_KEY, 'essential');
+    window.dispatchEvent(new Event('cookieConsentChanged'));
     setVisible(false);
   }
 
@@ -30,8 +32,9 @@ export default function CookieConsent() {
     <div className={styles.banner} role="dialog" aria-label="Cookie consent">
       <div className={styles.inner}>
         <p className={styles.text}>
-          We use cookies to keep your cart between visits and to understand how people find us.
-          You can accept all cookies or continue with essential ones only.
+          We use essential cookies to keep your cart between visits. With your consent we also use
+          Google Analytics, Microsoft Clarity (session recordings &amp; heatmaps), and Vercel Analytics
+          to understand how people find and use our site. No data is shared with advertisers.
         </p>
         <div className={styles.actions}>
           <button className={styles.essentialBtn} onClick={essential}>

@@ -112,7 +112,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             <h1>{product.name}</h1>
             <p className={styles.price}>
               €{Number(product.price).toFixed(2)}
-              <span className={styles.vatNote}>incl. VAT</span>
             </p>
             <StockBadge level={product.stockLevel} />
             <p className={styles.description}>{product.description}</p>

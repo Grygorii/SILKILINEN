@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import styles from './AdminLayout.module.css';
 import LogoutButton from './LogoutButton';
+import AdminNotifications from './AdminNotifications';
 
 type Props = {
   children: React.ReactNode;
@@ -57,6 +58,7 @@ export default function AdminLayout({ children, active }: Props) {
         </button>
         {children}
       </main>
+      <AdminNotifications />
     </div>
   );
 }
