@@ -67,7 +67,21 @@ export default function AdminDashboard() {
       .catch(() => setLoading(false));
   }, []);
 
-  const maxGeo = stats?.geoDistribution?.[0]?.count ?? 1;
+  const s: Stats = stats ?? {
+    revenueThisMonth: 0,
+    revenueLastMonth: 0,
+    revenueChange: null,
+    ordersThisMonth: 0,
+    ordersLastMonth: 0,
+    ordersChange: null,
+    aov: 0,
+    totalOrders: 0,
+    recentOrders: [],
+    topProducts: [],
+    salesChart: [],
+    geoDistribution: [],
+  };
+  const maxGeo = s.geoDistribution[0]?.count ?? 1;
 
   return (
     <AdminLayout active="dashboard">
@@ -77,7 +91,7 @@ export default function AdminDashboard() {
 
       {loading && <p className={styles.loading}>Loading…</p>}
 
-      {!loading && stats && (
+      {!loading && (
         <>
           {/* ── Row 1: Key metrics ── */}
           <div className={styles.section}>
@@ -85,22 +99,22 @@ export default function AdminDashboard() {
             <div className={styles.metricsRow}>
               <div className={styles.metricCard}>
                 <p className={styles.metricLabel}>Revenue</p>
-                <p className={styles.metricValue}>{fmt(stats.revenueThisMonth)}</p>
-                <Change value={stats.revenueChange} />
+                <p className={styles.metricValue}>{fmt(s.revenueThisMonth)}</p>
+                <Change value={s.revenueChange} />
               </div>
               <div className={styles.metricCard}>
                 <p className={styles.metricLabel}>Orders</p>
-                <p className={styles.metricValue}>{stats.ordersThisMonth}</p>
-                <Change value={stats.ordersChange} />
+                <p className={styles.metricValue}>{s.ordersThisMonth}</p>
+                <Change value={s.ordersChange} />
               </div>
               <div className={styles.metricCard}>
                 <p className={styles.metricLabel}>Avg order value</p>
-                <p className={styles.metricValue}>{fmt(stats.aov)}</p>
+                <p className={styles.metricValue}>{fmt(s.aov)}</p>
                 <span className={styles.changeMuted}>All time</span>
               </div>
               <div className={styles.metricCard}>
                 <p className={styles.metricLabel}>Total orders</p>
-                <p className={styles.metricValue}>{stats.totalOrders}</p>
+                <p className={styles.metricValue}>{s.totalOrders}</p>
                 <span className={styles.changeMuted}>All time</span>
               </div>
             </div>
@@ -110,24 +124,28 @@ export default function AdminDashboard() {
           <div className={`${styles.section} ${styles.twoCol}`}>
             <div className={styles.card}>
               <p className={styles.cardTitle}>Revenue — last 30 days</p>
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={stats.salesChart} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e8e4de" />
-                  <XAxis dataKey="date" tickFormatter={chartTick} tick={{ fontSize: 10, fill: '#9a9690' }} />
-                  <YAxis tick={{ fontSize: 10, fill: '#9a9690' }} tickFormatter={v => `€${v}`} />
-                  <Tooltip formatter={(v) => [`€${Number(v ?? 0).toFixed(2)}`, 'Revenue']} labelFormatter={(label) => shortDate(String(label))} />
-                  <Line type="monotone" dataKey="revenue" stroke="#2a2825" strokeWidth={1.5} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
+              {s.salesChart.length === 0 ? (
+                <p className={styles.emptyState}>No orders yet — your first order will appear here.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={s.salesChart} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e8e4de" />
+                    <XAxis dataKey="date" tickFormatter={chartTick} tick={{ fontSize: 10, fill: '#9a9690' }} />
+                    <YAxis tick={{ fontSize: 10, fill: '#9a9690' }} tickFormatter={v => `€${v}`} />
+                    <Tooltip formatter={(v) => [`€${Number(v ?? 0).toFixed(2)}`, 'Revenue']} labelFormatter={(label) => shortDate(String(label))} />
+                    <Line type="monotone" dataKey="revenue" stroke="#2a2825" strokeWidth={1.5} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </div>
 
             <div className={styles.card}>
               <p className={styles.cardTitle}>Top products this month</p>
-              {stats.topProducts.length === 0 ? (
-                <p className={styles.loading}>No sales yet this month.</p>
+              {s.topProducts.length === 0 ? (
+                <p className={styles.emptyState}>No sales yet this month.</p>
               ) : (
                 <ul className={styles.topList}>
-                  {stats.topProducts.map((p, i) => (
+                  {s.topProducts.map((p, i) => (
                     <li key={i} className={styles.topItem}>
                       <span className={styles.topName}>{p.name}</span>
                       <span className={styles.topQty}>{p.qty} sold</span>
@@ -142,38 +160,39 @@ export default function AdminDashboard() {
           <div className={`${styles.section} ${styles.twoCol}`}>
             <div className={styles.card}>
               <p className={styles.cardTitle}>Recent orders</p>
-              <table className={styles.miniTable}>
-                <thead>
-                  <tr>
-                    <th>Customer</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.recentOrders.map(o => (
-                    <tr key={o._id}>
-                      <td>{o.customerName || o.customerEmail || 'Guest'}</td>
-                      <td>{fmt(o.total ?? 0)}</td>
-                      <td><StatusBadge status={o.status} /></td>
-                      <td>{shortDate(o.createdAt)}</td>
+              {s.recentOrders.length === 0 ? (
+                <p className={styles.emptyState}>No orders yet — your first order will appear here.</p>
+              ) : (
+                <table className={styles.miniTable}>
+                  <thead>
+                    <tr>
+                      <th>Customer</th>
+                      <th>Total</th>
+                      <th>Status</th>
+                      <th>Date</th>
                     </tr>
-                  ))}
-                  {stats.recentOrders.length === 0 && (
-                    <tr><td colSpan={4} style={{ color: 'var(--muted)' }}>No paid orders yet.</td></tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {s.recentOrders.map(o => (
+                      <tr key={o._id}>
+                        <td>{o.customerName || o.customerEmail || 'Guest'}</td>
+                        <td>{fmt(o.total ?? 0)}</td>
+                        <td><StatusBadge status={o.status} /></td>
+                        <td>{shortDate(o.createdAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
 
             <div className={styles.card}>
               <p className={styles.cardTitle}>Orders by country</p>
-              {stats.geoDistribution.length === 0 ? (
-                <p className={styles.loading}>No data yet.</p>
+              {s.geoDistribution.length === 0 ? (
+                <p className={styles.emptyState}>No data yet.</p>
               ) : (
                 <ul className={styles.geoList}>
-                  {stats.geoDistribution.map(g => (
+                  {s.geoDistribution.map(g => (
                     <li key={g.country} className={styles.geoItem}>
                       <span style={{ minWidth: 32, fontSize: 12 }}>{g.country}</span>
                       <div className={styles.geoBar}>
