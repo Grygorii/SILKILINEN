@@ -1,17 +1,24 @@
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+    clarity?: (...args: unknown[]) => void;
+  }
+}
+
 function hasConsent(): boolean {
   if (typeof window === 'undefined') return false;
   return localStorage.getItem('silkilinen_cookie_consent') === 'all';
 }
 
 function gtagFire(event: string, params: Record<string, unknown>) {
-  if (typeof window !== 'undefined' && typeof (window as Record<string, unknown>).gtag === 'function') {
-    (window as Record<string, unknown & { gtag: (...a: unknown[]) => void }>).gtag('event', event, params);
+  if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+    window.gtag('event', event, params);
   }
 }
 
 function clarityFire(event: string) {
-  if (typeof window !== 'undefined' && typeof (window as Record<string, unknown>).clarity === 'function') {
-    ((window as Record<string, unknown>).clarity as (a: string, b: string) => void)('event', event);
+  if (typeof window !== 'undefined' && typeof window.clarity === 'function') {
+    window.clarity('event', event);
   }
 }
 
@@ -72,3 +79,5 @@ export function trackCartOpen() {
 export function trackScrollDepth(pct: 25 | 50 | 75 | 100) {
   trackEvent('scroll_depth', { percent_scrolled: pct });
 }
+
+export {};
