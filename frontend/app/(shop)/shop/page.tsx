@@ -1,4 +1,5 @@
 import ProductGrid from '@/components/ProductGrid';
+import styles from './page.module.css';
 
 export const metadata = {
   title: 'Shop — SILKILINEN',
@@ -15,10 +16,10 @@ export default async function ShopPage() {
   const products = await getProducts();
 
   return (
-    <main style={{ padding: '60px 6%' }}>
-      <div style={{ marginBottom: '40px' }}>
-        <h1 style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: '36px', fontWeight: 400, letterSpacing: '2px' }}>All products</h1>
-        <p style={{ fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--muted)' }}>Handpicked silk & linen pieces</p>
+    <main className={styles.page}>
+      <div className={styles.pageHeader}>
+        <h1>All products</h1>
+        <p>Handpicked silk &amp; linen pieces</p>
       </div>
       <ProductGrid products={products} />
     </main>

@@ -109,6 +109,11 @@
 }
 
 @media (max-width: 900px) {
+  .header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
   .grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -125,5 +130,15 @@
 
   .imgWrap {
     height: 220px;
+  }
+}
+
+@media (max-width: 400px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .imgWrap {
+    height: 280px;
   }
 }

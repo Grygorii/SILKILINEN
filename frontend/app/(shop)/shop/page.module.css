@@ -1,0 +1,39 @@
+.page {
+  padding: 60px 6%;
+}
+
+.pageHeader {
+  margin-bottom: 40px;
+}
+
+.pageHeader h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 36px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  color: var(--dark);
+}
+
+.pageHeader p {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 40px 5%;
+  }
+
+  .pageHeader h1 {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 32px 4%;
+  }
+}

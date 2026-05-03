@@ -92,6 +92,22 @@
 }
 
 @media (max-width: 640px) {
+  .hero {
+    padding: 0 5%;
+    align-items: flex-end;
+    padding-bottom: 56px;
+  }
+
+  .heroContent h2 {
+    font-size: clamp(32px, 9vw, 52px);
+  }
+
+  .heroBtn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
   .reviewsHeader {
     flex-direction: column;
     gap: 8px;

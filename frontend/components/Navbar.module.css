@@ -15,7 +15,7 @@
 /* ── Responsive visibility ────────────────────────── */
 
 .desktopOnly { display: flex; }
-.mobileOnly  { display: none; }
+.mobileOnly  { display: none !important; }
 
 @media (max-width: 767px) {
   .desktopOnly { display: none !important; }

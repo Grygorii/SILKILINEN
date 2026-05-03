@@ -87,6 +87,10 @@
     grid-template-columns: 1fr;
   }
 
+  .imageCol {
+    min-height: 320px;
+  }
+
   .imagePlaceholder {
     min-height: 280px;
     padding: 48px 32px;
@@ -94,5 +98,15 @@
 
   .textCol {
     padding: 48px 6%;
+  }
+}
+
+@media (max-width: 480px) {
+  .imageCol {
+    min-height: 240px;
+  }
+
+  .textCol {
+    padding: 36px 5%;
   }
 }
