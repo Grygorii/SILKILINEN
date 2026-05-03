@@ -13,7 +13,7 @@ cloudinary.config({
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 15 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
 
 function toObj(items) {
@@ -68,31 +68,16 @@ router.post('/upload', requireAuth, upload.single('image'), async function(req, 
 
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        {
-          folder: `silkilinen/${section}`,
-          transformation: [
-            { width: 2000, crop: 'limit' },
-            { fetch_format: 'auto', quality: 'auto' },
-          ],
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
+        { folder: `silkilinen/${section}`, resource_type: 'image' },
+        (error, result) => error ? reject(error) : resolve(result)
       );
       stream.end(req.file.buffer);
     });
 
-    res.json({
-      url: result.secure_url,
-      publicId: result.public_id,
-      width: result.width,
-      height: result.height,
-      bytes: result.bytes,
-    });
+    res.json({ url: result.secure_url, publicId: result.public_id });
   } catch (err) {
-    console.error(`[UPLOAD] Cloudinary error: ${err.message}`, err.http_code ? `(HTTP ${err.http_code})` : '');
-    res.status(500).json({ error: err.message, detail: err.http_code ? `Cloudinary HTTP ${err.http_code}` : undefined });
+    console.error('[UPLOAD] Cloudinary error:', err);
+    res.status(500).json({ error: 'Upload failed', message: err.message });
   }
 });
 
