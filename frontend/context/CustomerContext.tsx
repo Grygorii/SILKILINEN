@@ -52,16 +52,6 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
         const data = await res.json();
         setCustomer(data);
         localStorage.setItem(CUSTOMER_ID_KEY, data._id);
-        // Sync localStorage wishlist to DB on first load
-        const localWishlist = JSON.parse(localStorage.getItem('silkilinen_wishlist') || '[]');
-        if (localWishlist.length > 0) {
-          fetch(`${API}/api/customers/me/wishlist/sync`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ ids: localWishlist }),
-          }).catch(() => {});
-        }
       } else {
         setCustomer(null);
         localStorage.removeItem(CUSTOMER_ID_KEY);

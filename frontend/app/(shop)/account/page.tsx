@@ -3,22 +3,21 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useCustomer } from '@/context/CustomerContext';
+import { useWishlist } from '@/context/WishlistContext';
 import styles from './account.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function AccountPage() {
   const { customer, signOut } = useCustomer();
+  const { count: wishlistCount } = useWishlist();
   const searchParams = useSearchParams();
   const isWelcome = searchParams.get('welcome') === '1';
   const [orderCount, setOrderCount] = useState<number | null>(null);
-  const [wishlistCount, setWishlistCount] = useState<number | null>(null);
 
   useEffect(() => {
     fetch(`${API}/api/customers/me/orders`, { credentials: 'include' })
       .then(r => r.ok ? r.json() : []).then(d => setOrderCount(d.length)).catch(() => {});
-    fetch(`${API}/api/customers/me/wishlist`, { credentials: 'include' })
-      .then(r => r.ok ? r.json() : []).then(d => setWishlistCount(d.length)).catch(() => {});
   }, []);
 
   if (!customer) return null;
@@ -46,7 +45,7 @@ export default function AccountPage() {
         <a href="/account/wishlist" className={styles.card}>
           <span className={styles.cardIcon}>♥</span>
           <span className={styles.cardTitle}>Wishlist</span>
-          <span className={styles.cardMeta}>{wishlistCount === null ? '…' : wishlistCount === 0 ? 'Empty' : `${wishlistCount} saved item${wishlistCount === 1 ? '' : 's'}`}</span>
+          <span className={styles.cardMeta}>{wishlistCount === 0 ? 'Empty' : `${wishlistCount} saved item${wishlistCount === 1 ? '' : 's'}`}</span>
           <span className={styles.cardArrow}>View wishlist →</span>
         </a>
         <a href="/account/profile" className={styles.card}>

@@ -1,33 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useCart } from '@/context/CartContext';
+import { useWishlist, type WishlistProduct } from '@/context/WishlistContext';
 import styles from '../account.module.css';
-
-const API = process.env.NEXT_PUBLIC_API_URL;
-
-type Product = { _id: string; name: string; price: number; image?: string; category?: string };
 
 export default function WishlistPage() {
   const { addToCart } = useCart();
-  const [items, setItems] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { items, toggle, loading } = useWishlist();
 
-  useEffect(() => {
-    fetch(`${API}/api/customers/me/wishlist`, { credentials: 'include' })
-      .then(r => r.ok ? r.json() : [])
-      .then(d => { setItems(d); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
-
-  async function remove(id: string) {
-    await fetch(`${API}/api/customers/me/wishlist/${id}`, { method: 'DELETE', credentials: 'include' });
-    setItems(prev => prev.filter(p => p._id !== id));
-  }
-
-  function moveToCart(product: Product) {
+  function moveToCart(product: WishlistProduct) {
     addToCart({ name: product.name, price: product.price, colour: '', size: '', quantity: 1 });
-    remove(product._id);
+    toggle(product._id);
   }
 
   return (
@@ -60,7 +43,7 @@ export default function WishlistPage() {
               </div>
               <div className={styles.wishActions}>
                 <button className={styles.wishBtn} onClick={() => moveToCart(p)}>Add to cart</button>
-                <button className={`${styles.wishBtn} ${styles.wishBtnRemove}`} onClick={() => remove(p._id)}>Remove</button>
+                <button className={`${styles.wishBtn} ${styles.wishBtnRemove}`} onClick={() => toggle(p._id)}>Remove</button>
               </div>
             </div>
           ))}
