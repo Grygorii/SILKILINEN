@@ -1,5 +1,11 @@
 require('dotenv').config();
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'silkilinen_super_secret_key_change_this_in_production';
+
+const DEFAULT_SECRET = 'silkilinen_super_secret_key_change_this_in_production';
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET === DEFAULT_SECRET) {
+  console.error('FATAL: JWT_SECRET is not set or is using the insecure default. Set a strong random secret in Railway environment variables.');
+  if (process.env.NODE_ENV === 'production') process.exit(1);
+}
+process.env.JWT_SECRET = process.env.JWT_SECRET || DEFAULT_SECRET;
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');

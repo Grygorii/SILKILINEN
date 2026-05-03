@@ -95,7 +95,7 @@ router.get('/stats', requireAuth, async function(req, res) {
   }
 });
 
-router.get('/recent-activity', async function(req, res) {
+router.get('/recent-activity', requireAuth, async function(req, res) {
   try {
     const orders = await Order.find({ status: 'paid' }).sort({ createdAt: -1 }).limit(10);
     const activity = orders.map(o => ({

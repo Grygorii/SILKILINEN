@@ -13,7 +13,7 @@ function getGenAI() {
   return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 }
 
-router.get('/', async function(req, res) {
+router.get('/', requireAuth, async function(req, res) {
   try {
     const models = await AiModel.find().sort({ createdAt: 1 });
     res.json(models);
