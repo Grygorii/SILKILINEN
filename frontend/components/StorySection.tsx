@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { type Content, val } from '@/lib/content';
 import styles from './StorySection.module.css';
 
@@ -14,7 +15,13 @@ export default function StorySection({ content = {} }: { content?: Content }) {
     <section className={styles.section}>
       <div className={styles.imageCol}>
         {image ? (
-          <img src={image} alt={content.homepage_story_image?.altText || 'Our story'} className={styles.storyImg} />
+          <Image
+            src={image}
+            alt={content.homepage_story_image?.altText || 'Our story'}
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className={styles.storyImg}
+          />
         ) : (
           <div className={styles.imagePlaceholder}>
             <p className={styles.pullQuote}>&ldquo;Made with love,<br />worn with intention.&rdquo;</p>

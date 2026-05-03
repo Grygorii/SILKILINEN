@@ -6,6 +6,116 @@ import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
+type ImageSpec = {
+  width: number;
+  height: number;
+  aspectRatio: string;
+  orientation: string;
+  maxFileSize: string;
+  formats: string[];
+  usage: string;
+  aiPromptHelper: string;
+};
+
+const IMAGE_SPECS: Record<string, ImageSpec> = {
+  homepage_hero_image: {
+    width: 2400, height: 1200, aspectRatio: '2:1', orientation: 'landscape',
+    maxFileSize: '3 MB', formats: ['JPG', 'WebP'],
+    usage: 'Full-width hero banner, shown on every homepage visitor. Mobile crops the centre.',
+    aiPromptHelper: 'Full-width fashion hero, 2400×1200px, 2:1 landscape ratio, soft natural daylight, cream/neutral palette, La Perla aesthetic, wide composition with space for text overlay',
+  },
+  homepage_story_image: {
+    width: 1200, height: 1500, aspectRatio: '4:5', orientation: 'portrait',
+    maxFileSize: '2 MB', formats: ['JPG', 'WebP'],
+    usage: 'Editorial portrait beside the brand story text on the homepage. Should feel intimate.',
+    aiPromptHelper: 'Editorial portrait photography, 1200×1500px, 4:5 portrait aspect ratio, soft natural daylight, cream/neutral palette, La Perla / Toast aesthetic',
+  },
+  category_tile_robes_image: {
+    width: 800, height: 1000, aspectRatio: '4:5', orientation: 'portrait',
+    maxFileSize: '1.5 MB', formats: ['JPG', 'WebP'],
+    usage: 'Category navigation tile for Robes.',
+    aiPromptHelper: 'Fashion editorial, silk robe, 800×1000px, 4:5 portrait, soft daylight, neutral background, model or flat lay',
+  },
+  category_tile_dresses_image: {
+    width: 800, height: 1000, aspectRatio: '4:5', orientation: 'portrait',
+    maxFileSize: '1.5 MB', formats: ['JPG', 'WebP'],
+    usage: 'Category navigation tile for Dresses.',
+    aiPromptHelper: 'Fashion editorial, silk dress, 800×1000px, 4:5 portrait, soft daylight, neutral background',
+  },
+  category_tile_shorts_image: {
+    width: 800, height: 1000, aspectRatio: '4:5', orientation: 'portrait',
+    maxFileSize: '1.5 MB', formats: ['JPG', 'WebP'],
+    usage: 'Category navigation tile for Shorts.',
+    aiPromptHelper: 'Fashion editorial, silk shorts, 800×1000px, 4:5 portrait, soft daylight, neutral background',
+  },
+  category_tile_shirts_image: {
+    width: 800, height: 1000, aspectRatio: '4:5', orientation: 'portrait',
+    maxFileSize: '1.5 MB', formats: ['JPG', 'WebP'],
+    usage: 'Category navigation tile for Shirts.',
+    aiPromptHelper: 'Fashion editorial, silk shirt, 800×1000px, 4:5 portrait, soft daylight, neutral background',
+  },
+  category_tile_scarves_image: {
+    width: 800, height: 1000, aspectRatio: '4:5', orientation: 'portrait',
+    maxFileSize: '1.5 MB', formats: ['JPG', 'WebP'],
+    usage: 'Category navigation tile for Scarves.',
+    aiPromptHelper: 'Fashion editorial, silk scarf, 800×1000px, 4:5 portrait, soft daylight, neutral background',
+  },
+  about_hero_image: {
+    width: 2400, height: 1200, aspectRatio: '2:1', orientation: 'landscape',
+    maxFileSize: '3 MB', formats: ['JPG', 'WebP'],
+    usage: 'About page full-width top banner.',
+    aiPromptHelper: 'Fashion lifestyle, 2400×1200px, 2:1 landscape, atelier or studio setting, warm daylight, minimal editorial',
+  },
+  about_story_image_1: {
+    width: 1200, height: 1500, aspectRatio: '4:5', orientation: 'portrait',
+    maxFileSize: '2 MB', formats: ['JPG', 'WebP'],
+    usage: 'About page story column — left image.',
+    aiPromptHelper: 'Editorial portrait, 1200×1500px, 4:5 portrait, silk fabric detail or model, soft daylight, cream palette',
+  },
+  about_story_image_2: {
+    width: 1200, height: 1500, aspectRatio: '4:5', orientation: 'portrait',
+    maxFileSize: '2 MB', formats: ['JPG', 'WebP'],
+    usage: 'About page story column — right image.',
+    aiPromptHelper: 'Editorial portrait, 1200×1500px, 4:5 portrait, silk fabric detail or model, soft daylight, cream palette',
+  },
+  instagram_image_1: {
+    width: 1080, height: 1080, aspectRatio: '1:1', orientation: 'square',
+    maxFileSize: '1 MB', formats: ['JPG', 'WebP'],
+    usage: 'Instagram grid image 1 (matches Instagram native square format).',
+    aiPromptHelper: 'Instagram fashion flat lay, 1080×1080px, 1:1 square, silk garment or lifestyle detail, soft daylight, neutral palette',
+  },
+  instagram_image_2: {
+    width: 1080, height: 1080, aspectRatio: '1:1', orientation: 'square',
+    maxFileSize: '1 MB', formats: ['JPG', 'WebP'],
+    usage: 'Instagram grid image 2.',
+    aiPromptHelper: 'Instagram fashion flat lay, 1080×1080px, 1:1 square, silk garment or lifestyle detail, soft daylight, neutral palette',
+  },
+  instagram_image_3: {
+    width: 1080, height: 1080, aspectRatio: '1:1', orientation: 'square',
+    maxFileSize: '1 MB', formats: ['JPG', 'WebP'],
+    usage: 'Instagram grid image 3.',
+    aiPromptHelper: 'Instagram fashion flat lay, 1080×1080px, 1:1 square, silk garment or lifestyle detail, soft daylight, neutral palette',
+  },
+  instagram_image_4: {
+    width: 1080, height: 1080, aspectRatio: '1:1', orientation: 'square',
+    maxFileSize: '1 MB', formats: ['JPG', 'WebP'],
+    usage: 'Instagram grid image 4.',
+    aiPromptHelper: 'Instagram fashion flat lay, 1080×1080px, 1:1 square, silk garment or lifestyle detail, soft daylight, neutral palette',
+  },
+  instagram_image_5: {
+    width: 1080, height: 1080, aspectRatio: '1:1', orientation: 'square',
+    maxFileSize: '1 MB', formats: ['JPG', 'WebP'],
+    usage: 'Instagram grid image 5.',
+    aiPromptHelper: 'Instagram fashion flat lay, 1080×1080px, 1:1 square, silk garment or lifestyle detail, soft daylight, neutral palette',
+  },
+  instagram_image_6: {
+    width: 1080, height: 1080, aspectRatio: '1:1', orientation: 'square',
+    maxFileSize: '1 MB', formats: ['JPG', 'WebP'],
+    usage: 'Instagram grid image 6.',
+    aiPromptHelper: 'Instagram fashion flat lay, 1080×1080px, 1:1 square, silk garment or lifestyle detail, soft daylight, neutral palette',
+  },
+};
+
 type ContentItem = {
   _id: string;
   key: string;
@@ -84,7 +194,7 @@ export default function ContentPage() {
         const formData = new FormData();
         formData.append('image', edit.file);
         const uploadRes = await fetch(
-          `${API}/api/content/upload?section=${edit.item.section}`,
+          `${API}/api/content/upload?section=${edit.item.section}&key=${edit.item.key}`,
           { method: 'POST', credentials: 'include', body: formData }
         );
         if (!uploadRes.ok) throw new Error((await uploadRes.json()).error || 'Upload failed');
@@ -215,6 +325,36 @@ export default function ContentPage() {
             <div className={styles.modalBody}>
               {edit.item.type === 'image' ? (
                 <>
+                  {(() => {
+                    const spec = IMAGE_SPECS[edit.item.key];
+                    if (!spec) return null;
+                    return (
+                      <div className={styles.specPanel}>
+                        <p className={styles.specTitle}>Image Requirements</p>
+                        <div className={styles.specGrid}>
+                          <span className={styles.specLabel}>Dimensions</span>
+                          <span className={styles.specValue}>{spec.width} × {spec.height} px</span>
+                          <span className={styles.specLabel}>Aspect ratio</span>
+                          <span className={styles.specValue}>{spec.aspectRatio} {spec.orientation}</span>
+                          <span className={styles.specLabel}>Max size</span>
+                          <span className={styles.specValue}>{spec.maxFileSize}</span>
+                          <span className={styles.specLabel}>Formats</span>
+                          <span className={styles.specValue}>{spec.formats.join(', ')}</span>
+                        </div>
+                        <p className={styles.specUsage}>{spec.usage}</p>
+                        <div className={styles.specPromptRow}>
+                          <p className={styles.specPromptText}>{spec.aiPromptHelper}</p>
+                          <button
+                            className={styles.copyBtn}
+                            onClick={() => navigator.clipboard.writeText(spec.aiPromptHelper)}
+                          >
+                            Copy AI prompt
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   <div className={styles.imgPreviewWrap}>
                     {(edit.preview || edit.value) ? (
                       <img
