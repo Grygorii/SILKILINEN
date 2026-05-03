@@ -168,6 +168,7 @@ router.post('/logout', function(req, res) {
     httpOnly: true,
     secure: IS_PROD,
     sameSite: IS_PROD ? 'none' : 'lax',
+    path: '/',
   });
   res.json({ success: true });
 });

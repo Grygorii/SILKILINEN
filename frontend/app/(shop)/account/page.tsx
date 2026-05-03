@@ -63,7 +63,7 @@ export default function AccountPage() {
       </div>
 
       <div className={styles.signOutRow}>
-        <button className={styles.signOutBtn} onClick={() => { signOut(); window.location.href = '/'; }}>
+        <button className={styles.signOutBtn} onClick={async () => { await signOut(); window.location.href = '/'; }}>
           Sign out
         </button>
       </div>

@@ -107,7 +107,7 @@ export default function Navbar() {
                   <div className={styles.dropDivider} />
                   <button
                     className={styles.dropSignOut}
-                    onClick={() => { signOut(); setAccountOpen(false); window.location.href = '/'; }}
+                    onClick={async () => { await signOut(); setAccountOpen(false); window.location.href = '/'; }}
                   >
                     Sign out
                   </button>

@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { googleLogout } from '@react-oauth/google';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 const CUSTOMER_ID_KEY = 'silkilinen_customer_id';
@@ -67,6 +68,7 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     await fetch(`${API}/api/customers/logout`, { method: 'POST', credentials: 'include' });
+    googleLogout(); // clear Google Identity Services session to prevent auto re-auth
     setCustomer(null);
     localStorage.removeItem(CUSTOMER_ID_KEY);
   }, []);
