@@ -6,6 +6,7 @@ import StorySection from '@/components/StorySection';
 import BlogTeaser from '@/components/BlogTeaser';
 import NewsletterBand from '@/components/NewsletterBand';
 import InstagramGrid from '@/components/InstagramGrid';
+import { getContent, val } from '@/lib/content';
 
 async function getReviews(): Promise<ReviewData[]> {
   try {
@@ -25,26 +26,37 @@ function average(reviews: ReviewData[]) {
 }
 
 export default async function Home() {
-  const allReviews = await getReviews();
+  const [allReviews, content] = await Promise.all([
+    getReviews(),
+    getContent(),
+  ]);
+
   const withMessage = allReviews.filter(r => r.message.trim().length > 0);
   const avg = average(allReviews);
 
+  const heroImage = val(content, 'homepage_hero_image');
+  const heroTitle = val(content, 'homepage_hero_title', 'Pure silk, pure comfort.');
+  const heroSubtitle = val(content, 'homepage_hero_subtitle', 'Handcrafted silk & linen intimates');
+  const heroCta = val(content, 'homepage_hero_cta', 'Shop the collection');
+
   return (
     <main>
-      <section className={styles.hero}>
+      <section
+        className={styles.hero}
+        style={heroImage ? { backgroundImage: `url(${heroImage})` } : undefined}
+      >
         <div className={styles.heroContent}>
-          <h2>Pure silk,</h2>
-          <h2>pure comfort.</h2>
-          <p>Handcrafted silk &amp; linen intimates</p>
-          <a href="/shop" className={styles.heroBtn}>Shop the collection</a>
+          <h2>{heroTitle}</h2>
+          <p>{heroSubtitle}</p>
+          <a href="/shop" className={styles.heroBtn}>{heroCta}</a>
         </div>
       </section>
 
       <NewArrivals />
 
-      <CategoryTiles />
+      <CategoryTiles content={content} />
 
-      <StorySection />
+      <StorySection content={content} />
 
       {withMessage.length > 0 && (
         <section className={styles.reviews}>
@@ -68,7 +80,7 @@ export default async function Home() {
 
       <NewsletterBand />
 
-      <InstagramGrid />
+      <InstagramGrid content={content} />
     </main>
   );
 }

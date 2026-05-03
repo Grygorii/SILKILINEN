@@ -8,6 +8,14 @@
   background: #e8e4dd;
   display: flex;
   align-items: stretch;
+  overflow: hidden;
+}
+
+.storyImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .imagePlaceholder {

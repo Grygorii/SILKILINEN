@@ -19,13 +19,16 @@
 }
 
 .tile {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 36px 16px;
   border: 1px solid var(--border);
   text-decoration: none;
+  overflow: hidden;
   transition: border-color 0.2s ease, background 0.2s ease;
+  min-height: 120px;
 }
 
 .tile:hover {
@@ -33,12 +36,44 @@
   background: var(--cream);
 }
 
+.tileWithImage {
+  border-color: transparent;
+  min-height: 180px;
+}
+
+.tileWithImage:hover {
+  border-color: transparent;
+  background: none;
+}
+
+.tileImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.tileWithImage:hover .tileImg {
+  transform: scale(1.04);
+}
+
 .label {
+  position: relative;
+  z-index: 1;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   letter-spacing: 3px;
   text-transform: uppercase;
   color: var(--dark);
+}
+
+.tileWithImage .label {
+  color: var(--warm-white);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.18);
+  padding: 6px 14px;
 }
 
 @media (max-width: 768px) {

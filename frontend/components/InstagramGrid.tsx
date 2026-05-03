@@ -1,8 +1,12 @@
+import { type Content } from '@/lib/content';
 import styles from './InstagramGrid.module.css';
 
-const CELLS = Array.from({ length: 6 });
+export default function InstagramGrid({ content = {} }: { content?: Content }) {
+  const images = [1, 2, 3, 4, 5, 6].map(i => ({
+    url: content[`instagram_image_${i}`]?.value || '',
+    alt: content[`instagram_image_${i}`]?.altText || `Instagram photo ${i}`,
+  }));
 
-export default function InstagramGrid() {
   return (
     <section className={styles.section}>
       <div className={styles.header}>
@@ -10,13 +14,17 @@ export default function InstagramGrid() {
         <p className={styles.sub}>Follow along for daily inspiration</p>
       </div>
       <div className={styles.grid}>
-        {CELLS.map((_, i) => (
-          <div key={i} className={styles.cell} />
+        {images.map((img, i) => (
+          <div key={i} className={styles.cell}>
+            {img.url && (
+              <img src={img.url} alt={img.alt} className={styles.cellImg} />
+            )}
+          </div>
         ))}
       </div>
       <div className={styles.footer}>
         <a
-          href="https://instagram.com"
+          href="https://instagram.com/silkilinen"
           target="_blank"
           rel="noopener noreferrer"
           className={styles.followBtn}

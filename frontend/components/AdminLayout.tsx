@@ -39,6 +39,7 @@ export default function AdminLayout({ children, active }: Props) {
           <a href="/admin/products" className={`${styles.navItem} ${active === 'products' ? styles.active : ''}`}>👗 Products</a>
           <a href="/admin/import" className={`${styles.navItem} ${active === 'import' ? styles.active : ''}`}>📥 Import products</a>
           <a href="/admin/orders" className={`${styles.navItem} ${active === 'orders' ? styles.active : ''}`}>📦 Orders</a>
+          <a href="/admin/content" className={`${styles.navItem} ${active === 'content' ? styles.active : ''}`}>🖼️ Content</a>
           <a href="/admin/promo-codes" className={`${styles.navItem} ${active === 'promo-codes' ? styles.active : ''}`}>🏷️ Promo Codes</a>
           <a href="/admin/models" className={`${styles.navItem} ${active === 'models' ? styles.active : ''}`}>🤖 AI Models</a>
           <a href="/admin/settings" className={`${styles.navItem} ${active === 'settings' ? styles.active : ''}`}>⚙️ Settings</a>
