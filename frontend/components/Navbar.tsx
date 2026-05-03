@@ -69,11 +69,13 @@ export default function Navbar() {
               ♥ {wishlistCount}
             </Link>
           )}
-          {/* Mobile: icon always visible, badge when count > 0 */}
-          <Link href="/wishlist" className={`${styles.iconBtn} ${styles.mobileOnly}`} aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} items` : ''}`}>
-            <Heart size={22} strokeWidth={1.5} />
-            {wishlistCount > 0 && <span className={styles.badge}>{wishlistCount}</span>}
-          </Link>
+          {/* Mobile: heart icon, only when count > 0 */}
+          {wishlistCount > 0 && (
+            <Link href="/wishlist" className={`${styles.iconBtn} ${styles.mobileOnly}`} aria-label={`Wishlist, ${wishlistCount} items`}>
+              <Heart size={22} strokeWidth={1.5} />
+              <span className={styles.badge}>{wishlistCount}</span>
+            </Link>
+          )}
 
           {/* ── Account ──────────────────────────── */}
           {customer ? (

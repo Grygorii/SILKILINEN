@@ -2,6 +2,43 @@
   padding: 60px 6% 80px;
 }
 
+.guestBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  padding: 13px 18px;
+  margin-bottom: 32px;
+  font-size: 13px;
+  color: var(--dark);
+  line-height: 1.5;
+}
+
+.bannerLink {
+  color: var(--dark);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.bannerClose {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.bannerClose:hover {
+  color: var(--dark);
+}
+
 .inner {
   max-width: 900px;
 }

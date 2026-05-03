@@ -21,6 +21,8 @@ type WishlistContextType = {
   toggle: (id: string) => void;
   isWished: (id: string) => boolean;
   loading: boolean;
+  mergedCount: number;
+  clearMergeNotice: () => void;
 };
 
 const WishlistContext = createContext<WishlistContextType>({
@@ -30,6 +32,8 @@ const WishlistContext = createContext<WishlistContextType>({
   toggle: () => {},
   isWished: () => false,
   loading: false,
+  mergedCount: 0,
+  clearMergeNotice: () => {},
 });
 
 function lsGet(): string[] {
@@ -44,6 +48,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [items, setItems] = useState<WishlistProduct[]>([]);
   const [loading, setLoading] = useState(false);
+  const [mergedCount, setMergedCount] = useState(0);
   const prevCustomerId = useRef<string | null>(null);
 
   const fetchFromApi = useCallback(async () => {
@@ -78,6 +83,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       // Logged in: sync any localStorage items then fetch from API
       const localIds = lsGet();
       if (localIds.length > 0) {
+        const syncedCount = localIds.length;
         fetch(`${API}/api/customers/me/wishlist/sync`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -85,6 +91,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({ ids: localIds }),
         }).catch(() => {}).finally(() => {
           lsSet([]);
+          setMergedCount(syncedCount);
           fetchFromApi();
         });
       } else {
@@ -124,9 +131,10 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   }, [customer, wishlist, fetchFromApi]);
 
   const isWished = useCallback((id: string) => wishlist.includes(id), [wishlist]);
+  const clearMergeNotice = useCallback(() => setMergedCount(0), []);
 
   return (
-    <WishlistContext.Provider value={{ wishlist, items, count: wishlist.length, toggle, isWished, loading }}>
+    <WishlistContext.Provider value={{ wishlist, items, count: wishlist.length, toggle, isWished, loading, mergedCount, clearMergeNotice }}>
       {children}
     </WishlistContext.Provider>
   );

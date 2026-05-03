@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useWishlist } from '@/context/WishlistContext';
+import { useCustomer } from '@/context/CustomerContext';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -17,8 +18,10 @@ type Product = {
 
 export default function WishlistPage() {
   const { wishlist, toggle } = useWishlist();
+  const { customer } = useCustomer();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   useEffect(() => {
     if (wishlist.length === 0) { setLoading(false); return; }
@@ -37,6 +40,13 @@ export default function WishlistPage() {
   return (
     <main className={styles.page}>
       <div className={styles.inner}>
+        {!customer && wishlist.length >= 5 && !bannerDismissed && (
+          <div className={styles.guestBanner}>
+            <p>Don&apos;t lose these favourites — <a href="/account/sign-in" className={styles.bannerLink}>Sign in</a> to access from any device</p>
+            <button className={styles.bannerClose} onClick={() => setBannerDismissed(true)} aria-label="Dismiss">✕</button>
+          </div>
+        )}
+
         <header className={styles.header}>
           <h1>Wishlist</h1>
           {!loading && products.length > 0 && (

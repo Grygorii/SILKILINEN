@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import AddedToCartToast from "@/components/AddedToCartToast";
 import JustSoldPopup from "@/components/JustSoldPopup";
+import WishlistSignInNudge from "@/components/WishlistSignInNudge";
 import { getContent } from "@/lib/content";
 
 export default async function ShopLayout({
@@ -25,6 +26,7 @@ export default async function ShopLayout({
       <Footer />
       <AddedToCartToast />
       <JustSoldPopup />
+      <WishlistSignInNudge />
     </>
   );
 }
