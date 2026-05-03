@@ -57,8 +57,11 @@ router.post('/upload', requireAuth, upload.single('image'), async function(req, 
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
-    if (!process.env.CLOUDINARY_CLOUD_NAME) {
-      return res.status(503).json({ error: 'Cloudinary not configured — set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET' });
+    const missingVars = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET']
+      .filter(v => !process.env[v]);
+    if (missingVars.length) {
+      console.error(`[UPLOAD] Missing env vars: ${missingVars.join(', ')}`);
+      return res.status(503).json({ error: `Cloudinary not configured — missing: ${missingVars.join(', ')}` });
     }
 
     const section = req.query.section || 'content';
@@ -88,7 +91,8 @@ router.post('/upload', requireAuth, upload.single('image'), async function(req, 
       bytes: result.bytes,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(`[UPLOAD] Cloudinary error: ${err.message}`, err.http_code ? `(HTTP ${err.http_code})` : '');
+    res.status(500).json({ error: err.message, detail: err.http_code ? `Cloudinary HTTP ${err.http_code}` : undefined });
   }
 });
 
