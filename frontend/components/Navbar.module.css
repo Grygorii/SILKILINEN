@@ -12,8 +12,23 @@
   z-index: 100;
 }
 
+/* ── Responsive visibility ────────────────────────── */
+
+.desktopOnly { display: flex; }
+.mobileOnly  { display: none; }
+
+@media (max-width: 767px) {
+  .desktopOnly { display: none !important; }
+  .mobileOnly  { display: flex !important; }
+}
+
+/* ── Logo ─────────────────────────────────────────── */
+
 .logoLink {
   text-decoration: none;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .logo h1 {
@@ -24,34 +39,85 @@
   color: var(--dark);
 }
 
-.logo p {
+.logoSub {
   font-size: 11px;
   letter-spacing: 2px;
   color: var(--muted);
   text-align: center;
 }
 
-.hamburger {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  cursor: pointer;
-  padding: 4px;
-}
-
-.hamburger span {
-  display: block;
-  width: 24px;
-  height: 1px;
-  background: var(--dark);
-  transition: all 0.3s ease;
-}
+/* ── Right group ──────────────────────────────────── */
 
 .navRight {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 4px;
 }
+
+/* ── Icon button (mobile tap targets) ─────────────── */
+
+.iconBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--dark);
+  text-decoration: none;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.iconBtn:hover {
+  opacity: 0.65;
+}
+
+/* ── Count badge ──────────────────────────────────── */
+
+.badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--dark);
+  color: var(--warm-white);
+  font-size: 10px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  line-height: 1;
+  padding: 0 3px;
+}
+
+/* ── Hamburger ────────────────────────────────────── */
+
+.hamburger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--dark);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.hamburger:hover {
+  opacity: 0.65;
+}
+
+/* ── Desktop-only text elements ───────────────────── */
 
 .wishlistLink {
   font-size: 13px;
@@ -85,6 +151,8 @@
   opacity: 0.6;
 }
 
+/* ── Account (desktop) ────────────────────────────── */
+
 .accountWrap {
   position: relative;
 }
@@ -97,6 +165,7 @@
   border: none;
   cursor: pointer;
   padding: 4px 0;
+  min-height: 44px;
 }
 
 .accountAvatar {
@@ -169,18 +238,36 @@
   color: var(--dark);
 }
 
-@media (max-width: 600px) {
-  .nav {
-    top: 30px;
-  }
-}
+/* ── Mobile nav sizing ────────────────────────────── */
 
-@media (max-width: 480px) {
+@media (max-width: 767px) {
   .nav {
-    padding: 16px 20px;
+    padding: 10px 16px;
+    gap: 0;
+  }
+
+  .navRight {
+    gap: 0;
+  }
+
+  /* Centre the logo absolutely so left/right groups can be equal width */
+  .logoLink {
+    left: 50%;
+    transform: translateX(-50%);
   }
 
   .logo h1 {
-    font-size: 18px;
+    font-size: 17px;
+    letter-spacing: 3px;
+  }
+
+  .logoSub {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .nav {
+    top: 30px;
   }
 }

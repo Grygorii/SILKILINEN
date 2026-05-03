@@ -19,7 +19,7 @@ export default async function ShopLayout({
     <>
       <AnnouncementBar messages={messages.length > 0 ? messages : undefined} />
       <Navbar />
-      <div style={{ paddingTop: '120px' }}>
+      <div className="shopContent">
         {children}
       </div>
       <Footer />

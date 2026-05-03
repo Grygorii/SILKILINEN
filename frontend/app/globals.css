@@ -21,5 +21,16 @@ body {
   overflow-x: hidden;
 }
 body {
-  padding-top: 0px;
+  padding-top: 0;
+}
+
+/* Used by shop layout to clear the fixed header (announcement bar + nav) */
+.shopContent {
+  padding-top: 120px; /* 38px announcement + ~80px nav */
+}
+
+@media (max-width: 767px) {
+  .shopContent {
+    padding-top: 74px; /* 30px announcement + ~44px compact mobile nav */
+  }
 }

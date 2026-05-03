@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { Menu, Heart, User, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCustomer } from '@/context/CustomerContext';
@@ -34,39 +35,67 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', outside);
   }, []);
 
+  const avatarLetter = customer
+    ? (customer.firstName?.[0] || customer.email[0]).toUpperCase()
+    : null;
+
   return (
     <>
       <nav className={styles.nav}>
-        <div className={styles.hamburger} onClick={() => setMenuOpen(true)}>
-          <span></span><span></span><span></span>
-        </div>
+        {/* Hamburger — left */}
+        <button
+          className={styles.hamburger}
+          onClick={() => setMenuOpen(true)}
+          aria-label="Open menu"
+        >
+          <Menu size={22} strokeWidth={1.5} />
+        </button>
+
+        {/* Logo — centre */}
         <Link href="/" className={styles.logoLink}>
           <div className={styles.logo}>
             <h1>SILKILINEN</h1>
-            <p>Silk &amp; Linen</p>
+            <p className={styles.logoSub}>Silk &amp; Linen</p>
           </div>
         </Link>
+
+        {/* Right actions */}
         <div className={styles.navRight}>
+
+          {/* ── Wishlist ─────────────────────────── */}
+          {/* Desktop: text link, only when items > 0 */}
           {wishlistCount > 0 && (
-            <Link href="/wishlist" className={styles.wishlistLink} aria-label="Wishlist">
+            <Link href="/wishlist" className={`${styles.wishlistLink} ${styles.desktopOnly}`} aria-label="Wishlist">
               ♥ {wishlistCount}
             </Link>
           )}
+          {/* Mobile: icon always visible, badge when count > 0 */}
+          <Link href="/wishlist" className={`${styles.iconBtn} ${styles.mobileOnly}`} aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} items` : ''}`}>
+            <Heart size={22} strokeWidth={1.5} />
+            {wishlistCount > 0 && <span className={styles.badge}>{wishlistCount}</span>}
+          </Link>
 
+          {/* ── Account ──────────────────────────── */}
           {customer ? (
             <div className={styles.accountWrap} ref={dropdownRef}>
+              {/* Desktop: avatar circle + name */}
               <button
-                className={styles.accountBtn}
+                className={`${styles.accountBtn} ${styles.desktopOnly}`}
                 onClick={() => setAccountOpen(o => !o)}
                 aria-label="Account menu"
               >
-                <span className={styles.accountAvatar}>
-                  {(customer.firstName?.[0] || customer.email[0]).toUpperCase()}
-                </span>
-                <span className={styles.accountName}>
-                  {customer.firstName || 'Account'}
-                </span>
+                <span className={styles.accountAvatar}>{avatarLetter}</span>
+                <span className={styles.accountName}>{customer.firstName || 'Account'}</span>
               </button>
+              {/* Mobile: avatar circle only (already icon-sized) */}
+              <button
+                className={`${styles.iconBtn} ${styles.mobileOnly}`}
+                onClick={() => setAccountOpen(o => !o)}
+                aria-label="Account menu"
+              >
+                <span className={styles.accountAvatar}>{avatarLetter}</span>
+              </button>
+
               {accountOpen && (
                 <div className={styles.accountDropdown}>
                   <a href="/account" className={styles.dropItem}>My account</a>
@@ -84,14 +113,33 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <a href="/account/sign-in" className={styles.signInLink}>Sign in</a>
+            <>
+              {/* Desktop: text link */}
+              <a href="/account/sign-in" className={`${styles.signInLink} ${styles.desktopOnly}`}>Sign in</a>
+              {/* Mobile: User icon */}
+              <a href="/account/sign-in" className={`${styles.iconBtn} ${styles.mobileOnly}`} aria-label="Sign in">
+                <User size={22} strokeWidth={1.5} />
+              </a>
+            </>
           )}
 
-          <div className={styles.cart} onClick={() => setCartOpen(true)}>
+          {/* ── Cart ─────────────────────────────── */}
+          {/* Desktop: text */}
+          <div className={`${styles.cart} ${styles.desktopOnly}`} onClick={() => setCartOpen(true)}>
             <p>Cart ({cartCount})</p>
           </div>
+          {/* Mobile: bag icon + badge */}
+          <button
+            className={`${styles.iconBtn} ${styles.mobileOnly}`}
+            onClick={() => setCartOpen(true)}
+            aria-label={`Cart, ${cartCount} item${cartCount !== 1 ? 's' : ''}`}
+          >
+            <ShoppingBag size={22} strokeWidth={1.5} />
+            {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
+          </button>
         </div>
       </nav>
+
       <SideMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
       <CartPanel isOpen={cartOpen} onClose={() => setCartOpen(false)} />
     </>
