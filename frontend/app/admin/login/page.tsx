@@ -1,21 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
+
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
+  // If already logged in (Vercel-domain cookie present), go straight to admin
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`, { credentials: 'include' })
-      .then(r => { if (r.ok) router.replace('/admin'); })
+    fetch('/api/admin-session', { method: 'HEAD' })
       .catch(() => {});
-  }, [router]);
+    // Check via the backend whether session is valid
+    fetch(`${API}/api/auth/me`, { credentials: 'include' })
+      .then(r => { if (r.ok) window.location.href = '/admin'; })
+      .catch(() => {});
+  }, []);
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -23,7 +27,8 @@ export default function AdminLoginPage() {
     setError('');
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+      // 1. Authenticate with Railway (sets Railway-domain cookie for client API calls)
+      const res = await fetch(`${API}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -32,12 +37,23 @@ export default function AdminLoginPage() {
 
       const data = await res.json();
 
-      if (data.success) {
-        router.push('/admin');
-      } else {
+      if (!res.ok) {
         setError(data.error || 'Login failed');
+        return;
       }
-    } catch (err) {
+
+      // 2. Set Vercel-domain cookie so Next.js middleware can see it
+      if (data.token) {
+        await fetch('/api/admin-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: data.token }),
+        });
+      }
+
+      // 3. Full page reload — middleware re-evaluates with the new cookie present
+      window.location.href = '/admin';
+    } catch {
       setError('Something went wrong');
     } finally {
       setLoading(false);

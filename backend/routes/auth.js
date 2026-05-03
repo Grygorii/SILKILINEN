@@ -56,7 +56,9 @@ router.post('/login', loginLimiter, async function(req, res) {
     });
 
     console.log(`[AUTH] Admin login: ${email} | ip=${ip}`);
-    res.json({ success: true });
+    // Return token in body so the Vercel frontend can set a same-domain
+    // httpOnly cookie for its Edge middleware (cross-domain cookie workaround).
+    res.json({ success: true, token });
   } catch (err) {
     console.error(`[AUTH] Login error: ip=${ip} | ${err.message}`);
     res.status(500).json({ error: err.message });

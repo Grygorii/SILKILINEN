@@ -11,21 +11,22 @@ export default async function AdminRootLayout({
   const cookieStore = await cookies();
   const token = cookieStore.get('token');
 
-  if (token) {
-    // Validate the token against the backend — catches expired/tampered tokens
-    // that the Edge middleware (cookie presence check) would miss.
-    try {
-      const res = await fetch(`${API}/api/auth/me`, {
-        headers: { Cookie: `token=${token.value}` },
-        cache: 'no-store',
-      });
-      if (!res.ok) redirect('/admin/login');
-    } catch {
-      redirect('/admin/login');
-    }
+  // No Vercel-domain cookie → only /admin/login reaches here (middleware guards the rest).
+  // Let the login page render without validation.
+  if (!token) {
+    return <>{children}</>;
   }
-  // No token: middleware already redirects all /admin/* except /admin/login,
-  // so we only reach here for the login page itself.
+
+  // Token present: validate it against the backend before rendering any admin page.
+  try {
+    const res = await fetch(`${API}/api/auth/me`, {
+      headers: { Cookie: `token=${token.value}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) redirect('/admin/login');
+  } catch {
+    redirect('/admin/login');
+  }
 
   return <>{children}</>;
 }

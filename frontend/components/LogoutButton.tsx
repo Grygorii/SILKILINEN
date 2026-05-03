@@ -9,8 +9,11 @@ export default function LogoutButton() {
   const router = useRouter();
 
   async function handleLogout() {
+    // Clear Railway-domain cookie (for client-side API calls)
     await fetch(`${API}/api/auth/logout`, { method: 'POST', credentials: 'include' });
-    router.push('/admin/login');
+    // Clear Vercel-domain cookie (for middleware + layout)
+    await fetch('/api/admin-session', { method: 'DELETE' });
+    window.location.href = '/admin/login';
   }
 
   return (
