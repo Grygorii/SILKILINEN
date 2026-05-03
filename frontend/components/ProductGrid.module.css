@@ -44,15 +44,12 @@
   position: relative;
 }
 
-/*
-  Overlay: placed LAST in DOM so it naturally stacks above image + info.
-  z-index: 1 confirms it is above the image (z-index: auto).
-  Interactive elements (heart, buttons) use z-index: 2 to pierce through.
-*/
-.cardOverlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
+/* Link wraps image + name + colours; cardBottom sits below as a sibling */
+.cardLink {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  flex: 1;
 }
 
 /* ── Image ────────────────────────────────────────── */
@@ -94,7 +91,7 @@
   transform: translateX(-50%) translateY(0);
 }
 
-/* Heart button — above the overlay (z-index: 2) */
+/* Heart: direct child of card, positioned absolute so it floats over the image */
 .heartBtn {
   position: absolute;
   top: 12px;
@@ -158,16 +155,14 @@
   display: inline-block;
 }
 
-/* ── Bottom row — above overlay ───────────────────── */
+/* ── Bottom row — sibling of Link ─────────────────── */
 
 .cardBottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: auto;
-  position: relative;
-  z-index: 2;
+  padding-top: 14px;
 }
 
 .price {

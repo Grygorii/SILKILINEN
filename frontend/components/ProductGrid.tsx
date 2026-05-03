@@ -68,56 +68,52 @@ export default function ProductGrid({ products }: { products: Product[] }) {
 
           return (
             <div key={product._id} className={styles.card}>
-              {/* Image area */}
-              <div className={styles.cardImg}>
-                <button
-                  className={`${styles.heartBtn} ${isWished(product._id) ? styles.heartActive : ''}`}
-                  onClick={e => { e.preventDefault(); e.stopPropagation(); toggle(product._id); }}
-                  aria-label={isWished(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
-                >
-                  {isWished(product._id) ? '♥' : '♡'}
-                </button>
-                <span className={styles.viewBtn}>View product</span>
-              </div>
-
-              {/* Info area */}
-              <div className={styles.cardInfo}>
-                <h3 className={styles.cardName}>{product.name}</h3>
-                <div className={styles.colours}>
-                  {product.colours?.map(colour => {
-                    const hex = colourToHex(colour);
-                    return (
-                      <span
-                        key={colour}
-                        className={styles.colourDot}
-                        title={colour}
-                        style={hex ? { background: hex, borderColor: hex === '#ffffff' ? '#e0ddd7' : 'transparent' } : undefined}
-                      />
-                    );
-                  })}
-                </div>
-                <div className={styles.cardBottom}>
-                  <span className={styles.price}>€{Number(product.price).toFixed(2)}</span>
-                  <button
-                    className={`${styles.addBtn} ${isAdded ? styles.addedBtn : ''}`}
-                    onClick={e => handleAdd(e, product)}
-                  >
-                    {isAdded ? '✓ Added' : hasSizes ? 'Select size' : 'Add to cart'}
-                  </button>
-                </div>
-              </div>
-
               {/*
-                Overlay placed LAST in DOM so it stacks above image + info.
-                z-index: 1 sits above both. heartBtn and cardBottom use z-index: 2
-                via pointer-events: auto + position: relative.
+                Heart is a direct child of card (sibling of Link),
+                positioned absolute. Not nested inside Link — click
+                events cannot bubble up to the anchor.
               */}
-              <Link
-                href={`/product/${product._id}`}
-                className={styles.cardOverlay}
-                aria-label={`View ${product.name}`}
-                tabIndex={-1}
-              />
+              <button
+                className={`${styles.heartBtn} ${isWished(product._id) ? styles.heartActive : ''}`}
+                onClick={() => toggle(product._id)}
+                aria-label={isWished(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
+              >
+                {isWished(product._id) ? '♥' : '♡'}
+              </button>
+
+              {/* Link wraps image + name + colours */}
+              <Link href={`/product/${product._id}`} className={styles.cardLink}>
+                <div className={styles.cardImg}>
+                  <span className={styles.viewBtn}>View product</span>
+                </div>
+                <div className={styles.cardInfo}>
+                  <h3 className={styles.cardName}>{product.name}</h3>
+                  <div className={styles.colours}>
+                    {product.colours?.map(colour => {
+                      const hex = colourToHex(colour);
+                      return (
+                        <span
+                          key={colour}
+                          className={styles.colourDot}
+                          title={colour}
+                          style={hex ? { background: hex, borderColor: hex === '#ffffff' ? '#e0ddd7' : 'transparent' } : undefined}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              </Link>
+
+              {/* Price + add-to-cart: sibling of Link, not inside it */}
+              <div className={styles.cardBottom}>
+                <span className={styles.price}>€{Number(product.price).toFixed(2)}</span>
+                <button
+                  className={`${styles.addBtn} ${isAdded ? styles.addedBtn : ''}`}
+                  onClick={e => handleAdd(e, product)}
+                >
+                  {isAdded ? '✓ Added' : hasSizes ? 'Select size' : 'Add to cart'}
+                </button>
+              </div>
             </div>
           );
         })}
