@@ -37,7 +37,7 @@ export default function ModelsPage() {
   const [genCost, setGenCost] = useState(0);
 
   async function load() {
-    const res = await fetch(`${API}/api/ai-models`);
+    const res = await fetch(`${API}/api/ai-models`, { credentials: 'include' });
     if (res.ok) setModels(await res.json());
   }
 
