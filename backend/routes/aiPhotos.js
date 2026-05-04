@@ -67,9 +67,19 @@ function getGenAI() {
   return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 }
 
+function withTimeout(promise, ms, label) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`Timed out after ${ms / 1000}s: ${label}`)), ms);
+    promise.then(
+      v => { clearTimeout(timer); resolve(v); },
+      e => { clearTimeout(timer); reject(e); }
+    );
+  });
+}
+
 async function imageUrlToBase64(url) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to fetch image: ${url}`);
+  const res = await withTimeout(fetch(url), 20_000, `fetch image ${url}`);
+  if (!res.ok) throw new Error(`Image fetch failed (${res.status}): ${url}`);
   return Buffer.from(await res.arrayBuffer()).toString('base64');
 }
 
@@ -90,33 +100,47 @@ function uploadBuffer(buffer, options) {
   });
 }
 
-// Call Gemini and upload result directly to Cloudinary — no validation, no retries.
+// Call Gemini and upload result directly to Cloudinary.
 async function generate(aiModel, inputPhotos, position, iterationFeedback, tierKey) {
   const tier = getTier(tierKey);
+  const tag = `[AI:${position}:${tierKey}]`;
+
+  console.log(`${tag} START — model="${aiModel.name}" inputs=${inputPhotos.length} tier=${tierKey}`);
 
   const imageParts = [];
   if (aiModel.referenceImageUrl) {
-    imageParts.push({
-      inlineData: {
-        mimeType: guessMimeType(aiModel.referenceImageUrl),
-        data: await imageUrlToBase64(aiModel.referenceImageUrl),
-      },
-    });
+    console.log(`${tag} Fetching reference image…`);
+    const data = await imageUrlToBase64(aiModel.referenceImageUrl);
+    console.log(`${tag} Reference image OK (${Math.round(data.length * 0.75 / 1024)}KB)`);
+    imageParts.push({ inlineData: { mimeType: guessMimeType(aiModel.referenceImageUrl), data } });
   }
-  for (const url of inputPhotos) {
-    imageParts.push({ inlineData: { mimeType: guessMimeType(url), data: await imageUrlToBase64(url) } });
+  for (let i = 0; i < inputPhotos.length; i++) {
+    console.log(`${tag} Fetching input photo ${i + 1}/${inputPhotos.length}…`);
+    const data = await imageUrlToBase64(inputPhotos[i]);
+    console.log(`${tag} Input photo ${i + 1} OK (${Math.round(data.length * 0.75 / 1024)}KB)`);
+    imageParts.push({ inlineData: { mimeType: guessMimeType(inputPhotos[i]), data } });
   }
 
   const prompt = buildPrompt(aiModel, position, iterationFeedback);
   const genai = getGenAI();
-  const response = await genai.models.generateContent({
-    model: GEMINI_MODEL,
-    contents: [{ parts: [...imageParts, { text: prompt }] }],
-    config: {
-      responseModalities: ['IMAGE', 'TEXT'],
-      imageConfig: { aspectRatio: '4:5', width: tier.width, height: tier.height },
-    },
-  });
+
+  console.log(`${tag} Calling Gemini (${GEMINI_MODEL}) with ${imageParts.length} image(s)…`);
+  const t0 = Date.now();
+
+  const response = await withTimeout(
+    genai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: [{ parts: [...imageParts, { text: prompt }] }],
+      config: {
+        responseModalities: ['IMAGE', 'TEXT'],
+        imageConfig: { aspectRatio: '4:5', width: tier.width, height: tier.height },
+      },
+    }),
+    90_000,
+    'Gemini generateContent'
+  );
+
+  console.log(`${tag} Gemini responded in ${Date.now() - t0}ms`);
 
   let imageBuffer = null;
   for (const part of (response.candidates?.[0]?.content?.parts || [])) {
@@ -125,12 +149,17 @@ async function generate(aiModel, inputPhotos, position, iterationFeedback, tierK
       break;
     }
   }
-  if (!imageBuffer) throw new Error('Gemini returned no image');
+  if (!imageBuffer) throw new Error('Gemini returned no image in response');
 
-  const uploaded = await uploadBuffer(imageBuffer, {
-    folder: 'silkilinen/ai-generated',
-    resource_type: 'image',
-  });
+  console.log(`${tag} Image buffer: ${Math.round(imageBuffer.length / 1024)}KB — uploading to Cloudinary…`);
+
+  const uploaded = await withTimeout(
+    uploadBuffer(imageBuffer, { folder: 'silkilinen/ai-generated', resource_type: 'image' }),
+    30_000,
+    'Cloudinary upload'
+  );
+
+  console.log(`${tag} DONE — ${uploaded.secure_url} (${uploaded.width}×${uploaded.height})`);
 
   return {
     url: uploaded.secure_url,

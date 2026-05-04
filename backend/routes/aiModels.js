@@ -23,6 +23,16 @@ function uploadBuffer(buffer, options) {
   });
 }
 
+function withTimeout(promise, ms, label) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`Timed out after ${ms / 1000}s: ${label}`)), ms);
+    promise.then(
+      v => { clearTimeout(timer); resolve(v); },
+      e => { clearTimeout(timer); reject(e); }
+    );
+  });
+}
+
 router.get('/', requireAuth, async function(req, res) {
   try {
     const models = await AiModel.find().sort({ createdAt: 1 });
@@ -81,14 +91,21 @@ router.post('/:id/generate-reference', requireAuth, async function(req, res) {
     ].join('\n\n');
 
     const genai = getGenAI();
-    const response = await genai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: [{ parts: [{ text: prompt }] }],
-      config: {
-        responseModalities: ['IMAGE', 'TEXT'],
-        imageConfig: { aspectRatio: '4:5', width: tier.width, height: tier.height },
-      },
-    });
+    console.log(`[AI Models] Calling Gemini for reference photo (${aiModel.name}, ${tierKey})…`);
+    const t0 = Date.now();
+    const response = await withTimeout(
+      genai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: [{ parts: [{ text: prompt }] }],
+        config: {
+          responseModalities: ['IMAGE', 'TEXT'],
+          imageConfig: { aspectRatio: '4:5', width: tier.width, height: tier.height },
+        },
+      }),
+      90_000,
+      'Gemini generateContent (reference)'
+    );
+    console.log(`[AI Models] Gemini responded in ${Date.now() - t0}ms`);
 
     let imageBuffer = null;
     let mimeType = 'image/jpeg';
