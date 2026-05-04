@@ -155,6 +155,24 @@
   gap: 8px;
 }
 
+.refGenRow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tierSelect {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  color: var(--dark);
+  background: #fff;
+  outline: none;
+  width: 100%;
+}
+
 .actionBtn {
   width: 100%;
   padding: 9px 12px;

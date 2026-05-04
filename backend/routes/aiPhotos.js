@@ -6,16 +6,20 @@ const PhotoshootSession = require('../models/PhotoshootSession');
 const Product = require('../models/product');
 const { cloudinary } = require('../utils/cloudinary');
 const { requireAuth } = require('../middleware/auth');
+const {
+  getTier, getDefaultTierKey, validateGeneration,
+  computeFaceHash, hashSimilarity, identityMatchStatus,
+} = require('../utils/imageValidation');
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash-preview-image-generation';
-const COST_PER_GENERATION = parseFloat(process.env.GEMINI_COST_PER_GENERATION || '0.13');
+const MAX_RETRIES = 2;
 const MAX_ITERATIONS_PER_PHOTO = 10;
 const MAX_SESSION_GENERATIONS = 30;
 const SESSION_COST_WARN = 5;
 const SESSION_COST_LIMIT = 10;
 
-// Simple in-memory daily counter (resets on server restart — fine for low-volume admin)
+// Simple in-memory daily counter (resets on server restart)
 const dailyCounter = {};
 function checkDailyLimit() {
   const today = new Date().toISOString().slice(0, 10);
@@ -83,9 +87,18 @@ function guessMimeType(url) {
   return 'image/jpeg';
 }
 
-async function runGeneration(aiModel, inputPhotos, position, iterationFeedback) {
-  checkDailyLimit();
+function uploadBuffer(buffer, options) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(options, (err, result) => {
+      if (err) reject(err);
+      else resolve(result);
+    });
+    stream.end(buffer);
+  });
+}
 
+// Call Gemini once and return raw buffer + mime type
+async function callGemini(aiModel, inputPhotos, position, iterationFeedback, tier) {
   const imageParts = [];
   if (aiModel.referenceImageUrl) {
     const base64 = await imageUrlToBase64(aiModel.referenceImageUrl);
@@ -101,19 +114,109 @@ async function runGeneration(aiModel, inputPhotos, position, iterationFeedback) 
   const response = await genai.models.generateContent({
     model: GEMINI_MODEL,
     contents: [{ parts: [...imageParts, { text: prompt }] }],
-    config: { responseModalities: ['IMAGE', 'TEXT'] },
+    config: {
+      responseModalities: ['IMAGE', 'TEXT'],
+      imageConfig: { aspectRatio: '4:5', width: tier.width, height: tier.height },
+    },
   });
 
   for (const part of (response.candidates?.[0]?.content?.parts || [])) {
     if (part.inlineData) {
-      const uploaded = await cloudinary.uploader.upload(
-        `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`,
-        { folder: 'silkilinen/ai-generated' }
-      );
-      return uploaded.secure_url;
+      return {
+        buffer: Buffer.from(part.inlineData.data, 'base64'),
+        mimeType: part.inlineData.mimeType || 'image/jpeg',
+        prompt,
+      };
     }
   }
   throw new Error('Gemini returned no image');
+}
+
+// Full generation pipeline: retry on validation failure, then upload + analyse
+async function runGeneration(aiModel, inputPhotos, position, iterationFeedback, tierKey) {
+  const tier = getTier(tierKey);
+  let lastError = 'Generation failed';
+  let retryCount = 0;
+  let retryCost = 0;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    if (attempt > 0) {
+      retryCost += tier.estimatedCost;
+      console.log(`[AI Photo] Retry ${attempt} for ${position}: ${lastError}`);
+    }
+
+    let geminiResult;
+    try {
+      geminiResult = await callGemini(aiModel, inputPhotos, position, iterationFeedback, tier);
+    } catch (err) {
+      lastError = err.message;
+      retryCount = attempt;
+      if (attempt < MAX_RETRIES) continue;
+      break;
+    }
+
+    const validation = await validateGeneration(geminiResult.buffer, tier);
+    if (!validation.passed) {
+      const failed = Object.entries(validation.checks).filter(([, v]) => !v).map(([k]) => k);
+      lastError = `Validation failed: ${failed.join(', ')}`;
+      retryCount = attempt;
+      if (attempt < MAX_RETRIES) continue;
+
+      const { width, height } = validation.metadata;
+      const err = new Error(
+        `Generation failed validation after ${MAX_RETRIES + 1} attempts. ` +
+        `Failed checks: ${failed.join(', ')} (got ${width}×${height}, expected ≥${Math.floor(tier.width * 0.5)}×${Math.floor(tier.height * 0.5)}). ` +
+        `Try regenerating, or lower the quality tier.`
+      );
+      err.retryCount = retryCount;
+      err.retryCost = retryCost;
+      throw err;
+    }
+
+    // Upload to Cloudinary with face detection
+    const uploaded = await uploadBuffer(geminiResult.buffer, {
+      folder: 'silkilinen/ai-generated',
+      detection: 'face_detection',
+      resource_type: 'image',
+    });
+
+    const faces = uploaded.faces || [];
+    const hasFace = faces.length > 0;
+
+    // Identity drift comparison against locked reference
+    let identSimilarity = null;
+    let matchStatus = null;
+
+    if (hasFace && aiModel.referenceFaceHash) {
+      const [x, y, w, h] = faces[0];
+      const faceBox = { x, y, width: w, height: h };
+      const newHash = await computeFaceHash(geminiResult.buffer, faceBox);
+      if (newHash) {
+        identSimilarity = hashSimilarity(aiModel.referenceFaceHash, newHash);
+        matchStatus = identityMatchStatus(identSimilarity);
+      }
+    }
+
+    return {
+      url: uploaded.secure_url,
+      cloudinaryPublicId: uploaded.public_id,
+      prompt: geminiResult.prompt,
+      resolution: { width: uploaded.width, height: uploaded.height },
+      fileSize: uploaded.bytes,
+      validationChecks: validation.checks,
+      faceData: faces,
+      hasFace,
+      identitySimilarity: identSimilarity,
+      identityMatchStatus: matchStatus,
+      retryCount: attempt,
+      retryCost,
+    };
+  }
+
+  const err = new Error(lastError);
+  err.retryCount = retryCount;
+  err.retryCost = retryCost;
+  throw err;
 }
 
 // ── Auto-model selection ─────────────────────────────────────────────────────
@@ -128,6 +231,7 @@ async function pickModel(category) {
 function costResponse(session) {
   return {
     totalCost: session.totalCost,
+    costBreakdown: session.costBreakdown,
     costWarning: session.totalCost >= SESSION_COST_WARN && session.totalCost < SESSION_COST_LIMIT,
     costBlocked: session.totalCost >= SESSION_COST_LIMIT,
   };
@@ -135,7 +239,6 @@ function costResponse(session) {
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 
-// Create session
 router.post('/sessions', requireAuth, async function(req, res) {
   try {
     const { productId, modelId, inputPhotoUrls } = req.body;
@@ -160,6 +263,8 @@ router.post('/sessions', requireAuth, async function(req, res) {
       generatedPhotos: [],
       totalCost: 0,
       iterationCount: 0,
+      failedRetries: 0,
+      costBreakdown: { successful: 0, retries: 0 },
     });
 
     res.status(201).json({
@@ -176,10 +281,9 @@ router.post('/sessions', requireAuth, async function(req, res) {
   }
 });
 
-// Generate one or all positions
 router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
   try {
-    const { positions, forceOverride } = req.body;
+    const { positions, forceOverride, tier: reqTier } = req.body;
     const session = await PhotoshootSession.findById(req.params.id).populate('selectedModel');
     if (!session) return res.status(404).json({ error: 'Session not found' });
 
@@ -199,20 +303,51 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
       return res.status(400).json({ error: 'Model has no reference photo. Generate one in AI Models first.' });
     }
 
+    checkDailyLimit(); // once per user request
+
     const targetPositions = Array.isArray(positions) && positions.length > 0
       ? positions
       : ['front', 'side', 'detail', 'lifestyle'];
 
     const results = [];
     for (const position of targetPositions) {
-      const url = await runGeneration(aiModel, session.inputPhotos, position, null);
+      // Use explicit tier if supplied, else per-position default
+      const tierKey = (reqTier && reqTier !== 'auto' && ['standard', 'hd', 'premium'].includes(reqTier))
+        ? reqTier
+        : getDefaultTierKey(position);
+      const tier = getTier(tierKey);
+
+      let result;
+      try {
+        result = await runGeneration(aiModel, session.inputPhotos, position, null, tierKey);
+      } catch (err) {
+        // Track retry costs even for failures
+        const rCost = err.retryCost || 0;
+        session.failedRetries += err.retryCount || 0;
+        session.costBreakdown.retries = (session.costBreakdown.retries || 0) + rCost;
+        session.totalCost += rCost;
+        console.error(`[AI Photo] Generation failed for ${position}: ${err.message}`);
+        results.push({ position, error: err.message });
+        continue;
+      }
+
       const photoData = {
-        url,
-        prompt: buildPrompt(aiModel, position, null),
+        url: result.url,
+        prompt: result.prompt,
         position,
         status: 'pending',
         iterationCount: 0,
-        generationCost: COST_PER_GENERATION,
+        generationCost: tier.estimatedCost,
+        qualityTier: tierKey,
+        retryCount: result.retryCount,
+        retryCost: result.retryCost,
+        resolution: result.resolution,
+        fileSize: result.fileSize,
+        validationChecks: result.validationChecks,
+        faceData: result.faceData,
+        hasFace: result.hasFace,
+        identitySimilarity: result.identitySimilarity,
+        identityMatchStatus: result.identityMatchStatus,
       };
 
       const existingIdx = session.generatedPhotos.findIndex(p => p.position === position);
@@ -221,12 +356,29 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
       } else {
         session.generatedPhotos.push(photoData);
       }
-      session.totalCost += COST_PER_GENERATION;
+
+      session.totalCost += tier.estimatedCost;
+      session.failedRetries += result.retryCount;
+      session.costBreakdown.successful = (session.costBreakdown.successful || 0) + tier.estimatedCost;
+      session.costBreakdown.retries = (session.costBreakdown.retries || 0) + result.retryCost;
       session.iterationCount += 1;
-      results.push({ position, url });
+
+      results.push({
+        position,
+        url: result.url,
+        qualityTier: tierKey,
+        retryCount: result.retryCount,
+        resolution: result.resolution,
+        fileSize: result.fileSize,
+        validationChecks: result.validationChecks,
+        hasFace: result.hasFace,
+        identitySimilarity: result.identitySimilarity,
+        identityMatchStatus: result.identityMatchStatus,
+      });
     }
 
     session.markModified('generatedPhotos');
+    session.markModified('costBreakdown');
     await session.save();
 
     res.json({ results, ...costResponse(session) });
@@ -235,10 +387,9 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
   }
 });
 
-// Iterate on a specific photo with feedback
 router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
   try {
-    const { position, feedback, forceOverride } = req.body;
+    const { position, feedback, forceOverride, tier: reqTier } = req.body;
     if (!position || !feedback) {
       return res.status(400).json({ error: 'position and feedback are required' });
     }
@@ -262,21 +413,63 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
       return res.status(400).json({ error: `Max iterations (${MAX_ITERATIONS_PER_PHOTO}) reached for this photo` });
     }
 
-    const url = await runGeneration(session.selectedModel, session.inputPhotos, position, feedback);
+    checkDailyLimit(); // once per user request
 
-    session.generatedPhotos[photoIdx].url = url;
+    // Use explicit tier, or inherit parent photo's tier
+    const tierKey = (reqTier && reqTier !== 'auto' && ['standard', 'hd', 'premium'].includes(reqTier))
+      ? reqTier
+      : (photo.qualityTier || getDefaultTierKey(position));
+    const tier = getTier(tierKey);
+
+    let result;
+    try {
+      result = await runGeneration(session.selectedModel, session.inputPhotos, position, feedback, tierKey);
+    } catch (err) {
+      const rCost = err.retryCost || 0;
+      session.failedRetries += err.retryCount || 0;
+      session.costBreakdown.retries = (session.costBreakdown.retries || 0) + rCost;
+      session.totalCost += rCost;
+      session.markModified('costBreakdown');
+      await session.save();
+      return res.status(422).json({ error: err.message, retryCost: rCost, ...costResponse(session) });
+    }
+
+    session.generatedPhotos[photoIdx].url = result.url;
     session.generatedPhotos[photoIdx].feedback = feedback;
     session.generatedPhotos[photoIdx].iterationCount += 1;
-    session.generatedPhotos[photoIdx].generationCost += COST_PER_GENERATION;
+    session.generatedPhotos[photoIdx].generationCost += tier.estimatedCost;
     session.generatedPhotos[photoIdx].status = 'pending';
-    session.totalCost += COST_PER_GENERATION;
+    session.generatedPhotos[photoIdx].qualityTier = tierKey;
+    session.generatedPhotos[photoIdx].retryCount = result.retryCount;
+    session.generatedPhotos[photoIdx].retryCost = (photo.retryCost || 0) + result.retryCost;
+    session.generatedPhotos[photoIdx].resolution = result.resolution;
+    session.generatedPhotos[photoIdx].fileSize = result.fileSize;
+    session.generatedPhotos[photoIdx].validationChecks = result.validationChecks;
+    session.generatedPhotos[photoIdx].hasFace = result.hasFace;
+    session.generatedPhotos[photoIdx].identitySimilarity = result.identitySimilarity;
+    session.generatedPhotos[photoIdx].identityMatchStatus = result.identityMatchStatus;
+
+    session.totalCost += tier.estimatedCost;
+    session.failedRetries += result.retryCount;
+    session.costBreakdown.successful = (session.costBreakdown.successful || 0) + tier.estimatedCost;
+    session.costBreakdown.retries = (session.costBreakdown.retries || 0) + result.retryCost;
     session.iterationCount += 1;
+
     session.markModified('generatedPhotos');
+    session.markModified('costBreakdown');
     await session.save();
 
     res.json({
-      url,
+      url: result.url,
       iterations: session.generatedPhotos[photoIdx].iterationCount,
+      qualityTier: tierKey,
+      retryCount: result.retryCount,
+      resolution: result.resolution,
+      fileSize: result.fileSize,
+      validationChecks: result.validationChecks,
+      hasFace: result.hasFace,
+      identitySimilarity: result.identitySimilarity,
+      identityMatchStatus: result.identityMatchStatus,
       ...costResponse(session),
     });
   } catch (err) {
@@ -284,7 +477,6 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
   }
 });
 
-// Approve a photo
 router.post('/sessions/:id/approve-photo', requireAuth, async function(req, res) {
   try {
     const { position } = req.body;
@@ -306,7 +498,6 @@ router.post('/sessions/:id/approve-photo', requireAuth, async function(req, res)
   }
 });
 
-// Finalize — sets product image to first approved front photo
 router.post('/sessions/:id/finalize', requireAuth, async function(req, res) {
   try {
     const session = await PhotoshootSession.findById(req.params.id);
@@ -321,17 +512,23 @@ router.post('/sessions/:id/finalize', requireAuth, async function(req, res) {
     session.status = 'approved';
     await session.save();
 
-    res.json({ success: true, approvedCount: approved.length, productImageUrl: primary.url });
+    res.json({
+      success: true,
+      approvedCount: approved.length,
+      productImageUrl: primary.url,
+      totalCost: session.totalCost,
+      costBreakdown: session.costBreakdown,
+      failedRetries: session.failedRetries,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Get session
 router.get('/sessions/:id', requireAuth, async function(req, res) {
   try {
     const session = await PhotoshootSession.findById(req.params.id)
-      .populate('selectedModel', 'name heritage referenceImageUrl');
+      .populate('selectedModel', 'name heritage referenceImageUrl referenceFaceHash');
     if (!session) return res.status(404).json({ error: 'Session not found' });
     res.json(session);
   } catch (err) {

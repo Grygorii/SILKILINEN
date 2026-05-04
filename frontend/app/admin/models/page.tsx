@@ -35,6 +35,7 @@ export default function ModelsPage() {
   const [saving, setSaving] = useState(false);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [genCost, setGenCost] = useState(0);
+  const [refTier, setRefTier] = useState<'standard' | 'hd' | 'premium'>('premium');
 
   async function load() {
     const res = await fetch(`${API}/api/ai-models`, { credentials: 'include' });
@@ -118,18 +119,23 @@ export default function ModelsPage() {
     await load();
   }
 
+  const TIER_COSTS = { standard: 0.05, hd: 0.13, premium: 0.24 };
+
   async function handleGenerateReference(model: AiModel) {
     if (model.locked) return alert('Unlock the model before regenerating.');
-    if (!confirm(`Generate a new reference photo for "${model.name}"? This will cost approximately €0.05.`)) return;
+    const est = TIER_COSTS[refTier].toFixed(2);
+    if (!confirm(`Generate a new reference photo for "${model.name}" at ${refTier.toUpperCase()} quality? Estimated cost: €${est}.`)) return;
     setGeneratingId(model._id);
     try {
       const res = await fetch(`${API}/api/ai-models/${model._id}/generate-reference`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        body: JSON.stringify({ tier: refTier }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setGenCost(c => c + (data.cost || 0.05));
+      setGenCost(c => c + (data.totalCost || TIER_COSTS[refTier]));
       await load();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Generation failed');
@@ -170,12 +176,26 @@ export default function ModelsPage() {
               )}
             </div>
             <div className={styles.cardActions}>
+              <div className={styles.refGenRow}>
+                <select
+                  className={styles.tierSelect}
+                  value={refTier}
+                  onChange={e => setRefTier(e.target.value as 'standard' | 'hd' | 'premium')}
+                  disabled={generatingId === model._id}
+                >
+                  <option value="standard">Standard (1K, ~€0.05)</option>
+                  <option value="hd">HD (2K, ~€0.13)</option>
+                  <option value="premium">Premium (4K, ~€0.24)</option>
+                </select>
+              </div>
               <button
                 className={styles.actionBtn}
                 onClick={() => handleGenerateReference(model)}
                 disabled={generatingId === model._id}
               >
-                {generatingId === model._id ? 'Generating…' : '✨ Reference photo'}
+                {generatingId === model._id
+                  ? 'Generating…'
+                  : `✨ Generate (€${TIER_COSTS[refTier].toFixed(2)})`}
               </button>
               <div className={styles.actionRow}>
                 <button className={styles.editBtn} onClick={() => openEdit(model)}>Edit</button>

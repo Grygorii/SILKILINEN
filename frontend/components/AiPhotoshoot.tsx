@@ -24,6 +24,15 @@ const QUICK_FEEDBACK = [
   'Different background',
 ];
 
+const QUALITY_TIERS = {
+  auto:     { label: 'Auto (position defaults)', estimatedCost: null },
+  standard: { label: 'Standard (1K, ~€0.05)',    estimatedCost: 0.05 },
+  hd:       { label: 'HD (2K, ~€0.13)',           estimatedCost: 0.13 },
+  premium:  { label: 'Premium (4K, ~€0.24)',      estimatedCost: 0.24 },
+};
+
+type TierKey = keyof typeof QUALITY_TIERS;
+
 type ModelSummary = {
   _id: string;
   name: string;
@@ -32,10 +41,25 @@ type ModelSummary = {
   active: boolean;
 };
 
+type ValidationChecks = {
+  resolution: boolean;
+  fileSize: boolean;
+  aspectRatio: boolean;
+  notBlank: boolean;
+};
+
 type PhotoState = {
   url: string;
   status: 'pending' | 'approved';
   iterations: number;
+  qualityTier?: TierKey;
+  retryCount?: number;
+  resolution?: { width: number; height: number };
+  fileSize?: number;
+  validationChecks?: ValidationChecks;
+  hasFace?: boolean;
+  identitySimilarity?: number | null;
+  identityMatchStatus?: 'good' | 'warning' | 'drifted' | null;
 };
 
 type Props = {
@@ -43,6 +67,53 @@ type Props = {
   productCategory: string;
   onPhotoApproved: (url: string) => void;
 };
+
+function fmtBytes(b: number) {
+  if (b >= 1_000_000) return `${(b / 1_000_000).toFixed(1)} MB`;
+  return `${Math.round(b / 1000)} KB`;
+}
+
+function ValidationStrip({ photo, modelName }: { photo: PhotoState; modelName?: string }) {
+  if (!photo.resolution && !photo.validationChecks) return null;
+  const { resolution, fileSize, validationChecks: vc, hasFace, identitySimilarity, identityMatchStatus: idm, qualityTier, retryCount } = photo;
+
+  function chk(ok: boolean | undefined, label: string) {
+    if (ok === undefined) return null;
+    const cls = ok ? styles.vPass : styles.vFail;
+    const icon = ok ? '✓' : '✗';
+    return <span className={cls}>{icon} {label}</span>;
+  }
+
+  const idPct = identitySimilarity !== null && identitySimilarity !== undefined
+    ? Math.round(identitySimilarity * 100)
+    : null;
+  const idCls = idm === 'good' ? styles.vPass : idm === 'warning' ? styles.vWarn : idm === 'drifted' ? styles.vFail : '';
+
+  return (
+    <div className={styles.validationStrip}>
+      {resolution && (
+        <span className={vc?.resolution ? styles.vPass : styles.vFail}>
+          {vc?.resolution ? '✓' : '✗'} {resolution.width}×{resolution.height}
+          {qualityTier && qualityTier !== 'auto' ? ` (${QUALITY_TIERS[qualityTier]?.label?.split(' ')[0]})` : ''}
+        </span>
+      )}
+      {fileSize !== undefined && chk(vc?.fileSize, fmtBytes(fileSize))}
+      {hasFace !== undefined && (
+        <span className={hasFace ? styles.vPass : styles.vWarn}>
+          {hasFace ? '✓ Face' : '⚠ No face'}
+        </span>
+      )}
+      {idPct !== null && modelName && (
+        <span className={idCls}>
+          {idm === 'good' ? '✓' : idm === 'warning' ? '⚠' : '✗'} {modelName} {idPct}%
+        </span>
+      )}
+      {!!retryCount && (
+        <span className={styles.vRetry}>↺ {retryCount} {retryCount === 1 ? 'retry' : 'retries'}</span>
+      )}
+    </div>
+  );
+}
 
 export default function AiPhotoshoot({ productId, productCategory, onPhotoApproved }: Props) {
   const [expanded, setExpanded] = useState(false);
@@ -62,6 +133,7 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
   const [costBlocked, setCostBlocked] = useState(false);
   const [forceOverride, setForceOverride] = useState(false);
   const [error, setError] = useState('');
+  const [qualityTier, setQualityTier] = useState<TierKey>('auto');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -88,6 +160,30 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
     setUploadedPhotos(p => p.filter((_, i) => i !== idx));
   }
 
+  function applyGenerateResult(results: { position: string; url?: string; error?: string; [key: string]: unknown }[]) {
+    setPhotoStates(prev => {
+      const next = { ...prev };
+      for (const r of results) {
+        if (r.url) {
+          next[r.position as Position] = {
+            url: r.url as string,
+            status: 'pending',
+            iterations: prev[r.position as Position]?.iterations || 0,
+            qualityTier: r.qualityTier as TierKey | undefined,
+            retryCount: r.retryCount as number | undefined,
+            resolution: r.resolution as { width: number; height: number } | undefined,
+            fileSize: r.fileSize as number | undefined,
+            validationChecks: r.validationChecks as ValidationChecks | undefined,
+            hasFace: r.hasFace as boolean | undefined,
+            identitySimilarity: r.identitySimilarity as number | null | undefined,
+            identityMatchStatus: r.identityMatchStatus as 'good' | 'warning' | 'drifted' | null | undefined,
+          };
+        }
+      }
+      return next;
+    });
+  }
+
   async function startGeneration() {
     if (uploadedPhotos.length === 0) {
       setError('Upload at least one product photo first.');
@@ -96,7 +192,6 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
     setError('');
 
     let sid = sessionId;
-    let model = suggestedModel;
 
     if (!sid) {
       setCreatingSession(true);
@@ -114,7 +209,6 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
         sid = data.sessionId;
-        model = data.selectedModel;
         setSessionId(sid);
         setSuggestedModel(data.selectedModel);
         if (!selectedModelId) setSelectedModelId(data.selectedModel._id);
@@ -135,6 +229,7 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
         body: JSON.stringify({
           positions: ['front', 'side', 'detail', 'lifestyle'],
           forceOverride,
+          tier: qualityTier,
         }),
       });
       const data = await res.json();
@@ -149,11 +244,7 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
         throw new Error(data.error);
       }
 
-      const newStates = { ...photoStates };
-      for (const result of (data.results || [])) {
-        newStates[result.position as Position] = { url: result.url, status: 'pending', iterations: 0 };
-      }
-      setPhotoStates(newStates);
+      applyGenerateResult(data.results || []);
       setTotalCost(data.totalCost);
       if (data.costWarning) setCostWarning(true);
       if (data.costBlocked) setCostBlocked(true);
@@ -189,7 +280,12 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ position: improvingPosition, feedback: improveFeedback, forceOverride }),
+        body: JSON.stringify({
+          position: improvingPosition,
+          feedback: improveFeedback,
+          forceOverride,
+          tier: qualityTier === 'auto' ? undefined : qualityTier,
+        }),
       });
       const data = await res.json();
 
@@ -209,6 +305,14 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
           url: data.url,
           status: 'pending',
           iterations: (s[improvingPosition]?.iterations || 0) + 1,
+          qualityTier: data.qualityTier,
+          retryCount: data.retryCount,
+          resolution: data.resolution,
+          fileSize: data.fileSize,
+          validationChecks: data.validationChecks,
+          hasFace: data.hasFace,
+          identitySimilarity: data.identitySimilarity,
+          identityMatchStatus: data.identityMatchStatus,
         },
       }));
       setTotalCost(data.totalCost);
@@ -233,7 +337,14 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
     const data = await res.json();
     if (res.ok) {
       onPhotoApproved(data.productImageUrl);
-      alert(`Done — ${data.approvedCount} approved photo(s) saved. Product image updated.`);
+      let msg = `Done — ${data.approvedCount} approved photo(s) saved.`;
+      if (data.costBreakdown) {
+        msg += ` Total: €${(data.totalCost || 0).toFixed(2)}`;
+        if (data.failedRetries > 0) {
+          msg += ` (incl. €${(data.costBreakdown.retries || 0).toFixed(2)} in retries)`;
+        }
+      }
+      alert(msg);
     } else {
       setError(data.error);
     }
@@ -242,6 +353,12 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
   const hasApproved = Object.values(photoStates).some(p => p?.status === 'approved');
   const hasPhotos = Object.keys(photoStates).length > 0;
   const isWorking = creatingSession || generating || iterating;
+
+  // Estimated cost for current quality selection (4 positions)
+  const tierCost = qualityTier === 'auto'
+    ? null
+    : (QUALITY_TIERS[qualityTier]?.estimatedCost ?? null);
+  const estimatedTotal = tierCost !== null ? tierCost * 4 : null;
 
   return (
     <div className={styles.section}>
@@ -312,6 +429,28 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
             )}
           </div>
 
+          {/* ── Quality selector ─────────────────────────────── */}
+          <div className={styles.qualityRow}>
+            <div className={styles.qualityWrap}>
+              <p className={styles.overrideLabel}>Quality</p>
+              <select
+                className={styles.qualitySelect}
+                value={qualityTier}
+                onChange={e => setQualityTier(e.target.value as TierKey)}
+                disabled={isWorking}
+              >
+                {(Object.keys(QUALITY_TIERS) as TierKey[]).map(k => (
+                  <option key={k} value={k}>{QUALITY_TIERS[k].label}</option>
+                ))}
+              </select>
+            </div>
+            {estimatedTotal !== null && (
+              <p className={styles.qualityEstimate}>
+                Estimated: €{estimatedTotal.toFixed(2)} for 4 shots
+              </p>
+            )}
+          </div>
+
           {/* ── Generate row ─────────────────────────────────── */}
           <div className={styles.generateRow}>
             <button
@@ -325,6 +464,8 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
                 ? 'Generating — this takes ~30–60 s…'
                 : hasPhotos
                 ? 'Regenerate all 4 positions'
+                : estimatedTotal !== null
+                ? `Generate (€${estimatedTotal.toFixed(2)})`
                 : 'Generate photoshoot'}
             </button>
             <div className={styles.costInfo}>
@@ -368,6 +509,10 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
                       )}
                     </div>
 
+                    {photo && (
+                      <ValidationStrip photo={photo} modelName={suggestedModel?.name} />
+                    )}
+
                     {photo?.url && (
                       <div className={styles.resultActions}>
                         {photo.status === 'approved' ? (
@@ -390,7 +535,6 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
                       </div>
                     )}
 
-                    {/* Feedback panel inline below card */}
                     {isImproving && (
                       <div className={styles.feedbackPanel}>
                         <div className={styles.quickTaps}>

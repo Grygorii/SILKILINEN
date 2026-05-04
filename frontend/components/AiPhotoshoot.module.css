@@ -205,6 +205,36 @@
   font-style: italic;
 }
 
+/* ── Quality selector ────────────────────────────── */
+
+.qualityRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.qualityWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.qualitySelect {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  color: var(--dark);
+  background: #fff;
+  min-width: 240px;
+}
+
+.qualityEstimate {
+  font-size: 12px;
+  color: var(--muted);
+}
+
 /* ── Generate row ────────────────────────────────── */
 
 .generateRow {
@@ -512,6 +542,25 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* ── Validation strip ────────────────────────────── */
+
+.validationStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 8px;
+  background: #f9f7f4;
+  border-top: 1px solid var(--border);
+  font-size: 10px;
+  font-family: 'Jost', monospace;
+  letter-spacing: 0.3px;
+}
+
+.vPass   { color: #27ae60; }
+.vWarn   { color: #c8830a; }
+.vFail   { color: #c0392b; }
+.vRetry  { color: var(--muted); font-style: italic; }
 
 /* ── Finalize ────────────────────────────────────── */
 
