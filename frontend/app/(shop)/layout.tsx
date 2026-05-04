@@ -4,6 +4,8 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import AddedToCartToast from "@/components/AddedToCartToast";
 import JustSoldPopup from "@/components/JustSoldPopup";
 import WishlistSignInNudge from "@/components/WishlistSignInNudge";
+import EmailCapturePopup from "@/components/EmailCapturePopup";
+import ContactWidget from "@/components/ContactWidget";
 import { getContent } from "@/lib/content";
 
 export default async function ShopLayout({
@@ -27,6 +29,8 @@ export default async function ShopLayout({
       <AddedToCartToast />
       <JustSoldPopup />
       <WishlistSignInNudge />
+      <EmailCapturePopup />
+      <ContactWidget />
     </>
   );
 }

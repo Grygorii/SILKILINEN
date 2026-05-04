@@ -3,6 +3,7 @@ import styles from './page.module.css';
 import ProductOptions from '@/components/ProductOptions';
 import CrossSell from '@/components/CrossSell';
 import RecentlyViewed from '@/components/RecentlyViewed';
+import ReviewsSection from '@/components/ReviewsSection';
 import ProductViewTracker from '@/components/ProductViewTracker';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -163,6 +164,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       </main>
       <CrossSell productId={id} />
       <RecentlyViewed excludeId={id} />
+      <ReviewsSection />
     </>
   );
 }

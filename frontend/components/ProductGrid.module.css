@@ -155,6 +155,26 @@
   display: inline-block;
 }
 
+/* ── Review badge ─────────────────────────────────── */
+
+.reviewBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.reviewStars {
+  color: #c07a00;
+  font-size: 12px;
+}
+
+.reviewCount {
+  color: var(--muted);
+}
+
 /* ── Bottom row — sibling of Link ─────────────────── */
 
 .cardBottom {

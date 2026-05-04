@@ -1,0 +1,143 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 25, 22, 0.55);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal {
+  position: relative;
+  background: var(--warm-white, #faf8f4);
+  max-width: 420px;
+  width: 100%;
+  padding: 52px 44px 44px;
+  text-align: center;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--muted, #8a8680);
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+  transition: color 0.15s;
+}
+.close:hover { color: var(--dark, #1a1916); }
+
+.eyebrow {
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted, #8a8680);
+  margin-bottom: 14px;
+}
+
+.title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 30px;
+  font-weight: 400;
+  color: var(--dark, #1a1916);
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.body {
+  font-size: 13px;
+  color: var(--muted, #8a8680);
+  line-height: 1.75;
+  margin-bottom: 28px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.input {
+  padding: 13px 16px;
+  border: 1px solid var(--border, #e0ddd7);
+  background: var(--cream, #f5f2ec);
+  color: var(--dark, #1a1916);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+.input:focus { border-color: var(--dark, #1a1916); }
+
+.btn {
+  padding: 14px 16px;
+  background: var(--dark, #1a1916);
+  color: var(--warm-white, #faf8f4);
+  border: none;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn:hover:not(:disabled) { opacity: 0.85; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+
+.small {
+  font-size: 11px;
+  color: var(--muted, #8a8680);
+}
+
+/* ── Success state ────────────────────────────────── */
+
+.success {
+  padding: 16px 0;
+}
+
+.successIcon {
+  font-size: 36px;
+  color: #2d7d47;
+  margin-bottom: 16px;
+}
+
+.successTitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--dark, #1a1916);
+  margin-bottom: 8px;
+}
+
+.successSub {
+  font-size: 13px;
+  color: var(--muted, #8a8680);
+}
+
+@media (max-width: 480px) {
+  .modal {
+    padding: 44px 28px 36px;
+    max-width: 100%;
+  }
+  .title { font-size: 26px; }
+}

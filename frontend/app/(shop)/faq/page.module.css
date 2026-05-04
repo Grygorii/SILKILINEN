@@ -1,0 +1,118 @@
+.page {
+  padding: 80px 6% 100px;
+  min-height: 60vh;
+}
+
+.inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.eyebrow {
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 40px;
+  font-weight: 400;
+  color: var(--dark);
+  margin-bottom: 52px;
+  line-height: 1.15;
+}
+
+/* ── Accordion ────────────────────────────────────────── */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+}
+
+.item {
+  border-bottom: 1px solid var(--border);
+}
+
+.question {
+  font-size: 15px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 500;
+  color: var(--dark);
+  padding: 22px 32px 22px 0;
+  cursor: pointer;
+  list-style: none;
+  position: relative;
+  line-height: 1.4;
+  transition: color 0.15s;
+}
+
+.question::-webkit-details-marker { display: none; }
+
+.question::after {
+  content: '+';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  font-weight: 300;
+  font-family: inherit;
+  color: var(--muted);
+  transition: transform 0.2s ease, color 0.15s;
+  line-height: 1;
+}
+
+.item[open] .question::after {
+  transform: translateY(-50%) rotate(45deg);
+  color: var(--dark);
+}
+
+.item[open] .question {
+  color: var(--dark);
+}
+
+.answer {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.85;
+  padding: 0 32px 24px 0;
+}
+
+/* ── CTA ──────────────────────────────────────────────── */
+
+.cta {
+  margin-top: 64px;
+  padding-top: 40px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.cta p {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.ctaLink {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--dark);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 2px;
+  transition: border-color 0.15s;
+}
+.ctaLink:hover { border-color: var(--dark); }
+
+@media (max-width: 640px) {
+  .page { padding: 60px 5% 80px; }
+  .title { font-size: 32px; margin-bottom: 40px; }
+  .question { font-size: 14px; padding: 18px 28px 18px 0; }
+}

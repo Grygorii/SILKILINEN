@@ -317,4 +317,47 @@ async function sendCancelledEmail(order) {
   });
 }
 
-module.exports = { sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail };
+async function sendNewsletterWelcome({ email, code, validUntil, unsubscribeToken }) {
+  if (!process.env.RESEND_API_KEY) return;
+  const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.vercel.app';
+  const expires = validUntil
+    ? new Date(validUntil).toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '30 days';
+  const unsubLink = unsubscribeToken
+    ? `${process.env.BACKEND_URL || 'https://silkilinen-backend-production.up.railway.app'}/api/newsletter/unsubscribe/${unsubscribeToken}`
+    : `${FRONTEND}/unsubscribe`;
+
+  await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: 'Welcome to SILKILINEN — your 10% off is inside',
+    html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:40px 16px;">
+<tr><td align="center">
+<table cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;">
+<tr><td style="background:#1a1916;padding:32px 40px;text-align:center;">
+<p style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;letter-spacing:6px;color:#faf8f4;">SILKILINEN</p>
+<p style="margin:8px 0 0;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#7a7670;">Silk &amp; Linen Intimates</p>
+</td></tr>
+<tr><td style="background:#faf8f4;padding:48px 40px;">
+<p style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1916;">Welcome.</p>
+<p style="margin:0 0 24px;font-size:13px;color:#5a5650;line-height:1.8;">Thank you for joining us. We're a small Dublin studio making silk and linen pieces by hand, in considered batches.</p>
+<p style="margin:0 0 28px;font-size:13px;color:#5a5650;line-height:1.8;">Your first order has 10% off. Use this code at checkout:</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+<tr><td style="background:#f0ede8;border-left:3px solid #1a1916;padding:20px 24px;text-align:center;">
+<p style="margin:0;font-family:Georgia,serif;font-size:28px;letter-spacing:6px;font-weight:600;color:#1a1916;">${code}</p>
+<p style="margin:8px 0 0;font-size:12px;color:#8a8680;letter-spacing:1px;">10% off · 1 use · valid until ${expires}</p>
+</td></tr>
+</table>
+<a href="${FRONTEND}/shop" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Shop the collection</a>
+<p style="margin:40px 0 0;font-size:13px;color:#5a5650;line-height:1.8;">Slowly,<br>SILKILINEN<br><a href="mailto:hello@silkilinen.com" style="color:#1a1916;">hello@silkilinen.com</a></p>
+</td></tr>
+<tr><td style="background:#f0ede8;padding:20px 40px;text-align:center;">
+<p style="margin:0;font-size:11px;color:#aca8a2;">Dublin, Ireland &nbsp;·&nbsp; Worldwide shipping &nbsp;·&nbsp; <a href="${unsubLink}" style="color:#aca8a2;">Unsubscribe</a></p>
+</td></tr>
+</table></td></tr></table></body></html>`,
+  });
+}
+
+module.exports = { sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail };

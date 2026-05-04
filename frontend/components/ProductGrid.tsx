@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { colourToHex } from '@/lib/colours';
 import styles from './ProductGrid.module.css';
+
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 type Product = {
   _id: string;
@@ -22,8 +24,16 @@ const categories = ['all', 'shorts', 'dresses', 'robes', 'shirts', 'scarves'];
 export default function ProductGrid({ products }: { products: Product[] }) {
   const [filter, setFilter] = useState('all');
   const [addedId, setAddedId] = useState<string | null>(null);
+  const [reviewBadge, setReviewBadge] = useState<{ avg: number; count: number } | null>(null);
   const { addToCart } = useCart();
   const { toggle, isWished } = useWishlist();
+
+  useEffect(() => {
+    fetch(`${API}/api/reviews/summary`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d && d.count > 0) setReviewBadge({ avg: d.average, count: d.count }); })
+      .catch(() => {});
+  }, []);
 
   const filtered = filter === 'all'
     ? products
@@ -88,6 +98,13 @@ export default function ProductGrid({ products }: { products: Product[] }) {
                 </div>
                 <div className={styles.cardInfo}>
                   <h3 className={styles.cardName}>{product.name}</h3>
+                  {reviewBadge && (
+                    <span className={styles.reviewBadge}>
+                      <span className={styles.reviewStars}>★</span>
+                      {reviewBadge.avg.toFixed(1)}
+                      <span className={styles.reviewCount}>({reviewBadge.count})</span>
+                    </span>
+                  )}
                   <div className={styles.colours}>
                     {product.colours?.map(colour => {
                       const hex = colourToHex(colour);
