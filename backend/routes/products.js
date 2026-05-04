@@ -143,9 +143,14 @@ function csvToProducts(records, platform) {
 
 router.get('/', async function(req, res) {
   try {
-    const { sort, limit } = req.query;
-    // Exclude draft and archived products from the public shop
-    let query = Product.find({ status: { $in: ['active', 'sold_out', null, undefined] } });
+    const { sort, limit, category, q } = req.query;
+    const filter = { status: { $in: ['active', 'sold_out', null, undefined] } };
+    if (category) filter.category = category;
+    if (q) filter.$or = [
+      { name: { $regex: q, $options: 'i' } },
+      { description: { $regex: q, $options: 'i' } },
+    ];
+    let query = Product.find(filter);
     if (sort === '-createdAt') query = query.sort({ createdAt: -1 });
     if (limit) query = query.limit(parseInt(limit, 10));
     const products = await query;

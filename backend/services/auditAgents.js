@@ -2,19 +2,15 @@
 
 const Product = require('../models/Product');
 const Order = require('../models/Order');
-
-// ── Known frontend configuration (source of truth for consistency checks) ──
-
-const FRONTEND_CATEGORIES = ['gifts', 'robes', 'pyjamas', 'dresses', 'lingerie', 'accessories', 'shorts', 'shirts', 'scarves'];
+const { SLUGS: FRONTEND_CATEGORIES } = require('../config/categories');
 
 const SIDEMENU_LINKS = [
   { label: 'SHOP ALL', href: '/shop', filter: null },
-  { label: 'GIFTS', href: '/shop?category=gifts', filter: 'gifts' },
   { label: 'ROBES', href: '/shop?category=robes', filter: 'robes' },
-  { label: 'PYJAMAS', href: '/shop?category=pyjamas', filter: 'pyjamas' },
-  { label: 'DRESSES', href: '/shop?category=dresses', filter: 'dresses' },
+  { label: 'PYJAMA SETS', href: '/shop?category=pyjamas', filter: 'pyjamas' },
+  { label: 'SLEEP DRESSES', href: '/shop?category=sleep-dresses', filter: 'sleep-dresses' },
   { label: 'LINGERIE', href: '/shop?category=lingerie', filter: 'lingerie' },
-  { label: 'ACCESSORIES', href: '/shop?category=accessories', filter: 'accessories' },
+  { label: 'SCARVES', href: '/shop?category=scarves', filter: 'scarves' },
   { label: 'ABOUT', href: '/about', filter: null },
 ];
 
@@ -22,7 +18,7 @@ const FOOTER_LINKS = [
   { label: 'New arrivals', href: '/shop' },
   { label: 'All products', href: '/shop' },
   { label: 'Robes', href: '/shop?category=robes' },
-  { label: 'Dresses', href: '/shop?category=dresses' },
+  { label: 'Sleep Dresses', href: '/shop?category=sleep-dresses' },
   { label: 'About us', href: '/about' },
   { label: 'Reviews', href: '/reviews' },
   { label: 'Shipping', href: '/shipping' },

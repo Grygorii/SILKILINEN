@@ -1,4 +1,5 @@
 import styles from './Footer.module.css';
+import FooterShopLinks from './FooterShopLinks';
 
 export default function Footer() {
   return (
@@ -36,8 +37,7 @@ export default function Footer() {
           <h4>Shop</h4>
           <a href="/shop">New arrivals</a>
           <a href="/shop">All products</a>
-          <a href="/shop?category=robes">Robes</a>
-          <a href="/shop?category=dresses">Dresses</a>
+          <FooterShopLinks />
         </div>
         <div className={styles.col}>
           <h4>Info</h4>

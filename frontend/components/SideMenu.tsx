@@ -1,22 +1,15 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { X, Heart, User } from 'lucide-react';
 import { useCustomer } from '@/context/CustomerContext';
 import { useWishlist } from '@/context/WishlistContext';
 import styles from './SideMenu.module.css';
 
-const NAV_LINKS = [
-  { label: 'SHOP ALL', href: '/shop', arrow: true, featured: false },
-  { label: 'GIFTS', href: '/shop?category=gifts', arrow: true, featured: true },
-  { label: 'ROBES', href: '/shop?category=robes', arrow: false, featured: false },
-  { label: 'PYJAMAS', href: '/shop?category=pyjamas', arrow: false, featured: false },
-  { label: 'DRESSES', href: '/shop?category=dresses', arrow: false, featured: false },
-  { label: 'LINGERIE', href: '/shop?category=lingerie', arrow: false, featured: false },
-  { label: 'ACCESSORIES', href: '/shop?category=accessories', arrow: false, featured: false },
-  { label: 'ABOUT', href: '/about', arrow: false, featured: false },
-];
+const API = process.env.NEXT_PUBLIC_API_URL;
+
+type Category = { slug: string; label: string; count: number };
 
 type Props = {
   isOpen: boolean;
@@ -27,6 +20,14 @@ export default function SideMenu({ isOpen, onClose }: Props) {
   const { customer } = useCustomer();
   const { count: wishlistCount } = useWishlist();
   const searchRef = useRef<HTMLInputElement>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    fetch(`${API}/api/categories`)
+      .then(r => r.ok ? r.json() : [])
+      .then((data: Category[]) => setCategories(data.filter(c => c.count > 0)))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -88,17 +89,25 @@ export default function SideMenu({ isOpen, onClose }: Props) {
 
         {/* Navigation */}
         <nav className={styles.nav}>
-          {NAV_LINKS.map(link => (
+          <Link href="/shop" className={styles.navLink} onClick={onClose}>
+            <span>SHOP ALL</span>
+            <span className={styles.navArrow}>→</span>
+          </Link>
+
+          {categories.map(cat => (
             <Link
-              key={link.href}
-              href={link.href}
-              className={`${styles.navLink} ${link.featured ? styles.navLinkFeatured : ''}`}
+              key={cat.slug}
+              href={`/shop?category=${cat.slug}`}
+              className={styles.navLink}
               onClick={onClose}
             >
-              <span>{link.label}</span>
-              {link.arrow && <span className={styles.navArrow}>→</span>}
+              <span>{cat.label.toUpperCase()}</span>
             </Link>
           ))}
+
+          <Link href="/about" className={styles.navLink} onClick={onClose}>
+            <span>ABOUT</span>
+          </Link>
         </nav>
 
         {/* Spacer */}

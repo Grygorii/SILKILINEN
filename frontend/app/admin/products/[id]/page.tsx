@@ -53,11 +53,21 @@ type Form = {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const STANDARD_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
-const CATEGORIES = ['shorts', 'dresses', 'robes', 'shirts', 'scarves', 'sets', 'accessories'];
+const CATEGORIES = [
+  { slug: 'robes',         label: 'Robes' },
+  { slug: 'pyjamas',       label: 'Pyjama Sets' },
+  { slug: 'sleep-dresses', label: 'Sleep Dresses' },
+  { slug: 'lingerie',      label: 'Lingerie' },
+  { slug: 'shorts',        label: 'Lounge Shorts' },
+  { slug: 'shirts',        label: 'Lounge Shirts' },
+  { slug: 'pillowcases',   label: 'Pillowcases' },
+  { slug: 'eye-masks',     label: 'Eye Masks' },
+  { slug: 'scarves',       label: 'Scarves' },
+];
 
 const EMPTY_FORM: Form = {
   name: '', status: 'draft', price: '', compareAtPrice: '', costPrice: '',
-  category: 'shorts', description: '', tags: '',
+  category: 'robes', description: '', tags: '',
   metaTitle: '', metaDescription: '', slug: '', keywords: '', altTextTemplate: '',
   materialComposition: '', careInstructions: '', origin: 'Made in Dublin', certifications: '',
 };
@@ -500,7 +510,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 <label className={styles.label}>Category</label>
                 <select className={styles.input} value={form.category} onChange={e => setField('category', e.target.value)}>
                   {CATEGORIES.map(c => (
-                    <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                    <option key={c.slug} value={c.slug}>{c.label}</option>
                   ))}
                 </select>
               </div>
