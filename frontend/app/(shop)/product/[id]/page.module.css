@@ -1,131 +1,137 @@
 .page {
-  padding: 60px 6%;
+  padding: 0 0 80px;
 }
+
+/* ── Layout ───────────────────────────────────────── */
 
 .inner {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 80px;
+  grid-template-columns: 60fr 40fr;
+  gap: 0;
   align-items: start;
 }
 
-.placeholder {
-  background: var(--cream);
-  height: 600px;
+/* ── Gallery column ───────────────────────────────── */
+
+.galleryCol {
+  /* no padding — image goes edge to top on mobile */
 }
 
-.heroImg {
-  width: 100%;
-  height: 600px;
-  object-fit: cover;
-  display: block;
+/* ── Info column ──────────────────────────────────── */
+
+.infoCol {
+  padding: 60px 60px 60px 48px;
+  position: sticky;
+  top: 100px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  scrollbar-width: none;
 }
+
+.infoCol::-webkit-scrollbar { display: none; }
+
+/* ── Back link ────────────────────────────────────── */
 
 .back {
   display: inline-block;
-  font-size: 12px;
-  letter-spacing: 1px;
-  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted, #8a8680);
   text-decoration: none;
-  margin-bottom: 24px;
-  transition: color 0.2s ease;
+  margin-bottom: 28px;
+  transition: color 0.15s;
+}
+.back:hover { color: var(--dark, #1a1916); }
+
+/* ── New tag ──────────────────────────────────────── */
+
+.newTag {
+  display: block;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--muted, #8a8680);
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
 }
 
-.back:hover {
-  color: var(--dark);
-}
+/* ── Product name ─────────────────────────────────── */
 
-.info h1 {
+.productName {
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 42px;
+  font-size: 36px;
   font-weight: 400;
-  letter-spacing: 1px;
-  margin-bottom: 16px;
+  letter-spacing: 0.5px;
+  color: var(--dark, #1a1916);
+  margin-bottom: 8px;
+  line-height: 1.15;
 }
+
+/* ── Material subtitle ────────────────────────────── */
+
+.materialSub {
+  font-size: 16px;
+  font-style: italic;
+  color: var(--muted, #8a8680);
+  margin-bottom: 20px;
+}
+
+/* ── Price ────────────────────────────────────────── */
 
 .price {
-  font-size: 22px;
-  margin-bottom: 24px;
+  font-size: 20px;
+  color: var(--dark, #1a1916);
+  margin-bottom: 28px;
   display: flex;
   align-items: baseline;
   gap: 10px;
 }
 
 .priceSale {
-  color: #c0392b;
+  text-decoration: line-through;
+  color: var(--muted, #8a8680);
 }
 
 .priceCompare {
-  font-size: 16px;
-  color: var(--muted);
-  text-decoration: line-through;
+  font-size: 20px;
+  color: var(--dark, #1a1916);
 }
 
-.vatNote {
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 0.5px;
-  font-weight: 400;
-}
-
-.stockIn {
-  font-size: 12px;
-  letter-spacing: 1px;
-  color: #4a7c59;
-  margin-bottom: 16px;
-}
+/* ── Stock ────────────────────────────────────────── */
 
 .stockLow {
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 1px;
+  text-transform: uppercase;
   color: #b5631a;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .stockOut {
-  font-size: 12px;
-  letter-spacing: 1px;
-  color: #c0392b;
-  margin-bottom: 16px;
-}
-
-.sizeGuideLink {
-  display: inline-block;
   font-size: 11px;
   letter-spacing: 1px;
-  color: var(--muted);
-  text-decoration: underline;
+  text-transform: uppercase;
+  color: var(--muted, #8a8680);
   margin-bottom: 20px;
-  transition: color 0.2s ease;
 }
 
-.sizeGuideLink:hover {
-  color: var(--dark);
-}
+/* ── Accordions ───────────────────────────────────── */
 
-.description {
-  font-size: 14px;
-  color: var(--muted);
-  line-height: 1.9;
-  margin-bottom: 32px;
-}
-
-/* ── Material & Care accordion ───────────────────── */
-.materialSection {
-  margin-top: 28px;
-  border-top: 1px solid var(--border);
+.accordions {
+  margin-top: 32px;
+  border-top: 1px solid var(--border, #e0ddd7);
 }
 
 .accordion {
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border, #e0ddd7);
 }
 
 .accordionSummary {
-  padding: 14px 0;
-  font-size: 12px;
-  letter-spacing: 1.5px;
+  padding: 20px 0;
+  font-size: 11px;
+  letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--dark);
+  color: var(--dark, #1a1916);
   cursor: pointer;
   list-style: none;
   display: flex;
@@ -140,7 +146,8 @@
   content: '+';
   font-size: 18px;
   font-weight: 300;
-  color: var(--muted);
+  color: var(--muted, #8a8680);
+  line-height: 1;
   transition: transform 0.2s ease;
 }
 
@@ -150,46 +157,41 @@
 
 .accordionBody {
   font-size: 13px;
-  color: var(--muted);
-  line-height: 1.8;
-  padding-bottom: 16px;
+  color: var(--muted, #8a8680);
+  line-height: 1.85;
+  padding-bottom: 20px;
   margin: 0;
 }
 
+/* ── Not found ────────────────────────────────────── */
+
 .notFound {
-  min-height: 40vh;
+  min-height: 50vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 20px;
-  color: var(--muted);
+  color: var(--muted, #8a8680);
   font-size: 14px;
 }
 
-@media (max-width: 768px) {
+/* ── Mobile ───────────────────────────────────────── */
+
+@media (max-width: 900px) {
   .inner {
     grid-template-columns: 1fr;
-    gap: 32px;
   }
-
-  .placeholder,
-  .heroImg {
-    height: 380px;
+  .infoCol {
+    padding: 40px 6% 60px;
+    position: static;
+    max-height: none;
+    overflow-y: visible;
   }
-
-  .info h1 {
-    font-size: 32px;
-  }
+  .productName { font-size: 30px; }
 }
 
 @media (max-width: 480px) {
-  .page {
-    padding: 40px 5%;
-  }
-
-  .placeholder,
-  .heroImg {
-    height: 300px;
-  }
+  .infoCol { padding: 32px 5% 48px; }
+  .productName { font-size: 26px; }
 }

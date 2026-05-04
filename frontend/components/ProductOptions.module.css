@@ -1,94 +1,147 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Picker row ───────────────────────────────────── */
+
 .picker {
   margin-bottom: 24px;
 }
 
-.picker p {
-  font-size: 11px;
+.pickerLabel {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
+  color: var(--muted, #8a8680);
   margin-bottom: 12px;
-  color: var(--muted);
+  gap: 12px;
 }
 
-.options {
+.pickerValue {
+  color: var(--dark, #1a1916);
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+/* ── Colour swatches ──────────────────────────────── */
+
+.swatches {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.btn {
-  background: none;
-  border: 1px solid var(--border);
-  padding: 8px 16px;
-  font-family: 'Jost', sans-serif;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--muted);
-}
-
-.btn:hover {
-  border-color: var(--dark);
-  color: var(--dark);
-}
-
-.active {
-  background: var(--dark);
-  color: #faf8f4;
-  border-color: var(--dark);
-}
-
-.selectedLabel {
-  font-size: 11px;
-  letter-spacing: 1px;
-  color: var(--dark);
-  font-weight: 500;
-}
-
-.error {
-  color: #c0392b;
-  font-size: 12px;
-  margin-bottom: 8px;
-}
-
-.swatchBtn {
-  padding: 4px;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .swatch {
-  display: block;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border, #e0ddd7);
+  background: var(--cream, #f5f2ec);
+  cursor: pointer;
+  transition: border-color 0.15s;
+  padding: 0;
   flex-shrink: 0;
 }
 
-.swatchBtn.active .swatch {
-  outline: 2px solid var(--dark);
-  outline-offset: 2px;
+.swatch:hover { border-color: var(--dark, #1a1916); }
+
+.swatchActive {
+  border: 2px solid var(--dark, #1a1916);
+  outline: 2px solid var(--dark, #1a1916);
+  outline-offset: 1px;
 }
 
-.addToCart {
-  width: 100%;
-  padding: 16px;
-  background: var(--dark);
-  color: #faf8f4;
-  border: none;
-  font-family: 'Jost', sans-serif;
-  font-size: 11px;
-  letter-spacing: 3px;
+/* ── Size boxes ───────────────────────────────────── */
+
+.sizeGuideLink {
+  font-size: 10px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  cursor: pointer;
-  transition: opacity 0.3s ease;
-  margin-top: 8px;
+  color: var(--muted, #8a8680);
+  text-decoration: underline;
+  transition: color 0.15s;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
-.addToCart:hover {
-  opacity: 0.8;
+.sizeGuideLink:hover { color: var(--dark, #1a1916); }
+
+.sizes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
+
+.sizeBtn {
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--border, #e0ddd7);
+  background: var(--warm-white, #faf8f4);
+  color: var(--dark, #1a1916);
+  font-size: 12px;
+  font-family: inherit;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.sizeBtn:hover { border-color: var(--dark, #1a1916); background: var(--cream, #f5f2ec); }
+
+.sizeBtnActive {
+  background: var(--dark, #1a1916);
+  color: var(--warm-white, #faf8f4);
+  border-color: var(--dark, #1a1916);
+}
+
+/* ── CTA ──────────────────────────────────────────── */
+
+.cta {
+  width: 100%;
+  height: 56px;
+  background: var(--dark, #1a1916);
+  color: var(--warm-white, #faf8f4);
+  border: 1px solid var(--dark, #1a1916);
+  font-size: 12px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  margin-bottom: 16px;
+}
+
+.cta:hover:not(:disabled) { opacity: 0.88; }
+.cta:disabled { background: var(--cream, #f5f2ec); color: var(--muted, #8a8680); border-color: var(--border, #e0ddd7); cursor: default; }
+
+.ctaOutline {
+  background: transparent;
+  color: var(--dark, #1a1916);
+}
+.ctaOutline:hover:not(:disabled) { background: var(--dark, #1a1916); color: var(--warm-white, #faf8f4); }
+
+.ctaAdded {
+  opacity: 0.75;
+}
+
+/* ── Drop a Hint ──────────────────────────────────── */
+
+.hintBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted, #8a8680);
+  font-family: inherit;
+  padding: 4px 0;
+  transition: color 0.15s;
+  text-align: left;
+}
+
+.hintBtn:hover { color: var(--dark, #1a1916); }

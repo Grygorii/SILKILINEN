@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
+import { Heart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { colourToHex } from '@/lib/colours';
 import styles from './ProductGrid.module.css';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+type ProductImage = { url: string; isPrimary?: boolean; alt?: string };
 
 type Product = {
   _id: string;
@@ -17,23 +18,38 @@ type Product = {
   colours: string[];
   sizes: string[];
   description: string;
+  materialComposition?: string;
+  createdAt?: string;
+  images?: ProductImage[];
+  image?: string;
 };
 
 const categories = ['all', 'shorts', 'dresses', 'robes', 'shirts', 'scarves'];
 
+const NEW_DAYS = 30;
+
+function getMaterialSub(mat?: string): string {
+  if (!mat) return '';
+  const m = mat.toLowerCase();
+  if (m.includes('mulberry silk')) return 'in Mulberry Silk';
+  if (m.includes('silk satin')) return 'in Silk Satin';
+  if (m.includes('silk') && m.includes('linen')) return 'in Silk & Linen';
+  if (m.includes('silk')) return 'in Pure Silk';
+  if (m.includes('linen')) return 'in Pure Linen';
+  return '';
+}
+
+function isNew(createdAt?: string): boolean {
+  if (!createdAt) return false;
+  return Date.now() - new Date(createdAt).getTime() < NEW_DAYS * 86_400_000;
+}
+
 export default function ProductGrid({ products }: { products: Product[] }) {
   const [filter, setFilter] = useState('all');
   const [addedId, setAddedId] = useState<string | null>(null);
-  const [reviewBadge, setReviewBadge] = useState<{ avg: number; count: number } | null>(null);
+  const [animatingId, setAnimatingId] = useState<string | null>(null);
   const { addToCart } = useCart();
   const { toggle, isWished } = useWishlist();
-
-  useEffect(() => {
-    fetch(`${API}/api/reviews/summary`)
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d && d.count > 0) setReviewBadge({ avg: d.average, count: d.count }); })
-      .catch(() => {});
-  }, []);
 
   const filtered = filter === 'all'
     ? products
@@ -58,6 +74,14 @@ export default function ProductGrid({ products }: { products: Product[] }) {
     setTimeout(() => setAddedId(null), 1500);
   }
 
+  function handleHeart(e: React.MouseEvent, id: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    toggle(id);
+    setAnimatingId(id);
+    setTimeout(() => setAnimatingId(null), 300);
+  }
+
   return (
     <div>
       <div className={styles.filters}>
@@ -75,36 +99,48 @@ export default function ProductGrid({ products }: { products: Product[] }) {
         {filtered.map(product => {
           const hasSizes = product.sizes?.length > 0;
           const isAdded = addedId === product._id;
+          const wished = isWished(product._id);
+          const animating = animatingId === product._id;
+          const materialSub = getMaterialSub(product.materialComposition);
+          const showNew = isNew(product.createdAt);
+
+          const primaryImg = product.images?.find(i => i.isPrimary)
+            ?? product.images?.[0]
+            ?? null;
+          const secondImg = product.images?.find(i => !i.isPrimary && i !== primaryImg)
+            ?? (product.images && product.images.length > 1 ? product.images[1] : null);
+          const heroUrl = primaryImg?.url ?? product.image ?? null;
+          const heroAlt = primaryImg?.alt ?? product.name;
 
           return (
             <div key={product._id} className={styles.card}>
-              {/*
-                Heart is a direct child of card (sibling of Link),
-                positioned absolute. Not nested inside Link — click
-                events cannot bubble up to the anchor.
-              */}
+              {/* Heart — positioned absolute over image */}
               <button
-                className={`${styles.heartBtn} ${isWished(product._id) ? styles.heartActive : ''}`}
-                onClick={() => toggle(product._id)}
-                aria-label={isWished(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                className={`${styles.heartBtn} ${animating ? styles.heartAnimating : ''}`}
+                onClick={e => handleHeart(e, product._id)}
+                aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
               >
-                {isWished(product._id) ? '♥' : '♡'}
+                <Heart
+                  size={22}
+                  strokeWidth={1.5}
+                  fill={wished ? 'currentColor' : 'none'}
+                  className={wished ? styles.heartFilled : ''}
+                />
               </button>
 
-              {/* Link wraps image + name + colours */}
               <Link href={`/product/${product._id}`} className={styles.cardLink}>
                 <div className={styles.cardImg}>
-                  <span className={styles.viewBtn}>View product</span>
+                  {heroUrl && (
+                    <img src={heroUrl} alt={heroAlt} className={styles.img} />
+                  )}
+                  {secondImg?.url && (
+                    <img src={secondImg.url} alt={heroAlt} className={`${styles.img} ${styles.imgHover}`} />
+                  )}
+                  {showNew && <span className={styles.newBadge}>new</span>}
                 </div>
                 <div className={styles.cardInfo}>
                   <h3 className={styles.cardName}>{product.name}</h3>
-                  {reviewBadge && (
-                    <span className={styles.reviewBadge}>
-                      <span className={styles.reviewStars}>★</span>
-                      {reviewBadge.avg.toFixed(1)}
-                      <span className={styles.reviewCount}>({reviewBadge.count})</span>
-                    </span>
-                  )}
+                  {materialSub && <p className={styles.materialSub}>{materialSub}</p>}
                   <div className={styles.colours}>
                     {product.colours?.map(colour => {
                       const hex = colourToHex(colour);
@@ -121,14 +157,14 @@ export default function ProductGrid({ products }: { products: Product[] }) {
                 </div>
               </Link>
 
-              {/* Price + add-to-cart: sibling of Link, not inside it */}
               <div className={styles.cardBottom}>
                 <span className={styles.price}>€{Number(product.price).toFixed(2)}</span>
                 <button
-                  className={`${styles.addBtn} ${isAdded ? styles.addedBtn : ''}`}
+                  className={`${styles.plusBtn} ${isAdded ? styles.plusAdded : ''}`}
                   onClick={e => handleAdd(e, product)}
+                  aria-label={isAdded ? 'Added to bag' : hasSizes ? 'Select size' : 'Add to bag'}
                 >
-                  {isAdded ? '✓ Added' : hasSizes ? 'Select size' : 'Add to cart'}
+                  {isAdded ? '✓' : '+'}
                 </button>
               </div>
             </div>

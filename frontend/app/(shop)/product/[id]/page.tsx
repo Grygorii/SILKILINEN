@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import styles from './page.module.css';
 import ProductOptions from '@/components/ProductOptions';
+import ProductGallery from '@/components/ProductGallery';
 import CrossSell from '@/components/CrossSell';
 import RecentlyViewed from '@/components/RecentlyViewed';
-import ReviewsSection from '@/components/ReviewsSection';
 import ProductViewTracker from '@/components/ProductViewTracker';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -55,12 +55,23 @@ export async function generateMetadata(
   };
 }
 
+function getMaterialSub(mat?: string): string {
+  if (!mat) return '';
+  const m = mat.toLowerCase();
+  if (m.includes('mulberry silk')) return 'In Mulberry Silk';
+  if (m.includes('silk satin')) return 'In Silk Satin';
+  if (m.includes('silk') && m.includes('linen')) return 'In Silk & Linen';
+  if (m.includes('silk')) return 'In Pure Silk';
+  if (m.includes('linen')) return 'In Pure Linen';
+  return '';
+}
+
 function StockBadge({ product }: { product: { inStock?: boolean; totalStock?: number; stockLevel?: number } }) {
   const total = product.totalStock ?? product.stockLevel ?? null;
   if (total === null) return null;
   if (total === 0) return <p className={styles.stockOut}>Out of stock</p>;
-  if (total <= 3) return <p className={styles.stockLow}>Low stock — only {total} left</p>;
-  return <p className={styles.stockIn}>In stock</p>;
+  if (total <= 3) return <p className={styles.stockLow}>Only {total} left</p>;
+  return null;
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -78,24 +89,31 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  const hasSizes = Array.isArray(product.sizes) && product.sizes.length > 0;
-  const primaryImage = product.images?.find((i: { isPrimary: boolean }) => i.isPrimary);
-  const heroImage = primaryImage?.url || product.images?.[0]?.url || product.image || '';
-  const heroAlt = primaryImage?.alt || product.altText || product.name;
   const total = product.totalStock ?? product.stockLevel ?? null;
+  const outOfStock = total === 0;
+  const materialSub = getMaterialSub(product.materialComposition);
+  const showNew = product.createdAt
+    ? Date.now() - new Date(product.createdAt).getTime() < 30 * 86_400_000
+    : false;
+
+  const galleryImages = product.images?.length > 0
+    ? product.images
+    : product.image
+      ? [{ url: product.image, alt: product.name }]
+      : [];
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
     description: product.description || '',
-    image: heroImage || undefined,
+    image: galleryImages[0]?.url || undefined,
     brand: { '@type': 'Brand', name: 'SILKILINEN' },
     offers: {
       '@type': 'Offer',
       priceCurrency: 'EUR',
       price: Number(product.price).toFixed(2),
-      availability: total === 0
+      availability: outOfStock
         ? 'https://schema.org/OutOfStock'
         : 'https://schema.org/InStock',
       url: `https://silkilinen.vercel.app/product/${id}`,
@@ -110,61 +128,81 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <ProductViewTracker id={product._id} name={product.name} price={product.price} />
+
         <div className={styles.inner}>
-          <div className={styles.image}>
-            {heroImage ? (
-              <img src={heroImage} alt={heroAlt} className={styles.heroImg} />
-            ) : (
-              <div className={styles.placeholder} />
-            )}
+          {/* Gallery */}
+          <div className={styles.galleryCol}>
+            <ProductGallery
+              images={galleryImages}
+              name={product.name}
+              productId={product._id}
+            />
           </div>
-          <div className={styles.info}>
+
+          {/* Info */}
+          <div className={styles.infoCol}>
             <a href="/shop" className={styles.back}>← Back to shop</a>
-            <h1>{product.name}</h1>
+
+            {showNew && <span className={styles.newTag}>new</span>}
+            <h1 className={styles.productName}>{product.name}</h1>
+            {materialSub && <p className={styles.materialSub}>{materialSub}</p>}
+
             <p className={styles.price}>
-              <span className={product.compareAtPrice ? styles.priceSale : ''}>
+              <span className={product.compareAtPrice && product.compareAtPrice > product.price ? styles.priceSale : ''}>
                 €{Number(product.price).toFixed(2)}
               </span>
               {product.compareAtPrice && product.compareAtPrice > product.price && (
                 <span className={styles.priceCompare}>€{Number(product.compareAtPrice).toFixed(2)}</span>
               )}
             </p>
+
             <StockBadge product={product} />
-            <p className={styles.description}>{product.description}</p>
-            {hasSizes && (
-              <a href="/size-guide" className={styles.sizeGuideLink} target="_blank" rel="noopener noreferrer">
-                Size guide →
-              </a>
-            )}
+
             <ProductOptions
               colours={product.colours ?? []}
               sizes={product.sizes ?? []}
               productName={product.name}
+              productId={product._id}
               price={product.price}
+              outOfStock={outOfStock}
             />
 
-            {(product.materialComposition || product.careInstructions) && (
-              <div className={styles.materialSection}>
-                {product.materialComposition && (
-                  <details className={styles.accordion}>
-                    <summary className={styles.accordionSummary}>Material</summary>
-                    <p className={styles.accordionBody}>{product.materialComposition}</p>
-                  </details>
-                )}
-                {product.careInstructions && (
-                  <details className={styles.accordion}>
-                    <summary className={styles.accordionSummary}>Care</summary>
-                    <p className={styles.accordionBody}>{product.careInstructions}</p>
-                  </details>
-                )}
-              </div>
-            )}
+            {/* Accordions */}
+            <div className={styles.accordions}>
+              {product.description && (
+                <details className={styles.accordion}>
+                  <summary className={styles.accordionSummary}>PRODUCT DETAILS</summary>
+                  <p className={styles.accordionBody}>{product.description}</p>
+                </details>
+              )}
+              {(product.materialComposition || product.careInstructions) && (
+                <details className={styles.accordion}>
+                  <summary className={styles.accordionSummary}>MATERIAL AND CARE</summary>
+                  <div className={styles.accordionBody}>
+                    {product.materialComposition && <p>{product.materialComposition}</p>}
+                    {product.careInstructions && <p style={{ marginTop: '8px' }}>{product.careInstructions}</p>}
+                  </div>
+                </details>
+              )}
+              <details className={styles.accordion}>
+                <summary className={styles.accordionSummary}>DELIVERY & RETURNS</summary>
+                <p className={styles.accordionBody}>
+                  We ship from Dublin, Ireland worldwide. Standard delivery 5–10 business days. Express shipping available at checkout. Returns accepted within 14 days of delivery for unworn items in their original condition.
+                </p>
+              </details>
+              <details className={styles.accordion}>
+                <summary className={styles.accordionSummary}>GIFT PACKAGING</summary>
+                <p className={styles.accordionBody}>
+                  Every order is wrapped in our signature tissue-lined box with ribbon — ready for gifting. Add a personal note in the order notes at checkout.
+                </p>
+              </details>
+            </div>
           </div>
         </div>
       </main>
+
       <CrossSell productId={id} />
       <RecentlyViewed excludeId={id} />
-      <ReviewsSection />
     </>
   );
 }

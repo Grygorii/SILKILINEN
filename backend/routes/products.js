@@ -4,6 +4,7 @@ const multer = require('multer');
 const Product = require('../models/Product');
 const { upload } = require('../utils/cloudinary');
 const { requireAuth } = require('../middleware/auth');
+const { sendDropAHint } = require('../services/email');
 
 // In-memory multer for CSV import (no cloud upload)
 const csvUpload = multer({
@@ -216,6 +217,35 @@ router.post('/', requireAuth, async function(req, res) {
     res.status(201).json(product);
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+router.post('/:id/drop-hint', async function(req, res) {
+  try {
+    const { recipientName, recipientEmail, senderName, message } = req.body;
+    if (!recipientEmail || !senderName) {
+      return res.status(400).json({ error: 'recipientEmail and senderName are required' });
+    }
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+
+    const primaryImg = product.images?.find(i => i.isPrimary) ?? product.images?.[0];
+    const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.vercel.app';
+
+    await sendDropAHint({
+      recipientName,
+      recipientEmail,
+      senderName,
+      message,
+      productName: product.name,
+      productUrl: `${FRONTEND}/product/${product._id}`,
+      productImage: primaryImg?.url || product.image || null,
+      price: product.price,
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

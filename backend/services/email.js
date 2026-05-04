@@ -360,4 +360,57 @@ async function sendNewsletterWelcome({ email, code, validUntil, unsubscribeToken
   });
 }
 
-module.exports = { sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail };
+async function sendDropAHint({ recipientName, recipientEmail, senderName, message, productName, productUrl, productImage, price }) {
+  if (!process.env.RESEND_API_KEY) return;
+  const greeting = recipientName ? `Hi ${recipientName},` : 'Hello,';
+  const imageBlock = productImage
+    ? `<tr><td style="padding:0 0 24px;text-align:center;"><img src="${productImage}" alt="${productName}" style="max-width:280px;width:100%;height:auto;display:block;margin:0 auto;" /></td></tr>`
+    : '';
+  const messageBlock = message
+    ? `<tr><td style="padding:0 0 28px;"><p style="font-size:14px;color:#5a5650;line-height:1.8;font-style:italic;border-left:3px solid #e0ddd7;padding-left:16px;margin:0;">"${message}"</p></td></tr>`
+    : '';
+
+  await getResend().emails.send({
+    from: FROM,
+    to: recipientEmail,
+    subject: `${senderName} thinks you'd love this`,
+    html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:40px 16px;">
+<tr><td align="center">
+<table cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;">
+<tr><td style="background:#1a1916;padding:28px 40px;text-align:center;">
+<p style="margin:0;font-family:Georgia,serif;font-size:20px;font-weight:400;letter-spacing:6px;color:#faf8f4;">SILKILINEN</p>
+</td></tr>
+<tr><td style="background:#faf8f4;padding:48px 40px 40px;">
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr><td style="padding:0 0 20px;">
+<p style="margin:0;font-size:14px;color:#5a5650;line-height:1.8;">${greeting}</p>
+<p style="margin:12px 0 0;font-size:14px;color:#5a5650;line-height:1.8;">${senderName} thought you might love this:</p>
+</td></tr>
+${imageBlock}
+<tr><td style="padding:0 0 8px;">
+<p style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#1a1916;">${productName}</p>
+</td></tr>
+<tr><td style="padding:0 0 24px;">
+<p style="margin:0;font-size:18px;color:#1a1916;">€${Number(price).toFixed(2)}</p>
+</td></tr>
+${messageBlock}
+<tr><td style="padding:0 0 36px;">
+<a href="${productUrl}" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:16px 40px;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;">VIEW PRODUCT</a>
+</td></tr>
+<tr><td>
+<p style="margin:0;font-size:13px;color:#8a8680;line-height:1.8;">Slowly,<br>SILKILINEN</p>
+</td></tr>
+</table>
+</td></tr>
+<tr><td style="background:#f0ede8;padding:20px 40px;text-align:center;">
+<p style="margin:0;font-size:11px;color:#aca8a2;">Dublin, Ireland &nbsp;·&nbsp; Worldwide shipping</p>
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>`,
+  });
+}
+
+module.exports = { sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail, sendDropAHint };

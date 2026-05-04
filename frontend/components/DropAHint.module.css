@@ -1,0 +1,166 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 25, 22, 0.5);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal {
+  background: var(--warm-white, #faf8f4);
+  width: 100%;
+  max-width: 440px;
+  padding: 36px 36px 32px;
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.modalTitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--dark, #1a1916);
+  margin: 0;
+}
+
+.close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted, #8a8680);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+  margin-top: 2px;
+  margin-right: -4px;
+}
+.close:hover { color: var(--dark, #1a1916); }
+
+.subtitle {
+  font-size: 13px;
+  color: var(--muted, #8a8680);
+  line-height: 1.75;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border, #e0ddd7);
+  padding-bottom: 20px;
+}
+
+/* ── Form ─────────────────────────────────────────── */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted, #8a8680);
+}
+
+.input,
+.textarea {
+  border: 1px solid var(--border, #e0ddd7);
+  background: var(--warm-white, #faf8f4);
+  color: var(--dark, #1a1916);
+  font-size: 14px;
+  font-family: inherit;
+  padding: 12px 14px;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: var(--dark, #1a1916);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--muted, #8a8680);
+  font-style: italic;
+}
+
+.errorMsg {
+  font-size: 12px;
+  color: #a04040;
+}
+
+.submitBtn {
+  width: 100%;
+  height: 52px;
+  background: var(--dark, #1a1916);
+  color: var(--warm-white, #faf8f4);
+  border: none;
+  font-size: 12px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  margin-top: 4px;
+}
+.submitBtn:hover:not(:disabled) { opacity: 0.85; }
+.submitBtn:disabled { opacity: 0.5; cursor: default; }
+
+.productRef {
+  margin-top: 16px;
+  font-size: 11px;
+  color: var(--muted, #8a8680);
+  font-style: italic;
+}
+
+/* ── Success ──────────────────────────────────────── */
+
+.success {
+  padding: 16px 0 8px;
+}
+
+.successTitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--dark, #1a1916);
+  margin-bottom: 8px;
+}
+
+.successSub {
+  font-size: 13px;
+  color: var(--muted, #8a8680);
+}
+
+@media (max-width: 480px) {
+  .modal { padding: 28px 24px; }
+}
