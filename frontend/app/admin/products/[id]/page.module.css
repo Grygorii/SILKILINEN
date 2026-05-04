@@ -634,3 +634,42 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ── AI SEO generation ───────────────────────────── */
+
+.seoGenBtn {
+  width: 100%;
+  padding: 10px 16px;
+  background: #f0faf4;
+  border: 1px solid #b6e4c7;
+  color: #2d7d47;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.15s;
+  margin-bottom: 18px;
+  text-align: center;
+}
+.seoGenBtn:hover:not(:disabled) { background: #dff2e8; }
+.seoGenBtn:disabled { opacity: 0.55; cursor: default; }
+
+.seoToast {
+  padding: 9px 14px;
+  background: #2d7d47;
+  color: #fff;
+  font-size: 12px;
+  border-radius: 2px;
+  margin-bottom: 16px;
+}
+.seoToastError { background: #b03a2e; }
+
+.aiFilledInput {
+  border-left: 3px solid #2d7d47 !important;
+  background: #f8fdf9 !important;
+}
+
+.aiFilledBorder {
+  border-left: 3px solid #2d7d47;
+}

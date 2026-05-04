@@ -43,6 +43,7 @@ type Form = {
   metaDescription: string;
   slug: string;
   keywords: string;
+  altTextTemplate: string;
   materialComposition: string;
   careInstructions: string;
   origin: string;
@@ -57,7 +58,7 @@ const CATEGORIES = ['shorts', 'dresses', 'robes', 'shirts', 'scarves', 'sets', '
 const EMPTY_FORM: Form = {
   name: '', status: 'draft', price: '', compareAtPrice: '', costPrice: '',
   category: 'shorts', description: '', tags: '',
-  metaTitle: '', metaDescription: '', slug: '', keywords: '',
+  metaTitle: '', metaDescription: '', slug: '', keywords: '', altTextTemplate: '',
   materialComposition: '', careInstructions: '', origin: 'Made in Dublin', certifications: '',
 };
 
@@ -133,6 +134,9 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const [saveError, setSaveError] = useState('');
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [seoGenerating, setSeoGenerating]   = useState(false);
+  const [aiFilledFields, setAiFilledFields] = useState<Set<string>>(new Set());
+  const [seoToast, setSeoToast]             = useState('');
   // Generate wizard
   const [showWizard, setShowWizard] = useState(false);
   const [genColours, setGenColours] = useState('');
@@ -161,6 +165,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           metaDescription: p.metaDescription ?? '',
           slug: p.slug ?? '',
           keywords: (p.keywords ?? []).join(', '),
+          altTextTemplate: p.altTextTemplate ?? '',
           materialComposition: p.materialComposition ?? '',
           careInstructions: p.careInstructions ?? '',
           origin: p.origin ?? 'Made in Dublin',
@@ -182,9 +187,54 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     autoSaveTimer.current = setTimeout(doSave, 30_000);
   }, []); // eslint-disable-line
 
+  // Auto-clear SEO toast after 4s
+  useEffect(() => {
+    if (!seoToast) return;
+    const t = setTimeout(() => setSeoToast(''), 4000);
+    return () => clearTimeout(t);
+  }, [seoToast]);
+
   function setField(field: keyof Form, value: string) {
     setForm(f => ({ ...f, [field]: value }));
     markDirty();
+    if (aiFilledFields.has(field)) {
+      setAiFilledFields(prev => { const n = new Set(prev); n.delete(field); return n; });
+    }
+  }
+
+  async function generateSEO() {
+    setSeoGenerating(true);
+    try {
+      const res = await fetch(`${API}/api/admin/products/${id}/generate-seo`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          description: form.description,
+          category: form.category,
+          materialComposition: form.materialComposition,
+          colours: form.tags.split(',').map(t => t.trim()).filter(Boolean),
+          price: form.price,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.details || data.error);
+      const { seo } = data;
+      const filled = new Set<string>();
+      if (seo.metaTitle)       { setForm(f => ({ ...f, metaTitle: seo.metaTitle }));             filled.add('metaTitle'); }
+      if (seo.metaDescription) { setForm(f => ({ ...f, metaDescription: seo.metaDescription })); filled.add('metaDescription'); }
+      if (seo.slug)            { setForm(f => ({ ...f, slug: seo.slug }));                        filled.add('slug'); }
+      if (seo.keywords?.length){ setForm(f => ({ ...f, keywords: seo.keywords.join(', ') }));    filled.add('keywords'); }
+      if (seo.altTextTemplate) { setForm(f => ({ ...f, altTextTemplate: seo.altTextTemplate })); filled.add('altTextTemplate'); }
+      setAiFilledFields(filled);
+      setSeoToast('SEO generated — review and save');
+      markDirty();
+    } catch (err) {
+      setSeoToast(`SEO failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setSeoGenerating(false);
+    }
   }
 
   const doSave = useCallback(async () => {
@@ -199,6 +249,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
         keywords: form.keywords.split(',').map(k => k.trim()).filter(Boolean),
         certifications: form.certifications.split(',').map(c => c.trim()).filter(Boolean),
+        altTextTemplate: form.altTextTemplate,
         variants,
       };
       const res = await fetch(`${API}/api/admin/products/${id}`, {
@@ -698,9 +749,25 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               </ul>
             )}
 
+            {/* Generate SEO button */}
+            <button
+              className={styles.seoGenBtn}
+              onClick={generateSEO}
+              disabled={seoGenerating || !form.name}
+            >
+              {seoGenerating ? '✨ Generating SEO…' : '✨ Generate SEO with AI — €0.001'}
+            </button>
+
+            {/* Toast */}
+            {seoToast && (
+              <div className={`${styles.seoToast} ${seoToast.startsWith('SEO failed') ? styles.seoToastError : ''}`}>
+                {seoToast}
+              </div>
+            )}
+
             <div className={styles.fg}>
               <label className={styles.label}>URL slug</label>
-              <div className={styles.slugRow}>
+              <div className={`${styles.slugRow} ${aiFilledFields.has('slug') ? styles.aiFilledBorder : ''}`}>
                 <span className={styles.slugBase}>silkilinen.com/product/</span>
                 <input
                   className={`${styles.input} ${styles.slugInput}`}
@@ -715,7 +782,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 Meta title <CharCounter value={form.metaTitle} max={70} warnAt={60} />
               </label>
               <input
-                className={styles.input}
+                className={`${styles.input} ${aiFilledFields.has('metaTitle') ? styles.aiFilledInput : ''}`}
                 value={form.metaTitle}
                 maxLength={70}
                 onChange={e => setField('metaTitle', e.target.value)}
@@ -727,7 +794,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 Meta description <CharCounter value={form.metaDescription} max={165} warnAt={140} />
               </label>
               <textarea
-                className={`${styles.input} ${styles.textareaSm}`}
+                className={`${styles.input} ${styles.textareaSm} ${aiFilledFields.has('metaDescription') ? styles.aiFilledInput : ''}`}
                 rows={3}
                 value={form.metaDescription}
                 maxLength={165}
@@ -737,8 +804,24 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             </div>
             <div className={styles.fg}>
               <label className={styles.label}>Keywords (comma separated)</label>
-              <input className={styles.input} value={form.keywords} onChange={e => setField('keywords', e.target.value)} placeholder="silk shorts, luxury lingerie, handmade Dublin" />
+              <input
+                className={`${styles.input} ${aiFilledFields.has('keywords') ? styles.aiFilledInput : ''}`}
+                value={form.keywords}
+                onChange={e => setField('keywords', e.target.value)}
+                placeholder="silk shorts, luxury lingerie, handmade Dublin"
+              />
             </div>
+            {form.altTextTemplate && (
+              <div className={styles.fg}>
+                <label className={styles.label}>Image alt text template</label>
+                <input
+                  className={`${styles.input} ${aiFilledFields.has('altTextTemplate') ? styles.aiFilledInput : ''}`}
+                  value={form.altTextTemplate}
+                  onChange={e => setField('altTextTemplate', e.target.value)}
+                  placeholder="Product name — {position} view, handmade silk by SILKILINEN Dublin"
+                />
+              </div>
+            )}
 
             {/* Google preview */}
             <div className={styles.gpCard}>

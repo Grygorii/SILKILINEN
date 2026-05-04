@@ -41,6 +41,8 @@ export default function AdminProductsPage() {
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [stockFilter, setStockFilter] = useState('');
+  const [bulkGenerating, setBulkGenerating] = useState(false);
+  const [bulkResult, setBulkResult] = useState('');
 
   const load = useCallback(() => {
     setLoading(true);
@@ -64,6 +66,24 @@ export default function AdminProductsPage() {
     return primary?.url || p.images?.[0]?.url || p.image || '';
   }
 
+  async function handleBulkGenerateSEO() {
+    if (!confirm('Generate missing SEO for all active/draft products? Estimated cost: ~€0.001 per product.')) return;
+    setBulkGenerating(true);
+    setBulkResult('');
+    try {
+      const res = await fetch(`${API}/api/admin/products/bulk-generate-seo`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      setBulkResult(data.message || 'Done');
+    } catch {
+      setBulkResult('Bulk SEO generation failed');
+    } finally {
+      setBulkGenerating(false);
+    }
+  }
+
   async function deleteProduct(id: string, name: string) {
     if (!confirm(`Archive "${name}"? It will be hidden from the shop but not deleted.`)) return;
     await fetch(`${API}/api/admin/products/${id}`, {
@@ -84,7 +104,18 @@ export default function AdminProductsPage() {
     <AdminLayout active="products">
       <div className={styles.header}>
         <h2>Products</h2>
-        <a href="/admin/products/new" className={styles.addBtn}>+ Add product</a>
+        <div className={styles.headerActions}>
+          <button
+            className={styles.bulkSeoBtn}
+            onClick={handleBulkGenerateSEO}
+            disabled={bulkGenerating}
+            title="Generate SEO for all products missing meta title or description"
+          >
+            {bulkGenerating ? '✨ Generating…' : '✨ Generate missing SEO'}
+          </button>
+          {bulkResult && <span className={styles.bulkSeoResult}>{bulkResult}</span>}
+          <a href="/admin/products/new" className={styles.addBtn}>+ Add product</a>
+        </div>
       </div>
 
       <div className={styles.filterBar}>

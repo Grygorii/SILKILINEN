@@ -3,6 +3,36 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bulkSeoBtn {
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid #b6e4c7;
+  color: #2d7d47;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.bulkSeoBtn:hover:not(:disabled) { background: #f0faf4; }
+.bulkSeoBtn:disabled { opacity: 0.5; cursor: default; }
+
+.bulkSeoResult {
+  font-size: 12px;
+  color: #2d7d47;
+  white-space: nowrap;
 }
 
 .header h2 {

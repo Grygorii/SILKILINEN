@@ -4,6 +4,7 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
+const { generateProductSEO } = require('../services/seoGenerator');
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -28,6 +29,20 @@ function uploadBuffer(buffer, options) {
     });
     stream.end(buffer);
   });
+}
+
+// Fire-and-forget SEO auto-generation for products with missing fields
+function autoGenerateSEO(product) {
+  if (product.metaTitle && product.metaDescription) return;
+  generateProductSEO(product)
+    .then(seo => Product.findByIdAndUpdate(product._id, {
+      metaTitle: product.metaTitle || seo.metaTitle,
+      metaDescription: product.metaDescription || seo.metaDescription,
+      slug: product.slug || seo.slug,
+      keywords: product.keywords?.length ? product.keywords : seo.keywords,
+      altTextTemplate: product.altTextTemplate || seo.altTextTemplate || '',
+    }))
+    .catch(err => console.error(`[Auto-SEO] Failed for ${product._id}: ${err.message}`));
 }
 
 // All routes require admin auth
@@ -90,6 +105,7 @@ router.post('/', async function(req, res) {
       status: req.body.status || 'draft',
       lastUpdatedBy: req.user.userId,
     });
+    autoGenerateSEO(product);
     res.status(201).json(product);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -105,9 +121,80 @@ router.put('/:id', async function(req, res) {
 
     Object.assign(product, rest, { lastUpdatedBy: req.user.userId });
     await product.save();
+    autoGenerateSEO(product);
     res.json(product);
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/products/bulk-generate-seo — generate SEO for all products missing it
+router.post('/bulk-generate-seo', async function(req, res) {
+  try {
+    const products = await Product.find({
+      status: { $ne: 'archived' },
+      $or: [
+        { metaTitle: { $in: [null, ''] } },
+        { metaDescription: { $in: [null, ''] } },
+      ],
+    }).select('name description category materialComposition colours price metaTitle metaDescription slug keywords altTextTemplate');
+
+    const total = products.length;
+    if (total === 0) return res.json({ updated: 0, total: 0, message: 'All products already have SEO.' });
+
+    let updated = 0;
+    const errors = [];
+
+    for (let i = 0; i < products.length; i += 5) {
+      const batch = products.slice(i, i + 5);
+      const results = await Promise.allSettled(batch.map(async (product) => {
+        const seo = await generateProductSEO(product);
+        await Product.findByIdAndUpdate(product._id, {
+          metaTitle: product.metaTitle || seo.metaTitle,
+          metaDescription: product.metaDescription || seo.metaDescription,
+          slug: product.slug || seo.slug,
+          keywords: product.keywords?.length ? product.keywords : seo.keywords,
+          altTextTemplate: product.altTextTemplate || seo.altTextTemplate || '',
+        });
+      }));
+      for (let j = 0; j < results.length; j++) {
+        if (results[j].status === 'fulfilled') updated++;
+        else errors.push(`${batch[j].name}: ${results[j].reason?.message}`);
+      }
+    }
+
+    res.json({
+      updated,
+      total,
+      errors,
+      message: `SEO generated for ${updated} of ${total} product${total !== 1 ? 's' : ''}.`,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/products/:id/generate-seo — generate SEO for one product (no auto-save)
+router.post('/:id/generate-seo', async function(req, res) {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+
+    // Accept current form state from frontend so admin doesn't need to save first
+    const data = {
+      name: req.body.name || product.name,
+      description: req.body.description || product.description,
+      category: req.body.category || product.category,
+      materialComposition: req.body.materialComposition || product.materialComposition,
+      colours: req.body.colours || product.colours,
+      price: req.body.price || product.price,
+    };
+
+    const seo = await generateProductSEO(data);
+    res.json({ seo, cost: 0.001, message: 'SEO generated. Review and save to apply.' });
+  } catch (err) {
+    console.error('SEO generation error:', err);
+    res.status(500).json({ error: 'Failed to generate SEO', details: err.message });
   }
 });
 
@@ -182,9 +269,13 @@ router.post('/:id/images/url', async function(req, res) {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Not found' });
 
+    const defaultAlt = alt || (product.altTextTemplate
+      ? product.altTextTemplate.replace('{position}', 'product photo')
+      : `${product.name} — handmade silk by SILKILINEN, Dublin`);
+
     product.images.push({
       url,
-      alt: alt || '',
+      alt: defaultAlt,
       isPrimary: product.images.length === 0,
       order: product.images.length,
       cloudinaryPublicId: cloudinaryPublicId || '',
@@ -212,9 +303,12 @@ router.post('/:id/images', imgUpload.array('images', 20), async function(req, re
         resource_type: 'image',
         transformation: [{ width: 1200, height: 1500, crop: 'fill', gravity: 'auto' }],
       });
+      const defaultAlt = product.altTextTemplate
+        ? product.altTextTemplate.replace('{position}', 'product photo')
+        : `${product.name} — handmade silk by SILKILINEN, Dublin`;
       product.images.push({
         url: result.secure_url,
-        alt: '',
+        alt: defaultAlt,
         isPrimary: product.images.length === 0,
         order: product.images.length,
         cloudinaryPublicId: result.public_id,
