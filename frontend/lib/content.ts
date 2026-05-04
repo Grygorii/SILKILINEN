@@ -16,7 +16,7 @@ export async function getContent(section?: string): Promise<Content> {
     ? `${API}/api/content/${section}`
     : `${API}/api/content`;
   try {
-    const res = await fetch(url, { next: { revalidate: 60 } } as RequestInit);
+    const res = await fetch(url, { next: { revalidate: 60 }, signal: AbortSignal.timeout(3000) } as RequestInit);
     if (!res.ok) return {};
     return res.json();
   } catch {

@@ -297,7 +297,7 @@ async function sendDeliveredEmail(order) {
     html: buildStatusHtml({
       order,
       heading: 'Your order has arrived',
-      body: 'your order has been delivered. We hope you love every piece. If anything isn't right, please reach out — we're here to help.',
+      body: `your order has been delivered. We hope you love every piece. If anything isn't right, please reach out — we're here to help.`,
     }),
   });
 }
