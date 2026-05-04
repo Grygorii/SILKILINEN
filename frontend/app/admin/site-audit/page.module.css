@@ -1,0 +1,382 @@
+.page {
+  padding: 32px;
+  max-width: 1200px;
+}
+
+/* ── Header ──────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1a1916;
+  margin: 0 0 4px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: #8a8680;
+  margin: 0;
+}
+
+.runBtn {
+  padding: 10px 24px;
+  background: #1a1916;
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+
+.runBtn:hover { opacity: 0.8; }
+.runBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Body layout ─────────────────────────────────── */
+
+.body {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+/* ── History sidebar ─────────────────────────────── */
+
+.sidebar { }
+
+.sidebarTitle {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #8a8680;
+  margin: 0 0 12px;
+}
+
+.historyItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: 1px solid transparent;
+  text-align: left;
+  cursor: pointer;
+  margin-bottom: 4px;
+  transition: background 0.15s;
+}
+
+.historyItem:hover { background: #f5f3ef; }
+
+.historyActive {
+  background: #f5f3ef;
+  border-color: #e0ddd7;
+}
+
+.historyTime {
+  font-size: 12px;
+  color: #1a1916;
+}
+
+.historyStatus {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+}
+
+/* ── Main content ────────────────────────────────── */
+
+.main { min-width: 0; }
+
+.emptyState {
+  padding: 80px 0;
+  text-align: center;
+  color: #8a8680;
+  font-size: 14px;
+}
+
+/* ── Agent cards ─────────────────────────────────── */
+
+.agentCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.agentCard {
+  border: 1px solid #e0ddd7;
+  padding: 20px;
+}
+
+.agentCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.agentName {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1916;
+}
+
+.agentStatus {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+}
+
+.agentCounts {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.countCritical { font-size: 12px; color: #c0392b; }
+.countWarning { font-size: 12px; color: #b5631a; }
+.countInfo { font-size: 12px; color: #8a8680; }
+.countDuration { font-size: 11px; color: #c5c2bc; margin-left: auto; }
+
+.agentError {
+  font-size: 11px;
+  color: #c0392b;
+  margin: 8px 0 0;
+}
+
+/* ── Progress bar ────────────────────────────────── */
+
+.progressBar {
+  height: 2px;
+  background: #e0ddd7;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: #1a1916;
+  width: 40%;
+  animation: slide 1.4s ease-in-out infinite;
+}
+
+@keyframes slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+
+/* ── Status colours ──────────────────────────────── */
+
+.statusPending { background: #f5f3ef; color: #8a8680; }
+.statusRunning { background: #fef9e7; color: #b5631a; }
+.statusDone    { background: #eafaf1; color: #27ae60; }
+.statusError   { background: #fdf2f0; color: #c0392b; }
+
+/* ── Critical banner ─────────────────────────────── */
+
+.criticalBanner {
+  background: #fdf2f0;
+  border: 1px solid #e8c4c0;
+  color: #c0392b;
+  padding: 12px 16px;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+/* ── Filters ─────────────────────────────────────── */
+
+.filters {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.filterGroup {
+  display: flex;
+  gap: 4px;
+}
+
+.filterBtn {
+  padding: 6px 14px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: none;
+  border: 1px solid #e0ddd7;
+  color: #8a8680;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.filterBtn:hover { border-color: #1a1916; color: #1a1916; }
+
+.filterActive {
+  background: #1a1916;
+  border-color: #1a1916;
+  color: #fff;
+}
+
+/* ── Findings ────────────────────────────────────── */
+
+.findings { }
+
+.findingRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid #e0ddd7;
+}
+
+.findingResolved {
+  opacity: 0.45;
+}
+
+.findingLeft {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sevBadge {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.sevCritical { background: #fdf2f0; color: #c0392b; }
+.sevWarning  { background: #fef9e7; color: #b5631a; }
+.sevInfo     { background: #f5f3ef; color: #8a8680; }
+
+.findingContent { min-width: 0; }
+
+.findingTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1916;
+  margin: 0 0 4px;
+}
+
+.findingLocation {
+  font-size: 11px;
+  color: #8a8680;
+  margin: 0 0 4px;
+  font-family: monospace;
+}
+
+.findingDetail {
+  font-size: 12px;
+  color: #6b6864;
+  margin: 0 0 4px;
+}
+
+.findingSuggestion {
+  font-size: 12px;
+  color: #27ae60;
+  margin: 4px 0 0;
+}
+
+.findingActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.btnFixed {
+  padding: 6px 14px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: #1a1916;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btnFixed:hover { opacity: 0.8; }
+.btnFixed:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btnWontFix {
+  padding: 6px 14px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: none;
+  color: #8a8680;
+  border: 1px solid #e0ddd7;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btnWontFix:hover { border-color: #8a8680; }
+.btnWontFix:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.resolvedLabel {
+  font-size: 11px;
+  color: #8a8680;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.undoBtn {
+  font-size: 11px;
+  color: #8a8680;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.undoBtn:hover { color: #1a1916; }
+
+/* ── Audit meta ──────────────────────────────────── */
+
+.auditMeta {
+  font-size: 11px;
+  color: #c5c2bc;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e0ddd7;
+}
+
+/* ── Empty ───────────────────────────────────────── */
+
+.empty {
+  font-size: 13px;
+  color: #8a8680;
+  padding: 16px 0;
+}
+
+/* ── Mobile ──────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .page { padding: 20px 16px; }
+  .body { grid-template-columns: 1fr; }
+  .agentCards { grid-template-columns: 1fr; }
+  .header { flex-direction: column; align-items: flex-start; }
+}

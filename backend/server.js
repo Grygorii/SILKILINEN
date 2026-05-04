@@ -24,6 +24,7 @@ const aiPhotosRoutes = require('./routes/aiPhotos');
 const customersRoutes = require('./routes/customers');
 const promoCodesRoutes = require('./routes/promoCodes');
 const contentRoutes = require('./routes/content');
+const siteAuditRoutes = require('./routes/siteAudit');
 
 const app = express();
 
@@ -64,6 +65,7 @@ app.use('/api/ai-photos', aiPhotosRoutes);
 app.use('/api/customers', customersRoutes);
 app.use('/api/promo-codes', promoCodesRoutes);
 app.use('/api/content', contentRoutes);
+app.use('/api/admin/site-audit', siteAuditRoutes);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(function() { console.log('Connected to MongoDB'); })
