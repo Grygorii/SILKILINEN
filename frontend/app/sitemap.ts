@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { BLOG_POSTS } from '@/lib/blogPosts';
 
-const BASE = 'https://silkilinen.vercel.app';
+const BASE = 'https://silkilinen.com';
 
 async function getProductIds(): Promise<string[]> {
   try {

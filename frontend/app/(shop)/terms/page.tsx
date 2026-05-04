@@ -15,7 +15,7 @@ export default function TermsPage() {
         </header>
 
         <div className={styles.highlight}>
-          By placing an order on silkilinen.vercel.app you agree to these terms. Please read them before purchasing.
+          By placing an order on silkilinen.com you agree to these terms. Please read them before purchasing.
         </div>
 
         <section className={styles.section}>

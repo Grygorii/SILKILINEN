@@ -31,6 +31,8 @@ const app = express();
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
+  'https://silkilinen.com',
+  'https://www.silkilinen.com',
   'https://silkilinen.vercel.app',
   'https://silkilinen-git-master-grishakinzerskyi-1780s-projects.vercel.app',
   ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),

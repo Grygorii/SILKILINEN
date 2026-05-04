@@ -204,7 +204,7 @@ async function sendWelcome({ email, firstName }) {
 <p style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1916;">Welcome, ${name}</p>
 <p style="margin:0 0 24px;font-size:13px;color:#5a5650;line-height:1.8;">Thank you for joining SILKILINEN. Every piece we make is crafted by hand in Dublin from pure silk and linen — made to be worn, felt, and loved.</p>
 <p style="margin:0 0 36px;font-size:13px;color:#5a5650;line-height:1.8;">As a welcome gift, use code <strong style="color:#1a1916;letter-spacing:1px;">SILK10</strong> at checkout for 10% off your first order.</p>
-<a href="https://silkilinen.vercel.app/shop" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Shop the collection</a>
+<a href="https://silkilinen.com/shop" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Shop the collection</a>
 </td></tr>
 <tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
 <p style="margin:0;font-size:11px;color:#aca8a2;">Dublin, Ireland &nbsp;·&nbsp; hello@silkilinen.com</p>
@@ -216,7 +216,7 @@ async function sendWelcome({ email, firstName }) {
 function buildStatusHtml({ order, heading, body, trackingBlock }) {
   const id = shortId(order._id);
   const firstName = order.customerName ? order.customerName.split(' ')[0] : 'there';
-  const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.vercel.app';
+  const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.com';
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:40px 16px;">
@@ -319,7 +319,7 @@ async function sendCancelledEmail(order) {
 
 async function sendNewsletterWelcome({ email, code, validUntil, unsubscribeToken }) {
   if (!process.env.RESEND_API_KEY) return;
-  const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.vercel.app';
+  const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.com';
   const expires = validUntil
     ? new Date(validUntil).toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' })
     : '30 days';

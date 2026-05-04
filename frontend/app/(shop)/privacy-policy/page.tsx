@@ -19,7 +19,7 @@ export default function PrivacyPolicyPage() {
           <p>
             SILKILINEN is an online retailer of silk and linen intimates, operated from Dublin, Ireland.
             We are the data controller for the personal information collected through this website
-            (<a href="https://silkilinen.vercel.app">silkilinen.vercel.app</a>).
+            (<a href="https://silkilinen.com">silkilinen.com</a>).
           </p>
           <p>Contact: <a href="mailto:hello@silkilinen.com">hello@silkilinen.com</a></p>
         </section>

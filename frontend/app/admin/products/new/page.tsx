@@ -150,7 +150,7 @@ export default function NewProductPage() {
             <div className={`${styles.field} ${styles.fullWidth}`}>
               <label>Google preview</label>
               <div className={styles.googlePreview}>
-                <p className={styles.gpUrl}>silkilinen.vercel.app › product</p>
+                <p className={styles.gpUrl}>silkilinen.com › product</p>
                 <p className={styles.gpTitle}>{previewTitle}</p>
                 <p className={styles.gpDesc}>{previewDesc}</p>
               </div>

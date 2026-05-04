@@ -230,7 +230,7 @@ router.post('/:id/drop-hint', async function(req, res) {
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
     const primaryImg = product.images?.find(i => i.isPrimary) ?? product.images?.[0];
-    const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.vercel.app';
+    const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.com';
 
     await sendDropAHint({
       recipientName,

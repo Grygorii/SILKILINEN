@@ -6,7 +6,7 @@ const PromoCode = require('../models/PromoCode');
 const { sendNewsletterWelcome } = require('../services/email');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.vercel.app';
+const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.com';
 
 function generateUniqueCode() {
   return 'SILK' + crypto.randomBytes(3).toString('hex').toUpperCase();

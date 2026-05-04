@@ -59,7 +59,7 @@ router.post('/request-magic-link', async function(req, res) {
       await customer.save();
     }
 
-    const baseUrl = process.env.FRONTEND_URL || 'https://silkilinen.vercel.app';
+    const baseUrl = process.env.FRONTEND_URL || 'https://silkilinen.com';
     await sendMagicLink({ email: customer.email, link: `${baseUrl}/account/verify?token=${token}` });
 
     res.json({ success: true });

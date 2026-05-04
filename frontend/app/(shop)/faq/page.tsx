@@ -4,7 +4,7 @@ import styles from './page.module.css';
 export const metadata: Metadata = {
   title: 'FAQ — SILKILINEN',
   description: 'Answers to common questions about SILKILINEN silk and linen products — materials, sizing, care, shipping, and returns.',
-  alternates: { canonical: 'https://silkilinen.vercel.app/faq' },
+  alternates: { canonical: 'https://silkilinen.com/faq' },
 };
 
 const FAQS = [
