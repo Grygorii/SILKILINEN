@@ -345,10 +345,6 @@
   border-color: #2ecc71;
 }
 
-.resultReview {
-  border-color: #c8830a;
-}
-
 .resultHeader {
   display: flex;
   align-items: center;
@@ -402,15 +398,6 @@
   letter-spacing: 0.5px;
 }
 
-.reviewBanner {
-  padding: 6px 10px;
-  background: #fef9ed;
-  border-top: 1px solid #f0d080;
-  font-size: 10px;
-  color: #c8830a;
-  letter-spacing: 0.3px;
-}
-
 .resultActions {
   display: flex;
   border-top: 1px solid var(--border);
@@ -436,30 +423,6 @@
 }
 
 .approveBtn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.useAnywayBtn {
-  flex: 1;
-  padding: 8px 4px;
-  background: none;
-  border: none;
-  border-right: 1px solid var(--border);
-  font-family: 'Jost', sans-serif;
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: #c8830a;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.useAnywayBtn:hover:not(:disabled) {
-  background: #fef9ed;
-}
-
-.useAnywayBtn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
@@ -579,25 +542,6 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
-
-/* ── Validation strip ────────────────────────────── */
-
-.validationStrip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 6px 8px;
-  background: #f9f7f4;
-  border-top: 1px solid var(--border);
-  font-size: 10px;
-  font-family: 'Jost', monospace;
-  letter-spacing: 0.3px;
-}
-
-.vPass   { color: #27ae60; }
-.vWarn   { color: #c8830a; }
-.vFail   { color: #c0392b; }
-.vRetry  { color: var(--muted); font-style: italic; }
 
 /* ── Finalize ────────────────────────────────────── */
 

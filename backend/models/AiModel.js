@@ -6,13 +6,6 @@ const aiModelSchema = new mongoose.Schema({
   description: { type: String, trim: true },
   prompt: { type: String, required: true, trim: true },
   referenceImageUrl: { type: String },
-  referenceFaceHash: { type: String },
-  referenceFaceBox: {
-    x: Number,
-    y: Number,
-    width: Number,
-    height: Number,
-  },
   useCases: [String],
   markets: [String],
   locked: { type: Boolean, default: false },

@@ -41,27 +41,12 @@ type ModelSummary = {
   active: boolean;
 };
 
-type ValidationChecks = {
-  resolution: boolean;
-  fileSize: boolean;
-  aspectRatio: boolean;
-  notBlank: boolean;
-};
-
 type PhotoState = {
   url: string;
   status: 'pending' | 'approved';
   iterations: number;
-  forReview?: boolean;
-  validationPassed?: boolean;
   qualityTier?: TierKey;
-  retryCount?: number;
   resolution?: { width: number; height: number };
-  fileSize?: number;
-  validationChecks?: ValidationChecks;
-  hasFace?: boolean;
-  identitySimilarity?: number | null;
-  identityMatchStatus?: 'good' | 'warning' | 'drifted' | null;
 };
 
 type Props = {
@@ -69,53 +54,6 @@ type Props = {
   productCategory: string;
   onPhotoApproved: (url: string) => void;
 };
-
-function fmtBytes(b: number) {
-  if (b >= 1_000_000) return `${(b / 1_000_000).toFixed(1)} MB`;
-  return `${Math.round(b / 1000)} KB`;
-}
-
-function ValidationStrip({ photo, modelName }: { photo: PhotoState; modelName?: string }) {
-  if (!photo.resolution && !photo.validationChecks) return null;
-  const { resolution, fileSize, validationChecks: vc, hasFace, identitySimilarity, identityMatchStatus: idm, qualityTier, retryCount } = photo;
-
-  function chk(ok: boolean | undefined, label: string) {
-    if (ok === undefined) return null;
-    const cls = ok ? styles.vPass : styles.vFail;
-    const icon = ok ? '✓' : '✗';
-    return <span className={cls}>{icon} {label}</span>;
-  }
-
-  const idPct = identitySimilarity !== null && identitySimilarity !== undefined
-    ? Math.round(identitySimilarity * 100)
-    : null;
-  const idCls = idm === 'good' ? styles.vPass : idm === 'warning' ? styles.vWarn : idm === 'drifted' ? styles.vFail : '';
-
-  return (
-    <div className={styles.validationStrip}>
-      {resolution && (
-        <span className={vc?.resolution ? styles.vPass : styles.vFail}>
-          {vc?.resolution ? '✓' : '✗'} {resolution.width}×{resolution.height}
-          {qualityTier && qualityTier !== 'auto' ? ` (${QUALITY_TIERS[qualityTier]?.label?.split(' ')[0]})` : ''}
-        </span>
-      )}
-      {fileSize !== undefined && chk(vc?.fileSize, fmtBytes(fileSize))}
-      {hasFace !== undefined && (
-        <span className={hasFace ? styles.vPass : styles.vWarn}>
-          {hasFace ? '✓ Face' : '⚠ No face'}
-        </span>
-      )}
-      {idPct !== null && modelName && (
-        <span className={idCls}>
-          {idm === 'good' ? '✓' : idm === 'warning' ? '⚠' : '✗'} {modelName} {idPct}%
-        </span>
-      )}
-      {!!retryCount && (
-        <span className={styles.vRetry}>↺ {retryCount} {retryCount === 1 ? 'retry' : 'retries'}</span>
-      )}
-    </div>
-  );
-}
 
 export default function AiPhotoshoot({ productId, productCategory, onPhotoApproved }: Props) {
   const [expanded, setExpanded] = useState(false);
@@ -171,16 +109,8 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
             url: r.url as string,
             status: 'pending',
             iterations: prev[r.position as Position]?.iterations || 0,
-            forReview: r.forReview as boolean | undefined,
-            validationPassed: r.validationPassed as boolean | undefined,
             qualityTier: r.qualityTier as TierKey | undefined,
-            retryCount: r.retryCount as number | undefined,
             resolution: r.resolution as { width: number; height: number } | undefined,
-            fileSize: r.fileSize as number | undefined,
-            validationChecks: r.validationChecks as ValidationChecks | undefined,
-            hasFace: r.hasFace as boolean | undefined,
-            identitySimilarity: r.identitySimilarity as number | null | undefined,
-            identityMatchStatus: r.identityMatchStatus as 'good' | 'warning' | 'drifted' | null | undefined,
           };
         }
       }
@@ -270,7 +200,7 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
     });
     const data = await res.json();
     if (res.ok) {
-      setPhotoStates(s => ({ ...s, [position]: { ...s[position]!, status: 'approved', forReview: false } }));
+      setPhotoStates(s => ({ ...s, [position]: { ...s[position]!, status: 'approved' } }));
       onPhotoApproved(data.url);
     }
   }
@@ -309,16 +239,8 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
           url: data.url,
           status: 'pending',
           iterations: (s[improvingPosition]?.iterations || 0) + 1,
-          forReview: data.forReview,
-          validationPassed: data.validationPassed,
           qualityTier: data.qualityTier,
-          retryCount: data.retryCount,
           resolution: data.resolution,
-          fileSize: data.fileSize,
-          validationChecks: data.validationChecks,
-          hasFace: data.hasFace,
-          identitySimilarity: data.identitySimilarity,
-          identityMatchStatus: data.identityMatchStatus,
         },
       }));
       setTotalCost(data.totalCost);
@@ -343,14 +265,7 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
     const data = await res.json();
     if (res.ok) {
       onPhotoApproved(data.productImageUrl);
-      let msg = `Done — ${data.approvedCount} approved photo(s) saved.`;
-      if (data.costBreakdown) {
-        msg += ` Total: €${(data.totalCost || 0).toFixed(2)}`;
-        if (data.failedRetries > 0) {
-          msg += ` (incl. €${(data.costBreakdown.retries || 0).toFixed(2)} in retries)`;
-        }
-      }
-      alert(msg);
+      alert(`Done — ${data.approvedCount} approved photo(s) saved. Total: €${(data.totalCost || 0).toFixed(2)}`);
     } else {
       setError(data.error);
     }
@@ -498,7 +413,7 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
                 const photo = photoStates[pos];
                 const isImproving = improvingPosition === pos;
                 return (
-                  <div key={pos} className={`${styles.resultCard} ${photo?.forReview ? styles.resultReview : photo?.status === 'approved' ? styles.resultApproved : ''}`}>
+                  <div key={pos} className={`${styles.resultCard} ${photo?.status === 'approved' ? styles.resultApproved : ''}`}>
                     <div className={styles.resultHeader}>
                       <span className={styles.resultPos}>{POSITION_LABELS[pos]}</span>
                       {photo && photo.iterations > 0 && (
@@ -515,47 +430,25 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
                       )}
                     </div>
 
-                    {photo && (
-                      <ValidationStrip photo={photo} modelName={suggestedModel?.name} />
-                    )}
-
-                    {photo?.forReview && (
-                      <div className={styles.reviewBanner}>
-                        ⚠ Failed validation — review before using
-                      </div>
-                    )}
-
                     {photo?.url && (
                       <div className={styles.resultActions}>
-                        {photo.forReview ? (
-                          <>
-                            <button className={styles.useAnywayBtn} onClick={() => approvePhoto(pos)} disabled={isWorking}>
-                              Use this image
-                            </button>
-                            <button
-                              className={`${styles.improveBtn} ${isImproving ? styles.improveBtnActive : ''}`}
-                              onClick={() => { setImprovingPosition(isImproving ? null : pos); setImproveFeedback(''); }}
-                              disabled={isWorking}
-                            >
-                              ↺ Regenerate
-                            </button>
-                          </>
-                        ) : photo.status === 'approved' ? (
+                        {photo.status === 'approved' ? (
                           <span className={styles.approvedLabel}>Approved</span>
                         ) : (
-                          <>
-                            <button className={styles.approveBtn} onClick={() => approvePhoto(pos)} disabled={isWorking}>
-                              ✓ Approve
-                            </button>
-                            <button
-                              className={`${styles.improveBtn} ${isImproving ? styles.improveBtnActive : ''}`}
-                              onClick={() => { setImprovingPosition(isImproving ? null : pos); setImproveFeedback(''); }}
-                              disabled={isWorking}
-                            >
-                              ↺ Improve
-                            </button>
-                          </>
+                          <button className={styles.approveBtn} onClick={() => approvePhoto(pos)} disabled={isWorking}>
+                            ✓ Approve
+                          </button>
                         )}
+                        <button
+                          className={`${styles.improveBtn} ${isImproving ? styles.improveBtnActive : ''}`}
+                          onClick={() => {
+                            setImprovingPosition(isImproving ? null : pos);
+                            setImproveFeedback('');
+                          }}
+                          disabled={isWorking}
+                        >
+                          ↺ Improve
+                        </button>
                       </div>
                     )}
 
