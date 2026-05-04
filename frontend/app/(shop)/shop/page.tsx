@@ -94,7 +94,7 @@ export default async function ShopPage({
           <p className={styles.description}>{copy.description}</p>
         )}
       </div>
-      <ProductGrid products={products} />
+      <ProductGrid products={products} currentCategory={category ?? 'all'} />
     </main>
   );
 }

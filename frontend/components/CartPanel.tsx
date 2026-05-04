@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
 import { trackBeginCheckout } from '@/lib/analytics';
 import styles from './CartPanel.module.css';
@@ -16,6 +16,59 @@ export default function CartPanel({ isOpen, onClose }: Props) {
   const { cart, removeFromCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const panelRef = useRef<HTMLDivElement>(null);
+  const prevFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    if (isOpen) document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (isOpen) {
+      prevFocusRef.current = document.activeElement as HTMLElement;
+      const timer = setTimeout(() => {
+        const panel = panelRef.current;
+        if (!panel) return;
+        const focusable = panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])'
+        );
+        focusable[0]?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    } else {
+      prevFocusRef.current?.focus();
+      prevFocusRef.current = null;
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    function trap(e: KeyboardEvent) {
+      if (e.key !== 'Tab' || !panelRef.current) return;
+      const focusable = panelRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+    document.addEventListener('keydown', trap);
+    return () => document.removeEventListener('keydown', trap);
+  }, [isOpen]);
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -44,7 +97,13 @@ export default function CartPanel({ isOpen, onClose }: Props) {
         className={`${styles.overlay} ${isOpen ? styles.overlayOpen : ''}`}
         onClick={onClose}
       />
-      <div className={`${styles.panel} ${isOpen ? styles.panelOpen : ''}`}>
+      <div
+        ref={panelRef}
+        className={`${styles.panel} ${isOpen ? styles.panelOpen : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Shopping cart"
+      >
         <div className={styles.header}>
           <h3>Your cart</h3>
           <button className={styles.close} onClick={onClose} aria-label="Close cart">✕</button>

@@ -26,6 +26,13 @@
   border-bottom: 1px solid var(--dark, #1a1916);
 }
 
+.emptyState {
+  font-size: 14px;
+  color: var(--muted, #8a8680);
+  font-style: italic;
+  padding: 24px 0;
+}
+
 /* ── Grid ─────────────────────────────────────────── */
 
 .grid {

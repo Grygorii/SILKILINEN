@@ -84,13 +84,22 @@ export default function Navbar() {
           </div>
         ) : (
           <>
-            {/* Logo — left */}
-            <Link href="/" className={styles.logoLink}>
-              <span className={styles.logoText}>SILKILINEN</span>
-              <span className={styles.logoSub}>Silk &amp; Linen</span>
-            </Link>
+            {/* Left — hamburger */}
+            <div className={styles.navLeft}>
+              <button className={styles.iconBtn} onClick={() => setMenuOpen(true)} aria-label="Open menu">
+                <Menu size={20} strokeWidth={1.5} />
+              </button>
+            </div>
 
-            {/* Right icons */}
+            {/* Centre — logo */}
+            <div className={styles.navCenter}>
+              <Link href="/" className={styles.logoLink}>
+                <span className={styles.logoText}>SILKILINEN</span>
+                <span className={styles.logoSub}>Silk &amp; Linen</span>
+              </Link>
+            </div>
+
+            {/* Right — search, account, cart */}
             <div className={styles.navRight}>
               <button className={styles.iconBtn} onClick={() => setSearchOpen(true)} aria-label="Search">
                 <Search size={20} strokeWidth={1.5} />
@@ -136,10 +145,6 @@ export default function Navbar() {
               >
                 <ShoppingBag size={20} strokeWidth={1.5} />
                 {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
-              </button>
-
-              <button className={styles.iconBtn} onClick={() => setMenuOpen(true)} aria-label="Open menu">
-                <Menu size={20} strokeWidth={1.5} />
               </button>
             </div>
           </>

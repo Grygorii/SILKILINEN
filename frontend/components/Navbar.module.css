@@ -3,9 +3,9 @@
   top: 38px;
   left: 0;
   right: 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   padding: 24px 32px;
   background: var(--warm-white, #faf8f4);
   z-index: 100;
@@ -14,6 +14,23 @@
 
 .scrolled {
   padding: 12px 32px;
+}
+
+/* ── Grid columns ─────────────────────────────────── */
+
+.navLeft {
+  justify-self: start;
+}
+
+.navCenter {
+  justify-self: center;
+}
+
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  justify-self: end;
 }
 
 /* ── Logo ─────────────────────────────────────────── */
@@ -40,14 +57,6 @@
   text-transform: uppercase;
   color: var(--muted, #8a8680);
   font-variant: small-caps;
-}
-
-/* ── Right icons ──────────────────────────────────── */
-
-.navRight {
-  display: flex;
-  align-items: center;
-  gap: 2px;
 }
 
 /* ── Icon button ──────────────────────────────────── */
@@ -163,6 +172,7 @@
 /* ── Search bar ───────────────────────────────────── */
 
 .searchBar {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -219,6 +229,9 @@
   }
   .navRight {
     gap: 0;
+  }
+  .navLeft {
+    min-width: 44px;
   }
 }
 
