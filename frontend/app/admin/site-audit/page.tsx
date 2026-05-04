@@ -204,6 +204,14 @@ export default function SiteAuditPage() {
     return () => clearInterval(timer);
   }, [audit, loadAudit]);
 
+  async function clearAllAudits() {
+    if (!confirm('Delete all audit history? This cannot be undone.')) return;
+    await fetch(`${API}/api/admin/site-audit`, { method: 'DELETE', credentials: 'include' });
+    setHistory([]);
+    setSelectedId(null);
+    setAudit(null);
+  }
+
   async function triggerAudit() {
     setRunning(true);
     try {
@@ -253,7 +261,12 @@ export default function SiteAuditPage() {
         <div className={styles.body}>
           {/* Sidebar: history */}
           <aside className={styles.sidebar}>
-            <h2 className={styles.sidebarTitle}>History</h2>
+            <div className={styles.sidebarHeader}>
+              <h2 className={styles.sidebarTitle}>History</h2>
+              {history.length > 0 && (
+                <button className={styles.clearBtn} onClick={clearAllAudits}>Clear</button>
+              )}
+            </div>
             {history.length === 0 && <p className={styles.empty}>No audits yet</p>}
             {history.map(a => (
               <button

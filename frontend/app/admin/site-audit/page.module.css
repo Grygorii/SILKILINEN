@@ -55,12 +55,33 @@
 
 .sidebar { }
 
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.clearBtn {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #8a8680;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.clearBtn:hover { color: #c0392b; }
+
 .sidebarTitle {
   font-size: 11px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: #8a8680;
-  margin: 0 0 12px;
+  margin: 0;
 }
 
 .historyItem {

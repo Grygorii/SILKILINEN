@@ -550,7 +550,7 @@ function levenshtein(a, b) {
 // ── Main orchestrator ────────────────────────────────────────────────────────
 
 async function runAudit(audit) {
-  const FRONTEND_URL = (process.env.FRONTEND_URL || 'https://silkilinen.com').replace(/\/$/, '');
+  const FRONTEND_URL = 'https://silkilinen.com';
   const BACKEND_URL = (process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3000}`).replace(/\/$/, '');
 
   const allFindings = [];

@@ -57,4 +57,13 @@ router.patch('/:id/findings/:idx', requireAuth, async function(req, res) {
   }
 });
 
+router.delete('/', requireAuth, async function(req, res) {
+  try {
+    await SiteAudit.deleteMany({});
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
