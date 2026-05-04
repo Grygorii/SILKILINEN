@@ -8,9 +8,21 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 type Order = {
   _id: string;
   total: number;
+  shippingCost: number;
   status: string;
   createdAt: string;
   items: { name: string }[];
+};
+
+const STATUS_CLASS: Record<string, string> = {
+  paid: styles.statusPaid,
+  processing: styles.statusProcessing,
+  shipped: styles.statusShipped,
+  delivered: styles.statusDelivered,
+  pending: styles.statusPending,
+  cancelled: styles.statusCancelled,
+  returned: styles.statusCancelled,
+  refunded: styles.statusCancelled,
 };
 
 function shortId(id: string) { return id.slice(-8).toUpperCase(); }
@@ -52,8 +64,10 @@ export default function OrdersPage() {
                 {new Date(o.createdAt).toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' })}
                 {o.items?.[0] && ` · ${o.items[0].name}${o.items.length > 1 ? ` +${o.items.length - 1} more` : ''}`}
               </span>
-              <span className={styles.orderTotal}>€{(o.total ?? 0).toFixed(2)}</span>
-              <span className={styles.orderStatus}>{o.status}</span>
+              <span className={styles.orderTotal}>€{((o.total ?? 0) + (o.shippingCost ?? 0)).toFixed(2)}</span>
+              <span className={`${styles.orderStatus} ${STATUS_CLASS[o.status] || styles.statusDefault}`}>
+                {o.status}
+              </span>
             </a>
           ))}
         </div>

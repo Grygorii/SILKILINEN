@@ -23,7 +23,33 @@ const orderSchema = new mongoose.Schema({
   total: { type: Number },
   shippingCost: { type: Number, default: 0 },
   shippingMethod: { type: String },
-  status: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
+
+  status: {
+    type: String,
+    enum: ['pending', 'paid', 'failed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'refunded'],
+    default: 'pending',
+  },
+  statusHistory: [{
+    status: { type: String },
+    note: { type: String, default: '' },
+    changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    timestamp: { type: Date, default: Date.now },
+  }],
+
+  trackingNumber: { type: String },
+  trackingUrl: { type: String },
+  carrier: { type: String },
+  shippedAt: { type: Date },
+  deliveredAt: { type: Date },
+  estimatedDelivery: { type: Date },
+
+  customerNote: { type: String },
+  internalNote: { type: String },
+
+  refundedAmount: { type: Number },
+  refundedAt: { type: Date },
+  refundReason: { type: String },
+
   customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null },
 }, { timestamps: true });
 

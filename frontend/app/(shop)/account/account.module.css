@@ -217,9 +217,16 @@
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 3px 10px;
-  background: #d4edda;
-  color: #155724;
+  border-radius: 2px;
 }
+
+.statusPaid       { background: #eaf7ee; color: #2d7d47; }
+.statusProcessing { background: #eef3fb; color: #2155a3; }
+.statusShipped    { background: #f0ebfb; color: #6b35b8; }
+.statusDelivered  { background: #eaf7ee; color: #1a6b3c; border: 1px solid #b6e4c7; }
+.statusPending    { background: var(--cream); color: var(--muted); border: 1px solid var(--border); }
+.statusCancelled  { background: #fdf0ef; color: #b03a2e; }
+.statusDefault    { background: var(--cream); color: var(--muted); }
 
 /* Order detail */
 .orderDetail {
@@ -275,6 +282,103 @@
 }
 
 .totalRow strong { font-size: 15px; }
+
+/* Tracking block */
+.trackingBlock {
+  padding: 16px;
+  background: var(--cream);
+  border: 1px solid var(--border);
+}
+
+.trackingLabel {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.trackingLink {
+  font-size: 14px;
+  color: var(--dark);
+  text-decoration: underline;
+}
+
+.trackingMeta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* Status timeline */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.timelineStep {
+  display: flex;
+  gap: 16px;
+  padding-bottom: 20px;
+  position: relative;
+}
+
+.timelineStep:last-child { padding-bottom: 0; }
+
+.timelineStep:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 16px;
+  bottom: 0;
+  width: 1px;
+  background: var(--border);
+}
+
+.timelineDot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--dark);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.timelineDotMuted {
+  background: var(--border);
+}
+
+.timelineContent { flex: 1; }
+
+.timelineStatus {
+  font-size: 13px;
+  color: var(--dark);
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+.timelineNote {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.timelineDate {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Customer note */
+.noteBlock {
+  padding: 14px 16px;
+  background: #fefdf9;
+  border: 1px solid #e8e3d4;
+  font-size: 13px;
+  color: var(--dark);
+  line-height: 1.7;
+}
 
 .reorderBtn {
   padding: 12px 28px;

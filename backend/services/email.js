@@ -213,4 +213,108 @@ async function sendWelcome({ email, firstName }) {
   });
 }
 
-module.exports = { sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome };
+function buildStatusHtml({ order, heading, body, trackingBlock }) {
+  const id = shortId(order._id);
+  const firstName = order.customerName ? order.customerName.split(' ')[0] : 'there';
+  const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.vercel.app';
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:40px 16px;">
+<tr><td align="center">
+<table cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+<tr><td style="background:#1a1916;padding:32px 40px;text-align:center;">
+<p style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;letter-spacing:6px;color:#faf8f4;">SILKILINEN</p>
+<p style="margin:8px 0 0;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#7a7670;">Silk &amp; Linen Intimates</p>
+</td></tr>
+<tr><td style="background:#faf8f4;padding:40px 40px 32px;">
+<p style="margin:0 0 12px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1916;">${heading}</p>
+<p style="margin:0 0 28px;font-size:13px;color:#5a5650;line-height:1.8;">Hi ${firstName}, ${body}</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;background:#f0ede8;border-radius:2px;">
+<tr><td style="padding:14px 20px;">
+<span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a8680;">Order</span>
+<span style="font-size:14px;color:#1a1916;font-weight:500;margin-left:12px;">#${id}</span>
+</td></tr>
+</table>
+${trackingBlock || ''}
+<a href="${FRONTEND}/account/orders" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">View your order</a>
+</td></tr>
+<tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
+<p style="margin:0 0 6px;font-size:12px;color:#8a8680;">Questions? <a href="mailto:hello@silkilinen.com" style="color:#1a1916;text-decoration:underline;">hello@silkilinen.com</a></p>
+<p style="margin:0;font-size:11px;color:#aca8a2;">Dublin, Ireland &nbsp;·&nbsp; Worldwide shipping</p>
+</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+async function sendProcessingEmail(order) {
+  if (!process.env.RESEND_API_KEY || !order.customerEmail) return;
+  const id = shortId(order._id);
+  await getResend().emails.send({
+    from: FROM,
+    to: order.customerEmail,
+    subject: `Your SILKILINEN order #${id} is being prepared`,
+    html: buildStatusHtml({
+      order,
+      heading: "We're preparing your order",
+      body: "your order is now being carefully prepared and packed. We'll email you again once it's on its way.",
+    }),
+  });
+}
+
+async function sendShippedEmail(order) {
+  if (!process.env.RESEND_API_KEY || !order.customerEmail) return;
+  const id = shortId(order._id);
+  const trackingBlock = (order.trackingNumber || order.trackingUrl) ? `
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;border:1px solid #eae8e3;border-radius:2px;">
+<tr><td style="padding:16px 20px;">
+<p style="margin:0 0 6px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8a8680;">Tracking</p>
+${order.carrier ? `<p style="margin:0 0 4px;font-size:13px;color:#5a5650;">${order.carrier}</p>` : ''}
+${order.trackingUrl
+    ? `<a href="${order.trackingUrl}" style="font-size:14px;color:#1a1916;font-weight:500;">${order.trackingNumber || 'Track your package →'}</a>`
+    : `<p style="margin:0;font-size:14px;color:#1a1916;font-weight:500;">${order.trackingNumber}</p>`}
+${order.estimatedDelivery ? `<p style="margin:8px 0 0;font-size:12px;color:#8a8680;">Est. delivery: ${new Date(order.estimatedDelivery).toDateString()}</p>` : ''}
+</td></tr>
+</table>` : '';
+  await getResend().emails.send({
+    from: FROM,
+    to: order.customerEmail,
+    subject: `Your SILKILINEN order #${id} is on its way`,
+    html: buildStatusHtml({
+      order,
+      heading: 'Your order is on its way',
+      body: 'your order has been dispatched and is heading your way.',
+      trackingBlock,
+    }),
+  });
+}
+
+async function sendDeliveredEmail(order) {
+  if (!process.env.RESEND_API_KEY || !order.customerEmail) return;
+  const id = shortId(order._id);
+  await getResend().emails.send({
+    from: FROM,
+    to: order.customerEmail,
+    subject: `Your SILKILINEN order #${id} has been delivered`,
+    html: buildStatusHtml({
+      order,
+      heading: 'Your order has arrived',
+      body: 'your order has been delivered. We hope you love every piece. If anything isn't right, please reach out — we're here to help.',
+    }),
+  });
+}
+
+async function sendCancelledEmail(order) {
+  if (!process.env.RESEND_API_KEY || !order.customerEmail) return;
+  const id = shortId(order._id);
+  await getResend().emails.send({
+    from: FROM,
+    to: order.customerEmail,
+    subject: `Your SILKILINEN order #${id} has been cancelled`,
+    html: buildStatusHtml({
+      order,
+      heading: 'Your order has been cancelled',
+      body: 'your order has been cancelled. If a refund is due, it will appear in your account within 5–10 business days. Please contact us if you have any questions.',
+    }),
+  });
+}
+
+module.exports = { sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail };

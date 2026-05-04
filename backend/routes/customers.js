@@ -178,7 +178,10 @@ router.get('/me/orders', requireCustomer, async function(req, res) {
   try {
     const customer = await Customer.findById(req.customer.customerId);
     if (!customer) return res.status(404).json({ error: 'Not found' });
-    const orders = await Order.find({ customerEmail: customer.email, status: 'paid' }).sort({ createdAt: -1 });
+    const orders = await Order.find({
+      customerEmail: customer.email,
+      status: { $nin: ['pending', 'failed'] },
+    }).sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -190,7 +193,10 @@ router.get('/me/orders/:orderId', requireCustomer, async function(req, res) {
   try {
     const customer = await Customer.findById(req.customer.customerId);
     if (!customer) return res.status(404).json({ error: 'Not found' });
-    const order = await Order.findOne({ _id: req.params.orderId, customerEmail: customer.email });
+    const order = await Order.findOne(
+      { _id: req.params.orderId, customerEmail: customer.email },
+      { internalNote: 0 },
+    );
     if (!order) return res.status(404).json({ error: 'Order not found' });
     res.json(order);
   } catch (err) {
