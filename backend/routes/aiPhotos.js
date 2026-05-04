@@ -3,7 +3,7 @@ const router = express.Router();
 const { GoogleGenAI } = require('@google/genai');
 const AiModel = require('../models/AiModel');
 const PhotoshootSession = require('../models/PhotoshootSession');
-const Product = require('../models/product');
+const Product = require('../models/Product');
 const { cloudinary } = require('../utils/cloudinary');
 const { requireAuth } = require('../middleware/auth');
 const {
