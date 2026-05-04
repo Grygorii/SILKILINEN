@@ -48,21 +48,45 @@ async function validateGeneration(imageBuffer, tier) {
   const stats = await sharp(imageBuffer).stats();
   const avgStdDev = stats.channels.reduce((sum, c) => sum + c.stdev, 0) / stats.channels.length;
 
-  // Accept 50% of requested size — Gemini may not honour exact dimensions
-  const minWidth = Math.floor(tier.width * 0.5);
-  const minHeight = Math.floor(tier.height * 0.5);
-  const expectedAspect = tier.width / tier.height;
+  const expectedAspect = tier.width / tier.height; // e.g. 0.8 for 4:5
 
+  // Hard fails only — these indicate a broken/blank generation worth retrying.
+  // Resolution is NOT a hard fail: Gemini caps output at ~1024×1280 regardless of
+  // imageConfig, so checking against requested dimensions always fails for HD/Premium.
+  // We log it but let the admin decide whether the quality is acceptable.
   const checks = {
-    resolution: metadata.width >= minWidth && metadata.height >= minHeight,
-    fileSize: imageBuffer.length > 100_000,
-    aspectRatio: Math.abs((metadata.width / metadata.height) - expectedAspect) < 0.15,
-    notBlank: avgStdDev > 10,
+    fileSize: imageBuffer.length > 50_000,   // < 50 KB = almost certainly broken
+    aspectRatio: Math.abs((metadata.width / metadata.height) - expectedAspect) < 0.2,
+    notBlank: avgStdDev > 8,                 // stdev ≤ 8 = solid colour / blank
   };
 
-  return {
-    passed: Object.values(checks).every(Boolean),
+  const passed = Object.values(checks).every(Boolean);
+
+  // Informational resolution check (logged, not a hard fail)
+  const resolutionOk = metadata.width >= tier.width * 0.85 && metadata.height >= tier.height * 0.85;
+
+  console.log('[AI Validate]', {
+    tier: tier.label,
+    expected: { width: tier.width, height: tier.height, aspect: expectedAspect.toFixed(3) },
+    actual: { width: metadata.width, height: metadata.height, aspect: (metadata.width / metadata.height).toFixed(3) },
+    fileSizeKB: Math.round(imageBuffer.length / 1000),
+    stdDev: avgStdDev.toFixed(1),
+    resolutionOk,
     checks,
+    passed,
+  });
+
+  return {
+    passed,
+    checks: {
+      ...checks,
+      resolution: resolutionOk, // included for UI display, not used in passed logic
+    },
+    resolutionInfo: {
+      ok: resolutionOk,
+      actual: { width: metadata.width, height: metadata.height },
+      requested: { width: tier.width, height: tier.height },
+    },
     metadata: {
       width: metadata.width,
       height: metadata.height,

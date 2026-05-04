@@ -52,6 +52,8 @@ type PhotoState = {
   url: string;
   status: 'pending' | 'approved';
   iterations: number;
+  forReview?: boolean;
+  validationPassed?: boolean;
   qualityTier?: TierKey;
   retryCount?: number;
   resolution?: { width: number; height: number };
@@ -169,6 +171,8 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
             url: r.url as string,
             status: 'pending',
             iterations: prev[r.position as Position]?.iterations || 0,
+            forReview: r.forReview as boolean | undefined,
+            validationPassed: r.validationPassed as boolean | undefined,
             qualityTier: r.qualityTier as TierKey | undefined,
             retryCount: r.retryCount as number | undefined,
             resolution: r.resolution as { width: number; height: number } | undefined,
@@ -266,7 +270,7 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
     });
     const data = await res.json();
     if (res.ok) {
-      setPhotoStates(s => ({ ...s, [position]: { ...s[position]!, status: 'approved' } }));
+      setPhotoStates(s => ({ ...s, [position]: { ...s[position]!, status: 'approved', forReview: false } }));
       onPhotoApproved(data.url);
     }
   }
@@ -305,6 +309,8 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
           url: data.url,
           status: 'pending',
           iterations: (s[improvingPosition]?.iterations || 0) + 1,
+          forReview: data.forReview,
+          validationPassed: data.validationPassed,
           qualityTier: data.qualityTier,
           retryCount: data.retryCount,
           resolution: data.resolution,
@@ -492,7 +498,7 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
                 const photo = photoStates[pos];
                 const isImproving = improvingPosition === pos;
                 return (
-                  <div key={pos} className={`${styles.resultCard} ${photo?.status === 'approved' ? styles.resultApproved : ''}`}>
+                  <div key={pos} className={`${styles.resultCard} ${photo?.forReview ? styles.resultReview : photo?.status === 'approved' ? styles.resultApproved : ''}`}>
                     <div className={styles.resultHeader}>
                       <span className={styles.resultPos}>{POSITION_LABELS[pos]}</span>
                       {photo && photo.iterations > 0 && (
@@ -513,25 +519,43 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
                       <ValidationStrip photo={photo} modelName={suggestedModel?.name} />
                     )}
 
+                    {photo?.forReview && (
+                      <div className={styles.reviewBanner}>
+                        ⚠ Failed validation — review before using
+                      </div>
+                    )}
+
                     {photo?.url && (
                       <div className={styles.resultActions}>
-                        {photo.status === 'approved' ? (
+                        {photo.forReview ? (
+                          <>
+                            <button className={styles.useAnywayBtn} onClick={() => approvePhoto(pos)} disabled={isWorking}>
+                              Use this image
+                            </button>
+                            <button
+                              className={`${styles.improveBtn} ${isImproving ? styles.improveBtnActive : ''}`}
+                              onClick={() => { setImprovingPosition(isImproving ? null : pos); setImproveFeedback(''); }}
+                              disabled={isWorking}
+                            >
+                              ↺ Regenerate
+                            </button>
+                          </>
+                        ) : photo.status === 'approved' ? (
                           <span className={styles.approvedLabel}>Approved</span>
                         ) : (
-                          <button className={styles.approveBtn} onClick={() => approvePhoto(pos)} disabled={isWorking}>
-                            ✓ Approve
-                          </button>
+                          <>
+                            <button className={styles.approveBtn} onClick={() => approvePhoto(pos)} disabled={isWorking}>
+                              ✓ Approve
+                            </button>
+                            <button
+                              className={`${styles.improveBtn} ${isImproving ? styles.improveBtnActive : ''}`}
+                              onClick={() => { setImprovingPosition(isImproving ? null : pos); setImproveFeedback(''); }}
+                              disabled={isWorking}
+                            >
+                              ↺ Improve
+                            </button>
+                          </>
                         )}
-                        <button
-                          className={`${styles.improveBtn} ${isImproving ? styles.improveBtnActive : ''}`}
-                          onClick={() => {
-                            setImprovingPosition(isImproving ? null : pos);
-                            setImproveFeedback('');
-                          }}
-                          disabled={isWorking}
-                        >
-                          ↺ Improve
-                        </button>
                       </div>
                     )}
 

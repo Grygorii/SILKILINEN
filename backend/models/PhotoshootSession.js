@@ -23,6 +23,8 @@ const generatedPhotoSchema = new mongoose.Schema({
   hasFace: Boolean,
   identitySimilarity: Number,
   identityMatchStatus: { type: String, enum: ['good', 'warning', 'drifted'] },
+  validationPassed: { type: Boolean, default: true },
+  forReview: { type: Boolean, default: false },
 }, { _id: false });
 
 const photoshootSessionSchema = new mongoose.Schema({

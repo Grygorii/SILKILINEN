@@ -97,7 +97,7 @@ function uploadBuffer(buffer, options) {
   });
 }
 
-// Call Gemini once and return raw buffer + mime type
+// Call Gemini once — returns { buffer, mimeType, prompt } or throws
 async function callGemini(aiModel, inputPhotos, position, iterationFeedback, tier) {
   const imageParts = [];
   if (aiModel.referenceImageUrl) {
@@ -132,48 +132,48 @@ async function callGemini(aiModel, inputPhotos, position, iterationFeedback, tie
   throw new Error('Gemini returned no image');
 }
 
-// Full generation pipeline: retry on validation failure, then upload + analyse
+// Full generation pipeline — NEVER throws on validation failure.
+// Returns { url, validationPassed, forReview, ... } always.
+// Only throws if every Gemini API call failed (network/auth errors).
 async function runGeneration(aiModel, inputPhotos, position, iterationFeedback, tierKey) {
   const tier = getTier(tierKey);
-  let lastError = 'Generation failed';
   let retryCount = 0;
   let retryCost = 0;
+  let lastGeminiResult = null; // last successful Gemini call (even if validation failed)
+  let lastValidation = null;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     if (attempt > 0) {
       retryCost += tier.estimatedCost;
-      console.log(`[AI Photo] Retry ${attempt} for ${position}: ${lastError}`);
     }
 
     let geminiResult;
     try {
       geminiResult = await callGemini(aiModel, inputPhotos, position, iterationFeedback, tier);
+      lastGeminiResult = geminiResult;
     } catch (err) {
-      lastError = err.message;
+      console.error(`[AI Photo] Gemini call failed (attempt ${attempt + 1}): ${err.message}`);
       retryCount = attempt;
       if (attempt < MAX_RETRIES) continue;
-      break;
-    }
-
-    const validation = await validateGeneration(geminiResult.buffer, tier);
-    if (!validation.passed) {
-      const failed = Object.entries(validation.checks).filter(([, v]) => !v).map(([k]) => k);
-      lastError = `Validation failed: ${failed.join(', ')}`;
-      retryCount = attempt;
-      if (attempt < MAX_RETRIES) continue;
-
-      const { width, height } = validation.metadata;
-      const err = new Error(
-        `Generation failed validation after ${MAX_RETRIES + 1} attempts. ` +
-        `Failed checks: ${failed.join(', ')} (got ${width}×${height}, expected ≥${Math.floor(tier.width * 0.5)}×${Math.floor(tier.height * 0.5)}). ` +
-        `Try regenerating, or lower the quality tier.`
-      );
-      err.retryCount = retryCount;
-      err.retryCost = retryCost;
+      // All Gemini API calls failed — use last image if we have one, otherwise throw
+      if (lastGeminiResult) break;
       throw err;
     }
 
-    // Upload to Cloudinary with face detection
+    const validation = await validateGeneration(geminiResult.buffer, tier);
+    lastValidation = validation;
+
+    if (!validation.passed) {
+      const failedChecks = Object.entries(validation.checks)
+        .filter(([k, v]) => !v && k !== 'resolution') // resolution is informational only
+        .map(([k]) => k);
+      console.log(`[AI Photo] Hard validation failed (attempt ${attempt + 1}/${MAX_RETRIES + 1}) for ${position}: ${failedChecks.join(', ')}`);
+      retryCount = attempt;
+      if (attempt < MAX_RETRIES) continue;
+      break; // all retries exhausted — fall through to review upload
+    }
+
+    // Validation passed — upload to production folder
     const uploaded = await uploadBuffer(geminiResult.buffer, {
       folder: 'silkilinen/ai-generated',
       detection: 'face_detection',
@@ -182,15 +182,12 @@ async function runGeneration(aiModel, inputPhotos, position, iterationFeedback, 
 
     const faces = uploaded.faces || [];
     const hasFace = faces.length > 0;
-
-    // Identity drift comparison against locked reference
     let identSimilarity = null;
     let matchStatus = null;
 
     if (hasFace && aiModel.referenceFaceHash) {
       const [x, y, w, h] = faces[0];
-      const faceBox = { x, y, width: w, height: h };
-      const newHash = await computeFaceHash(geminiResult.buffer, faceBox);
+      const newHash = await computeFaceHash(geminiResult.buffer, { x, y, width: w, height: h });
       if (newHash) {
         identSimilarity = hashSimilarity(aiModel.referenceFaceHash, newHash);
         matchStatus = identityMatchStatus(identSimilarity);
@@ -204,6 +201,8 @@ async function runGeneration(aiModel, inputPhotos, position, iterationFeedback, 
       resolution: { width: uploaded.width, height: uploaded.height },
       fileSize: uploaded.bytes,
       validationChecks: validation.checks,
+      validationPassed: true,
+      forReview: false,
       faceData: faces,
       hasFace,
       identitySimilarity: identSimilarity,
@@ -213,10 +212,37 @@ async function runGeneration(aiModel, inputPhotos, position, iterationFeedback, 
     };
   }
 
-  const err = new Error(lastError);
-  err.retryCount = retryCount;
-  err.retryCost = retryCost;
-  throw err;
+  // ── All validation attempts failed — upload last image for admin review ──
+  console.warn(`[AI Photo] All ${MAX_RETRIES + 1} attempts failed for ${position} [${tier.label}]. Uploading to review folder.`);
+
+  let reviewUrl = null;
+  if (lastGeminiResult) {
+    try {
+      const uploaded = await uploadBuffer(lastGeminiResult.buffer, {
+        folder: 'silkilinen/ai-review',
+        resource_type: 'image',
+      });
+      reviewUrl = uploaded.secure_url;
+    } catch (uploadErr) {
+      console.error(`[AI Photo] Failed to upload review image: ${uploadErr.message}`);
+    }
+  }
+
+  return {
+    url: reviewUrl,
+    prompt: lastGeminiResult?.prompt || null,
+    resolution: lastValidation ? { width: lastValidation.metadata.width, height: lastValidation.metadata.height } : null,
+    fileSize: lastValidation?.metadata.size ?? null,
+    validationChecks: lastValidation?.checks ?? null,
+    validationPassed: false,
+    forReview: true,
+    faceData: [],
+    hasFace: false,
+    identitySimilarity: null,
+    identityMatchStatus: null,
+    retryCount,
+    retryCost,
+  };
 }
 
 // ── Auto-model selection ─────────────────────────────────────────────────────
@@ -235,6 +261,21 @@ function costResponse(session) {
     costWarning: session.totalCost >= SESSION_COST_WARN && session.totalCost < SESSION_COST_LIMIT,
     costBlocked: session.totalCost >= SESSION_COST_LIMIT,
   };
+}
+
+// Apply result to session cost tracking — only charges for successful generations
+function applyResultToSession(session, result, tierEstimatedCost) {
+  if (result.forReview) {
+    // Validation failed — no charge to admin. Track internally only.
+    session.failedRetries = (session.failedRetries || 0) + result.retryCount;
+    console.log(`[AI Cost] Internal: ~€${(tierEstimatedCost + (result.retryCost || 0)).toFixed(2)} incurred (not charged — validation failed)`);
+  } else {
+    // Success — charge the single successful generation cost only
+    session.totalCost += tierEstimatedCost;
+    session.costBreakdown.successful = (session.costBreakdown.successful || 0) + tierEstimatedCost;
+    session.costBreakdown.retries = (session.costBreakdown.retries || 0) + (result.retryCost || 0);
+    session.failedRetries = (session.failedRetries || 0) + result.retryCount;
+  }
 }
 
 // ── Routes ───────────────────────────────────────────────────────────────────
@@ -303,7 +344,7 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
       return res.status(400).json({ error: 'Model has no reference photo. Generate one in AI Models first.' });
     }
 
-    checkDailyLimit(); // once per user request
+    checkDailyLimit(); // once per user request, not per retry
 
     const targetPositions = Array.isArray(positions) && positions.length > 0
       ? positions
@@ -311,7 +352,6 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
 
     const results = [];
     for (const position of targetPositions) {
-      // Use explicit tier if supplied, else per-position default
       const tierKey = (reqTier && reqTier !== 'auto' && ['standard', 'hd', 'premium'].includes(reqTier))
         ? reqTier
         : getDefaultTierKey(position);
@@ -321,15 +361,14 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
       try {
         result = await runGeneration(aiModel, session.inputPhotos, position, null, tierKey);
       } catch (err) {
-        // Track retry costs even for failures
-        const rCost = err.retryCost || 0;
-        session.failedRetries += err.retryCount || 0;
-        session.costBreakdown.retries = (session.costBreakdown.retries || 0) + rCost;
-        session.totalCost += rCost;
-        console.error(`[AI Photo] Generation failed for ${position}: ${err.message}`);
-        results.push({ position, error: err.message });
+        // True API failure (not validation) — no charge
+        console.error(`[AI Photo] API error for ${position}: ${err.message}`);
+        results.push({ position, error: 'Generation failed due to API error. No charge applied.', forReview: false });
         continue;
       }
+
+      applyResultToSession(session, result, tier.estimatedCost);
+      session.iterationCount += 1;
 
       const photoData = {
         url: result.url,
@@ -337,13 +376,15 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
         position,
         status: 'pending',
         iterationCount: 0,
-        generationCost: tier.estimatedCost,
+        generationCost: result.forReview ? 0 : tier.estimatedCost,
         qualityTier: tierKey,
         retryCount: result.retryCount,
         retryCost: result.retryCost,
         resolution: result.resolution,
         fileSize: result.fileSize,
         validationChecks: result.validationChecks,
+        validationPassed: result.validationPassed,
+        forReview: result.forReview,
         faceData: result.faceData,
         hasFace: result.hasFace,
         identitySimilarity: result.identitySimilarity,
@@ -357,12 +398,6 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
         session.generatedPhotos.push(photoData);
       }
 
-      session.totalCost += tier.estimatedCost;
-      session.failedRetries += result.retryCount;
-      session.costBreakdown.successful = (session.costBreakdown.successful || 0) + tier.estimatedCost;
-      session.costBreakdown.retries = (session.costBreakdown.retries || 0) + result.retryCost;
-      session.iterationCount += 1;
-
       results.push({
         position,
         url: result.url,
@@ -371,9 +406,14 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
         resolution: result.resolution,
         fileSize: result.fileSize,
         validationChecks: result.validationChecks,
+        validationPassed: result.validationPassed,
+        forReview: result.forReview,
         hasFace: result.hasFace,
         identitySimilarity: result.identitySimilarity,
         identityMatchStatus: result.identityMatchStatus,
+        ...(result.forReview ? {
+          reviewMessage: 'Auto-validation failed — no charge applied. You can use this image or regenerate.',
+        } : {}),
       });
     }
 
@@ -413,9 +453,8 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
       return res.status(400).json({ error: `Max iterations (${MAX_ITERATIONS_PER_PHOTO}) reached for this photo` });
     }
 
-    checkDailyLimit(); // once per user request
+    checkDailyLimit();
 
-    // Use explicit tier, or inherit parent photo's tier
     const tierKey = (reqTier && reqTier !== 'auto' && ['standard', 'hd', 'premium'].includes(reqTier))
       ? reqTier
       : (photo.qualityTier || getDefaultTierKey(position));
@@ -425,19 +464,16 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
     try {
       result = await runGeneration(session.selectedModel, session.inputPhotos, position, feedback, tierKey);
     } catch (err) {
-      const rCost = err.retryCost || 0;
-      session.failedRetries += err.retryCount || 0;
-      session.costBreakdown.retries = (session.costBreakdown.retries || 0) + rCost;
-      session.totalCost += rCost;
-      session.markModified('costBreakdown');
-      await session.save();
-      return res.status(422).json({ error: err.message, retryCost: rCost, ...costResponse(session) });
+      return res.status(422).json({ error: `Generation failed: ${err.message}. No charge applied.`, ...costResponse(session) });
     }
+
+    applyResultToSession(session, result, tier.estimatedCost);
+    session.iterationCount += 1;
 
     session.generatedPhotos[photoIdx].url = result.url;
     session.generatedPhotos[photoIdx].feedback = feedback;
     session.generatedPhotos[photoIdx].iterationCount += 1;
-    session.generatedPhotos[photoIdx].generationCost += tier.estimatedCost;
+    session.generatedPhotos[photoIdx].generationCost += result.forReview ? 0 : tier.estimatedCost;
     session.generatedPhotos[photoIdx].status = 'pending';
     session.generatedPhotos[photoIdx].qualityTier = tierKey;
     session.generatedPhotos[photoIdx].retryCount = result.retryCount;
@@ -445,15 +481,11 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
     session.generatedPhotos[photoIdx].resolution = result.resolution;
     session.generatedPhotos[photoIdx].fileSize = result.fileSize;
     session.generatedPhotos[photoIdx].validationChecks = result.validationChecks;
+    session.generatedPhotos[photoIdx].validationPassed = result.validationPassed;
+    session.generatedPhotos[photoIdx].forReview = result.forReview;
     session.generatedPhotos[photoIdx].hasFace = result.hasFace;
     session.generatedPhotos[photoIdx].identitySimilarity = result.identitySimilarity;
     session.generatedPhotos[photoIdx].identityMatchStatus = result.identityMatchStatus;
-
-    session.totalCost += tier.estimatedCost;
-    session.failedRetries += result.retryCount;
-    session.costBreakdown.successful = (session.costBreakdown.successful || 0) + tier.estimatedCost;
-    session.costBreakdown.retries = (session.costBreakdown.retries || 0) + result.retryCost;
-    session.iterationCount += 1;
 
     session.markModified('generatedPhotos');
     session.markModified('costBreakdown');
@@ -467,9 +499,12 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
       resolution: result.resolution,
       fileSize: result.fileSize,
       validationChecks: result.validationChecks,
+      validationPassed: result.validationPassed,
+      forReview: result.forReview,
       hasFace: result.hasFace,
       identitySimilarity: result.identitySimilarity,
       identityMatchStatus: result.identityMatchStatus,
+      ...(result.forReview ? { reviewMessage: 'Auto-validation failed — no charge applied.' } : {}),
       ...costResponse(session),
     });
   } catch (err) {
@@ -489,6 +524,7 @@ router.post('/sessions/:id/approve-photo', requireAuth, async function(req, res)
     if (photoIdx === -1) return res.status(404).json({ error: 'Photo not found' });
 
     session.generatedPhotos[photoIdx].status = 'approved';
+    session.generatedPhotos[photoIdx].forReview = false; // admin has manually approved — no longer in review
     session.markModified('generatedPhotos');
     await session.save();
 
