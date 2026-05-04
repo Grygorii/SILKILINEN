@@ -236,6 +236,30 @@ async function pickModel(category) {
   return models.find(m => m.name === 'Aoife') || models[0] || null;
 }
 
+// ── Error classification ──────────────────────────────────────────────────────
+function classifyError(err) {
+  const msg = (err?.message || '').toLowerCase();
+  if (msg.includes('timed out after 90s') || msg.includes('gemini generatecontent')) {
+    return { errorType: 'timeout', userMessage: 'Generation timed out — no charge applied.' };
+  }
+  if (msg.includes('timed out after')) {
+    return { errorType: 'timeout', userMessage: 'Request timed out — no charge applied.' };
+  }
+  if (msg.includes('503') || msg.includes('unavailable') || msg.includes('overloaded')) {
+    return { errorType: 'service_unavailable', userMessage: 'Gemini is temporarily busy — no charge applied.' };
+  }
+  if (msg.includes('429') || msg.includes('resource_exhausted') || msg.includes('quota')) {
+    return { errorType: 'rate_limit', userMessage: 'Too many requests — wait a minute and try again. No charge applied.' };
+  }
+  if (msg.includes('gemini returned no image')) {
+    return { errorType: 'no_image', userMessage: 'Gemini returned no image — no charge applied.' };
+  }
+  if (msg.includes('daily generation limit')) {
+    return { errorType: 'daily_limit', userMessage: err.message };
+  }
+  return { errorType: 'unknown', userMessage: 'Generation failed — no charge applied.' };
+}
+
 // ── Cost helpers ──────────────────────────────────────────────────────────────
 function costResponse(session) {
   return {
@@ -348,7 +372,8 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
         result = await generate(aiModel, session.inputPhotos, position, null, tierKey, { publicId, altText });
       } catch (err) {
         console.error(`[AI Photo] Generation failed for ${position}: ${err.message}`);
-        results.push({ position, label, tier: tierKey, error: err.message });
+        const { errorType, userMessage } = classifyError(err);
+        results.push({ position, label, tier: tierKey, error: err.message, errorType, userMessage });
         continue;
       }
 
@@ -434,7 +459,8 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
     try {
       result = await generate(session.selectedModel, session.inputPhotos, position, feedback || null, tierKey, { publicId, altText });
     } catch (err) {
-      return res.status(422).json({ error: `Generation failed: ${err.message}`, ...costResponse(session) });
+      const { errorType, userMessage } = classifyError(err);
+      return res.status(422).json({ error: `Generation failed: ${err.message}`, errorType, userMessage, ...costResponse(session) });
     }
 
     session.totalCost += tier.estimatedCost;

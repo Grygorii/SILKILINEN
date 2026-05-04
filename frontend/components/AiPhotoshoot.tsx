@@ -250,6 +250,13 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
       if (data.costWarning) setCostWarning(true);
       if (data.costBlocked) setCostBlocked(true);
       setForceOverride(false);
+
+      const failed = (data.results || []).filter((r: { url?: string; label?: string; position: string; userMessage?: string; error?: string }) => !r.url);
+      if (failed.length > 0) {
+        setError(failed.map((r: { label?: string; position: string; userMessage?: string; error?: string }) =>
+          `${r.label || r.position}: ${r.userMessage || r.error || 'Failed'}`
+        ).join('\n'));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Generation failed');
     } finally {
@@ -294,7 +301,7 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
       const data = await res.json();
       if (!res.ok) {
         if (data.error === 'SESSION_COST_LIMIT') { setCostBlocked(true); setTotalCost(data.totalCost); setError(data.message); return; }
-        throw new Error(data.error);
+        throw new Error(data.userMessage || data.error);
       }
       setPhotoStates(s => ({
         ...s,
@@ -494,7 +501,11 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
             </>
           )}
 
-          {error && <p className={styles.error}>{error}</p>}
+          {error && (
+            <div className={styles.error}>
+              {error.split('\n').map((line, i) => <p key={i}>{line}</p>)}
+            </div>
+          )}
 
           {/* ── Results ──────────────────────────────────────── */}
           {hasPhotos && (
