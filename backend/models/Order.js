@@ -51,6 +51,14 @@ const orderSchema = new mongoose.Schema({
   refundReason: { type: String },
 
   customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null },
+
+  attribution: {
+    source:      { type: String, default: 'direct' },
+    medium:      { type: String, default: 'none' },
+    campaign:    { type: String, default: 'none' },
+    referrer:    { type: String, default: '' },
+    landingPage: { type: String, default: '' },
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

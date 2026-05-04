@@ -39,7 +39,22 @@
       "Bash(node -e \"require\\('./models/Product'\\); require\\('./routes/adminProducts'\\); console.log\\('OK'\\)\")",
       "Bash(cd /d d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\frontend)",
       "Bash(Get-ChildItem -Recurse -Include \"Header.tsx\", \"Header.module.css\", \"SideMenu.tsx\", \"SideMenu.module.css\", \"Cart*.tsx\", \"Cart*.module.css\", \"ProductGrid.tsx\")",
-      "Bash(Select-Object FullName)"
+      "Bash(Select-Object FullName)",
+      "Bash(find \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\" -maxdepth 1 -type f)",
+      "Bash(find \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\\\\\\\\backend\" -type f -name \"*.js\")",
+      "Bash(find \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\\\\\\\\backend\" -maxdepth 2 -type f -name \"*.js\")",
+      "Bash(grep -r \"utm\" \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\\\\\\\\backend\" --include=\"*.js\" --exclude-dir=node_modules)",
+      "Bash(grep -r \"attribution\" \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\\\\\\\\backend\" --include=\"*.js\" --exclude-dir=node_modules)",
+      "Bash(grep -r \"ga4\\\\|GA4\" \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\\\\\\\\backend\" --include=\"*.js\" --exclude-dir=node_modules)",
+      "Bash(find \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\\\\\\\\backend\\\\\\\\services\" -type f -name \"*.js\")",
+      "Bash(find \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\" -name \".env*\" -type f)",
+      "Bash(find \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\" -maxdepth 3 -name \"package.json\" -type f)",
+      "Bash(grep -r \"gtag\\\\|GA4\\\\|analytics\\\\|google-analytics\" \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\\\\\\\\frontend\" --include=\"*.tsx\" --include=\"*.ts\" --include=\"*.jsx\" --include=\"*.js\" --exclude-dir=node_modules -l)",
+      "Bash(find \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\\\\\\\\frontend\" -type f \\\\\\( -name \"success*\" -o -name \"checkout*\" \\\\\\) -path \"*/app/*\")",
+      "Bash(find \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\\\\\\\\frontend\\\\\\\\app\" -maxdepth 3 -type d)",
+      "Bash(find \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\\\\\\\\frontend\\\\\\\\app\" -name \"success*\" -o -name \"cancel*\")",
+      "Bash(find \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\\\\\\\\frontend\\\\\\\\app\\\\\\\\\\(shop\\)\\\\\\\\success\" -type f)",
+      "Bash(grep -r \"NEXT_PUBLIC_GA\\\\|GA_ID\\\\|GA4\\\\|PROPERTY_ID\" \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\" --include=\"*.tsx\" --include=\"*.ts\" --include=\"*.js\" --exclude-dir=node_modules)"
     ]
   }
 }

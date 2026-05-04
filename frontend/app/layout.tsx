@@ -5,6 +5,7 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import CookieConsent from "@/components/CookieConsent";
 import NewsletterPopup from "@/components/NewsletterPopup";
 import AnalyticsLoader from "@/components/AnalyticsLoader";
+import UTMCapture from "@/components/UTMCapture";
 import GoogleAuthProvider from "@/components/GoogleAuthProvider";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
@@ -35,6 +36,7 @@ export default function RootLayout({
                 <CookieConsent />
                 <NewsletterPopup />
                 <AnalyticsLoader />
+                <UTMCapture />
               </CartProvider>
             </WishlistProvider>
           </CustomerProvider>

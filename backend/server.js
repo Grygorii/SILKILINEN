@@ -26,6 +26,7 @@ const promoCodesRoutes = require('./routes/promoCodes');
 const contentRoutes = require('./routes/content');
 const categoriesRoutes = require('./routes/categories');
 const siteAuditRoutes = require('./routes/siteAudit');
+const insightsRoutes = require('./routes/insights');
 
 const app = express();
 
@@ -70,6 +71,7 @@ app.use('/api/promo-codes', promoCodesRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/admin/site-audit', siteAuditRoutes);
+app.use('/api/admin/insights', insightsRoutes);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(function() { console.log('Connected to MongoDB'); })

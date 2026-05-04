@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import AdminLayout from '@/components/AdminLayout';
 import styles from './page.module.css';
@@ -29,6 +29,15 @@ type Stats = {
   topProducts: { name: string; qty: number }[];
   salesChart: { date: string; revenue: number }[];
   geoDistribution: { country: string; count: number }[];
+};
+
+type Insight = { type: 'success' | 'warning' | 'info'; title: string; body: string };
+
+type InsightsData = {
+  today: { revenue: number; orders: number; abandonedCarts: number };
+  attribution: { source: string; orders: number; revenue: number; pct: number }[];
+  topProducts: { name: string; qty: number; revenue: number }[];
+  insights: Insight[];
 };
 
 function Change({ value }: { value: number | null }) {
@@ -58,13 +67,18 @@ function chartTick(date: string) {
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [insights, setInsights] = useState<InsightsData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API}/api/orders/stats`, { credentials: 'include' })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { setStats(data); setLoading(false); })
-      .catch(() => setLoading(false));
+    Promise.all([
+      fetch(`${API}/api/orders/stats`, { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+      fetch(`${API}/api/admin/insights`, { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+    ]).then(([statsData, insightsData]) => {
+      setStats(statsData);
+      setInsights(insightsData);
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, []);
 
   const s: Stats = stats ?? {
@@ -210,97 +224,89 @@ export default function AdminDashboard() {
           <div className={styles.section}>
             <p className={styles.sectionTitle}>Customer insights</p>
 
-            {/* Funnel + setup checklist */}
-            <div className={`${styles.twoCol} ${styles.insightsRow}`}>
+            {/* Today snapshot */}
+            {insights && (
+              <div className={styles.metricsRow} style={{ marginBottom: 16 }}>
+                <div className={styles.metricCard}>
+                  <p className={styles.metricLabel}>Today&apos;s revenue</p>
+                  <p className={styles.metricValue}>{fmt(insights.today.revenue)}</p>
+                  <span className={styles.changeMuted}>{insights.today.orders} order{insights.today.orders !== 1 ? 's' : ''}</span>
+                </div>
+                <div className={styles.metricCard}>
+                  <p className={styles.metricLabel}>Abandoned carts</p>
+                  <p className={styles.metricValue}>{insights.today.abandonedCarts}</p>
+                  <span className={styles.changeMuted}>Pending &gt; 2 hours</span>
+                </div>
+                <div className={styles.metricCard}>
+                  <p className={styles.metricLabel}>Top source</p>
+                  <p className={styles.metricValue} style={{ fontSize: 22, textTransform: 'capitalize' }}>
+                    {insights.attribution[0]?.source ?? '—'}
+                  </p>
+                  <span className={styles.changeMuted}>{insights.attribution[0]?.pct ?? 0}% of revenue</span>
+                </div>
+                <div className={styles.metricCard}>
+                  <p className={styles.metricLabel}>Top product (30d)</p>
+                  <p className={styles.metricValue} style={{ fontSize: 16, lineHeight: 1.3, marginTop: 8 }}>
+                    {insights.topProducts[0]?.name ?? '—'}
+                  </p>
+                  <span className={styles.changeMuted}>{insights.topProducts[0] ? `${insights.topProducts[0].qty} sold` : 'No sales yet'}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Attribution + Automated insights */}
+            <div className={styles.twoCol}>
               <div className={styles.card}>
-                <p className={styles.cardTitle}>Conversion funnel</p>
-                <ResponsiveContainer width="100%" height={180}>
-                  <BarChart
-                    layout="vertical"
-                    data={[
-                      { stage: 'Visitors', count: 0 },
-                      { stage: 'Product views', count: 0 },
-                      { stage: 'Added to cart', count: 0 },
-                      { stage: 'Checkout started', count: 0 },
-                      { stage: 'Purchased', count: s.totalOrders },
-                    ]}
-                    margin={{ top: 0, right: 24, left: 100, bottom: 0 }}
-                  >
-                    <XAxis type="number" tick={{ fontSize: 10, fill: '#9a9690' }} />
-                    <YAxis type="category" dataKey="stage" tick={{ fontSize: 11, fill: '#9a9690' }} width={96} />
-                    <Tooltip formatter={(v) => (Number(v) > 0 ? [v, 'Orders'] : ['—', 'Connect GA4'])} />
-                    <Bar dataKey="count" fill="#2a2825" radius={[0, 2, 2, 0]} minPointSize={2} />
-                  </BarChart>
-                </ResponsiveContainer>
-                <p className={styles.funnelNote}>Upper funnel (visitors → cart) requires Google Analytics 4.</p>
+                <p className={styles.cardTitle}>Traffic sources (all time)</p>
+                {!insights || insights.attribution.length === 0 ? (
+                  <p className={styles.emptyState}>No attributed orders yet. UTM tags on your links will populate this.</p>
+                ) : (
+                  <table className={styles.attrTable}>
+                    <thead>
+                      <tr>
+                        <th>Source</th>
+                        <th>Orders</th>
+                        <th style={{ width: 80 }}>Revenue</th>
+                        <th style={{ width: 120 }}>Share</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {insights.attribution.map(a => (
+                        <tr key={a.source}>
+                          <td style={{ textTransform: 'capitalize' }}>{a.source}</td>
+                          <td>{a.orders}</td>
+                          <td>{fmt(a.revenue)}</td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <div className={styles.attrBar} style={{ width: `${a.pct}%` }} />
+                              <span className={styles.attrPct}>{a.pct}%</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
 
               <div className={styles.card}>
-                <p className={styles.cardTitle}>Analytics setup</p>
-                <ul className={styles.setupList}>
-                  <li className={styles.setupItem}>
-                    <span className={process.env.NEXT_PUBLIC_GA_ID ? styles.setupDone : styles.setupTodo}>
-                      {process.env.NEXT_PUBLIC_GA_ID ? '✓' : '○'}
-                    </span>
-                    <div>
-                      <span className={styles.setupLabel}>Google Analytics 4</span>
-                      {!process.env.NEXT_PUBLIC_GA_ID && (
-                        <span className={styles.setupHint}>Add NEXT_PUBLIC_GA_ID to Vercel env vars</span>
-                      )}
-                    </div>
-                  </li>
-                  <li className={styles.setupItem}>
-                    <span className={process.env.NEXT_PUBLIC_CLARITY_ID ? styles.setupDone : styles.setupTodo}>
-                      {process.env.NEXT_PUBLIC_CLARITY_ID ? '✓' : '○'}
-                    </span>
-                    <div>
-                      <span className={styles.setupLabel}>Microsoft Clarity</span>
-                      {!process.env.NEXT_PUBLIC_CLARITY_ID && (
-                        <span className={styles.setupHint}>Add NEXT_PUBLIC_CLARITY_ID to Vercel env vars</span>
-                      )}
-                    </div>
-                  </li>
-                  <li className={styles.setupItem}>
-                    <span className={styles.setupDone}>✓</span>
-                    <span className={styles.setupLabel}>Vercel Analytics</span>
-                  </li>
-                  <li className={styles.setupItem}>
-                    <span className={styles.setupDone}>✓</span>
-                    <span className={styles.setupLabel}>Order event tracking (internal)</span>
-                  </li>
-                </ul>
+                <p className={styles.cardTitle}>Automated insights</p>
+                {!insights ? (
+                  <p className={styles.emptyState}>Loading…</p>
+                ) : (
+                  <ul className={styles.insightsList}>
+                    {insights.insights.map((ins, i) => (
+                      <li key={i} className={styles.insightItem}>
+                        <div className={`${styles.insightDot} ${styles[`insightDot${ins.type.charAt(0).toUpperCase() + ins.type.slice(1)}` as keyof typeof styles]}`} />
+                        <div>
+                          <p className={styles.insightTitle}>{ins.title}</p>
+                          <p className={styles.insightBody}>{ins.body}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-            </div>
-
-            {/* Quick links */}
-            <div className={styles.quickLinks}>
-              <a
-                href="https://analytics.google.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.quickLink}
-              >
-                <span className={styles.qlIcon}>📊</span>
-                <span>Google Analytics</span>
-              </a>
-              <a
-                href="https://clarity.microsoft.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.quickLink}
-              >
-                <span className={styles.qlIcon}>🎥</span>
-                <span>Session recordings</span>
-              </a>
-              <a
-                href="https://vercel.com/analytics"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.quickLink}
-              >
-                <span className={styles.qlIcon}>⚡</span>
-                <span>Speed insights</span>
-              </a>
             </div>
           </div>
         </>

@@ -76,11 +76,18 @@ export default function CartPanel({ isOpen, onClose }: Props) {
     trackBeginCheckout(subtotal, cart.reduce((n, i) => n + i.quantity, 0));
     setLoading(true);
     setError('');
+    const attribution = {
+      source:      sessionStorage.getItem('attr_source')   ?? 'direct',
+      medium:      sessionStorage.getItem('attr_medium')   ?? 'none',
+      campaign:    sessionStorage.getItem('attr_campaign') ?? 'none',
+      referrer:    sessionStorage.getItem('attr_referrer') ?? '',
+      landingPage: sessionStorage.getItem('attr_landing')  ?? '',
+    };
     try {
       const res = await fetch(`${API}/api/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: cart }),
+        body: JSON.stringify({ items: cart, attribution }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Checkout failed');

@@ -36,6 +36,7 @@ router.post('/', express.raw({ type: 'application/json' }), async function(req, 
         }
       }
 
+      const meta = session.metadata ?? {};
       const updatedOrder = await Order.findOneAndUpdate(
         { stripeSessionId: session.id },
         {
@@ -53,6 +54,11 @@ router.post('/', express.raw({ type: 'application/json' }), async function(req, 
           } : null,
           shippingCost,
           shippingMethod,
+          'attribution.source':      meta.utm_source   ?? 'direct',
+          'attribution.medium':      meta.utm_medium   ?? 'none',
+          'attribution.campaign':    meta.utm_campaign ?? 'none',
+          'attribution.referrer':    meta.referrer     ?? '',
+          'attribution.landingPage': meta.landing_page ?? '',
         },
         { new: true }
       );

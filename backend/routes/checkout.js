@@ -60,7 +60,7 @@ const ALLOWED_COUNTRIES = [
 
 router.post('/', async function(req, res) {
   try {
-    const { items } = req.body;
+    const { items, attribution } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Cart is empty' });
@@ -93,6 +93,13 @@ router.post('/', async function(req, res) {
       phone_number_collection: { enabled: true },
       success_url: `${FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${FRONTEND_URL}/cancel`,
+      metadata: {
+        utm_source:   attribution?.source   ?? 'direct',
+        utm_medium:   attribution?.medium   ?? 'none',
+        utm_campaign: attribution?.campaign ?? 'none',
+        referrer:     attribution?.referrer ?? '',
+        landing_page: attribution?.landingPage ?? '',
+      },
     });
 
     await Order.create({
@@ -100,6 +107,13 @@ router.post('/', async function(req, res) {
       items: items.map(({ name, price, colour, size, quantity }) => ({ name, price, colour, size, quantity })),
       total: items.reduce((sum, i) => sum + i.price * i.quantity, 0),
       status: 'pending',
+      attribution: {
+        source:      attribution?.source   ?? 'direct',
+        medium:      attribution?.medium   ?? 'none',
+        campaign:    attribution?.campaign ?? 'none',
+        referrer:    attribution?.referrer ?? '',
+        landingPage: attribution?.landingPage ?? '',
+      },
     });
 
     res.json({ url: session.url });
