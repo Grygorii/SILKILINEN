@@ -3,7 +3,9 @@ const mongoose = require('mongoose');
 const generatedPhotoSchema = new mongoose.Schema({
   url: String,
   prompt: String,
-  position: { type: String, enum: ['front', 'side', 'detail', 'lifestyle'] },
+  position: { type: String, enum: ['thumbnail', 'front', 'side', 'detail', 'lifestyle'] },
+  label: { type: String, default: '' },
+  altText: { type: String, default: '' },
   iterationCount: { type: Number, default: 0 },
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   feedback: String,

@@ -26,11 +26,38 @@ function checkDailyLimit() {
   dailyCounter[today]++;
 }
 
+// ── Workflow presets ──────────────────────────────────────────────────────────
+const WORKFLOW_PRESETS = {
+  quick_add: [
+    { position: 'thumbnail', tier: 'standard', label: 'Shop card' },
+  ],
+  standard: [
+    { position: 'thumbnail', tier: 'standard', label: 'Shop card' },
+    { position: 'front',     tier: 'hd',       label: 'Product page hero' },
+    { position: 'detail',    tier: 'hd',       label: 'Detail close-up' },
+  ],
+  full_launch: [
+    { position: 'thumbnail', tier: 'standard', label: 'Shop card' },
+    { position: 'front',     tier: 'premium',  label: 'Product page hero' },
+    { position: 'side',      tier: 'hd',       label: 'Side angle' },
+    { position: 'detail',    tier: 'hd',       label: 'Detail close-up' },
+  ],
+};
+
+const POSITION_LABELS = {
+  thumbnail: 'Shop card',
+  front:     'Product page hero',
+  side:      'Side angle',
+  detail:    'Detail close-up',
+  lifestyle: 'Lifestyle',
+};
+
 // ── Prompts ──────────────────────────────────────────────────────────────────
 const POSITION_PROMPTS = {
-  front: 'Full-length front view, model centred, straight-on camera angle, hands relaxed at sides, vertical 3:4 aspect ratio.',
-  side: 'Three-quarter side angle, model facing camera with subtle hip shift, one hand softly at hip.',
-  detail: 'Closer crop showing garment details — fabric texture, neckline, sleeves, buttons, piping. Focus on craftsmanship.',
+  thumbnail: 'Tight editorial crop from waist to crown, model centred. Garment clearly visible from shoulders to hips. Clean cream-white studio backdrop. Tighter framing than a full-length portrait — optimised for shop grid display.',
+  front:     'Full-length front view, model centred, straight-on camera angle, hands relaxed at sides, vertical 3:4 aspect ratio.',
+  side:      'Three-quarter side angle, model facing camera with subtle hip shift, one hand softly at hip.',
+  detail:    'Closer crop showing garment details — fabric texture, neckline, sleeves, buttons, piping. Focus on craftsmanship.',
   lifestyle: 'Editorial lifestyle setting appropriate to product (bedroom for sleepwear, vanity for accessories), soft natural daylight, magazine quality.',
 };
 
@@ -43,12 +70,12 @@ const ALWAYS_APPEND = [
 ].join(' ');
 
 const FEEDBACK_MAP = {
-  'Different pose': 'Same model, same garment, alternative editorial pose',
-  'Brighter lighting': 'Increase ambient daylight, lift shadows, more luminous',
-  'Closer crop': 'Tighter framing, focus on upper body and garment detail',
-  'More elegant expression': 'More refined neutral magazine expression, calm composed',
-  'Show garment detail': 'Adjust pose to better display garment cut, drape, and detail',
-  'Different background': 'Alternative editorial background while keeping model identical',
+  'Different pose':           'Same model, same garment, alternative editorial pose',
+  'Brighter lighting':        'Increase ambient daylight, lift shadows, more luminous',
+  'Closer crop':              'Tighter framing, focus on upper body and garment detail',
+  'More elegant expression':  'More refined neutral magazine expression, calm composed',
+  'Show garment detail':      'Adjust pose to better display garment cut, drape, and detail',
+  'Different background':     'Alternative editorial background while keeping model identical',
 };
 
 function buildPrompt(aiModel, position, iterationFeedback) {
@@ -61,7 +88,23 @@ function buildPrompt(aiModel, position, iterationFeedback) {
   ].filter(Boolean).join('\n\n');
 }
 
-// ── Gemini + Cloudinary helpers ──────────────────────────────────────────────
+// ── Alt text ──────────────────────────────────────────────────────────────────
+const POSITION_ALT_DESCRIPTIONS = {
+  thumbnail: 'shop image',
+  front:     'front view modelled',
+  side:      'side angle modelled',
+  detail:    'fabric and craftsmanship close-up',
+  lifestyle: 'styled in lifestyle setting',
+};
+
+function generateAltText(product, position) {
+  const colour = product.colours?.[0] || '';
+  const colourPart = colour ? ` in ${colour}` : '';
+  const desc = POSITION_ALT_DESCRIPTIONS[position] || position;
+  return `${product.name}${colourPart}, ${desc} — handmade silk by SILKILINEN, Dublin`;
+}
+
+// ── Cloudinary / Gemini helpers ───────────────────────────────────────────────
 function getGenAI() {
   if (!process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is not set');
   return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -100,30 +143,34 @@ function uploadBuffer(buffer, options) {
   });
 }
 
-// Call Gemini and upload result directly to Cloudinary.
-async function generate(aiModel, inputPhotos, position, iterationFeedback, tierKey) {
+function toSlug(str) {
+  return String(str).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+// Call Gemini and upload to Cloudinary.
+// opts: { publicId?, altText? }
+async function generate(aiModel, inputPhotos, position, iterationFeedback, tierKey, opts = {}) {
   const tier = getTier(tierKey);
   const tag = `[AI:${position}:${tierKey}]`;
 
-  console.log(`${tag} START — model="${aiModel.name}" inputs=${inputPhotos.length} tier=${tierKey}`);
+  console.log(`${tag} START — model="${aiModel.name}" inputs=${inputPhotos.length}`);
 
   const imageParts = [];
   if (aiModel.referenceImageUrl) {
     console.log(`${tag} Fetching reference image…`);
     const data = await imageUrlToBase64(aiModel.referenceImageUrl);
-    console.log(`${tag} Reference image OK (${Math.round(data.length * 0.75 / 1024)}KB)`);
+    console.log(`${tag} Reference OK (${Math.round(data.length * 0.75 / 1024)}KB)`);
     imageParts.push({ inlineData: { mimeType: guessMimeType(aiModel.referenceImageUrl), data } });
   }
   for (let i = 0; i < inputPhotos.length; i++) {
-    console.log(`${tag} Fetching input photo ${i + 1}/${inputPhotos.length}…`);
+    console.log(`${tag} Fetching input ${i + 1}/${inputPhotos.length}…`);
     const data = await imageUrlToBase64(inputPhotos[i]);
-    console.log(`${tag} Input photo ${i + 1} OK (${Math.round(data.length * 0.75 / 1024)}KB)`);
+    console.log(`${tag} Input ${i + 1} OK (${Math.round(data.length * 0.75 / 1024)}KB)`);
     imageParts.push({ inlineData: { mimeType: guessMimeType(inputPhotos[i]), data } });
   }
 
   const prompt = buildPrompt(aiModel, position, iterationFeedback);
   const genai = getGenAI();
-
   console.log(`${tag} Calling Gemini (${GEMINI_MODEL}) with ${imageParts.length} image(s)…`);
   const t0 = Date.now();
 
@@ -149,12 +196,25 @@ async function generate(aiModel, inputPhotos, position, iterationFeedback, tierK
       break;
     }
   }
-  if (!imageBuffer) throw new Error('Gemini returned no image in response');
+  if (!imageBuffer) throw new Error('Gemini returned no image');
 
-  console.log(`${tag} Image buffer: ${Math.round(imageBuffer.length / 1024)}KB — uploading to Cloudinary…`);
+  console.log(`${tag} Buffer: ${Math.round(imageBuffer.length / 1024)}KB — uploading…`);
+
+  const cloudinaryOpts = {
+    folder: 'silkilinen/ai-generated',
+    resource_type: 'image',
+  };
+  if (opts.publicId) {
+    cloudinaryOpts.public_id = opts.publicId;
+    cloudinaryOpts.overwrite = true;
+    cloudinaryOpts.use_filename = false;
+  }
+  if (opts.altText) {
+    cloudinaryOpts.context = { alt: opts.altText, caption: opts.altText };
+  }
 
   const uploaded = await withTimeout(
-    uploadBuffer(imageBuffer, { folder: 'silkilinen/ai-generated', resource_type: 'image' }),
+    uploadBuffer(imageBuffer, cloudinaryOpts),
     30_000,
     'Cloudinary upload'
   );
@@ -168,7 +228,7 @@ async function generate(aiModel, inputPhotos, position, iterationFeedback, tierK
   };
 }
 
-// ── Auto-model selection ─────────────────────────────────────────────────────
+// ── Auto-model selection ──────────────────────────────────────────────────────
 async function pickModel(category) {
   const models = await AiModel.find({ active: true });
   const matched = models.filter(m => m.useCases.includes(category));
@@ -176,7 +236,7 @@ async function pickModel(category) {
   return models.find(m => m.name === 'Aoife') || models[0] || null;
 }
 
-// ── Cost helpers ─────────────────────────────────────────────────────────────
+// ── Cost helpers ──────────────────────────────────────────────────────────────
 function costResponse(session) {
   return {
     totalCost: session.totalCost,
@@ -185,7 +245,7 @@ function costResponse(session) {
   };
 }
 
-// ── Routes ───────────────────────────────────────────────────────────────────
+// ── Routes ────────────────────────────────────────────────────────────────────
 
 router.post('/sessions', requireAuth, async function(req, res) {
   try {
@@ -229,7 +289,7 @@ router.post('/sessions', requireAuth, async function(req, res) {
 
 router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
   try {
-    const { positions, forceOverride, tier: reqTier } = req.body;
+    const { preset, positions, forceOverride } = req.body;
     const session = await PhotoshootSession.findById(req.params.id).populate('selectedModel');
     if (!session) return res.status(404).json({ error: 'Session not found' });
 
@@ -249,25 +309,46 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
       return res.status(400).json({ error: 'Model has no reference photo. Generate one in AI Models first.' });
     }
 
+    // Resolve job list from preset, custom positions array, or default
+    let jobs;
+    if (preset && WORKFLOW_PRESETS[preset]) {
+      jobs = WORKFLOW_PRESETS[preset];
+    } else if (Array.isArray(positions) && positions.length > 0) {
+      if (typeof positions[0] === 'string') {
+        // Legacy: array of position strings
+        jobs = positions.map(p => ({
+          position: p,
+          tier: getDefaultTierKey(p),
+          label: POSITION_LABELS[p] || p,
+        }));
+      } else {
+        // New: [{position, tier, label}]
+        jobs = positions;
+      }
+    } else {
+      jobs = WORKFLOW_PRESETS.standard;
+    }
+
+    // Fetch product once for SEO data
+    const product = await Product.findById(session.productId, 'name slug colours').lean();
+    const productSlug = toSlug(product?.slug || product?.name || String(session.productId));
+    const modelSlug = toSlug(aiModel.name);
+
     checkDailyLimit();
 
-    const targetPositions = Array.isArray(positions) && positions.length > 0
-      ? positions
-      : ['front', 'side', 'detail', 'lifestyle'];
-
     const results = [];
-    for (const position of targetPositions) {
-      const tierKey = (reqTier && reqTier !== 'auto' && ['standard', 'hd', 'premium'].includes(reqTier))
-        ? reqTier
-        : getDefaultTierKey(position);
+    for (const job of jobs) {
+      const { position, tier: tierKey, label } = job;
       const tier = getTier(tierKey);
+      const publicId = `${productSlug}-${modelSlug}-${position}`;
+      const altText = product ? generateAltText(product, position) : null;
 
       let result;
       try {
-        result = await generate(aiModel, session.inputPhotos, position, null, tierKey);
+        result = await generate(aiModel, session.inputPhotos, position, null, tierKey, { publicId, altText });
       } catch (err) {
         console.error(`[AI Photo] Generation failed for ${position}: ${err.message}`);
-        results.push({ position, error: err.message });
+        results.push({ position, label, tier: tierKey, error: err.message });
         continue;
       }
 
@@ -278,6 +359,8 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
         url: result.url,
         prompt: result.prompt,
         position,
+        label,
+        altText: altText || '',
         status: 'pending',
         iterationCount: 0,
         generationCost: tier.estimatedCost,
@@ -291,7 +374,13 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
         session.generatedPhotos.push(photoData);
       }
 
-      results.push({ position, url: result.url, qualityTier: tierKey, resolution: result.resolution });
+      results.push({
+        position,
+        url: result.url,
+        label,
+        tier: tierKey,
+        resolution: result.resolution,
+      });
     }
 
     session.markModified('generatedPhotos');
@@ -306,9 +395,7 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
 router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
   try {
     const { position, feedback, forceOverride, tier: reqTier } = req.body;
-    if (!position || !feedback) {
-      return res.status(400).json({ error: 'position and feedback are required' });
-    }
+    if (!position) return res.status(400).json({ error: 'position is required' });
 
     const session = await PhotoshootSession.findById(req.params.id).populate('selectedModel');
     if (!session) return res.status(404).json({ error: 'Session not found' });
@@ -331,14 +418,21 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
 
     checkDailyLimit();
 
-    const tierKey = (reqTier && reqTier !== 'auto' && ['standard', 'hd', 'premium'].includes(reqTier))
+    const tierKey = (reqTier && ['standard', 'hd', 'premium'].includes(reqTier))
       ? reqTier
       : (photo.qualityTier || getDefaultTierKey(position));
     const tier = getTier(tierKey);
 
+    // Rebuild SEO opts for the overwrite case
+    const product = await Product.findById(session.productId, 'name slug colours').lean();
+    const productSlug = toSlug(product?.slug || product?.name || String(session.productId));
+    const modelSlug = toSlug(session.selectedModel.name);
+    const publicId = `${productSlug}-${modelSlug}-${position}`;
+    const altText = product ? generateAltText(product, position) : null;
+
     let result;
     try {
-      result = await generate(session.selectedModel, session.inputPhotos, position, feedback, tierKey);
+      result = await generate(session.selectedModel, session.inputPhotos, position, feedback || null, tierKey, { publicId, altText });
     } catch (err) {
       return res.status(422).json({ error: `Generation failed: ${err.message}`, ...costResponse(session) });
     }
@@ -347,7 +441,7 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
     session.iterationCount += 1;
 
     session.generatedPhotos[photoIdx].url = result.url;
-    session.generatedPhotos[photoIdx].feedback = feedback;
+    session.generatedPhotos[photoIdx].feedback = feedback || null;
     session.generatedPhotos[photoIdx].iterationCount += 1;
     session.generatedPhotos[photoIdx].generationCost += tier.estimatedCost;
     session.generatedPhotos[photoIdx].status = 'pending';
@@ -359,7 +453,7 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
     res.json({
       url: result.url,
       iterations: session.generatedPhotos[photoIdx].iterationCount,
-      qualityTier: tierKey,
+      tier: tierKey,
       resolution: result.resolution,
       ...costResponse(session),
     });
@@ -397,7 +491,7 @@ router.post('/sessions/:id/finalize', requireAuth, async function(req, res) {
     const approved = session.generatedPhotos.filter(p => p.status === 'approved');
     if (approved.length === 0) return res.status(400).json({ error: 'No approved photos to finalize' });
 
-    const primary = approved.find(p => p.position === 'front') || approved[0];
+    const primary = approved.find(p => p.position === 'front') || approved.find(p => p.position === 'thumbnail') || approved[0];
     await Product.findByIdAndUpdate(session.productId, { image: primary.url });
 
     session.status = 'approved';

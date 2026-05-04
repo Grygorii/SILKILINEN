@@ -5,15 +5,54 @@ import styles from './AiPhotoshoot.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-const POSITIONS = ['front', 'side', 'detail', 'lifestyle'] as const;
-type Position = typeof POSITIONS[number];
+// ── Tiers ────────────────────────────────────────────────────────────────────
+const TIER_COSTS   = { standard: 0.05, hd: 0.13, premium: 0.24 } as const;
+const TIER_LABELS  = { standard: '1K',  hd: '2K',  premium: '4K'  } as const;
+type TierKey = keyof typeof TIER_COSTS;
 
-const POSITION_LABELS: Record<Position, string> = {
-  front: 'Front',
-  side: 'Side',
-  detail: 'Detail',
-  lifestyle: 'Lifestyle',
+// ── Workflow presets (mirrors backend) ───────────────────────────────────────
+type JobSpec = { position: string; tier: TierKey; label: string };
+type WorkflowKey = 'quick_add' | 'standard' | 'full_launch' | 'custom';
+
+const WORKFLOW_PRESETS: Record<Exclude<WorkflowKey, 'custom'>, {
+  label: string; count: number; description: string; note: string; jobs: JobSpec[];
+}> = {
+  quick_add: {
+    label: 'Quick Add', count: 1,
+    description: 'Just a thumbnail for the shop grid.',
+    note: 'Good for: testing new products, quick listings.',
+    jobs: [{ position: 'thumbnail', tier: 'standard', label: 'Shop card' }],
+  },
+  standard: {
+    label: 'Standard', count: 3,
+    description: 'Shop thumbnail + 2 product page angles.',
+    note: 'Good for: most products, balanced quality and cost.',
+    jobs: [
+      { position: 'thumbnail', tier: 'standard', label: 'Shop card' },
+      { position: 'front',     tier: 'hd',       label: 'Product page hero' },
+      { position: 'detail',    tier: 'hd',       label: 'Detail close-up' },
+    ],
+  },
+  full_launch: {
+    label: 'Full Launch', count: 4,
+    description: 'Thumbnail + hero + side + detail close-up.',
+    note: 'Good for: featured products, hero items.',
+    jobs: [
+      { position: 'thumbnail', tier: 'standard', label: 'Shop card' },
+      { position: 'front',     tier: 'premium',  label: 'Product page hero' },
+      { position: 'side',      tier: 'hd',       label: 'Side angle' },
+      { position: 'detail',    tier: 'hd',       label: 'Detail close-up' },
+    ],
+  },
 };
+
+const ALL_POSITIONS: JobSpec[] = [
+  { position: 'thumbnail', tier: 'standard', label: 'Shop card' },
+  { position: 'front',     tier: 'hd',       label: 'Product page hero' },
+  { position: 'side',      tier: 'hd',       label: 'Side angle' },
+  { position: 'detail',    tier: 'hd',       label: 'Detail close-up' },
+  { position: 'lifestyle', tier: 'hd',       label: 'Lifestyle' },
+];
 
 const QUICK_FEEDBACK = [
   'Different pose',
@@ -24,15 +63,7 @@ const QUICK_FEEDBACK = [
   'Different background',
 ];
 
-const QUALITY_TIERS = {
-  auto:     { label: 'Auto (position defaults)', estimatedCost: null },
-  standard: { label: 'Standard (1K, ~€0.05)',    estimatedCost: 0.05 },
-  hd:       { label: 'HD (2K, ~€0.13)',           estimatedCost: 0.13 },
-  premium:  { label: 'Premium (4K, ~€0.24)',      estimatedCost: 0.24 },
-};
-
-type TierKey = keyof typeof QUALITY_TIERS;
-
+// ── Types ────────────────────────────────────────────────────────────────────
 type ModelSummary = {
   _id: string;
   name: string;
@@ -45,7 +76,8 @@ type PhotoState = {
   url: string;
   status: 'pending' | 'approved';
   iterations: number;
-  qualityTier?: TierKey;
+  label: string;
+  tier: TierKey;
   resolution?: { width: number; height: number };
 };
 
@@ -55,26 +87,50 @@ type Props = {
   onPhotoApproved: (url: string) => void;
 };
 
+function presetCost(workflow: WorkflowKey, customJobs: JobSpec[]): number {
+  if (workflow === 'custom') return customJobs.reduce((s, j) => s + TIER_COSTS[j.tier], 0);
+  return WORKFLOW_PRESETS[workflow].jobs.reduce((s, j) => s + TIER_COSTS[j.tier], 0);
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
 export default function AiPhotoshoot({ productId, productCategory, onPhotoApproved }: Props) {
-  const [expanded, setExpanded] = useState(false);
-  const [models, setModels] = useState<ModelSummary[]>([]);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [expanded, setExpanded]             = useState(false);
+  const [showTooltip, setShowTooltip]       = useState(false);
+  const [models, setModels]                 = useState<ModelSummary[]>([]);
+  const [sessionId, setSessionId]           = useState<string | null>(null);
   const [selectedModelId, setSelectedModelId] = useState('');
   const [suggestedModel, setSuggestedModel] = useState<ModelSummary | null>(null);
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
-  const [photoStates, setPhotoStates] = useState<Partial<Record<Position, PhotoState>>>({});
-  const [totalCost, setTotalCost] = useState(0);
-  const [generating, setGenerating] = useState(false);
+  const [photoStates, setPhotoStates]       = useState<Record<string, PhotoState>>({});
+  const [totalCost, setTotalCost]           = useState(0);
+
+  const [workflow, setWorkflow]             = useState<WorkflowKey>('standard');
+  const [customSelected, setCustomSelected] = useState<Set<string>>(new Set(['thumbnail', 'front']));
+  const [customTier, setCustomTier]         = useState<TierKey>('hd');
+
+  const [generating, setGenerating]         = useState(false);
   const [creatingSession, setCreatingSession] = useState(false);
-  const [improvingPosition, setImprovingPosition] = useState<Position | null>(null);
+  const [improvingPosition, setImprovingPosition] = useState<string | null>(null);
   const [improveFeedback, setImproveFeedback] = useState('');
-  const [iterating, setIterating] = useState(false);
-  const [costWarning, setCostWarning] = useState(false);
-  const [costBlocked, setCostBlocked] = useState(false);
-  const [forceOverride, setForceOverride] = useState(false);
-  const [error, setError] = useState('');
-  const [qualityTier, setQualityTier] = useState<TierKey>('auto');
+  const [iterating, setIterating]           = useState(false);
+  const [costWarning, setCostWarning]       = useState(false);
+  const [costBlocked, setCostBlocked]       = useState(false);
+  const [forceOverride, setForceOverride]   = useState(false);
+  const [error, setError]                   = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Onboarding: show once per browser
+  useEffect(() => {
+    if (!expanded) return;
+    if (typeof window !== 'undefined' && !localStorage.getItem('silkilinen_ai_photoshoot_seen')) {
+      setShowTooltip(true);
+    }
+  }, [expanded]);
+
+  function dismissTooltip() {
+    setShowTooltip(false);
+    if (typeof window !== 'undefined') localStorage.setItem('silkilinen_ai_photoshoot_seen', '1');
+  }
 
   useEffect(() => {
     if (!expanded) return;
@@ -84,6 +140,20 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
       .catch(() => {});
   }, [expanded]);
 
+  // Derived: custom jobs from selected positions + tier
+  const customJobs: JobSpec[] = Array.from(customSelected).map(pos => {
+    const base = ALL_POSITIONS.find(p => p.position === pos)!;
+    return { ...base, tier: pos === 'thumbnail' ? 'standard' : customTier };
+  });
+
+  const currentJobs = workflow === 'custom' ? customJobs : WORKFLOW_PRESETS[workflow].jobs;
+  const estimatedCost = presetCost(workflow, customJobs);
+
+  const hasPhotos = Object.keys(photoStates).length > 0;
+  const hasApproved = Object.values(photoStates).some(p => p.status === 'approved');
+  const isWorking = creatingSession || generating || iterating;
+
+  // ── Upload ──────────────────────────────────────────────────────────────────
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []).slice(0, 3 - uploadedPhotos.length);
     for (const file of files) {
@@ -96,21 +166,30 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
-  function removeUploadedPhoto(idx: number) {
-    setUploadedPhotos(p => p.filter((_, i) => i !== idx));
+  function toggleCustomPosition(pos: string) {
+    setCustomSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(pos)) next.delete(pos); else next.add(pos);
+      return next;
+    });
   }
 
-  function applyGenerateResult(results: { position: string; url?: string; error?: string; [key: string]: unknown }[]) {
+  // ── Apply API results ───────────────────────────────────────────────────────
+  function applyGenerateResult(
+    results: { position: string; url?: string; label?: string; tier?: string; resolution?: { width: number; height: number } }[]
+  ) {
     setPhotoStates(prev => {
       const next = { ...prev };
       for (const r of results) {
         if (r.url) {
-          next[r.position as Position] = {
-            url: r.url as string,
+          const job = currentJobs.find(j => j.position === r.position);
+          next[r.position] = {
+            url: r.url,
             status: 'pending',
-            iterations: prev[r.position as Position]?.iterations || 0,
-            qualityTier: r.qualityTier as TierKey | undefined,
-            resolution: r.resolution as { width: number; height: number } | undefined,
+            iterations: prev[r.position]?.iterations || 0,
+            label:    r.label || job?.label || r.position,
+            tier:     (r.tier as TierKey) || job?.tier || 'hd',
+            resolution: r.resolution,
           };
         }
       }
@@ -118,15 +197,12 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
     });
   }
 
+  // ── Generate ────────────────────────────────────────────────────────────────
   async function startGeneration() {
-    if (uploadedPhotos.length === 0) {
-      setError('Upload at least one product photo first.');
-      return;
-    }
+    if (uploadedPhotos.length === 0) { setError('Upload at least one product photo first.'); return; }
     setError('');
 
     let sid = sessionId;
-
     if (!sid) {
       setCreatingSession(true);
       try {
@@ -134,11 +210,7 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({
-            productId,
-            modelId: selectedModelId || undefined,
-            inputPhotoUrls: uploadedPhotos,
-          }),
+          body: JSON.stringify({ productId, modelId: selectedModelId || undefined, inputPhotoUrls: uploadedPhotos }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
@@ -156,25 +228,20 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
 
     setGenerating(true);
     try {
+      const body = workflow === 'custom'
+        ? { positions: customJobs, forceOverride }
+        : { preset: workflow, forceOverride };
+
       const res = await fetch(`${API}/api/ai-photos/sessions/${sid}/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          positions: ['front', 'side', 'detail', 'lifestyle'],
-          forceOverride,
-          tier: qualityTier,
-        }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
 
       if (!res.ok) {
-        if (data.error === 'SESSION_COST_LIMIT') {
-          setCostBlocked(true);
-          setTotalCost(data.totalCost);
-          setError(data.message);
-          return;
-        }
+        if (data.error === 'SESSION_COST_LIMIT') { setCostBlocked(true); setTotalCost(data.totalCost); setError(data.message); return; }
         throw new Error(data.error);
       }
 
@@ -190,7 +257,8 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
     }
   }
 
-  async function approvePhoto(position: Position) {
+  // ── Approve ─────────────────────────────────────────────────────────────────
+  async function approvePhoto(position: string) {
     if (!sessionId) return;
     const res = await fetch(`${API}/api/ai-photos/sessions/${sessionId}/approve-photo`, {
       method: 'POST',
@@ -205,41 +273,36 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
     }
   }
 
-  async function handleIterate() {
-    if (!sessionId || !improvingPosition || !improveFeedback) return;
+  // ── Regenerate single photo ──────────────────────────────────────────────────
+  async function handleRegenerate() {
+    if (!sessionId || !improvingPosition) return;
     setIterating(true);
     setError('');
     try {
+      const photo = photoStates[improvingPosition];
       const res = await fetch(`${API}/api/ai-photos/sessions/${sessionId}/iterate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
           position: improvingPosition,
-          feedback: improveFeedback,
+          feedback: improveFeedback || null,
+          tier: photo?.tier,
           forceOverride,
-          tier: qualityTier === 'auto' ? undefined : qualityTier,
         }),
       });
       const data = await res.json();
-
       if (!res.ok) {
-        if (data.error === 'SESSION_COST_LIMIT') {
-          setCostBlocked(true);
-          setTotalCost(data.totalCost);
-          setError(data.message);
-          return;
-        }
+        if (data.error === 'SESSION_COST_LIMIT') { setCostBlocked(true); setTotalCost(data.totalCost); setError(data.message); return; }
         throw new Error(data.error);
       }
-
       setPhotoStates(s => ({
         ...s,
         [improvingPosition]: {
+          ...s[improvingPosition]!,
           url: data.url,
           status: 'pending',
           iterations: (s[improvingPosition]?.iterations || 0) + 1,
-          qualityTier: data.qualityTier,
           resolution: data.resolution,
         },
       }));
@@ -256,49 +319,57 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
     }
   }
 
+  // ── Finalize ─────────────────────────────────────────────────────────────────
   async function finalize() {
     if (!sessionId) return;
-    const res = await fetch(`${API}/api/ai-photos/sessions/${sessionId}/finalize`, {
-      method: 'POST',
-      credentials: 'include',
-    });
+    const res = await fetch(`${API}/api/ai-photos/sessions/${sessionId}/finalize`, { method: 'POST', credentials: 'include' });
     const data = await res.json();
     if (res.ok) {
       onPhotoApproved(data.productImageUrl);
-      alert(`Done — ${data.approvedCount} approved photo(s) saved. Total: €${(data.totalCost || 0).toFixed(2)}`);
+      alert(`Done — ${data.approvedCount} photo(s) saved. Session total: €${(data.totalCost || 0).toFixed(2)}`);
     } else {
       setError(data.error);
     }
   }
 
-  const hasApproved = Object.values(photoStates).some(p => p?.status === 'approved');
-  const hasPhotos = Object.keys(photoStates).length > 0;
-  const isWorking = creatingSession || generating || iterating;
-
-  // Estimated cost for current quality selection (4 positions)
-  const tierCost = qualityTier === 'auto'
-    ? null
-    : (QUALITY_TIERS[qualityTier]?.estimatedCost ?? null);
-  const estimatedTotal = tierCost !== null ? tierCost * 4 : null;
-
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div className={styles.section}>
       <button className={styles.toggle} onClick={() => setExpanded(e => !e)}>
         <span>✨ AI Photoshoot</span>
-        <span className={styles.toggleChevron}>{expanded ? '▲' : '▼'}</span>
+        <span className={styles.toggleRight}>
+          {totalCost > 0 && <span className={styles.sessionCostBadge}>€{totalCost.toFixed(2)}</span>}
+          <span className={styles.toggleChevron}>{expanded ? '▲' : '▼'}</span>
+        </span>
       </button>
 
       {expanded && (
         <div className={styles.body}>
 
+          {/* ── Onboarding tooltip ──────────────────────────── */}
+          {showTooltip && (
+            <div className={styles.tooltip}>
+              <div className={styles.tooltipSteps}>
+                <span><strong>1.</strong> Upload 2–3 product photos (any angle)</span>
+                <span><strong>2.</strong> Choose a workflow — Standard is a good start</span>
+                <span><strong>3.</strong> Aoife is auto-selected — switch model if you like</span>
+                <span><strong>4.</strong> Click Generate — allow 30–60 s per photo</span>
+                <span><strong>5.</strong> Approve the good ones, regenerate the rest individually</span>
+              </div>
+              <button className={styles.tooltipClose} onClick={dismissTooltip}>Got it →</button>
+            </div>
+          )}
+
           {/* ── Upload zone ─────────────────────────────────── */}
           <div className={styles.uploadZone}>
-            <p className={styles.uploadLabel}>Product photos <span className={styles.uploadHint}>(2–3 recommended — front, back, detail)</span></p>
+            <p className={styles.uploadLabel}>
+              Product photos <span className={styles.uploadHint}>(2–3 recommended — front, back, detail)</span>
+            </p>
             <div className={styles.thumbRow}>
               {uploadedPhotos.map((url, i) => (
                 <div key={i} className={styles.thumb}>
                   <img src={url} alt="" className={styles.thumbImg} />
-                  <button className={styles.thumbRemove} onClick={() => removeUploadedPhoto(i)} disabled={isWorking}>✕</button>
+                  <button className={styles.thumbRemove} onClick={() => setUploadedPhotos(p => p.filter((_, j) => j !== i))} disabled={isWorking}>✕</button>
                 </div>
               ))}
               {uploadedPhotos.length < 3 && (
@@ -308,24 +379,15 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
                 </button>
               )}
             </div>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              ref={fileInputRef}
-              className={styles.hiddenInput}
-              onChange={handleUpload}
-            />
+            <input type="file" accept="image/*" multiple ref={fileInputRef} className={styles.hiddenInput} onChange={handleUpload} />
           </div>
 
           {/* ── Model selector ───────────────────────────────── */}
           <div className={styles.modelRow}>
             <div className={styles.modelCard}>
-              {suggestedModel?.referenceImageUrl ? (
-                <img src={suggestedModel.referenceImageUrl} className={styles.modelThumb} alt={suggestedModel.name} />
-              ) : (
-                <div className={styles.modelThumbEmpty}>👤</div>
-              )}
+              {suggestedModel?.referenceImageUrl
+                ? <img src={suggestedModel.referenceImageUrl} className={styles.modelThumb} alt={suggestedModel.name} />
+                : <div className={styles.modelThumbEmpty}>👤</div>}
               <div>
                 <p className={styles.modelName}>{suggestedModel?.name || 'Auto-select on generate'}</p>
                 {suggestedModel?.heritage && <p className={styles.modelHeritage}>{suggestedModel.heritage}</p>}
@@ -334,157 +396,178 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
             {models.length > 0 && (
               <div className={styles.overrideWrap}>
                 <p className={styles.overrideLabel}>Override model</p>
-                <select
-                  className={styles.overrideSelect}
-                  value={selectedModelId}
-                  onChange={e => setSelectedModelId(e.target.value)}
-                  disabled={!!sessionId || isWorking}
-                >
+                <select className={styles.overrideSelect} value={selectedModelId} onChange={e => setSelectedModelId(e.target.value)} disabled={!!sessionId || isWorking}>
                   <option value="">Auto-select</option>
-                  {models.map(m => (
-                    <option key={m._id} value={m._id}>{m.name} — {m.heritage}</option>
-                  ))}
+                  {models.map(m => <option key={m._id} value={m._id}>{m.name} — {m.heritage}</option>)}
                 </select>
                 {sessionId && <p className={styles.overrideNote}>Model locked once session starts</p>}
               </div>
             )}
           </div>
 
-          {/* ── Quality selector ─────────────────────────────── */}
-          <div className={styles.qualityRow}>
-            <div className={styles.qualityWrap}>
-              <p className={styles.overrideLabel}>Quality</p>
-              <select
-                className={styles.qualitySelect}
-                value={qualityTier}
-                onChange={e => setQualityTier(e.target.value as TierKey)}
-                disabled={isWorking}
-              >
-                {(Object.keys(QUALITY_TIERS) as TierKey[]).map(k => (
-                  <option key={k} value={k}>{QUALITY_TIERS[k].label}</option>
-                ))}
-              </select>
-            </div>
-            {estimatedTotal !== null && (
-              <p className={styles.qualityEstimate}>
-                Estimated: €{estimatedTotal.toFixed(2)} for 4 shots
-              </p>
-            )}
-          </div>
+          {/* ── Workflow presets + generate (only before first generation) ── */}
+          {!hasPhotos && (
+            <>
+              <div className={styles.workflowSection}>
+                <p className={styles.workflowHeading}>PHOTOSHOOT WORKFLOW</p>
 
-          {/* ── Generate row ─────────────────────────────────── */}
-          <div className={styles.generateRow}>
-            <button
-              className={styles.generateBtn}
-              onClick={startGeneration}
-              disabled={isWorking || uploadedPhotos.length === 0 || (costBlocked && !forceOverride)}
-            >
-              {creatingSession
-                ? 'Setting up session…'
-                : generating
-                ? 'Generating — this takes ~30–60 s…'
-                : hasPhotos
-                ? 'Regenerate all 4 positions'
-                : estimatedTotal !== null
-                ? `Generate (€${estimatedTotal.toFixed(2)})`
-                : 'Generate photoshoot'}
-            </button>
-            <div className={styles.costInfo}>
-              <span className={styles.costFigure}>€{totalCost.toFixed(2)}</span>
-              <span className={styles.costLabel}>session cost</span>
-              {costWarning && !costBlocked && <span className={styles.costWarn}>⚠ Approaching €5 limit</span>}
-              {costBlocked && (
-                <span className={styles.costOver}>
-                  ⛔ €10 limit
-                  <button className={styles.overrideBtn} onClick={() => { setForceOverride(true); setCostBlocked(false); setError(''); }}>
-                    Admin override
-                  </button>
-                </span>
-              )}
-            </div>
-          </div>
+                {(Object.entries(WORKFLOW_PRESETS) as [Exclude<WorkflowKey, 'custom'>, typeof WORKFLOW_PRESETS[Exclude<WorkflowKey, 'custom'>]][]).map(([key, preset]) => {
+                  const cost = preset.jobs.reduce((s, j) => s + TIER_COSTS[j.tier], 0);
+                  return (
+                    <label key={key} className={`${styles.workflowOption} ${workflow === key ? styles.workflowActive : ''}`}>
+                      <input type="radio" name="workflow" value={key} checked={workflow === key} onChange={() => setWorkflow(key)} className={styles.workflowRadio} />
+                      <div className={styles.workflowBody}>
+                        <span className={styles.workflowTitle}>
+                          {preset.label} ({preset.count} photo{preset.count !== 1 ? 's' : ''})
+                          <span className={styles.workflowCost}> — €{cost.toFixed(2)}</span>
+                        </span>
+                        <span className={styles.workflowDesc}>{preset.description}</span>
+                        <span className={styles.workflowNote}>{preset.note}</span>
+                      </div>
+                    </label>
+                  );
+                })}
+
+                <label className={`${styles.workflowOption} ${workflow === 'custom' ? styles.workflowActive : ''}`}>
+                  <input type="radio" name="workflow" value="custom" checked={workflow === 'custom'} onChange={() => setWorkflow('custom')} className={styles.workflowRadio} />
+                  <div className={styles.workflowBody}>
+                    <span className={styles.workflowTitle}>
+                      Custom — pick individually
+                      {workflow === 'custom' && customJobs.length > 0 && (
+                        <span className={styles.workflowCost}> — €{estimatedCost.toFixed(2)}</span>
+                      )}
+                    </span>
+                  </div>
+                </label>
+
+                {workflow === 'custom' && (
+                  <div className={styles.customPanel}>
+                    {ALL_POSITIONS.map(pos => (
+                      <label key={pos.position} className={styles.customOption}>
+                        <input type="checkbox" checked={customSelected.has(pos.position)} onChange={() => toggleCustomPosition(pos.position)} className={styles.customCheckbox} />
+                        <span className={styles.customOptionLabel}>{pos.label}</span>
+                        <span className={styles.customOptionMeta}>
+                          {pos.position === 'thumbnail'
+                            ? `Standard 1K — €${TIER_COSTS.standard.toFixed(2)}`
+                            : `${customTier.charAt(0).toUpperCase() + customTier.slice(1)} ${TIER_LABELS[customTier]} — €${TIER_COSTS[customTier].toFixed(2)}`}
+                        </span>
+                      </label>
+                    ))}
+                    <div className={styles.customTierRow}>
+                      <span className={styles.overrideLabel}>Quality for non-thumbnail shots</span>
+                      <select className={styles.overrideSelect} value={customTier} onChange={e => setCustomTier(e.target.value as TierKey)}>
+                        <option value="standard">Standard (1K) — €0.05 each</option>
+                        <option value="hd">HD (2K) — €0.13 each</option>
+                        <option value="premium">Premium (4K) — €0.24 each</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.generateRow}>
+                <button
+                  className={styles.generateBtn}
+                  onClick={startGeneration}
+                  disabled={isWorking || uploadedPhotos.length === 0 || (costBlocked && !forceOverride) || (workflow === 'custom' && customJobs.length === 0)}
+                >
+                  {creatingSession
+                    ? 'Setting up session…'
+                    : generating
+                    ? `Generating — ~${currentJobs.length * 45}s…`
+                    : `Generate Photoshoot — €${estimatedCost.toFixed(2)}`}
+                </button>
+                <div className={styles.costInfo}>
+                  {totalCost > 0 && <>
+                    <span className={styles.costFigure}>€{totalCost.toFixed(2)}</span>
+                    <span className={styles.costLabel}>session cost</span>
+                  </>}
+                  {costWarning && !costBlocked && <span className={styles.costWarn}>⚠ Approaching €5 limit</span>}
+                  {costBlocked && (
+                    <span className={styles.costOver}>
+                      ⛔ €10 limit
+                      <button className={styles.overrideBtn} onClick={() => { setForceOverride(true); setCostBlocked(false); setError(''); }}>Admin override</button>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
 
           {error && <p className={styles.error}>{error}</p>}
 
-          {/* ── Results grid ─────────────────────────────────── */}
+          {/* ── Results ──────────────────────────────────────── */}
           {hasPhotos && (
-            <div className={styles.resultsGrid}>
-              {POSITIONS.map(pos => {
-                const photo = photoStates[pos];
-                const isImproving = improvingPosition === pos;
-                return (
-                  <div key={pos} className={`${styles.resultCard} ${photo?.status === 'approved' ? styles.resultApproved : ''}`}>
-                    <div className={styles.resultHeader}>
-                      <span className={styles.resultPos}>{POSITION_LABELS[pos]}</span>
-                      {photo && photo.iterations > 0 && (
-                        <span className={styles.iterBadge}>×{photo.iterations}</span>
-                      )}
-                      {photo?.status === 'approved' && <span className={styles.approvedMark}>✓</span>}
-                    </div>
+            <>
+              <div className={styles.resultsGrid}>
+                {Object.entries(photoStates).map(([pos, photo]) => {
+                  const isImproving = improvingPosition === pos;
+                  return (
+                    <div key={pos} className={`${styles.resultCard} ${photo.status === 'approved' ? styles.resultApproved : ''}`}>
+                      <div className={styles.resultHeader}>
+                        <span className={styles.resultLabel}>{photo.label}</span>
+                        <div className={styles.resultMeta}>
+                          <span className={styles.resBadge}>{TIER_LABELS[photo.tier]}</span>
+                          <span className={styles.costBadge}>€{TIER_COSTS[photo.tier].toFixed(2)}</span>
+                        </div>
+                        {photo.iterations > 0 && <span className={styles.iterBadge}>×{photo.iterations}</span>}
+                        {photo.status === 'approved' && <span className={styles.approvedMark}>✓</span>}
+                      </div>
 
-                    <div className={styles.resultImgWrap}>
-                      {photo?.url ? (
-                        <img src={photo.url} alt={`${pos} view`} className={styles.resultImg} />
-                      ) : (
-                        <div className={styles.resultPlaceholder}>Pending</div>
-                      )}
-                    </div>
+                      <div className={styles.resultImgWrap}>
+                        <img src={photo.url} alt={photo.label} className={styles.resultImg} />
+                      </div>
 
-                    {photo?.url && (
                       <div className={styles.resultActions}>
                         {photo.status === 'approved' ? (
                           <span className={styles.approvedLabel}>Approved</span>
                         ) : (
-                          <button className={styles.approveBtn} onClick={() => approvePhoto(pos)} disabled={isWorking}>
-                            ✓ Approve
-                          </button>
+                          <button className={styles.approveBtn} onClick={() => approvePhoto(pos)} disabled={isWorking}>✓ Approve</button>
                         )}
                         <button
                           className={`${styles.improveBtn} ${isImproving ? styles.improveBtnActive : ''}`}
-                          onClick={() => {
-                            setImprovingPosition(isImproving ? null : pos);
-                            setImproveFeedback('');
-                          }}
+                          onClick={() => { setImprovingPosition(isImproving ? null : pos); setImproveFeedback(''); }}
                           disabled={isWorking}
                         >
-                          ↺ Improve
+                          ↺ Regenerate
                         </button>
                       </div>
-                    )}
 
-                    {isImproving && (
-                      <div className={styles.feedbackPanel}>
-                        <div className={styles.quickTaps}>
-                          {QUICK_FEEDBACK.map(fb => (
-                            <button
-                              key={fb}
-                              className={`${styles.quickBtn} ${improveFeedback === fb ? styles.quickBtnActive : ''}`}
-                              onClick={() => setImproveFeedback(fb)}
-                            >
-                              {fb}
-                            </button>
-                          ))}
+                      {isImproving && (
+                        <div className={styles.feedbackPanel}>
+                          <div className={styles.quickTaps}>
+                            {QUICK_FEEDBACK.map(fb => (
+                              <button key={fb} className={`${styles.quickBtn} ${improveFeedback === fb ? styles.quickBtnActive : ''}`} onClick={() => setImproveFeedback(fb)}>
+                                {fb}
+                              </button>
+                            ))}
+                          </div>
+                          <textarea className={styles.customInput} rows={2} placeholder="Or type custom feedback…" value={improveFeedback} onChange={e => setImproveFeedback(e.target.value)} />
+                          <p className={styles.regenCostNote}>
+                            Cost: €{TIER_COSTS[photo.tier].toFixed(2)} ({TIER_LABELS[photo.tier]})
+                          </p>
+                          <button className={styles.regenerateBtn} onClick={handleRegenerate} disabled={iterating}>
+                            {iterating ? 'Regenerating…' : 'Regenerate →'}
+                          </button>
                         </div>
-                        <textarea
-                          className={styles.customInput}
-                          rows={2}
-                          placeholder="Or type custom feedback…"
-                          value={improveFeedback}
-                          onChange={e => setImproveFeedback(e.target.value)}
-                        />
-                        <button
-                          className={styles.regenerateBtn}
-                          onClick={handleIterate}
-                          disabled={iterating || !improveFeedback}
-                        >
-                          {iterating ? 'Regenerating…' : 'Regenerate →'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {costWarning && !costBlocked && <p className={styles.costWarn}>⚠ Session approaching €5 limit</p>}
+              {costBlocked && (
+                <p className={styles.costOver}>
+                  ⛔ Session reached €10 limit
+                  <button className={styles.overrideBtn} onClick={() => { setForceOverride(true); setCostBlocked(false); setError(''); }}>Admin override</button>
+                </p>
+              )}
+
+              <button className={styles.resetLink} onClick={() => { setPhotoStates({}); setImprovingPosition(null); }} disabled={isWorking}>
+                ← Change workflow / generate more
+              </button>
+            </>
           )}
 
           {/* ── Finalize ─────────────────────────────────────── */}
@@ -493,9 +576,10 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
               <button className={styles.finalizeBtn} onClick={finalize} disabled={isWorking}>
                 Add approved photos to product →
               </button>
-              <span className={styles.finalizeNote}>Sets product main image to the approved front photo</span>
+              <span className={styles.finalizeNote}>Session total: €{totalCost.toFixed(2)}</span>
             </div>
           )}
+
         </div>
       )}
     </div>
