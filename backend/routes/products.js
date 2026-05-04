@@ -143,7 +143,8 @@ function csvToProducts(records, platform) {
 router.get('/', async function(req, res) {
   try {
     const { sort, limit } = req.query;
-    let query = Product.find();
+    // Exclude draft and archived products from the public shop
+    let query = Product.find({ status: { $in: ['active', 'sold_out', null, undefined] } });
     if (sort === '-createdAt') query = query.sort({ createdAt: -1 });
     if (limit) query = query.limit(parseInt(limit, 10));
     const products = await query;
@@ -244,6 +245,10 @@ router.get('/:id', async function(req, res) {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Product not found' });
+    // Hide draft and archived from the public
+    if (product.status === 'archived' || product.status === 'draft') {
+      return res.status(404).json({ error: 'Product not found' });
+    }
     res.json(product);
   } catch (err) {
     res.status(500).json({ error: err.message });

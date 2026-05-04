@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .header h2 {
@@ -26,6 +26,89 @@
   opacity: 0.8;
 }
 
+/* ── Filter bar ──────────────────────────────────── */
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--dark);
+  background: var(--warm-white);
+  outline: none;
+}
+
+.searchInput:focus {
+  border-color: var(--dark);
+}
+
+.searchBtn {
+  padding: 9px 18px;
+  background: var(--dark);
+  color: var(--warm-white);
+  border: none;
+  font-size: 12px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.searchBtn:hover { opacity: 0.8; }
+
+.clearBtn {
+  padding: 9px 14px;
+  background: none;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.clearBtn:hover { border-color: var(--dark); color: var(--dark); }
+
+.filterSelects {
+  display: flex;
+  gap: 8px;
+}
+
+.filterSelect {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--dark);
+  background: var(--warm-white);
+  cursor: pointer;
+  outline: none;
+}
+
+.filterSelect:focus { border-color: var(--dark); }
+
+/* ── Loading / empty ─────────────────────────────── */
+.loadingText,
+.emptyText {
+  color: var(--muted);
+  font-size: 14px;
+  padding: 40px 0;
+  text-align: center;
+}
+
 /* ── Table ───────────────────────────────────────── */
 .tableWrap {
   width: 100%;
@@ -42,10 +125,11 @@
 
 .table colgroup col:nth-child(1) { width: 72px; }   /* Image   */
 .table colgroup col:nth-child(2) { width: auto; }   /* Name    */
-.table colgroup col:nth-child(3) { width: 120px; }  /* Category */
+.table colgroup col:nth-child(3) { width: 100px; }  /* Status  */
 .table colgroup col:nth-child(4) { width: 90px; }   /* Price   */
-.table colgroup col:nth-child(5) { width: 240px; }  /* Colours */
-.table colgroup col:nth-child(6) { width: 120px; }  /* Actions */
+.table colgroup col:nth-child(5) { width: 110px; }  /* Stock   */
+.table colgroup col:nth-child(6) { width: 100px; }  /* Updated */
+.table colgroup col:nth-child(7) { width: 130px; }  /* Actions */
 
 .table th {
   text-align: left;
@@ -78,7 +162,7 @@
 /* ── Thumbnail / no-image ────────────────────────── */
 .thumbnail {
   width: 48px;
-  height: 48px;
+  height: 60px;
   object-fit: cover;
   border: 1px solid var(--border);
   display: block;
@@ -86,7 +170,7 @@
 
 .noImage {
   width: 48px;
-  height: 48px;
+  height: 60px;
   background: var(--cream);
   border: 1px solid var(--border);
   display: flex;
@@ -95,22 +179,57 @@
   color: #c0b8ae;
 }
 
-/* ── Colour badges ───────────────────────────────── */
-.colourTags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+/* ── Product name cell ───────────────────────────── */
+.productName {
+  display: block;
+  font-size: 14px;
+  color: var(--dark);
+  line-height: 1.4;
 }
 
-.colourTag {
+.productCategory {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+  letter-spacing: 0.5px;
+}
+
+/* ── Status badges ───────────────────────────────── */
+.statusBadge {
   display: inline-block;
-  padding: 2px 8px;
-  background: var(--cream);
-  border: 1px solid var(--border);
+  padding: 3px 10px;
   border-radius: 2px;
   font-size: 11px;
   letter-spacing: 0.5px;
-  color: var(--dark);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sActive   { background: #e6f4ea; color: #2d7a3a; }
+.sDraft    { background: #f0f0f0; color: #666; }
+.sSoldOut  { background: #fff3e0; color: #c17800; }
+.sArchived { background: #fce8e6; color: #c0392b; }
+
+/* ── Stock badges ────────────────────────────────── */
+.stockBadge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 2px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.skIn  { background: #e6f4ea; color: #2d7a3a; }
+.skLow { background: #fff3e0; color: #c17800; }
+.skOut { background: #fce8e6; color: #c0392b; }
+
+/* ── Updated at ──────────────────────────────────── */
+.updatedAt {
+  font-size: 12px !important;
+  color: var(--muted) !important;
   white-space: nowrap;
 }
 

@@ -30,7 +30,8 @@ export async function generateMetadata(
   const description = product.metaDescription
     || (product.description ? product.description.slice(0, 155) : `Shop ${product.name} at SILKILINEN. Pure silk and linen intimates, shipped worldwide from Dublin.`);
   const url = `https://silkilinen.vercel.app/product/${id}`;
-  const image = product.image || 'https://silkilinen.vercel.app/og-default.jpg';
+  const primaryImage = product.images?.find((i: { isPrimary: boolean }) => i.isPrimary);
+  const image = primaryImage?.url || product.images?.[0]?.url || product.image || 'https://silkilinen.vercel.app/og-default.jpg';
 
   return {
     title,
@@ -53,10 +54,11 @@ export async function generateMetadata(
   };
 }
 
-function StockBadge({ level }: { level: number | null }) {
-  if (level === null || level === undefined) return null;
-  if (level === 0) return <p className={styles.stockOut}>Out of stock</p>;
-  if (level <= 3) return <p className={styles.stockLow}>Low stock — only {level} left</p>;
+function StockBadge({ product }: { product: { inStock?: boolean; totalStock?: number; stockLevel?: number } }) {
+  const total = product.totalStock ?? product.stockLevel ?? null;
+  if (total === null) return null;
+  if (total === 0) return <p className={styles.stockOut}>Out of stock</p>;
+  if (total <= 3) return <p className={styles.stockLow}>Low stock — only {total} left</p>;
   return <p className={styles.stockIn}>In stock</p>;
 }
 
@@ -76,19 +78,23 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   }
 
   const hasSizes = Array.isArray(product.sizes) && product.sizes.length > 0;
+  const primaryImage = product.images?.find((i: { isPrimary: boolean }) => i.isPrimary);
+  const heroImage = primaryImage?.url || product.images?.[0]?.url || product.image || '';
+  const heroAlt = primaryImage?.alt || product.altText || product.name;
+  const total = product.totalStock ?? product.stockLevel ?? null;
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
     description: product.description || '',
-    image: product.image || undefined,
+    image: heroImage || undefined,
     brand: { '@type': 'Brand', name: 'SILKILINEN' },
     offers: {
       '@type': 'Offer',
       priceCurrency: 'EUR',
       price: Number(product.price).toFixed(2),
-      availability: product.stockLevel === 0
+      availability: total === 0
         ? 'https://schema.org/OutOfStock'
         : 'https://schema.org/InStock',
       url: `https://silkilinen.vercel.app/product/${id}`,
@@ -105,15 +111,24 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         <ProductViewTracker id={product._id} name={product.name} price={product.price} />
         <div className={styles.inner}>
           <div className={styles.image}>
-            <div className={styles.placeholder}></div>
+            {heroImage ? (
+              <img src={heroImage} alt={heroAlt} className={styles.heroImg} />
+            ) : (
+              <div className={styles.placeholder} />
+            )}
           </div>
           <div className={styles.info}>
             <a href="/shop" className={styles.back}>← Back to shop</a>
             <h1>{product.name}</h1>
             <p className={styles.price}>
-              €{Number(product.price).toFixed(2)}
+              <span className={product.compareAtPrice ? styles.priceSale : ''}>
+                €{Number(product.price).toFixed(2)}
+              </span>
+              {product.compareAtPrice && product.compareAtPrice > product.price && (
+                <span className={styles.priceCompare}>€{Number(product.compareAtPrice).toFixed(2)}</span>
+              )}
             </p>
-            <StockBadge level={product.stockLevel} />
+            <StockBadge product={product} />
             <p className={styles.description}>{product.description}</p>
             {hasSizes && (
               <a href="/size-guide" className={styles.sizeGuideLink} target="_blank" rel="noopener noreferrer">
@@ -126,6 +141,23 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               productName={product.name}
               price={product.price}
             />
+
+            {(product.materialComposition || product.careInstructions) && (
+              <div className={styles.materialSection}>
+                {product.materialComposition && (
+                  <details className={styles.accordion}>
+                    <summary className={styles.accordionSummary}>Material</summary>
+                    <p className={styles.accordionBody}>{product.materialComposition}</p>
+                  </details>
+                )}
+                {product.careInstructions && (
+                  <details className={styles.accordion}>
+                    <summary className={styles.accordionSummary}>Care</summary>
+                    <p className={styles.accordionBody}>{product.careInstructions}</p>
+                  </details>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </main>

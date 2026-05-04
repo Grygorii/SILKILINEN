@@ -11,6 +11,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const productRoutes = require('./routes/products');
+const adminProductsRoutes = require('./routes/adminProducts');
 const authRoutes = require('./routes/auth');
 const checkoutRoutes = require('./routes/checkout');
 const webhookRoutes = require('./routes/webhook');
@@ -51,6 +52,7 @@ app.use('/api/webhook', webhookRoutes);
 
 app.use(express.json());
 app.use('/api/products', productRoutes);
+app.use('/api/admin/products', adminProductsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/orders', ordersRoutes);

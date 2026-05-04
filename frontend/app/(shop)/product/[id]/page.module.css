@@ -14,6 +14,13 @@
   height: 600px;
 }
 
+.heroImg {
+  width: 100%;
+  height: 600px;
+  object-fit: cover;
+  display: block;
+}
+
 .back {
   display: inline-block;
   font-size: 12px;
@@ -42,6 +49,16 @@
   display: flex;
   align-items: baseline;
   gap: 10px;
+}
+
+.priceSale {
+  color: #c0392b;
+}
+
+.priceCompare {
+  font-size: 16px;
+  color: var(--muted);
+  text-decoration: line-through;
 }
 
 .vatNote {
@@ -93,6 +110,52 @@
   margin-bottom: 32px;
 }
 
+/* ── Material & Care accordion ───────────────────── */
+.materialSection {
+  margin-top: 28px;
+  border-top: 1px solid var(--border);
+}
+
+.accordion {
+  border-bottom: 1px solid var(--border);
+}
+
+.accordionSummary {
+  padding: 14px 0;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--dark);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+
+.accordionSummary::-webkit-details-marker { display: none; }
+
+.accordionSummary::after {
+  content: '+';
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--muted);
+  transition: transform 0.2s ease;
+}
+
+.accordion[open] .accordionSummary::after {
+  content: '−';
+}
+
+.accordionBody {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.8;
+  padding-bottom: 16px;
+  margin: 0;
+}
+
 .notFound {
   min-height: 40vh;
   display: flex;
@@ -110,7 +173,8 @@
     gap: 32px;
   }
 
-  .placeholder {
+  .placeholder,
+  .heroImg {
     height: 380px;
   }
 
@@ -124,7 +188,8 @@
     padding: 40px 5%;
   }
 
-  .placeholder {
+  .placeholder,
+  .heroImg {
     height: 300px;
   }
 }
