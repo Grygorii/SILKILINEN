@@ -28,6 +28,13 @@ type ProductImage = {
   isPrimary: boolean;
   order: number;
   associatedColour?: string;
+  slot?: string;
+};
+
+type ProductVideo = {
+  url: string;
+  thumbnailUrl?: string;
+  cloudinaryPublicId?: string;
 };
 
 type Form = {
@@ -64,6 +71,16 @@ const CATEGORIES = [
   { slug: 'eye-masks',     label: 'Eye Masks' },
   { slug: 'scarves',       label: 'Scarves' },
 ];
+
+const IMAGE_SLOTS = [
+  { key: 'hero',      label: 'Hero',      description: 'Main listing photo', required: true  },
+  { key: 'front',     label: 'Front',     description: 'Front view',         required: false },
+  { key: 'back',      label: 'Back',      description: 'Back view',          required: false },
+  { key: 'side',      label: 'Side',      description: 'Side profile',       required: false },
+  { key: 'detail',    label: 'Detail',    description: 'Fabric close-up',    required: false },
+  { key: 'lifestyle', label: 'Lifestyle', description: 'Model or scene',     required: false },
+  { key: 'thumbnail', label: 'Thumbnail', description: 'Cart thumbnail',     required: false },
+] as const;
 
 const EMPTY_FORM: Form = {
   name: '', status: 'draft', price: '', compareAtPrice: '', costPrice: '',
@@ -144,6 +161,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const [saveError, setSaveError] = useState('');
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [video, setVideo] = useState<ProductVideo | null>(null);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [videoError, setVideoError] = useState('');
   const [seoGenerating, setSeoGenerating]   = useState(false);
   const [aiFilledFields, setAiFilledFields] = useState<Set<string>>(new Set());
   const [seoToast, setSeoToast]             = useState('');
@@ -155,6 +176,8 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const altTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const slotInputRef = useRef<HTMLInputElement>(null);
+  const pendingSlotRef = useRef<string | undefined>(undefined);
 
   // Load product
   useEffect(() => {
@@ -184,6 +207,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         const sorted = (p.images ?? []).slice().sort((a: ProductImage, b: ProductImage) => a.order - b.order);
         setImages(sorted);
         setVariants(p.variants ?? []);
+        setVideo(p.productVideo ?? null);
         setLastSaved(new Date(p.updatedAt));
         setSaveState('saved');
       })
@@ -283,11 +307,13 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   }, [form, variants, id]);
 
   // Image handlers
-  async function handleImageUpload(files: FileList | null) {
+  async function handleImageUpload(files: FileList | null, slot?: string) {
     if (!files || files.length === 0) return;
     setUploading(true);
+    setUploadError('');
     const fd = new FormData();
     Array.from(files).forEach(f => fd.append('images', f));
+    if (slot) fd.append('slot', slot);
     try {
       const res = await fetch(`${API}/api/admin/products/${id}/images`, {
         method: 'POST', credentials: 'include', body: fd,
@@ -295,10 +321,56 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       if (res.ok) {
         const updated = await res.json();
         setImages(updated.slice().sort((a: ProductImage, b: ProductImage) => a.order - b.order));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setUploadError(data.error || 'Upload failed');
       }
+    } catch {
+      setUploadError('Upload failed — check connection');
     } finally {
       setUploading(false);
     }
+  }
+
+  function openSlotPicker(slot?: string) {
+    pendingSlotRef.current = slot;
+    slotInputRef.current?.click();
+  }
+
+  function getSlotImage(slotKey: string): ProductImage | undefined {
+    return images.find(img => img.slot === slotKey);
+  }
+
+  async function handleVideoUpload(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setVideoUploading(true);
+    setVideoError('');
+    const fd = new FormData();
+    fd.append('video', files[0]);
+    try {
+      const res = await fetch(`${API}/api/admin/products/${id}/video`, {
+        method: 'POST', credentials: 'include', body: fd,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setVideo(data.productVideo ?? null);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setVideoError(data.error || 'Video upload failed');
+      }
+    } catch {
+      setVideoError('Upload failed — check connection');
+    } finally {
+      setVideoUploading(false);
+    }
+  }
+
+  async function handleDeleteVideo() {
+    if (!confirm('Delete this video?')) return;
+    const res = await fetch(`${API}/api/admin/products/${id}/video`, {
+      method: 'DELETE', credentials: 'include',
+    });
+    if (res.ok) setVideo(null);
   }
 
   async function handleDeleteImage(imageId: string) {
@@ -527,51 +599,143 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               <h3 className={styles.cardTitle}>Images</h3>
               <span className={styles.cardMeta}>{images.length} image{images.length !== 1 ? 's' : ''}</span>
             </div>
-            <label className={`${styles.uploadArea} ${uploading ? styles.uploadAreaBusy : ''}`}>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                className={styles.fileInputHidden}
-                onChange={e => handleImageUpload(e.target.files)}
-                disabled={uploading}
-              />
-              {uploading ? (
-                <span className={styles.uploadText}>Uploading…</span>
-              ) : (
-                <>
-                  <span className={styles.uploadPlus}>+</span>
-                  <span className={styles.uploadText}>Click to upload images</span>
-                  <span className={styles.uploadHint}>JPEG · PNG · WebP · max 10 MB · 4:5 portrait ideal</span>
-                </>
-              )}
-            </label>
 
-            {images.length > 0 && (
-              <div className={styles.imageGrid}>
-                {images.map((img, idx) => (
-                  <div key={img._id} className={styles.imgCard}>
-                    <div className={styles.imgThumbWrap}>
-                      <img src={img.url} alt={img.alt || ''} className={styles.imgThumb} />
-                      {img.isPrimary && <span className={styles.primaryBadge}>Primary</span>}
-                    </div>
-                    <input
-                      className={styles.altInput}
-                      value={img.alt}
-                      onChange={e => handleAltChange(img._id, e.target.value)}
-                      placeholder="Alt text (required for SEO)…"
-                    />
-                    <div className={styles.imgActions}>
-                      <button className={styles.imgBtn} onClick={() => handleMoveImage(img._id, 'up')} disabled={idx === 0} title="Move up">▲</button>
-                      <button className={styles.imgBtn} onClick={() => handleMoveImage(img._id, 'down')} disabled={idx === images.length - 1} title="Move down">▼</button>
-                      {!img.isPrimary && (
-                        <button className={styles.imgBtn} onClick={() => handleSetPrimary(img._id)} title="Set as primary">★</button>
-                      )}
-                      <button className={`${styles.imgBtn} ${styles.imgBtnDel}`} onClick={() => handleDeleteImage(img._id)} title="Delete">✕</button>
-                    </div>
+            <input
+              ref={slotInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className={styles.fileInputHidden}
+              onChange={e => { handleImageUpload(e.target.files, pendingSlotRef.current); e.target.value = ''; }}
+              disabled={uploading}
+            />
+
+            {uploadError && <p className={styles.uploadError}>{uploadError}</p>}
+            {uploading && <p className={styles.uploadingMsg}>Uploading…</p>}
+
+            <div className={styles.slotGrid}>
+              {IMAGE_SLOTS.map(slot => {
+                const img = getSlotImage(slot.key);
+                return (
+                  <div key={slot.key} className={styles.slotCard}>
+                    {img ? (
+                      <>
+                        <div
+                          className={styles.slotThumbWrap}
+                          onClick={() => !uploading && openSlotPicker(slot.key)}
+                          title="Click to replace"
+                        >
+                          <img src={img.url} alt={img.alt || ''} className={styles.slotThumb} />
+                          <span className={styles.slotBadge}>{slot.label}</span>
+                          <span className={styles.slotReplace}>Replace</span>
+                        </div>
+                        <div className={styles.slotControls}>
+                          <input
+                            className={styles.altInput}
+                            value={img.alt}
+                            onChange={e => handleAltChange(img._id, e.target.value)}
+                            placeholder="Alt text…"
+                          />
+                          <button
+                            className={styles.slotDelBtn}
+                            onClick={() => handleDeleteImage(img._id)}
+                          >Remove</button>
+                        </div>
+                      </>
+                    ) : (
+                      <div
+                        className={styles.slotEmpty}
+                        onClick={() => !uploading && openSlotPicker(slot.key)}
+                      >
+                        <span className={styles.slotPlus}>+</span>
+                        <span className={styles.slotName}>{slot.label}{slot.required ? ' *' : ''}</span>
+                        <span className={styles.slotDesc}>{slot.description}</span>
+                      </div>
+                    )}
                   </div>
-                ))}
+                );
+              })}
+            </div>
+
+            {images.filter(img => !img.slot).length > 0 && (
+              <>
+                <p className={styles.unslottedTitle}>Additional images</p>
+                <div className={styles.imageGrid}>
+                  {images.filter(img => !img.slot).map((img, idx, arr) => (
+                    <div key={img._id} className={styles.imgCard}>
+                      <div className={styles.imgThumbWrap}>
+                        <img src={img.url} alt={img.alt || ''} className={styles.imgThumb} />
+                        {img.isPrimary && <span className={styles.primaryBadge}>Primary</span>}
+                      </div>
+                      <input
+                        className={styles.altInput}
+                        value={img.alt}
+                        onChange={e => handleAltChange(img._id, e.target.value)}
+                        placeholder="Alt text (required for SEO)…"
+                      />
+                      <div className={styles.imgActions}>
+                        <button className={styles.imgBtn} onClick={() => handleMoveImage(img._id, 'up')} disabled={idx === 0} title="Move up">▲</button>
+                        <button className={styles.imgBtn} onClick={() => handleMoveImage(img._id, 'down')} disabled={idx === arr.length - 1} title="Move down">▼</button>
+                        {!img.isPrimary && (
+                          <button className={styles.imgBtn} onClick={() => handleSetPrimary(img._id)} title="Set as primary">★</button>
+                        )}
+                        <button className={`${styles.imgBtn} ${styles.imgBtnDel}`} onClick={() => handleDeleteImage(img._id)} title="Delete">✕</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <button
+              className={styles.addMoreBtn}
+              onClick={() => openSlotPicker(undefined)}
+              disabled={uploading}
+            >+ Add image</button>
+          </section>
+
+          {/* Video */}
+          <section className={styles.card}>
+            <div className={styles.cardHeader}>
+              <h3 className={styles.cardTitle}>Product video</h3>
+              <span className={styles.cardMeta}>MP4 · max 30 MB</span>
+            </div>
+
+            {videoError && <p className={styles.uploadError}>{videoError}</p>}
+
+            {video ? (
+              <div className={styles.videoPreview}>
+                {video.thumbnailUrl && (
+                  <img src={video.thumbnailUrl} alt="Video thumbnail" className={styles.videoThumb} />
+                )}
+                <div className={styles.videoMeta}>
+                  <a href={video.url} target="_blank" rel="noopener noreferrer" className={styles.videoLink}>
+                    View video ↗
+                  </a>
+                  <button className={`${styles.imgBtn} ${styles.imgBtnDel}`} onClick={handleDeleteVideo}>
+                    Delete video
+                  </button>
+                </div>
               </div>
+            ) : (
+              <label className={`${styles.uploadArea} ${videoUploading ? styles.uploadAreaBusy : ''}`}>
+                <input
+                  type="file"
+                  accept="video/mp4,video/quicktime,video/webm"
+                  className={styles.fileInputHidden}
+                  onChange={e => { handleVideoUpload(e.target.files); e.target.value = ''; }}
+                  disabled={videoUploading}
+                />
+                {videoUploading ? (
+                  <span className={styles.uploadText}>Uploading…</span>
+                ) : (
+                  <>
+                    <span className={styles.uploadPlus}>▶</span>
+                    <span className={styles.uploadText}>Click to upload product video</span>
+                    <span className={styles.uploadHint}>MP4 · QuickTime · WebM · max 30 MB</span>
+                  </>
+                )}
+              </label>
             )}
           </section>
 

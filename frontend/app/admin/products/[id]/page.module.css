@@ -340,6 +340,210 @@
 
 .imgBtnDel:hover:not(:disabled) { color: #b03a2e !important; border-color: #b03a2e !important; }
 
+/* ── Upload error / status ───────────────────────── */
+
+.uploadError {
+  font-size: 12px;
+  color: #b03a2e;
+  padding: 8px 12px;
+  background: #fdf0ef;
+  border: 1px solid #f5c6c0;
+  border-radius: 2px;
+  margin-bottom: 12px;
+}
+
+.uploadingMsg {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 4px 0 10px;
+}
+
+/* ── Slot grid ───────────────────────────────────── */
+
+.slotGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.slotCard {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  background: var(--cream);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.slotThumbWrap {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.slotThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.slotBadge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 1px;
+}
+
+.slotReplace {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.slotThumbWrap:hover .slotReplace { opacity: 1; }
+
+.slotEmpty {
+  aspect-ratio: 4 / 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 16px;
+  cursor: pointer;
+  border: 2px dashed var(--border);
+  border-radius: 2px;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.slotEmpty:hover {
+  border-color: var(--dark);
+  background: var(--warm-white);
+}
+
+.slotPlus {
+  font-size: 22px;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.slotName {
+  font-size: 11px;
+  color: var(--dark);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.slotDesc {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.slotControls {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.slotDelBtn {
+  width: 100%;
+  height: 24px;
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.slotDelBtn:hover { color: #b03a2e; border-color: #b03a2e; }
+
+/* ── Unslotted / additional images ───────────────── */
+
+.unslottedTitle {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 400;
+  margin: 4px 0 10px;
+}
+
+.addMoreBtn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-top: 12px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.addMoreBtn:hover:not(:disabled) {
+  border-color: var(--dark);
+  color: var(--dark);
+}
+
+.addMoreBtn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Video ───────────────────────────────────────── */
+
+.videoPreview {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.videoThumb {
+  width: 110px;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 2px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.videoMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.videoLink {
+  font-size: 12px;
+  color: var(--dark);
+  text-decoration: underline;
+}
+
 /* ── Variant table ───────────────────────────────── */
 
 .varTableWrap {

@@ -5,6 +5,7 @@ const cloudinary = require('cloudinary').v2;
 const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
 const { generateProductSEO } = require('../services/seoGenerator');
+const { SLOT_KEYS } = require('../config/imageSlots');
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -18,6 +19,15 @@ const imgUpload = multer({
   fileFilter(req, file, cb) {
     if (file.mimetype.startsWith('image/')) cb(null, true);
     else cb(new Error('Images only'));
+  },
+});
+
+const videoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 30 * 1024 * 1024 },
+  fileFilter(req, file, cb) {
+    if (file.mimetype.startsWith('video/')) cb(null, true);
+    else cb(new Error('Videos only'));
   },
 });
 
@@ -297,21 +307,42 @@ router.post('/:id/images', imgUpload.array('images', 20), async function(req, re
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Not found' });
 
-    for (const file of req.files) {
+    const slot = req.body.slot && SLOT_KEYS.includes(req.body.slot) ? req.body.slot : undefined;
+
+    // If uploading to a slot, remove the existing image in that slot first
+    if (slot) {
+      const existing = product.images.find(img => img.slot === slot);
+      if (existing) {
+        if (existing.cloudinaryPublicId) {
+          await cloudinary.uploader.destroy(existing.cloudinaryPublicId).catch(() => {});
+        }
+        product.images.pull(existing._id);
+      }
+      // Hero slot owns isPrimary
+      if (slot === 'hero') {
+        product.images.forEach(img => { img.isPrimary = false; });
+      }
+    }
+
+    // For slot uploads use only the first file; for unslotted allow all
+    const filesToProcess = slot ? [req.files[0]] : req.files;
+
+    for (const file of filesToProcess) {
       const result = await uploadBuffer(file.buffer, {
         folder: `silkilinen/products/${req.params.id}`,
         resource_type: 'image',
         transformation: [{ width: 1200, height: 1500, crop: 'fill', gravity: 'auto' }],
       });
       const defaultAlt = product.altTextTemplate
-        ? product.altTextTemplate.replace('{position}', 'product photo')
+        ? product.altTextTemplate.replace('{position}', slot || 'product photo')
         : `${product.name} — handmade silk by SILKILINEN, Dublin`;
       product.images.push({
         url: result.secure_url,
         alt: defaultAlt,
-        isPrimary: product.images.length === 0,
+        isPrimary: product.images.length === 0 || slot === 'hero',
         order: product.images.length,
         cloudinaryPublicId: result.public_id,
+        slot,
       });
     }
 
@@ -381,6 +412,57 @@ router.delete('/:id/images/:imageId', async function(req, res) {
     product.lastUpdatedBy = req.user.userId;
     await product.save();
     res.json(product.images);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/products/:id/video — upload product video
+router.post('/:id/video', videoUpload.single('video'), async function(req, res) {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file' });
+    if (!process.env.CLOUDINARY_CLOUD_NAME) return res.status(503).json({ error: 'Cloudinary not configured' });
+
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Not found' });
+
+    if (product.productVideo?.cloudinaryPublicId) {
+      await cloudinary.uploader.destroy(product.productVideo.cloudinaryPublicId, { resource_type: 'video' }).catch(() => {});
+    }
+
+    const result = await uploadBuffer(req.file.buffer, {
+      folder: `silkilinen/products/${req.params.id}`,
+      resource_type: 'video',
+    });
+
+    const thumbnailUrl = result.secure_url
+      .replace('/video/upload/', '/video/upload/f_jpg,so_1/')
+      .replace(/\.[^.]+$/, '.jpg');
+
+    product.productVideo = { url: result.secure_url, thumbnailUrl, cloudinaryPublicId: result.public_id };
+    product.lastUpdatedBy = req.user.userId;
+    await product.save();
+    res.json({ productVideo: product.productVideo });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/admin/products/:id/video — remove product video
+router.delete('/:id/video', async function(req, res) {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Not found' });
+
+    if (product.productVideo?.cloudinaryPublicId) {
+      await cloudinary.uploader.destroy(product.productVideo.cloudinaryPublicId, { resource_type: 'video' }).catch(() => {});
+    }
+
+    await Product.findByIdAndUpdate(req.params.id, {
+      $unset: { productVideo: 1 },
+      lastUpdatedBy: req.user.userId,
+    });
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

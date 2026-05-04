@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Schema.Types;
+const { SLOT_KEYS } = require('../config/imageSlots');
 
 const variantSchema = new mongoose.Schema({
   sku: { type: String },
@@ -18,7 +19,14 @@ const imageSchema = new mongoose.Schema({
   order: { type: Number, default: 0 },
   associatedColour: { type: String },
   cloudinaryPublicId: { type: String },
+  slot: { type: String, enum: SLOT_KEYS },
 }, { _id: true });
+
+const productVideoSchema = new mongoose.Schema({
+  url:                { type: String, required: true },
+  thumbnailUrl:       { type: String },
+  cloudinaryPublicId: { type: String },
+}, { _id: false });
 
 const productSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
@@ -47,6 +55,7 @@ const productSchema = new mongoose.Schema({
   inStock: { type: Boolean, default: true },
 
   images: [imageSchema],
+  productVideo: productVideoSchema,
 
   // Legacy fields — kept for backwards compat, synced from images[] in pre-save
   image: { type: String },
