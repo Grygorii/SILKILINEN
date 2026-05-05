@@ -15,20 +15,6 @@ const CHANNELS = [
     href: 'mailto:hello@silkilinen.com?subject=Hello%20SILKILINEN',
   },
   {
-    id: 'whatsapp',
-    label: 'WhatsApp',
-    sub: 'Typically replies within the hour',
-    icon: 'W',
-    href: 'https://wa.me/353000000000?text=Hi%20SILKILINEN%2C%20I%20have%20a%20question%20about%20your%20products.',
-  },
-  {
-    id: 'telegram',
-    label: 'Telegram',
-    sub: '@silkilinen',
-    icon: 'T',
-    href: 'https://t.me/silkilinen',
-  },
-  {
     id: 'instagram',
     label: 'Instagram',
     sub: '@silkilinen',

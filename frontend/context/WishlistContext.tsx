@@ -70,6 +70,33 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     setWishlist(lsGet());
   }, []);
 
+  // For guests: fetch product details whenever wishlist IDs change.
+  // Auto-cleans stale IDs (archived/deleted products return 404 from public API).
+  useEffect(() => {
+    if (customer || customerLoading) return;
+    if (wishlist.length === 0) {
+      setItems([]);
+      return;
+    }
+    setLoading(true);
+    Promise.all(
+      wishlist.map(id =>
+        fetch(`${API}/api/products/${id}`)
+          .then(r => r.ok ? r.json() : null)
+          .catch(() => null)
+      )
+    ).then(results => {
+      const valid = results.filter((r): r is WishlistProduct => r !== null);
+      setItems(valid);
+      const validIds = valid.map(p => p._id);
+      if (validIds.length !== wishlist.length) {
+        setWishlist(validIds);
+        lsSet(validIds);
+      }
+    }).finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customer, customerLoading, wishlist.join(',')]);
+
   // Handle auth transitions (login / logout / initial load while logged in)
   useEffect(() => {
     if (customerLoading) return;

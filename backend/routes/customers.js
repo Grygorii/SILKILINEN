@@ -208,7 +208,8 @@ router.get('/me/orders/:orderId', requireCustomer, async function(req, res) {
 router.get('/me/wishlist', requireCustomer, async function(req, res) {
   try {
     const customer = await Customer.findById(req.customer.customerId).populate('wishlist');
-    res.json(customer?.wishlist || []);
+    const items = (customer?.wishlist || []).filter(p => p.status !== 'draft' && p.status !== 'archived');
+    res.json(items);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
