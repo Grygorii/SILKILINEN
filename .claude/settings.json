@@ -60,7 +60,9 @@
       "Bash(Out-Null)",
       "Bash(Write-Output \"done\")",
       "PowerShell(New-Item -ItemType Directory -Force -Path \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\frontend\\\\app\\\\unsubscribe\")",
-      "PowerShell(\"done\")"
+      "PowerShell(\"done\")",
+      "Bash(curl -s \"https://silkilinen-production.up.railway.app/api/products?limit=3\")",
+      "Bash(curl -s -X POST \"https://silkilinen-production.up.railway.app/api/checkout\" -H \"Content-Type: application/json\" -H \"Origin: https://silkilinen.com\" -d \"{\\\\\"items\\\\\":[{\\\\\"productId\\\\\":\\\\\"000000000000000000000001\\\\\",\\\\\"name\\\\\":\\\\\"Fake Product\\\\\",\\\\\"price\\\\\":0.01,\\\\\"quantity\\\\\":1}],\\\\\"customerEmail\\\\\":\\\\\"test@silkilinen.com\\\\\"}\")"
     ]
   }
 }
