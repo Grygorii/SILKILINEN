@@ -1,0 +1,12 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        { "type": "host", "value": "silkilinen.vercel.app" }
+      ],
+      "destination": "https://silkilinen.com/$1",
+      "permanent": true
+    }
+  ]
+}
