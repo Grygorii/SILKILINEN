@@ -65,7 +65,7 @@ const productSchema = new mongoose.Schema({
 
   metaTitle: { type: String, maxlength: 70 },
   metaDescription: { type: String, maxlength: 165 },
-  slug: { type: String, sparse: true, index: true },
+  slug: { type: String, sparse: true },
   keywords: [String],
   altTextTemplate: { type: String, default: '' },
 

@@ -12,7 +12,6 @@ const newsletterSchema = new mongoose.Schema({
   customerId:         { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null },
 }, { timestamps: true });
 
-newsletterSchema.index({ email: 1 });
 newsletterSchema.index({ unsubscribeToken: 1 });
 
 module.exports = mongoose.model('Newsletter', newsletterSchema);
