@@ -30,6 +30,10 @@ const insightsRoutes = require('./routes/insights');
 
 const app = express();
 
+// Trust Railway's reverse proxy so express-rate-limit can read X-Forwarded-For.
+// Integer 1 = trust exactly one proxy hop; avoids IP spoofing via forged headers.
+app.set('trust proxy', 1);
+
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
