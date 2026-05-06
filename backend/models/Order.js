@@ -14,6 +14,7 @@ const orderSchema = new mongoose.Schema({
     country: String,
   },
   items: [{
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', default: null },
     name: { type: String },
     price: { type: Number },
     colour: { type: String },

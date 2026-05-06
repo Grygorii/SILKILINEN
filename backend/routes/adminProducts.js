@@ -58,10 +58,14 @@ function autoGenerateSEO(product) {
 // All routes require admin auth
 router.use(requireAuth);
 
-// GET /api/admin/products — list with filters and pagination
+// GET /api/admin/products — list with filters, sort, and pagination
 router.get('/', async function(req, res) {
   try {
-    const { status, search, stock, page = 1, limit = 50 } = req.query;
+    const {
+      status, search, stock, category, issues,
+      sort = 'updatedAt', dir = 'desc',
+      page = 1, limit = 50,
+    } = req.query;
     const filter = {};
 
     if (status && status !== 'all') {
@@ -72,21 +76,30 @@ router.get('/', async function(req, res) {
 
     if (search) {
       const re = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-      filter.name = re;
+      filter.$or = [{ name: re }, { description: re }];
     }
 
-    if (stock === 'in') filter.inStock = true;
-    else if (stock === 'out') filter.inStock = false;
-    else if (stock === 'low') {
-      filter.variants = { $elemMatch: { stockLevel: { $gt: 0 }, $expr: { $lte: ['$stockLevel', '$lowStockThreshold'] } } };
-    }
+    if (category && category !== 'all') filter.category = category;
+
+    if (stock === 'in') filter.totalStock = { $gt: 0 };
+    else if (stock === 'out') filter.totalStock = { $lte: 0 };
+    else if (stock === 'low') filter.totalStock = { $gt: 0, $lt: 5 };
+
+    if (issues === 'no-images')      filter['images.0'] = { $exists: false };
+    else if (issues === 'no-seo')    filter.$or = [{ metaTitle: { $in: [null, ''] } }];
+    else if (issues === 'no-variants') filter['variants.0'] = { $exists: false };
+    else if (issues === 'no-description') filter.description = { $in: [null, ''] };
+
+    const allowedSorts = ['updatedAt', 'createdAt', 'name', 'price', 'totalStock'];
+    const sortField = allowedSorts.includes(sort) ? sort : 'updatedAt';
+    const sortObj = { [sortField]: dir === 'asc' ? 1 : -1 };
 
     const pageNum = Math.max(1, parseInt(page) || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 50));
     const skip = (pageNum - 1) * limitNum;
 
     const [products, total] = await Promise.all([
-      Product.find(filter).sort({ updatedAt: -1 }).skip(skip).limit(limitNum),
+      Product.find(filter).sort(sortObj).skip(skip).limit(limitNum),
       Product.countDocuments(filter),
     ]);
 
@@ -153,6 +166,187 @@ router.put('/:id', async function(req, res) {
       return res.status(400).json({ error: `Validation failed: ${details}` });
     }
     res.status(400).json({ error: err.message });
+  }
+});
+
+// PATCH /api/admin/products/:id/quick-update — inline edit price / status / stock
+router.patch('/:id/quick-update', async function(req, res) {
+  try {
+    const { price, totalStock, status } = req.body;
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Not found' });
+
+    if (typeof price === 'number') {
+      if (price < 0) return res.status(400).json({ error: 'Price must be positive' });
+      product.price = Math.round(price * 100) / 100;
+    }
+
+    if (typeof totalStock === 'number') {
+      if (product.variants?.length > 0) {
+        return res.status(400).json({ error: 'Has variants — edit stock on the product page' });
+      }
+      product.totalStock = Math.max(0, Math.floor(totalStock));
+      product.inStock = product.totalStock > 0;
+    }
+
+    if (status) {
+      const allowed = ['draft', 'active', 'sold_out', 'archived'];
+      if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+      if (status === 'active' && product.status !== 'active') {
+        const missing = [];
+        if (!product.images?.length) missing.push('image');
+        if (!product.variants?.length) missing.push('variants');
+        if (missing.length) return res.status(400).json({ error: `Cannot publish — missing: ${missing.join(', ')}` });
+      }
+      product.status = status;
+    }
+
+    product.lastUpdatedBy = req.user.userId;
+    await product.save({ validateBeforeSave: false });
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Bulk endpoints — all must come BEFORE /:id param routes ───────────────────
+
+// POST /api/admin/products/bulk-publish
+router.post('/bulk-publish', async function(req, res) {
+  try {
+    const { productIds } = req.body;
+    if (!Array.isArray(productIds) || productIds.length === 0) return res.status(400).json({ error: 'No products selected' });
+    if (productIds.length > 100) return res.status(400).json({ error: 'Max 100 at a time' });
+
+    const products = await Product.find({ _id: { $in: productIds } });
+    const cantPublish = products
+      .filter(p => !p.images?.length || !p.variants?.length)
+      .map(p => ({ name: p.name, missing: [...(!p.images?.length ? ['images'] : []), ...(!p.variants?.length ? ['variants'] : [])] }));
+
+    if (cantPublish.length > 0) {
+      return res.status(400).json({ error: 'Some products cannot be published', details: cantPublish });
+    }
+
+    const result = await Product.updateMany({ _id: { $in: productIds } }, { $set: { status: 'active' } });
+    res.json({ updated: result.modifiedCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/products/bulk-archive
+router.post('/bulk-archive', async function(req, res) {
+  try {
+    const { productIds } = req.body;
+    if (!Array.isArray(productIds) || productIds.length === 0) return res.status(400).json({ error: 'No products selected' });
+    const result = await Product.updateMany({ _id: { $in: productIds } }, { $set: { status: 'archived' } });
+    res.json({ updated: result.modifiedCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/products/bulk-delete — hard delete where safe, archive rest
+router.post('/bulk-delete', async function(req, res) {
+  try {
+    const { productIds, confirmation } = req.body;
+    if (confirmation !== 'DELETE') return res.status(400).json({ error: 'Confirmation phrase required' });
+    if (!Array.isArray(productIds) || productIds.length === 0) return res.status(400).json({ error: 'No products selected' });
+
+    const Order = require('../models/Order');
+    const products = await Product.find({ _id: { $in: productIds } });
+    const safeIds = [];
+    const archiveIds = [];
+
+    for (const product of products) {
+      const hasOrder = await Order.exists({
+        $or: [
+          { 'items.productId': product._id },
+          { 'items.name': product.name },
+        ],
+      });
+      if (hasOrder) archiveIds.push(product._id);
+      else safeIds.push(product._id);
+    }
+
+    if (safeIds.length > 0) await Product.deleteMany({ _id: { $in: safeIds } });
+    if (archiveIds.length > 0) await Product.updateMany({ _id: { $in: archiveIds } }, { $set: { status: 'archived' } });
+
+    res.json({
+      deleted: safeIds.length,
+      archivedInstead: archiveIds.length,
+      message: archiveIds.length > 0
+        ? `Deleted ${safeIds.length}. ${archiveIds.length} archived (had order history).`
+        : `Deleted ${safeIds.length} products.`,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/products/bulk-category
+router.post('/bulk-category', async function(req, res) {
+  try {
+    const { productIds, category } = req.body;
+    const { SLUGS } = require('../config/categories');
+    if (!SLUGS.includes(category)) return res.status(400).json({ error: 'Invalid category' });
+    if (!Array.isArray(productIds) || productIds.length === 0) return res.status(400).json({ error: 'No products selected' });
+    const result = await Product.updateMany({ _id: { $in: productIds } }, { $set: { category } });
+    res.json({ updated: result.modifiedCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/products/bulk-discount — apply % off, set compareAtPrice
+router.post('/bulk-discount', async function(req, res) {
+  try {
+    const { productIds, discountPercent } = req.body;
+    if (!Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 90) {
+      return res.status(400).json({ error: 'Discount must be 0–90%' });
+    }
+    if (!Array.isArray(productIds) || productIds.length === 0) return res.status(400).json({ error: 'No products selected' });
+
+    const products = await Product.find({ _id: { $in: productIds } });
+    for (const product of products) {
+      product.compareAtPrice = product.price;
+      product.price = Math.round(product.price * (1 - discountPercent / 100) * 100) / 100;
+      await product.save({ validateBeforeSave: false });
+    }
+    res.json({ updated: products.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/products/export — CSV download
+router.post('/export', async function(req, res) {
+  try {
+    const { productIds } = req.body;
+    if (!Array.isArray(productIds) || productIds.length === 0) return res.status(400).json({ error: 'No products selected' });
+
+    const products = await Product.find({ _id: { $in: productIds } }).lean();
+    const rows = [
+      ['ID', 'Name', 'Status', 'Category', 'Price', 'CompareAtPrice', 'TotalStock', 'Variants', 'Images', 'Created'].join(','),
+      ...products.map(p => [
+        p._id,
+        `"${(p.name || '').replace(/"/g, '""')}"`,
+        p.status,
+        p.category,
+        p.price,
+        p.compareAtPrice || '',
+        p.totalStock || 0,
+        (p.variants || []).length,
+        (p.images || []).length,
+        new Date(p.createdAt).toISOString().split('T')[0],
+      ].join(',')),
+    ].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="products-${Date.now()}.csv"`);
+    res.send(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -226,16 +420,32 @@ router.post('/:id/generate-seo', async function(req, res) {
   }
 });
 
-// DELETE /api/admin/products/:id — soft delete (set status: archived)
+// DELETE /api/admin/products/:id — hard delete if no order history, else archive
 router.delete('/:id', async function(req, res) {
   try {
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      { status: 'archived', lastUpdatedBy: req.user.userId },
-      { new: true }
-    );
+    const { confirmation } = req.body;
+    if (confirmation !== 'DELETE') return res.status(400).json({ error: 'Confirmation required' });
+
+    const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Not found' });
-    res.json({ success: true });
+
+    const Order = require('../models/Order');
+    const hasOrder = await Order.exists({
+      $or: [
+        { 'items.productId': product._id },
+        { 'items.name': product.name },
+      ],
+    });
+
+    if (hasOrder) {
+      product.status = 'archived';
+      product.lastUpdatedBy = req.user.userId;
+      await product.save({ validateBeforeSave: false });
+      return res.json({ deleted: false, archived: true, message: 'Product had order history — archived instead of deleted' });
+    }
+
+    await Product.deleteOne({ _id: product._id });
+    res.json({ deleted: true, message: 'Product permanently deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
