@@ -145,7 +145,7 @@ function csvToProducts(records, platform) {
 router.get('/', async function(req, res) {
   try {
     const { sort, limit, category, q, ids } = req.query;
-    const filter = { status: { $in: ['active', 'sold_out', null, undefined] } };
+    const filter = { status: 'active' };
 
     // Batch lookup by IDs — used by wishlist to resolve stored product IDs
     if (ids) {
@@ -241,7 +241,7 @@ router.post('/:id/drop-hint', lightRateLimit, async function(req, res) {
     if (!recipientEmail || !senderName) {
       return res.status(400).json({ error: 'recipientEmail and senderName are required' });
     }
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOne({ _id: req.params.id, status: 'active' });
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
     const primaryImg = product.images?.find(i => i.isPrimary) ?? product.images?.[0];
@@ -266,17 +266,18 @@ router.post('/:id/drop-hint', lightRateLimit, async function(req, res) {
 
 router.get('/related/:id', async function(req, res) {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOne({ _id: req.params.id, status: 'active' });
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
     let related = await Product.find({
       _id: { $ne: product._id },
       category: product.category,
+      status: 'active',
     }).limit(4);
 
     if (related.length < 4) {
       const ids = [product._id, ...related.map(p => p._id)];
-      const extras = await Product.find({ _id: { $nin: ids } }).limit(4 - related.length);
+      const extras = await Product.find({ _id: { $nin: ids }, status: 'active' }).limit(4 - related.length);
       related = [...related, ...extras];
     }
 
@@ -288,12 +289,8 @@ router.get('/related/:id', async function(req, res) {
 
 router.get('/:id', async function(req, res) {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOne({ _id: req.params.id, status: 'active' });
     if (!product) return res.status(404).json({ error: 'Product not found' });
-    // Hide draft and archived from the public
-    if (product.status === 'archived' || product.status === 'draft') {
-      return res.status(404).json({ error: 'Product not found' });
-    }
     res.json(product);
   } catch (err) {
     res.status(500).json({ error: err.message });

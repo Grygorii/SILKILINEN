@@ -8,7 +8,7 @@ const { CATEGORIES } = require('../config/categories');
 router.get('/', async function(req, res) {
   try {
     const counts = await Product.aggregate([
-      { $match: { status: { $in: ['active', 'sold_out', null, undefined] } } },
+      { $match: { status: 'active' } },
       { $group: { _id: '$category', count: { $sum: 1 } } },
     ]);
     const countMap = {};
