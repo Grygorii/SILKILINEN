@@ -6,6 +6,7 @@ const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
 const { generateProductSEO } = require('../services/seoGenerator');
 const { SLOT_KEYS } = require('../config/imageSlots');
+const { SLUGS: CATEGORY_SLUGS } = require('../config/categories');
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -53,6 +54,21 @@ function autoGenerateSEO(product) {
       altTextTemplate: product.altTextTemplate || seo.altTextTemplate || '',
     }))
     .catch(err => console.error(`[Auto-SEO] Failed for ${product._id}: ${err.message}`));
+}
+
+// ── Publish validation ─────────────────────────────────────────────────────────
+// Called before any status transition to 'active'. Returns array of error strings.
+function validateForPublish(product) {
+  const errors = [];
+  if (!product.name?.trim()) errors.push('Name is required');
+  if (!product.price || product.price <= 0) errors.push('Valid price is required');
+  if (!product.category || !CATEGORY_SLUGS.includes(product.category)) errors.push('Valid category is required');
+  if (!product.description?.trim() || product.description.trim().length < 50) {
+    errors.push('Description must be at least 50 characters');
+  }
+  if (!product.images?.length) errors.push('At least one image is required');
+  if (!product.variants?.length) errors.push('At least one variant is required');
+  return errors;
 }
 
 // All routes require admin auth
@@ -142,17 +158,13 @@ router.put('/:id', async function(req, res) {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Not found' });
 
+    const oldStatus = product.status;
     Object.assign(product, rest, { lastUpdatedBy: req.user.userId });
 
-    if (product.status !== 'draft') {
-      const missing = [];
-      if (!product.name?.trim()) missing.push('name');
-      if (product.price == null || product.price < 0) missing.push('price');
-      if (!product.category?.trim()) missing.push('category');
-      if (missing.length) {
-        return res.status(400).json({
-          error: `Cannot publish: ${missing.join(', ')} ${missing.length === 1 ? 'is' : 'are'} required`,
-        });
+    if (product.status === 'active' && oldStatus !== 'active') {
+      const errors = validateForPublish(product);
+      if (errors.length) {
+        return res.status(400).json({ error: 'Cannot publish product', missingRequirements: errors });
       }
     }
 
@@ -193,10 +205,8 @@ router.patch('/:id/quick-update', async function(req, res) {
       const allowed = ['draft', 'active', 'sold_out', 'archived'];
       if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status' });
       if (status === 'active' && product.status !== 'active') {
-        const missing = [];
-        if (!product.images?.length) missing.push('image');
-        if (!product.variants?.length) missing.push('variants');
-        if (missing.length) return res.status(400).json({ error: `Cannot publish — missing: ${missing.join(', ')}` });
+        const errors = validateForPublish(product);
+        if (errors.length) return res.status(400).json({ error: 'Cannot publish product', missingRequirements: errors });
       }
       product.status = status;
     }
@@ -220,8 +230,8 @@ router.post('/bulk-publish', async function(req, res) {
 
     const products = await Product.find({ _id: { $in: productIds } });
     const cantPublish = products
-      .filter(p => !p.images?.length || !p.variants?.length)
-      .map(p => ({ name: p.name, missing: [...(!p.images?.length ? ['images'] : []), ...(!p.variants?.length ? ['variants'] : [])] }));
+      .map(p => ({ name: p.name, errors: validateForPublish(p) }))
+      .filter(p => p.errors.length > 0);
 
     if (cantPublish.length > 0) {
       return res.status(400).json({ error: 'Some products cannot be published', details: cantPublish });
