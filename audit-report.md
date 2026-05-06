@@ -1,7 +1,10 @@
 # SILKILINEN Codebase Audit Report
-Generated: 2026-05-06
+Generated: 2026-05-06 | Remediated: 2026-05-06
 Total files audited: ~80 frontend + ~40 backend
 Auditor: Claude Code (automated static analysis + manual inspection)
+
+> **Remediation status:** All C1-C5 critical findings and W1/W3/W4 warnings resolved. See CHANGELOG.md for full details.
+> Resolved: C1 ✅ C2 ✅ C3 ✅ C4 ✅ C5 ✅ W1 ✅ W3 ✅ W4 ✅ NEW-2 ✅ NEW-3 ✅
 
 ---
 

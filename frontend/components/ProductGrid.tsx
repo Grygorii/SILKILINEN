@@ -84,6 +84,7 @@ export default function ProductGrid({
       return;
     }
     addToCart({
+      productId: product._id,
       name: product.name,
       price: product.price,
       colour: product.colours?.[0] ?? '',

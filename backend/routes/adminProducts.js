@@ -130,10 +130,28 @@ router.put('/:id', async function(req, res) {
     if (!product) return res.status(404).json({ error: 'Not found' });
 
     Object.assign(product, rest, { lastUpdatedBy: req.user.userId });
-    await product.save();
+
+    if (product.status !== 'draft') {
+      const missing = [];
+      if (!product.name?.trim()) missing.push('name');
+      if (product.price == null || product.price < 0) missing.push('price');
+      if (!product.category?.trim()) missing.push('category');
+      if (missing.length) {
+        return res.status(400).json({
+          error: `Cannot publish: ${missing.join(', ')} ${missing.length === 1 ? 'is' : 'are'} required`,
+        });
+      }
+    }
+
+    const isDraft = product.status === 'draft';
+    await product.save({ validateBeforeSave: !isDraft });
     autoGenerateSEO(product);
     res.json(product);
   } catch (err) {
+    if (err.name === 'ValidationError') {
+      const details = Object.values(err.errors).map(e => e.message).join('; ');
+      return res.status(400).json({ error: `Validation failed: ${details}` });
+    }
     res.status(400).json({ error: err.message });
   }
 });

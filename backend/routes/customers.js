@@ -5,9 +5,10 @@ const jwt = require('jsonwebtoken');
 const Customer = require('../models/Customer');
 const Order = require('../models/Order');
 const { requireCustomer } = require('../middleware/customerAuth');
+const { authRateLimit } = require('../middleware/rateLimits');
 const { sendMagicLink, sendWelcome } = require('../services/email');
 
-const SECRET = process.env.JWT_CUSTOMER_SECRET || 'silkilinen_customer_secret_change_in_prod';
+const SECRET = process.env.JWT_CUSTOMER_SECRET; // fatal-exit guard is in middleware/customerAuth.js
 const IS_PROD = process.env.NODE_ENV === 'production';
 
 const COOKIE_OPTS = {
@@ -38,7 +39,7 @@ function safeCustomer(c) {
 }
 
 // POST /api/customers/request-magic-link
-router.post('/request-magic-link', async function(req, res) {
+router.post('/request-magic-link', authRateLimit, async function(req, res) {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email required' });
@@ -99,7 +100,7 @@ router.post('/verify-magic-link', async function(req, res) {
 });
 
 // POST /api/customers/google
-router.post('/google', async function(req, res) {
+router.post('/google', authRateLimit, async function(req, res) {
   try {
     const { credential } = req.body;
     if (!credential) return res.status(400).json({ error: 'Credential required' });

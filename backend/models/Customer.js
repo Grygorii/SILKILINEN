@@ -27,4 +27,7 @@ const customerSchema = new mongoose.Schema({
   lastLogin: { type: Date, default: null },
 }, { timestamps: true });
 
+customerSchema.index({ email: 1 }, { unique: true });
+customerSchema.index({ googleId: 1 }, { sparse: true });
+
 module.exports = mongoose.model('Customer', customerSchema);

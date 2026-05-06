@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const Newsletter = require('../models/Newsletter');
 const PromoCode = require('../models/PromoCode');
 const { sendNewsletterWelcome } = require('../services/email');
+const { publicWriteRateLimit } = require('../middleware/rateLimits');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.com';
@@ -42,8 +43,8 @@ async function handleSubscribe(req, res) {
       description: `Newsletter welcome — ${normalised}`,
     });
 
-    // Upsert newsletter record
-    await Newsletter.findOneAndUpdate(
+    // Upsert newsletter record — preserve existing unsubscribeToken on re-subscribe
+    const subscriber = await Newsletter.findOneAndUpdate(
       { email: normalised },
       {
         email: normalised,
@@ -56,7 +57,7 @@ async function handleSubscribe(req, res) {
       { upsert: true, new: true }
     );
 
-    await sendNewsletterWelcome({ email: normalised, code, validUntil, unsubscribeToken: null });
+    await sendNewsletterWelcome({ email: normalised, code, validUntil, unsubscribeToken: subscriber.unsubscribeToken });
 
     return res.json({ success: true });
   } catch (err) {
@@ -67,8 +68,8 @@ async function handleSubscribe(req, res) {
 }
 
 // Root POST — backward compat with NewsletterBand which posts to /api/newsletter
-router.post('/', handleSubscribe);
-router.post('/subscribe', handleSubscribe);
+router.post('/', publicWriteRateLimit, handleSubscribe);
+router.post('/subscribe', publicWriteRateLimit, handleSubscribe);
 
 // GET /api/newsletter/unsubscribe/:token
 router.get('/unsubscribe/:token', async function(req, res) {
@@ -79,11 +80,11 @@ router.get('/unsubscribe/:token', async function(req, res) {
       { new: true }
     );
     if (!record) {
-      return res.redirect(`${FRONTEND}/?unsubscribe=notfound`);
+      return res.redirect(`${FRONTEND}/unsubscribe?status=invalid`);
     }
-    res.redirect(`${FRONTEND}/?unsubscribe=success`);
+    res.redirect(`${FRONTEND}/unsubscribe?status=success`);
   } catch (err) {
-    res.redirect(`${FRONTEND}/?unsubscribe=error`);
+    res.redirect(`${FRONTEND}/unsubscribe?status=error`);
   }
 });
 

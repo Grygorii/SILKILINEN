@@ -510,7 +510,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             )}
             {saveState === 'unsaved' && <span className={styles.stateUnsaved}>● Unsaved</span>}
             {saveState === 'error' && (
-              <span className={styles.stateError} title={saveError}>✕ Save failed</span>
+              <span className={styles.stateError}>✕ {saveError || 'Save failed'}</span>
             )}
           </span>
 

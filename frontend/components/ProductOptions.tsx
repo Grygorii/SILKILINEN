@@ -59,7 +59,7 @@ export default function ProductOptions({ colours, sizes, productName, productId,
     if (!canAdd || addState !== 'idle') return;
     setAddState('adding');
     setTimeout(() => {
-      addToCart({ name: productName, price, colour: selectedColour, size: selectedSize, quantity: 1 });
+      addToCart({ productId, name: productName, price, colour: selectedColour, size: selectedSize, quantity: 1 });
       setAddState('added');
       setTimeout(() => setAddState('idle'), 3000);
     }, 400);

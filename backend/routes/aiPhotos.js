@@ -7,6 +7,7 @@ const Product = require('../models/Product');
 const { cloudinary } = require('../utils/cloudinary');
 const { requireAuth } = require('../middleware/auth');
 const { getTier, getDefaultTierKey } = require('../utils/imageValidation');
+const SystemState = require('../models/SystemState');
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash-preview-image-generation';
@@ -15,15 +16,23 @@ const MAX_SESSION_GENERATIONS = 30;
 const SESSION_COST_WARN = 5;
 const SESSION_COST_LIMIT = 10;
 
-const dailyCounter = {};
-function checkDailyLimit() {
+// Persistent daily counter — survives server restarts and deploys
+async function checkAndIncrementDailyLimit() {
   const today = new Date().toISOString().slice(0, 10);
-  if (!dailyCounter[today]) dailyCounter[today] = 0;
+  const key = `ai_daily_${today}`;
   const limit = parseInt(process.env.GEMINI_DAILY_LIMIT || '100', 10);
-  if (dailyCounter[today] >= limit) {
+
+  const state = await SystemState.findOneAndUpdate(
+    { key },
+    { $inc: { value: 1 } },
+    { upsert: true, new: true }
+  );
+
+  if (state.value > limit) {
+    // Undo the increment — we're over limit
+    await SystemState.findOneAndUpdate({ key }, { $inc: { value: -1 } });
     throw new Error(`Daily generation limit (${limit}) reached. Try again tomorrow.`);
   }
-  dailyCounter[today]++;
 }
 
 // ── Workflow presets ──────────────────────────────────────────────────────────
@@ -358,7 +367,7 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
     const productSlug = toSlug(product?.slug || product?.name || String(session.productId));
     const modelSlug = toSlug(aiModel.name);
 
-    checkDailyLimit();
+    await checkAndIncrementDailyLimit();
 
     const results = [];
     for (const job of jobs) {
@@ -441,7 +450,7 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
       return res.status(400).json({ error: `Max iterations (${MAX_ITERATIONS_PER_PHOTO}) reached for this photo` });
     }
 
-    checkDailyLimit();
+    await checkAndIncrementDailyLimit();
 
     const tierKey = (reqTier && ['standard', 'hd', 'premium'].includes(reqTier))
       ? reqTier

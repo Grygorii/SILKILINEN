@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { trackAddToCart, trackRemoveFromCart } from '@/lib/analytics';
 
 type CartItem = {
+  productId?: string;
   name: string;
   price: number;
   colour: string;
@@ -45,13 +46,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       window.dispatchEvent(new CustomEvent('cartItemAdded', { detail: item.name }));
     }
     setCart(prev => {
-      const existing = prev.find(i => i.name === item.name && i.colour === item.colour && i.size === item.size);
+      const match = (i: CartItem) => item.productId
+        ? i.productId === item.productId && i.colour === item.colour && i.size === item.size
+        : i.name === item.name && i.colour === item.colour && i.size === item.size;
+      const existing = prev.find(match);
       if (existing) {
-        return prev.map(i =>
-          i.name === item.name && i.colour === item.colour && i.size === item.size
-            ? { ...i, quantity: i.quantity + 1 }
-            : i
-        );
+        return prev.map(i => match(i) ? { ...i, quantity: i.quantity + 1 } : i);
       }
       return [...prev, { ...item, quantity: 1 }];
     });

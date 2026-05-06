@@ -5,6 +5,7 @@ const Product = require('../models/Product');
 const { upload } = require('../utils/cloudinary');
 const { requireAuth } = require('../middleware/auth');
 const { sendDropAHint } = require('../services/email');
+const { lightRateLimit } = require('../middleware/rateLimits');
 
 // In-memory multer for CSV import (no cloud upload)
 const csvUpload = multer({
@@ -143,8 +144,17 @@ function csvToProducts(records, platform) {
 
 router.get('/', async function(req, res) {
   try {
-    const { sort, limit, category, q } = req.query;
+    const { sort, limit, category, q, ids } = req.query;
     const filter = { status: { $in: ['active', 'sold_out', null, undefined] } };
+
+    // Batch lookup by IDs — used by wishlist to resolve stored product IDs
+    if (ids) {
+      const idArray = ids.split(',').map(s => s.trim()).filter(Boolean);
+      filter._id = { $in: idArray };
+      const products = await Product.find(filter).lean();
+      return res.json(products);
+    }
+
     if (category) filter.category = category;
     if (q) filter.$or = [
       { name: { $regex: q, $options: 'i' } },
@@ -225,7 +235,7 @@ router.post('/', requireAuth, async function(req, res) {
   }
 });
 
-router.post('/:id/drop-hint', async function(req, res) {
+router.post('/:id/drop-hint', lightRateLimit, async function(req, res) {
   try {
     const { recipientName, recipientEmail, senderName, message } = req.body;
     if (!recipientEmail || !senderName) {

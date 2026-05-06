@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Schema.Types;
 const { SLOT_KEYS } = require('../config/imageSlots');
+const { SLUGS: CATEGORY_SLUGS } = require('../config/categories');
 
 const variantSchema = new mongoose.Schema({
   sku: { type: String },
@@ -42,7 +43,7 @@ const productSchema = new mongoose.Schema({
   compareAtPrice: { type: Number, min: 0 },
   costPrice: { type: Number, min: 0 },
 
-  category: { type: String, required: true, trim: true },
+  category: { type: String, required: true, trim: true, enum: CATEGORY_SLUGS },
   description: { type: String, trim: true },
   tags: [String],
 
@@ -76,7 +77,11 @@ const productSchema = new mongoose.Schema({
   lastUpdatedBy: { type: ObjectId, ref: 'User' },
 }, { timestamps: true });
 
-productSchema.pre('save', function(next) {
+productSchema.index({ status: 1, category: 1 });
+productSchema.index({ status: 1, createdAt: -1 });
+productSchema.index({ slug: 1 }, { unique: true, sparse: true });
+
+productSchema.pre('save', async function() {
   this.colours = [...new Set(this.variants.map(v => v.colour).filter(Boolean))];
   this.sizes = [...new Set(this.variants.map(v => v.size).filter(Boolean))];
 
@@ -99,8 +104,6 @@ productSchema.pre('save', function(next) {
     this.image = primary.url;
     if (primary.alt) this.altText = primary.alt;
   }
-
-  next();
 });
 
 module.exports = mongoose.model('Product', productSchema);

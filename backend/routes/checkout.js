@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Order = require('../models/Order');
+const Product = require('../models/Product');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
 
@@ -66,15 +67,43 @@ router.post('/', async function(req, res) {
       return res.status(400).json({ error: 'Cart is empty' });
     }
 
+    if (items.length > 50) {
+      return res.status(400).json({ error: 'Too many items in cart' });
+    }
+
+    // Validate quantities and fetch authoritative prices from DB
+    const validatedItems = [];
     for (const item of items) {
-      if (!item.name || typeof item.price !== 'number' || item.price <= 0 || item.quantity < 1) {
-        return res.status(400).json({ error: 'Invalid cart item' });
+      if (!Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 99) {
+        return res.status(400).json({ error: 'Invalid item quantity' });
       }
+
+      // Look up product from DB — by productId if provided, fallback to name
+      let product = null;
+      if (item.productId) {
+        product = await Product.findOne({ _id: item.productId, status: { $in: ['active', 'sold_out'] } }).lean();
+      } else if (item.name) {
+        product = await Product.findOne({ name: item.name, status: { $in: ['active', 'sold_out'] } }).lean();
+      }
+
+      if (!product) {
+        return res.status(400).json({ error: `Product "${item.name || item.productId}" is no longer available` });
+      }
+
+      // Use DB price — never trust browser
+      validatedItems.push({
+        productId: product._id,
+        name: product.name,
+        price: product.price,      // authoritative price from DB
+        colour: item.colour || '',
+        size: item.size || '',
+        quantity: item.quantity,
+      });
     }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      line_items: items.map(item => ({
+      line_items: validatedItems.map(item => ({
         price_data: {
           currency: 'eur',
           product_data: {
@@ -104,8 +133,8 @@ router.post('/', async function(req, res) {
 
     await Order.create({
       stripeSessionId: session.id,
-      items: items.map(({ name, price, colour, size, quantity }) => ({ name, price, colour, size, quantity })),
-      total: items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+      items: validatedItems.map(({ name, price, colour, size, quantity }) => ({ name, price, colour, size, quantity })),
+      total: validatedItems.reduce((sum, i) => sum + i.price * i.quantity, 0),
       status: 'pending',
       attribution: {
         source:      attribution?.source   ?? 'direct',

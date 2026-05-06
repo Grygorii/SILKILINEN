@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
 
-const SECRET = process.env.JWT_CUSTOMER_SECRET || 'silkilinen_customer_secret_change_in_prod';
+const SECRET = process.env.JWT_CUSTOMER_SECRET;
+if (!SECRET) {
+  console.error('FATAL: JWT_CUSTOMER_SECRET is not set. Server cannot start without customer auth secret.');
+  process.exit(1);
+}
 
 function requireCustomer(req, res, next) {
   const token = req.cookies.customer_token;

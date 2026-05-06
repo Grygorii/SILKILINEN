@@ -9,7 +9,7 @@ export default function WishlistPage() {
   const { items, toggle, loading } = useWishlist();
 
   function moveToCart(product: WishlistProduct) {
-    addToCart({ name: product.name, price: product.price, colour: '', size: '', quantity: 1 });
+    addToCart({ productId: product._id, name: product.name, price: product.price, colour: '', size: '', quantity: 1 });
     toggle(product._id);
   }
 
