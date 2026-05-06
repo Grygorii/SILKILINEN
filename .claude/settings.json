@@ -54,7 +54,13 @@
       "Bash(find \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\\\\\\\\frontend\\\\\\\\app\" -maxdepth 3 -type d)",
       "Bash(find \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\\\\\\\\frontend\\\\\\\\app\" -name \"success*\" -o -name \"cancel*\")",
       "Bash(find \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\\\\\\\\frontend\\\\\\\\app\\\\\\\\\\(shop\\)\\\\\\\\success\" -type f)",
-      "Bash(grep -r \"NEXT_PUBLIC_GA\\\\|GA_ID\\\\|GA4\\\\|PROPERTY_ID\" \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\" --include=\"*.tsx\" --include=\"*.ts\" --include=\"*.js\" --exclude-dir=node_modules)"
+      "Bash(grep -r \"NEXT_PUBLIC_GA\\\\|GA_ID\\\\|GA4\\\\|PROPERTY_ID\" \"d:\\\\\\\\Programming\\\\\\\\Course_!\\\\\\\\Silkilinen\" --include=\"*.tsx\" --include=\"*.ts\" --include=\"*.js\" --exclude-dir=node_modules)",
+      "Bash(node -e \"require\\('express-rate-limit'\\); console.log\\('ok'\\)\")",
+      "Bash(New-Item -ItemType Directory -Force -Path \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\frontend\\\\app\\\\unsubscribe\")",
+      "Bash(Out-Null)",
+      "Bash(Write-Output \"done\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\frontend\\\\app\\\\unsubscribe\")",
+      "PowerShell(\"done\")"
     ]
   }
 }
