@@ -501,7 +501,7 @@ router.put('/:id/images/reorder', async function(req, res) {
     });
     product.images.sort((a, b) => a.order - b.order);
     product.lastUpdatedBy = req.user.userId;
-    await product.save();
+    await product.save({ validateBeforeSave: false });
     res.json(product.images);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -529,7 +529,7 @@ router.post('/:id/images/url', async function(req, res) {
       cloudinaryPublicId: cloudinaryPublicId || '',
     });
     product.lastUpdatedBy = req.user.userId;
-    await product.save();
+    await product.save({ validateBeforeSave: false });
     res.json(product.images);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -585,7 +585,7 @@ router.post('/:id/images', imgUpload.array('images', 20), async function(req, re
     }
 
     product.lastUpdatedBy = req.user.userId;
-    await product.save();
+    await product.save({ validateBeforeSave: false });
     res.json(product.images);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -602,7 +602,7 @@ router.put('/:id/images/:imageId/primary', async function(req, res) {
       img.isPrimary = String(img._id) === req.params.imageId;
     });
     product.lastUpdatedBy = req.user.userId;
-    await product.save();
+    await product.save({ validateBeforeSave: false });
     res.json(product.images);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -621,7 +621,7 @@ router.put('/:id/images/:imageId', async function(req, res) {
     if (req.body.alt !== undefined) img.alt = req.body.alt;
     if (req.body.associatedColour !== undefined) img.associatedColour = req.body.associatedColour;
     product.lastUpdatedBy = req.user.userId;
-    await product.save();
+    await product.save({ validateBeforeSave: false });
     res.json(product.images);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -648,7 +648,7 @@ router.delete('/:id/images/:imageId', async function(req, res) {
       product.images[0].isPrimary = true;
     }
     product.lastUpdatedBy = req.user.userId;
-    await product.save();
+    await product.save({ validateBeforeSave: false });
     res.json(product.images);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -679,7 +679,7 @@ router.post('/:id/video', videoUpload.single('video'), async function(req, res) 
 
     product.productVideo = { url: result.secure_url, thumbnailUrl, cloudinaryPublicId: result.public_id };
     product.lastUpdatedBy = req.user.userId;
-    await product.save();
+    await product.save({ validateBeforeSave: false });
     res.json({ productVideo: product.productVideo });
   } catch (err) {
     res.status(500).json({ error: err.message });
