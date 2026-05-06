@@ -140,12 +140,22 @@ function csvToProducts(records, platform) {
   return records.map(mapFn).filter(p => p.name);
 }
 
+// ── Public filter — applied to every customer-facing product query ─────────────
+// A product is only visible publicly if it is active, has at least one image,
+// and has a price > 0. This prevents drafts, archived items, image-less products,
+// and free/unconfigured products from leaking to the storefront.
+const PUBLIC_FILTER = {
+  status: 'active',
+  'images.0': { $exists: true },
+  price: { $gt: 0 },
+};
+
 // ── Routes ─────────────────────────────────────────────────────────────────────
 
 router.get('/', async function(req, res) {
   try {
     const { sort, limit, category, q, ids } = req.query;
-    const filter = { status: 'active' };
+    const filter = { ...PUBLIC_FILTER };
 
     // Batch lookup by IDs — used by wishlist to resolve stored product IDs
     if (ids) {
@@ -241,7 +251,7 @@ router.post('/:id/drop-hint', lightRateLimit, async function(req, res) {
     if (!recipientEmail || !senderName) {
       return res.status(400).json({ error: 'recipientEmail and senderName are required' });
     }
-    const product = await Product.findOne({ _id: req.params.id, status: 'active' });
+    const product = await Product.findOne({ ...PUBLIC_FILTER, _id: req.params.id });
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
     const primaryImg = product.images?.find(i => i.isPrimary) ?? product.images?.[0];
@@ -266,18 +276,18 @@ router.post('/:id/drop-hint', lightRateLimit, async function(req, res) {
 
 router.get('/related/:id', async function(req, res) {
   try {
-    const product = await Product.findOne({ _id: req.params.id, status: 'active' });
+    const product = await Product.findOne({ ...PUBLIC_FILTER, _id: req.params.id });
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
     let related = await Product.find({
+      ...PUBLIC_FILTER,
       _id: { $ne: product._id },
       category: product.category,
-      status: 'active',
     }).limit(4);
 
     if (related.length < 4) {
       const ids = [product._id, ...related.map(p => p._id)];
-      const extras = await Product.find({ _id: { $nin: ids }, status: 'active' }).limit(4 - related.length);
+      const extras = await Product.find({ ...PUBLIC_FILTER, _id: { $nin: ids } }).limit(4 - related.length);
       related = [...related, ...extras];
     }
 
@@ -289,7 +299,7 @@ router.get('/related/:id', async function(req, res) {
 
 router.get('/:id', async function(req, res) {
   try {
-    const product = await Product.findOne({ _id: req.params.id, status: 'active' });
+    const product = await Product.findOne({ ...PUBLIC_FILTER, _id: req.params.id });
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (err) {
