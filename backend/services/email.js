@@ -324,7 +324,7 @@ async function sendNewsletterWelcome({ email, code, validUntil, unsubscribeToken
     ? new Date(validUntil).toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' })
     : '30 days';
   const unsubLink = unsubscribeToken
-    ? `${process.env.BACKEND_URL || 'https://silkilinen-backend-production.up.railway.app'}/api/newsletter/unsubscribe/${unsubscribeToken}`
+    ? `${process.env.BACKEND_URL || 'https://silkilinen-production.up.railway.app'}/api/newsletter/unsubscribe/${unsubscribeToken}`
     : `${FRONTEND}/unsubscribe`;
 
   await getResend().emails.send({

@@ -62,7 +62,16 @@
       "PowerShell(New-Item -ItemType Directory -Force -Path \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\frontend\\\\app\\\\unsubscribe\")",
       "PowerShell(\"done\")",
       "Bash(curl -s \"https://silkilinen-production.up.railway.app/api/products?limit=3\")",
-      "Bash(curl -s -X POST \"https://silkilinen-production.up.railway.app/api/checkout\" -H \"Content-Type: application/json\" -H \"Origin: https://silkilinen.com\" -d \"{\\\\\"items\\\\\":[{\\\\\"productId\\\\\":\\\\\"000000000000000000000001\\\\\",\\\\\"name\\\\\":\\\\\"Fake Product\\\\\",\\\\\"price\\\\\":0.01,\\\\\"quantity\\\\\":1}],\\\\\"customerEmail\\\\\":\\\\\"test@silkilinen.com\\\\\"}\")"
+      "Bash(curl -s -X POST \"https://silkilinen-production.up.railway.app/api/checkout\" -H \"Content-Type: application/json\" -H \"Origin: https://silkilinen.com\" -d \"{\\\\\"items\\\\\":[{\\\\\"productId\\\\\":\\\\\"000000000000000000000001\\\\\",\\\\\"name\\\\\":\\\\\"Fake Product\\\\\",\\\\\"price\\\\\":0.01,\\\\\"quantity\\\\\":1}],\\\\\"customerEmail\\\\\":\\\\\"test@silkilinen.com\\\\\"}\")",
+      "Bash(Get-ChildItem -Path \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\frontend\\\\app\\\\admin\" -Recurse)",
+      "Bash(Select-Object -Property FullName, PSIsContainer)",
+      "Bash(ConvertTo-Json -Depth 10)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://silkilinen-production.up.railway.app/api/admin/health)",
+      "Bash(curl -s https://silkilinen-production.up.railway.app/api/admin/health)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://silkilinen-production.up.railway.app/api/admin/insights)",
+      "Bash(node -e \"const c = require\\('cloudinary'\\).v2; console.log\\('ping:', typeof c.api.ping\\); console.log\\('usage:', typeof c.api.usage\\);\")",
+      "Bash(curl -s https://silkilinen-production.up.railway.app/api/admin/health/test)",
+      "Bash(Select-String \"health\")"
     ]
   }
 }
