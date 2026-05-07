@@ -1,0 +1,115 @@
+const express = require('express');
+const router = express.Router();
+const mongoose = require('mongoose');
+const cloudinary = require('cloudinary').v2;
+const { requireAuth } = require('../middleware/auth');
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+let healthCache = null;
+let healthCacheAt = 0;
+const CACHE_TTL = 60 * 60 * 1000;
+
+async function timedFetch(url, options, ms = 5000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...options, signal: ctrl.signal });
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+async function runChecks() {
+  const results = await Promise.allSettled([
+    Promise.resolve().then(() => ({
+      name: 'mongodb',
+      label: 'Database',
+      status: mongoose.connection.readyState === 1 ? 'healthy' : 'critical',
+      detail: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+    })),
+
+    cloudinary.api.ping()
+      .then(() => ({ name: 'cloudinary', label: 'Media (Cloudinary)', status: 'healthy', detail: 'API responding' }))
+      .catch(err => ({ name: 'cloudinary', label: 'Media (Cloudinary)', status: 'critical', detail: err.message || 'Failed' })),
+
+    timedFetch('https://api.resend.com/v1/domains', {
+      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY || ''}` },
+    }).then(r => ({
+      name: 'resend',
+      label: 'Email (Resend)',
+      status: r.ok ? 'healthy' : r.status === 401 ? 'warning' : 'critical',
+      detail: r.ok ? 'API responding' : `HTTP ${r.status}`,
+    })).catch(err => ({
+      name: 'resend',
+      label: 'Email (Resend)',
+      status: 'critical',
+      detail: err.name === 'AbortError' ? 'Timeout' : (err.message || 'Failed'),
+    })),
+
+    timedFetch('https://api.stripe.com/v1/balance', {
+      headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY || ''}` },
+    }).then(r => ({
+      name: 'stripe',
+      label: 'Payments (Stripe)',
+      status: r.ok ? 'healthy' : 'critical',
+      detail: r.ok ? 'API responding' : `HTTP ${r.status}`,
+    })).catch(err => ({
+      name: 'stripe',
+      label: 'Payments (Stripe)',
+      status: 'critical',
+      detail: err.name === 'AbortError' ? 'Timeout' : (err.message || 'Failed'),
+    })),
+
+    Promise.resolve().then(() => {
+      const required = [
+        'JWT_SECRET', 'MONGODB_URI', 'STRIPE_SECRET_KEY',
+        'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET',
+        'RESEND_API_KEY',
+      ];
+      const missing = required.filter(k => !process.env[k]);
+      return {
+        name: 'env',
+        label: 'Environment',
+        status: missing.length === 0 ? 'healthy' : 'critical',
+        detail: missing.length === 0 ? 'All required vars set' : `Missing: ${missing.join(', ')}`,
+      };
+    }),
+  ]);
+
+  const checks = results.map(r =>
+    r.status === 'fulfilled'
+      ? r.value
+      : { name: 'unknown', label: 'Unknown', status: 'critical', detail: r.reason?.message || 'Error' }
+  );
+
+  const SEV = { healthy: 0, info: 1, warning: 2, critical: 3 };
+  const overall = checks.reduce(
+    (worst, c) => SEV[c.status] > SEV[worst] ? c.status : worst,
+    'healthy'
+  );
+
+  return { overall, checks, checkedAt: new Date().toISOString() };
+}
+
+router.get('/', requireAuth, async (req, res) => {
+  const now = Date.now();
+  const force = req.query.force === 'true';
+  if (!force && healthCache && now - healthCacheAt < CACHE_TTL) {
+    return res.json({ ...healthCache, cached: true });
+  }
+  try {
+    const result = await runChecks();
+    healthCache = result;
+    healthCacheAt = now;
+    res.json({ ...result, cached: false });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+module.exports = router;

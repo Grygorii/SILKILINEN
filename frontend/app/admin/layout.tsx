@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import './_tokens.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -28,5 +29,5 @@ export default async function AdminRootLayout({
     redirect('/admin/login');
   }
 
-  return <>{children}</>;
+  return <div className="admin-root">{children}</div>;
 }

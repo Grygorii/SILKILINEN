@@ -1,0 +1,14 @@
+.admin-root {
+  --a-sidebar-bg: #1e1c19;
+  --a-sidebar-text: #b0aca6;
+  --a-sidebar-hover: rgba(255, 255, 255, 0.07);
+  --a-sidebar-active-bg: rgba(255, 255, 255, 0.11);
+  --a-sidebar-active-accent: #c9a96e;
+  --a-sidebar-divider: #2a2724;
+  --a-sidebar-section: #4a4843;
+  --a-sidebar-width: 240px;
+  --a-topbar-height: 56px;
+  --a-bottomtab-height: 60px;
+  --a-accent: #c9a96e;
+  --a-radius: 5px;
+}

@@ -1,66 +1,146 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import {
+  LayoutDashboard, Package, FileText, Users,
+  Megaphone, Settings, Menu, Bell, X,
+} from 'lucide-react';
 import styles from './AdminLayout.module.css';
 import LogoutButton from './LogoutButton';
 import AdminNotifications from './AdminNotifications';
 
-type Props = {
+type NavEntry =
+  | { section: string }
+  | { label: string; href: string; icon: React.ElementType; exact?: boolean };
+
+const NAV: NavEntry[] = [
+  { section: 'Core' },
+  { label: 'Dashboard',  href: '/admin',            icon: LayoutDashboard, exact: true },
+  { label: 'Products',   href: '/admin/products',   icon: Package },
+  { label: 'Import',     href: '/admin/import',     icon: FileText },
+  { label: 'Orders',     href: '/admin/orders',     icon: FileText },
+  { label: 'Customers',  href: '/admin/customers',  icon: Users },
+  { section: 'Publish' },
+  { label: 'Content',    href: '/admin/content',    icon: FileText },
+  { label: 'Marketing',  href: '/admin/marketing',  icon: Megaphone },
+  { section: 'Config' },
+  { label: 'Settings',   href: '/admin/settings',   icon: Settings },
+];
+
+const TABS = [
+  { label: 'Home',      href: '/admin',           icon: LayoutDashboard, exact: true },
+  { label: 'Products',  href: '/admin/products',  icon: Package },
+  { label: 'Orders',    href: '/admin/orders',    icon: FileText },
+  { label: 'Marketing', href: '/admin/marketing', icon: Megaphone },
+  { label: 'Settings',  href: '/admin/settings',  icon: Settings },
+] as const;
+
+function isActive(href: string, pathname: string, exact = false): boolean {
+  if (exact) return pathname === href;
+  return pathname === href || pathname.startsWith(href + '/');
+}
+
+function isTabActive(tab: (typeof TABS)[number], pathname: string): boolean {
+  if (tab.href === '/admin/products') {
+    return pathname.startsWith('/admin/products') || pathname.startsWith('/admin/import');
+  }
+  return isActive(tab.href, pathname, 'exact' in tab ? tab.exact : false);
+}
+
+export default function AdminLayout({
+  children,
+  active: _ignored,
+}: {
   children: React.ReactNode;
   active?: string;
-};
-
-export default function AdminLayout({ children, active }: Props) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+}) {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
 
   return (
     <div className={styles.layout}>
-      {sidebarOpen && (
-        <div className={styles.mobileOverlay} onClick={() => setSidebarOpen(false)} />
-      )}
+      {/* Sidebar (desktop fixed, mobile drawer) */}
+      <aside className={`${styles.sidebar} ${open ? styles.sidebarOpen : ''}`}>
+        <div className={styles.sidebarInner}>
+          <button
+            className={styles.sidebarClose}
+            onClick={() => setOpen(false)}
+            aria-label="Close menu"
+          >
+            <X size={18} />
+          </button>
 
-      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
-        <button
-          className={styles.sidebarClose}
-          onClick={() => setSidebarOpen(false)}
-          aria-label="Close menu"
-        >
-          ✕
-        </button>
-        <Link href="/" className={styles.sidebarLogoLink}>
-          <div className={styles.sidebarLogo}>
-            <h1>SILKILINEN</h1>
-            <p>Admin Panel</p>
+          <Link href="/" className={styles.logo}>
+            <p className={styles.logoTitle}>SILKILINEN</p>
+            <p className={styles.logoSub}>Admin Panel</p>
+          </Link>
+
+          <nav className={styles.nav}>
+            {NAV.map((entry, i) => {
+              if ('section' in entry) {
+                return <p key={i} className={styles.navSection}>{entry.section}</p>;
+              }
+              const Icon = entry.icon;
+              const active = isActive(entry.href, pathname, entry.exact);
+              return (
+                <Link
+                  key={entry.href}
+                  href={entry.href}
+                  className={`${styles.navItem} ${active ? styles.navActive : ''}`}
+                  onClick={() => setOpen(false)}
+                >
+                  <Icon size={15} />
+                  {entry.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className={styles.sidebarFooter}>
+            <LogoutButton />
           </div>
-        </Link>
-        <nav className={styles.sidebarNav}>
-          <a href="/admin" className={`${styles.navItem} ${active === 'dashboard' ? styles.active : ''}`}>📊 Dashboard</a>
-          <a href="/admin/products" className={`${styles.navItem} ${active === 'products' ? styles.active : ''}`}>👗 Products</a>
-          <a href="/admin/import" className={`${styles.navItem} ${active === 'import' ? styles.active : ''}`}>📥 Import products</a>
-          <a href="/admin/orders" className={`${styles.navItem} ${active === 'orders' ? styles.active : ''}`}>📦 Orders</a>
-          <a href="/admin/content" className={`${styles.navItem} ${active === 'content' ? styles.active : ''}`}>🖼️ Content</a>
-          <a href="/admin/promo-codes" className={`${styles.navItem} ${active === 'promo-codes' ? styles.active : ''}`}>🏷️ Promo Codes</a>
-          <a href="/admin/models" className={`${styles.navItem} ${active === 'models' ? styles.active : ''}`}>🤖 AI Models</a>
-          <a href="/admin/site-audit" className={`${styles.navItem} ${active === 'site-audit' ? styles.active : ''}`}>🔍 Site Audit</a>
-          <a href="/admin/settings" className={`${styles.navItem} ${active === 'settings' ? styles.active : ''}`}>⚙️ Settings</a>
-        </nav>
-        <div className={styles.sidebarDivider} />
-        <LogoutButton />
+        </div>
       </aside>
 
-      <main className={styles.main}>
-        <button
-          className={styles.mobileMenuBtn}
-          onClick={() => setSidebarOpen(true)}
-          aria-label="Open menu"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
+      {/* Mobile drawer backdrop */}
+      {open && <div className={styles.overlay} onClick={() => setOpen(false)} />}
+
+      {/* Mobile top bar */}
+      <header className={styles.topbar}>
+        <button className={styles.topbarBtn} onClick={() => setOpen(true)} aria-label="Open menu">
+          <Menu size={20} />
         </button>
+        <span className={styles.topbarLogo}>SILKILINEN</span>
+        <button className={styles.topbarBtn} aria-label="Notifications">
+          <Bell size={20} />
+        </button>
+      </header>
+
+      {/* Page content */}
+      <main className={styles.main}>
         {children}
       </main>
+
+      {/* Mobile bottom tabs */}
+      <nav className={styles.bottomTabs}>
+        {TABS.map(tab => {
+          const Icon = tab.icon;
+          const active = isTabActive(tab, pathname);
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              className={`${styles.tab} ${active ? styles.tabActive : ''}`}
+            >
+              <Icon size={20} />
+              {tab.label}
+            </Link>
+          );
+        })}
+      </nav>
+
       <AdminNotifications />
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import Link from 'next/link';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -18,6 +19,19 @@ function formatDate(iso: string) {
     day: 'numeric', month: 'short', year: 'numeric',
   });
 }
+
+const ADVANCED_TOOLS = [
+  {
+    href: '/admin/settings/advanced/site-audit',
+    title: 'Site Audit',
+    description: 'Automated checks for navigation, user journeys, and data consistency',
+  },
+  {
+    href: '/admin/settings/advanced/ai-models',
+    title: 'AI Models',
+    description: 'Manage brand model profiles and generate reference photos',
+  },
+];
 
 export default function SettingsPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -196,6 +210,26 @@ export default function SettingsPage() {
             {saving ? 'Creating…' : 'Create admin account'}
           </button>
         </form>
+      </section>
+
+      {/* ── Advanced tools ── */}
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>Advanced</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginTop: 4 }}>
+          {ADVANCED_TOOLS.map(tool => (
+            <Link key={tool.href} href={tool.href} style={{ textDecoration: 'none' }}>
+              <div style={{
+                border: '1px solid var(--border)',
+                background: 'white',
+                padding: '18px 20px',
+                transition: 'box-shadow 0.2s',
+              }}>
+                <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark)', marginBottom: 4 }}>{tool.title}</p>
+                <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>{tool.description}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
       </section>
     </AdminLayout>
   );

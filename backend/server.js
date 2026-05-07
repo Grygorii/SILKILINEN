@@ -27,6 +27,7 @@ const contentRoutes = require('./routes/content');
 const categoriesRoutes = require('./routes/categories');
 const siteAuditRoutes = require('./routes/siteAudit');
 const insightsRoutes = require('./routes/insights');
+const adminHealthRoutes = require('./routes/adminHealth');
 
 const app = express();
 
@@ -76,6 +77,7 @@ app.use('/api/content', contentRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/admin/site-audit', siteAuditRoutes);
 app.use('/api/admin/insights', insightsRoutes);
+app.use('/api/admin/health', adminHealthRoutes);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(function() { console.log('Connected to MongoDB'); })

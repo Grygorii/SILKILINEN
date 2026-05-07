@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import AdminLayout from '@/components/AdminLayout';
+import StatusPill from './_components/StatusPill';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -40,6 +41,20 @@ type InsightsData = {
   insights: Insight[];
 };
 
+type HealthCheck = {
+  name: string;
+  label: string;
+  status: string;
+  detail: string;
+};
+
+type HealthData = {
+  overall: string;
+  checks: HealthCheck[];
+  checkedAt: string;
+  cached: boolean;
+};
+
 function Change({ value }: { value: number | null }) {
   if (value === null) return <span className={styles.changeMuted}>No data yet</span>;
   const sign = value >= 0 ? '+' : '';
@@ -52,9 +67,7 @@ function StatusBadge({ status }: { status: string }) {
   return <span className={`${styles.statusBadge} ${cls}`}>{status}</span>;
 }
 
-function fmt(n: number) {
-  return `€${n.toFixed(2)}`;
-}
+function fmt(n: number) { return `€${n.toFixed(2)}`; }
 
 function shortDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
@@ -65,10 +78,33 @@ function chartTick(date: string) {
   return d.getDate() % 5 === 1 ? `${d.getDate()}/${d.getMonth() + 1}` : '';
 }
 
+function timeAgo(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [insights, setInsights] = useState<InsightsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [health, setHealth] = useState<HealthData | null>(null);
+  const [healthLoading, setHealthLoading] = useState(false);
+
+  const fetchHealth = useCallback(async (force = false) => {
+    setHealthLoading(true);
+    try {
+      const url = `${API}/api/admin/health${force ? '?force=true' : ''}`;
+      const res = await fetch(url, { credentials: 'include' });
+      if (res.ok) setHealth(await res.json());
+    } finally {
+      setHealthLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -79,21 +115,14 @@ export default function AdminDashboard() {
       setInsights(insightsData);
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, []);
+
+    fetchHealth();
+  }, [fetchHealth]);
 
   const s: Stats = stats ?? {
-    revenueThisMonth: 0,
-    revenueLastMonth: 0,
-    revenueChange: null,
-    ordersThisMonth: 0,
-    ordersLastMonth: 0,
-    ordersChange: null,
-    aov: 0,
-    totalOrders: 0,
-    recentOrders: [],
-    topProducts: [],
-    salesChart: [],
-    geoDistribution: [],
+    revenueThisMonth: 0, revenueLastMonth: 0, revenueChange: null,
+    ordersThisMonth: 0, ordersLastMonth: 0, ordersChange: null,
+    aov: 0, totalOrders: 0, recentOrders: [], topProducts: [], salesChart: [], geoDistribution: [],
   };
   const maxGeo = s.geoDistribution[0]?.count ?? 1;
 
@@ -107,7 +136,7 @@ export default function AdminDashboard() {
 
       {!loading && (
         <>
-          {/* ── Row 1: Key metrics ── */}
+          {/* ── Zone 1: Key metrics ── */}
           <div className={styles.section}>
             <p className={styles.sectionTitle}>This month</p>
             <div className={styles.metricsRow}>
@@ -134,7 +163,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* ── Row 2: Sales chart + top products ── */}
+          {/* ── Zone 2: Sales chart + top products ── */}
           <div className={`${styles.section} ${styles.twoCol}`}>
             <div className={styles.card}>
               <p className={styles.cardTitle}>Revenue — last 30 days</p>
@@ -152,7 +181,6 @@ export default function AdminDashboard() {
                 </ResponsiveContainer>
               )}
             </div>
-
             <div className={styles.card}>
               <p className={styles.cardTitle}>Top products this month</p>
               {s.topProducts.length === 0 ? (
@@ -170,7 +198,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* ── Row 3: Recent orders + geo ── */}
+          {/* ── Zone 3: Recent orders + geo ── */}
           <div className={`${styles.section} ${styles.twoCol}`}>
             <div className={styles.card}>
               <p className={styles.cardTitle}>Recent orders</p>
@@ -180,10 +208,7 @@ export default function AdminDashboard() {
                 <table className={styles.miniTable}>
                   <thead>
                     <tr>
-                      <th>Customer</th>
-                      <th>Total</th>
-                      <th>Status</th>
-                      <th>Date</th>
+                      <th>Customer</th><th>Total</th><th>Status</th><th>Date</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -199,7 +224,6 @@ export default function AdminDashboard() {
                 </table>
               )}
             </div>
-
             <div className={styles.card}>
               <p className={styles.cardTitle}>Orders by country</p>
               {s.geoDistribution.length === 0 ? (
@@ -220,11 +244,9 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* ── Customer Insights ── */}
+          {/* ── Customer insights ── */}
           <div className={styles.section}>
             <p className={styles.sectionTitle}>Customer insights</p>
-
-            {/* Today snapshot */}
             {insights && (
               <div className={styles.metricsRow} style={{ marginBottom: 16 }}>
                 <div className={styles.metricCard}>
@@ -253,8 +275,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
-
-            {/* Attribution + Automated insights */}
             <div className={styles.twoCol}>
               <div className={styles.card}>
                 <p className={styles.cardTitle}>Traffic sources (all time)</p>
@@ -264,8 +284,7 @@ export default function AdminDashboard() {
                   <table className={styles.attrTable}>
                     <thead>
                       <tr>
-                        <th>Source</th>
-                        <th>Orders</th>
+                        <th>Source</th><th>Orders</th>
                         <th style={{ width: 80 }}>Revenue</th>
                         <th style={{ width: 120 }}>Share</th>
                       </tr>
@@ -288,7 +307,6 @@ export default function AdminDashboard() {
                   </table>
                 )}
               </div>
-
               <div className={styles.card}>
                 <p className={styles.cardTitle}>Automated insights</p>
                 {!insights ? (
@@ -308,6 +326,57 @@ export default function AdminDashboard() {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* ── Zone 4: System health ── */}
+          <div className={styles.section}>
+            <div className={styles.healthHeader}>
+              <p className={styles.sectionTitle} style={{ margin: 0 }}>System health</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {health?.checkedAt && (
+                  <span className={styles.healthMeta}>
+                    Checked {timeAgo(health.checkedAt)}{health.cached ? ' · cached' : ''}
+                  </span>
+                )}
+                <button
+                  className={styles.healthRefreshBtn}
+                  onClick={() => fetchHealth(true)}
+                  disabled={healthLoading}
+                >
+                  {healthLoading ? 'Checking…' : 'Refresh'}
+                </button>
+              </div>
+            </div>
+
+            {healthLoading && !health && (
+              <p className={styles.loading}>Running health checks…</p>
+            )}
+
+            {health && (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, marginTop: 12 }}>
+                  <StatusPill status={health.overall} />
+                  <span style={{ fontSize: 13, color: 'var(--muted)' }}>
+                    {health.overall === 'healthy'
+                      ? 'All systems operational'
+                      : health.overall === 'warning'
+                      ? 'Some services need attention'
+                      : 'Critical issues detected'}
+                  </span>
+                </div>
+                <div className={styles.healthGrid}>
+                  {health.checks.map(check => (
+                    <div key={check.name} className={styles.healthCheck}>
+                      <div className={styles.healthCheckTop}>
+                        <p className={styles.healthCheckLabel}>{check.label}</p>
+                        <StatusPill status={check.status} />
+                      </div>
+                      <p className={styles.healthCheckDetail}>{check.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </>
       )}
