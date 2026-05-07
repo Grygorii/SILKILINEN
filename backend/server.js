@@ -35,6 +35,8 @@ const app = express();
 // Integer 1 = trust exactly one proxy hop; avoids IP spoofing via forged headers.
 app.set('trust proxy', 1);
 
+console.log('[boot] routes: admin/health, admin/site-audit, admin/insights');
+
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
