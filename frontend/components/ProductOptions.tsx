@@ -13,14 +13,18 @@ type Props = {
   productId: string;
   price: number;
   outOfStock: boolean;
+  stock?: number | null;
 };
 
-export default function ProductOptions({ colours, sizes, productName, productId, price, outOfStock }: Props) {
+export default function ProductOptions({ colours, sizes, productName, productId, price, outOfStock, stock }: Props) {
   const [selectedColour, setSelectedColour] = useState(colours[0] ?? '');
   const [selectedSize, setSelectedSize] = useState('');
   const [addState, setAddState] = useState<'idle' | 'adding' | 'added'>('idle');
   const [hintOpen, setHintOpen] = useState(false);
+  const [qty, setQty] = useState(1);
   const { addToCart } = useCart();
+
+  const maxQty = Math.min(stock ?? 10, 10);
 
   const needsColour = colours.length > 0 && !selectedColour;
   const needsSize = sizes.length > 0 && !selectedSize;
@@ -59,7 +63,7 @@ export default function ProductOptions({ colours, sizes, productName, productId,
     if (!canAdd || addState !== 'idle') return;
     setAddState('adding');
     setTimeout(() => {
-      addToCart({ productId, name: productName, price, colour: selectedColour, size: selectedSize, quantity: 1 });
+      addToCart({ productId, name: productName, price, colour: selectedColour, size: selectedSize, quantity: qty, stock: stock ?? undefined });
       setAddState('added');
       setTimeout(() => setAddState('idle'), 3000);
     }, 400);
@@ -113,6 +117,28 @@ export default function ProductOptions({ colours, sizes, productName, productId,
                 {size}
               </button>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Quantity stepper */}
+      {!outOfStock && (
+        <div className={styles.stepper}>
+          <p className={styles.stepperLabel}>QUANTITY</p>
+          <div className={styles.stepperControls}>
+            <button
+              className={styles.stepperBtn}
+              onClick={() => setQty(q => Math.max(1, q - 1))}
+              disabled={qty <= 1}
+              aria-label="Decrease quantity"
+            >−</button>
+            <span className={styles.stepperVal}>{qty}</span>
+            <button
+              className={styles.stepperBtn}
+              onClick={() => setQty(q => Math.min(maxQty, q + 1))}
+              disabled={qty >= maxQty}
+              aria-label="Increase quantity"
+            >+</button>
           </div>
         </div>
       )}

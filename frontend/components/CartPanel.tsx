@@ -13,7 +13,7 @@ type Props = {
 };
 
 export default function CartPanel({ isOpen, onClose }: Props) {
-  const { cart, removeFromCart } = useCart();
+  const { cart, removeFromCart, updateQuantity } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const panelRef = useRef<HTMLDivElement>(null);
@@ -124,17 +124,39 @@ export default function CartPanel({ isOpen, onClose }: Props) {
               <button className={styles.shopBtn} onClick={onClose}>Shop now</button>
             </div>
           ) : (
-            cart.map((item, index) => (
-              <div key={index} className={styles.item}>
-                <div className={styles.itemImg}></div>
-                <div className={styles.itemInfo}>
-                  <p className={styles.itemName}>{item.name}</p>
-                  <p className={styles.itemDetails}>{item.colour}{item.size ? ` / ${item.size}` : ''}</p>
-                  <p className={styles.itemPrice}>€{(item.price * item.quantity).toFixed(2)} × {item.quantity}</p>
+            cart.map((item, index) => {
+              const maxQty = Math.min(item.stock ?? 10, 10);
+              const atStockLimit = item.stock !== undefined && item.stock < 10 && item.quantity >= maxQty;
+              return (
+                <div key={index} className={styles.item}>
+                  <div className={styles.itemImg}></div>
+                  <div className={styles.itemInfo}>
+                    <p className={styles.itemName}>{item.name}</p>
+                    <p className={styles.itemDetails}>{item.colour}{item.size ? ` / ${item.size}` : ''}</p>
+                    <p className={styles.itemPrice}>€{(item.price * item.quantity).toFixed(2)}</p>
+                    {atStockLimit && (
+                      <p className={styles.stockNote}>Only {item.stock} available</p>
+                    )}
+                    <div className={styles.stepperWrap}>
+                      <button
+                        className={styles.stepBtn}
+                        onClick={() => updateQuantity(index, -1)}
+                        disabled={item.quantity <= 1}
+                        aria-label="Decrease quantity"
+                      >−</button>
+                      <span className={styles.stepVal}>{item.quantity}</span>
+                      <button
+                        className={styles.stepBtn}
+                        onClick={() => updateQuantity(index, 1)}
+                        disabled={item.quantity >= maxQty}
+                        aria-label="Increase quantity"
+                      >+</button>
+                    </div>
+                  </div>
+                  <button className={styles.remove} onClick={() => removeFromCart(index)} aria-label="Remove item">✕</button>
                 </div>
-                <button className={styles.remove} onClick={() => removeFromCart(index)} aria-label="Remove item">✕</button>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 

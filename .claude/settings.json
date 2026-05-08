@@ -71,7 +71,8 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://silkilinen-production.up.railway.app/api/admin/insights)",
       "Bash(node -e \"const c = require\\('cloudinary'\\).v2; console.log\\('ping:', typeof c.api.ping\\); console.log\\('usage:', typeof c.api.usage\\);\")",
       "Bash(curl -s https://silkilinen-production.up.railway.app/api/admin/health/test)",
-      "Bash(Select-String \"health\")"
+      "Bash(Select-String \"health\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://silkilinen-production.up.railway.app/api/auth/me)"
     ]
   }
 }

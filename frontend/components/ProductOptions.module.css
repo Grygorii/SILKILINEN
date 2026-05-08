@@ -98,6 +98,55 @@
   border-color: var(--dark, #1a1916);
 }
 
+/* ── Quantity stepper ─────────────────────────────── */
+
+.stepper {
+  margin-bottom: 20px;
+}
+
+.stepperLabel {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted, #8a8680);
+  margin-bottom: 10px;
+}
+
+.stepperControls {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  border: 1px solid var(--border, #e0ddd7);
+}
+
+.stepperBtn {
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--dark, #1a1916);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.stepperBtn:hover:not(:disabled) { background: var(--cream, #f5f2ec); }
+.stepperBtn:disabled { color: var(--muted, #8a8680); cursor: default; }
+
+.stepperVal {
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 40px;
+  border-left: 1px solid var(--border, #e0ddd7);
+  border-right: 1px solid var(--border, #e0ddd7);
+}
+
 /* ── CTA ──────────────────────────────────────────── */
 
 .cta {

@@ -3,21 +3,29 @@
 import { useEffect, useState } from 'react';
 import styles from './AddedToCartToast.module.css';
 
-type Toast = { id: number; name: string };
+type Toast = { id: number; message: string; isCapped?: boolean };
 
 export default function AddedToCartToast() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const nextId = { current: 0 };
 
   useEffect(() => {
-    function handler(e: Event) {
-      const name = (e as CustomEvent<string>).detail || 'item';
+    function addHandler(e: Event) {
       const id = ++nextId.current;
-      setToasts(prev => [...prev, { id, name }]);
+      setToasts(prev => [...prev, { id, message: (e as CustomEvent<string>).detail || 'item' }]);
       setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 2500);
     }
-    window.addEventListener('cartItemAdded', handler);
-    return () => window.removeEventListener('cartItemAdded', handler);
+    function cappedHandler(e: Event) {
+      const id = ++nextId.current;
+      setToasts(prev => [...prev, { id, message: (e as CustomEvent<string>).detail || 'Quantity limit reached.', isCapped: true }]);
+      setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
+    }
+    window.addEventListener('cartItemAdded', addHandler);
+    window.addEventListener('cartCapped', cappedHandler);
+    return () => {
+      window.removeEventListener('cartItemAdded', addHandler);
+      window.removeEventListener('cartCapped', cappedHandler);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -27,14 +35,16 @@ export default function AddedToCartToast() {
     <div className={styles.stack}>
       {toasts.map(t => (
         <div key={t.id} className={styles.toast}>
-          <span className={styles.check}>✓</span>
-          <span className={styles.msg}>Added to cart</span>
-          <button
-            className={styles.viewBtn}
-            onClick={() => window.dispatchEvent(new Event('openCart'))}
-          >
-            View cart
-          </button>
+          <span className={styles.check}>{t.isCapped ? '!' : '✓'}</span>
+          <span className={styles.msg}>{t.isCapped ? t.message : 'Added to cart'}</span>
+          {!t.isCapped && (
+            <button
+              className={styles.viewBtn}
+              onClick={() => window.dispatchEvent(new Event('openCart'))}
+            >
+              View cart
+            </button>
+          )}
         </div>
       ))}
     </div>

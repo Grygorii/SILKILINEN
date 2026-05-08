@@ -137,6 +137,48 @@
   color: var(--muted);
 }
 
+.stepperWrap {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  width: fit-content;
+  margin-top: 8px;
+}
+
+.stepBtn {
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.stepBtn:hover:not(:disabled) { background: var(--cream); }
+.stepBtn:disabled { color: var(--muted); cursor: default; }
+
+.stepVal {
+  width: 28px;
+  height: 36px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 36px;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+
+.stockNote {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
 .remove {
   background: none;
   border: none;

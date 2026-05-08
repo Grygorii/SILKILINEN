@@ -10,6 +10,7 @@ type CartItem = {
   colour: string;
   size: string;
   quantity: number;
+  stock?: number;
 };
 
 type CartContextType = {
@@ -18,6 +19,7 @@ type CartContextType = {
   removeFromCart: (index: number) => void;
   clearCart: () => void;
   cartCount: number;
+  updateQuantity: (index: number, delta: number) => void;
 };
 
 const CartContext = createContext<CartContextType>({
@@ -26,6 +28,7 @@ const CartContext = createContext<CartContextType>({
   removeFromCart: () => {},
   clearCart: () => {},
   cartCount: 0,
+  updateQuantity: () => {},
 });
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
@@ -42,19 +45,39 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   function addToCart(item: CartItem) {
     trackAddToCart({ name: item.name, price: item.price });
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('cartItemAdded', { detail: item.name }));
-    }
-    setCart(prev => {
-      const match = (i: CartItem) => item.productId
-        ? i.productId === item.productId && i.colour === item.colour && i.size === item.size
-        : i.name === item.name && i.colour === item.colour && i.size === item.size;
-      const existing = prev.find(match);
-      if (existing) {
-        return prev.map(i => match(i) ? { ...i, quantity: i.quantity + 1 } : i);
+
+    const maxQty = Math.min(item.stock ?? 10, 10);
+    const matchFn = (i: CartItem) => item.productId
+      ? i.productId === item.productId && i.colour === item.colour && i.size === item.size
+      : i.name === item.name && i.colour === item.colour && i.size === item.size;
+
+    // Compute event before setState to avoid side effects in updater
+    const existing = cart.find(matchFn);
+    let eventName = 'cartItemAdded';
+    let eventDetail = item.name;
+    if (existing) {
+      const desired = existing.quantity + item.quantity;
+      const newQty = Math.min(desired, maxQty);
+      if (newQty < desired) {
+        eventName = 'cartCapped';
+        eventDetail = newQty >= 10
+          ? 'Maximum 10 per order.'
+          : `Only ${newQty} in stock. Cart updated to maximum available.`;
       }
-      return [...prev, { ...item, quantity: 1 }];
+    }
+
+    setCart(prev => {
+      const ex = prev.find(matchFn);
+      if (ex) {
+        const newQty = Math.min(ex.quantity + item.quantity, maxQty);
+        return prev.map(i => matchFn(i) ? { ...i, quantity: newQty } : i);
+      }
+      return [...prev, { ...item, quantity: Math.min(item.quantity, maxQty) }];
     });
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(eventName, { detail: eventDetail }));
+    }
   }
 
   function removeFromCart(index: number) {
@@ -69,10 +92,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart([]);
   }
 
+  function updateQuantity(index: number, delta: number) {
+    setCart(prev => prev.map((item, i) => {
+      if (i !== index) return item;
+      const maxQty = Math.min(item.stock ?? 10, 10);
+      const newQty = Math.min(Math.max(1, item.quantity + delta), maxQty);
+      return { ...item, quantity: newQty };
+    }));
+  }
+
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, cartCount }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, cartCount, updateQuantity }}>
       {children}
     </CartContext.Provider>
   );
