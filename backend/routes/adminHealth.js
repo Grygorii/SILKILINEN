@@ -37,19 +37,15 @@ async function runChecks() {
       .then(() => ({ name: 'cloudinary', label: 'Media (Cloudinary)', status: 'healthy', detail: 'API responding' }))
       .catch(err => ({ name: 'cloudinary', label: 'Media (Cloudinary)', status: 'critical', detail: err.message || 'Failed' })),
 
-    timedFetch('https://api.resend.com/v1/domains', {
-      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY || ''}` },
-    }).then(r => ({
-      name: 'resend',
-      label: 'Email (Resend)',
-      status: r.ok ? 'healthy' : r.status === 401 ? 'warning' : 'critical',
-      detail: r.ok ? 'API responding' : `HTTP ${r.status}`,
-    })).catch(err => ({
-      name: 'resend',
-      label: 'Email (Resend)',
-      status: 'critical',
-      detail: err.name === 'AbortError' ? 'Timeout' : (err.message || 'Failed'),
-    })),
+    Promise.resolve().then(() => {
+      const key = process.env.RESEND_API_KEY || '';
+      const from = process.env.RESEND_FROM_EMAIL || '';
+      if (!key) return { name: 'resend', label: 'Email (Resend)', status: 'critical', detail: 'RESEND_API_KEY is not set' };
+      if (!key.startsWith('re_')) return { name: 'resend', label: 'Email (Resend)', status: 'critical', detail: 'RESEND_API_KEY has unexpected format' };
+      if (!from) return { name: 'resend', label: 'Email (Resend)', status: 'critical', detail: 'RESEND_FROM_EMAIL is not set' };
+      if (!/^[^@]+@[^@]+$/.test(from)) return { name: 'resend', label: 'Email (Resend)', status: 'critical', detail: 'RESEND_FROM_EMAIL is not a valid email' };
+      return { name: 'resend', label: 'Email (Resend)', status: 'healthy', detail: 'Configuration valid' };
+    }),
 
     timedFetch('https://api.stripe.com/v1/balance', {
       headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY || ''}` },
