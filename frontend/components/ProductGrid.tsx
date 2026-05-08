@@ -153,7 +153,7 @@ export default function ProductGrid({
                   aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
                 >
                   <Heart
-                    size={22}
+                    size={16}
                     strokeWidth={1.5}
                     fill={wished ? 'currentColor' : 'none'}
                     className={wished ? styles.heartFilled : ''}

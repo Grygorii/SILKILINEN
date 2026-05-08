@@ -182,6 +182,9 @@
   .inner {
     grid-template-columns: 1fr;
   }
+  .galleryCol {
+    margin-top: 16px;
+  }
   .infoCol {
     padding: 40px 6% 60px;
     position: static;

@@ -67,7 +67,7 @@ export default function ProductGallery({ images, name, productId }: Props) {
         onClick={handleHeart}
         aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
       >
-        <Heart size={26} strokeWidth={1.5} fill={wished ? 'currentColor' : 'none'} />
+        <Heart size={16} strokeWidth={1.5} fill={wished ? 'currentColor' : 'none'} />
       </button>
 
       {/* Dots */}

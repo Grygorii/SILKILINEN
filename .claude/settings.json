@@ -72,7 +72,10 @@
       "Bash(node -e \"const c = require\\('cloudinary'\\).v2; console.log\\('ping:', typeof c.api.ping\\); console.log\\('usage:', typeof c.api.usage\\);\")",
       "Bash(curl -s https://silkilinen-production.up.railway.app/api/admin/health/test)",
       "Bash(Select-String \"health\")",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://silkilinen-production.up.railway.app/api/auth/me)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://silkilinen-production.up.railway.app/api/auth/me)",
+      "Bash(Get-ChildItem -Path . -Directory)",
+      "Bash(Select-Object -First 20)",
+      "Bash(xargs grep -l \"heart\\\\|Heart\\\\|wishlist\")"
     ]
   }
 }
