@@ -60,6 +60,10 @@ const orderSchema = new mongoose.Schema({
     referrer:    { type: String, default: '' },
     landingPage: { type: String, default: '' },
   },
+
+  // Browser session ID from the frontend tracking lib (localStorage).
+  // Used to link the originating Visit document to this order after payment.
+  browserSessionId: { type: String },
 }, { timestamps: true });
 
 orderSchema.index({ status: 1, createdAt: -1 });

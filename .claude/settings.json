@@ -75,7 +75,15 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://silkilinen-production.up.railway.app/api/auth/me)",
       "Bash(Get-ChildItem -Path . -Directory)",
       "Bash(Select-Object -First 20)",
-      "Bash(xargs grep -l \"heart\\\\|Heart\\\\|wishlist\")"
+      "Bash(xargs grep -l \"heart\\\\|Heart\\\\|wishlist\")",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\" -Exclude \"node_modules\" -Recurse -File | Where-Object { $_.Extension -match '\\\\.\\(md|txt\\)$' } | Select-Object -ExpandProperty FullName | Head -50)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\" -Exclude \"node_modules\" -Recurse -File | Where-Object { $_.Extension -match '\\\\.\\(md|txt\\)$' } | Select-Object -ExpandProperty FullName | Select-Object -First 50)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\" -Recurse -File | Where-Object { $_.Extension -eq \".md\" -or $_.Extension -eq \".txt\" } | Where-Object { $_.FullName -notmatch \"node_modules\" } | Select-Object -ExpandProperty FullName)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\USER\\\\.claude\\\\projects\\\\d--Programming-Course---Silkilinen\\\\memory\\\\\" -Recurse -File | ForEach-Object { Select-String -Path $_.FullName \"\\(?i\\)phase 2b|2b v1\" -AllMatches 2>$null })",
+      "PowerShell(Get-Content \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\.claude\\\\settings.json\" -Raw | Select-String \"Phase 2B|2B v1\" -AllMatches | ForEach-Object { $_.Matches.Value })",
+      "PowerShell($content = Get-Content \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\.claude\\\\settings.json\" -Raw; $lines = $content -split \"`n\"; $lines | ForEach-Object -Begin { $i = 0 } { if \\($_ -match \"Phase 2B|2B v1\"\\) { Write-Output \"Line $\\($i+1\\): $_\" }; $i++ })",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\" -Recurse -File | ForEach-Object { $content = Get-Content $_.FullName -Raw -ErrorAction SilentlyContinue; if \\($content -match \"Phase 2B|2B v1\"\\) { Write-Output $_.FullName } })",
+      "Bash(git diff *)"
     ]
   }
 }

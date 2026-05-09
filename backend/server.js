@@ -28,6 +28,8 @@ const categoriesRoutes = require('./routes/categories');
 const siteAuditRoutes = require('./routes/siteAudit');
 const insightsRoutes = require('./routes/insights');
 const adminHealthRoutes = require('./routes/adminHealth');
+const trackRoutes = require('./routes/track');
+const adminDashboardRoutes = require('./routes/adminDashboard');
 
 const app = express();
 
@@ -35,7 +37,7 @@ const app = express();
 // Integer 1 = trust exactly one proxy hop; avoids IP spoofing via forged headers.
 app.set('trust proxy', 1);
 
-console.log('[boot] routes: admin/health, admin/site-audit, admin/insights');
+console.log('[boot] routes: admin/health, admin/dashboard, admin/site-audit, admin/insights, track');
 
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
@@ -80,6 +82,8 @@ app.use('/api/categories', categoriesRoutes);
 app.use('/api/admin/site-audit', siteAuditRoutes);
 app.use('/api/admin/insights', insightsRoutes);
 app.use('/api/admin/health', adminHealthRoutes);
+app.use('/api/admin/dashboard', adminDashboardRoutes);
+app.use('/api/track', trackRoutes);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(function() { console.log('Connected to MongoDB'); })

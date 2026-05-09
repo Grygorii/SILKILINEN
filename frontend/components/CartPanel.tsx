@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
 import { trackBeginCheckout } from '@/lib/analytics';
+import { getSessionId } from '@/lib/track';
 import styles from './CartPanel.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -87,7 +88,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
       const res = await fetch(`${API}/api/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: cart, attribution }),
+        body: JSON.stringify({ items: cart, attribution, sessionId: getSessionId() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Checkout failed');

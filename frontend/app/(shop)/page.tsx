@@ -1,4 +1,5 @@
 import styles from './page.module.css';
+import PageTracker from '@/components/PageTracker';
 import ReviewsCarousel, { type ReviewData } from '@/components/ReviewsCarousel';
 import NewArrivals from '@/components/NewArrivals';
 import CategoryTiles from '@/components/CategoryTiles';
@@ -81,6 +82,7 @@ export default async function Home() {
       <NewsletterBand />
 
       <InstagramGrid content={content} />
+      <PageTracker page="home" />
     </main>
   );
 }

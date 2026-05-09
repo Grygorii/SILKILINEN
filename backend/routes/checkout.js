@@ -132,7 +132,7 @@ router.post('/', async function(req, res) {
     });
 
     await Order.create({
-      stripeSessionId: session.id,
+      stripeSessionId:  session.id,
       items: validatedItems.map(({ name, price, colour, size, quantity }) => ({ name, price, colour, size, quantity })),
       total: validatedItems.reduce((sum, i) => sum + i.price * i.quantity, 0),
       status: 'pending',
@@ -143,6 +143,7 @@ router.post('/', async function(req, res) {
         referrer:    attribution?.referrer ?? '',
         landingPage: attribution?.landingPage ?? '',
       },
+      browserSessionId: req.body.sessionId || undefined,
     });
 
     res.json({ url: session.url });

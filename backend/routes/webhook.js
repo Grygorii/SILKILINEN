@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Order = require('../models/Order');
+const Visit = require('../models/Visit');
 const { sendOrderConfirmation, sendAdminOrderNotification } = require('../services/email');
 
 // express.raw() is applied here so this route receives the raw buffer Stripe needs
@@ -68,6 +69,19 @@ router.post('/', express.raw({ type: 'application/json' }), async function(req, 
           sendOrderConfirmation(updatedOrder),
           sendAdminOrderNotification(updatedOrder),
         ]);
+
+        // Link the originating Visit to this order for traffic attribution
+        if (updatedOrder.browserSessionId) {
+          Visit.findOneAndUpdate(
+            {
+              sessionId:        updatedOrder.browserSessionId,
+              createdAt:        { $gte: new Date(Date.now() - 7 * 24 * 3600 * 1000) },
+              convertedToOrder: { $exists: false },
+            },
+            { convertedToOrder: updatedOrder._id },
+            { sort: { createdAt: -1 } }
+          ).catch(err => console.error('[webhook] visit attribution error:', err.message));
+        }
       }
     } catch (err) {
       console.error('Failed to update order:', err.message);

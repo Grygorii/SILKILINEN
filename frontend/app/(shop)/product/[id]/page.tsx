@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import styles from './page.module.css';
 import ProductOptions from '@/components/ProductOptions';
 import ProductGallery from '@/components/ProductGallery';
+import PageTracker from '@/components/PageTracker';
 import CrossSell from '@/components/CrossSell';
 import RecentlyViewed from '@/components/RecentlyViewed';
 import ProductViewTracker from '@/components/ProductViewTracker';
@@ -128,6 +129,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <ProductViewTracker id={product._id} name={product.name} price={product.price} />
+        <PageTracker page="product" productId={product._id} />
 
         <div className={styles.inner}>
           {/* Gallery */}
