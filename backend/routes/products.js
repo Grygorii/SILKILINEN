@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const jwt = require('jsonwebtoken');
 const Product = require('../models/Product');
 const { upload } = require('../utils/cloudinary');
 const { requireAuth } = require('../middleware/auth');
@@ -292,6 +293,32 @@ router.get('/related/:id', async function(req, res) {
     }
 
     res.json(related);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/products/:id/preview?token=... — draft-visible product for signed preview links
+router.get('/:id/preview', async function(req, res) {
+  try {
+    const { token } = req.query;
+    if (!token) return res.status(401).json({ error: 'Preview token required' });
+
+    const secret = process.env.PREVIEW_TOKEN_SECRET || process.env.JWT_SECRET;
+    let decoded;
+    try {
+      decoded = jwt.verify(token, secret);
+    } catch {
+      return res.status(401).json({ error: 'Invalid or expired preview token' });
+    }
+
+    if (String(decoded.productId) !== req.params.id) {
+      return res.status(403).json({ error: 'Token does not match product' });
+    }
+
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+    res.json(product);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

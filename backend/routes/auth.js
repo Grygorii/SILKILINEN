@@ -16,6 +16,8 @@ const loginLimiter = rateLimit({
     console.warn(`[AUTH] Rate limit hit: ${req.ip} | ${new Date().toISOString()}`);
     res.status(429).json(options.message);
   },
+  requestWasSuccessful: (_req, res) => res.statusCode < 500,
+  skipFailedRequests: true,
 });
 
 router.post('/login', loginLimiter, async function(req, res) {
@@ -26,13 +28,13 @@ router.post('/login', loginLimiter, async function(req, res) {
     const user = await User.findOne({ email });
     if (!user) {
       console.warn(`[AUTH] Failed login (no user): ${email} | ip=${ip}`);
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Incorrect email or password.' });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       console.warn(`[AUTH] Failed login (bad password): ${email} | ip=${ip}`);
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Incorrect email or password.' });
     }
 
     if (user.role !== 'admin') {
@@ -61,7 +63,7 @@ router.post('/login', loginLimiter, async function(req, res) {
     res.json({ success: true, token });
   } catch (err) {
     console.error(`[AUTH] Login error: ip=${ip} | ${err.message}`);
-    res.status(500).json({ error: err.message });
+    res.status(503).json({ error: 'Something went wrong on our end. Please try again in a moment.' });
   }
 });
 
@@ -83,7 +85,8 @@ router.get('/me', requireAuth, async function(req, res) {
     if (!user) return res.status(401).json({ error: 'User not found' });
     res.json({ _id: user._id, email: user.email, role: user.role });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(`[AUTH] /me error: ${err.message}`);
+    res.status(503).json({ error: 'Something went wrong on our end. Please try again in a moment.' });
   }
 });
 

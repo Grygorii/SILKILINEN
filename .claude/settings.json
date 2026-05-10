@@ -83,7 +83,17 @@
       "PowerShell(Get-Content \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\.claude\\\\settings.json\" -Raw | Select-String \"Phase 2B|2B v1\" -AllMatches | ForEach-Object { $_.Matches.Value })",
       "PowerShell($content = Get-Content \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\.claude\\\\settings.json\" -Raw; $lines = $content -split \"`n\"; $lines | ForEach-Object -Begin { $i = 0 } { if \\($_ -match \"Phase 2B|2B v1\"\\) { Write-Output \"Line $\\($i+1\\): $_\" }; $i++ })",
       "PowerShell(Get-ChildItem -Path \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\" -Recurse -File | ForEach-Object { $content = Get-Content $_.FullName -Raw -ErrorAction SilentlyContinue; if \\($content -match \"Phase 2B|2B v1\"\\) { Write-Output $_.FullName } })",
-      "Bash(git diff *)"
+      "Bash(git diff *)",
+      "Bash(node -e \"const p = require\\('express-rate-limit'\\); console.log\\(require\\('./node_modules/express-rate-limit/package.json'\\).version\\)\")",
+      "Bash(node -e \"const opts = require\\('express-rate-limit'\\); const inst = opts\\({ windowMs: 1000, max: 5 }\\); console.log\\(Object.keys\\(require\\('./node_modules/express-rate-limit/dist/index.js'\\)\\)\\)\")",
+      "Bash(node scripts/updateAiModelPromptsV2.js)",
+      "Bash(Get-ChildItem -Path \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(node -e \"const jwt = require\\('d:/Programming/Course_!/Silkilinen/backend/node_modules/jsonwebtoken'\\); console.log\\('jwt version:', require\\('d:/Programming/Course_!/Silkilinen/backend/node_modules/jsonwebtoken/package.json'\\).version\\)\")",
+      "Bash(mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/\\(shop\\)/preview/[id]\")"
+    ],
+    "additionalDirectories": [
+      "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\(shop)\\preview"
     ]
   }
 }

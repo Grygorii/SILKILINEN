@@ -12,6 +12,8 @@ const authRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: () => isDev,
+  requestWasSuccessful: (_req, res) => res.statusCode < 500,
+  skipFailedRequests: true,
 });
 
 // 10 requests per hour — newsletter subscribe, contact form
@@ -22,6 +24,8 @@ const publicWriteRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: () => isDev,
+  requestWasSuccessful: (_req, res) => res.statusCode < 500,
+  skipFailedRequests: true,
 });
 
 // 30 requests per hour — drop-a-hint and similar light writes
@@ -32,6 +36,8 @@ const lightRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: () => isDev,
+  requestWasSuccessful: (_req, res) => res.statusCode < 500,
+  skipFailedRequests: true,
 });
 
 module.exports = { authRateLimit, publicWriteRateLimit, lightRateLimit };

@@ -42,7 +42,9 @@ function safeCustomer(c) {
 router.post('/request-magic-link', authRateLimit, async function(req, res) {
   try {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ error: 'Email required' });
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Please enter a valid email address.' });
+    }
 
     const token = crypto.randomBytes(32).toString('hex');
     const expiry = new Date(Date.now() + 15 * 60 * 1000);
@@ -65,7 +67,8 @@ router.post('/request-magic-link', authRateLimit, async function(req, res) {
 
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(`[CUSTOMERS] request-magic-link error: ${err.message}`);
+    res.status(503).json({ error: 'Something went wrong on our end. Please try again in a moment.' });
   }
 });
 
@@ -79,7 +82,7 @@ router.post('/verify-magic-link', async function(req, res) {
       emailVerificationToken: token,
       emailVerificationExpiry: { $gt: new Date() },
     });
-    if (!customer) return res.status(400).json({ error: 'Link expired or already used' });
+    if (!customer) return res.status(410).json({ error: 'This link has expired. Please request a new one.' });
 
     const isFirstLogin = !customer.emailVerified;
     customer.emailVerified = true;
@@ -95,7 +98,8 @@ router.post('/verify-magic-link', async function(req, res) {
     setCustomerCookie(res, customer);
     res.json({ success: true, customer: safeCustomer(customer), isFirstLogin });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(`[CUSTOMERS] verify-magic-link error: ${err.message}`);
+    res.status(503).json({ error: 'Something went wrong on our end. Please try again in a moment.' });
   }
 });
 
@@ -133,7 +137,8 @@ router.post('/google', authRateLimit, async function(req, res) {
     setCustomerCookie(res, customer);
     res.json({ success: true, customer: safeCustomer(customer), isFirstLogin });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(`[CUSTOMERS] google auth error: ${err.message}`);
+    res.status(503).json({ error: 'Something went wrong on our end. Please try again in a moment.' });
   }
 });
 

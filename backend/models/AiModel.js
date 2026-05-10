@@ -10,6 +10,8 @@ const aiModelSchema = new mongoose.Schema({
   markets: [String],
   locked: { type: Boolean, default: false },
   active: { type: Boolean, default: true },
+  productShotPromptTemplate: { type: String, default: null },
+  lifestyleShotPromptTemplate: { type: String, default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('AiModel', aiModelSchema);

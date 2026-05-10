@@ -159,6 +159,8 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const [saveState, setSaveState] = useState<SaveState>('saved');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saveError, setSaveError] = useState('');
+  const [validationErrors, setValidationErrors] = useState<{ field: string; label: string; message: string }[]>([]);
+  const [invalidFields, setInvalidFields] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
@@ -271,9 +273,23 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     }
   }
 
+  function closeValidationModal() {
+    const fields = validationErrors;
+    setValidationErrors([]);
+    if (fields.length > 0) {
+      setInvalidFields(new Set(fields.map(f => f.field)));
+      const el = document.querySelector<HTMLElement>(`[data-field="${fields[0].field}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => el.focus(), 350);
+      }
+    }
+  }
+
   const doSave = useCallback(async () => {
     setSaveState('saving');
     setSaveError('');
+    setInvalidFields(new Set());
     try {
       const body = {
         ...form,
@@ -294,6 +310,11 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       });
       if (!res.ok) {
         const data = await res.json();
+        if (res.status === 400 && data.fields?.length) {
+          setValidationErrors(data.fields);
+          setSaveState('unsaved');
+          return;
+        }
         throw new Error(data.error || 'Save failed');
       }
       const updated = await res.json();
@@ -304,7 +325,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       setSaveState('error');
       setSaveError(err instanceof Error ? err.message : 'Save failed');
     }
-  }, [form, variants, id]);
+  }, [form, variants, id]); // eslint-disable-line
 
   // Image handlers
   async function handleImageUpload(files: FileList | null, slot?: string) {
@@ -514,12 +535,19 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             )}
           </span>
 
-          <a
-            href={`/product/${id}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
             className={styles.previewBtn}
-          >Preview ↗</a>
+            onClick={async () => {
+              try {
+                const res = await fetch(`${API}/api/admin/products/${id}/preview-token`, { credentials: 'include' });
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                window.open(data.url, '_blank', 'noopener,noreferrer');
+              } catch {
+                setSeoToast('Could not generate preview. Please save the product first.');
+              }
+            }}
+          >Preview ↗</button>
 
           <button
             className={styles.dupBtn}
@@ -558,9 +586,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 Product name <CharCounter value={form.name} max={80} />
               </label>
               <input
-                className={styles.input}
+                data-field="name"
+                className={`${styles.input} ${invalidFields.has('name') ? styles.fieldError : ''}`}
                 value={form.name}
-                onChange={e => setField('name', e.target.value)}
+                onChange={e => { setField('name', e.target.value); setInvalidFields(p => { const n = new Set(p); n.delete('name'); return n; }); }}
                 onBlur={() => { if (!form.slug && form.name) setField('slug', slugify(form.name)); }}
                 placeholder="e.g. Bastet Silk Shorts"
               />
@@ -878,7 +907,13 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             <h3 className={styles.cardTitle}>Pricing</h3>
             <div className={styles.fg}>
               <label className={styles.label}>Price (€) *</label>
-              <input className={styles.input} type="number" step="0.01" min="0" value={form.price} onChange={e => setField('price', e.target.value)} />
+              <input
+                data-field="price"
+                className={`${styles.input} ${invalidFields.has('price') ? styles.fieldError : ''}`}
+                type="number" step="0.01" min="0"
+                value={form.price}
+                onChange={e => { setField('price', e.target.value); setInvalidFields(p => { const n = new Set(p); n.delete('price'); return n; }); }}
+              />
             </div>
             <div className={styles.fg}>
               <label className={styles.label}>Compare-at price (€)</label>
@@ -1023,6 +1058,22 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           />
         </div>
       </div>
+
+      {/* ── Validation modal ─────────────────────────────────────────────── */}
+      {validationErrors.length > 0 && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="valModalTitle">
+            <h3 id="valModalTitle" className={styles.modalTitle}>Please complete required fields</h3>
+            <p className={styles.modalBody}>The following fields are required:</p>
+            <ul className={styles.modalList}>
+              {validationErrors.map(e => (
+                <li key={e.field} className={styles.modalItem}>• {e.label}</li>
+              ))}
+            </ul>
+            <button className={styles.modalBtn} onClick={closeValidationModal}>Got it</button>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }

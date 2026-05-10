@@ -97,8 +97,8 @@ router.get('/stats', requireAuth, async function(req, res) {
   }
 });
 
-// GET /api/orders/recent-activity
-router.get('/recent-activity', requireAuth, async function(req, res) {
+// GET /api/orders/recent-activity — public endpoint for JustSoldPopup social proof widget
+router.get('/recent-activity', async function(req, res) {
   try {
     const orders = await Order.find({ status: { $nin: ['pending', 'failed'] } })
       .sort({ createdAt: -1 }).limit(10);

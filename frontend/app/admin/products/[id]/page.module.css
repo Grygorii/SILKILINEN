@@ -877,3 +877,69 @@
 .aiFilledBorder {
   border-left: 3px solid #2d7d47;
 }
+
+/* ── Validation modal ─────────────────────────────────────────────────────── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 25, 22, 0.55);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  background: #fff;
+  padding: 32px 36px;
+  max-width: 440px;
+  width: calc(100% - 48px);
+  box-shadow: 0 8px 32px rgba(26, 25, 22, 0.18);
+}
+
+.modalTitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--dark);
+  margin-bottom: 12px;
+}
+
+.modalBody {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.modalList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+}
+
+.modalItem {
+  font-size: 14px;
+  color: var(--dark);
+  padding: 4px 0;
+}
+
+.modalBtn {
+  background: var(--dark, #1a1916);
+  color: #fff;
+  border: none;
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 12px 28px;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.15s;
+}
+.modalBtn:hover { opacity: 0.85; }
+
+/* ── Field error highlight ──────────────────────────────────────────────── */
+.fieldError {
+  border-color: #c0392b !important;
+  background: #fdf5f5 !important;
+}

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const jwt = require('jsonwebtoken');
 const cloudinary = require('cloudinary').v2;
 const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
@@ -56,19 +57,43 @@ function autoGenerateSEO(product) {
     .catch(err => console.error(`[Auto-SEO] Failed for ${product._id}: ${err.message}`));
 }
 
-// ── Publish validation ─────────────────────────────────────────────────────────
-// Called before any status transition to 'active'. Returns array of error strings.
-function validateForPublish(product) {
-  const errors = [];
-  if (!product.name?.trim()) errors.push('Name is required');
-  if (!product.price || product.price <= 0) errors.push('Valid price is required');
-  if (!product.category || !CATEGORY_SLUGS.includes(product.category)) errors.push('Valid category is required');
-  if (!product.description?.trim() || product.description.trim().length < 50) {
-    errors.push('Description must be at least 50 characters');
+// ── Validation helpers ─────────────────────────────────────────────────────────
+
+// Fields that must be present on every save (draft included).
+function validateForSave(data) {
+  const fields = [];
+  if (!data.name?.trim()) {
+    fields.push({ field: 'name', label: 'Product name', message: 'Product name is required' });
   }
-  if (!product.images?.length) errors.push('At least one image is required');
-  if (!product.variants?.length) errors.push('At least one variant is required');
-  return errors;
+  const price = Number(data.price);
+  if (!price || price <= 0) {
+    fields.push({ field: 'price', label: 'Price', message: 'Price must be greater than 0' });
+  }
+  return fields;
+}
+
+// Additional fields required before transitioning to 'active'.
+function validateForPublish(product) {
+  const fields = [];
+  if (!product.name?.trim()) {
+    fields.push({ field: 'name', label: 'Product name', message: 'Product name is required' });
+  }
+  if (!product.price || product.price <= 0) {
+    fields.push({ field: 'price', label: 'Price', message: 'Price must be greater than 0' });
+  }
+  if (!product.category || !CATEGORY_SLUGS.includes(product.category)) {
+    fields.push({ field: 'category', label: 'Category', message: 'Valid category is required' });
+  }
+  if (!product.description?.trim() || product.description.trim().length < 50) {
+    fields.push({ field: 'description', label: 'Description', message: 'Description must be at least 50 characters' });
+  }
+  if (!product.images?.length) {
+    fields.push({ field: 'images', label: 'Product images', message: 'At least one image is required' });
+  }
+  if (!product.variants?.length) {
+    fields.push({ field: 'variants', label: 'Variants', message: 'At least one variant is required' });
+  }
+  return fields;
 }
 
 // All routes require admin auth
@@ -125,6 +150,24 @@ router.get('/', async function(req, res) {
   }
 });
 
+// GET /api/admin/products/:id/preview-token — generate a 1-hour signed preview URL
+router.get('/:id/preview-token', async function(req, res) {
+  try {
+    const product = await Product.findById(req.params.id).select('_id');
+    if (!product) return res.status(404).json({ error: 'Not found' });
+
+    const secret = process.env.PREVIEW_TOKEN_SECRET || process.env.JWT_SECRET;
+    const token = jwt.sign({ productId: String(product._id) }, secret, { expiresIn: '1h' });
+    const baseUrl = process.env.FRONTEND_URL || 'https://silkilinen.com';
+    const url = `${baseUrl}/preview/${product._id}?token=${token}`;
+    const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
+
+    res.json({ token, url, expiresAt });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/admin/products/:id — single product, any status
 router.get('/:id', async function(req, res) {
   try {
@@ -139,6 +182,10 @@ router.get('/:id', async function(req, res) {
 // POST /api/admin/products — create draft
 router.post('/', async function(req, res) {
   try {
+    const saveErrors = validateForSave(req.body);
+    if (saveErrors.length) {
+      return res.status(400).json({ error: 'ValidationError', fields: saveErrors });
+    }
     const product = await Product.create({
       ...req.body,
       status: req.body.status || 'draft',
@@ -155,6 +202,12 @@ router.post('/', async function(req, res) {
 router.put('/:id', async function(req, res) {
   try {
     const { images: _images, ...rest } = req.body;
+
+    const saveErrors = validateForSave(rest);
+    if (saveErrors.length) {
+      return res.status(400).json({ error: 'ValidationError', fields: saveErrors });
+    }
+
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Not found' });
 
@@ -162,9 +215,9 @@ router.put('/:id', async function(req, res) {
     Object.assign(product, rest, { lastUpdatedBy: req.user.userId });
 
     if (product.status === 'active' && oldStatus !== 'active') {
-      const errors = validateForPublish(product);
-      if (errors.length) {
-        return res.status(400).json({ error: 'Cannot publish product', missingRequirements: errors });
+      const publishErrors = validateForPublish(product);
+      if (publishErrors.length) {
+        return res.status(400).json({ error: 'ValidationError', fields: publishErrors });
       }
     }
 
@@ -174,10 +227,12 @@ router.put('/:id', async function(req, res) {
     res.json(product);
   } catch (err) {
     if (err.name === 'ValidationError') {
-      const details = Object.values(err.errors).map(e => e.message).join('; ');
-      return res.status(400).json({ error: `Validation failed: ${details}` });
+      const fields = Object.entries(err.errors).map(([field, e]) => ({
+        field, label: field, message: e.message,
+      }));
+      return res.status(400).json({ error: 'ValidationError', fields });
     }
-    res.status(400).json({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -205,8 +260,8 @@ router.patch('/:id/quick-update', async function(req, res) {
       const allowed = ['draft', 'active', 'sold_out', 'archived'];
       if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status' });
       if (status === 'active' && product.status !== 'active') {
-        const errors = validateForPublish(product);
-        if (errors.length) return res.status(400).json({ error: 'Cannot publish product', missingRequirements: errors });
+        const publishErrors = validateForPublish(product);
+        if (publishErrors.length) return res.status(400).json({ error: 'ValidationError', fields: publishErrors });
       }
       product.status = status;
     }
@@ -472,7 +527,11 @@ router.post('/:id/duplicate', async function(req, res) {
     delete obj.createdAt;
     delete obj.updatedAt;
     delete obj.__v;
-    delete obj.slug; // will be regenerated
+    delete obj.slug;            // will be regenerated
+    delete obj.altTextTemplate; // prevents old product's alt text bleeding into new uploads
+    delete obj.metaTitle;
+    delete obj.metaDescription;
+    delete obj.keywords;
     obj.name = `${src.name} (copy)`;
     obj.status = 'draft';
     obj.lastUpdatedBy = req.user.userId;
