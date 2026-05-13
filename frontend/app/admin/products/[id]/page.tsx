@@ -255,20 +255,28 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           price: form.price,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.details || data.error);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = res.status === 503
+          ? (data.error || 'AI SEO is temporarily unavailable. Please fill in manually or try again.')
+          : res.status === 404
+            ? 'Product not found. Save the product first, then try again.'
+            : (data.error || 'Could not generate SEO. Please try again or fill in manually.');
+        setSeoToast(msg);
+        return;
+      }
       const { seo } = data;
       const filled = new Set<string>();
-      if (seo.metaTitle)       { setForm(f => ({ ...f, metaTitle: seo.metaTitle }));             filled.add('metaTitle'); }
-      if (seo.metaDescription) { setForm(f => ({ ...f, metaDescription: seo.metaDescription })); filled.add('metaDescription'); }
-      if (seo.slug)            { setForm(f => ({ ...f, slug: seo.slug }));                        filled.add('slug'); }
-      if (seo.keywords?.length){ setForm(f => ({ ...f, keywords: seo.keywords.join(', ') }));    filled.add('keywords'); }
-      if (seo.altTextTemplate) { setForm(f => ({ ...f, altTextTemplate: seo.altTextTemplate })); filled.add('altTextTemplate'); }
+      if (seo.metaTitle)        { setForm(f => ({ ...f, metaTitle: seo.metaTitle }));             filled.add('metaTitle'); }
+      if (seo.metaDescription)  { setForm(f => ({ ...f, metaDescription: seo.metaDescription })); filled.add('metaDescription'); }
+      if (seo.slug)             { setForm(f => ({ ...f, slug: seo.slug }));                        filled.add('slug'); }
+      if (seo.keywords?.length) { setForm(f => ({ ...f, keywords: seo.keywords.join(', ') }));    filled.add('keywords'); }
+      if (seo.altTextTemplate)  { setForm(f => ({ ...f, altTextTemplate: seo.altTextTemplate })); filled.add('altTextTemplate'); }
       setAiFilledFields(filled);
       setSeoToast('SEO generated — review and save');
       markDirty();
-    } catch (err) {
-      setSeoToast(`SEO failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } catch {
+      setSeoToast('Could not generate SEO. Check your connection and try again.');
     } finally {
       setSeoGenerating(false);
     }
@@ -1008,12 +1016,12 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               onClick={generateSEO}
               disabled={seoGenerating || !form.name}
             >
-              {seoGenerating ? '✨ Generating SEO…' : '✨ Generate SEO with AI — €0.001'}
+              {seoGenerating ? '✨ Generating SEO…' : '✨ Generate SEO with AI — €0.0005'}
             </button>
 
             {/* Toast */}
             {seoToast && (
-              <div className={`${styles.seoToast} ${seoToast.startsWith('SEO failed') ? styles.seoToastError : ''}`}>
+              <div className={`${styles.seoToast} ${seoToast !== 'SEO generated — review and save' ? styles.seoToastError : ''}`}>
                 {seoToast}
               </div>
             )}

@@ -1,5 +1,45 @@
 # SILKILINEN Changelog
 
+## 2026-05-13 — DeepSeek SEO migration
+
+**What changed:**
+
+- SEO generation migrated from Gemini (`gemini-2.0-flash`, now deprecated/404) to DeepSeek (`deepseek-chat`)
+- New abstraction layer: `backend/services/aiText.js` wraps text-AI calls via the OpenAI SDK pointed at DeepSeek's OpenAI-compatible endpoint. Future provider swaps require only env var changes.
+- Strong system prompt anchors SEO output to SILKILINEN brand voice (Donegal origin, quiet luxury tone, British English, explicit never-use word list)
+- All five SEO fields returned: `metaTitle`, `metaDescription`, `slug`, `keywords`, `altTextTemplate`
+- AI failures return clean 503 with human-readable message — no raw JSON ever shown to admin
+- Server-side logging of every AI text call (product name, model, duration)
+- Server startup logs a warning if `DEEPSEEK_API_KEY` is missing
+
+**Files created:**
+- `backend/services/aiText.js`
+
+**Files modified:**
+- `backend/routes/adminProducts.js` — import swapped to `aiText`; `generate-seo` endpoint returns structured 503 on AI failure
+- `backend/server.js` — DEEPSEEK_API_KEY startup warning added
+- `backend/package.json` + `package-lock.json` — `openai` SDK added
+- `frontend/app/admin/products/[id]/page.tsx` — clean error messages by HTTP status; error toast condition fixed; button cost label updated to €0.0005
+
+**Files deleted:**
+- `backend/services/seoGenerator.js` — old Gemini SEO implementation removed
+
+**Environment variables:**
+- `DEEPSEEK_API_KEY` — already set in Railway
+- `DEEPSEEK_MODEL_SEO` — optional, defaults to `deepseek-chat`
+- `DEEPSEEK_BASE_URL` — optional, defaults to `https://api.deepseek.com/v1`
+
+**Out of scope:**
+- Image generation remains on Gemini (working correctly, unrelated)
+- Other AI text uses audited and none found (SEO was the only text call to Gemini)
+- Multi-provider failover not implemented
+
+**Deviations:**
+- `altTextTemplate` and `slug` added to the DeepSeek response even though the brief's sketch only showed three fields — both are used by the existing frontend and bulk-generate endpoint so they were kept.
+- Cost per call is ~€0.0005 (DeepSeek pricing), updated from the old €0.001 Gemini estimate.
+
+---
+
 ## 2026-05-13 — Photo slot UX + admin popup exclusion + visit tracking improvements
 
 **What changed:**

@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 13 May 2026.
+Last updated: 13 May 2026 (evening).
 
 ---
 
@@ -22,6 +22,7 @@ The site exists primarily to **escape Etsy's fee burden** (Etsy takes ~15-20% ef
 - **Email:** Resend (welcome emails, magic-link sign-in, transactional)
 - **Auth:** Magic-link via email + Google OAuth for customers, JWT for admin
 - **AI image gen:** Gemini integration with 5 model identities (Aoife, Charlotte, Sofia, Maya, Yuki) using v2 prompts
+- **AI text (SEO):** DeepSeek (`deepseek-chat`) via OpenAI SDK; abstraction layer at `backend/services/aiText.js`; Gemini text removed
 
 ## Operational hardening shipped
 

@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const cloudinary = require('cloudinary').v2;
 const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
-const { generateProductSEO } = require('../services/seoGenerator');
+const { generateProductSEO, AIServiceError } = require('../services/aiText');
 const { SLOT_KEYS } = require('../config/imageSlots');
 const { SLUGS: CATEGORY_SLUGS } = require('../config/categories');
 
@@ -468,20 +468,23 @@ router.post('/:id/generate-seo', async function(req, res) {
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
     // Accept current form state from frontend so admin doesn't need to save first
-    const data = {
-      name: req.body.name || product.name,
-      description: req.body.description || product.description,
-      category: req.body.category || product.category,
+    const seo = await generateProductSEO({
+      name:                req.body.name                || product.name,
+      description:         req.body.description         || product.description,
+      category:            req.body.category            || product.category,
       materialComposition: req.body.materialComposition || product.materialComposition,
-      colours: req.body.colours || product.colours,
-      price: req.body.price || product.price,
-    };
+      colours:             req.body.colours             || product.colours,
+      price:               req.body.price               || product.price,
+      keywords:            product.keywords             || [],
+    });
 
-    const seo = await generateProductSEO(data);
-    res.json({ seo, cost: 0.001, message: 'SEO generated. Review and save to apply.' });
+    res.json({ seo, cost: 0.0005, message: 'SEO generated. Review and save to apply.' });
   } catch (err) {
-    console.error('SEO generation error:', err);
-    res.status(500).json({ error: 'Failed to generate SEO', details: err.message });
+    console.error('[generate-seo] error:', err);
+    if (err instanceof AIServiceError) {
+      return res.status(503).json({ error: 'AI SEO generation is temporarily unavailable. Please fill in SEO fields manually, or try again in a moment.' });
+    }
+    res.status(500).json({ error: 'Could not generate SEO. Please try again or fill in manually.' });
   }
 });
 

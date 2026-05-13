@@ -6,6 +6,11 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET === DEFAULT_SECRET) {
   if (process.env.NODE_ENV === 'production') process.exit(1);
 }
 process.env.JWT_SECRET = process.env.JWT_SECRET || DEFAULT_SECRET;
+
+if (!process.env.DEEPSEEK_API_KEY) {
+  console.warn('[warning] DEEPSEEK_API_KEY not set — AI SEO generation will fail until it is configured.');
+}
+
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
