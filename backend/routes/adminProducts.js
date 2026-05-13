@@ -567,25 +567,37 @@ router.put('/:id/images/reorder', async function(req, res) {
   }
 });
 
-// POST /api/admin/products/:id/images/url — add already-uploaded image by URL
+// POST /api/admin/products/:id/images/url — add already-uploaded image by URL (AI approval flow)
 router.post('/:id/images/url', async function(req, res) {
   try {
-    const { url, cloudinaryPublicId, alt } = req.body;
+    const { url, cloudinaryPublicId, alt, slot } = req.body;
     if (!url) return res.status(400).json({ error: 'URL required' });
 
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Not found' });
 
+    const validSlot = slot && SLOT_KEYS.includes(slot) ? slot : undefined;
+
+    // Bump any existing occupant of the target slot to unslotted
+    if (validSlot) {
+      const occupant = product.images.find(i => i.slot === validSlot);
+      if (occupant) occupant.slot = undefined;
+      if (validSlot === 'hero') {
+        product.images.forEach(i => { i.isPrimary = false; });
+      }
+    }
+
     const defaultAlt = alt || (product.altTextTemplate
-      ? product.altTextTemplate.replace('{position}', 'product photo')
+      ? product.altTextTemplate.replace('{position}', validSlot || 'product photo')
       : `${product.name} — handmade silk by SILKILINEN, Dublin`);
 
     product.images.push({
       url,
       alt: defaultAlt,
-      isPrimary: product.images.length === 0,
+      isPrimary: product.images.length === 0 || validSlot === 'hero',
       order: product.images.length,
       cloudinaryPublicId: cloudinaryPublicId || '',
+      slot: validSlot,
     });
     product.lastUpdatedBy = req.user.userId;
     await product.save({ validateBeforeSave: false });
@@ -643,6 +655,40 @@ router.post('/:id/images', imgUpload.array('images', 20), async function(req, re
       });
     }
 
+    product.lastUpdatedBy = req.user.userId;
+    await product.save({ validateBeforeSave: false });
+    res.json(product.images);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/admin/products/:id/images/:imageId/slot — assign or unslot an image
+router.patch('/:id/images/:imageId/slot', requireAuth, async function(req, res) {
+  try {
+    const { slot } = req.body; // null/undefined to unslot; valid key to slot
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Not found' });
+
+    const img = product.images.id(req.params.imageId);
+    if (!img) return res.status(404).json({ error: 'Image not found' });
+
+    const validSlot = slot && SLOT_KEYS.includes(slot) ? slot : null;
+
+    if (validSlot) {
+      // Bump any existing occupant of the target slot back to unslotted
+      const occupant = product.images.find(
+        i => i.slot === validSlot && String(i._id) !== req.params.imageId,
+      );
+      if (occupant) occupant.slot = undefined;
+
+      if (validSlot === 'hero') {
+        product.images.forEach(i => { i.isPrimary = false; });
+        img.isPrimary = true;
+      }
+    }
+
+    img.slot = validSlot || undefined;
     product.lastUpdatedBy = req.user.userId;
     await product.save({ validateBeforeSave: false });
     res.json(product.images);

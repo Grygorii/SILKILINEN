@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import styles from './CookieConsent.module.css';
 
 const STORAGE_KEY = 'silkilinen_cookie_consent';
 
 export default function CookieConsent() {
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -26,6 +28,7 @@ export default function CookieConsent() {
     setVisible(false);
   }
 
+  if (pathname?.startsWith('/admin')) return null;
   if (!visible) return null;
 
   return (

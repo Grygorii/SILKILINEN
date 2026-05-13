@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import styles from './NewsletterPopup.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 const DISMISSED_KEY = 'silkilinen_newsletter_dismissed';
 
 export default function NewsletterPopup() {
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -41,6 +43,7 @@ export default function NewsletterPopup() {
     }
   }
 
+  if (pathname?.startsWith('/admin')) return null;
   if (!visible) return null;
 
   return (

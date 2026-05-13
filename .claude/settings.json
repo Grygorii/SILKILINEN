@@ -90,7 +90,9 @@
       "Bash(Get-ChildItem -Path \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\" -Directory)",
       "Bash(Select-Object Name)",
       "Bash(node -e \"const jwt = require\\('d:/Programming/Course_!/Silkilinen/backend/node_modules/jsonwebtoken'\\); console.log\\('jwt version:', require\\('d:/Programming/Course_!/Silkilinen/backend/node_modules/jsonwebtoken/package.json'\\).version\\)\")",
-      "Bash(mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/\\(shop\\)/preview/[id]\")"
+      "Bash(mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/\\(shop\\)/preview/[id]\")",
+      "Bash(cat backend/config/imageSlots.js)",
+      "Bash(find backend *)"
     ],
     "additionalDirectories": [
       "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\(shop)\\preview"

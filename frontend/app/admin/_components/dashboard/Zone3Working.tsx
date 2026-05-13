@@ -9,16 +9,20 @@ type TopProduct = {
 };
 type TrafficSource = {
   source: string; displayLabel: string;
-  visitors: number; buyers: number; conversionPercent: number;
+  visitors: number; buyers: number; conversionPercent: number | null;
 };
 type BestConverting = {
   productId: string; productName: string; imageUrl: string | null;
   conversionPercent: number; linkTo: string;
 } | null;
+type GeoCountry = { country: string; countryCode: string | null; visitors: number };
+type GeoCity    = { city: string; country: string | null; visitors: number };
 
 type Zone3Data = {
-  topProducts30d:        TopProduct[];
-  topTrafficSources30d:  TrafficSource[];
+  topProducts30d:           TopProduct[];
+  topTrafficSources30d:     TrafficSource[];
+  topCountries30d:          GeoCountry[];
+  topCities30d:             GeoCity[];
   bestConvertingProduct30d: BestConverting;
 };
 
@@ -29,6 +33,8 @@ function fmtCents(cents: number) {
 export default function Zone3Working({ data }: { data: Zone3Data }) {
   const router = useRouter();
   const { topProducts30d, topTrafficSources30d, bestConvertingProduct30d } = data;
+  const topCountries30d = data.topCountries30d ?? [];
+  const topCities30d    = data.topCities30d    ?? [];
 
   return (
     <Card title="WHAT'S WORKING">
@@ -107,12 +113,46 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
                   >
                     <span style={{ flex: 1, color: 'var(--dark)' }}>{s.displayLabel}</span>
                     <span style={{ color: 'var(--muted)', fontSize: 12 }}>{s.visitors} visitors</span>
-                    <span style={{ color: 'var(--muted)', fontSize: 12 }}>{s.conversionPercent.toFixed(1)}%</span>
+                    <span style={{ color: 'var(--muted)', fontSize: 12 }}>{s.conversionPercent != null ? `${s.conversionPercent.toFixed(1)}%` : '—'}</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
+
+          {/* Top countries */}
+          {topCountries30d.length > 0 && (
+            <div>
+              <p style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 12 }}>
+                Top countries (30 days)
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {topCountries30d.map(c => (
+                  <div key={c.country} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
+                    <span style={{ flex: 1, color: 'var(--dark)' }}>{c.country}</span>
+                    <span style={{ color: 'var(--muted)', fontSize: 12 }}>{c.visitors} visitors</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Top cities */}
+          {topCities30d.length > 0 && (
+            <div>
+              <p style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 12 }}>
+                Top cities (30 days)
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {topCities30d.map(c => (
+                  <div key={`${c.city}-${c.country}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
+                    <span style={{ flex: 1, color: 'var(--dark)' }}>{c.city}{c.country ? `, ${c.country}` : ''}</span>
+                    <span style={{ color: 'var(--muted)', fontSize: 12 }}>{c.visitors} visitors</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Best converting */}
           <div>

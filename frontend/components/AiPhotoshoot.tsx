@@ -84,7 +84,7 @@ type PhotoState = {
 type Props = {
   productId: string;
   productCategory: string;
-  onPhotoApproved: (url: string) => void;
+  onPhotoApproved: (url: string, slot?: string) => void;
 };
 
 function presetCost(workflow: WorkflowKey, customJobs: JobSpec[]): number {
@@ -276,7 +276,7 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
     const data = await res.json();
     if (res.ok) {
       setPhotoStates(s => ({ ...s, [position]: { ...s[position]!, status: 'approved' } }));
-      onPhotoApproved(data.url);
+      onPhotoApproved(data.url, position);
     }
   }
 

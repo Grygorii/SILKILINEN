@@ -277,16 +277,21 @@ async function getZone3Data({ thirtyDaysAgo }) {
     };
   });
 
-  // Traffic sources and best-converting product from Visit model
-  const [sourcesData, bestConvertingData] = await Promise.all([
+  // Traffic sources, best-converting product, and geo breakdown from Visit model
+  const [sourcesData, bestConvertingData, topCountriesData, topCitiesData] = await Promise.all([
+    // Fix: deduplicate by (source, sessionId) first so one session with 4 page-views
+    // doesn't count as 4 buyers even if convertedToOrder is set on each visit doc.
     Visit.aggregate([
       { $match: { createdAt: { $gte: thirtyDaysAgo } } },
       { $group: {
-        _id:        '$source',
-        sessionIds: { $addToSet: '$sessionId' },
-        buyers:     { $sum: { $cond: [{ $ne: ['$convertedToOrder', null] }, 1, 0] } },
+        _id:      { source: '$source', sessionId: '$sessionId' },
+        hasOrder: { $max: { $cond: [{ $ne: ['$convertedToOrder', null] }, 1, 0] } },
       }},
-      { $project: { visitors: { $size: '$sessionIds' }, buyers: 1 } },
+      { $group: {
+        _id:      '$_id.source',
+        visitors: { $sum: 1 },
+        buyers:   { $sum: '$hasOrder' },
+      }},
       { $sort: { visitors: -1 } },
       { $limit: 5 },
     ]),
@@ -306,6 +311,22 @@ async function getZone3Data({ thirtyDaysAgo }) {
       { $sort: { conversionRate: -1 } },
       { $limit: 1 },
     ]),
+
+    Visit.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo }, country: { $exists: true, $ne: null } } },
+      { $group: { _id: { country: '$country', countryCode: '$countryCode' }, visitors: { $addToSet: '$sessionId' } } },
+      { $project: { country: '$_id.country', countryCode: '$_id.countryCode', visitors: { $size: '$visitors' } } },
+      { $sort: { visitors: -1 } },
+      { $limit: 5 },
+    ]),
+
+    Visit.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo }, city: { $exists: true, $ne: null } } },
+      { $group: { _id: { city: '$city', country: '$country' }, visitors: { $addToSet: '$sessionId' } } },
+      { $project: { city: '$_id.city', country: '$_id.country', visitors: { $size: '$visitors' } } },
+      { $sort: { visitors: -1 } },
+      { $limit: 5 },
+    ]),
   ]);
 
   const topTrafficSources30d = sourcesData.map(s => ({
@@ -314,8 +335,16 @@ async function getZone3Data({ thirtyDaysAgo }) {
     visitors:          s.visitors,
     buyers:            s.buyers,
     conversionPercent: s.visitors > 0
-      ? Math.round((s.buyers / s.visitors) * 10000) / 100
-      : 0,
+      ? Math.min(100, Math.round((s.buyers / s.visitors) * 10000) / 100)
+      : null,
+  }));
+
+  const topCountries30d = topCountriesData.map(c => ({
+    country: c.country, countryCode: c.countryCode || null, visitors: c.visitors,
+  }));
+
+  const topCities30d = topCitiesData.map(c => ({
+    city: c.city, country: c.country || null, visitors: c.visitors,
   }));
 
   let bestConvertingProduct30d = null;
@@ -334,7 +363,7 @@ async function getZone3Data({ thirtyDaysAgo }) {
     }
   }
 
-  return { topProducts30d, topTrafficSources30d, bestConvertingProduct30d };
+  return { topProducts30d, topTrafficSources30d, topCountries30d, topCities30d, bestConvertingProduct30d };
 }
 
 // ── Route ─────────────────────────────────────────────────────────────────────

@@ -14,8 +14,11 @@ const visitSchema = new mongoose.Schema({
   },
   referrer:   String,
   device:     { type: String, enum: ['mobile', 'desktop', 'tablet', 'unknown'], default: 'unknown' },
-  country:    String,
-  createdAt:  { type: Date, default: Date.now, index: true },
+  country:     String,
+  countryCode: String,
+  city:        String,
+  region:      String,
+  createdAt:   { type: Date, default: Date.now, index: true },
   customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', sparse: true, index: true },
   convertedToOrder: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', sparse: true },
 });

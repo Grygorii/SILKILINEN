@@ -79,7 +79,6 @@ const IMAGE_SLOTS = [
   { key: 'side',      label: 'Side',      description: 'Side profile',       required: false },
   { key: 'detail',    label: 'Detail',    description: 'Fabric close-up',    required: false },
   { key: 'lifestyle', label: 'Lifestyle', description: 'Model or scene',     required: false },
-  { key: 'thumbnail', label: 'Thumbnail', description: 'Cart thumbnail',     required: false },
 ] as const;
 
 const EMPTY_FORM: Form = {
@@ -170,6 +169,8 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const [seoGenerating, setSeoGenerating]   = useState(false);
   const [aiFilledFields, setAiFilledFields] = useState<Set<string>>(new Set());
   const [seoToast, setSeoToast]             = useState('');
+  // Slot picker modal
+  const [pickerSlot, setPickerSlot] = useState<string | null>(null);
   // Generate wizard
   const [showWizard, setShowWizard] = useState(false);
   const [genColours, setGenColours] = useState('');
@@ -354,8 +355,44 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   }
 
   function openSlotPicker(slot?: string) {
-    pendingSlotRef.current = slot;
-    slotInputRef.current?.click();
+    if (slot) {
+      // Named slot — open picker modal (shows existing uploads + upload-new option)
+      setPickerSlot(slot);
+    } else {
+      // "+ Add image" button — directly open file input for unslotted upload
+      pendingSlotRef.current = undefined;
+      slotInputRef.current?.click();
+    }
+  }
+
+  async function handleAssignSlot(imageId: string, targetSlot: string) {
+    setUploading(true);
+    try {
+      const res = await fetch(`${API}/api/admin/products/${id}/images/${imageId}/slot`, {
+        method: 'PATCH', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slot: targetSlot }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setImages(updated.slice().sort((a: ProductImage, b: ProductImage) => a.order - b.order));
+      }
+    } finally {
+      setUploading(false);
+      setPickerSlot(null);
+    }
+  }
+
+  async function handleUnslotImage(imageId: string) {
+    const res = await fetch(`${API}/api/admin/products/${id}/images/${imageId}/slot`, {
+      method: 'PATCH', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slot: null }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setImages(updated.slice().sort((a: ProductImage, b: ProductImage) => a.order - b.order));
+    }
   }
 
   function getSlotImage(slotKey: string): ProductImage | undefined {
@@ -665,10 +702,17 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                             onChange={e => handleAltChange(img._id, e.target.value)}
                             placeholder="Alt text…"
                           />
-                          <button
-                            className={styles.slotDelBtn}
-                            onClick={() => handleDeleteImage(img._id)}
-                          >Remove</button>
+                          <div className={styles.slotActions}>
+                            <button
+                              className={styles.slotMoveBtn}
+                              onClick={() => handleUnslotImage(img._id)}
+                              title="Move back to additional images (keeps photo)"
+                            >↓ Gallery</button>
+                            <button
+                              className={styles.slotDelBtn}
+                              onClick={() => handleDeleteImage(img._id)}
+                            >Delete</button>
+                          </div>
                         </div>
                       </>
                     ) : (
@@ -1044,11 +1088,19 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           <AiPhotoshoot
             productId={id}
             productCategory={form.category}
-            onPhotoApproved={async (url) => {
+            onPhotoApproved={async (url, slot) => {
+              // If a named slot was generated and it's already occupied, ask admin
+              const validSlot = slot && IMAGE_SLOTS.some(s => s.key === slot) ? slot : undefined;
+              let targetSlot = validSlot;
+              if (validSlot && images.some(img => img.slot === validSlot)) {
+                const label = IMAGE_SLOTS.find(s => s.key === validSlot)?.label ?? validSlot;
+                const replace = confirm(`Replace the existing ${label} photo with this generated one?\n\nClick Cancel to put it in Additional images instead.`);
+                if (!replace) targetSlot = undefined;
+              }
               const res = await fetch(`${API}/api/admin/products/${id}/images/url`, {
                 method: 'POST', credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url }),
+                body: JSON.stringify({ url, slot: targetSlot }),
               });
               if (res.ok) {
                 const updated = await res.json();
@@ -1058,6 +1110,45 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           />
         </div>
       </div>
+
+      {/* ── Slot picker modal ───────────────────────────────────────────── */}
+      {pickerSlot && (
+        <div className={styles.modalOverlay} onClick={() => setPickerSlot(null)}>
+          <div className={styles.pickerModal} role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+            <div className={styles.pickerHeader}>
+              <h3 className={styles.pickerTitle}>
+                Choose photo for {IMAGE_SLOTS.find(s => s.key === pickerSlot)?.label ?? pickerSlot}
+              </h3>
+              <button className={styles.pickerClose} onClick={() => setPickerSlot(null)}>✕</button>
+            </div>
+            {images.filter(img => !img.slot).length > 0 ? (
+              <div className={styles.pickerGrid}>
+                {images.filter(img => !img.slot).map(img => (
+                  <div key={img._id} className={styles.pickerItem}>
+                    <img src={img.url} alt={img.alt || ''} className={styles.pickerThumb} />
+                    <button
+                      className={styles.pickerUseBtn}
+                      disabled={uploading}
+                      onClick={() => handleAssignSlot(img._id, pickerSlot)}
+                    >Use here</button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className={styles.pickerEmpty}>No unassigned photos yet. Upload one below.</p>
+            )}
+            <button
+              className={styles.pickerUploadBtn}
+              disabled={uploading}
+              onClick={() => {
+                setPickerSlot(null);
+                pendingSlotRef.current = pickerSlot;
+                slotInputRef.current?.click();
+              }}
+            >+ Upload new photo</button>
+          </div>
+        </div>
+      )}
 
       {/* ── Validation modal ─────────────────────────────────────────────── */}
       {validationErrors.length > 0 && (

@@ -482,6 +482,25 @@
 
 .slotDelBtn:hover { color: #b03a2e; border-color: #b03a2e; }
 
+.slotActions {
+  display: flex;
+  gap: 4px;
+}
+
+.slotMoveBtn {
+  flex: 1;
+  height: 24px;
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: color 0.15s;
+}
+.slotMoveBtn:hover { color: var(--dark); }
+
 /* ── Unslotted / additional images ───────────────── */
 
 .unslottedTitle {
@@ -943,3 +962,103 @@
   border-color: #c0392b !important;
   background: #fdf5f5 !important;
 }
+
+/* ── Slot picker modal ──────────────────────────────────────────────────── */
+.pickerModal {
+  background: var(--warm-white, #faf9f7);
+  border: 1px solid var(--border);
+  width: 90vw;
+  max-width: 560px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pickerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.pickerTitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--dark);
+}
+
+.pickerClose {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+.pickerClose:hover { color: var(--dark); }
+
+.pickerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.pickerItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pickerThumb {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  display: block;
+}
+
+.pickerUseBtn {
+  background: var(--dark, #1a1916);
+  color: #fff;
+  border: none;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 7px 0;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.pickerUseBtn:hover:not(:disabled) { opacity: 0.8; }
+.pickerUseBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.pickerEmpty {
+  padding: 20px;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.pickerUploadBtn {
+  margin: 0 20px 20px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--dark);
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 10px 0;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  flex-shrink: 0;
+}
+.pickerUploadBtn:hover:not(:disabled) { border-color: var(--dark); }
+.pickerUploadBtn:disabled { opacity: 0.4; cursor: not-allowed; }
