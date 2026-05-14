@@ -2,13 +2,15 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 14 May 2026 (afternoon).
+Last updated: 14 May 2026 (evening).
 
 ---
 
 ## What it is
 
 E-commerce platform for a silk and linen brand, live at https://silkilinen.com. Owned by Гріша and his wife Sabreena. Brand origin is **Donegal, Ireland** (not Dublin — all customer-facing copy updated 14 May 2026). Built over roughly 12 working days using AI-augmented development (Claude in the chat for design and planning, Claude Code in VS Code for implementation).
+
+**Brand copy layering (intentional):** The main announcement bar says "Ireland" (broad, internationally recognizable, welcoming surface). Product pages, emails, story copy, AI prompts, and footer all say "Donegal" (specific, evocative, the authentic depth of origin). This is deliberate — not a contradiction.
 
 The site exists primarily to **escape Etsy's fee burden** (Etsy takes ~15-20% effective on each sale) and capture margin on existing Etsy product sales. The actual current hero product per the founders is silk panties at volume, not the dress/robe products currently most visible on the site. Strategy work that assumed luxury slip-dress positioning needs a reality-check pass against Etsy sales data before being acted on.
 
@@ -76,6 +78,7 @@ Other admin pages:
 
 ## Known bugs / minor
 
+- Logo CSS: `letter-spacing` adds trailing space after the last glyph, visually shifting letter-spaced text left of center. Fixed 14 May 2026 — `align-items: center` on `.logoLink` + `padding-right` matching `letter-spacing` on each text span.
 - Mongoose duplicate-index warnings on `Product.slug`, `Customer.email`, `Customer.googleId` — cosmetic in logs, not affecting functionality
 - Microsoft Clarity tracker firing — origin unknown, investigate before enabling any paid-ads pixels
 - `finalize()` in AiPhotoshoot (bulk-approve all photos at once) does not auto-route to slots — only individual `approvePhoto()` does. Bulk-finalized photos land in Additional images.

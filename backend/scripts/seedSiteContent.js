@@ -9,7 +9,7 @@ const CONTENT = [
   { key: 'banner_message_2', type: 'text', section: 'banner', label: 'Banner Message 2', order: 2,
     value: 'New to Silkilinen? Use code <strong>SILK10</strong> for 10% off' },
   { key: 'banner_message_3', type: 'text', section: 'banner', label: 'Banner Message 3', order: 3,
-    value: 'Handmade in Donegal with love' },
+    value: 'Handmade in Ireland with love' },
   { key: 'banner_message_4', type: 'text', section: 'banner', label: 'Banner Message 4', order: 4,
     value: 'All silk is <strong>OEKO-TEX certified</strong> — gentle on skin' },
 

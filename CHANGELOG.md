@@ -1,5 +1,22 @@
 # SILKILINEN Changelog
 
+## 2026-05-14 (evening, late) — Three small UX fixes: banner copy, Dublin audit, logo centering
+
+**What changed:**
+
+- **Banner "Ireland" copy** — `AnnouncementBar.tsx` default message changed from "Handmade in Donegal with love" to "Handmade in Ireland with love". Brand logic: "Ireland" on the main banner is the internationally recognizable, welcoming surface; "Donegal" is used everywhere else (product pages, emails, story copy, AI prompts). Intentional layering, not a contradiction. Seed script `backend/scripts/seedSiteContent.js` `banner_message_3` updated to match.
+- **Dublin audit** — Comprehensive grep across all file types for remaining customer-facing "Dublin" references. All legitimate: IANA timezone identifier (`'Europe/Dublin'`), geolocation city field (visitor data), contact form address placeholder (deliberate Irish address), customer shipping address fields. No further changes needed.
+- **Logo centering** — `Navbar.module.css`: added `align-items: center` to `.logoLink` so both lines share a vertical axis. Added `padding-right: 4px` to `.logoText` and `padding-right: 3px` to `.logoSub` to compensate for the visual left-shift caused by CSS `letter-spacing` adding trailing space after the last glyph. Mobile override updated: `padding-right: 3px` on `.logoText` at `max-width: 767px` (matches the overridden `letter-spacing: 3px`).
+
+**Files modified:**
+
+- `frontend/components/AnnouncementBar.tsx` — banner message 3 updated
+- `backend/scripts/seedSiteContent.js` — `banner_message_3` value updated
+- `frontend/components/Navbar.module.css` — `align-items: center` on `.logoLink`; `padding-right` on `.logoText` (desktop + mobile) and `.logoSub`
+- `SILKILINEN.md` — brand copy layering note added; logo CSS bug entry added to Known bugs
+
+---
+
 ## 2026-05-14 (evening) — Fix: empty draft creation schema hardening
 
 **What changed:**
