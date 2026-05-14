@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 13 May 2026 (evening).
+Last updated: 14 May 2026.
 
 ---
 
@@ -54,7 +54,7 @@ Other admin pages:
 - **Preview for drafts** — Preview button fetches a signed token, opens `/preview/[id]?token=...` in a new tab; page is noindex and shows a sticky "PREVIEW MODE — not yet published" banner
 - **Photo slot picker** — named slots (HERO, FRONT, BACK, SIDE, DETAIL, LIFESTYLE) show a picker modal when clicked; admin can choose from existing unassigned uploads ("Use here") or upload new; filled slots show "↓ Gallery" (unslot without delete) + "Delete" actions
 - **AI photo auto-routing** — approving a generated photo auto-places it into its matching named slot; if slot occupied, admin is prompted to replace or send to additional images
-- **Dashboard geo** — "Top countries" and "Top cities" sections in WHAT'S WORKING zone; conversion rate aggregation bug fixed (no more 400%)
+- **Dashboard geo** — "Top countries" and "Top cities" sections in WHAT'S WORKING zone; conversion rate aggregation bug fixed (no more 400%); traffic sources, countries, and cities all show % of total sessions alongside conversion rates
 - Order management
 
 ## Listed products as of 12 May 2026

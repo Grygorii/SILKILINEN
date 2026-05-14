@@ -278,7 +278,7 @@ async function getZone3Data({ thirtyDaysAgo }) {
   });
 
   // Traffic sources, best-converting product, and geo breakdown from Visit model
-  const [sourcesData, bestConvertingData, topCountriesData, topCitiesData] = await Promise.all([
+  const [sourcesData, bestConvertingData, topCountriesData, topCitiesData, totalVisitorCount] = await Promise.all([
     // Fix: deduplicate by (source, sessionId) first so one session with 4 page-views
     // doesn't count as 4 buyers even if convertedToOrder is set on each visit doc.
     Visit.aggregate([
@@ -327,7 +327,16 @@ async function getZone3Data({ thirtyDaysAgo }) {
       { $sort: { visitors: -1 } },
       { $limit: 5 },
     ]),
+
+    // Total unique sessions across all sources (denominator for % of traffic)
+    Visit.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      { $group: { _id: '$sessionId' } },
+      { $count: 'total' },
+    ]),
   ]);
+
+  const totalVisitors = totalVisitorCount[0]?.total || 0;
 
   const topTrafficSources30d = sourcesData.map(s => ({
     source:            s._id || 'direct',
@@ -337,14 +346,27 @@ async function getZone3Data({ thirtyDaysAgo }) {
     conversionPercent: s.visitors > 0
       ? Math.min(100, Math.round((s.buyers / s.visitors) * 10000) / 100)
       : null,
+    percentOfTraffic:  totalVisitors > 0
+      ? Math.round((s.visitors / totalVisitors) * 1000) / 10
+      : null,
   }));
 
   const topCountries30d = topCountriesData.map(c => ({
-    country: c.country, countryCode: c.countryCode || null, visitors: c.visitors,
+    country:          c.country,
+    countryCode:      c.countryCode || null,
+    visitors:         c.visitors,
+    percentOfTraffic: totalVisitors > 0
+      ? Math.round((c.visitors / totalVisitors) * 1000) / 10
+      : null,
   }));
 
   const topCities30d = topCitiesData.map(c => ({
-    city: c.city, country: c.country || null, visitors: c.visitors,
+    city:             c.city,
+    country:          c.country || null,
+    visitors:         c.visitors,
+    percentOfTraffic: totalVisitors > 0
+      ? Math.round((c.visitors / totalVisitors) * 1000) / 10
+      : null,
   }));
 
   let bestConvertingProduct30d = null;

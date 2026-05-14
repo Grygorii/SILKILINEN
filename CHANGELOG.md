@@ -1,5 +1,25 @@
 # SILKILINEN Changelog
 
+## 2026-05-14 — Product form state bug fix + dashboard traffic percentages
+
+**What changed:**
+
+- **Admin product form: stale closure bug fixed** — `markDirty`'s 30-second auto-save timer was always calling the first-render `doSave` (which closed over `EMPTY_FORM`), sending empty values to the backend. Fixed with a `doSaveRef` pattern: a ref is kept in sync with `doSave` via `useEffect([doSave])`, and `markDirty` calls `() => doSaveRef.current?.()` instead of the stale reference. The manual Save button was not affected.
+- **Dashboard traffic sources: % of traffic column added** — Each traffic source row now shows its share of total 30-day sessions alongside the conversion rate. Backend computes the denominator as total unique sessions across all sources via a separate aggregation stage. The header row labels the two right columns ("% traffic" / "conv.").
+- **Dashboard geo sections: % of traffic added** — Top countries and top cities rows now show percentage of total sessions instead of raw visitor count, consistent with the traffic sources section.
+
+**Files modified:**
+
+- `frontend/app/admin/products/[id]/page.tsx` — `doSaveRef` added; `useEffect` syncs ref to `doSave`; `markDirty` timer updated to call ref
+- `backend/routes/adminDashboard.js` — Total unique session count aggregation added; `percentOfTraffic` field added to `topTrafficSources30d`, `topCountries30d`, `topCities30d`
+- `frontend/app/admin/_components/dashboard/Zone3Working.tsx` — `percentOfTraffic` field added to `TrafficSource`, `GeoCountry`, `GeoCity` types; traffic sources table gets two-column header and right-aligned stat columns; countries/cities show `%` when available
+
+**Deviations:**
+
+- None — implementation matches the brief exactly.
+
+---
+
 ## 2026-05-13 — DeepSeek SEO migration
 
 **What changed:**

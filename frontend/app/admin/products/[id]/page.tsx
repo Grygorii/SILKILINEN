@@ -181,6 +181,9 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const altTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const slotInputRef = useRef<HTMLInputElement>(null);
   const pendingSlotRef = useRef<string | undefined>(undefined);
+  // Stable ref so markDirty's auto-save timer always calls the latest doSave,
+  // not the stale closure from the first render.
+  const doSaveRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
   // Load product
   useEffect(() => {
@@ -221,7 +224,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     setSaveState('unsaved');
     setSaveError('');
     clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(doSave, 30_000);
+    autoSaveTimer.current = setTimeout(() => doSaveRef.current?.(), 30_000);
   }, []); // eslint-disable-line
 
   // Auto-clear SEO toast after 4s
@@ -335,6 +338,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       setSaveError(err instanceof Error ? err.message : 'Save failed');
     }
   }, [form, variants, id]); // eslint-disable-line
+
+  useEffect(() => {
+    doSaveRef.current = doSave;
+  }, [doSave]);
 
   // Image handlers
   async function handleImageUpload(files: FileList | null, slot?: string) {

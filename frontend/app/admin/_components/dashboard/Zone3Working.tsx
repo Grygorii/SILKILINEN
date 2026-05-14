@@ -9,14 +9,16 @@ type TopProduct = {
 };
 type TrafficSource = {
   source: string; displayLabel: string;
-  visitors: number; buyers: number; conversionPercent: number | null;
+  visitors: number; buyers: number;
+  conversionPercent: number | null;
+  percentOfTraffic: number | null;
 };
 type BestConverting = {
   productId: string; productName: string; imageUrl: string | null;
   conversionPercent: number; linkTo: string;
 } | null;
-type GeoCountry = { country: string; countryCode: string | null; visitors: number };
-type GeoCity    = { city: string; country: string | null; visitors: number };
+type GeoCountry = { country: string; countryCode: string | null; visitors: number; percentOfTraffic: number | null };
+type GeoCity    = { city: string; country: string | null; visitors: number; percentOfTraffic: number | null };
 
 type Zone3Data = {
   topProducts30d:           TopProduct[];
@@ -99,6 +101,11 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                <div style={{ display: 'flex', gap: 12, padding: '4px 0 8px', fontSize: 10, color: 'var(--muted)', letterSpacing: '0.5px' }}>
+                  <span style={{ flex: 1 }} />
+                  <span style={{ width: 56, textAlign: 'right' }}>% traffic</span>
+                  <span style={{ width: 56, textAlign: 'right' }}>conv.</span>
+                </div>
                 {topTrafficSources30d.map(s => (
                   <div
                     key={s.source}
@@ -112,8 +119,12 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
                     }}
                   >
                     <span style={{ flex: 1, color: 'var(--dark)' }}>{s.displayLabel}</span>
-                    <span style={{ color: 'var(--muted)', fontSize: 12 }}>{s.visitors} visitors</span>
-                    <span style={{ color: 'var(--muted)', fontSize: 12 }}>{s.conversionPercent != null ? `${s.conversionPercent.toFixed(1)}%` : '—'}</span>
+                    <span style={{ width: 56, textAlign: 'right', color: 'var(--muted)', fontSize: 12 }}>
+                      {s.percentOfTraffic != null ? `${s.percentOfTraffic.toFixed(1)}%` : '—'}
+                    </span>
+                    <span style={{ width: 56, textAlign: 'right', color: 'var(--muted)', fontSize: 12 }}>
+                      {s.conversionPercent != null ? `${s.conversionPercent.toFixed(1)}%` : '—'}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -130,7 +141,9 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
                 {topCountries30d.map(c => (
                   <div key={c.country} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
                     <span style={{ flex: 1, color: 'var(--dark)' }}>{c.country}</span>
-                    <span style={{ color: 'var(--muted)', fontSize: 12 }}>{c.visitors} visitors</span>
+                    <span style={{ color: 'var(--muted)', fontSize: 12, textAlign: 'right' }}>
+                      {c.percentOfTraffic != null ? `${c.percentOfTraffic.toFixed(1)}%` : `${c.visitors}`}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -147,7 +160,9 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
                 {topCities30d.map(c => (
                   <div key={`${c.city}-${c.country}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
                     <span style={{ flex: 1, color: 'var(--dark)' }}>{c.city}{c.country ? `, ${c.country}` : ''}</span>
-                    <span style={{ color: 'var(--muted)', fontSize: 12 }}>{c.visitors} visitors</span>
+                    <span style={{ color: 'var(--muted)', fontSize: 12, textAlign: 'right' }}>
+                      {c.percentOfTraffic != null ? `${c.percentOfTraffic.toFixed(1)}%` : `${c.visitors}`}
+                    </span>
                   </div>
                 ))}
               </div>
