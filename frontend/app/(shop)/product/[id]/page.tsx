@@ -30,7 +30,7 @@ export async function generateMetadata(
 
   const title = product.metaTitle || `${product.name} — SILKILINEN`;
   const description = product.metaDescription
-    || (product.description ? product.description.slice(0, 155) : `Shop ${product.name} at SILKILINEN. Pure silk and linen intimates, shipped worldwide from Dublin.`);
+    || (product.description ? product.description.slice(0, 155) : `Shop ${product.name} at SILKILINEN. Pure silk and linen intimates, shipped worldwide from Donegal.`);
   const url = `https://silkilinen.com/product/${id}`;
   const primaryImage = product.images?.find((i: { isPrimary: boolean }) => i.isPrimary);
   const image = primaryImage?.url || product.images?.[0]?.url || product.image || 'https://silkilinen.com/og-default.jpg';
@@ -190,7 +190,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               <details className={styles.accordion}>
                 <summary className={styles.accordionSummary}>DELIVERY & RETURNS</summary>
                 <p className={styles.accordionBody}>
-                  We ship from Dublin, Ireland worldwide. Standard delivery 5–10 business days. Express shipping available at checkout. Returns accepted within 14 days of delivery for unworn items in their original condition.
+                  We ship from Donegal, Ireland worldwide. Standard delivery 5–10 business days. Express shipping available at checkout. Returns accepted within 14 days of delivery for unworn items in their original condition.
                 </p>
               </details>
               <details className={styles.accordion}>

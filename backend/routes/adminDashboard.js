@@ -91,6 +91,16 @@ function getTimeWindows() {
   };
 }
 
+function calculateConversion(buyers, visitors) {
+  if (!visitors) return null;
+  if (!buyers) return 0;
+  if (buyers > visitors) {
+    console.warn(`[dashboard] Suspicious conversion: ${buyers} buyers vs ${visitors} visitors`);
+    return 100;
+  }
+  return Math.round((buyers / visitors) * 1000) / 10;
+}
+
 function computeDelta(thisCents, lastCents) {
   if (!lastCents) return { deltaPercent: null, direction: 'neutral' };
   const delta = ((thisCents - lastCents) / lastCents) * 100;
@@ -277,6 +287,13 @@ async function getZone3Data({ thirtyDaysAgo }) {
     };
   });
 
+  // Total paid orders in window (used for showConversion flag)
+  const totalOrdersInWindow = await Order.countDocuments({
+    status: { $in: PAID_STATUSES },
+    createdAt: { $gte: thirtyDaysAgo },
+  });
+  const showConversion = totalOrdersInWindow > 0;
+
   // Traffic sources, best-converting product, and geo breakdown from Visit model
   const [sourcesData, bestConvertingData, topCountriesData, topCitiesData, totalVisitorCount] = await Promise.all([
     // Fix: deduplicate by (source, sessionId) first so one session with 4 page-views
@@ -343,9 +360,7 @@ async function getZone3Data({ thirtyDaysAgo }) {
     displayLabel:      displayLabel(s._id || 'direct'),
     visitors:          s.visitors,
     buyers:            s.buyers,
-    conversionPercent: s.visitors > 0
-      ? Math.min(100, Math.round((s.buyers / s.visitors) * 10000) / 100)
-      : null,
+    conversionPercent: calculateConversion(s.buyers, s.visitors),
     percentOfTraffic:  totalVisitors > 0
       ? Math.round((s.visitors / totalVisitors) * 1000) / 10
       : null,
@@ -385,7 +400,7 @@ async function getZone3Data({ thirtyDaysAgo }) {
     }
   }
 
-  return { topProducts30d, topTrafficSources30d, topCountries30d, topCities30d, bestConvertingProduct30d };
+  return { topProducts30d, topTrafficSources30d, topCountries30d, topCities30d, bestConvertingProduct30d, showConversion };
 }
 
 // ── Route ─────────────────────────────────────────────────────────────────────

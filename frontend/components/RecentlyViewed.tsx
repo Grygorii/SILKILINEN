@@ -12,6 +12,7 @@ type ViewedProduct = {
 
 const KEY = 'silkilinen_recently_viewed';
 const MAX = 4;
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 export function trackProductView(id: string, name: string, price: number) {
   try {
@@ -27,11 +28,36 @@ export default function RecentlyViewed({ excludeId }: { excludeId: string }) {
   const [products, setProducts] = useState<ViewedProduct[]>([]);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      const all: ViewedProduct[] = raw ? JSON.parse(raw) : [];
-      setProducts(all.filter(p => p.id !== excludeId));
-    } catch { /* ignore */ }
+    async function loadAndValidate() {
+      try {
+        const raw = localStorage.getItem(KEY);
+        const all: ViewedProduct[] = raw ? JSON.parse(raw) : [];
+        const candidates = all.filter(p => p.id !== excludeId);
+        if (candidates.length === 0) return;
+
+        const validated = (await Promise.all(
+          candidates.map(async (p) => {
+            try {
+              const res = await fetch(`${API}/api/products/${p.id}`);
+              if (!res.ok) return null;
+              const product = await res.json();
+              if (product.status !== 'active') return null;
+              return p;
+            } catch {
+              return null;
+            }
+          })
+        )).filter((p): p is ViewedProduct => p !== null);
+
+        // Write back only valid IDs so future loads skip deleted products
+        const validIds = validated.map(p => p.id);
+        const fullList: ViewedProduct[] = raw ? JSON.parse(raw) : [];
+        localStorage.setItem(KEY, JSON.stringify(fullList.filter(p => validIds.includes(p.id))));
+
+        setProducts(validated);
+      } catch { /* ignore */ }
+    }
+    loadAndValidate();
   }, [excludeId]);
 
   if (products.length === 0) return null;

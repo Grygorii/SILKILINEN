@@ -1,5 +1,50 @@
 # SILKILINEN Changelog
 
+## 2026-05-14 (afternoon) — UX bug bundle: pre-window, conversion math, recently viewed, Donegal copy
+
+**What changed:**
+
+- **"New product" pre-window removed** — clicking "Add Product" now creates an empty draft immediately via `POST /api/admin/products` (with `createEmptyDraft: true` flag) and redirects straight to the full edit page. The intermediate form page is replaced with a spinner + auto-redirect. No more entering name/price twice. Backend accepts empty name and price=0 for this path, bypassing `validateForSave`.
+- **Conversion math fixed** — `calculateConversion(buyers, visitors)` helper added. Returns `null` when visitors=0 (shows —), returns `0` explicitly when buyers=0 (shows 0.0%), caps at 100% with a warning log if buyers > visitors. Optional `showConversion` flag added: when total paid orders in the 30-day window is 0, the conversion column is hidden entirely from TOP SOURCES. This prevents "0.0% across every source" noise during the pre-revenue period.
+- **Recently viewed filters deleted/archived products** — Component now fetches each product ID from the public API before rendering. Products returning 404 or with `status !== 'active'` are silently dropped. After validation, the cleaned list of valid IDs is written back to localStorage so future loads don't re-fetch deleted products. Section hides entirely when all are gone.
+- **"Dublin" → "Donegal" across all customer-facing surfaces** — AnnouncementBar, Footer (badge + body + bottom line), StorySection (title + default text), About page (hero heading + body + values card), all email templates (order confirmation, magic link, welcome, newsletter — 8 replacements), Product model origin default, EMPTY_FORM fallback in admin product edit page.
+- **DB migration** — 0 products had `origin: "Made in Dublin"` (schema default had already been correct in DB); 6 products had null/empty origin and were updated to `"Made in Donegal"`. All 14 products now have Donegal origin.
+
+**Files modified:**
+
+- `frontend/app/admin/products/new/page.tsx` — replaced with auto-creating redirect
+- `frontend/app/admin/products/new/page.module.css` — added `.creating` / `.creatingText` styles
+- `backend/routes/adminProducts.js` — `createEmptyDraft` flag path added to POST route
+- `backend/routes/adminDashboard.js` — `calculateConversion()` helper; `showConversion` flag; total orders count added to Zone 3
+- `frontend/app/admin/_components/dashboard/Zone3Working.tsx` — `showConversion` type + conditional conv. column
+- `frontend/components/RecentlyViewed.tsx` — API validation on load, localStorage cleanup
+- `frontend/components/AnnouncementBar.tsx` — "Dublin" → "Donegal"
+- `frontend/components/Footer.tsx` — "Dublin" → "Donegal" (3 occurrences)
+- `frontend/components/StorySection.tsx` — "Dublin" → "Donegal" (2 occurrences)
+- `frontend/app/(shop)/about/page.tsx` — "Dublin" → "Donegal" (4 occurrences)
+- `backend/services/email.js` — "Dublin" → "Donegal" (8 occurrences)
+- `backend/models/Product.js` — origin default `'Made in Dublin'` → `'Made in Donegal'`
+- `frontend/app/admin/products/[id]/page.tsx` — EMPTY_FORM origin default updated
+
+**Database changes:**
+
+- 0 products updated from `"Made in Dublin"` (none had that value)
+- 6 products updated from null/empty origin → `"Made in Donegal"`
+- Total: all 14 products now have `origin: "Made in Donegal"`
+
+**Optional enhancement shipped:**
+
+- `showConversion: false` when total orders = 0 → conversion column hidden entirely until first revenue event
+
+**Out of scope (deferred):**
+
+- Phase 1 Social Media MVP
+- Lingerie/intimates photography workflow
+- Larger dashboard redesign
+- Collections / New Arrivals feature
+
+---
+
 ## 2026-05-14 — Product form state bug fix + dashboard traffic percentages
 
 **What changed:**

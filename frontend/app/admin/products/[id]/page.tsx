@@ -85,7 +85,7 @@ const EMPTY_FORM: Form = {
   name: '', status: 'draft', price: '', compareAtPrice: '', costPrice: '',
   category: 'robes', description: '', tags: '',
   metaTitle: '', metaDescription: '', slug: '', keywords: '', altTextTemplate: '',
-  materialComposition: '', careInstructions: '', origin: 'Made in Dublin', certifications: '',
+  materialComposition: '', careInstructions: '', origin: 'Made in Donegal', certifications: '',
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -207,7 +207,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           altTextTemplate: p.altTextTemplate ?? '',
           materialComposition: p.materialComposition ?? '',
           careInstructions: p.careInstructions ?? '',
-          origin: p.origin ?? 'Made in Dublin',
+          origin: p.origin ?? 'Made in Donegal',
           certifications: (p.certifications ?? []).join(', '),
         });
         const sorted = (p.images ?? []).slice().sort((a: ProductImage, b: ProductImage) => a.order - b.order);
@@ -948,7 +948,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             <div className={styles.frow}>
               <div className={styles.fg}>
                 <label className={styles.label}>Country of origin</label>
-                <input className={styles.input} value={form.origin} onChange={e => setField('origin', e.target.value)} placeholder="Made in Dublin" />
+                <input className={styles.input} value={form.origin} onChange={e => setField('origin', e.target.value)} placeholder="Made in Donegal" />
               </div>
               <div className={styles.fg}>
                 <label className={styles.label}>Certifications (comma separated)</label>
@@ -1076,7 +1076,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 className={`${styles.input} ${aiFilledFields.has('keywords') ? styles.aiFilledInput : ''}`}
                 value={form.keywords}
                 onChange={e => setField('keywords', e.target.value)}
-                placeholder="silk shorts, luxury lingerie, handmade Dublin"
+                placeholder="silk shorts, luxury lingerie, handmade Donegal"
               />
             </div>
             {form.altTextTemplate && (
@@ -1086,7 +1086,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                   className={`${styles.input} ${aiFilledFields.has('altTextTemplate') ? styles.aiFilledInput : ''}`}
                   value={form.altTextTemplate}
                   onChange={e => setField('altTextTemplate', e.target.value)}
-                  placeholder="Product name — {position} view, handmade silk by SILKILINEN Dublin"
+                  placeholder="Product name — {position} view, handmade silk by SILKILINEN Donegal"
                 />
               </div>
             )}

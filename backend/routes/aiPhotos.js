@@ -110,7 +110,7 @@ function generateAltText(product, position) {
   const colour = product.colours?.[0] || '';
   const colourPart = colour ? ` in ${colour}` : '';
   const desc = POSITION_ALT_DESCRIPTIONS[position] || position;
-  return `${product.name}${colourPart}, ${desc} — handmade silk by SILKILINEN, Dublin`;
+  return `${product.name}${colourPart}, ${desc} — handmade silk by SILKILINEN, Donegal`;
 }
 
 // ── Cloudinary / Gemini helpers ───────────────────────────────────────────────

@@ -4,7 +4,7 @@ import styles from './page.module.css';
 
 export const metadata: Metadata = {
   title: 'Shop — SILKILINEN',
-  description: 'Browse the full SILKILINEN collection of pure silk and linen intimates. Robes, slips, dresses and sets, shipped worldwide from Dublin.',
+  description: 'Browse the full SILKILINEN collection of pure silk and linen intimates. Robes, slips, dresses and sets, shipped worldwide from Donegal.',
 };
 
 const CATEGORY_COPY: Record<string, { title: string; description: string }> = {

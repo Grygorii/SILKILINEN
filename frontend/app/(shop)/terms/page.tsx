@@ -21,7 +21,7 @@ export default function TermsPage() {
         <section className={styles.section}>
           <h2>1. About us</h2>
           <p>
-            SILKILINEN is a retailer of silk and linen intimates operated from Dublin, Ireland.
+            SILKILINEN is a retailer of silk and linen intimates operated from Donegal, Ireland.
             Contact: <a href="mailto:hello@silkilinen.com">hello@silkilinen.com</a>
           </p>
         </section>

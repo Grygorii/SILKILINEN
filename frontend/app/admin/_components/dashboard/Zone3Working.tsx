@@ -26,6 +26,7 @@ type Zone3Data = {
   topCountries30d:          GeoCountry[];
   topCities30d:             GeoCity[];
   bestConvertingProduct30d: BestConverting;
+  showConversion:           boolean;
 };
 
 function fmtCents(cents: number) {
@@ -34,7 +35,7 @@ function fmtCents(cents: number) {
 
 export default function Zone3Working({ data }: { data: Zone3Data }) {
   const router = useRouter();
-  const { topProducts30d, topTrafficSources30d, bestConvertingProduct30d } = data;
+  const { topProducts30d, topTrafficSources30d, bestConvertingProduct30d, showConversion } = data;
   const topCountries30d = data.topCountries30d ?? [];
   const topCities30d    = data.topCities30d    ?? [];
 
@@ -104,7 +105,7 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
                 <div style={{ display: 'flex', gap: 12, padding: '4px 0 8px', fontSize: 10, color: 'var(--muted)', letterSpacing: '0.5px' }}>
                   <span style={{ flex: 1 }} />
                   <span style={{ width: 56, textAlign: 'right' }}>% traffic</span>
-                  <span style={{ width: 56, textAlign: 'right' }}>conv.</span>
+                  {showConversion && <span style={{ width: 56, textAlign: 'right' }}>conv.</span>}
                 </div>
                 {topTrafficSources30d.map(s => (
                   <div
@@ -122,9 +123,11 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
                     <span style={{ width: 56, textAlign: 'right', color: 'var(--muted)', fontSize: 12 }}>
                       {s.percentOfTraffic != null ? `${s.percentOfTraffic.toFixed(1)}%` : '—'}
                     </span>
-                    <span style={{ width: 56, textAlign: 'right', color: 'var(--muted)', fontSize: 12 }}>
-                      {s.conversionPercent != null ? `${s.conversionPercent.toFixed(1)}%` : '—'}
-                    </span>
+                    {showConversion && (
+                      <span style={{ width: 56, textAlign: 'right', color: 'var(--muted)', fontSize: 12 }}>
+                        {s.conversionPercent != null ? `${s.conversionPercent.toFixed(1)}%` : '—'}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>

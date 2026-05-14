@@ -17,7 +17,7 @@ export default function PrivacyPolicyPage() {
         <section className={styles.section}>
           <h2>Who we are</h2>
           <p>
-            SILKILINEN is an online retailer of silk and linen intimates, operated from Dublin, Ireland.
+            SILKILINEN is an online retailer of silk and linen intimates, operated from Donegal, Ireland.
             We are the data controller for the personal information collected through this website
             (<a href="https://silkilinen.com">silkilinen.com</a>).
           </p>

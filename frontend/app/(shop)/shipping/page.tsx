@@ -45,7 +45,7 @@ export default function ShippingPage() {
             </table>
           </div>
           <p className={styles.note}>
-            All orders are dispatched from Dublin, Ireland within 1–2 business days of payment confirmation.
+            All orders are dispatched from Donegal, Ireland within 1–2 business days of payment confirmation.
             Delivery times are estimates and may vary during busy periods.
           </p>
         </section>

@@ -71,7 +71,7 @@ const productSchema = new mongoose.Schema({
 
   materialComposition: { type: String },
   careInstructions: { type: String },
-  origin: { type: String, default: 'Made in Dublin' },
+  origin: { type: String, default: 'Made in Donegal' },
   certifications: [String],
 
   lastUpdatedBy: { type: ObjectId, ref: 'User' },

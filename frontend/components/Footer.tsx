@@ -20,16 +20,16 @@ export default function Footer() {
         </div>
         <div className={styles.trustBadge}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-          <span>Handmade in Dublin</span>
+          <span>Handmade in Donegal</span>
         </div>
       </div>
 
       <div className={styles.inner}>
         <div className={styles.brand}>
           <h3>SILKILINEN</h3>
-          <p>Pure silk &amp; linen intimates,<br />shipped worldwide from Dublin.</p>
+          <p>Pure silk &amp; linen intimates,<br />shipped worldwide from Donegal.</p>
           <p className={styles.address}>
-            Dublin, Ireland<br />
+            Donegal, Ireland<br />
             <a href="mailto:hello@silkilinen.com">hello@silkilinen.com</a>
           </p>
         </div>
@@ -56,7 +56,7 @@ export default function Footer() {
       </div>
       <div className={styles.bottom}>
         <p>© {new Date().getFullYear()} SILKILINEN. All rights reserved.</p>
-        <p>Registered in Dublin, Ireland · VAT not applicable — small business exemption (Ireland)</p>
+        <p>Registered in Donegal, Ireland · VAT not applicable — small business exemption (Ireland)</p>
       </div>
     </footer>
   );

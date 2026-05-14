@@ -22,7 +22,7 @@ const FAQS = [
   },
   {
     q: 'Do you ship worldwide?',
-    a: 'Yes. We ship from Dublin, Ireland to most countries. Standard international shipping typically takes 7–14 business days. Expedited options are available at checkout. Customs duties and import taxes for international orders are the responsibility of the recipient.',
+    a: 'Yes. We ship from Donegal, Ireland to most countries. Standard international shipping typically takes 7–14 business days. Expedited options are available at checkout. Customs duties and import taxes for international orders are the responsibility of the recipient.',
   },
   {
     q: 'What is your return policy?',

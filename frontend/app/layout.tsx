@@ -14,7 +14,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Silkilinen — Pure Silk & Linen Intimates",
-  description: "Handpicked silk and linen intimates, shipped worldwide from Dublin, Ireland.",
+  description: "Handpicked silk and linen intimates, shipped worldwide from Donegal, Ireland.",
 };
 
 export default function RootLayout({

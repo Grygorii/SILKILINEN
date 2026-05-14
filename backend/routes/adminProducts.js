@@ -182,6 +182,20 @@ router.get('/:id', async function(req, res) {
 // POST /api/admin/products — create draft
 router.post('/', async function(req, res) {
   try {
+    // Empty-draft path: skip name/price validation, create with bare defaults
+    if (req.body.createEmptyDraft) {
+      const product = new Product({
+        name: '',
+        price: 0,
+        status: 'draft',
+        category: req.body.category || CATEGORY_SLUGS[0] || 'robes',
+        origin: 'Made in Donegal',
+        lastUpdatedBy: req.user.userId,
+      });
+      await product.save({ validateBeforeSave: false });
+      return res.status(201).json(product);
+    }
+
     const saveErrors = validateForSave(req.body);
     if (saveErrors.length) {
       return res.status(400).json({ error: 'ValidationError', fields: saveErrors });
@@ -592,7 +606,7 @@ router.post('/:id/images/url', async function(req, res) {
 
     const defaultAlt = alt || (product.altTextTemplate
       ? product.altTextTemplate.replace('{position}', validSlot || 'product photo')
-      : `${product.name} — handmade silk by SILKILINEN, Dublin`);
+      : `${product.name} — handmade silk by SILKILINEN, Donegal`);
 
     product.images.push({
       url,
@@ -647,7 +661,7 @@ router.post('/:id/images', imgUpload.array('images', 20), async function(req, re
       });
       const defaultAlt = product.altTextTemplate
         ? product.altTextTemplate.replace('{position}', slot || 'product photo')
-        : `${product.name} — handmade silk by SILKILINEN, Dublin`;
+        : `${product.name} — handmade silk by SILKILINEN, Donegal`;
       product.images.push({
         url: result.secure_url,
         alt: defaultAlt,

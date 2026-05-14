@@ -20,7 +20,7 @@ export default function ContactPage() {
           </div>
           <div className={styles.block}>
             <h3>Based in</h3>
-            <p>Dublin, Ireland</p>
+            <p>Donegal, Ireland</p>
           </div>
           <div className={styles.block}>
             <h3>Shipping</h3>

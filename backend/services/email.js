@@ -121,7 +121,7 @@ function buildHtml({ order, isAdmin }) {
           <tr>
             <td style="background:#f0ede8;padding:24px 40px;text-align:center;">
               <p style="margin:0 0 6px;font-size:12px;color:#8a8680;">Questions? Email us at <a href="mailto:hello@silkilinen.com" style="color:#1a1916;text-decoration:underline;">hello@silkilinen.com</a></p>
-              <p style="margin:0;font-size:11px;color:#aca8a2;">Dublin, Ireland &nbsp;·&nbsp; Worldwide shipping</p>
+              <p style="margin:0;font-size:11px;color:#aca8a2;">Donegal, Ireland &nbsp;·&nbsp; Worldwide shipping</p>
             </td>
           </tr>
 
@@ -178,7 +178,7 @@ async function sendMagicLink({ email, link }) {
 <p style="margin:36px 0 0;font-size:11px;color:#8a8680;">If you didn't request this, you can safely ignore this email.</p>
 </td></tr>
 <tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
-<p style="margin:0;font-size:11px;color:#aca8a2;">Dublin, Ireland &nbsp;·&nbsp; hello@silkilinen.com</p>
+<p style="margin:0;font-size:11px;color:#aca8a2;">Donegal, Ireland &nbsp;·&nbsp; hello@silkilinen.com</p>
 </td></tr>
 </table></td></tr></table></body></html>`,
   });
@@ -202,12 +202,12 @@ async function sendWelcome({ email, firstName }) {
 </td></tr>
 <tr><td style="background:#faf8f4;padding:48px 40px;">
 <p style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1916;">Welcome, ${name}</p>
-<p style="margin:0 0 24px;font-size:13px;color:#5a5650;line-height:1.8;">Thank you for joining SILKILINEN. Every piece we make is crafted by hand in Dublin from pure silk and linen — made to be worn, felt, and loved.</p>
+<p style="margin:0 0 24px;font-size:13px;color:#5a5650;line-height:1.8;">Thank you for joining SILKILINEN. Every piece we make is crafted by hand in Donegal from pure silk and linen — made to be worn, felt, and loved.</p>
 <p style="margin:0 0 36px;font-size:13px;color:#5a5650;line-height:1.8;">As a welcome gift, use code <strong style="color:#1a1916;letter-spacing:1px;">SILK10</strong> at checkout for 10% off your first order.</p>
 <a href="https://silkilinen.com/shop" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Shop the collection</a>
 </td></tr>
 <tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
-<p style="margin:0;font-size:11px;color:#aca8a2;">Dublin, Ireland &nbsp;·&nbsp; hello@silkilinen.com</p>
+<p style="margin:0;font-size:11px;color:#aca8a2;">Donegal, Ireland &nbsp;·&nbsp; hello@silkilinen.com</p>
 </td></tr>
 </table></td></tr></table></body></html>`,
   });
@@ -240,7 +240,7 @@ ${trackingBlock || ''}
 </td></tr>
 <tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
 <p style="margin:0 0 6px;font-size:12px;color:#8a8680;">Questions? <a href="mailto:hello@silkilinen.com" style="color:#1a1916;text-decoration:underline;">hello@silkilinen.com</a></p>
-<p style="margin:0;font-size:11px;color:#aca8a2;">Dublin, Ireland &nbsp;·&nbsp; Worldwide shipping</p>
+<p style="margin:0;font-size:11px;color:#aca8a2;">Donegal, Ireland &nbsp;·&nbsp; Worldwide shipping</p>
 </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -342,7 +342,7 @@ async function sendNewsletterWelcome({ email, code, validUntil, unsubscribeToken
 </td></tr>
 <tr><td style="background:#faf8f4;padding:48px 40px;">
 <p style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1916;">Welcome.</p>
-<p style="margin:0 0 24px;font-size:13px;color:#5a5650;line-height:1.8;">Thank you for joining us. We're a small Dublin studio making silk and linen pieces by hand, in considered batches.</p>
+<p style="margin:0 0 24px;font-size:13px;color:#5a5650;line-height:1.8;">Thank you for joining us. We're a small Donegal studio making silk and linen pieces by hand, in considered batches.</p>
 <p style="margin:0 0 28px;font-size:13px;color:#5a5650;line-height:1.8;">Your first order has 10% off. Use this code at checkout:</p>
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
 <tr><td style="background:#f0ede8;border-left:3px solid #1a1916;padding:20px 24px;text-align:center;">
@@ -354,7 +354,7 @@ async function sendNewsletterWelcome({ email, code, validUntil, unsubscribeToken
 <p style="margin:40px 0 0;font-size:13px;color:#5a5650;line-height:1.8;">Slowly,<br>SILKILINEN<br><a href="mailto:hello@silkilinen.com" style="color:#1a1916;">hello@silkilinen.com</a></p>
 </td></tr>
 <tr><td style="background:#f0ede8;padding:20px 40px;text-align:center;">
-<p style="margin:0;font-size:11px;color:#aca8a2;">Dublin, Ireland &nbsp;·&nbsp; Worldwide shipping &nbsp;·&nbsp; <a href="${unsubLink}" style="color:#aca8a2;">Unsubscribe</a></p>
+<p style="margin:0;font-size:11px;color:#aca8a2;">Donegal, Ireland &nbsp;·&nbsp; Worldwide shipping &nbsp;·&nbsp; <a href="${unsubLink}" style="color:#aca8a2;">Unsubscribe</a></p>
 </td></tr>
 </table></td></tr></table></body></html>`,
   });
@@ -405,7 +405,7 @@ ${messageBlock}
 </table>
 </td></tr>
 <tr><td style="background:#f0ede8;padding:20px 40px;text-align:center;">
-<p style="margin:0;font-size:11px;color:#aca8a2;">Dublin, Ireland &nbsp;·&nbsp; Worldwide shipping</p>
+<p style="margin:0;font-size:11px;color:#aca8a2;">Donegal, Ireland &nbsp;·&nbsp; Worldwide shipping</p>
 </td></tr>
 </table>
 </td></tr></table>
