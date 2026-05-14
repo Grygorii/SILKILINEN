@@ -30,7 +30,10 @@ const productVideoSchema = new mongoose.Schema({
 }, { _id: false });
 
 const productSchema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true },
+  // required: false — application-level validation via validateForSave() / validateForPublish()
+  // handles required-on-save and required-on-publish checks. Schema required: true would
+  // block empty draft creation.
+  name: { type: String, required: false, default: '', trim: true },
 
   status: {
     type: String,
@@ -39,11 +42,11 @@ const productSchema = new mongoose.Schema({
     index: true,
   },
 
-  price: { type: Number, required: true, min: 0 },
+  price: { type: Number, required: false, default: 0, min: 0 },
   compareAtPrice: { type: Number, min: 0 },
   costPrice: { type: Number, min: 0 },
 
-  category: { type: String, required: true, trim: true, enum: CATEGORY_SLUGS },
+  category: { type: String, required: false, trim: true, enum: CATEGORY_SLUGS, default: CATEGORY_SLUGS[0] },
   description: { type: String, trim: true },
   tags: [String],
 

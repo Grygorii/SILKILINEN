@@ -1,5 +1,24 @@
 # SILKILINEN Changelog
 
+## 2026-05-14 (evening) — Fix: empty draft creation schema hardening
+
+**What changed:**
+
+- **Root cause:** `createEmptyDraft` backend code was correct but Railway was running pre-change code (changes not yet committed/pushed). This entry documents the schema hardening shipped alongside the deployment.
+- **Product schema:** Removed `required: true` from `name`, `price`, `category`. Added safe defaults (`name: ''`, `price: 0`, `category: CATEGORY_SLUGS[0]`). Application-level validation via `validateForSave()` and `validateForPublish()` already handles required-on-save and required-on-publish. Schema `required: true` was redundant and blocked empty draft creation.
+- **POST /api/admin/products (createEmptyDraft path):** Simplified — no longer needs `validateBeforeSave: false` since the schema now has defaults for all previously-required fields. `new Product({ status: 'draft', origin: 'Made in Donegal', ... }).save()` works directly.
+
+**Files modified:**
+
+- `backend/models/Product.js` — `name`, `price`, `category` changed from `required: true` to `required: false` with defaults
+- `backend/routes/adminProducts.js` — `createEmptyDraft` path simplified (removed `validateBeforeSave: false`)
+
+**Deployment note:**
+
+The production fix requires a git commit and push to trigger Railway redeploy. The `createEmptyDraft` handler on the POST route was already present in the local codebase since the afternoon brief.
+
+---
+
 ## 2026-05-14 (afternoon) — UX bug bundle: pre-window, conversion math, recently viewed, Donegal copy
 
 **What changed:**

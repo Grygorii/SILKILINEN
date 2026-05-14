@@ -182,17 +182,14 @@ router.get('/:id', async function(req, res) {
 // POST /api/admin/products — create draft
 router.post('/', async function(req, res) {
   try {
-    // Empty-draft path: skip name/price validation, create with bare defaults
+    // Empty-draft path: create immediately with schema defaults, bypass app-level validators
     if (req.body.createEmptyDraft) {
       const product = new Product({
-        name: '',
-        price: 0,
         status: 'draft',
-        category: req.body.category || CATEGORY_SLUGS[0] || 'robes',
         origin: 'Made in Donegal',
         lastUpdatedBy: req.user.userId,
       });
-      await product.save({ validateBeforeSave: false });
+      await product.save();
       return res.status(201).json(product);
     }
 
