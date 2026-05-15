@@ -4,7 +4,18 @@
       "Bash(find /d/Programming/Course_*/Silkilinen/backend -maxdepth 2 -type f \\\\\\( -name \"*.js\" -o -name \"*.json\" \\\\\\) ! -path \"*/node_modules/*\")",
       "Bash(find /d/Programming/Course_*/Silkilinen/frontend -maxdepth 3 -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" -o -name \"*.json\" -o -name \"*.css\" \\\\\\) ! -path \"*/node_modules/*\" ! -path \"*/.next/*\")",
       "Bash(del backend\\\\services\\\\seoGenerator.js)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(dir /s /b \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\frontend\\\\app\\\\\\(shop\\)\\\\product\")",
+      "Bash(xargs ls -la)",
+      "Bash(dir /b \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\frontend\\\\components\\\\ContactWidget*\")",
+      "Bash(dir /b \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\frontend\\\\components\\\\DropAHint*\")",
+      "Bash(dir \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\backend\\\\routes\" /b)",
+      "Bash(mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/admin/collections\" && mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/admin/collections/[id]\")",
+      "Bash(mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/\\(shop\\)/collections/[slug]\")"
+    ],
+    "additionalDirectories": [
+      "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\admin\\collections",
+      "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\(shop)\\collections"
     ]
   }
 }
