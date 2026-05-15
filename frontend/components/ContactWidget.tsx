@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { MessageCircle } from 'lucide-react';
 import styles from './ContactWidget.module.css';
 
 const BLOCKED_PATHS = ['/admin', '/checkout'];
@@ -52,6 +53,9 @@ export default function ContactWidget() {
                 </a>
               ))}
             </div>
+            <p className={styles.responseTime}>
+              Response time: usually within 24 hours
+            </p>
           </div>
         </>
       )}
@@ -60,7 +64,7 @@ export default function ContactWidget() {
         onClick={() => setOpen(v => !v)}
         aria-label={open ? 'Close contact panel' : 'Contact us'}
       >
-        {open ? '✕' : '?'}
+        {open ? '✕' : <MessageCircle size={20} strokeWidth={1.5} />}
       </button>
     </div>
   );

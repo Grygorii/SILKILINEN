@@ -1,5 +1,61 @@
 # SILKILINEN Changelog
 
+## 2026-05-15 — Product page polish (7 improvements for soft launch)
+
+**What changed:**
+
+- **Multi-image gallery with thumbnail strip (Sections 1+2)** — `ProductGallery` fully rewritten. Desktop: vertical 88px thumbnail strip on the left, main image on the right. All product images and video appear as thumbnails. Click any thumbnail to display in the main area. Mobile: full-width image with page dots and native touch swipe (no library dependency — native `onTouchStart`/`onTouchEnd` with 40px threshold). `isPrimary` image always first, then sorted by `order` field.
+- **Video display on product pages (Section 2)** — `product.productVideo` is now passed from `page.tsx` to `ProductGallery`. Video appears as the last thumbnail with a play-icon overlay derived from Cloudinary's `so_0,f_jpg` still-frame transformation. Main area renders a `<video>` element with `controls`, `playsInline`, `preload="none"`. Video pauses automatically when navigating to a different thumbnail. No autoplay.
+- **"One Size" auto-select (Section 3)** — `ProductOptions` initialises `selectedSize` via lazy `useState(() => sizes.length === 1 ? sizes[0] : '')`. Single-size products skip the "PLEASE SELECT A SIZE" gate; "ADD TO BAG" is active on page load. Multi-size products unchanged.
+- **Story sentence above price (Section 4)** — `getStorySnippet()` helper extracts the first ~180 characters of `product.description` (sentence-boundary aware). Shown in italic muted text between the material subtitle and the price. "Read more" anchor links to `#product-details` if truncated. If description is absent or too short, section hides gracefully.
+- **PRODUCT DETAILS accordion open by default (Section 4)** — `<details id="product-details" open>` — customer immediately sees material, origin, and product story on page load. Other accordions (Material and Care, Delivery & Returns, Gift Packaging) remain closed.
+- **Wishlist heart style fix (Section 5)** — White circle background removed entirely. Heart now floats on the image with `filter: drop-shadow` for visibility across light/dark silk tones. Filled charcoal (`currentColor`, which is `--dark`) when wishlisted — never red. Scale animation preserved. Z-index fixed: `DropAHint` now renders via `createPortal(…, document.body)` escaping the `position: sticky + overflow-y: auto` ancestor that caused the Safari stacking-context bug where fixed overlays didn't cover the full viewport.
+- **Free shipping reminder below price (Section 6)** — Below the price, a dynamic italic line shows: "✨ Free shipping to Ireland included" (price ≥ €150) or "Add €X for free shipping to Ireland" (price < €150, rounded up). Copy is always Ireland-specific — no international shipping logic needed yet.
+- **Contact button: speech bubble + response time (Section 7)** — Floating trigger button now renders `<MessageCircle size={20} />` from lucide-react instead of `?`. Cormorant Garamond serif font removed from the trigger (inappropriate for a UI icon). "Response time: usually within 24 hours" line added below the channel list inside the panel.
+
+**Files modified:**
+
+- `frontend/components/ProductGallery.tsx` — full rewrite
+- `frontend/components/ProductGallery.module.css` — full rewrite
+- `frontend/components/ProductOptions.tsx` — lazy useState for auto-select
+- `frontend/app/(shop)/product/[id]/page.tsx` — story snippet, shipping note, video prop, open accordion
+- `frontend/app/(shop)/product/[id]/page.module.css` — `.storySentence`, `.readMore`, `.shippingNote`, `.price` margin adjusted
+- `frontend/components/DropAHint.tsx` — `createPortal(…, document.body)` for z-index fix
+- `frontend/components/ContactWidget.tsx` — `MessageCircle` icon, response time line
+- `frontend/components/ContactWidget.module.css` — `.responseTime` style, font-family removed from trigger
+
+**New dependencies:** none — mobile swipe uses native touch events, no library added.
+
+**Schema changes:** none — `product.productVideo` already existed in the Mongoose schema (`productVideoSchema` with `url`, `thumbnailUrl`, `cloudinaryPublicId`).
+
+**Content workflow note (for Гриша/Sabreena):**
+- The `description` field is what powers the story sentence. It's already in the admin product editor.
+- Recommended: Sabreena hand-writes 2–4 sentences for hero products (Aoife robe, Bare champagne nightshirt). DeepSeek generates for the rest using the brand-voice system prompt.
+
+**Out of scope (deferred):**
+- Lightbox full-screen image viewer (existing lightbox preserved on desktop image click)
+- Image zoom on hover
+- 360° spin views
+- Reviews section
+- Cart-aware free shipping message (cart total vs threshold)
+- International shipping threshold logic
+- Phase 1 Social Media MVP
+
+**Verification status:**
+- Desktop thumbnail strip: confirmed via code review — flex layout, 88px thumbStrip, mainArea flex: 1
+- Mobile swipe + dots: confirmed — touchStart/End handlers, dots hidden on desktop, thumbStrip hidden on mobile
+- Video thumbnail: Cloudinary `so_0,f_jpg` poster derivation, play icon overlay
+- One Size auto-select: lazy useState init — `sizes.length === 1 ? sizes[0] : ''`
+- Story sentence: `getStorySnippet()` tested for empty/short/long descriptions
+- PRODUCT DETAILS open: `<details open>` attribute
+- Heart: no circle background, charcoal fill, drop-shadow
+- DropAHint portal: `createPortal(…, document.body)`
+- Free shipping: `Math.ceil(150 - price)` for the "Add €X" variant
+- Speech bubble: `<MessageCircle size={20} strokeWidth={1.5} />`
+- Response time: added below channels list in ContactWidget panel
+
+---
+
 ## 2026-05-14 (evening, late) — Three small UX fixes: banner copy, Dublin audit, logo centering
 
 **What changed:**

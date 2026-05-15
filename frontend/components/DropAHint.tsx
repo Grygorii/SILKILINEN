@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import styles from './DropAHint.module.css';
 
@@ -43,7 +44,7 @@ export default function DropAHint({ productId, productName, onClose }: Props) {
     }
   }
 
-  return (
+  return createPortal(
     <div className={styles.overlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className={styles.modal} role="dialog" aria-modal="true" aria-label="Drop a hint">
         <div className={styles.modalHeader}>
@@ -119,6 +120,7 @@ export default function DropAHint({ productId, productName, onClose }: Props) {
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

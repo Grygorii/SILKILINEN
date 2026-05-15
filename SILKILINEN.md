@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 14 May 2026 (evening).
+Last updated: 15 May 2026.
 
 ---
 
@@ -42,6 +42,8 @@ The site exists primarily to **escape Etsy's fee burden** (Etsy takes ~15-20% ef
 ## Customer-facing features live
 
 Browse / product detail pages, cart with quantity adjustment and stock caps, wishlist, magic-link or Google OAuth sign-in, Stripe checkout, customer accounts. Newsletter signup with welcome email + SILK10 code. "Just sold" social-proof popup (public endpoint, no auth required). Free-shipping-over-€150-to-Ireland banner.
+
+**Product page (as of 15 May 2026):** Multi-image gallery with desktop vertical thumbnail strip + main image; mobile touch-swipe with page dots. Video renders in gallery sequence (Cloudinary `so_0,f_jpg` poster). Story sentence from `description` visible above price. PRODUCT DETAILS accordion open by default. One-size products auto-select. Free shipping reminder below price. Heart: no white circle, charcoal fill, portal-fixed z-index. Contact button: speech bubble icon, response time line.
 
 ## Admin tooling shipped
 

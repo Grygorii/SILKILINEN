@@ -67,6 +67,17 @@ function getMaterialSub(mat?: string): string {
   return '';
 }
 
+function getStorySnippet(description?: string): { text: string; truncated: boolean } | null {
+  if (!description?.trim()) return null;
+  const d = description.trim();
+  if (d.length < 20) return null;
+  if (d.length <= 180) return { text: d, truncated: false };
+  // Try to break at a sentence boundary
+  const cutoff = d.lastIndexOf('. ', 180);
+  if (cutoff > 60) return { text: d.slice(0, cutoff + 1), truncated: true };
+  return { text: d.slice(0, 180) + '…', truncated: true };
+}
+
 function StockBadge({ product }: { product: { inStock?: boolean; totalStock?: number; stockLevel?: number } }) {
   const total = product.totalStock ?? product.stockLevel ?? null;
   if (total === null) return null;
@@ -103,6 +114,13 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       ? [{ url: product.image, alt: product.name }]
       : [];
 
+  const snippet = getStorySnippet(product.description);
+
+  const shippingThreshold = 150;
+  const shippingMessage = product.price >= shippingThreshold
+    ? '✨ Free shipping to Ireland included'
+    : `Add €${Math.ceil(shippingThreshold - product.price)} for free shipping to Ireland`;
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -138,6 +156,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               images={galleryImages}
               name={product.name}
               productId={product._id}
+              video={product.productVideo ?? null}
             />
           </div>
 
@@ -149,6 +168,16 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             <h1 className={styles.productName}>{product.name}</h1>
             {materialSub && <p className={styles.materialSub}>{materialSub}</p>}
 
+            {/* Story sentence — brand voice visible above price */}
+            {snippet && (
+              <p className={styles.storySentence}>
+                {snippet.text}
+                {snippet.truncated && (
+                  <>{' '}<a href="#product-details" className={styles.readMore}>Read more</a></>
+                )}
+              </p>
+            )}
+
             <p className={styles.price}>
               <span className={product.compareAtPrice && product.compareAtPrice > product.price ? styles.priceSale : ''}>
                 €{Number(product.price).toFixed(2)}
@@ -157,6 +186,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 <span className={styles.priceCompare}>€{Number(product.compareAtPrice).toFixed(2)}</span>
               )}
             </p>
+
+            <p className={styles.shippingNote}>{shippingMessage}</p>
 
             <StockBadge product={product} />
 
@@ -173,7 +204,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             {/* Accordions */}
             <div className={styles.accordions}>
               {product.description && (
-                <details className={styles.accordion}>
+                <details id="product-details" className={styles.accordion} open>
                   <summary className={styles.accordionSummary}>PRODUCT DETAILS</summary>
                   <p className={styles.accordionBody}>{product.description}</p>
                 </details>

@@ -18,7 +18,7 @@ type Props = {
 
 export default function ProductOptions({ colours, sizes, productName, productId, price, outOfStock, stock }: Props) {
   const [selectedColour, setSelectedColour] = useState(colours[0] ?? '');
-  const [selectedSize, setSelectedSize] = useState('');
+  const [selectedSize, setSelectedSize] = useState(() => sizes.length === 1 ? sizes[0] : '');
   const [addState, setAddState] = useState<'idle' | 'adding' | 'added'>('idle');
   const [hintOpen, setHintOpen] = useState(false);
   const [qty, setQty] = useState(1);
