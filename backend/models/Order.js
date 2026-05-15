@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
-  stripeSessionId: { type: String, sparse: true, unique: true, default: null },
+  stripeSessionId: { type: String, default: null },
 
   // Payment Intent fields (v2 checkout)
-  stripePaymentIntentId: { type: String, sparse: true, unique: true, default: null },
+  stripePaymentIntentId: { type: String, default: null },
   stripeChargeId: { type: String },
   orderNumber: { type: String },
   customerEmail: { type: String },
@@ -85,7 +85,20 @@ const orderSchema = new mongoose.Schema({
 orderSchema.index({ status: 1, createdAt: -1 });
 orderSchema.index({ customerId: 1, createdAt: -1 });
 orderSchema.index({ customerEmail: 1 });
-orderSchema.index({ orderNumber: 1 }, { sparse: true });
-orderSchema.index({ stripePaymentIntentId: 1 }, { sparse: true });
+// Partial unique indexes — only enforce uniqueness when the field is actually set.
+// This allows multiple documents with null/undefined (e.g. before payment is created)
+// while still preventing duplicate Stripe IDs once set.
+orderSchema.index(
+  { stripeSessionId: 1 },
+  { unique: true, partialFilterExpression: { stripeSessionId: { $type: 'string' } } }
+);
+orderSchema.index(
+  { stripePaymentIntentId: 1 },
+  { unique: true, partialFilterExpression: { stripePaymentIntentId: { $type: 'string' } } }
+);
+orderSchema.index(
+  { orderNumber: 1 },
+  { unique: true, partialFilterExpression: { orderNumber: { $type: 'string' } } }
+);
 
 module.exports = mongoose.model('Order', orderSchema);

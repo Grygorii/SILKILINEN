@@ -1,0 +1,126 @@
+.header {
+  margin-bottom: 28px;
+}
+
+.header h2 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--dark);
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.muted { color: var(--muted); font-size: 13px; }
+
+.error {
+  font-size: 13px;
+  color: #c0392b;
+}
+
+.allClear {
+  text-align: center;
+  padding: 60px 0;
+  font-size: 15px;
+  font-style: italic;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  color: var(--dark);
+}
+
+.card {
+  border: 1px solid var(--border, #e0ddd7);
+  background: white;
+  padding: 20px 24px;
+  margin-bottom: 12px;
+}
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cardMeta { flex: 1; }
+
+.customer {
+  font-size: 14px;
+  color: var(--dark);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.anon {
+  color: var(--muted);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.stats {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.created {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.cardActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.expandBtn {
+  padding: 6px 12px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--border, #e0ddd7);
+  background: transparent;
+  color: var(--dark);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.expandBtn:hover { background: var(--cream, #f5f2ec); }
+
+.viewOrderLink {
+  font-size: 11px;
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.viewOrderLink:hover { color: var(--dark); }
+
+.itemList {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  border-top: 1px solid var(--border, #e0ddd7);
+}
+
+.item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border, #e0ddd7);
+  font-size: 13px;
+}
+.item:last-child { border-bottom: none; }
+
+.itemName { color: var(--dark); flex: 1; }
+
+.itemVariant { color: var(--muted); font-size: 12px; }
+
+.itemPrice { color: var(--muted); white-space: nowrap; }
