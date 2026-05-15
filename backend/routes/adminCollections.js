@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const Collection = require('../models/Collection');
 const Product = require('../models/Product');
-const requireAdmin = require('../middleware/requireAdmin');
+const { requireAuth } = require('../middleware/auth');
 
 // All routes require admin auth
-router.use(requireAdmin);
+router.use(requireAuth);
 
 // GET /api/admin/collections
 router.get('/', async (req, res) => {
