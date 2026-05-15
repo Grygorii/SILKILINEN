@@ -1,0 +1,91 @@
+.page {
+  padding-bottom: 100px;
+}
+
+/* Hero with image */
+.hero {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  overflow: hidden;
+  margin-bottom: 64px;
+}
+
+.heroImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 25, 22, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heroTitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 48px;
+  font-weight: 400;
+  color: var(--warm-white, #faf8f4);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0 6%;
+}
+
+/* Text-only header (no hero image) */
+.pageHeader {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto 64px;
+  padding-top: 80px;
+}
+
+.title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  color: var(--dark, #1a1916);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.description {
+  font-size: 15px;
+  color: var(--muted, #8a8680);
+  line-height: 1.85;
+  letter-spacing: 0.2px;
+}
+
+/* When hero is shown, show description below without top padding */
+.hero + .pageHeader {
+  padding-top: 0;
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted, #8a8680);
+  font-size: 14px;
+  padding: 80px 6%;
+}
+
+@media (max-width: 768px) {
+  .hero { height: 300px; margin-bottom: 48px; }
+  .heroTitle { font-size: 32px; letter-spacing: 2px; }
+  .pageHeader { padding-top: 60px; margin-bottom: 48px; }
+  .title { font-size: 26px; }
+}
+
+@media (max-width: 480px) {
+  .hero { height: 240px; }
+  .heroTitle { font-size: 26px; }
+  .pageHeader { padding-top: 48px; }
+  .title { font-size: 22px; }
+}

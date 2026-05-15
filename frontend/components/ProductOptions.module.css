@@ -28,31 +28,36 @@
   letter-spacing: 1px;
 }
 
-/* ── Colour swatches ──────────────────────────────── */
+/* ── Colour cubes ─────────────────────────────────── */
 
-.swatches {
+.colourCubes {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.swatch {
-  width: 40px;
-  height: 40px;
+.colourCube {
+  padding: 8px 14px;
   border: 1px solid var(--border, #e0ddd7);
-  background: var(--cream, #f5f2ec);
+  background: var(--warm-white, #faf8f4);
+  color: var(--dark, #1a1916);
+  font-size: 11px;
+  letter-spacing: 1px;
+  font-family: inherit;
   cursor: pointer;
-  transition: border-color 0.15s;
-  padding: 0;
-  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
 }
 
-.swatch:hover { border-color: var(--dark, #1a1916); }
+.colourCube:hover {
+  border-color: var(--dark, #1a1916);
+  background: var(--cream, #f5f2ec);
+}
 
-.swatchActive {
-  border: 2px solid var(--dark, #1a1916);
-  outline: 2px solid var(--dark, #1a1916);
-  outline-offset: 1px;
+.colourCubeActive {
+  background: var(--dark, #1a1916);
+  color: var(--warm-white, #faf8f4);
+  border-color: var(--dark, #1a1916);
 }
 
 /* ── Size boxes ───────────────────────────────────── */

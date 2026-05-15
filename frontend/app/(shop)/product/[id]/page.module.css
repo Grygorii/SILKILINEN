@@ -76,6 +76,53 @@
   margin-bottom: 20px;
 }
 
+/* ── Colour variant cubes ────────────────────────── */
+
+.colourCubes {
+  margin-bottom: 20px;
+}
+
+.colourLabel {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted, #8a8680);
+  margin-bottom: 10px;
+}
+
+.cubeRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cubeActive {
+  display: inline-block;
+  padding: 8px 14px;
+  background: var(--dark, #1a1916);
+  color: var(--warm-white, #faf8f4);
+  font-size: 11px;
+  letter-spacing: 1px;
+  border: 1px solid var(--dark, #1a1916);
+}
+
+.cubeLink {
+  display: inline-block;
+  padding: 8px 14px;
+  background: var(--warm-white, #faf8f4);
+  color: var(--dark, #1a1916);
+  font-size: 11px;
+  letter-spacing: 1px;
+  border: 1px solid var(--border, #e0ddd7);
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.cubeLink:hover {
+  border-color: var(--dark, #1a1916);
+  background: var(--cream, #f5f2ec);
+}
+
 /* ── Story sentence ───────────────────────────────── */
 
 .storySentence {

@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
       <div className={styles.inner}>
         <header className={styles.header}>
           <h1>Privacy Policy</h1>
-          <p>Effective date: 1 May 2025 · Last updated: 1 May 2025</p>
+          <p>Effective date: 1 May 2026 · Last updated: 15 May 2026</p>
         </header>
 
         <section className={styles.section}>
@@ -73,12 +73,8 @@ export default function PrivacyPolicyPage() {
 
         <section className={styles.section}>
           <h2>Cookies</h2>
-          <p>We use the following cookies:</p>
-          <ul>
-            <li><strong>Essential cookies</strong> — your cart contents are stored in your browser's local storage so items persist between visits. No server-side session cookie is created for shop visitors.</li>
-            <li><strong>Analytics cookies</strong> — if you accept all cookies, we may use anonymised analytics to understand how visitors use the site.</li>
-          </ul>
-          <p>You can manage your cookie preferences via the banner shown on your first visit.</p>
+          <p>We use minimal cookies — essential cart storage only. Your cart contents are stored in your browser&apos;s local storage so items persist between visits. No server-side session cookie is created for shop visitors.</p>
+          <p>We do not currently use analytics or advertising cookies. When we introduce optional cookies in the future, you will be asked for consent before any are placed.</p>
         </section>
 
         <section className={styles.section}>

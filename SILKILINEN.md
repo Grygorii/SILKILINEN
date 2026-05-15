@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 15 May 2026.
+Last updated: 16 May 2026.
 
 ---
 
@@ -43,7 +43,7 @@ The site exists primarily to **escape Etsy's fee burden** (Etsy takes ~15-20% ef
 
 Browse / product detail pages, cart with quantity adjustment and stock caps, wishlist, magic-link or Google OAuth sign-in, Stripe checkout, customer accounts. Newsletter signup with welcome email + SILK10 code. "Just sold" social-proof popup (public endpoint, no auth required). Free-shipping-over-€150-to-Ireland banner.
 
-**Product page (as of 15 May 2026):** Multi-image gallery with desktop vertical thumbnail strip + main image; mobile touch-swipe with page dots. Video renders in gallery sequence (Cloudinary `so_0,f_jpg` poster). Story sentence from `description` visible above price. PRODUCT DETAILS accordion open by default. One-size products auto-select. Free shipping reminder below price. Heart: no white circle, charcoal fill, portal-fixed z-index. Contact button: speech bubble icon, response time line.
+**Product page (as of 15 May 2026):** Multi-image gallery with desktop vertical thumbnail strip + main image; mobile touch-swipe with page dots. Video renders in gallery sequence (Cloudinary `so_0,f_jpg` poster). Story sentence from `description` visible above price. PRODUCT DETAILS accordion open by default. One-size products auto-select. Free shipping reminder below price. Heart: no white circle, charcoal fill, portal-fixed z-index. Contact button: speech bubble icon, response time line. Colour cubes instead of hex swatches (both on product page and shop grid). Footer: "14-day returns" (removed "hassle-free").
 
 ## Admin tooling shipped
 
@@ -67,10 +67,52 @@ Other admin pages:
 - Existing Dalia / Bastet / Ciara / Rehab dress and robe products from earlier build phase
 - **Silk panties** (the actual sales hero) — currently sold on Etsy, not yet migrated to silkilinen.com as primary
 
+## Shipped 16 May 2026
+
+### Section B — Collections system
+- `backend/models/Collection.js` — full Collection schema (name, slug, description, heroImage, isFeatured, featuredOrder, displayOrder, status, metaTitle, metaDescription)
+- `backend/routes/adminCollections.js` — admin CRUD + product assignment + bulk reorder. All routes require admin auth
+- `backend/routes/collections.js` — public endpoints: GET all active, GET featured, GET /:slug with products
+- Wired into `backend/server.js` at `/api/admin/collections` and `/api/collections`
+- `backend/scripts/seedCollections.js` — seeds 5 initial collections (New Arrivals, Sleepwear, Intimates, Donegal Motif Series, Editor's Picks)
+- `Product` model extended with `collections: [ObjectId ref Collection]`, `colorName`, `colorHex`, `colorVariants`
+- Admin UI: `/admin/collections` list page + `/admin/collections/[id]` edit/create page (with product assignment search)
+- Storefront: `/collections/[slug]` page with optional hero image, description, product grid
+- `FeaturedCollections` server component on homepage (between NewArrivals and CategoryTiles) — shows featured active collections as tiles
+
+### Section A — Parallel commerce engine (Payment Intents)
+- `backend/services/shipping.js` — rate tiers: IE €4.99/€150 free, GB/IM/JE/GG €14.99/€250 free (Derry), EU €9.99/€200 free, US/CA/AU €14.99/€300 free, worldwide €19.99/€400 free
+- `backend/services/discounts.js` — validate + redeem PromoCode; returns discountAmount
+- `backend/services/tax.js` — stub returning `shouldDisplay: false` (sole trader below Irish VAT threshold — no VAT shown anywhere)
+- `backend/models/Cart.js` — persistent cart keyed by sessionId, 7-day TTL via MongoDB TTL index
+- `backend/routes/cart.js` — GET, POST (add/increment), PATCH (qty), DELETE items; POST/DELETE discount; PATCH country
+- `backend/routes/checkoutV2.js` — `/create-intent` validates items, creates Stripe PaymentIntent with items + discount + shipping in metadata; `/webhook` handles `payment_intent.succeeded`, creates Order with orderNumber
+- **PARALLEL BUILD — existing Stripe Checkout path unchanged.** Do NOT cut over until real test orders verified
+- `Order` model extended: `stripePaymentIntentId`, `stripeChargeId`, `orderNumber`, `subtotal`, `discountCode`, `discountAmount`, `refunds[]`, `partially_refunded` status
+- Refund endpoint: `POST /api/orders/:id/refund` — creates Stripe refund, updates `refunds[]`, sets status to `refunded` or `partially_refunded`
+- Frontend `/checkout` page — Stripe Elements embedded card form; country selector for shipping preview; discount code input; order summary with live totals. `@stripe/react-stripe-js` + `@stripe/stripe-js` installed
+- Admin order detail page — refund card (amount + reason input, confirm dialog, Stripe refund, status update); extended type with refunds[], orderNumber, stripePaymentIntentId; `partially_refunded` added to status list
+
+### Section C — Colour UX
+- Colour swatches removed from shop product cards (`ProductGrid.tsx`)
+- Colour cubes (text, not hex circles) on product page (`ProductOptions.tsx`)
+- `colorVariants` cross-product linking on product page (`page.tsx`) — server-side, no client JS
+
+### Section D — Shipping page
+- Full rewrite of `/shipping` page: 5-row table (Ireland, UK, EU, US/CA/AU, Worldwide), Derry advantage for UK, customs section, no duplicate returns content
+
+### Section E — Policy + footer
+- Privacy Policy: effective date updated, cookies section rewritten (essential only, no analytics cookies, no banner yet)
+- Terms: effective date updated to 1 May 2026
+- Footer: "14-day hassle-free returns" → "14-day returns"
+
 ## Active scoped work, not yet built
 
 - **THUMBNAIL slot auto-derive** — thumbnail generation still exists in AI workflow tiers but no named slot card shows for it; images with `slot: thumbnail` appear in Additional images. Future: auto-derive from HERO via Cloudinary transformation if needed.
-- **Collections feature** including a "New Arrivals" toggle. Replaces a simple new-arrivals boolean with named collections products can belong to (Spring/Summer, Donegal Series, Editor's Picks, etc.).
+- **Collections header nav** — dynamic nav rebuild around collections (static category nav still in place)
+- **Collections heroImage upload** — admin edit page shows heroImage URL fields; Cloudinary upload widget not yet wired for collections
+- **New checkout cutover** — `/checkout` page built and tested (parallel). Cut over: wire "Checkout" button in CartPanel to go to `/checkout`; configure `STRIPE_WEBHOOK_SECRET_V2` env var in Railway; place real test orders; then cut over
+- **Stripe test orders** — must place real test orders on the v2 checkout path before going live
 - **Pricing spreadsheet** for the actual catalogue with cost-up + margin + Etsy fee comparison. Needs real Etsy sales data first.
 - **Finance admin tab** ("captain's cabin") — daily revenue, monthly P&L, margin tracking, cash flow. Phase 2D.
 - **GDPR cookie banner** with equal-prominence Accept/Reject. Required before any paid-ads tracking pixels.

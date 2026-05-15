@@ -66,6 +66,18 @@ const productSchema = new mongoose.Schema({
   altText: { type: String },
   stockLevel: { type: Number, default: null },
 
+  // Collections — replaces/supplements the single `category` field
+  collections: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Collection' }],
+
+  // Color — used for cross-product variant linking (single colour per product model)
+  colorName: { type: String },
+  colorHex: { type: String },
+  colorVariants: [{
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+    colorName: { type: String },
+    _id: false,
+  }],
+
   metaTitle: { type: String, maxlength: 70 },
   metaDescription: { type: String, maxlength: 165 },
   slug: { type: String, sparse: true },

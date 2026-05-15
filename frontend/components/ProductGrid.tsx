@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { Heart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
-import { colourToHex } from '@/lib/colours';
 import styles from './ProductGrid.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -173,19 +172,6 @@ export default function ProductGrid({
                   <div className={styles.cardInfo}>
                     <h3 className={styles.cardName}>{product.name}</h3>
                     {materialSub && <p className={styles.materialSub}>{materialSub}</p>}
-                    <div className={styles.colours}>
-                      {product.colours?.map(colour => {
-                        const hex = colourToHex(colour);
-                        return (
-                          <span
-                            key={colour}
-                            className={styles.colourDot}
-                            title={colour}
-                            style={hex ? { background: hex, borderColor: hex === '#ffffff' ? '#e0ddd7' : 'transparent' } : undefined}
-                          />
-                        );
-                      })}
-                    </div>
                   </div>
                 </Link>
 

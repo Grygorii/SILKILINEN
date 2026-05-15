@@ -3,6 +3,7 @@ import PageTracker from '@/components/PageTracker';
 import ReviewsCarousel, { type ReviewData } from '@/components/ReviewsCarousel';
 import NewArrivals from '@/components/NewArrivals';
 import CategoryTiles from '@/components/CategoryTiles';
+import FeaturedCollections from '@/components/FeaturedCollections';
 import StorySection from '@/components/StorySection';
 import BlogTeaser from '@/components/BlogTeaser';
 import NewsletterBand from '@/components/NewsletterBand';
@@ -54,6 +55,8 @@ export default async function Home() {
       </section>
 
       <NewArrivals />
+
+      <FeaturedCollections />
 
       <CategoryTiles content={content} />
 

@@ -11,7 +11,7 @@ export default function TermsPage() {
       <div className={styles.inner}>
         <header className={styles.header}>
           <h1>Terms &amp; Conditions</h1>
-          <p>Effective date: 1 May 2025 · Governing law: Republic of Ireland</p>
+          <p>Effective date: 1 May 2026 · Governing law: Republic of Ireland</p>
         </header>
 
         <div className={styles.highlight}>

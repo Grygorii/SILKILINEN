@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import styles from './page.module.css';
 import ProductOptions from '@/components/ProductOptions';
 import ProductGallery from '@/components/ProductGallery';
@@ -167,6 +168,27 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             {showNew && <span className={styles.newTag}>new</span>}
             <h1 className={styles.productName}>{product.name}</h1>
             {materialSub && <p className={styles.materialSub}>{materialSub}</p>}
+
+            {/* Colour variant cubes — links to sibling colour products */}
+            {(product.colorName || (product.colorVariants && product.colorVariants.length > 0)) && (
+              <div className={styles.colourCubes}>
+                <p className={styles.colourLabel}>COLOUR</p>
+                <div className={styles.cubeRow}>
+                  <span className={styles.cubeActive}>
+                    {product.colorName || product.colours?.[0] || 'One Colour'}
+                  </span>
+                  {product.colorVariants?.map((v: { productId: string; colorName: string }) => (
+                    <Link
+                      key={v.productId}
+                      href={`/product/${v.productId}`}
+                      className={styles.cubeLink}
+                    >
+                      {v.colorName}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Story sentence — brand voice visible above price */}
             {snippet && (

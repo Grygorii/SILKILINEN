@@ -35,6 +35,10 @@ const insightsRoutes = require('./routes/insights');
 const adminHealthRoutes = require('./routes/adminHealth');
 const trackRoutes = require('./routes/track');
 const adminDashboardRoutes = require('./routes/adminDashboard');
+const collectionsRoutes = require('./routes/collections');
+const adminCollectionsRoutes = require('./routes/adminCollections');
+const cartRoutes = require('./routes/cart');
+const checkoutV2Routes = require('./routes/checkoutV2');
 
 const app = express();
 
@@ -65,9 +69,9 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-// Webhook must be mounted before express.json() — Stripe needs the raw request body
-// to verify the STRIPE_WEBHOOK_SECRET signature.
+// Webhooks must be mounted before express.json() — Stripe needs the raw request body
 app.use('/api/webhook', webhookRoutes);
+app.use('/api/v2/checkout', checkoutV2Routes);
 
 app.use(express.json());
 app.use('/api/products', productRoutes);
@@ -89,6 +93,9 @@ app.use('/api/admin/insights', insightsRoutes);
 app.use('/api/admin/health', adminHealthRoutes);
 app.use('/api/admin/dashboard', adminDashboardRoutes);
 app.use('/api/track', trackRoutes);
+app.use('/api/collections', collectionsRoutes);
+app.use('/api/admin/collections', adminCollectionsRoutes);
+app.use('/api/cart', cartRoutes);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(function() { console.log('Connected to MongoDB'); })

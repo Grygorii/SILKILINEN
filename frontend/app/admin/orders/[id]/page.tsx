@@ -22,9 +22,19 @@ type OrderItem = {
   quantity: number;
 };
 
+type RefundEntry = {
+  stripeRefundId: string;
+  amount: number;
+  reason: string;
+  createdAt: string;
+};
+
 type Order = {
   _id: string;
   stripeSessionId: string;
+  stripePaymentIntentId?: string;
+  stripeChargeId?: string;
+  orderNumber?: string;
   customerName: string | null;
   customerEmail: string | null;
   customerPhone: string | null;
@@ -33,6 +43,9 @@ type Order = {
     state?: string; postalCode?: string; country?: string;
   } | null;
   items: OrderItem[];
+  subtotal?: number;
+  discountCode?: string;
+  discountAmount?: number;
   total: number;
   shippingCost: number;
   shippingMethod: string | null;
@@ -46,10 +59,12 @@ type Order = {
   estimatedDelivery?: string;
   customerNote?: string;
   internalNote?: string;
+  refundedAmount?: number;
+  refunds?: RefundEntry[];
   createdAt: string;
 };
 
-const VALID_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'refunded'];
+const VALID_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'refunded', 'partially_refunded'];
 
 const STATUS_BADGE: Record<string, string> = {
   pending: styles.badgePending,
@@ -60,6 +75,7 @@ const STATUS_BADGE: Record<string, string> = {
   cancelled: styles.badgeCancelled,
   returned: styles.badgeCancelled,
   refunded: styles.badgeCancelled,
+  partially_refunded: styles.badgeCancelled,
   failed: styles.badgeFailed,
 };
 
@@ -103,6 +119,12 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
   const [internalNote, setInternalNote] = useState('');
   const [notesSaving, setNotesSaving] = useState(false);
   const [notesMsg, setNotesMsg] = useState('');
+
+  // Refund panel state
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundReason, setRefundReason] = useState('');
+  const [refundSaving, setRefundSaving] = useState(false);
+  const [refundMsg, setRefundMsg] = useState('');
 
   useEffect(() => {
     fetch(`${API}/api/orders/${id}`, { credentials: 'include' })
@@ -168,6 +190,35 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
       setTrackingMsg('Failed');
     } finally {
       setTrackingSaving(false);
+    }
+  }
+
+  async function issueRefund() {
+    const amount = parseFloat(refundAmount);
+    if (!amount || amount <= 0) { setRefundMsg('Enter a valid amount'); return; }
+    if (!confirm(`Issue a €${amount.toFixed(2)} refund via Stripe?`)) return;
+    setRefundSaving(true);
+    setRefundMsg('');
+    try {
+      const res = await fetch(`${API}/api/orders/${id}/refund`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, reason: refundReason || 'requested_by_customer' }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setOrder(data);
+        setRefundAmount('');
+        setRefundReason('');
+        setRefundMsg(`Refunded €${amount.toFixed(2)}`);
+      } else {
+        setRefundMsg(data.error || 'Refund failed');
+      }
+    } catch {
+      setRefundMsg('Refund failed');
+    } finally {
+      setRefundSaving(false);
     }
   }
 
@@ -379,9 +430,69 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
 
           {/* Stripe */}
           <section className={styles.card}>
-            <h3 className={styles.cardTitle}>Stripe session</h3>
-            <p className={styles.sessionId}>{order.stripeSessionId}</p>
+            <h3 className={styles.cardTitle}>Stripe</h3>
+            {order.orderNumber && (
+              <div className={styles.infoRow}><span>Order #</span><span>{order.orderNumber}</span></div>
+            )}
+            {order.stripePaymentIntentId && (
+              <div className={styles.infoRow}><span>Payment intent</span><span className={styles.sessionId}>{order.stripePaymentIntentId}</span></div>
+            )}
+            {order.stripeSessionId && (
+              <div className={styles.infoRow}><span>Checkout session</span><span className={styles.sessionId}>{order.stripeSessionId}</span></div>
+            )}
+            {order.refundedAmount != null && order.refundedAmount > 0 && (
+              <div className={`${styles.infoRow} ${styles.refundedRow}`}>
+                <span>Refunded</span>
+                <span>€{order.refundedAmount.toFixed(2)}</span>
+              </div>
+            )}
           </section>
+
+          {/* Refund */}
+          {['paid', 'processing', 'shipped', 'delivered', 'partially_refunded'].includes(order.status) && (
+            <section className={styles.card}>
+              <h3 className={styles.cardTitle}>Issue refund</h3>
+              {order.refunds && order.refunds.length > 0 && (
+                <div className={styles.refundHistory}>
+                  {order.refunds.map((r, i) => (
+                    <div key={i} className={styles.refundEntry}>
+                      <span>€{r.amount.toFixed(2)}</span>
+                      {r.reason && <span className={styles.muted}> — {r.reason}</span>}
+                      <span className={styles.muted}> {formatDate(r.createdAt)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <label className={styles.label}>
+                Amount (€)
+                <input
+                  className={styles.input}
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  max={order.total}
+                  value={refundAmount}
+                  onChange={e => setRefundAmount(e.target.value)}
+                  placeholder={`e.g. ${order.total.toFixed(2)}`}
+                />
+              </label>
+              <label className={`${styles.label} ${styles.mt12}`}>
+                Reason (optional)
+                <input
+                  className={styles.input}
+                  value={refundReason}
+                  onChange={e => setRefundReason(e.target.value)}
+                  placeholder="e.g. Item not received"
+                />
+              </label>
+              <div className={styles.cardFooter}>
+                {refundMsg && <span className={refundMsg.startsWith('Refunded') ? styles.saveMsg : styles.errorMsg}>{refundMsg}</span>}
+                <button className={styles.refundBtn} onClick={issueRefund} disabled={refundSaving}>
+                  {refundSaving ? 'Processing…' : 'Issue refund via Stripe'}
+                </button>
+              </div>
+            </section>
+          )}
 
         </div>
       </div>

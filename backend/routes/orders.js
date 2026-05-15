@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Order = require('../models/Order');
 const { requireAuth } = require('../middleware/auth');
 const {
@@ -229,6 +230,72 @@ router.put('/:id/notes', requireAuth, async function(req, res) {
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/orders/:id/refund — issue a (partial or full) Stripe refund
+router.post('/:id/refund', requireAuth, async function(req, res) {
+  try {
+    const { amount, reason } = req.body;
+    if (!amount || typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({ error: 'amount (in euros) must be a positive number' });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ error: 'Not found' });
+    if (!['paid', 'processing', 'shipped', 'delivered', 'partially_refunded'].includes(order.status)) {
+      return res.status(400).json({ error: 'Order cannot be refunded in its current status' });
+    }
+
+    // Determine which Stripe identifier to refund against
+    const chargeId = order.stripeChargeId;
+    const paymentIntentId = order.stripePaymentIntentId;
+    if (!chargeId && !paymentIntentId) {
+      return res.status(400).json({ error: 'No Stripe charge or payment intent found on this order' });
+    }
+
+    const amountCents = Math.round(amount * 100);
+    const refundParams = {
+      amount: amountCents,
+      reason: reason || 'requested_by_customer',
+    };
+    if (chargeId) {
+      refundParams.charge = chargeId;
+    } else {
+      refundParams.payment_intent = paymentIntentId;
+    }
+
+    const stripeRefund = await stripe.refunds.create(refundParams);
+
+    const totalRefunded = (order.refundedAmount || 0) + amount;
+    const isFullRefund = totalRefunded >= (order.total || 0) - 0.01;
+
+    const update = {
+      refundedAmount: totalRefunded,
+      refundedAt: new Date(),
+      refundReason: reason || '',
+      status: isFullRefund ? 'refunded' : 'partially_refunded',
+      $push: {
+        refunds: {
+          stripeRefundId: stripeRefund.id,
+          amount,
+          reason: reason || '',
+          createdAt: new Date(),
+        },
+        statusHistory: {
+          status: isFullRefund ? 'refunded' : 'partially_refunded',
+          note: `Refunded €${amount.toFixed(2)}${reason ? ` — ${reason}` : ''}`,
+          changedBy: req.user.userId,
+          timestamp: new Date(),
+        },
+      },
+    };
+
+    const updated = await Order.findByIdAndUpdate(req.params.id, update, { new: true });
+    res.json(updated);
+  } catch (err) {
+    const stripeMsg = err.raw?.message || err.message;
+    res.status(500).json({ error: stripeMsg });
   }
 });
 

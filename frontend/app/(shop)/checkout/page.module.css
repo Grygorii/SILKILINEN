@@ -1,0 +1,242 @@
+.page {
+  padding: 60px 6% 100px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.heading {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--dark, #1a1916);
+  margin-bottom: 40px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 48px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  /* Show summary first on mobile */
+  .summaryCol { order: -1; }
+}
+
+/* Sections */
+.section {
+  border: 1px solid var(--border, #e0ddd7);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted, #8a8680);
+  font-weight: 400;
+  margin-bottom: 16px;
+}
+
+.select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border, #e0ddd7);
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--dark);
+  background: white;
+  cursor: pointer;
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 8px;
+}
+
+/* Empty cart */
+.empty {
+  text-align: center;
+  padding: 100px 0;
+  color: var(--muted);
+}
+
+.shopLink {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--dark);
+  text-decoration: none;
+}
+.shopLink:hover { text-decoration: underline; }
+
+/* Loading / error */
+.loadingMsg {
+  font-size: 13px;
+  color: var(--muted);
+  font-style: italic;
+  padding: 24px;
+}
+
+.intentError {
+  font-size: 13px;
+  color: #c0392b;
+  padding: 12px 0;
+}
+
+/* Payment form */
+.paymentForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.payError {
+  font-size: 13px;
+  color: #c0392b;
+}
+
+.payBtn {
+  background: var(--dark, #1a1916);
+  color: var(--warm-white, #faf8f4);
+  border: none;
+  padding: 18px 32px;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  width: 100%;
+}
+.payBtn:hover:not(:disabled) { opacity: 0.85; }
+.payBtn:disabled { opacity: 0.5; cursor: default; }
+
+/* Order summary items */
+.itemList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.itemMeta {
+  flex: 1;
+}
+
+.itemName {
+  font-size: 14px;
+  color: var(--dark);
+  margin-bottom: 2px;
+}
+
+.itemVariant {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.itemQty {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.itemPrice {
+  font-size: 14px;
+  color: var(--dark);
+  white-space: nowrap;
+}
+
+/* Discount */
+.discountRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.discountInput {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--border, #e0ddd7);
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--dark);
+}
+.discountInput:focus { outline: none; border-color: var(--dark); }
+
+.discountBtn {
+  padding: 10px 16px;
+  border: 1px solid var(--border, #e0ddd7);
+  background: transparent;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--dark);
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.discountBtn:hover:not(:disabled) { background: var(--cream, #f5f2ec); }
+
+.discountError {
+  font-size: 12px;
+  color: #c0392b;
+  margin-bottom: 8px;
+}
+
+.discountApplied {
+  font-size: 12px;
+  color: #2d7d47;
+  margin-bottom: 12px;
+}
+
+/* Totals */
+.totals {
+  border-top: 1px solid var(--border, #e0ddd7);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--dark);
+}
+
+.discount {
+  color: #2d7d47;
+}
+
+.grandTotal {
+  font-size: 16px;
+  font-weight: 500;
+  border-top: 1px solid var(--border, #e0ddd7);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+@media (max-width: 480px) {
+  .page { padding: 40px 5% 80px; }
+  .heading { font-size: 26px; }
+}

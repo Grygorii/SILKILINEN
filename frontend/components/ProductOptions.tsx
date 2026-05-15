@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
-import { colourToHex } from '@/lib/colours';
 import DropAHint from './DropAHint';
 import styles from './ProductOptions.module.css';
 
@@ -78,21 +77,17 @@ export default function ProductOptions({ colours, sizes, productName, productId,
             COLOUR:{' '}
             <span className={styles.pickerValue}>{selectedColour || '—'}</span>
           </p>
-          <div className={styles.swatches}>
-            {colours.map(colour => {
-              const hex = colourToHex(colour);
-              return (
-                <button
-                  key={colour}
-                  className={`${styles.swatch} ${selectedColour === colour ? styles.swatchActive : ''}`}
-                  onClick={() => setSelectedColour(colour)}
-                  title={colour}
-                  aria-label={colour}
-                  aria-pressed={selectedColour === colour}
-                  style={hex ? { background: hex } : undefined}
-                />
-              );
-            })}
+          <div className={styles.colourCubes}>
+            {colours.map(colour => (
+              <button
+                key={colour}
+                className={`${styles.colourCube} ${selectedColour === colour ? styles.colourCubeActive : ''}`}
+                onClick={() => setSelectedColour(colour)}
+                aria-pressed={selectedColour === colour}
+              >
+                {colour}
+              </button>
+            ))}
           </div>
         </div>
       )}

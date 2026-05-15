@@ -1,7 +1,12 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
-  stripeSessionId: { type: String, required: true, unique: true },
+  stripeSessionId: { type: String, sparse: true, unique: true, default: null },
+
+  // Payment Intent fields (v2 checkout)
+  stripePaymentIntentId: { type: String, sparse: true, unique: true, default: null },
+  stripeChargeId: { type: String },
+  orderNumber: { type: String },
   customerEmail: { type: String },
   customerName: { type: String },
   customerPhone: { type: String },
@@ -21,13 +26,16 @@ const orderSchema = new mongoose.Schema({
     size: { type: String },
     quantity: { type: Number },
   }],
+  subtotal: { type: Number, default: 0 },
+  discountCode: { type: String },
+  discountAmount: { type: Number, default: 0 },
   total: { type: Number },
   shippingCost: { type: Number, default: 0 },
   shippingMethod: { type: String },
 
   status: {
     type: String,
-    enum: ['pending', 'paid', 'failed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'refunded'],
+    enum: ['pending', 'paid', 'failed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'refunded', 'partially_refunded'],
     default: 'pending',
   },
   statusHistory: [{
@@ -51,6 +59,14 @@ const orderSchema = new mongoose.Schema({
   refundedAt: { type: Date },
   refundReason: { type: String },
 
+  refunds: [{
+    stripeRefundId: { type: String },
+    amount: { type: Number },
+    reason: { type: String },
+    createdAt: { type: Date, default: Date.now },
+    _id: false,
+  }],
+
   customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null },
 
   attribution: {
@@ -69,5 +85,7 @@ const orderSchema = new mongoose.Schema({
 orderSchema.index({ status: 1, createdAt: -1 });
 orderSchema.index({ customerId: 1, createdAt: -1 });
 orderSchema.index({ customerEmail: 1 });
+orderSchema.index({ orderNumber: 1 }, { sparse: true });
+orderSchema.index({ stripePaymentIntentId: 1 }, { sparse: true });
 
 module.exports = mongoose.model('Order', orderSchema);

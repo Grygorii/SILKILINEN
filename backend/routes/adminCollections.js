@@ -1,0 +1,125 @@
+const express = require('express');
+const router = express.Router();
+const Collection = require('../models/Collection');
+const Product = require('../models/Product');
+const requireAdmin = require('../middleware/requireAdmin');
+
+// All routes require admin auth
+router.use(requireAdmin);
+
+// GET /api/admin/collections
+router.get('/', async (req, res) => {
+  try {
+    const { status } = req.query;
+    const filter = {};
+    if (status) filter.status = status;
+    const collections = await Collection.find(filter).sort({ displayOrder: 1, createdAt: -1 });
+
+    // Enrich with product count
+    const enriched = await Promise.all(collections.map(async (c) => {
+      const count = await Product.countDocuments({ collections: c._id, status: 'active' });
+      return { ...c.toObject(), productCount: count };
+    }));
+
+    res.json(enriched);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/collections
+router.post('/', async (req, res) => {
+  try {
+    const { name, slug, description, heroImage, isFeatured, featuredOrder, displayOrder, status, metaTitle, metaDescription } = req.body;
+    const collection = new Collection({ name, slug, description, heroImage, isFeatured, featuredOrder, displayOrder, status, metaTitle, metaDescription });
+    await collection.save();
+    res.status(201).json(collection);
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'A collection with this slug already exists' });
+    }
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/admin/collections/:id
+router.get('/:id', async (req, res) => {
+  try {
+    const collection = await Collection.findById(req.params.id);
+    if (!collection) return res.status(404).json({ error: 'Not found' });
+
+    const products = await Product.find({ collections: collection._id })
+      .select('_id name status price images')
+      .sort({ createdAt: -1 });
+
+    res.json({ ...collection.toObject(), products });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/admin/collections/:id
+router.patch('/:id', async (req, res) => {
+  try {
+    const allowed = ['name', 'slug', 'description', 'heroImage', 'isFeatured', 'featuredOrder', 'displayOrder', 'status', 'metaTitle', 'metaDescription'];
+    const updates = {};
+    for (const key of allowed) {
+      if (key in req.body) updates[key] = req.body[key];
+    }
+    const collection = await Collection.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+    if (!collection) return res.status(404).json({ error: 'Not found' });
+    res.json(collection);
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'A collection with this slug already exists' });
+    }
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/admin/collections/:id  (soft archive)
+router.delete('/:id', async (req, res) => {
+  try {
+    const collection = await Collection.findByIdAndUpdate(req.params.id, { status: 'archived' }, { new: true });
+    if (!collection) return res.status(404).json({ error: 'Not found' });
+    res.json({ message: 'Archived', collection });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/collections/:id/products  — assign product to collection
+router.post('/:id/products', async (req, res) => {
+  try {
+    const { productId } = req.body;
+    await Product.findByIdAndUpdate(productId, { $addToSet: { collections: req.params.id } });
+    res.json({ message: 'Product added to collection' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/admin/collections/:id/products/:productId — remove product from collection
+router.delete('/:id/products/:productId', async (req, res) => {
+  try {
+    await Product.findByIdAndUpdate(req.params.productId, { $pull: { collections: req.params.id } });
+    res.json({ message: 'Product removed from collection' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /api/admin/collections/reorder — bulk update displayOrder
+router.put('/reorder', async (req, res) => {
+  try {
+    const { order } = req.body; // [{ id, displayOrder }, ...]
+    await Promise.all(order.map(({ id, displayOrder }) =>
+      Collection.findByIdAndUpdate(id, { displayOrder })
+    ));
+    res.json({ message: 'Reordered' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+module.exports = router;
