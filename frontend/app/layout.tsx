@@ -3,7 +3,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import CookieConsent from "@/components/CookieConsent";
-import NewsletterPopup from "@/components/NewsletterPopup";
 import AnalyticsLoader from "@/components/AnalyticsLoader";
 import UTMCapture from "@/components/UTMCapture";
 import GoogleAuthProvider from "@/components/GoogleAuthProvider";
@@ -34,7 +33,6 @@ export default function RootLayout({
               <CartProvider>
                 {children}
                 <CookieConsent />
-                <NewsletterPopup />
                 <AnalyticsLoader />
                 <UTMCapture />
               </CartProvider>
