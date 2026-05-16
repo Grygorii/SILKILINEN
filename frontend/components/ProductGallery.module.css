@@ -107,7 +107,7 @@
 .heroVideo {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 /* ── Heart button (no circle, floating) ───────────── */
@@ -127,8 +127,8 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  /* subtle glow makes dark heart visible on any image tone */
   filter: drop-shadow(0 1px 3px rgba(250, 248, 244, 0.8));
+  -webkit-tap-highlight-color: transparent;
   transition: transform 0.2s ease;
 }
 

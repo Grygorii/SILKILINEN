@@ -153,9 +153,11 @@ export default function ProductGallery({ images, name, productId, video }: Props
               ref={videoRef}
               src={item.url}
               poster={item.poster}
-              controls
+              autoPlay
+              muted
+              loop
               playsInline
-              preload="none"
+              preload="auto"
               className={styles.heroVideo}
             />
           </div>
