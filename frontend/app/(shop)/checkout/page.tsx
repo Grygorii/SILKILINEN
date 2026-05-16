@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
+  AddressElement,
   PaymentElement,
   useStripe,
   useElements,
@@ -14,14 +15,7 @@ import styles from './page.module.css';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type ShippingInfo = {
-  cost: number;
-  label: string;
-  isFree: boolean;
-};
-
+type ShippingInfo = { cost: number; label: string; isFree: boolean };
 type OrderSummary = {
   subtotal: number;
   discountCode: string | null;
@@ -30,39 +24,26 @@ type OrderSummary = {
   total: number;
 };
 
-// ── Country options ───────────────────────────────────────────────────────────
+// All countries covered by our shipping tiers
+const ALLOWED_COUNTRIES = [
+  'IE',
+  'GB', 'IM', 'JE', 'GG',
+  'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR',
+  'HU', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE',
+  'US', 'CA', 'AU', 'NZ',
+  'CH', 'NO', 'IS',
+] as const;
 
-const COUNTRIES = [
-  { code: 'IE', label: 'Ireland' },
-  { code: 'GB', label: 'United Kingdom' },
-  { code: 'US', label: 'United States' },
-  { code: 'AU', label: 'Australia' },
-  { code: 'CA', label: 'Canada' },
-  { code: 'NZ', label: 'New Zealand' },
-  { code: 'DE', label: 'Germany' },
-  { code: 'FR', label: 'France' },
-  { code: 'IT', label: 'Italy' },
-  { code: 'ES', label: 'Spain' },
-  { code: 'NL', label: 'Netherlands' },
-  { code: 'BE', label: 'Belgium' },
-  { code: 'AT', label: 'Austria' },
-  { code: 'SE', label: 'Sweden' },
-  { code: 'NO', label: 'Norway' },
-  { code: 'CH', label: 'Switzerland' },
-  { code: 'DK', label: 'Denmark' },
-  { code: 'FI', label: 'Finland' },
-  { code: 'PT', label: 'Portugal' },
-  { code: 'PL', label: 'Poland' },
-];
-
-// ── Payment form ──────────────────────────────────────────────────────────────
+// ── Payment + address form (must be inside <Elements>) ────────────────────────
 
 function PaymentForm({
   summary,
   onSuccess,
+  onCountryChange,
 }: {
   summary: OrderSummary;
   onSuccess: () => void;
+  onCountryChange: (country: string) => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -77,9 +58,7 @@ function PaymentForm({
 
     const { error: stripeError } = await stripe.confirmPayment({
       elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/success`,
-      },
+      confirmParams: { return_url: `${window.location.origin}/success` },
       redirect: 'if_required',
     });
 
@@ -93,9 +72,30 @@ function PaymentForm({
 
   return (
     <form onSubmit={handleSubmit} className={styles.paymentForm}>
-      <PaymentElement />
+      <h2 className={styles.sectionTitle}>Delivery address</h2>
+      <AddressElement
+        options={{
+          mode: 'shipping',
+          allowedCountries: [...ALLOWED_COUNTRIES],
+          fields: { phone: 'always' },
+          validation: { phone: { required: 'always' } },
+          defaultValues: { address: { country: 'IE' } },
+        }}
+        onChange={(event) => {
+          const country = event.value?.address?.country;
+          if (country) onCountryChange(country);
+        }}
+      />
+
+      <h2 className={styles.sectionTitle} style={{ marginTop: '28px' }}>Payment</h2>
+      <PaymentElement options={{ layout: 'tabs' }} />
+
       {error && <p className={styles.payError}>{error}</p>}
-      <button type="submit" className={styles.payBtn} disabled={!stripe || submitting}>
+      <button
+        type="submit"
+        className={styles.payBtn}
+        disabled={!stripe || submitting}
+      >
         {submitting ? 'Processing…' : `Pay €${summary.total.toFixed(2)}`}
       </button>
     </form>
@@ -106,7 +106,6 @@ function PaymentForm({
 
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
-  const [country, setCountry] = useState('IE');
   const [discountInput, setDiscountInput] = useState('');
   const [clientSecret, setClientSecret] = useState('');
   const [summary, setSummary] = useState<OrderSummary | null>(null);
@@ -115,8 +114,22 @@ export default function CheckoutPage() {
   const [discountError, setDiscountError] = useState('');
   const [appliedCode, setAppliedCode] = useState('');
 
-  const createIntent = useCallback(async (discountCode?: string) => {
+  // Refs so updateIntent always reads current values without triggering effects
+  const paymentIntentIdRef = useRef('');
+  const countryRef = useRef('IE');
+  const appliedCodeRef = useRef('');
+
+  // Keep appliedCodeRef in sync
+  useEffect(() => { appliedCodeRef.current = appliedCode; }, [appliedCode]);
+
+  // Create intent once on mount
+  useEffect(() => {
     if (cart.length === 0) return;
+    createIntent();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function createIntent() {
     setLoading(true);
     setIntentError('');
     try {
@@ -135,8 +148,7 @@ export default function CheckoutPage() {
             colour: i.colour,
             size: i.size,
           })),
-          shippingCountry: country,
-          discountCode: discountCode || undefined,
+          shippingCountry: 'IE',
           attribution,
         }),
       });
@@ -149,30 +161,59 @@ export default function CheckoutPage() {
 
       const data = await res.json();
       setClientSecret(data.clientSecret);
+      paymentIntentIdRef.current = data.paymentIntentId;
       setSummary(data.orderSummary);
-      if (data.orderSummary.discountCode) {
-        setAppliedCode(data.orderSummary.discountCode);
-      }
     } catch {
       setIntentError('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [cart, country]);
+  }
 
-  // Runs on mount AND on country change — single effect, no duplicate on initial render
-  useEffect(() => {
-    createIntent(appliedCode || undefined);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [country]);
+  // Updates the existing PaymentIntent (amount + metadata) without changing
+  // clientSecret — so the mounted Elements / AddressElement aren't destroyed.
+  async function updateIntent(country: string, discountCode?: string): Promise<OrderSummary | null> {
+    const piId = paymentIntentIdRef.current;
+    if (!piId) return null;
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/api/v2/checkout/update-intent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentIntentId: piId,
+          shippingCountry: country,
+          // undefined = keep existing; '' = remove; string = apply new code
+          discountCode: discountCode !== undefined ? discountCode : (appliedCodeRef.current || undefined),
+        }),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      setSummary(data.orderSummary);
+      if (data.orderSummary.discountCode) {
+        setAppliedCode(data.orderSummary.discountCode);
+      }
+      return data.orderSummary;
+    } catch {
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function applyDiscount() {
     setDiscountError('');
     if (!discountInput.trim()) return;
-    await createIntent(discountInput.trim());
-    if (!summary?.discountCode) {
+    const result = await updateIntent(countryRef.current, discountInput.trim());
+    if (!result?.discountCode) {
       setDiscountError('Invalid or expired discount code');
     }
+  }
+
+  function handleCountryChange(country: string) {
+    if (country === countryRef.current) return;
+    countryRef.current = country;
+    updateIntent(country);
   }
 
   function handleSuccess() {
@@ -196,55 +237,34 @@ export default function CheckoutPage() {
       <h1 className={styles.heading}>Checkout</h1>
 
       <div className={styles.layout}>
-        {/* Left — payment */}
+        {/* Left — address + payment */}
         <div className={styles.paymentCol}>
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>Shipping destination</h2>
-            <select
-              className={styles.select}
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-            >
-              {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>{c.label}</option>
-              ))}
-              <option value="OTHER">Other country</option>
-            </select>
-            <p className={styles.hint}>
-              Don&apos;t see your country? Select &ldquo;Other country&rdquo; — we ship worldwide.
-            </p>
-          </section>
+          {intentError && <p className={styles.intentError}>{intentError}</p>}
 
-          {intentError && (
-            <p className={styles.intentError}>{intentError}</p>
-          )}
-
-          {clientSecret && summary && (
-            <section className={styles.section}>
-              <h2 className={styles.sectionTitle}>Payment</h2>
-              <Elements
-                key={clientSecret}
-                stripe={stripePromise}
-                options={{
-                  clientSecret,
-                  appearance: {
-                    theme: 'stripe',
-                    variables: {
-                      fontFamily: '"Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif',
-                      colorPrimary: '#1a1916',
-                      borderRadius: '0px',
-                    },
+          {clientSecret && summary ? (
+            <Elements
+              stripe={stripePromise}
+              options={{
+                clientSecret,
+                appearance: {
+                  theme: 'stripe',
+                  variables: {
+                    fontFamily: '"Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif',
+                    colorPrimary: '#1a1916',
+                    borderRadius: '0px',
                   },
-                }}
-              >
-                <PaymentForm summary={summary} onSuccess={handleSuccess} />
-              </Elements>
-            </section>
-          )}
-
-          {loading && !clientSecret && (
+                },
+              }}
+            >
+              <PaymentForm
+                summary={summary}
+                onSuccess={handleSuccess}
+                onCountryChange={handleCountryChange}
+              />
+            </Elements>
+          ) : loading ? (
             <p className={styles.loadingMsg}>Preparing secure payment…</p>
-          )}
+          ) : null}
         </div>
 
         {/* Right — order summary */}
@@ -268,7 +288,6 @@ export default function CheckoutPage() {
               ))}
             </ul>
 
-            {/* Discount code */}
             <div className={styles.discountRow}>
               <input
                 className={styles.discountInput}
