@@ -117,6 +117,63 @@ checkoutRouter.post('/create-intent', async (req, res) => {
   }
 });
 
+// POST /api/v2/checkout/update-intent
+// Updates an existing PaymentIntent's amount when country or discount changes.
+// Keeps the same clientSecret so the mounted Elements context is preserved.
+checkoutRouter.post('/update-intent', async (req, res) => {
+  try {
+    const { paymentIntentId, shippingCountry, discountCode } = req.body;
+    if (!paymentIntentId) return res.status(400).json({ error: 'paymentIntentId required' });
+
+    const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    const meta = intent.metadata || {};
+
+    let items = [];
+    try { items = JSON.parse(meta.items || '[]'); } catch { /* ignore */ }
+
+    const subtotal = meta.subtotal ? parseFloat(meta.subtotal) : items.reduce((s, i) => s + i.price * i.quantity, 0);
+    const country = shippingCountry || meta.shippingCountry || 'IE';
+
+    let discountCodeResult = null;
+    let discountAmount = 0;
+    // discountCode === '' means "remove"; undefined means "keep existing"
+    const codeToTry = discountCode !== undefined ? discountCode : (meta.discountCode || '');
+    if (codeToTry) {
+      const dr = await validateDiscount(codeToTry, subtotal);
+      if (dr.valid) { discountCodeResult = dr.code; discountAmount = dr.discountAmount; }
+    }
+
+    const discountedSubtotal = Math.max(0, subtotal - discountAmount);
+    const ship = calculateShipping(country, discountedSubtotal);
+    const total = discountedSubtotal + ship.cost;
+
+    await stripe.paymentIntents.update(paymentIntentId, {
+      amount: Math.round(total * 100),
+      metadata: {
+        ...meta,
+        shippingCountry: country,
+        shippingCost: String(ship.cost),
+        discountCode: discountCodeResult || '',
+        discountAmount: String(discountAmount),
+      },
+    });
+
+    res.json({
+      orderSummary: {
+        items,
+        subtotal,
+        discountCode: discountCodeResult,
+        discountAmount,
+        shipping: { cost: ship.cost, label: ship.label, isFree: ship.isFree },
+        total,
+      },
+    });
+  } catch (err) {
+    console.error('[checkoutV2] update-intent error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/webhook (mounted at root in server.js — must be before express.json())
 webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
@@ -168,10 +225,23 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
       const shipping = { cost: shippingCost, label: calculateShipping(country, Math.max(0, subtotal - discountAmount)).label };
       const total = intent.amount / 100;
 
+      const stripeShipping = intent.shipping;
       const order = await Order.create({
         stripePaymentIntentId: intent.id,
         stripeChargeId: intent.latest_charge,
         orderNumber,
+        customerName: stripeShipping?.name,
+        customerPhone: stripeShipping?.phone,
+        shippingAddress: stripeShipping ? {
+          name:       stripeShipping.name,
+          phone:      stripeShipping.phone,
+          line1:      stripeShipping.address?.line1,
+          line2:      stripeShipping.address?.line2,
+          city:       stripeShipping.address?.city,
+          state:      stripeShipping.address?.state,
+          postalCode: stripeShipping.address?.postal_code,
+          country:    stripeShipping.address?.country,
+        } : undefined,
         items,
         subtotal,
         discountCode: discountCode || undefined,
