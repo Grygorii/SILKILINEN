@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 16 May 2026 (Marketing Command Center).
+Last updated: 16 May 2026 (Customer Intelligence v1 + Promo codes personal codes).
 
 ---
 
@@ -228,6 +228,86 @@ Other admin pages:
 - `frontend/components/AnalyticsLoader.tsx` — uses useCookieConsent hook
 - `frontend/components/Footer.tsx` — CookiePreferencesLink added to Legal column
 - `frontend/app/admin/marketing/page.tsx` — full rewrite
+
+---
+
+## Shipped 16 May 2026 — Promo codes admin restore + redemption tracking
+
+**Discovery findings:**
+- `/admin/promo-codes/page.tsx` was NOT deleted — it was moved to `/admin/marketing/promo-codes/` in commit `06e9b12` (Phase 2A navigation redesign), leaving a redirect at the old URL. Not a regression.
+- Only one code advertised in copy: `SILK10` (AnnouncementBar, account page, NewsletterBand, welcome email, seedSiteContent)
+- Old PromoCode model used simple `active: Boolean` + no per-customer redemption tracking
+
+**Changes:**
+- `backend/models/PromoCode.js` — extended with `status` enum, `redemptionType`, `appliesTo`, `source`, `campaignId` fields; `isActive` virtual resolves both old `active` boolean and new `status` for backward compat
+- `backend/models/PromoCodeRedemption.js` (NEW) — one doc per redemption; fields: `promoCodeId`, `code`, `orderId`, `orderNumber`, `customerEmail`, `discountAmount`, `redeemedAt`; compound index on `(promoCodeId, customerEmail)` for per-customer check
+- `backend/services/discounts.js` — `validateDiscount` now accepts optional `customerEmail` param; checks `PromoCodeRedemption` for prior redemption when `redemptionType === 'single_use_per_customer'` or legacy `maxUsesPerCustomer === 1`; `redeemDiscount` now accepts `{ orderId, orderNumber, customerEmail, discountAmount }` and creates `PromoCodeRedemption` (idempotent — guards against duplicate webhook calls)
+- `backend/routes/checkoutV2.js` — `update-intent` now passes `email || meta.customerEmail` to `validateDiscount`; webhook now passes full redemption context to `redeemDiscount`
+- `backend/routes/promoCodes.js` — rewrote: `GET /` supports `status` and `search` query params; `GET /:id` returns full promo + `performance` metrics + `redemptions[]`; `PUT /:id` whitelists specific fields + keeps `active` in sync with `status`; `DELETE` now sets `status: 'expired'` not just `active: false`; new codes set both `status` and `active` fields
+- `backend/scripts/seedPromoCodes.js` — rewrote to be idempotent; migrates existing docs without `status` field; seeds SILK10 with `status: 'active'`, `redemptionType: 'single_use_per_customer'`, `source: 'newsletter_welcome'`
+- `frontend/components/AdminLayout.tsx` — "Promo codes" entry added to NAV under PUBLISH (below Marketing) with Tag icon from lucide-react
+- `frontend/app/admin/promo-codes/page.tsx` — rebuilt as real list page (was a redirect); filter by status, search by code, table with inline Pause/Resume/Duplicate/Delete actions
+- `frontend/app/admin/promo-codes/new/page.tsx` (NEW) — 6-section create form: basics, discount type/value/min, applies-to, redemption rules, validity dates, attribution source
+- `frontend/app/admin/promo-codes/[id]/page.tsx` (NEW) — detail page: performance band (redemptions/discount/revenue/avg), inline edit form, summary grid, redemptions table with order links and masked emails
+- `frontend/app/admin/marketing/promo-codes/page.tsx` — now redirects to `/admin/promo-codes` (reversed the direction)
+
+**Advertised codes — status:**
+- `SILK10`: seeded active with 10% off, single use per customer, no expiry, source: newsletter_welcome. Per-customer enforcement is now live (blocked at `update-intent` validate call, and recorded in PromoCodeRedemption on order completion).
+
+---
+
+## Shipped 16 May 2026 — Customer Intelligence v1
+
+**PromoCode personal codes (addendum to promo codes section):**
+- `backend/models/PromoCode.js` — `targetCustomerId` field added (ObjectId ref Customer); personal codes can be linked directly to a specific customer
+- `frontend/app/admin/promo-codes/page.tsx` — "Personal" pill now renders in the Code column for any code where `targetCustomerId` is set or `source` starts with `customer_`; "Broad only / All codes / Personal only" filter chips added
+
+**Customer model extension:**
+- `backend/models/Customer.js` — extended with intelligence fields (all backward-compatible, optional):
+  - `tags: [String]`, `notes: [{ body, createdAt }]`, `customerType` (retail/wholesale/vip/internal), `internalRating` (1–5)
+  - `firstOrderAt`, `lastOrderAt`, `orderCount`, `totalSpend` — derived stats updated by backfill + webhook
+  - `country`, `city` — from last order shipping address
+  - `acquisitionSource/Medium/Campaign/CampaignId/VisitId`, `acquiredAt` — first-touch attribution
+  - `segments: [String]` — auto-computed slugs
+  - `emailLog: [{ subject, template, sentAt }]` — last 100 outbound emails
+  - `gdprDeletedAt: Date`, `consent: String` (accepted/rejected/null)
+  - Indexes: `segments`, `lastOrderAt`, `totalSpend`
+
+**Segment model + service:**
+- `backend/models/Segment.js` — one doc per segment (slug, label, description, color, count, lastComputedAt)
+- `backend/services/segments.js` — 7 auto-segments: `vip` (top 10% spend), `repeat` (2+ orders), `first-time` (1 order), `newsletter-only` (0 orders + consent), `recent` (≤30d), `lapsed` (60–180d), `at-risk` (≥90d); `recomputeAll()` bulk-writes all customers in one pass; `ensureSegmentDocs()` idempotent upsert
+
+**Admin customers route:**
+- `backend/routes/adminCustomers.js` (NEW) — mounted at `/api/admin/customers`; all routes require admin auth
+  - `GET /` — paginated list (page, limit, segment, search, consent filters); returns customers + segment tiles
+  - `GET /export/csv` — CSV for Meta Custom Audiences (consent-gated, segment filter)
+  - `POST /segments/recompute` — trigger full segment recompute
+  - `GET /:id` — full customer detail with orders array + totalSpend
+  - `POST /` — manual customer creation (409 if exists, returns customerId for redirect)
+  - `PUT /:id` — update whitelisted fields (name, phone, tags, type, rating, consent)
+  - `POST /:id/notes` — add internal note; `DELETE /:id/notes/:noteId` — remove note
+  - `POST /:id/promo-code` — generate personal one-time code (`FIRSTNAME-XXXX` format); creates PromoCode with `source: 'customer_personal'`, `targetCustomerId`, `maxUses: 1`
+  - `GET /:id/gdpr-export` — full PII + orders as JSON download
+  - `DELETE /:id/gdpr` — anonymise PII (replaces email, clears name/phone/address/notes/wishlist/tags), preserves order history, sets `gdprDeletedAt`
+
+**Backfill script:**
+- `backend/scripts/backfillCustomerOrderLinks.js` — idempotent; links orphan Orders (no customerId) to Customer docs by email; recomputes `firstOrderAt`, `lastOrderAt`, `orderCount`, `totalSpend`, `country`, `city`, acquisition fields; runs full segment recompute at end
+- Run: `node backend/scripts/backfillCustomerOrderLinks.js`
+
+**Backend wiring:**
+- `backend/server.js` — `adminCustomersRouter` wired at `/api/admin/customers`
+
+**Admin frontend (4 pages):**
+- `frontend/app/admin/customers/page.tsx` — paginated list with segment sidebar tiles + "Recompute now" button; search + consent filter bar; table with segments pills, spend, last order; CSV export; pagination
+- `frontend/app/admin/customers/[id]/page.tsx` — full detail: 4-cell stat band, profile (editable inline), acquisition attribution, orders table, internal notes (add/delete), personal promo code generator
+- `frontend/app/admin/customers/founder/page.tsx` — Sabreen-friendly view: segment tiles with counts + % of total, repeat rate highlight with plain-English interpretation, quick-action buttons
+- `frontend/app/admin/customers/new/page.tsx` — manual creation form; on 409 (existing email) redirects to that customer's detail page
+
+**Key decisions / invariants:**
+- Customers route at `/admin/customers` already existed in AdminLayout NAV (with Users icon) — no sidebar change needed
+- GDPR anonymisation replaces email with `deleted-${id}@anonymised.silkilinen.com` and clears PII; order history rows remain for accounting
+- Personal promo codes use `FIRSTNAME-XXXX` format (XXXX = 2 random bytes hex); always `maxUses: 1`, single use per customer, `source: 'customer_personal'`
+- Segment recompute is a full table scan (bulk write); safe to run from admin UI at any time
 
 ---
 

@@ -194,8 +194,9 @@ checkoutRouter.post('/update-intent', async (req, res) => {
     let discountAmount = 0;
     // discountCode === '' means "remove"; undefined means "keep existing"
     const codeToTry = discountCode !== undefined ? discountCode : (meta.discountCode || '');
+    const knownEmail = email || meta.customerEmail || undefined;
     if (codeToTry) {
-      const dr = await validateDiscount(codeToTry, subtotal);
+      const dr = await validateDiscount(codeToTry, subtotal, knownEmail);
       if (dr.valid) { discountCodeResult = dr.code; discountAmount = dr.discountAmount; }
     }
 
@@ -336,9 +337,14 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
       // Fire Meta Conversions API server-side Purchase event
       fireMetaCapi({ order, eventId: `order-${orderNumber}` });
 
-      // Increment discount usage
+      // Record redemption (creates PromoCodeRedemption doc + increments usageCount)
       if (discountCode) {
-        await redeemDiscount(discountCode).catch(() => {});
+        await redeemDiscount(discountCode, {
+          orderId:       order._id,
+          orderNumber:   order.orderNumber,
+          customerEmail: order.customerEmail,
+          discountAmount: order.discountAmount,
+        }).catch(() => {});
       }
 
       // Clear cart
