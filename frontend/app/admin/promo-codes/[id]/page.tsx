@@ -198,7 +198,7 @@ export default function PromoCodeDetailPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
               <div>
                 <label style={labelStyle}>Status</label>
-                <select style={{ ...inputStyle, width: '100%' }} value={editForm.status} onChange={e => setEF('status', e.target.value)}>
+                <select style={{ ...inputStyle, width: '100%' }} value={editForm.status || ''} onChange={e => setEF('status', e.target.value)}>
                   <option value="active">Active</option>
                   <option value="paused">Paused</option>
                   <option value="draft">Draft</option>
