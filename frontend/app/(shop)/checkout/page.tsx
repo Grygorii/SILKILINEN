@@ -160,17 +160,11 @@ export default function CheckoutPage() {
     }
   }, [cart, country]);
 
-  // Re-create intent when country changes
+  // Runs on mount AND on country change — single effect, no duplicate on initial render
   useEffect(() => {
     createIntent(appliedCode || undefined);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [country]);
-
-  // Initial load
-  useEffect(() => {
-    createIntent();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   async function applyDiscount() {
     setDiscountError('');
@@ -229,6 +223,7 @@ export default function CheckoutPage() {
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>Payment</h2>
               <Elements
+                key={clientSecret}
                 stripe={stripePromise}
                 options={{
                   clientSecret,
