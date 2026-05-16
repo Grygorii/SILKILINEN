@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 16 May 2026 (Customer Intelligence v1 + Promo codes personal codes).
+Last updated: 16 May 2026 (Customer Intelligence v1 + Promo codes personal codes + Vercel build fix).
 
 ---
 
@@ -156,6 +156,10 @@ Other admin pages:
 - Privacy Policy: effective date 1 May 2026, last updated 16 May 2026; cookies section: essential only, no analytics cookies, no banner yet
 - Terms: effective date 1 May 2026, last updated 16 May 2026; governing law Republic of Ireland
 - Footer trust badge: "14-day hassle-free returns"
+
+## Vercel build fix — 16 May 2026
+
+- `frontend/app/admin/promo-codes/[id]/page.tsx` — `editForm.status` typed as `string | null` (from `PromoCode.status`); React's `<select value>` prop doesn't accept `null`. Fixed: `value={editForm.status || ''}` — same pattern already used for `redemptionType` in the same file.
 
 ## Known bugs / minor (updated 16 May 2026)
 
