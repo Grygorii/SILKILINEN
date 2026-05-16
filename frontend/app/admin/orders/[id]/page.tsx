@@ -292,8 +292,14 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
             <div className={styles.totalsBlock}>
               <div className={styles.totalRow}>
                 <span>Subtotal</span>
-                <span>€{order.total?.toFixed(2) ?? '—'}</span>
+                <span>€{(order.subtotal ?? order.items.reduce((s, i) => s + i.price * i.quantity, 0)).toFixed(2)}</span>
               </div>
+              {(order.discountAmount ?? 0) > 0 && (
+                <div className={`${styles.totalRow} ${styles.totalRowDiscount}`}>
+                  <span>Discount{order.discountCode ? ` (${order.discountCode})` : ''}</span>
+                  <span>−€{(order.discountAmount ?? 0).toFixed(2)}</span>
+                </div>
+              )}
               {(order.shippingCost ?? 0) > 0 && (
                 <div className={styles.totalRow}>
                   <span>Shipping{order.shippingMethod ? ` (${order.shippingMethod})` : ''}</span>
@@ -302,7 +308,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
               )}
               <div className={`${styles.totalRow} ${styles.totalRowFinal}`}>
                 <span>Total</span>
-                <span>€{((order.total ?? 0) + (order.shippingCost ?? 0)).toFixed(2)}</span>
+                <span>€{order.total?.toFixed(2) ?? '—'}</span>
               </div>
             </div>
           </section>

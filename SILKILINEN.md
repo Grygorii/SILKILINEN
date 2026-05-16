@@ -67,6 +67,43 @@ Other admin pages:
 - Existing Dalia / Bastet / Ciara / Rehab dress and robe products from earlier build phase
 - **Silk panties** (the actual sales hero) — currently sold on Etsy, not yet migrated to silkilinen.com as primary
 
+## Shipped 16 May 2026 — hotfix bundle #7–11
+
+**#7 — Customer email capture + order confirmation:**
+- Required email input added to `/checkout` above the AddressElement (pre-filled for logged-in customers via CustomerContext)
+- `create-intent`: passes `email` as `receipt_email` and `metadata.customerEmail` to Stripe PaymentIntent
+- `update-intent`: also accepts `email`, updates `receipt_email` + `metadata.customerEmail`
+- `PaymentForm.handleSubmit`: calls `update-intent` with the typed email before `stripe.confirmPayment` — ensures webhook always gets the email even if email was entered after PI creation
+- Webhook reads `intent.receipt_email || intent.metadata.customerEmail`; persists as `order.customerEmail`
+- `sendOrderConfirmation` already guarded by `order.customerEmail` — now fires on every paid order
+
+**#8 — Fix double-counted shipping in totals:**
+- Admin order detail page: was showing `order.total` as "Subtotal" and then adding `shippingCost` again for "Total". Fixed: "Subtotal" = `order.subtotal`, "Total" = `order.total` (Stripe PI amount, already includes shipping). Discount row added.
+- `email.js buildHtml`: was computing `grandTotal = itemsSubtotal + shippingCost` ignoring discount. Fixed: `grandTotal = order.total ?? (itemsSubtotal - discountAmount + shippingCost)`. Discount row added to email template.
+- `sendAdminOrderNotification`: subject line now uses `order.total` directly.
+
+**#9 — Status-change emails:** Already wired in `orders.js` (`STATUS_EMAIL_FNS` map + `order.customerEmail` guard). Will fire automatically now that #7 persists email on orders.
+
+**#10 — Admin order detail polish:**
+- Right sidebar (`rightCol`) is now `position: sticky` on desktop with `max-height: calc(100vh - 48px)` + scroll — status panel stays visible while scrolling left column
+- Discount row (`totalRowDiscount` in green) added to items totals block
+
+**#11 — Dashboard stats bugs:**
+- Bug 1 (100% conversion): `calculateConversion` now returns `null` (shown as `—`) when a source has fewer than 5 sessions — too sparse to be meaningful
+- Bug 2 (>100% source %): Sources aggregation now groups by `sessionId` first (picking `$first` source per session), then groups by source — guarantees source percentages sum to ≤100%
+- Bug 3 (<100% country/city %): Country/city `percentOfTraffic` now uses `totalGeoVisitors` (sessions with geo data) as denominator instead of all sessions — percentages now correctly sum to 100% within geolocated sessions
+
+**Files modified:**
+- `backend/routes/checkoutV2.js`
+- `backend/routes/adminDashboard.js`
+- `backend/services/email.js`
+- `frontend/app/(shop)/checkout/page.tsx`
+- `frontend/app/(shop)/checkout/page.module.css`
+- `frontend/app/admin/orders/[id]/page.tsx`
+- `frontend/app/admin/orders/[id]/page.module.css`
+
+---
+
 ## Shipped 16 May 2026 — late session (overnight hotfix bundle)
 
 - **#1 Shipping address collection** — `AddressElement` (mode=shipping) on `/checkout`; Stripe auto-attaches address to PaymentIntent on `confirmPayment`; webhook reads `intent.shipping` → persisted to `Order.shippingAddress` (name, phone, line1, line2, city, state, postalCode, country). Order model extended with `name` and `phone` on `shippingAddress`.

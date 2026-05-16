@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
+import { useCustomer } from '@/context/CustomerContext';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
@@ -40,21 +41,41 @@ function PaymentForm({
   summary,
   onSuccess,
   onCountryChange,
+  defaultEmail,
+  onBeforeSubmit,
 }: {
   summary: OrderSummary;
   onSuccess: () => void;
   onCountryChange: (country: string) => void;
+  defaultEmail: string;
+  onBeforeSubmit: (email: string) => Promise<void>;
 }) {
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [email, setEmail] = useState(defaultEmail);
+
+  // Pre-fill when logged-in customer loads after mount
+  useEffect(() => {
+    if (defaultEmail && !email) setEmail(defaultEmail);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultEmail]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!stripe || !elements) return;
+
+    if (!email.trim() || !email.includes('@')) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
     setSubmitting(true);
     setError('');
+
+    // Persist email to PaymentIntent before confirming so webhook can read it
+    await onBeforeSubmit(email.trim());
 
     const { error: stripeError } = await stripe.confirmPayment({
       elements,
@@ -72,6 +93,17 @@ function PaymentForm({
 
   return (
     <form onSubmit={handleSubmit} className={styles.paymentForm}>
+      <h2 className={styles.sectionTitle}>Contact</h2>
+      <input
+        type="email"
+        required
+        className={styles.emailInput}
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        placeholder="Email address"
+        autoComplete="email"
+      />
+
       <h2 className={styles.sectionTitle}>Delivery address</h2>
       <AddressElement
         options={{
@@ -106,6 +138,7 @@ function PaymentForm({
 
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
+  const { customer } = useCustomer();
   const [discountInput, setDiscountInput] = useState('');
   const [clientSecret, setClientSecret] = useState('');
   const [summary, setSummary] = useState<OrderSummary | null>(null);
@@ -201,6 +234,23 @@ export default function CheckoutPage() {
     }
   }
 
+  async function setIntentEmail(email: string) {
+    const piId = paymentIntentIdRef.current;
+    if (!piId || !email) return;
+    try {
+      await fetch(`${API}/api/v2/checkout/update-intent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentIntentId: piId,
+          shippingCountry: countryRef.current,
+          discountCode: appliedCodeRef.current || undefined,
+          email,
+        }),
+      });
+    } catch { /* don't block payment if email update fails */ }
+  }
+
   async function applyDiscount() {
     setDiscountError('');
     if (!discountInput.trim()) return;
@@ -260,6 +310,8 @@ export default function CheckoutPage() {
                 summary={summary}
                 onSuccess={handleSuccess}
                 onCountryChange={handleCountryChange}
+                defaultEmail={customer?.email || ''}
+                onBeforeSubmit={setIntentEmail}
               />
             </Elements>
           ) : loading ? (

@@ -40,9 +40,10 @@ function formatAddress(addr) {
 
 function buildHtml({ order, isAdmin }) {
   const id = shortId(order._id);
-  const itemsSubtotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
+  const itemsSubtotal = order.subtotal ?? order.items.reduce((s, i) => s + i.price * i.quantity, 0);
   const shippingCost = order.shippingCost || 0;
-  const grandTotal = itemsSubtotal + shippingCost;
+  const discountAmount = order.discountAmount || 0;
+  const grandTotal = order.total ?? (itemsSubtotal - discountAmount + shippingCost);
   const firstName = order.customerName ? order.customerName.split(' ')[0] : 'there';
 
   return `<!DOCTYPE html>
@@ -100,6 +101,11 @@ function buildHtml({ order, isAdmin }) {
                   <td style="padding:8px 0;font-size:13px;color:#5a5650;">Items subtotal</td>
                   <td style="padding:8px 0;font-size:13px;color:#1a1916;text-align:right;">€${itemsSubtotal.toFixed(2)}</td>
                 </tr>
+                ${discountAmount > 0 ? `
+                <tr>
+                  <td style="padding:8px 0;font-size:13px;color:#5a5650;">Discount${order.discountCode ? ` (${order.discountCode})` : ''}</td>
+                  <td style="padding:8px 0;font-size:13px;color:#2d7d47;text-align:right;">−€${discountAmount.toFixed(2)}</td>
+                </tr>` : ''}
                 ${shippingCost > 0 ? `
                 <tr>
                   <td style="padding:8px 0;font-size:13px;color:#5a5650;">Shipping${order.shippingMethod ? ` (${order.shippingMethod})` : ''}</td>
@@ -147,11 +153,10 @@ async function sendOrderConfirmation(order) {
 async function sendAdminOrderNotification(order) {
   if (!process.env.RESEND_API_KEY || !ADMIN_EMAIL) return;
   const id = shortId(order._id);
-  const grandTotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0) + (order.shippingCost || 0);
   await getResend().emails.send({
     from: FROM,
     to: ADMIN_EMAIL,
-    subject: `New order #${id} — €${grandTotal.toFixed(2)}`,
+    subject: `New order #${id} — €${(order.total || 0).toFixed(2)}`,
     html: buildHtml({ order, isAdmin: true }),
   });
 }

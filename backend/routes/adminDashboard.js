@@ -92,7 +92,7 @@ function getTimeWindows() {
 }
 
 function calculateConversion(buyers, visitors) {
-  if (!visitors) return null;
+  if (!visitors || visitors < 5) return null; // too sparse to be meaningful
   if (!buyers) return 0;
   if (buyers > visitors) {
     console.warn(`[dashboard] Suspicious conversion: ${buyers} buyers vs ${visitors} visitors`);
@@ -295,17 +295,20 @@ async function getZone3Data({ thirtyDaysAgo }) {
   const showConversion = totalOrdersInWindow > 0;
 
   // Traffic sources, best-converting product, and geo breakdown from Visit model
-  const [sourcesData, bestConvertingData, topCountriesData, topCitiesData, totalVisitorCount] = await Promise.all([
-    // Fix: deduplicate by (source, sessionId) first so one session with 4 page-views
-    // doesn't count as 4 buyers even if convertedToOrder is set on each visit doc.
+  const [sourcesData, bestConvertingData, topCountriesData, topCitiesData, totalVisitorCount, totalGeoVisitorCount] = await Promise.all([
+    // Group by sessionId first to assign each session to exactly one source
+    // (the first source seen for that session). This prevents multi-source
+    // inflation where % of traffic columns sum to > 100%.
     Visit.aggregate([
       { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      { $sort: { createdAt: 1 } },
       { $group: {
-        _id:      { source: '$source', sessionId: '$sessionId' },
+        _id:      '$sessionId',
+        source:   { $first: '$source' },
         hasOrder: { $max: { $cond: [{ $ne: ['$convertedToOrder', null] }, 1, 0] } },
       }},
       { $group: {
-        _id:      '$_id.source',
+        _id:      '$source',
         visitors: { $sum: 1 },
         buyers:   { $sum: '$hasOrder' },
       }},
@@ -345,15 +348,23 @@ async function getZone3Data({ thirtyDaysAgo }) {
       { $limit: 5 },
     ]),
 
-    // Total unique sessions across all sources (denominator for % of traffic)
+    // Total unique sessions across all sources (denominator for source % of traffic)
     Visit.aggregate([
       { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      { $group: { _id: '$sessionId' } },
+      { $count: 'total' },
+    ]),
+
+    // Total unique sessions with geo data (denominator for country/city % of traffic)
+    Visit.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo }, country: { $exists: true, $ne: null } } },
       { $group: { _id: '$sessionId' } },
       { $count: 'total' },
     ]),
   ]);
 
   const totalVisitors = totalVisitorCount[0]?.total || 0;
+  const totalGeoVisitors = totalGeoVisitorCount[0]?.total || 0;
 
   const topTrafficSources30d = sourcesData.map(s => ({
     source:            s._id || 'direct',
@@ -370,8 +381,8 @@ async function getZone3Data({ thirtyDaysAgo }) {
     country:          c.country,
     countryCode:      c.countryCode || null,
     visitors:         c.visitors,
-    percentOfTraffic: totalVisitors > 0
-      ? Math.round((c.visitors / totalVisitors) * 1000) / 10
+    percentOfTraffic: totalGeoVisitors > 0
+      ? Math.round((c.visitors / totalGeoVisitors) * 1000) / 10
       : null,
   }));
 
@@ -379,8 +390,8 @@ async function getZone3Data({ thirtyDaysAgo }) {
     city:             c.city,
     country:          c.country || null,
     visitors:         c.visitors,
-    percentOfTraffic: totalVisitors > 0
-      ? Math.round((c.visitors / totalVisitors) * 1000) / 10
+    percentOfTraffic: totalGeoVisitors > 0
+      ? Math.round((c.visitors / totalGeoVisitors) * 1000) / 10
       : null,
   }));
 

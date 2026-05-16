@@ -93,6 +93,20 @@
   padding: 12px 0;
 }
 
+/* Email input */
+.emailInput {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border, #e0ddd7);
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--dark, #1a1916);
+  background: white;
+  box-sizing: border-box;
+  outline: none;
+}
+.emailInput:focus { border-color: var(--dark, #1a1916); }
+
 /* Payment form */
 .paymentForm {
   display: flex;

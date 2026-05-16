@@ -69,6 +69,15 @@
   gap: 20px;
 }
 
+@media (min-width: 901px) {
+  .rightCol {
+    position: sticky;
+    top: 24px;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+}
+
 /* ── Card ────────────────────────────────────────── */
 
 .card {
@@ -169,6 +178,10 @@
   margin-top: 4px;
   padding-top: 8px;
   border-top: 1px solid var(--border);
+}
+
+.totalRowDiscount {
+  color: #2d7d47;
 }
 
 /* ── Form controls ───────────────────────────────── */

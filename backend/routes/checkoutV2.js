@@ -13,7 +13,7 @@ const { sendOrderConfirmation, sendAdminOrderNotification } = require('../servic
 // POST /api/v2/checkout/create-intent
 checkoutRouter.post('/create-intent', async (req, res) => {
   try {
-    const { sessionId, shippingCountry, discountCode: incomingCode, attribution } = req.body;
+    const { sessionId, shippingCountry, discountCode: incomingCode, attribution, email } = req.body;
     let cart = null;
     let sourceItems = req.body.items; // direct items path
 
@@ -70,7 +70,7 @@ checkoutRouter.post('/create-intent', async (req, res) => {
     const total = discountedSubtotal + shipping.cost;
 
     // Create Stripe PaymentIntent (amount in cents)
-    const intent = await stripe.paymentIntents.create({
+    const intentParams = {
       amount: Math.round(total * 100),
       currency: 'eur',
       metadata: {
@@ -89,14 +89,17 @@ checkoutRouter.post('/create-intent', async (req, res) => {
           size: i.size,
           quantity: i.quantity,
         }))),
-        utm_source:   attribution?.source   ?? 'direct',
-        utm_medium:   attribution?.medium   ?? 'none',
-        utm_campaign: attribution?.campaign ?? 'none',
-        referrer:     attribution?.referrer ?? '',
-        landing_page: attribution?.landingPage ?? '',
+        utm_source:    attribution?.source   ?? 'direct',
+        utm_medium:    attribution?.medium   ?? 'none',
+        utm_campaign:  attribution?.campaign ?? 'none',
+        referrer:      attribution?.referrer ?? '',
+        landing_page:  attribution?.landingPage ?? '',
+        customerEmail: email || '',
       },
       description: `SILKILINEN order — ${validatedItems.length} item(s)`,
-    });
+    };
+    if (email) intentParams.receipt_email = email;
+    const intent = await stripe.paymentIntents.create(intentParams);
 
     res.json({
       clientSecret: intent.client_secret,
@@ -122,7 +125,7 @@ checkoutRouter.post('/create-intent', async (req, res) => {
 // Keeps the same clientSecret so the mounted Elements context is preserved.
 checkoutRouter.post('/update-intent', async (req, res) => {
   try {
-    const { paymentIntentId, shippingCountry, discountCode } = req.body;
+    const { paymentIntentId, shippingCountry, discountCode, email } = req.body;
     if (!paymentIntentId) return res.status(400).json({ error: 'paymentIntentId required' });
 
     const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
@@ -147,7 +150,7 @@ checkoutRouter.post('/update-intent', async (req, res) => {
     const ship = calculateShipping(country, discountedSubtotal);
     const total = discountedSubtotal + ship.cost;
 
-    await stripe.paymentIntents.update(paymentIntentId, {
+    const updatePayload = {
       amount: Math.round(total * 100),
       metadata: {
         ...meta,
@@ -156,7 +159,12 @@ checkoutRouter.post('/update-intent', async (req, res) => {
         discountCode: discountCodeResult || '',
         discountAmount: String(discountAmount),
       },
-    });
+    };
+    if (email !== undefined) {
+      updatePayload.receipt_email = email || null;
+      updatePayload.metadata.customerEmail = email || '';
+    }
+    await stripe.paymentIntents.update(paymentIntentId, updatePayload);
 
     res.json({
       orderSummary: {
@@ -226,10 +234,12 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
       const total = intent.amount / 100;
 
       const stripeShipping = intent.shipping;
+      const customerEmail = intent.receipt_email || intent.metadata?.customerEmail || null;
       const order = await Order.create({
         stripePaymentIntentId: intent.id,
         stripeChargeId: intent.latest_charge,
         orderNumber,
+        customerEmail,
         customerName: stripeShipping?.name,
         customerPhone: stripeShipping?.phone,
         shippingAddress: stripeShipping ? {
