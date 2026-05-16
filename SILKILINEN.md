@@ -67,6 +67,20 @@ Other admin pages:
 - Existing Dalia / Bastet / Ciara / Rehab dress and robe products from earlier build phase
 - **Silk panties** (the actual sales hero) — currently sold on Etsy, not yet migrated to silkilinen.com as primary
 
+## Shipped 16 May 2026 — late session (overnight hotfix bundle)
+
+- **#1 Shipping address collection** — `AddressElement` (mode=shipping) on `/checkout`; Stripe auto-attaches address to PaymentIntent on `confirmPayment`; webhook reads `intent.shipping` → persisted to `Order.shippingAddress` (name, phone, line1, line2, city, state, postalCode, country). Order model extended with `name` and `phone` on `shippingAddress`.
+- **#1 update-intent endpoint** — `POST /api/v2/checkout/update-intent` updates existing PI amount (country/discount change) without new `clientSecret`, so AddressElement fields never reset mid-form.
+- **#2 PaymentElement tabs layout** — `options={{ layout: 'tabs' }}` on PaymentElement; card/Link/Klarna render as tabs not accordion.
+- **#3 Duplicate newsletter popup removed** — deleted `NewsletterPopup.tsx` (JOIN THE LIST) from root layout; `EmailCapturePopup` (PURE SILK, PURE COMFORT) is the single popup, with scroll/exit-intent triggers and 30-day suppression.
+- **#4 Shop grid heart** — removed white circle/border; now matches product page style (no background, drop-shadow glow).
+- **#5 Product video** — `autoPlay muted loop playsInline`; `object-fit: cover` (no letterboxing); no controls overlay.
+- **#6 Heart tap highlight** — `-webkit-tap-highlight-color: transparent` on heart buttons in both ProductGrid and ProductGallery; eliminates blue rectangle flash on tap.
+
+**Known bugs added to tracking:**
+- `middleware.ts` → rename to `proxy.ts` for Next.js 16 (deprecation warning, not blocking)
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` exists redundantly on Railway — only needed on Vercel; delete from Railway when convenient
+
 ## Shipped 16 May 2026
 
 ### Section B — Collections system
@@ -106,6 +120,14 @@ Other admin pages:
 - Terms: effective date 1 May 2026, last updated 16 May 2026; governing law Republic of Ireland
 - Footer trust badge: "14-day hassle-free returns"
 
+## Known bugs / minor (updated 16 May 2026)
+
+- `middleware.ts` → rename to `proxy.ts` for Next.js 16 (deprecation warning, not blocking)
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` set on Railway — only needed on Vercel; delete from Railway when convenient
+- Microsoft Clarity tracker firing — origin unknown, investigate before enabling any paid-ads pixels
+- Mongoose duplicate-index warnings on `Product.slug`, `Customer.email`, `Customer.googleId` — cosmetic, not affecting functionality
+- `finalize()` in AiPhotoshoot does not auto-route to slots — only individual `approvePhoto()` does
+
 ## Active scoped work, not yet built
 
 - **THUMBNAIL slot auto-derive** — thumbnail generation still exists in AI workflow tiers but no named slot card shows for it; images with `slot: thumbnail` appear in Additional images. Future: auto-derive from HERO via Cloudinary transformation if needed.
@@ -120,13 +142,6 @@ Other admin pages:
 - **PWA admin app** with push notifications for orders, low stock, system health, messages. Phase 2C.
 - **VPS migration** — considered, not executed. Real architectural decision, deserves its own brief.
 
-## Known bugs / minor
-
-- Logo CSS: `letter-spacing` adds trailing space after the last glyph, visually shifting letter-spaced text left of center. Fixed 14 May 2026 — `align-items: center` on `.logoLink` + `padding-right` matching `letter-spacing` on each text span.
-- Mongoose duplicate-index warnings on `Product.slug`, `Customer.email`, `Customer.googleId` — cosmetic in logs, not affecting functionality
-- Microsoft Clarity tracker firing — origin unknown, investigate before enabling any paid-ads pixels
-- `finalize()` in AiPhotoshoot (bulk-approve all photos at once) does not auto-route to slots — only individual `approvePhoto()` does. Bulk-finalized photos land in Additional images.
-- Some env vars previously orphaned (`subject`, `to`, `body`, etc.) — clean-up done 8 May, worth a monthly env audit habit
 
 ## Where to start a new Claude chat about SILKILINEN
 

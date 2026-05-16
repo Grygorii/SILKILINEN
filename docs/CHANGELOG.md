@@ -1,5 +1,44 @@
 # CHANGELOG
 
+## 2026-05-16 (overnight) — Hotfix bundle #1–6
+
+**#1 Shipping address collection**
+- `AddressElement` (mode=shipping) added to `/checkout` inside `<Elements>` — collects name, address, phone. Stripe attaches address to PaymentIntent automatically on `confirmPayment`.
+- Webhook reads `intent.shipping`, persists `shippingAddress` (name, phone, line1, line2, city, state, postalCode, country) and `customerName`/`customerPhone` to Order document.
+- Order model: added `name` and `phone` to `shippingAddress` subdocument.
+- New endpoint `POST /api/v2/checkout/update-intent`: updates existing PaymentIntent amount when country or discount changes. Same `clientSecret` → AddressElement state preserved.
+- Country dropdown on /checkout removed — AddressElement is the source of truth.
+
+**#2 PaymentElement tabs layout**
+- `<PaymentElement options={{ layout: 'tabs' }} />` — card/Link/Klarna render as tabs.
+
+**#3 Duplicate newsletter popup**
+- `NewsletterPopup` (JOIN THE LIST) deleted from root layout and filesystem.
+- `EmailCapturePopup` (PURE SILK, PURE COMFORT) is the single popup — better copy, scroll/exit-intent triggers, 30-day suppression keyed to `slk_nl_dismissed`.
+
+**#4/#6 Wishlist heart — shop grid + tap highlight**
+- `ProductGrid` heart: removed white circle/border/shadow; now matches product page (no background, drop-shadow glow for visibility on any image).
+- `-webkit-tap-highlight-color: transparent` on heart buttons in ProductGrid and ProductGallery — kills blue rectangle flash on tap.
+
+**#5 Product video**
+- `autoPlay muted loop playsInline` on gallery video; removed `controls`.
+- `object-fit: cover` (was `contain`) — fills 4:5 frame, no letterboxing.
+
+**Files modified:**
+- `backend/models/Order.js`
+- `backend/routes/checkoutV2.js`
+- `frontend/app/(shop)/checkout/page.tsx`
+- `frontend/app/layout.tsx`
+- `frontend/components/ProductGrid.module.css`
+- `frontend/components/ProductGallery.tsx`
+- `frontend/components/ProductGallery.module.css`
+
+**Files deleted:**
+- `frontend/components/NewsletterPopup.tsx`
+- `frontend/components/NewsletterPopup.module.css`
+
+---
+
 ## 2026-05-16 (cutover) — Commerce cutover + policy amendments
 
 **What changed:**
