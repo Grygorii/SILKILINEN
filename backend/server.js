@@ -18,8 +18,6 @@ const cookieParser = require('cookie-parser');
 const productRoutes = require('./routes/products');
 const adminProductsRoutes = require('./routes/adminProducts');
 const authRoutes = require('./routes/auth');
-const checkoutRoutes = require('./routes/checkout');
-const webhookRoutes = require('./routes/webhook');
 const ordersRoutes = require('./routes/orders');
 const usersRoutes = require('./routes/users');
 const reviewsRoutes = require('./routes/reviews');
@@ -38,7 +36,7 @@ const adminDashboardRoutes = require('./routes/adminDashboard');
 const collectionsRoutes = require('./routes/collections');
 const adminCollectionsRoutes = require('./routes/adminCollections');
 const cartRoutes = require('./routes/cart');
-const checkoutV2Routes = require('./routes/checkoutV2');
+const { checkoutRouter, webhookRouter } = require('./routes/checkoutV2');
 
 const app = express();
 
@@ -69,15 +67,14 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-// Webhooks must be mounted before express.json() — Stripe needs the raw request body
-app.use('/api/webhook', webhookRoutes);
-app.use('/api/v2/checkout', checkoutV2Routes);
+// Webhook must be before express.json() — Stripe needs the raw request body
+app.use('/api/webhook', webhookRouter);
+app.use('/api/v2/checkout', checkoutRouter);
 
 app.use(express.json());
 app.use('/api/products', productRoutes);
 app.use('/api/admin/products', adminProductsRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/checkout', checkoutRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/reviews', reviewsRoutes);

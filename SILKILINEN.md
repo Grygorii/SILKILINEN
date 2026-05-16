@@ -43,7 +43,7 @@ The site exists primarily to **escape Etsy's fee burden** (Etsy takes ~15-20% ef
 
 Browse / product detail pages, cart with quantity adjustment and stock caps, wishlist, magic-link or Google OAuth sign-in, Stripe checkout, customer accounts. Newsletter signup with welcome email + SILK10 code. "Just sold" social-proof popup (public endpoint, no auth required). Free-shipping-over-€150-to-Ireland banner.
 
-**Product page (as of 15 May 2026):** Multi-image gallery with desktop vertical thumbnail strip + main image; mobile touch-swipe with page dots. Video renders in gallery sequence (Cloudinary `so_0,f_jpg` poster). Story sentence from `description` visible above price. PRODUCT DETAILS accordion open by default. One-size products auto-select. Free shipping reminder below price. Heart: no white circle, charcoal fill, portal-fixed z-index. Contact button: speech bubble icon, response time line. Colour cubes instead of hex swatches (both on product page and shop grid). Footer: "14-day returns" (removed "hassle-free").
+**Product page (as of 15 May 2026):** Multi-image gallery with desktop vertical thumbnail strip + main image; mobile touch-swipe with page dots. Video renders in gallery sequence (Cloudinary `so_0,f_jpg` poster). Story sentence from `description` visible above price. PRODUCT DETAILS accordion open by default. One-size products auto-select. Free shipping reminder below price. Heart: no white circle, charcoal fill, portal-fixed z-index. Contact button: speech bubble icon, response time line. Colour cubes instead of hex swatches (both on product page and shop grid). Footer: "14-day hassle-free returns".
 
 ## Admin tooling shipped
 
@@ -86,8 +86,8 @@ Other admin pages:
 - `backend/services/tax.js` — stub returning `shouldDisplay: false` (sole trader below Irish VAT threshold — no VAT shown anywhere)
 - `backend/models/Cart.js` — persistent cart keyed by sessionId, 7-day TTL via MongoDB TTL index
 - `backend/routes/cart.js` — GET, POST (add/increment), PATCH (qty), DELETE items; POST/DELETE discount; PATCH country
-- `backend/routes/checkoutV2.js` — `/create-intent` validates items, creates Stripe PaymentIntent with items + discount + shipping in metadata; `/webhook` handles `payment_intent.succeeded`, creates Order with orderNumber
-- **PARALLEL BUILD — existing Stripe Checkout path unchanged.** Do NOT cut over until real test orders verified
+- `backend/routes/checkoutV2.js` — `checkoutRouter` at `/api/v2/checkout/create-intent`: validates items, creates Stripe PaymentIntent with items + discount + shipping in metadata; `webhookRouter` at `/api/webhook`: handles `payment_intent.succeeded`, creates Order with orderNumber
+- **Commerce cutover complete (16 May 2026):** CartPanel "Checkout" button navigates to `/checkout`; old `checkout.js` + `webhook.js` deleted; webhook consolidated at `/api/webhook` using `STRIPE_WEBHOOK_SECRET`
 - `Order` model extended: `stripePaymentIntentId`, `stripeChargeId`, `orderNumber`, `subtotal`, `discountCode`, `discountAmount`, `refunds[]`, `partially_refunded` status
 - Refund endpoint: `POST /api/orders/:id/refund` — creates Stripe refund, updates `refunds[]`, sets status to `refunded` or `partially_refunded`
 - Frontend `/checkout` page — Stripe Elements embedded card form; country selector for shipping preview; discount code input; order summary with live totals. `@stripe/react-stripe-js` + `@stripe/stripe-js` installed
@@ -102,16 +102,16 @@ Other admin pages:
 - Full rewrite of `/shipping` page: 5-row table (Ireland, UK, EU, US/CA/AU, Worldwide), Derry advantage for UK, customs section, no duplicate returns content
 
 ### Section E — Policy + footer
-- Privacy Policy: effective date updated, cookies section rewritten (essential only, no analytics cookies, no banner yet)
-- Terms: effective date updated to 1 May 2026
-- Footer: "14-day hassle-free returns" → "14-day returns"
+- Privacy Policy: effective date 1 May 2026, last updated 16 May 2026; cookies section: essential only, no analytics cookies, no banner yet
+- Terms: effective date 1 May 2026, last updated 16 May 2026; governing law Republic of Ireland
+- Footer trust badge: "14-day hassle-free returns"
 
 ## Active scoped work, not yet built
 
 - **THUMBNAIL slot auto-derive** — thumbnail generation still exists in AI workflow tiers but no named slot card shows for it; images with `slot: thumbnail` appear in Additional images. Future: auto-derive from HERO via Cloudinary transformation if needed.
 - **Collections header nav** — dynamic nav rebuild around collections (static category nav still in place)
 - **Collections heroImage upload** — admin edit page shows heroImage URL fields; Cloudinary upload widget not yet wired for collections
-- **New checkout cutover** — `/checkout` page built and tested (parallel). Cut over: wire "Checkout" button in CartPanel to go to `/checkout`; configure `STRIPE_WEBHOOK_SECRET_V2` env var in Railway; place real test orders; then cut over
+- **Stripe test orders** — register `STRIPE_WEBHOOK_SECRET` in Railway pointing at `POST /api/webhook` (events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`, `charge.succeeded`), then place a real end-to-end order on the live site to verify the checkout flow
 - **Stripe test orders** — must place real test orders on the v2 checkout path before going live
 - **Pricing spreadsheet** for the actual catalogue with cost-up + margin + Etsy fee comparison. Needs real Etsy sales data first.
 - **Finance admin tab** ("captain's cabin") — daily revenue, monthly P&L, margin tracking, cash flow. Phase 2D.

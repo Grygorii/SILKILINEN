@@ -1,12 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
-import { trackBeginCheckout } from '@/lib/analytics';
-import { getSessionId } from '@/lib/track';
 import styles from './CartPanel.module.css';
-
-const API = process.env.NEXT_PUBLIC_API_URL;
 
 type Props = {
   isOpen: boolean;
@@ -14,9 +11,8 @@ type Props = {
 };
 
 export default function CartPanel({ isOpen, onClose }: Props) {
+  const router = useRouter();
   const { cart, removeFromCart, updateQuantity } = useCart();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const panelRef = useRef<HTMLDivElement>(null);
   const prevFocusRef = useRef<HTMLElement | null>(null);
 
@@ -72,32 +68,6 @@ export default function CartPanel({ isOpen, onClose }: Props) {
   }, [isOpen]);
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  async function handleCheckout() {
-    trackBeginCheckout(subtotal, cart.reduce((n, i) => n + i.quantity, 0));
-    setLoading(true);
-    setError('');
-    const attribution = {
-      source:      sessionStorage.getItem('attr_source')   ?? 'direct',
-      medium:      sessionStorage.getItem('attr_medium')   ?? 'none',
-      campaign:    sessionStorage.getItem('attr_campaign') ?? 'none',
-      referrer:    sessionStorage.getItem('attr_referrer') ?? '',
-      landingPage: sessionStorage.getItem('attr_landing')  ?? '',
-    };
-    try {
-      const res = await fetch(`${API}/api/checkout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: cart, attribution, sessionId: getSessionId() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Checkout failed');
-      window.location.href = data.url;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
-      setLoading(false);
-    }
-  }
 
   return (
     <>
@@ -173,9 +143,8 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                 <span className={styles.shippingNote}>Calculated at checkout</span>
               </div>
             </div>
-            {error && <p className={styles.error}>{error}</p>}
-            <button className={styles.checkout} onClick={handleCheckout} disabled={loading}>
-              {loading ? 'Redirecting…' : 'Checkout'}
+            <button className={styles.checkout} onClick={() => { onClose(); router.push('/checkout'); }}>
+              Checkout
             </button>
             <p className={styles.vatNote}>Secure checkout via Stripe</p>
           </div>

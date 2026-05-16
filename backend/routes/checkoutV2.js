@@ -1,5 +1,6 @@
 const express = require('express');
-const router = express.Router();
+const checkoutRouter = express.Router();
+const webhookRouter = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Cart = require('../models/Cart');
 const Order = require('../models/Order');
@@ -10,11 +11,7 @@ const { calculateTax } = require('../services/tax');
 const { sendOrderConfirmation, sendAdminOrderNotification } = require('../services/email');
 
 // POST /api/v2/checkout/create-intent
-// Validates cart, calculates totals, creates Stripe PaymentIntent.
-// Accepts either { sessionId } to load from backend Cart model,
-// or { items, discountCode, shippingCountry } to validate items directly.
-// Returns { clientSecret, orderSummary }
-router.post('/create-intent', async (req, res) => {
+checkoutRouter.post('/create-intent', async (req, res) => {
   try {
     const { sessionId, shippingCountry, discountCode: incomingCode, attribution } = req.body;
     let cart = null;
@@ -120,14 +117,12 @@ router.post('/create-intent', async (req, res) => {
   }
 });
 
-// POST /api/v2/checkout/webhook
-// Handles Stripe payment_intent.succeeded — creates Order and fires emails.
-// Must be registered BEFORE express.json() in server.js.
-router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+// POST /api/webhook (mounted at root in server.js — must be before express.json())
+webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET_V2 || process.env.STRIPE_WEBHOOK_SECRET);
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     return res.status(400).json({ error: `Webhook signature failed: ${err.message}` });
   }
@@ -217,4 +212,4 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   res.json({ received: true });
 });
 
-module.exports = router;
+module.exports = { checkoutRouter, webhookRouter };

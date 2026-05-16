@@ -1,5 +1,39 @@
 # CHANGELOG
 
+## 2026-05-16 (cutover) — Commerce cutover + policy amendments
+
+**What changed:**
+- CartPanel "Checkout" button now navigates to `/checkout` (on-site Stripe Elements) instead of calling old `/api/checkout` and redirecting to `checkout.stripe.com`
+- Deleted `backend/routes/checkout.js` (old Stripe Checkout Session route)
+- Deleted `backend/routes/webhook.js` (old webhook route)
+- `checkoutV2.js` split into `checkoutRouter` (create-intent) and `webhookRouter` (payment handler); webhook secret consolidated to `STRIPE_WEBHOOK_SECRET` only (removed `STRIPE_WEBHOOK_SECRET_V2` fallback)
+- Webhook endpoint moved from `/api/v2/checkout/webhook` to canonical `/api/webhook`
+- Privacy Policy: last updated date → 16 May 2026
+- Terms & Conditions: last updated date added → 16 May 2026
+- Footer trust badge: "14-day hassle-free returns"
+
+**Files modified:**
+- `frontend/components/CartPanel.tsx`
+- `backend/routes/checkoutV2.js`
+- `backend/server.js`
+- `frontend/app/(shop)/privacy-policy/page.tsx`
+- `frontend/app/(shop)/terms/page.tsx`
+- `frontend/components/Footer.tsx`
+
+**Files deleted:**
+- `backend/routes/checkout.js`
+- `backend/routes/webhook.js`
+
+**Stripe action required (Гриша):**
+1. Go to Stripe Dashboard → Developers → Webhooks
+2. Add endpoint: `https://silkilinen-production.up.railway.app/api/webhook`
+3. Select events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`, `charge.succeeded`
+4. Copy the signing secret → save as `STRIPE_WEBHOOK_SECRET` in Railway
+5. Verify `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is `pk_live_...` in Vercel
+6. Place a real test order end-to-end to confirm
+
+---
+
 ## 2026-05-16 (hotfix) — Three post-deployment fixes
 
 **What changed:**
