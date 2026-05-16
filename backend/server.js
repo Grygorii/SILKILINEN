@@ -69,9 +69,9 @@ app.use(cookieParser());
 
 // Webhook must be before express.json() — Stripe needs the raw request body
 app.use('/api/webhook', webhookRouter);
-app.use('/api/v2/checkout', checkoutRouter);
 
 app.use(express.json());
+app.use('/api/v2/checkout', checkoutRouter);
 app.use('/api/products', productRoutes);
 app.use('/api/admin/products', adminProductsRoutes);
 app.use('/api/auth', authRoutes);
