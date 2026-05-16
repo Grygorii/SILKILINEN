@@ -1,14 +1,67 @@
 const express = require('express');
 const checkoutRouter = express.Router();
 const webhookRouter = express.Router();
+const crypto = require('crypto');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Cart = require('../models/Cart');
 const Order = require('../models/Order');
+const Visit = require('../models/Visit');
 const Product = require('../models/Product');
 const { calculateShipping } = require('../services/shipping');
 const { validateDiscount, redeemDiscount } = require('../services/discounts');
 const { calculateTax } = require('../services/tax');
 const { sendOrderConfirmation, sendAdminOrderNotification } = require('../services/email');
+
+// ── Meta Conversions API ─────────────────────────────────────────────────────
+// Fires server-side Purchase event after payment confirmation.
+// Deduplicated with client-side fbq('track','Purchase') using matching event_id.
+async function fireMetaCapi({ order, eventId }) {
+  const pixelId = process.env.META_PIXEL_ID;
+  const token   = process.env.META_CONVERSIONS_API_TOKEN;
+  if (!pixelId || !token) return; // silently skip if not configured
+
+  try {
+    const userData = {};
+    if (order.customerEmail) {
+      userData.em = [crypto.createHash('sha256').update(order.customerEmail.trim().toLowerCase()).digest('hex')];
+    }
+    if (order.customerPhone) {
+      const phone = order.customerPhone.replace(/[^0-9]/g, '');
+      if (phone) userData.ph = [crypto.createHash('sha256').update(phone).digest('hex')];
+    }
+    if (order.shippingAddress?.country) {
+      userData.country = [crypto.createHash('sha256').update(order.shippingAddress.country.toLowerCase()).digest('hex')];
+    }
+
+    const payload = {
+      data: [{
+        event_name:       'Purchase',
+        event_time:       Math.floor(Date.now() / 1000),
+        event_id:         eventId,
+        action_source:    'website',
+        user_data:        userData,
+        custom_data: {
+          currency:  'EUR',
+          value:     order.total,
+          contents:  (order.items || []).map(i => ({ id: String(i.productId), quantity: i.quantity })),
+          content_type: 'product',
+        },
+      }],
+    };
+
+    const url = `https://graph.facebook.com/v18.0/${pixelId}/events?access_token=${token}`;
+    await Promise.race([
+      fetch(url, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('CAPI timeout')), 3000)),
+    ]);
+  } catch (err) {
+    console.error('[CAPI] Purchase event failed:', err.message);
+  }
+}
 
 // POST /api/v2/checkout/create-intent
 checkoutRouter.post('/create-intent', async (req, res) => {
@@ -202,7 +255,10 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
       if (existing) return res.json({ received: true });
 
       const sessionId = meta.sessionId;
-      const cart = sessionId ? await Cart.findOne({ sessionId }) : null;
+      const [cart, visit] = await Promise.all([
+        sessionId ? Cart.findOne({ sessionId }) : Promise.resolve(null),
+        sessionId ? Visit.findOne({ sessionId }).sort({ createdAt: -1 }).lean() : Promise.resolve(null),
+      ]);
 
       // Generate a readable order number: SL-YYYYMM-XXXXXX
       const now = new Date();
@@ -268,7 +324,17 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
           referrer:    meta.referrer     || '',
           landingPage: meta.landing_page || '',
         },
+        utm: visit?.utm ? {
+          source:   visit.utm.source,
+          medium:   visit.utm.medium,
+          campaign: visit.utm.campaign,
+          term:     visit.utm.term,
+          content:  visit.utm.content,
+        } : undefined,
       });
+
+      // Fire Meta Conversions API server-side Purchase event
+      fireMetaCapi({ order, eventId: `order-${orderNumber}` });
 
       // Increment discount usage
       if (discountCode) {

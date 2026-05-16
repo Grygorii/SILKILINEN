@@ -1,24 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { useCookieConsent } from '@/context/CookieConsentContext';
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-XZG6XTZ3S8';
 const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || 'wkxxtbufn3';
 
 export default function AnalyticsLoader() {
-  const [consented, setConsented] = useState(false);
+  const { consent } = useCookieConsent();
 
-  useEffect(() => {
-    const check = () => setConsented(localStorage.getItem('silkilinen_cookie_consent') === 'all');
-    check();
-    window.addEventListener('cookieConsentChanged', check);
-    return () => window.removeEventListener('cookieConsentChanged', check);
-  }, []);
-
-  if (!consented) return null;
+  if (consent !== 'accepted') return null;
 
   return (
     <>

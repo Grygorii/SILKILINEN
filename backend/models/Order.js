@@ -79,6 +79,16 @@ const orderSchema = new mongoose.Schema({
     landingPage: { type: String, default: '' },
   },
 
+  // Full UTM snapshot copied from the originating Visit document at order-creation time.
+  // attribution.campaign mirrors utm.campaign for backward compat.
+  utm: {
+    source:   String,
+    medium:   String,
+    campaign: String,
+    term:     String,
+    content:  String,
+  },
+
   // Browser session ID from the frontend tracking lib (localStorage).
   // Used to link the originating Visit document to this order after payment.
   browserSessionId: { type: String },

@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 16 May 2026.
+Last updated: 16 May 2026 (Marketing Command Center).
 
 ---
 
@@ -165,6 +165,72 @@ Other admin pages:
 - Mongoose duplicate-index warnings on `Product.slug`, `Customer.email`, `Customer.googleId` — cosmetic, not affecting functionality
 - `finalize()` in AiPhotoshoot does not auto-route to slots — only individual `approvePhoto()` does
 
+## Shipped 16 May 2026 — Marketing Command Center (#12 + full marketing layer)
+
+**#12 — Remove "Just Sold" social-proof popup:**
+- `<JustSoldPopup />` removed from `frontend/app/(shop)/layout.tsx` — doesn't fit editorial-luxury positioning
+- Backend `/api/just-sold` endpoint preserved (used for data, not rendered in storefront)
+
+**GDPR consent system:**
+- `frontend/context/CookieConsentContext.tsx` — `CookieConsentProvider` + `useCookieConsent()` hook; localStorage key `silkilinen:cookieConsent`; migrates from old `silkilinen_cookie_consent` key (legacy `all` → `accepted`, `essential` → `rejected`)
+- `frontend/components/CookieConsentBanner.tsx` + `.module.css` — bottom-of-screen non-modal banner; equal-weight Accept / Reject buttons per Irish DPC guidance (no pre-selected "Accept all")
+- `frontend/components/CookiePreferencesLink.tsx` — client button component added to Footer Legal column so users can reopen banner
+- `frontend/components/AnalyticsLoader.tsx` — rewritten to use `useCookieConsent()` instead of direct localStorage; GA4 + Microsoft Clarity + Vercel analytics all gated on consent
+- `frontend/app/layout.tsx` — `<CookieConsentProvider>` wraps entire tree; old `<CookieConsent />` removed
+
+**Tracking pixels (consent-gated):**
+- `frontend/components/MetaPixel.tsx` — loads `fbq` only after `consent === 'accepted'`; exports `trackFbEvent(event, params?, eventId?)` for use throughout app; `event_id` parameter supports deduplication with Meta CAPI
+- `frontend/components/PinterestTag.tsx` — loads `pintrk` only after consent; exports `trackPinEvent(event, params?)`
+- Both added to `frontend/app/(shop)/layout.tsx`
+
+**Meta Conversions API (server-side):**
+- `backend/routes/checkoutV2.js` — `fireMetaCapi({ order, eventId })` function: SHA-256 hashes email/phone/country, posts Purchase event to Meta Graph API v18.0, 3s timeout, silently fails if keys not configured
+- Webhook `payment_intent.succeeded`: looks up `Visit` by `sessionId`, copies `visit.utm` to `Order.utm` subdocument, then calls `fireMetaCapi({ order, eventId: 'order-${orderNumber}' })`
+- Deduplication: frontend `trackFbEvent('Purchase', ..., eventId)` + CAPI `event_id` both use `'order-' + orderNumber`
+- Env vars required: `META_PIXEL_ID`, `META_CONVERSIONS_API_TOKEN` (backend Railway), `NEXT_PUBLIC_META_PIXEL_ID` (frontend Vercel), `NEXT_PUBLIC_PINTEREST_TAG_ID` (frontend Vercel)
+
+**Campaign tracking data layer:**
+- `backend/models/Campaign.js` — slug-based campaign document; status lifecycle draft→active→paused→ended; spend log (`spendUpdates[]`), creatives array (`utmContent` keyed), targetProducts, budget
+- `backend/models/MarketingAnalysis.js` — one document per day (`dateStr` key); `bullets[]` + `founderBullets[]` + `dataSnapshot`
+- `backend/models/Order.js` — extended with `utm: { source, medium, campaign, term, content }` subdocument (from Visit, richer than `attribution` which comes from PI metadata)
+- `backend/routes/campaigns.js` — full CRUD: list, create, get+stats, update, add-spend, toggle-status, duplicate
+- `backend/routes/marketingDashboard.js` — GET /dashboard (pulse + analysis + campaign rows + top products/creatives/channels/geo), POST /analysis/regenerate, GET /founder
+- `backend/services/marketingAnalysis.js` — 7-rule engine: outperforming ROAS≥2×, no orders after €20 spend, creative ≥50 visits 0 orders, active with no spend 3d, channel spike >50%, single product >40% of ad orders, default fallback; `FOUNDER_TRANSLATIONS` map converts bullets to plain-English Sabreen language
+- `backend/server.js` — wired `/api/admin/campaigns` + `/api/admin/marketing`
+
+**Admin marketing UI:**
+- `frontend/app/admin/marketing/page.tsx` — full rewrite: Today's Pulse band (revenue, orders, ad orders, spend, ROAS, active campaigns), summary line, Today's Read analysis bullets with Regenerate, live campaigns table with status/spend/ROAS, top products + creatives + channel revenue + geo country grids
+- `frontend/app/admin/marketing/campaigns/new/page.tsx` — campaign creation form (name, channel, dates, budget, notes); auto-slugifies on backend
+- `frontend/app/admin/marketing/campaigns/[id]/page.tsx` — campaign detail: stat band, base UTM link, spend log with inline add form, creatives list with inline add form, attributed orders table
+- `frontend/app/admin/marketing/founder/page.tsx` — Sabreen plain-language view: week metric cards, plain-English bullet list from `founderBullets`
+- `frontend/app/admin/marketing/utm-builder/page.tsx` — UTM link generator: destination URL, source/medium/campaign/content/term fields, slug preview, copy-to-clipboard
+
+**Files added:**
+- `backend/models/Campaign.js`, `backend/models/MarketingAnalysis.js`
+- `backend/services/marketingAnalysis.js`
+- `backend/routes/campaigns.js`, `backend/routes/marketingDashboard.js`
+- `frontend/context/CookieConsentContext.tsx`
+- `frontend/components/CookieConsentBanner.tsx`, `.module.css`
+- `frontend/components/CookiePreferencesLink.tsx`
+- `frontend/components/MetaPixel.tsx`, `frontend/components/PinterestTag.tsx`
+- `frontend/app/admin/marketing/page.module.css`
+- `frontend/app/admin/marketing/campaigns/new/page.tsx`
+- `frontend/app/admin/marketing/campaigns/[id]/page.tsx`
+- `frontend/app/admin/marketing/founder/page.tsx`
+- `frontend/app/admin/marketing/utm-builder/page.tsx`
+
+**Files modified:**
+- `backend/routes/checkoutV2.js` — CAPI + Visit UTM lookup in webhook
+- `backend/models/Order.js` — `utm` subdocument added
+- `backend/server.js` — campaign + marketing routes wired
+- `frontend/app/layout.tsx` — CookieConsentProvider added, old CookieConsent removed
+- `frontend/app/(shop)/layout.tsx` — CookieConsentBanner + MetaPixel + PinterestTag added; JustSoldPopup removed
+- `frontend/components/AnalyticsLoader.tsx` — uses useCookieConsent hook
+- `frontend/components/Footer.tsx` — CookiePreferencesLink added to Legal column
+- `frontend/app/admin/marketing/page.tsx` — full rewrite
+
+---
+
 ## Active scoped work, not yet built
 
 - **THUMBNAIL slot auto-derive** — thumbnail generation still exists in AI workflow tiers but no named slot card shows for it; images with `slot: thumbnail` appear in Additional images. Future: auto-derive from HERO via Cloudinary transformation if needed.
@@ -174,7 +240,7 @@ Other admin pages:
 - **Stripe test orders** — must place real test orders on the v2 checkout path before going live
 - **Pricing spreadsheet** for the actual catalogue with cost-up + margin + Etsy fee comparison. Needs real Etsy sales data first.
 - **Finance admin tab** ("captain's cabin") — daily revenue, monthly P&L, margin tracking, cash flow. Phase 2D.
-- **GDPR cookie banner** with equal-prominence Accept/Reject. Required before any paid-ads tracking pixels.
+- ~~**GDPR cookie banner**~~ ✓ Shipped 16 May 2026
 - **Customer messaging system** — contact form + admin inbox + push notifications on new message.
 - **PWA admin app** with push notifications for orders, low stock, system health, messages. Phase 2C.
 - **VPS migration** — considered, not executed. Real architectural decision, deserves its own brief.

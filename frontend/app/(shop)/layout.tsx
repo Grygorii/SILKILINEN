@@ -5,6 +5,9 @@ import AddedToCartToast from "@/components/AddedToCartToast";
 import WishlistSignInNudge from "@/components/WishlistSignInNudge";
 import EmailCapturePopup from "@/components/EmailCapturePopup";
 import ContactWidget from "@/components/ContactWidget";
+import CookieConsentBanner from "@/components/CookieConsentBanner";
+import MetaPixel from "@/components/MetaPixel";
+import PinterestTag from "@/components/PinterestTag";
 import { getContent } from "@/lib/content";
 
 export default async function ShopLayout({
@@ -29,6 +32,9 @@ export default async function ShopLayout({
       <WishlistSignInNudge />
       <EmailCapturePopup />
       <ContactWidget />
+      <CookieConsentBanner />
+      <MetaPixel />
+      <PinterestTag />
     </>
   );
 }

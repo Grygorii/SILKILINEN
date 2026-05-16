@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AnnouncementBar from "@/components/AnnouncementBar";
-import CookieConsent from "@/components/CookieConsent";
 import AnalyticsLoader from "@/components/AnalyticsLoader";
 import UTMCapture from "@/components/UTMCapture";
 import GoogleAuthProvider from "@/components/GoogleAuthProvider";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { CustomerProvider } from "@/context/CustomerContext";
+import { CookieConsentProvider } from "@/context/CookieConsentContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,16 +28,17 @@ export default function RootLayout({
       </head>
       <body>
         <GoogleAuthProvider>
-          <CustomerProvider>
-            <WishlistProvider>
-              <CartProvider>
-                {children}
-                <CookieConsent />
-                <AnalyticsLoader />
-                <UTMCapture />
-              </CartProvider>
-            </WishlistProvider>
-          </CustomerProvider>
+          <CookieConsentProvider>
+            <CustomerProvider>
+              <WishlistProvider>
+                <CartProvider>
+                  {children}
+                  <AnalyticsLoader />
+                  <UTMCapture />
+                </CartProvider>
+              </WishlistProvider>
+            </CustomerProvider>
+          </CookieConsentProvider>
         </GoogleAuthProvider>
       </body>
     </html>

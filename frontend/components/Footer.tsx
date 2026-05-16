@@ -1,5 +1,6 @@
 import styles from './Footer.module.css';
 import FooterShopLinks from './FooterShopLinks';
+import CookiePreferencesLink from './CookiePreferencesLink';
 
 export default function Footer() {
   return (
@@ -52,6 +53,7 @@ export default function Footer() {
           <a href="/privacy-policy">Privacy policy</a>
           <a href="/terms">Terms &amp; conditions</a>
           <a href="/returns">Returns &amp; refunds</a>
+          <CookiePreferencesLink />
         </div>
       </div>
       <div className={styles.bottom}>

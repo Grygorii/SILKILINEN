@@ -37,6 +37,8 @@ const collectionsRoutes = require('./routes/collections');
 const adminCollectionsRoutes = require('./routes/adminCollections');
 const cartRoutes = require('./routes/cart');
 const { checkoutRouter, webhookRouter } = require('./routes/checkoutV2');
+const { router: campaignsRouter } = require('./routes/campaigns');
+const marketingDashboardRouter = require('./routes/marketingDashboard');
 
 const app = express();
 
@@ -93,6 +95,8 @@ app.use('/api/track', trackRoutes);
 app.use('/api/collections', collectionsRoutes);
 app.use('/api/admin/collections', adminCollectionsRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/admin/campaigns', campaignsRouter);
+app.use('/api/admin/marketing', marketingDashboardRouter);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(function() { console.log('Connected to MongoDB'); })
