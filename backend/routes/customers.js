@@ -114,7 +114,12 @@ router.post('/google', authRateLimit, async function(req, res) {
     if (!gRes.ok || !payload.email) return res.status(400).json({ error: 'Invalid Google token' });
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
-    if (clientId && payload.aud !== clientId) return res.status(400).json({ error: 'Token audience mismatch' });
+    if (!clientId) {
+      return res.status(503).json({ error: 'Google auth not configured' });
+    }
+    if (payload.aud !== clientId) {
+      return res.status(401).json({ error: 'Invalid token audience' });
+    }
 
     let customer = await Customer.findOne({ email: payload.email.toLowerCase() });
     const isFirstLogin = !customer;
