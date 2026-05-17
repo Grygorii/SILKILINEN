@@ -20,16 +20,16 @@ async function getGeo(ip) {
   if (cached && Date.now() - cached.at < GEO_TTL) return cached.data;
   try {
     const res = await fetch(
-      `http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city`,
+      `https://ipapi.co/${ip}/json/`,
       { signal: AbortSignal.timeout(3000) },
     );
     const json = await res.json();
-    if (json.status !== 'success') return null;
+    if (json.error) return null;
     const data = {
-      country:     json.country     || null,
-      countryCode: json.countryCode || null,
-      city:        json.city        || null,
-      region:      json.regionName  || null,
+      country:     json.country_name || null,
+      countryCode: json.country_code || null,
+      city:        json.city         || null,
+      region:      json.region       || null,
     };
     geoCache.set(ip, { data, at: Date.now() });
     return data;

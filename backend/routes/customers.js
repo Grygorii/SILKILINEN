@@ -73,7 +73,7 @@ router.post('/request-magic-link', authRateLimit, async function(req, res) {
 });
 
 // POST /api/customers/verify-magic-link
-router.post('/verify-magic-link', async function(req, res) {
+router.post('/verify-magic-link', authRateLimit, async function(req, res) {
   try {
     const { token } = req.body;
     if (!token) return res.status(400).json({ error: 'Token required' });
@@ -119,6 +119,10 @@ router.post('/google', authRateLimit, async function(req, res) {
     }
     if (payload.aud !== clientId) {
       return res.status(401).json({ error: 'Invalid token audience' });
+    }
+    const validIssuers = ['accounts.google.com', 'https://accounts.google.com'];
+    if (!validIssuers.includes(payload.iss)) {
+      return res.status(401).json({ error: 'Invalid token issuer' });
     }
 
     let customer = await Customer.findOne({ email: payload.email.toLowerCase() });
