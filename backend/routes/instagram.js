@@ -74,7 +74,8 @@ router.post('/refresh-token', requireAuth, async (req, res) => {
     cache.posts = null; // force fresh fetch on next request
     res.json({ success: true, expiresIn: result.expires_in });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

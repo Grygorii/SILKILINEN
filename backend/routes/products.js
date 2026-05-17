@@ -177,7 +177,8 @@ router.get('/', async function(req, res) {
     const products = await query;
     res.json(products);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -186,7 +187,8 @@ router.post('/upload', requireAuth, upload.single('image'), function(req, res) {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     res.json({ url: req.file.path });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -233,7 +235,8 @@ router.post('/import', requireAuth, csvUpload.single('csv'), async function(req,
       results,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -271,7 +274,8 @@ router.post('/:id/drop-hint', lightRateLimit, async function(req, res) {
 
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -294,7 +298,8 @@ router.get('/related/:id', async function(req, res) {
 
     res.json(related);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -320,7 +325,8 @@ router.get('/:id/preview', async function(req, res) {
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -330,7 +336,8 @@ router.get('/:id', async function(req, res) {
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -350,7 +357,8 @@ router.delete('/:id', requireAuth, async function(req, res) {
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

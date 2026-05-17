@@ -14,7 +14,8 @@ router.get('/', async (req, res) => {
       .lean();
     res.json(articles);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -27,7 +28,8 @@ router.get('/slug/:slug', async (req, res) => {
     JournalArticle.findByIdAndUpdate(article._id, { $inc: { viewCount: 1 } }).exec();
     res.json(article);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

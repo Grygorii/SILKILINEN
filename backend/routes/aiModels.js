@@ -38,7 +38,8 @@ router.get('/', requireAuth, async function(req, res) {
     const models = await AiModel.find().sort({ createdAt: 1 });
     res.json(models);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -67,7 +68,8 @@ router.delete('/:id', requireAuth, async function(req, res) {
     if (!model) return res.status(404).json({ error: 'Model not found' });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -132,7 +134,8 @@ router.post('/:id/generate-reference', requireAuth, async function(req, res) {
       resolution: { width: uploaded.width, height: uploaded.height },
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

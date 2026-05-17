@@ -9,7 +9,8 @@ router.get('/', requireAuth, async function(req, res) {
     const users = await User.find().select('-password').sort({ createdAt: 1 });
     res.json({ users, currentUserId: req.user.userId });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -30,7 +31,8 @@ router.post('/', requireAuth, async function(req, res) {
     const user = await User.create({ email, password, role: 'admin' });
     res.status(201).json({ _id: user._id, email: user.email, role: user.role, createdAt: user.createdAt });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -44,7 +46,8 @@ router.delete('/:id', requireAuth, async function(req, res) {
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

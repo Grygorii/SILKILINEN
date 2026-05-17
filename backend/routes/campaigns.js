@@ -105,7 +105,8 @@ router.get('/', requireAuth, async (req, res) => {
     const campaigns = await Campaign.find(filter).sort({ createdAt: -1 }).lean();
     res.json(campaigns);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -134,7 +135,8 @@ router.post('/', requireAuth, async (req, res) => {
 
     res.status(201).json(campaign);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -150,7 +152,8 @@ router.get('/:id', requireAuth, async (req, res) => {
 
     res.json({ ...campaign, stats });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -167,7 +170,8 @@ router.put('/:id', requireAuth, async (req, res) => {
     if (!campaign) return res.status(404).json({ error: 'Not found' });
     res.json(campaign);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -203,7 +207,8 @@ router.post('/:id/spend', requireAuth, async (req, res) => {
 
     res.json(campaign);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -217,7 +222,8 @@ router.put('/:id/status', requireAuth, async (req, res) => {
     if (!campaign) return res.status(404).json({ error: 'Not found' });
     res.json(campaign);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -244,7 +250,8 @@ router.post('/:id/duplicate', requireAuth, async (req, res) => {
     });
     res.status(201).json(dup);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

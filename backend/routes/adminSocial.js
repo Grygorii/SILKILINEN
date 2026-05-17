@@ -24,7 +24,7 @@ router.get('/platforms', requireAuth, async (req, res) => {
   try {
     const platforms = await SocialPlatform.find().sort({ sortOrder: 1, displayName: 1 }).lean();
     res.json(platforms);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // POST /api/admin/social/platforms — create new platform
@@ -50,7 +50,8 @@ router.post('/platforms', requireAuth, async (req, res) => {
     res.status(201).json(platform);
   } catch (err) {
     if (err.code === 11000) return res.status(409).json({ error: 'Platform key already exists' });
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -65,7 +66,7 @@ router.put('/platforms/:key', requireAuth, async (req, res) => {
     const platform = await SocialPlatform.findOneAndUpdate({ key: req.params.key }, update, { new: true });
     if (!platform) return res.status(404).json({ error: 'Not found' });
     res.json(platform);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // PATCH /api/admin/social/platforms/:key/url — set the connection URL for a platform
@@ -79,7 +80,7 @@ router.patch('/platforms/:key/url', requireAuth, async (req, res) => {
     );
     if (!platform) return res.status(404).json({ error: 'Not found' });
     res.json(platform);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // ─── Social posts ─────────────────────────────────────────────────────────────
@@ -91,7 +92,7 @@ router.get('/posts', requireAuth, async (req, res) => {
     const filter = status ? { status } : {};
     const posts = await SocialPost.find(filter).sort({ updatedAt: -1 }).limit(100).lean();
     res.json(posts);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // POST /api/admin/social/posts — create empty draft
@@ -104,7 +105,7 @@ router.post('/posts', requireAuth, async (req, res) => {
       lastEditedBy: req.user?.userId || 'admin',
     });
     res.status(201).json(post);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // GET /api/admin/social/posts/:id
@@ -113,7 +114,7 @@ router.get('/posts/:id', requireAuth, async (req, res) => {
     const post = await SocialPost.findById(req.params.id).lean();
     if (!post) return res.status(404).json({ error: 'Not found' });
     res.json(post);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // PUT /api/admin/social/posts/:id — full save
@@ -131,7 +132,7 @@ router.put('/posts/:id', requireAuth, async (req, res) => {
     const post = await SocialPost.findByIdAndUpdate(req.params.id, update, { new: true });
     if (!post) return res.status(404).json({ error: 'Not found' });
     res.json(post);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // POST /api/admin/social/posts/:id/autosave — lightweight autosave
@@ -145,7 +146,7 @@ router.post('/posts/:id/autosave', requireAuth, async (req, res) => {
     if (title !== undefined) update.title = title;
     await SocialPost.findByIdAndUpdate(req.params.id, update);
     res.json({ ok: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // PATCH /api/admin/social/posts/:id/posted-to — mark platform as posted / unposted
@@ -171,7 +172,7 @@ router.patch('/posts/:id/posted-to', requireAuth, async (req, res) => {
 
     await post.save();
     res.json(post);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // POST /api/admin/social/posts/:id/images — upload image(s) to post
@@ -192,7 +193,7 @@ router.post('/posts/:id/images', requireAuth, upload.array('images', 10), async 
     post.defaultImages.push(...uploaded);
     await post.save();
     res.json(post);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // DELETE /api/admin/social/posts/:id/images/:index — remove image by index
@@ -207,7 +208,7 @@ router.delete('/posts/:id/images/:index', requireAuth, async (req, res) => {
     }
     await post.save();
     res.json(post);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // DELETE /api/admin/social/posts/:id — delete post
@@ -221,7 +222,7 @@ router.delete('/posts/:id', requireAuth, async (req, res) => {
     }
     await post.deleteOne();
     res.json({ ok: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 module.exports = router;

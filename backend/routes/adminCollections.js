@@ -23,7 +23,8 @@ router.get('/', async (req, res) => {
 
     res.json(enriched);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -38,7 +39,8 @@ router.post('/', async (req, res) => {
     if (err.code === 11000) {
       return res.status(400).json({ error: 'A collection with this slug already exists' });
     }
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -54,7 +56,8 @@ router.get('/:id', async (req, res) => {
 
     res.json({ ...collection.toObject(), products });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -73,7 +76,8 @@ router.patch('/:id', async (req, res) => {
     if (err.code === 11000) {
       return res.status(400).json({ error: 'A collection with this slug already exists' });
     }
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -84,7 +88,8 @@ router.delete('/:id', async (req, res) => {
     if (!collection) return res.status(404).json({ error: 'Not found' });
     res.json({ message: 'Archived', collection });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -95,7 +100,8 @@ router.post('/:id/products', async (req, res) => {
     await Product.findByIdAndUpdate(productId, { $addToSet: { collections: req.params.id } });
     res.json({ message: 'Product added to collection' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -105,7 +111,8 @@ router.delete('/:id/products/:productId', async (req, res) => {
     await Product.findByIdAndUpdate(req.params.productId, { $pull: { collections: req.params.id } });
     res.json({ message: 'Product removed from collection' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -118,7 +125,8 @@ router.put('/reorder', async (req, res) => {
     ));
     res.json({ message: 'Reordered' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

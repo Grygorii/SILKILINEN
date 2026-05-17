@@ -68,7 +68,8 @@ router.get('/', requireAuth, async function(req, res) {
     cache = { data, at: Date.now() };
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

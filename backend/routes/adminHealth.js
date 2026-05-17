@@ -104,7 +104,8 @@ router.get('/', requireAuth, async (req, res) => {
     healthCacheAt = now;
     res.json({ ...result, cached: false });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

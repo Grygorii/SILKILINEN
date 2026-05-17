@@ -162,7 +162,8 @@ router.get('/dashboard', requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error('[marketing dashboard]', err.message);
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -173,7 +174,8 @@ router.post('/analysis/regenerate', requireAuth, async (req, res) => {
     const doc = await generateAnalysis();
     res.json({ bullets: doc.bullets, founderBullets: doc.founderBullets, generatedAt: doc.generatedAt });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -234,7 +236,8 @@ router.get('/founder', requireAuth, async (req, res) => {
       generatedAt:    analysis?.generatedAt || null,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

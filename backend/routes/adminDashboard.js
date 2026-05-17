@@ -449,7 +449,8 @@ router.get('/', requireAuth, async function(req, res) {
     res.json(payload);
   } catch (err) {
     console.error('[dashboard] error:', err.message);
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

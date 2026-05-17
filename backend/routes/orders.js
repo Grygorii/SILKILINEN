@@ -94,7 +94,8 @@ router.get('/stats', requireAuth, async function(req, res) {
       totalOrders: allPaidOrders.length,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -109,7 +110,8 @@ router.get('/recent-activity', async function(req, res) {
     }));
     res.json(activity);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -145,7 +147,8 @@ router.get('/', requireAuth, async function(req, res) {
 
     res.json({ orders, total, page: pageNum, pages: Math.ceil(total / limitNum) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -156,7 +159,8 @@ router.get('/:id', requireAuth, async function(req, res) {
     if (!order) return res.status(404).json({ error: 'Not found' });
     res.json(order);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -193,7 +197,8 @@ router.put('/:id/status', requireAuth, async function(req, res) {
 
     res.json(order);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -213,7 +218,8 @@ router.put('/:id/tracking', requireAuth, async function(req, res) {
     if (!order) return res.status(404).json({ error: 'Not found' });
     res.json(order);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -229,7 +235,8 @@ router.put('/:id/notes', requireAuth, async function(req, res) {
     if (!order) return res.status(404).json({ error: 'Not found' });
     res.json(order);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

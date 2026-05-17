@@ -162,7 +162,8 @@ router.get('/overview', requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error('[finance/overview]', err.message);
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -205,7 +206,8 @@ router.get('/action-items', requireAuth, async (req, res) => {
 
     res.json(items);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -247,7 +249,8 @@ router.get('/expenses', requireAuth, async (req, res) => {
       categories: EXPENSE_CATEGORIES,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -273,7 +276,8 @@ router.post('/expenses', requireAuth, async (req, res) => {
     });
     res.status(201).json(expense);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -291,7 +295,8 @@ router.put('/expenses/:id', requireAuth, async (req, res) => {
     await expense.save();
     res.json(expense);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -304,7 +309,8 @@ router.delete('/expenses/:id', requireAuth, async (req, res) => {
     await expense.deleteOne();
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -324,7 +330,8 @@ router.patch('/orders/:id/shipping-cost', requireAuth, async (req, res) => {
     if (!order) return res.status(404).json({ error: 'Order not found' });
     res.json({ ok: true, costs: order.costs });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -334,7 +341,8 @@ router.get('/receipts', requireAuth, async (req, res) => {
     const receipts = await Receipt.find().sort({ createdAt: -1 }).limit(100).lean();
     res.json(receipts);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -365,7 +373,8 @@ router.post('/receipts', requireAuth, upload.single('file'), async (req, res) =>
 
     res.status(201).json(receipt);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -382,7 +391,8 @@ router.put('/receipts/:id', requireAuth, async (req, res) => {
     await receipt.save();
     res.json(receipt);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -397,7 +407,8 @@ router.delete('/receipts/:id', requireAuth, async (req, res) => {
     await receipt.deleteOne();
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -513,7 +524,8 @@ router.get('/reports', requireAuth, async (req, res) => {
     res.json({ monthlyPL, marginByProduct, marginBySource, anomalies });
   } catch (err) {
     console.error('[finance/reports]', err.message);
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

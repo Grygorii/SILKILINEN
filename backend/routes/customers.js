@@ -154,7 +154,8 @@ router.get('/me', requireCustomer, async function(req, res) {
     if (!customer) return res.status(404).json({ error: 'Not found' });
     res.json(safeCustomer(customer));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -169,7 +170,8 @@ router.put('/me', requireCustomer, async function(req, res) {
     );
     res.json(safeCustomer(customer));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -195,7 +197,8 @@ router.get('/me/orders', requireCustomer, async function(req, res) {
     }).sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -211,7 +214,8 @@ router.get('/me/orders/:orderId', requireCustomer, async function(req, res) {
     if (!order) return res.status(404).json({ error: 'Order not found' });
     res.json(order);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -222,7 +226,8 @@ router.get('/me/wishlist', requireCustomer, async function(req, res) {
     const items = (customer?.wishlist || []).filter(p => p.status !== 'draft' && p.status !== 'archived');
     res.json(items);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -240,7 +245,8 @@ router.post('/me/wishlist/sync', requireCustomer, async function(req, res) {
     }
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -255,7 +261,8 @@ router.post('/me/wishlist/:productId', requireCustomer, async function(req, res)
     }
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -267,7 +274,8 @@ router.delete('/me/wishlist/:productId', requireCustomer, async function(req, re
     });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

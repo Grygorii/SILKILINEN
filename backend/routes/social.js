@@ -10,7 +10,7 @@ router.get('/platforms', async (req, res) => {
       .select('key displayName icon brandColor url')
       .lean();
     res.json(platforms);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 module.exports = router;

@@ -36,7 +36,8 @@ router.get('/', async function(req, res) {
 
     res.json({ reviews, total, page: pageNum, pages: Math.ceil(total / limitNum) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -59,7 +60,8 @@ router.get('/summary', async function(req, res) {
       distribution,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -74,7 +76,8 @@ router.post('/:id/helpful', async function(req, res) {
     if (!review) return res.status(404).json({ error: 'Review not found' });
     res.json({ helpfulCount: review.helpfulCount });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

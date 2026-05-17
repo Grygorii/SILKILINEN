@@ -146,7 +146,8 @@ router.get('/', async function(req, res) {
 
     res.json({ products, total, page: pageNum, pages: Math.ceil(total / limitNum) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -164,7 +165,8 @@ router.get('/:id/preview-token', async function(req, res) {
 
     res.json({ token, url, expiresAt });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -175,7 +177,8 @@ router.get('/:id', async function(req, res) {
     if (!product) return res.status(404).json({ error: 'Not found' });
     res.json(product);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -243,7 +246,8 @@ router.put('/:id', async function(req, res) {
       }));
       return res.status(400).json({ error: 'ValidationError', fields });
     }
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -281,7 +285,8 @@ router.patch('/:id/quick-update', async function(req, res) {
     await product.save({ validateBeforeSave: false });
     res.json(product);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -306,7 +311,8 @@ router.post('/bulk-publish', async function(req, res) {
     const result = await Product.updateMany({ _id: { $in: productIds } }, { $set: { status: 'active' } });
     res.json({ updated: result.modifiedCount });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -318,7 +324,8 @@ router.post('/bulk-archive', async function(req, res) {
     const result = await Product.updateMany({ _id: { $in: productIds } }, { $set: { status: 'archived' } });
     res.json({ updated: result.modifiedCount });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -356,7 +363,8 @@ router.post('/bulk-delete', async function(req, res) {
         : `Deleted ${safeIds.length} products.`,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -370,7 +378,8 @@ router.post('/bulk-category', async function(req, res) {
     const result = await Product.updateMany({ _id: { $in: productIds } }, { $set: { category } });
     res.json({ updated: result.modifiedCount });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -391,7 +400,8 @@ router.post('/bulk-discount', async function(req, res) {
     }
     res.json({ updated: products.length });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -422,7 +432,8 @@ router.post('/export', async function(req, res) {
     res.setHeader('Content-Disposition', `attachment; filename="products-${Date.now()}.csv"`);
     res.send(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -468,7 +479,8 @@ router.post('/bulk-generate-seo', async function(req, res) {
       message: `SEO generated for ${updated} of ${total} product${total !== 1 ? 's' : ''}.`,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -526,7 +538,8 @@ router.delete('/:id', async function(req, res) {
     await Product.deleteOne({ _id: product._id });
     res.json({ deleted: true, message: 'Product permanently deleted' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -577,7 +590,8 @@ router.put('/:id/images/reorder', async function(req, res) {
     await product.save({ validateBeforeSave: false });
     res.json(product.images);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -617,7 +631,8 @@ router.post('/:id/images/url', async function(req, res) {
     await product.save({ validateBeforeSave: false });
     res.json(product.images);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -673,7 +688,8 @@ router.post('/:id/images', imgUpload.array('images', 20), async function(req, re
     await product.save({ validateBeforeSave: false });
     res.json(product.images);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -707,7 +723,8 @@ router.patch('/:id/images/:imageId/slot', requireAuth, async function(req, res) 
     await product.save({ validateBeforeSave: false });
     res.json(product.images);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -724,7 +741,8 @@ router.put('/:id/images/:imageId/primary', async function(req, res) {
     await product.save({ validateBeforeSave: false });
     res.json(product.images);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -743,7 +761,8 @@ router.put('/:id/images/:imageId', async function(req, res) {
     await product.save({ validateBeforeSave: false });
     res.json(product.images);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -770,7 +789,8 @@ router.delete('/:id/images/:imageId', async function(req, res) {
     await product.save({ validateBeforeSave: false });
     res.json(product.images);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -801,7 +821,8 @@ router.post('/:id/video', videoUpload.single('video'), async function(req, res) 
     await product.save({ validateBeforeSave: false });
     res.json({ productVideo: product.productVideo });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -821,7 +842,8 @@ router.delete('/:id/video', async function(req, res) {
     });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

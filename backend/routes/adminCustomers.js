@@ -43,7 +43,8 @@ router.get('/', async (req, res) => {
 
     res.json({ customers, total, page, pages: Math.ceil(total / limit), segments });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -54,7 +55,8 @@ router.post('/segments/recompute', async (req, res) => {
     const result = await recomputeAll();
     res.json({ success: true, ...result });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -73,7 +75,8 @@ router.get('/:id', async (req, res) => {
 
     res.json({ customer, orders, totalSpend });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -96,7 +99,8 @@ router.post('/', async (req, res) => {
     });
     res.status(201).json(customer);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -112,7 +116,8 @@ router.put('/:id', async (req, res) => {
     if (!customer) return res.status(404).json({ error: 'Not found' });
     res.json(customer);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -129,7 +134,8 @@ router.post('/:id/notes', async (req, res) => {
     if (!customer) return res.status(404).json({ error: 'Not found' });
     res.json(customer.notes[customer.notes.length - 1]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -139,7 +145,8 @@ router.delete('/:id/notes/:noteId', async (req, res) => {
     await Customer.findByIdAndUpdate(req.params.id, { $pull: { notes: { _id: req.params.noteId } } });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -174,7 +181,8 @@ router.post('/:id/promo-code', async (req, res) => {
 
     res.status(201).json(promo);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -209,7 +217,8 @@ router.get('/:id/gdpr-export', async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="gdpr-export-${customer._id}.json"`);
     res.json(payload);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -241,7 +250,8 @@ router.delete('/:id/gdpr', async (req, res) => {
 
     res.json({ success: true, anonEmail });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -261,7 +271,8 @@ router.get('/export/csv', async (req, res) => {
     res.setHeader('Content-Disposition', 'attachment; filename="customers.csv"');
     res.send(rows.join('\n'));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

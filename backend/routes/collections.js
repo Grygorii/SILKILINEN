@@ -11,7 +11,8 @@ router.get('/', async (req, res) => {
       .select('-__v');
     res.json(collections);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -23,7 +24,8 @@ router.get('/featured', async (req, res) => {
       .select('-__v');
     res.json(collections);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -39,7 +41,8 @@ router.get('/:slug', async (req, res) => {
 
     res.json({ ...collection.toObject(), products });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

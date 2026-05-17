@@ -11,7 +11,8 @@ router.post('/', requireAuth, async function(req, res) {
     runAudit(audit).catch(err => console.error('Audit failed:', err));
     res.status(202).json({ auditId: audit._id });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -23,7 +24,8 @@ router.get('/', requireAuth, async function(req, res) {
       .select('runAt completedAt duration status agents triggeredBy');
     res.json(audits);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -33,7 +35,8 @@ router.get('/:id', requireAuth, async function(req, res) {
     if (!audit) return res.status(404).json({ error: 'Audit not found' });
     res.json(audit);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -53,7 +56,8 @@ router.patch('/:id/findings/:idx', requireAuth, async function(req, res) {
     await audit.save();
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -62,7 +66,8 @@ router.delete('/', requireAuth, async function(req, res) {
     await SiteAudit.deleteMany({});
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

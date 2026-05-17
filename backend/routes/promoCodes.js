@@ -24,7 +24,8 @@ router.get('/', requireAuth, async function(req, res) {
     const codes = await PromoCode.find(filter).sort({ createdAt: -1 });
     res.json(codes);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -67,7 +68,8 @@ router.get('/:id', requireAuth, async function(req, res) {
       redemptions: redemptionRows,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -172,7 +174,8 @@ router.delete('/:id', requireAuth, async function(req, res) {
 
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -198,7 +201,8 @@ router.post('/:id/sync-stripe', requireAuth, async function(req, res) {
 
     res.json(promo);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

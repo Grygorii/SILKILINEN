@@ -170,7 +170,8 @@ checkoutRouter.post('/create-intent', async (req, res) => {
     });
   } catch (err) {
     console.error('[checkoutV2] create-intent error:', err.message);
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -233,7 +234,8 @@ checkoutRouter.post('/update-intent', async (req, res) => {
     });
   } catch (err) {
     console.error('[checkoutV2] update-intent error:', err.message);
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

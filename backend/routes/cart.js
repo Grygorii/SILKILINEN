@@ -22,7 +22,8 @@ router.get('/:sessionId', async (req, res) => {
     }
     res.json({ ...cart.toObject(), ...summarise(cart) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -61,7 +62,8 @@ router.post('/:sessionId/items', async (req, res) => {
     await cart.save();
     res.json({ ...cart.toObject(), ...summarise(cart) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -95,7 +97,8 @@ router.patch('/:sessionId/items/:itemId', async (req, res) => {
     await cart.save();
     res.json({ ...cart.toObject(), ...summarise(cart) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -114,7 +117,8 @@ router.delete('/:sessionId/items/:itemId', async (req, res) => {
     await cart.save();
     res.json({ ...cart.toObject(), ...summarise(cart) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -141,7 +145,8 @@ router.post('/:sessionId/discount', async (req, res) => {
       message: replaced ? `Code replaced — ${result.code} applied` : `${result.code} applied`,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -155,7 +160,8 @@ router.delete('/:sessionId/discount', async (req, res) => {
     await cart.save();
     res.json({ ...cart.toObject(), ...summarise(cart) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -172,7 +178,8 @@ router.patch('/:sessionId/country', async (req, res) => {
     await cart.save();
     res.json({ ...cart.toObject(), ...summarise(cart) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

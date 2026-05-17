@@ -58,7 +58,8 @@ router.get('/', async function(req, res) {
     const items = await SiteContent.find({ active: true }).sort({ section: 1, order: 1 });
     res.json(toObj(items));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -68,7 +69,8 @@ router.get('/all-admin', requireAuth, async function(req, res) {
     const items = await SiteContent.find().sort({ section: 1, order: 1 });
     res.json(items);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -139,7 +141,8 @@ router.get('/:section', async function(req, res) {
     const items = await SiteContent.find({ section: req.params.section, active: true }).sort({ order: 1 });
     res.json(toObj(items));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

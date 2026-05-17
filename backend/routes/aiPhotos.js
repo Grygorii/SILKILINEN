@@ -316,7 +316,8 @@ router.post('/sessions', requireAuth, async function(req, res) {
       },
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -422,7 +423,8 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
 
     res.json({ results, ...costResponse(session) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -493,7 +495,8 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
       ...costResponse(session),
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -514,7 +517,8 @@ router.post('/sessions/:id/approve-photo', requireAuth, async function(req, res)
 
     res.json({ url: session.generatedPhotos[photoIdx].url, position, status: 'approved' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -539,7 +543,8 @@ router.post('/sessions/:id/finalize', requireAuth, async function(req, res) {
       totalCost: session.totalCost,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -550,7 +555,8 @@ router.get('/sessions/:id', requireAuth, async function(req, res) {
     if (!session) return res.status(404).json({ error: 'Session not found' });
     res.json(session);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

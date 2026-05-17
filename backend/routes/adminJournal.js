@@ -17,7 +17,8 @@ router.get('/', async (req, res) => {
       .lean();
     res.json(articles);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -29,7 +30,8 @@ router.post('/', async (req, res) => {
     const article = await JournalArticle.create({ title, status: 'draft' });
     res.status(201).json(article);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -40,7 +42,8 @@ router.get('/:id', async (req, res) => {
     if (!article) return res.status(404).json({ error: 'Not found' });
     res.json(article);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -63,7 +66,8 @@ router.put('/:id', async (req, res) => {
     if (!article) return res.status(404).json({ error: 'Not found' });
     res.json(article);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -78,7 +82,8 @@ router.post('/:id/autosave', async (req, res) => {
     await JournalArticle.findByIdAndUpdate(req.params.id, { $set: update });
     res.json({ saved: true, savedAt: update.updatedAt });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -90,7 +95,8 @@ router.get('/:id/preview-token', async (req, res) => {
     const token = jwt.sign({ articleId: req.params.id, type: 'journal_preview' }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.json({ token });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -100,7 +106,8 @@ router.delete('/:id', async (req, res) => {
     await JournalArticle.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
