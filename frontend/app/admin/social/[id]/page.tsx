@@ -618,11 +618,11 @@ export default function SocialComposerPage() {
                   </div>
 
                   {/* Image download */}
-                  {mainImage?.url && platform?.imageSpecs?.length > 0 && (
+                  {mainImage?.url && (platform?.imageSpecs?.length ?? 0) > 0 && (
                     <>
                       <p style={{ fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>Download image</p>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-                        {platform.imageSpecs.map((spec, i) => {
+                        {platform?.imageSpecs.map((spec, i) => {
                           const cloudUrl = mainImage.url.replace('/upload/', `/upload/c_fill,w_${spec.pixelWidth},h_${spec.pixelHeight}/`);
                           return (
                             <a key={i} href={cloudUrl} download target="_blank" rel="noopener noreferrer" style={{
