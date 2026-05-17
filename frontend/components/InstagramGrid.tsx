@@ -1,11 +1,32 @@
-import { type Content } from '@/lib/content';
 import styles from './InstagramGrid.module.css';
 
-export default function InstagramGrid({ content = {} }: { content?: Content }) {
-  const images = [1, 2, 3, 4, 5, 6].map(i => ({
-    url: content[`instagram_image_${i}`]?.value || '',
-    alt: content[`instagram_image_${i}`]?.altText || `Instagram photo ${i}`,
-  }));
+const API = process.env.NEXT_PUBLIC_API_URL;
+
+type IgPost = {
+  id: string;
+  media_url: string;
+  permalink: string;
+  caption: string;
+  media_type: string;
+  timestamp: string;
+};
+
+async function getPosts(): Promise<IgPost[]> {
+  try {
+    const res = await fetch(`${API}/api/instagram/posts?limit=6`, {
+      next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(5000),
+    } as RequestInit);
+    if (!res.ok) return [];
+    return res.json();
+  } catch { return []; }
+}
+
+export default async function InstagramGrid() {
+  const posts = await getPosts();
+
+  // Silently hide the section if no posts
+  if (posts.length === 0) return null;
 
   return (
     <section className={styles.section}>
@@ -14,12 +35,30 @@ export default function InstagramGrid({ content = {} }: { content?: Content }) {
         <p className={styles.sub}>Follow along for daily inspiration</p>
       </div>
       <div className={styles.grid}>
-        {images.map((img, i) => (
-          <div key={i} className={styles.cell}>
-            {img.url && (
-              <img src={img.url} alt={img.alt} className={styles.cellImg} />
+        {posts.map(post => (
+          <a
+            key={post.id}
+            href={post.permalink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.cell}
+            title={post.caption ? post.caption.slice(0, 100) : undefined}
+          >
+            {post.media_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={post.media_url}
+                alt={post.caption ? post.caption.slice(0, 80) : 'Instagram post'}
+                className={styles.cellImg}
+                loading="lazy"
+              />
             )}
-          </div>
+            {post.caption && (
+              <div className={styles.cellOverlay}>
+                <p className={styles.cellCaption}>{post.caption.slice(0, 60)}{post.caption.length > 60 ? '…' : ''}</p>
+              </div>
+            )}
+          </a>
         ))}
       </div>
       <div className={styles.footer}>

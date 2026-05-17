@@ -13,9 +13,10 @@ type Props = {
   price: number;
   outOfStock: boolean;
   stock?: number | null;
+  image?: string;
 };
 
-export default function ProductOptions({ colours, sizes, productName, productId, price, outOfStock, stock }: Props) {
+export default function ProductOptions({ colours, sizes, productName, productId, price, outOfStock, stock, image }: Props) {
   const [selectedColour, setSelectedColour] = useState(colours[0] ?? '');
   const [selectedSize, setSelectedSize] = useState(() => sizes.length === 1 ? sizes[0] : '');
   const [addState, setAddState] = useState<'idle' | 'adding' | 'added'>('idle');
@@ -62,7 +63,7 @@ export default function ProductOptions({ colours, sizes, productName, productId,
     if (!canAdd || addState !== 'idle') return;
     setAddState('adding');
     setTimeout(() => {
-      addToCart({ productId, name: productName, price, colour: selectedColour, size: selectedSize, quantity: qty, stock: stock ?? undefined });
+      addToCart({ productId, name: productName, price, colour: selectedColour, size: selectedSize, quantity: qty, stock: stock ?? undefined, image });
       setAddState('added');
       setTimeout(() => setAddState('idle'), 3000);
     }, 400);

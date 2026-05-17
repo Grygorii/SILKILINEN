@@ -100,7 +100,12 @@ export default function CartPanel({ isOpen, onClose }: Props) {
               const atStockLimit = item.stock !== undefined && item.stock < 10 && item.quantity >= maxQty;
               return (
                 <div key={index} className={styles.item}>
-                  <div className={styles.itemImg}></div>
+                  <div className={styles.itemImg}>
+                    {item.image && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                    )}
+                  </div>
                   <div className={styles.itemInfo}>
                     <p className={styles.itemName}>{item.name}</p>
                     <p className={styles.itemDetails}>{item.colour}{item.size ? ` / ${item.size}` : ''}</p>

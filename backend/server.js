@@ -40,6 +40,9 @@ const { checkoutRouter, webhookRouter } = require('./routes/checkoutV2');
 const { router: campaignsRouter } = require('./routes/campaigns');
 const marketingDashboardRouter = require('./routes/marketingDashboard');
 const adminCustomersRouter = require('./routes/adminCustomers');
+const journalRouter = require('./routes/journal');
+const adminJournalRouter = require('./routes/adminJournal');
+const instagramRouter = require('./routes/instagram');
 
 const app = express();
 
@@ -99,6 +102,9 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/admin/campaigns', campaignsRouter);
 app.use('/api/admin/marketing', marketingDashboardRouter);
 app.use('/api/admin/customers', adminCustomersRouter);
+app.use('/api/journal', journalRouter);
+app.use('/api/admin/journal', adminJournalRouter);
+app.use('/api/instagram', instagramRouter);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(function() { console.log('Connected to MongoDB'); })

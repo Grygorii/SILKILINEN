@@ -16,12 +16,14 @@
       "Bash(Remove-Item \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\backend\\\\routes\\\\webhook.js\" -Force)",
       "Bash(Write-Host \"Deleted\")",
       "Bash(git rm *)",
-      "Bash(mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/admin/customers/[id]\")"
+      "Bash(mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/admin/customers/[id]\")",
+      "Bash(mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/admin/journal\" \"d:/Programming/Course_!/Silkilinen/frontend/app/admin/journal/[id]\" \"d:/Programming/Course_!/Silkilinen/frontend/app/journal\" \"d:/Programming/Course_!/Silkilinen/frontend/app/journal/[slug]\")"
     ],
     "additionalDirectories": [
       "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\admin\\collections",
       "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\(shop)\\collections",
-      "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\admin\\customers"
+      "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\admin\\customers",
+      "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\admin\\journal"
     ]
   }
 }

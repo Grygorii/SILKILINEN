@@ -14,7 +14,7 @@ const CONTENT = [
     value: 'All silk is <strong>OEKO-TEX certified</strong> — gentle on skin' },
 
   // ── Homepage Hero ────────────────────────────────────
-  { key: 'homepage_hero_image', type: 'image', section: 'homepage', label: 'Hero Image', order: 1, value: '' },
+  { key: 'homepage_hero_image', type: 'image', section: 'homepage', label: 'Hero Image', order: 1, value: '/hero.png' },
   { key: 'homepage_hero_title', type: 'text', section: 'homepage', label: 'Hero Title', order: 2,
     value: 'Pure silk, pure comfort.' },
   { key: 'homepage_hero_subtitle', type: 'text', section: 'homepage', label: 'Hero Subtitle', order: 3,
@@ -67,6 +67,12 @@ async function seed() {
   for (const item of CONTENT) {
     const exists = await SiteContent.findOne({ key: item.key });
     if (exists) {
+      // Migrate: if this is the hero image and DB still has the empty placeholder, seed the CSS fallback
+      if (item.key === 'homepage_hero_image' && !exists.value && item.value) {
+        exists.value = item.value;
+        await exists.save();
+        console.log(`${item.key}: migrated empty value to default`);
+      }
       skipped++;
     } else {
       await SiteContent.create(item);

@@ -221,6 +221,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               price={product.price}
               outOfStock={outOfStock}
               stock={total ?? undefined}
+              image={galleryImages[0]?.url}
             />
 
             {/* Accordions */}

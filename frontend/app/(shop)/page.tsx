@@ -84,7 +84,7 @@ export default async function Home() {
 
       <NewsletterBand />
 
-      <InstagramGrid content={content} />
+      <InstagramGrid />
       <PageTracker page="home" />
     </main>
   );

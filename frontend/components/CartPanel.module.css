@@ -146,8 +146,8 @@
 }
 
 .stepBtn {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   background: none;
   border: none;
   cursor: pointer;
@@ -165,10 +165,10 @@
 
 .stepVal {
   width: 28px;
-  height: 36px;
+  height: 44px;
   text-align: center;
   font-size: 13px;
-  line-height: 36px;
+  line-height: 44px;
   border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
 }
@@ -258,5 +258,32 @@
   text-align: center;
   margin-top: 10px;
   letter-spacing: 0.3px;
+}
+
+@media (max-width: 400px) {
+  .header {
+    padding: 18px 16px;
+  }
+
+  .items {
+    padding: 16px;
+  }
+
+  .footer {
+    padding: 16px;
+  }
+
+  .itemImg {
+    width: 52px;
+    height: 52px;
+  }
+
+  .item {
+    gap: 10px;
+  }
+
+  .itemName {
+    font-size: 14px;
+  }
 }
 

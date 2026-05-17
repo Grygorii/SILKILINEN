@@ -1,25 +1,51 @@
 import Link from 'next/link';
-import { BLOG_POSTS } from '@/lib/blogPosts';
 import styles from './BlogTeaser.module.css';
+
+const API = process.env.NEXT_PUBLIC_API_URL;
+
+type Article = {
+  _id: string; title: string; slug: string; excerpt: string;
+  heroImage: { url: string; alt: string };
+  publishedAt: string; readingTimeMinutes: number | null;
+};
+
+async function getArticles(): Promise<Article[]> {
+  try {
+    const res = await fetch(`${API}/api/journal?limit=3`, { next: { revalidate: 60 } });
+    if (!res.ok) return [];
+    return res.json();
+  } catch { return []; }
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-export default function BlogTeaser() {
-  const posts = BLOG_POSTS.slice(0, 3);
+export default async function BlogTeaser() {
+  const posts = await getArticles();
+  if (posts.length === 0) return null;
+
   return (
     <section className={styles.section}>
       <div className={styles.header}>
         <h2 className={styles.title}>From the Journal</h2>
-        <Link href="/blog" className={styles.viewAll}>View all →</Link>
+        <Link href="/journal" className={styles.viewAll}>View all →</Link>
       </div>
       <div className={styles.grid}>
         {posts.map(post => (
-          <Link key={post.slug} href={`/blog/${post.slug}`} className={styles.card}>
-            <div className={styles.imgWrap} />
+          <Link key={post._id} href={`/journal/${post.slug}`} className={styles.card}>
+            <div className={styles.imgWrap}>
+              {post.heroImage?.url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={post.heroImage.url} alt={post.heroImage.alt || post.title}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              )}
+            </div>
             <div className={styles.cardBody}>
-              <p className={styles.date}>{formatDate(post.date)}</p>
+              <p className={styles.date}>
+                {formatDate(post.publishedAt)}
+                {post.readingTimeMinutes && ` · ${post.readingTimeMinutes} min read`}
+              </p>
               <h3 className={styles.cardTitle}>{post.title}</h3>
               <p className={styles.excerpt}>{post.excerpt}</p>
               <span className={styles.readMore}>Read article →</span>

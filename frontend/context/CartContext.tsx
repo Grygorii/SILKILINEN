@@ -11,6 +11,7 @@ type CartItem = {
   size: string;
   quantity: number;
   stock?: number;
+  image?: string;
 };
 
 type CartContextType = {

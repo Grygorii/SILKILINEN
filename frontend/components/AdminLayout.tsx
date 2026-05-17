@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   LayoutDashboard, Package, FileText, Users,
-  Megaphone, Settings, Menu, Bell, X, Layers, Tag,
+  Megaphone, Settings, Menu, Bell, X, Layers, Tag, BookOpen,
 } from 'lucide-react';
 import styles from './AdminLayout.module.css';
 import LogoutButton from './LogoutButton';
@@ -27,6 +27,7 @@ const NAV: NavEntry[] = [
   { label: 'Content',     href: '/admin/content',     icon: FileText },
   { label: 'Marketing',    href: '/admin/marketing',    icon: Megaphone },
   { label: 'Promo codes', href: '/admin/promo-codes', icon: Tag },
+  { label: 'Journal',     href: '/admin/journal',     icon: BookOpen },
   { section: 'Config' },
   { label: 'Settings',   href: '/admin/settings',   icon: Settings },
 ];

@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 16 May 2026 (Customer Intelligence v1 + Promo codes personal codes + Vercel build fix).
+Last updated: 17 May 2026 (Journal CMS + Instagram API integration + cart/hero bug fixes).
 
 ---
 
@@ -312,6 +312,78 @@ Other admin pages:
 - GDPR anonymisation replaces email with `deleted-${id}@anonymised.silkilinen.com` and clears PII; order history rows remain for accounting
 - Personal promo codes use `FIRSTNAME-XXXX` format (XXXX = 2 random bytes hex); always `maxUses: 1`, single use per customer, `source: 'customer_personal'`
 - Segment recompute is a full table scan (bulk write); safe to run from admin UI at any time
+
+---
+
+## Shipped 17 May 2026 — Sunday Build Brief (Journal CMS + Instagram API + Bug fixes)
+
+### Thread 1 — Journal CMS
+
+**Goal:** Writing surface where Sabreena can publish journal articles visible on the public storefront.
+
+**Backend:**
+- `backend/models/JournalArticle.js` (NEW) — Mongoose model with fields: title, slug (sparse unique), excerpt, body (Tiptap HTML), heroImage{url,alt,caption}, author (default 'Sabreen'), status (draft/preview/published), publishedAt, scheduledFor, metaTitle, metaDescription, keywords, readingTimeMinutes, viewCount, lastEditedBy; pre-save hook: auto-generates slug from title, auto-calculates readingTimeMinutes (words/230)
+- `backend/routes/adminJournal.js` (NEW) — mounted at `/api/admin/journal`; all routes require admin auth; endpoints: GET / (list with status filter), POST / (create), GET /:id, PUT /:id (full save, syncs publishedAt on first publish), POST /:id/autosave (body/title/excerpt only), GET /:id/preview-token (issues 1hr JWT with `type: 'journal_preview'`), DELETE /:id
+- `backend/routes/journal.js` (NEW) — mounted at `/api/journal`; public endpoints: GET / (published articles, sorted by publishedAt desc), GET /slug/:slug (individual article, increments viewCount fire-and-forget), GET /preview (validates JWT, returns any-status article for signed preview URLs)
+- `backend/scripts/seedJournalArticles.js` (NEW) — idempotent; seeds 3 draft articles from blogPosts.ts content as HTML `<p>` tags
+- `backend/server.js` — wired `/api/journal` + `/api/admin/journal`
+
+**Admin frontend:**
+- `frontend/app/admin/journal/page.tsx` (NEW) — editorial card list (3-column grid, not a table), filter chips by status, inline quick-create form, empty state
+- `frontend/app/admin/journal/[id]/page.tsx` (NEW) — full Tiptap writing canvas: sticky top bar (status pill + saved indicator + action buttons), hero image area, contentEditable title + excerpt, sticky Tiptap toolbar (Bold/Italic/Underline/H2/H3/blockquote/bullet/ordered/link/HR/Image), EditorContent, word count + reading time, collapsible SEO panel (slug/metaTitle/metaDescription/keywords/author)
+  - Autosave: 3s debounce after each editor update; Cmd/Ctrl+S triggers explicit save
+  - Preview: saves as 'preview', fetches signed JWT, opens `/journal/preview?token=...` in new tab
+  - Publish: confirms, sets status 'published'
+- `frontend/components/AdminLayout.tsx` — `BookOpen` icon + Journal entry added to NAV (after Promo codes)
+
+**Public frontend:**
+- `frontend/app/journal/page.tsx` (NEW) — async server component, ISR 60s, 3-column responsive grid of published articles
+- `frontend/app/journal/[slug]/page.tsx` (NEW) — generateMetadata with OG image, article hero + body with `dangerouslySetInnerHTML`, back link
+- `frontend/app/journal/preview/page.tsx` (NEW) — client component with Suspense, fetches `/api/journal/preview?token=`, "PREVIEW MODE" sticky purple banner
+
+**BlogTeaser rewrite:**
+- `frontend/components/BlogTeaser.tsx` — was a static component with hardcoded posts array; rewritten as async server component fetching from `/api/journal?limit=3` (ISR 60s); returns null if no posts; shows heroImage thumbnail; links to `/journal/[slug]`
+
+**Seed script:** run `node backend/scripts/seedJournalArticles.js` on production to create 3 draft articles.
+
+---
+
+### Thread 2 — Instagram Basic Display API
+
+**Goal:** Replace 6 placeholder SiteContent image tiles on the homepage with real @silkilinen posts from the Instagram API.
+
+**Backend:**
+- `backend/routes/instagram.js` (NEW) — mounted at `/api/instagram`
+  - In-memory 1hr cache (`posts`, `fetchedAt`, `error`, `tokenRefreshedAt`)
+  - `GET /posts?limit=6` — fetches `me/media` with fields id,media_url,permalink,caption,media_type,timestamp; serves stale cache on error; returns `[]` if not configured
+  - `GET /status` (requireAuth) — returns cache state: configured, cachedPostCount, fetchedAt, tokenRefreshedAt, lastError
+  - `POST /refresh-token` (requireAuth) — calls Instagram `refresh_access_token` endpoint, updates cached token timestamp
+  - Env var: `INSTAGRAM_ACCESS_TOKEN` (set in Railway)
+- `backend/server.js` — wired `/api/instagram`
+- `backend/docs/instagram-setup.md` (NEW) — step-by-step guide: Meta Developer app, Instagram Basic Display product, test user invite, token generation, long-lived token exchange (60d), Railway env var setup, token refresh schedule
+
+**Frontend:**
+- `frontend/components/InstagramGrid.tsx` — rewritten as async server component (was `content`-prop-based static component); self-fetching from `/api/instagram/posts?limit=6` (ISR 3600s); returns null if no posts (graceful failure); clickable tiles linking to Instagram permalink; caption overlay on hover; `AbortSignal.timeout(5000)` guard
+- `frontend/app/(shop)/page.tsx` — `<InstagramGrid content={content} />` → `<InstagramGrid />` (no more content prop)
+- `frontend/app/admin/content/page.tsx` — Instagram tab now shows a connection status panel instead of the old placeholder image tiles: connection status (green dot / red dot), cached post count, last fetch time, token refresh time, auto-refresh note, "Refresh token now" button, last error if any, setup instructions if token not configured
+
+**One-time setup needed:** See `backend/docs/instagram-setup.md`. Гріша must generate an Instagram Basic Display access token and add it to Railway as `INSTAGRAM_ACCESS_TOKEN`.
+
+---
+
+### Thread 3 — Bug fixes
+
+**3A — Cart line item thumbnails missing:**
+- Root cause: `CartItem` type had no `image` field; `ProductOptions.tsx` never passed image to `addToCart`; `CartPanel.tsx` rendered an empty div
+- Fix: `CartItem` type in `frontend/context/CartContext.tsx` extended with `image?: string`; `ProductOptions.tsx` accepts + passes `image` prop; `/product/[id]` page passes `image={galleryImages[0]?.url}` to `<ProductOptions>`; `CartPanel.tsx` renders `<img>` inside `itemImg` div
+
+**3B — Cart responsiveness (touch targets too small):**
+- `frontend/components/CartPanel.module.css` — `stepBtn` width/height 36px → 44px; `stepVal` height/line-height 36px → 44px; added `@media (max-width: 400px)` reducing panel padding to 16px and itemImg to 52×52px
+
+**3C — Hero image admin/display sync:**
+- Root cause: `homepage_hero_image` SiteContent record was seeded with `value: ''`; homepage CSS had a hardcoded `background-image: url('/hero.png')` fallback; admin correctly showed "No image" (DB empty) but homepage appeared to show the image (CSS fallback), making admin appear broken
+- Fix: `backend/scripts/seedSiteContent.js` — `homepage_hero_image` value changed from `''` to `'/hero.png'`; migration logic added to update existing empty records in place; `frontend/app/(shop)/page.module.css` — removed hardcoded `background-image: url('/hero.png')` from `.hero` class; DB is now single source of truth
+- **Run seed script on production:** `node backend/scripts/seedSiteContent.js` to populate the DB value
 
 ---
 
