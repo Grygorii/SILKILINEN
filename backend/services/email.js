@@ -11,6 +11,15 @@ function getResend() {
 // Set RESEND_FROM_EMAIL to "SILKILINEN <orders@silkilinen.com>" once domain is verified in Resend.
 const FROM = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+// Escape HTML-special characters in user-supplied strings before interpolating into email templates.
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 function shortId(mongoId) {
   return String(mongoId).slice(-8).toUpperCase();
@@ -367,18 +376,28 @@ async function sendNewsletterWelcome({ email, code, validUntil, unsubscribeToken
 
 async function sendDropAHint({ recipientName, recipientEmail, senderName, message, productName, productUrl, productImage, price }) {
   if (!process.env.RESEND_API_KEY) return;
-  const greeting = recipientName ? `Hi ${recipientName},` : 'Hello,';
-  const imageBlock = productImage
-    ? `<tr><td style="padding:0 0 24px;text-align:center;"><img src="${productImage}" alt="${productName}" style="max-width:280px;width:100%;height:auto;display:block;margin:0 auto;" /></td></tr>`
+
+  // Escape all user-supplied strings before HTML interpolation.
+  const safeRecipientName = esc(recipientName);
+  const safeSenderName = esc(senderName);
+  const safeMessage = esc(message);
+  const safeProductName = esc(productName);
+  // For URL attributes: only allow http(s) URLs — blocks javascript: and data: URL injection.
+  const safeProductUrl = (typeof productUrl === 'string' && /^https?:\/\//i.test(productUrl)) ? productUrl : '#';
+  const safeProductImage = (typeof productImage === 'string' && /^https?:\/\//i.test(productImage)) ? productImage : '';
+
+  const greeting = recipientName ? `Hi ${safeRecipientName},` : 'Hello,';
+  const imageBlock = safeProductImage
+    ? `<tr><td style="padding:0 0 24px;text-align:center;"><img src="${safeProductImage}" alt="${safeProductName}" style="max-width:280px;width:100%;height:auto;display:block;margin:0 auto;" /></td></tr>`
     : '';
   const messageBlock = message
-    ? `<tr><td style="padding:0 0 28px;"><p style="font-size:14px;color:#5a5650;line-height:1.8;font-style:italic;border-left:3px solid #e0ddd7;padding-left:16px;margin:0;">"${message}"</p></td></tr>`
+    ? `<tr><td style="padding:0 0 28px;"><p style="font-size:14px;color:#5a5650;line-height:1.8;font-style:italic;border-left:3px solid #e0ddd7;padding-left:16px;margin:0;">"${safeMessage}"</p></td></tr>`
     : '';
 
   await getResend().emails.send({
     from: FROM,
     to: recipientEmail,
-    subject: `${senderName} thinks you'd love this`,
+    subject: `${safeSenderName} thinks you'd love this`,
     html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:40px 16px;">
@@ -391,18 +410,18 @@ async function sendDropAHint({ recipientName, recipientEmail, senderName, messag
 <table width="100%" cellpadding="0" cellspacing="0">
 <tr><td style="padding:0 0 20px;">
 <p style="margin:0;font-size:14px;color:#5a5650;line-height:1.8;">${greeting}</p>
-<p style="margin:12px 0 0;font-size:14px;color:#5a5650;line-height:1.8;">${senderName} thought you might love this:</p>
+<p style="margin:12px 0 0;font-size:14px;color:#5a5650;line-height:1.8;">${safeSenderName} thought you might love this:</p>
 </td></tr>
 ${imageBlock}
 <tr><td style="padding:0 0 8px;">
-<p style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#1a1916;">${productName}</p>
+<p style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#1a1916;">${safeProductName}</p>
 </td></tr>
 <tr><td style="padding:0 0 24px;">
 <p style="margin:0;font-size:18px;color:#1a1916;">€${Number(price).toFixed(2)}</p>
 </td></tr>
 ${messageBlock}
 <tr><td style="padding:0 0 36px;">
-<a href="${productUrl}" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:16px 40px;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;">VIEW PRODUCT</a>
+<a href="${safeProductUrl}" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:16px 40px;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;">VIEW PRODUCT</a>
 </td></tr>
 <tr><td>
 <p style="margin:0;font-size:13px;color:#8a8680;line-height:1.8;">Slowly,<br>SILKILINEN</p>
