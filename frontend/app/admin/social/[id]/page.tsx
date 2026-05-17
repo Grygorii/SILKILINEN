@@ -545,7 +545,7 @@ export default function SocialComposerPage() {
           {(activePlatform?.imageSpecs?.length ?? 0) > 0 && (
             <div style={{ marginTop: 14 }}>
               <p style={{ fontSize: 10, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6 }}>Image specs</p>
-              {activePlatform.imageSpecs.map((spec, i) => (
+              {activePlatform?.imageSpecs.map((spec, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--muted)', padding: '3px 0', borderBottom: '1px solid #eee' }}>
                   <span>{spec.label}{spec.isDefault ? ' ★' : ''}</span>
                   <span>{spec.pixelWidth}×{spec.pixelHeight}</span>
