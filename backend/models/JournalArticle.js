@@ -28,7 +28,7 @@ const journalArticleSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Auto-generate slug from title (called before save when slug is missing)
-journalArticleSchema.pre('save', function (next) {
+journalArticleSchema.pre('save', async function () {
   if (!this.slug && this.title) {
     this.slug = this.title
       .toLowerCase()
@@ -42,7 +42,6 @@ journalArticleSchema.pre('save', function (next) {
     const words = this.body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean).length;
     this.readingTimeMinutes = Math.max(1, Math.ceil(words / 230));
   }
-  next();
 });
 
 module.exports = mongoose.model('JournalArticle', journalArticleSchema);
