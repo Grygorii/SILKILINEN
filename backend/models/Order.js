@@ -92,6 +92,17 @@ const orderSchema = new mongoose.Schema({
   // Browser session ID from the frontend tracking lib (localStorage).
   // Used to link the originating Visit document to this order after payment.
   browserSessionId: { type: String },
+
+  // Cost tracking for Finance tab
+  costs: {
+    shippingCost:      { type: Number },     // what it actually cost to ship (manual entry)
+    shippingCostNotes: { type: String },
+    cogs:              { type: Number },     // null = product had no costing data at time of sale
+    stripeFee:         { type: Number },     // from Stripe charge.balance_transaction.fee
+    refundedAmount:    { type: Number, default: 0 }, // mirrors refundedAmount, kept in sync
+  },
+
+  receiptIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Receipt' }],
 }, { timestamps: true });
 
 orderSchema.index({ status: 1, createdAt: -1 });

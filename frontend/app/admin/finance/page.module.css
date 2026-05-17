@@ -1,0 +1,92 @@
+.page { padding: 24px 32px; max-width: 1100px; }
+@media (max-width: 768px) { .page { padding: 16px; } }
+
+/* Honest line — hero band */
+.heroBand {
+  border-radius: 6px;
+  padding: 28px 32px;
+  margin-bottom: 28px;
+  background: #2b2b2b;
+  color: #f5f0eb;
+  position: relative;
+}
+.heroBandProfit { background: #1a3a1a; }
+.heroBandLoss   { background: #3a1a1a; }
+.heroVerdict { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin: 0 0 6px; }
+.heroSub { font-size: 13px; opacity: 0.65; margin: 0; }
+.heroBreakdown {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 4px 0;
+  font-size: 13px;
+}
+.heroBreakdown span:first-child { opacity: 0.65; }
+.heroBreakdown span:last-child  { font-variant-numeric: tabular-nums; }
+.heroDivider {
+  grid-column: 1 / -1;
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.2);
+  margin: 8px 0;
+}
+.heroNetRow { grid-column: 1 / -1; display: grid; grid-template-columns: 160px 1fr; font-weight: 700; font-size: 14px; }
+
+/* Metric cards row */
+.metricRow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+@media (max-width: 640px) { .metricRow { grid-template-columns: 1fr; } }
+.metricCard {
+  background: #fff;
+  border: 1px solid #e8e0d5;
+  border-radius: 6px;
+  padding: 20px 22px;
+}
+.metricLabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #888; margin: 0 0 6px; }
+.metricVal   { font-size: 26px; font-weight: 700; color: #1a1a1a; margin: 0 0 6px; font-variant-numeric: tabular-nums; }
+.metricDelta { font-size: 12px; }
+.metricDeltaPos { color: #2e7d32; }
+.metricDeltaNeg { color: #c62828; }
+
+/* Section headers */
+.sectionTitle { font-size: 14px; font-weight: 600; color: #1a1a1a; margin: 0 0 14px; }
+
+/* Expense breakdown bar */
+.breakdownSection { background: #fff; border: 1px solid #e8e0d5; border-radius: 6px; padding: 20px 22px; margin-bottom: 28px; }
+.breakdownBar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 16px; background: #f4f0eb; }
+.breakdownSeg { height: 100%; transition: width 0.3s; }
+.breakdownList { display: flex; flex-direction: column; gap: 8px; }
+.breakdownRow { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+.breakdownCat { color: #444; }
+.breakdownAmt { font-weight: 500; font-variant-numeric: tabular-nums; }
+.breakdownPrompt { font-size: 12px; color: #888; font-style: italic; margin-top: 8px; }
+.promptLink { color: #7a5c2e; text-decoration: underline; cursor: pointer; background: none; border: none; font: inherit; padding: 0; }
+
+/* Per-order table */
+.tableSection { background: #fff; border: 1px solid #e8e0d5; border-radius: 6px; padding: 20px 22px; margin-bottom: 28px; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; padding: 6px 10px; color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500; border-bottom: 1px solid #e8e0d5; }
+.table td { padding: 10px 10px; border-bottom: 1px solid #f4f0eb; vertical-align: middle; }
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: #faf8f5; }
+.table tr { cursor: pointer; }
+.profitPos   { color: #2e7d32; font-weight: 500; font-variant-numeric: tabular-nums; }
+.profitNeg   { color: #c62828; font-weight: 500; font-variant-numeric: tabular-nums; }
+.profitAmber { color: #b8860b; font-style: italic; font-variant-numeric: tabular-nums; }
+.missingDot  { color: #888; font-size: 12px; }
+.tNum        { font-variant-numeric: tabular-nums; }
+.tMuted      { color: #aaa; }
+
+/* Modal */
+.modalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200; display: flex; align-items: center; justify-content: center; }
+.modal { background: #fff; border-radius: 8px; padding: 28px; width: 360px; max-width: 92vw; }
+.modalTitle { font-size: 15px; font-weight: 600; margin: 0 0 16px; }
+.modalLabel { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
+.modalInput { width: 100%; padding: 10px 12px; border: 1px solid #d0c8be; border-radius: 4px; font-size: 14px; margin-bottom: 12px; box-sizing: border-box; }
+.modalFooter { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+.modalCancel { padding: 8px 16px; border: 1px solid #d0c8be; border-radius: 4px; background: #fff; cursor: pointer; font-size: 13px; }
+.modalSave { padding: 8px 20px; border: none; border-radius: 4px; background: #2b2b2b; color: #fff; cursor: pointer; font-size: 13px; }
+.modalSave:disabled { opacity: 0.5; }
+
+.loading { color: #888; font-size: 14px; padding: 40px 0; }
+.empty   { color: #aaa; font-size: 13px; padding: 20px 0; }

@@ -1,0 +1,52 @@
+.page { padding: 24px 32px; max-width: 1100px; }
+@media (max-width: 768px) { .page { padding: 16px; } }
+
+.header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px; flex-wrap: wrap; }
+.title  { font-size: 22px; font-weight: 700; margin: 0; }
+.sub    { font-size: 13px; color: #888; margin: 0 0 20px; }
+
+.actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.btnPrimary   { padding: 9px 18px; background: #2b2b2b; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.btnSecondary { padding: 9px 18px; background: #fff; color: #333; border: 1px solid #d0c8be; border-radius: 4px; cursor: pointer; font-size: 13px; }
+
+.filters { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
+.filterInput  { padding: 8px 12px; border: 1px solid #d0c8be; border-radius: 4px; font-size: 13px; }
+.filterSelect { padding: 8px 10px; border: 1px solid #d0c8be; border-radius: 4px; font-size: 13px; background: #fff; }
+.clearBtn     { font-size: 12px; color: #888; background: none; border: none; cursor: pointer; text-decoration: underline; }
+
+.tableWrap { overflow-x: auto; background: #fff; border: 1px solid #e8e0d5; border-radius: 6px; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; padding: 8px 14px; color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500; border-bottom: 1px solid #e8e0d5; white-space: nowrap; }
+.table td { padding: 11px 14px; border-bottom: 1px solid #f4f0eb; vertical-align: middle; }
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: #faf8f5; }
+.amountCol { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+.autoTag   { font-size: 10px; padding: 2px 5px; border-radius: 2px; background: #f4f0eb; color: #888; margin-left: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+.rowActions { display: flex; gap: 8px; }
+.actionBtn { font-size: 12px; color: #7a5c2e; background: none; border: none; cursor: pointer; padding: 2px 0; }
+.actionBtnDanger { font-size: 12px; color: #c62828; background: none; border: none; cursor: pointer; padding: 2px 0; }
+.receiptLink { color: #7a5c2e; text-decoration: none; font-size: 12px; }
+
+.pagination { display: flex; gap: 12px; align-items: center; justify-content: center; padding: 16px 0; font-size: 13px; }
+.pageBtn { padding: 6px 14px; border: 1px solid #d0c8be; border-radius: 4px; background: #fff; cursor: pointer; font-size: 13px; }
+.pageBtn:disabled { opacity: 0.4; cursor: default; }
+.pageInfo { color: #888; }
+
+.loading { color: #888; font-size: 14px; padding: 40px 0; }
+.empty   { color: #aaa; font-size: 13px; padding: 20px; }
+
+/* Modal */
+.modalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.modal { background: #fff; border-radius: 8px; padding: 28px; width: 480px; max-width: 100%; max-height: 90vh; overflow-y: auto; }
+.modalTitle  { font-size: 16px; font-weight: 600; margin: 0 0 20px; }
+.modalLabel  { display: block; font-size: 12px; color: #666; margin-bottom: 4px; margin-top: 12px; }
+.modalLabel:first-of-type { margin-top: 0; }
+.modalInput  { width: 100%; padding: 9px 12px; border: 1px solid #d0c8be; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
+.modalSelect { width: 100%; padding: 9px 12px; border: 1px solid #d0c8be; border-radius: 4px; font-size: 13px; background: #fff; box-sizing: border-box; }
+.modalTextarea { width: 100%; padding: 9px 12px; border: 1px solid #d0c8be; border-radius: 4px; font-size: 13px; resize: vertical; box-sizing: border-box; }
+.modalToggleRow { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 12px; }
+.modalFooter { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.modalCancel { padding: 8px 16px; border: 1px solid #d0c8be; border-radius: 4px; background: #fff; cursor: pointer; font-size: 13px; }
+.modalSave   { padding: 8px 20px; border: none; border-radius: 4px; background: #2b2b2b; color: #fff; cursor: pointer; font-size: 13px; }
+.modalSave:disabled { opacity: 0.5; }
+.modalErr { font-size: 12px; color: #c62828; margin-top: 8px; }

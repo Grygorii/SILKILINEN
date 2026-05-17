@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   LayoutDashboard, Package, FileText, Users,
-  Megaphone, Settings, Menu, Bell, X, Layers, Tag, BookOpen,
+  Megaphone, Settings, Menu, Bell, X, Layers, Tag, BookOpen, BookMarked,
 } from 'lucide-react';
 import styles from './AdminLayout.module.css';
 import LogoutButton from './LogoutButton';
@@ -28,6 +28,10 @@ const NAV: NavEntry[] = [
   { label: 'Marketing',    href: '/admin/marketing',    icon: Megaphone },
   { label: 'Promo codes', href: '/admin/promo-codes', icon: Tag },
   { label: 'Journal',     href: '/admin/journal',     icon: BookOpen },
+  { section: 'Finance' },
+  { label: 'Overview',   href: '/admin/finance',           icon: BookMarked, exact: true },
+  { label: 'Expenses',   href: '/admin/finance/expenses',  icon: BookMarked },
+  { label: 'Reports',    href: '/admin/finance/reports',   icon: BookMarked },
   { section: 'Config' },
   { label: 'Settings',   href: '/admin/settings',   icon: Settings },
 ];

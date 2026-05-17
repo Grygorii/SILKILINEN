@@ -22,6 +22,7 @@ type Product = {
   images: { url: string; isPrimary?: boolean; alt?: string }[];
   variants: unknown[];
   metaTitle?: string;
+  costing?: { totalUnitCost?: number };
   updatedAt: string;
   createdAt: string;
 };
@@ -730,7 +731,12 @@ export default function AdminProductsPage() {
                       )}
                     </td>
                     <td>
-                      <a href={`/admin/products/${product._id}`} className={styles.productName}>{product.name}</a>
+                      <a href={`/admin/products/${product._id}`} className={styles.productName}>
+                        {product.name}
+                        {product.status !== 'draft' && !product.costing?.totalUnitCost && (
+                          <span title="No costing data — Finance tab will show unknown COGS" style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: '#555', marginLeft: 6, verticalAlign: 'middle' }} />
+                        )}
+                      </a>
                       {product.category && <span className={styles.productCategory}>{product.category}</span>}
                       <IssuePills product={product} />
                     </td>

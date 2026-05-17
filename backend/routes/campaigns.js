@@ -3,6 +3,7 @@ const router = express.Router();
 const Campaign = require('../models/Campaign');
 const Order = require('../models/Order');
 const Visit = require('../models/Visit');
+const Expense = require('../models/Expense');
 const { requireAuth } = require('../middleware/auth');
 
 function slugify(str) {
@@ -186,6 +187,20 @@ router.post('/:id/spend', requireAuth, async (req, res) => {
       { new: true }
     );
     if (!campaign) return res.status(404).json({ error: 'Not found' });
+
+    // Auto-create a Finance Expense entry so spend appears in P&L without manual entry
+    await Expense.create({
+      amount,
+      date: new Date(),
+      category: 'marketing_ads',
+      description: `Ad spend — ${campaign.name}${note ? ': ' + note : ''}`,
+      notes: note || undefined,
+      isAutomatic: true,
+      sourceRef: `campaign:${campaign._id}`,
+      taxDeductible: true,
+      createdBy: req.user?.userId || 'admin',
+    }).catch(err => console.error('[campaigns/spend] expense creation failed:', err.message));
+
     res.json(campaign);
   } catch (err) {
     res.status(500).json({ error: err.message });

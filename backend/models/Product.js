@@ -90,6 +90,16 @@ const productSchema = new mongoose.Schema({
   certifications: [String],
 
   lastUpdatedBy: { type: ObjectId, ref: 'User' },
+
+  costing: {
+    materialCost:   { type: Number },
+    laborCost:      { type: Number },
+    packagingCost:  { type: Number },
+    totalUnitCost:  { type: Number },
+    notes:          { type: String },
+    lastUpdated:    { type: Date },
+    updatedBy:      { type: String },
+  },
 }, { timestamps: true });
 
 productSchema.index({ status: 1, category: 1 });

@@ -177,6 +177,11 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const [genSizes, setGenSizes] = useState<string[]>([]);
   const [genCustomSize, setGenCustomSize] = useState('');
 
+  type CostingForm = { materialCost: string; laborCost: string; packagingCost: string; notes: string };
+  const [costing, setCosting] = useState<CostingForm>({ materialCost: '', laborCost: '', packagingCost: '', notes: '' });
+  const [costingSaving, setCostingSaving] = useState(false);
+  const [costingMsg, setCostingMsg] = useState('');
+
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const altTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const slotInputRef = useRef<HTMLInputElement>(null);
@@ -214,6 +219,12 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         setImages(sorted);
         setVariants(p.variants ?? []);
         setVideo(p.productVideo ?? null);
+        setCosting({
+          materialCost: p.costing?.materialCost?.toString() ?? '',
+          laborCost:    p.costing?.laborCost?.toString()    ?? '',
+          packagingCost:p.costing?.packagingCost?.toString()?? '',
+          notes:        p.costing?.notes ?? '',
+        });
         setLastSaved(new Date(p.updatedAt));
         setSaveState('saved');
       })
@@ -342,6 +353,46 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   useEffect(() => {
     doSaveRef.current = doSave;
   }, [doSave]);
+
+  async function saveCosting() {
+    setCostingSaving(true);
+    setCostingMsg('');
+    const mat = Number(costing.materialCost) || 0;
+    const lab = Number(costing.laborCost) || 0;
+    const pkg = Number(costing.packagingCost) || 0;
+    try {
+      const res = await fetch(`${API}/api/admin/products/${id}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          price: Number(form.price) || 0,
+          compareAtPrice: form.compareAtPrice ? Number(form.compareAtPrice) : undefined,
+          costPrice: form.costPrice ? Number(form.costPrice) : undefined,
+          tags: form.tags.split(',').map((t: string) => t.trim()).filter(Boolean),
+          keywords: form.keywords.split(',').map((k: string) => k.trim()).filter(Boolean),
+          certifications: form.certifications.split(',').map((c: string) => c.trim()).filter(Boolean),
+          costing: {
+            materialCost:  mat,
+            laborCost:     lab,
+            packagingCost: pkg,
+            totalUnitCost: mat + lab + pkg,
+            notes: costing.notes,
+            lastUpdated: new Date().toISOString(),
+          },
+          variants,
+        }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
+      setCostingMsg('Saved');
+      setTimeout(() => setCostingMsg(''), 2500);
+    } catch (err) {
+      setCostingMsg(err instanceof Error ? err.message : 'Save failed');
+    } finally {
+      setCostingSaving(false);
+    }
+  }
 
   // Image handlers
   async function handleImageUpload(files: FileList | null, slot?: string) {
@@ -995,6 +1046,49 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               </div>
             )}
           </section>
+
+          {/* Costing */}
+          <details className={styles.card} open={!costing.materialCost && !costing.laborCost && !costing.packagingCost}>
+            <summary className={styles.cardTitle} style={{ cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>Costing{(!costing.materialCost && !costing.laborCost && !costing.packagingCost) && <span style={{ marginLeft: 8, fontSize: 11, color: '#c9572a', fontWeight: 500 }}>⚠ Missing</span>}</span>
+              <span style={{ fontSize: 12, color: '#aaa' }}>▾</span>
+            </summary>
+            <p style={{ fontSize: 12, color: '#888', margin: '8px 0 16px' }}>Used for COGS tracking in the Finance tab. Snapshotted at order creation time.</p>
+            <div className={styles.frow}>
+              <div className={styles.fg}>
+                <label className={styles.label}>Material cost (€/unit)</label>
+                <input className={styles.input} type="number" step="0.01" min="0" value={costing.materialCost} onChange={e => setCosting(c => ({ ...c, materialCost: e.target.value }))} placeholder="0.00" />
+              </div>
+              <div className={styles.fg}>
+                <label className={styles.label}>Labour cost (€/unit)</label>
+                <input className={styles.input} type="number" step="0.01" min="0" value={costing.laborCost} onChange={e => setCosting(c => ({ ...c, laborCost: e.target.value }))} placeholder="0.00" />
+              </div>
+              <div className={styles.fg}>
+                <label className={styles.label}>Packaging cost (€/unit)</label>
+                <input className={styles.input} type="number" step="0.01" min="0" value={costing.packagingCost} onChange={e => setCosting(c => ({ ...c, packagingCost: e.target.value }))} placeholder="0.00" />
+              </div>
+            </div>
+            {(Number(costing.materialCost) + Number(costing.laborCost) + Number(costing.packagingCost)) > 0 && (
+              <p style={{ fontSize: 13, fontWeight: 600, margin: '8px 0' }}>
+                Total unit cost: €{(Number(costing.materialCost) + Number(costing.laborCost) + Number(costing.packagingCost)).toFixed(2)}
+                {form.price && (
+                  <span style={{ fontWeight: 400, color: '#888', marginLeft: 8 }}>
+                    · {Math.round(((Number(form.price) - (Number(costing.materialCost) + Number(costing.laborCost) + Number(costing.packagingCost))) / Number(form.price)) * 100)}% gross margin
+                  </span>
+                )}
+              </p>
+            )}
+            <div className={styles.fg}>
+              <label className={styles.label}>Notes</label>
+              <input className={styles.input} value={costing.notes} onChange={e => setCosting(c => ({ ...c, notes: e.target.value }))} placeholder="e.g. fabric cost based on Oct 2025 purchase at €18/m" />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
+              <button className={styles.saveBtn} onClick={saveCosting} disabled={costingSaving}>
+                {costingSaving ? 'Saving…' : 'Save costing'}
+              </button>
+              {costingMsg && <span style={{ fontSize: 13, color: costingMsg.includes('fail') || costingMsg.includes('fail') ? '#c00' : '#2e7d32' }}>{costingMsg}</span>}
+            </div>
+          </details>
 
           {/* SEO */}
           <section className={styles.card}>

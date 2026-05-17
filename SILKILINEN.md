@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 17 May 2026 (Journal CMS + Instagram API integration + cart/hero bug fixes).
+Last updated: 17 May 2026 (Finance tab v1 + order total bug fix).
 
 ---
 
@@ -47,7 +47,9 @@ Browse / product detail pages, cart with quantity adjustment and stock caps, wis
 
 ## Admin tooling shipped
 
-Mobile-first admin panel — sidebar on desktop, drawer + bottom-tabs on mobile. Seven sections: Dashboard, Products, Orders, Customers, Marketing, Content, Settings.
+Mobile-first admin panel — sidebar on desktop, drawer + bottom-tabs on mobile. Eight sections: Dashboard, Products, Orders, Customers, Marketing, Content, Finance, Settings.
+
+**Finance tab at `/admin/finance`, `/admin/finance/expenses`, `/admin/finance/reports`** — full bookkeeping with auto-pulled Stripe revenue/fees/refunds, Marketing ad spend integration, COGS snapshotting from Product costing data, per-order profit calculation (revenue − Stripe fee − COGS − shipping cost − refunds), manual expense entry with category ledger, monthly P&L chart + table, margin analysis by product and acquisition source, anomaly flagging (orders without shipping cost, products without costing data, months with orders but zero expenses). Red/green honest reporting — no princess stories.
 
 The Dashboard surfaces today/week/month revenue, top products, traffic sources, action items, a 30-day sparkline, with 5-minute auto-refresh. Zone 4 system-health monitors Mongo, Cloudinary, Resend, Stripe, and env vars on a 60-second poll.
 
@@ -315,6 +317,66 @@ Other admin pages:
 
 ---
 
+## Shipped 17 May 2026 — Finance Tab v1 + Order Total Bug Fix
+
+### Step 0 — Order total bug fix
+
+**Bug:** Orders list page showed `order.total + order.shippingCost` (double-counting shipping). `order.total` already includes shipping per the canonical formula `total = subtotal − discountAmount + shippingCost`.
+
+**Fix:** `frontend/app/admin/orders/page.tsx` — removed the `+ order.shippingCost` from both the row total cell and the expanded inline detail section. Both list and detail now read `order.total` as the canonical persisted value.
+
+**Historical impact:** Order #3BF9D8B3 was showing €10.48 in list (wrong) vs €5.49 in detail (correct). The correct value is €5.49 (€0.50 item + €4.99 Ireland shipping). The order document itself was always correct — only the display was broken.
+
+### Finance Tab v1
+
+**Data models (new):**
+- `backend/models/Expense.js` — 15 categories, `isAutomatic` flag for system-created entries (Stripe refunds, campaign spend), `isRecurring` + `recurringFrequency`, `taxDeductible`, `sourceRef` for linking back to origin, `receiptId` FK
+- `backend/models/Receipt.js` — Cloudinary file reference; many-to-many linkage with Expense and Order; `totalOnReceipt`, `vendor`, `description` for reconciliation reference (not used for math)
+
+**Data model extensions (existing):**
+- `backend/models/Order.js` — `costs: { shippingCost, shippingCostNotes, cogs, stripeFee, refundedAmount }` subdocument; `receiptIds[]`
+- `backend/models/Product.js` — `costing: { materialCost, laborCost, packagingCost, totalUnitCost, notes, lastUpdated, updatedBy }` subdocument
+
+**Auto-population sources:**
+- `backend/routes/checkoutV2.js` — COGS snapshotted at order creation time: fetches `product.costing.totalUnitCost × quantity` for all line items, stores as `order.costs.cogs`; null if any product has no costing data (never assume zero)
+- `backend/routes/checkoutV2.js` — `charge.succeeded` webhook handler: retrieves `balance_transaction.fee` from Stripe, stores as `order.costs.stripeFee` (in EUR, from cents)
+- `backend/routes/campaigns.js` — `POST /:id/spend` now auto-creates an Expense doc with `category: 'marketing_ads'`, `isAutomatic: true`, `sourceRef: 'campaign:id'` — marketing spend flows to Finance P&L automatically
+
+**Backend finance routes (`backend/routes/adminFinance.js`, mounted at `/api/admin/finance`):**
+- `GET /overview` — current month P&L breakdown (revenue, Stripe fees, COGS, shipping costs, marketing spend, other expenses, refunds, net profit); last 30 days vs prior 30 days deltas; per-order profitability rows (50 most recent, with net profit and missing-data flags); expense category breakdown; soft prompts for missing categories
+- `GET /action-items` — orders without shipping cost (>7 days old), products without costing data
+- `GET /expenses` — paginated expense ledger with search/category/date filters; year-to-date total
+- `POST /expenses` — create expense
+- `PUT /expenses/:id` — update (blocks automatic entries)
+- `DELETE /expenses/:id` — delete (blocks automatic entries)
+- `PATCH /orders/:id/shipping-cost` — set per-order actual shipping cost from Finance Overview modal
+- `GET /receipts`, `POST /receipts`, `PUT /receipts/:id`, `DELETE /receipts/:id` — receipt CRUD with Cloudinary upload
+- `GET /reports` — 12-month P&L (revenue, refunds, Stripe fees, COGS, shipping costs, expenses, net profit per month); margin by product (last 90 days); margin by acquisition source; anomaly flags
+
+**Frontend (new pages):**
+- `frontend/app/admin/finance/page.tsx` — Overview: hero honest-line (red LOSS / green PROFIT with full cost breakdown visible); last-30-day metric cards with delta vs prior period; expense category breakdown bar; per-order profitability table (net profit per order, amber asterisk for missing data, click-to-add shipping cost modal)
+- `frontend/app/admin/finance/expenses/page.tsx` — Full expense ledger: search + category + date filters; paginated table with edit/delete row actions (auto entries locked); add/edit modal
+- `frontend/app/admin/finance/reports/page.tsx` — Monthly P&L bar chart + detail table; margin by product table; margin by acquisition source table; anomaly flags panel
+
+**Frontend (modified):**
+- `frontend/components/AdminLayout.tsx` — FINANCE section added between Publish and Config: Overview · Expenses · Reports; `BookMarked` icon from lucide-react
+- `frontend/app/admin/products/[id]/page.tsx` — Costing section added (collapsible, opens by default if no cost data): material/labour/packaging cost inputs, auto-calculated total unit cost with gross margin preview, notes, dedicated "Save costing" button; loads/saves via existing product PUT endpoint
+- `frontend/app/admin/products/page.tsx` — Small charcoal dot added to product name in list for any active/sold_out product missing `costing.totalUnitCost`; `costing` field added to Product type
+
+**Post-build report:**
+- Historical order total discrepancy: Order #3BF9D8B3 (€10.48 displayed in list, €5.49 actual). The Order document always had the correct `total: 5.49`. Display-only bug, now fixed. No DB correction needed.
+- All 4 existing test orders likely have `costs.stripeFee = null` and `costs.shippingCost = null` — Stripe fee capture only fires on `charge.succeeded` going forward; historical orders would need manual entry or a backfill script if needed
+- Products without costing data will show the charcoal dot in the admin product list — Sabreena should enter material/labour/packaging costs for each active product so COGS tracking becomes accurate on future orders
+
+**Active scoped work, not yet built (Finance tab phase 2):**
+- Receipt upload UI in Finance Expenses page (backend routes exist, frontend UI not yet wired)
+- Cash runway projection (needs 2+ months of consistent expense data)
+- VAT-readiness tracking if/when revenue approaches Irish VAT threshold
+- Quarterly tax-prep export formatted for accountant
+- Dashboard "Finance action items" band pulling from `/api/admin/finance/action-items`
+
+---
+
 ## Shipped 17 May 2026 — Sunday Build Brief (Journal CMS + Instagram API + Bug fixes)
 
 ### Thread 1 — Journal CMS
@@ -389,6 +451,7 @@ Other admin pages:
 
 ## Active scoped work, not yet built
 
+- **Finance tab phase 2** — receipt upload UI (backend done), cash runway projection (needs 2+ months data), dashboard "Finance action items" band, quarterly tax-prep export, VAT threshold tracking
 - **THUMBNAIL slot auto-derive** — thumbnail generation still exists in AI workflow tiers but no named slot card shows for it; images with `slot: thumbnail` appear in Additional images. Future: auto-derive from HERO via Cloudinary transformation if needed.
 - **Collections header nav** — dynamic nav rebuild around collections (static category nav still in place)
 - **Collections heroImage upload** — admin edit page shows heroImage URL fields; Cloudinary upload widget not yet wired for collections

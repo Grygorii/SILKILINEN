@@ -7,6 +7,7 @@ const Cart = require('../models/Cart');
 const Order = require('../models/Order');
 const Visit = require('../models/Visit');
 const Product = require('../models/Product');
+const Expense = require('../models/Expense');
 const { calculateShipping } = require('../services/shipping');
 const { validateDiscount, redeemDiscount } = require('../services/discounts');
 const { calculateTax } = require('../services/tax');
@@ -282,6 +283,25 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
         try { items = JSON.parse(meta.items); } catch { /* ignore */ }
       }
 
+      // Snapshot COGS from product costing data at time of sale
+      let cogsTotal = null;
+      const productIds = items.map(i => i.productId).filter(Boolean);
+      if (productIds.length > 0) {
+        const products = await Product.find({ _id: { $in: productIds } }).select('costing').lean();
+        const costMap = {};
+        for (const p of products) {
+          costMap[String(p._id)] = p.costing?.totalUnitCost ?? null;
+        }
+        let allHaveCost = true;
+        let sum = 0;
+        for (const item of items) {
+          const unitCost = costMap[String(item.productId)] ?? null;
+          if (unitCost === null) { allHaveCost = false; break; }
+          sum += unitCost * (item.quantity || 1);
+        }
+        cogsTotal = allHaveCost ? sum : null;
+      }
+
       const subtotal = meta.subtotal ? parseFloat(meta.subtotal) : items.reduce((s, i) => s + i.price * i.quantity, 0);
       const discountCode = meta.discountCode || null;
       const discountAmount = meta.discountAmount ? parseFloat(meta.discountAmount) : (discountCode && cart ? (cart.discountAmount || 0) : 0);
@@ -318,6 +338,7 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
         shippingMethod: shipping.label,
         status: 'paid',
         browserSessionId: sessionId,
+        costs: { cogs: cogsTotal },
         attribution: {
           source:      meta.utm_source   || 'direct',
           medium:      meta.utm_medium   || 'none',
@@ -358,6 +379,23 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
       ]);
     } catch (err) {
       console.error('[checkoutV2 webhook] error:', err.message);
+    }
+  }
+
+  // Capture Stripe fee from the charge's balance_transaction
+  if (event.type === 'charge.succeeded') {
+    const charge = event.data.object;
+    try {
+      if (charge.balance_transaction) {
+        const bt = await stripe.balanceTransactions.retrieve(charge.balance_transaction);
+        const feeEur = bt.fee / 100; // fee is in cents
+        await Order.findOneAndUpdate(
+          { stripeChargeId: charge.id },
+          { $set: { 'costs.stripeFee': feeEur } }
+        );
+      }
+    } catch (err) {
+      console.error('[webhook charge.succeeded] fee capture error:', err.message);
     }
   }
 
