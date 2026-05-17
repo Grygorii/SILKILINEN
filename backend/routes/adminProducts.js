@@ -57,6 +57,36 @@ function autoGenerateSEO(product) {
     .catch(err => console.error(`[Auto-SEO] Failed for ${product._id}: ${err.message}`));
 }
 
+// ── Mass-assignment allowlist (M5) ─────────────────────────────────────────────
+// Fields an authenticated admin may set on a product via create/update.
+// `images` and `productVideo` are managed by dedicated endpoints, not via body.
+// `lastUpdatedBy`, `_id`, timestamps, etc. are server-controlled.
+// If you add a new schema field that admins should be able to edit, add it here.
+const PRODUCT_ALLOWED_FIELDS = [
+  'name', 'price', 'compareAtPrice', 'description', 'category',
+  'colours', 'materialComposition', 'variants', 'totalStock', 'inStock',
+  'status', 'keywords', 'metaTitle', 'metaDescription', 'slug',
+  'altTextTemplate', 'origin',
+];
+
+function pickProductFields(body) {
+  const out = {};
+  const stripped = [];
+  for (const k of Object.keys(body || {})) {
+    if (PRODUCT_ALLOWED_FIELDS.includes(k)) {
+      out[k] = body[k];
+    } else if (k !== 'images' && k !== 'productVideo' && k !== 'createEmptyDraft') {
+      // Don't log "images" or "productVideo" — those are intentionally managed elsewhere.
+      // Don't log "createEmptyDraft" either — it's a control flag, not a field.
+      stripped.push(k);
+    }
+  }
+  if (stripped.length) {
+    console.warn('[adminProducts] stripped non-allowlisted fields from request body:', stripped);
+  }
+  return out;
+}
+
 // ── Validation helpers ─────────────────────────────────────────────────────────
 
 // Fields that must be present on every save (draft included).
@@ -196,13 +226,14 @@ router.post('/', async function(req, res) {
       return res.status(201).json(product);
     }
 
-    const saveErrors = validateForSave(req.body);
+    const safeFields = pickProductFields(req.body);
+    const saveErrors = validateForSave(safeFields);
     if (saveErrors.length) {
       return res.status(400).json({ error: 'ValidationError', fields: saveErrors });
     }
     const product = await Product.create({
-      ...req.body,
-      status: req.body.status || 'draft',
+      ...safeFields,
+      status: safeFields.status || 'draft',
       lastUpdatedBy: req.user.userId,
     });
     autoGenerateSEO(product);
@@ -215,9 +246,9 @@ router.post('/', async function(req, res) {
 // PUT /api/admin/products/:id — full update (variants included, images managed separately)
 router.put('/:id', async function(req, res) {
   try {
-    const { images: _images, ...rest } = req.body;
+    const safeFields = pickProductFields(req.body);
 
-    const saveErrors = validateForSave(rest);
+    const saveErrors = validateForSave(safeFields);
     if (saveErrors.length) {
       return res.status(400).json({ error: 'ValidationError', fields: saveErrors });
     }
@@ -226,7 +257,7 @@ router.put('/:id', async function(req, res) {
     if (!product) return res.status(404).json({ error: 'Not found' });
 
     const oldStatus = product.status;
-    Object.assign(product, rest, { lastUpdatedBy: req.user.userId });
+    Object.assign(product, safeFields, { lastUpdatedBy: req.user.userId });
 
     if (product.status === 'active' && oldStatus !== 'active') {
       const publishErrors = validateForPublish(product);
