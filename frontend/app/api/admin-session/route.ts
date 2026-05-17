@@ -25,11 +25,27 @@ export async function GET(request: NextRequest) {
 // Railway's Set-Cookie applies to the Railway domain only, so
 // Next.js middleware and Server Components can't see it. We receive the
 // JWT from the login response body and reissue it as a first-party cookie.
+// We verify the token with Railway before trusting it.
 export async function POST(request: NextRequest) {
   const { token } = await request.json();
   if (!token || typeof token !== 'string') {
     return NextResponse.json({ error: 'Missing token' }, { status: 400 });
   }
+
+  // Verify the token is real and belongs to an admin before issuing a session cookie.
+  // Prevents anyone from POSTing arbitrary strings and getting them set as the cookie.
+  try {
+    const verifyRes = await fetch(`${API}/api/auth/me`, {
+      headers: { Cookie: `token=${token}` },
+      cache: 'no-store',
+    });
+    if (!verifyRes.ok) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+  } catch {
+    return NextResponse.json({ error: 'Verification failed' }, { status: 503 });
+  }
+
   const response = NextResponse.json({ ok: true });
   response.cookies.set('token', token, {
     httpOnly: true,
