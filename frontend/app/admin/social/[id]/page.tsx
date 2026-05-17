@@ -542,7 +542,7 @@ export default function SocialComposerPage() {
           </div>
 
           {/* Image spec info */}
-          {activePlatform?.imageSpecs?.length > 0 && (
+          {(activePlatform?.imageSpecs?.length ?? 0) > 0 && (
             <div style={{ marginTop: 14 }}>
               <p style={{ fontSize: 10, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6 }}>Image specs</p>
               {activePlatform.imageSpecs.map((spec, i) => (
