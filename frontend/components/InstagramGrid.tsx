@@ -2,6 +2,19 @@ import styles from './InstagramGrid.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
+async function getInstagramUrl(): Promise<string> {
+  try {
+    const res = await fetch(`${API}/api/social/platforms`, {
+      next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(3000),
+    } as RequestInit);
+    if (!res.ok) return 'https://instagram.com/silkilinen';
+    const platforms: { key: string; url: string }[] = await res.json();
+    const ig = platforms.find(p => p.key === 'instagram');
+    return ig?.url || 'https://instagram.com/silkilinen';
+  } catch { return 'https://instagram.com/silkilinen'; }
+}
+
 type IgPost = {
   id: string;
   media_url: string;
@@ -23,7 +36,7 @@ async function getPosts(): Promise<IgPost[]> {
 }
 
 export default async function InstagramGrid() {
-  const posts = await getPosts();
+  const [posts, instagramUrl] = await Promise.all([getPosts(), getInstagramUrl()]);
 
   // Silently hide the section if no posts
   if (posts.length === 0) return null;
@@ -63,7 +76,7 @@ export default async function InstagramGrid() {
       </div>
       <div className={styles.footer}>
         <a
-          href="https://instagram.com/silkilinen"
+          href={instagramUrl}
           target="_blank"
           rel="noopener noreferrer"
           className={styles.followBtn}

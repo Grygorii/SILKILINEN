@@ -44,6 +44,8 @@ const journalRouter = require('./routes/journal');
 const adminJournalRouter = require('./routes/adminJournal');
 const instagramRouter = require('./routes/instagram');
 const adminFinanceRouter = require('./routes/adminFinance');
+const adminSocialRouter = require('./routes/adminSocial');
+const socialRouter = require('./routes/social');
 
 const app = express();
 
@@ -107,6 +109,8 @@ app.use('/api/journal', journalRouter);
 app.use('/api/admin/journal', adminJournalRouter);
 app.use('/api/instagram', instagramRouter);
 app.use('/api/admin/finance', adminFinanceRouter);
+app.use('/api/admin/social', adminSocialRouter);
+app.use('/api/social', socialRouter);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(function() { console.log('Connected to MongoDB'); })

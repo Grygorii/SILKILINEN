@@ -98,6 +98,18 @@
   color: #6a6660;
 }
 
+.socialIcon {
+  color: #9a9690;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.2s ease;
+  text-decoration: none;
+}
+
+.socialIcon:hover {
+  color: var(--warm-white);
+}
+
 @media (max-width: 768px) {
   .trust {
     gap: 20px;

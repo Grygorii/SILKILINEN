@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 17 May 2026 (Finance tab v1 + order total bug fix).
+Last updated: 17 May 2026 (Finance tab v1 + order total bug fix + Social Composer v1 + Cart drawer polish).
 
 ---
 
@@ -47,7 +47,7 @@ Browse / product detail pages, cart with quantity adjustment and stock caps, wis
 
 ## Admin tooling shipped
 
-Mobile-first admin panel — sidebar on desktop, drawer + bottom-tabs on mobile. Eight sections: Dashboard, Products, Orders, Customers, Marketing, Content, Finance, Settings.
+Mobile-first admin panel — sidebar on desktop, drawer + bottom-tabs on mobile. Nine sections: Dashboard, Products, Orders, Customers, Marketing, Content, Journal, Social, Finance, Settings.
 
 **Finance tab at `/admin/finance`, `/admin/finance/expenses`, `/admin/finance/reports`** — full bookkeeping with auto-pulled Stripe revenue/fees/refunds, Marketing ad spend integration, COGS snapshotting from Product costing data, per-order profit calculation (revenue − Stripe fee − COGS − shipping cost − refunds), manual expense entry with category ledger, monthly P&L chart + table, margin analysis by product and acquisition source, anomaly flagging (orders without shipping cost, products without costing data, months with orders but zero expenses). Red/green honest reporting — no princess stories.
 
@@ -449,9 +449,90 @@ Other admin pages:
 
 ---
 
+## Shipped 17 May 2026 — Social Composer v1
+
+**Founder principle:** Every social post = +1 to possibility of an order. Adding a new platform should be one form-fill, not an engineering task.
+
+**Architecture:** Not an autoposter. Pure composition workspace + export + manual posting checklist. No OAuth, no cross-posting API calls.
+
+### Three layers
+
+**Layer 1 — Platform Registry (data-driven)**
+- `backend/models/SocialPlatform.js` (NEW) — MongoDB collection of platform definitions: key (unique slug), displayName, icon (key for PLATFORM_ICONS frontend map), brandColor, baseUrl, imageSpecs[] (aspectRatio, label, pixelWidth, pixelHeight, isDefault), captionMaxChars, captionRecommended, hashtagsAllowed/Recommended/Max, supportsVideo/Carousel/AltText, tips[], url (the account URL set by admin), isActive, sortOrder
+- `backend/scripts/seedSocialPlatforms.js` (NEW) — idempotent `$setOnInsert` seed for 7 platforms: Instagram, Pinterest, Facebook, TikTok, Threads, YouTube, Twitter/X — with full image specs, caption limits, hashtag guidance, brand colors, platform-specific tips
+- `backend/routes/adminSocial.js` (NEW) — admin CRUD at `/api/admin/social`:
+  - `GET/POST /platforms` — list + create
+  - `PUT /platforms/:key` — full update (caption limits, specs, tips, etc.)
+  - `PATCH /platforms/:key/url` — set the account connection URL
+- `backend/routes/social.js` (NEW) — public endpoint at `/api/social`:
+  - `GET /platforms` — returns only active platforms where `url` is non-empty; used by Footer and InstagramGrid
+
+**Layer 2 — Social Connections admin page**
+- `frontend/app/admin/social/connections/page.tsx` (NEW) — per-platform URL input forms with per-row Save, CONNECTED badge, Activate/Deactivate toggle, add-platform modal (key/displayName/icon/brandColor/sortOrder). Platform icons rendered via inline SVG map (PLATFORM_ICONS). Domain validation on save.
+
+**Layer 3 — Social Composer**
+- `backend/models/SocialPost.js` (NEW) — SocialPost schema: title, defaultCaption, defaultImages[] (url/altText/cloudinaryId), defaultHashtags[], primaryImageIndex, platformVariations[] (platformKey, enabled, customCaption, customImages, customHashtags, customPrimaryImageIndex), postedTo[] (platformKey, postedAt, postedBy, note), status (draft/ready/posted), postedAt, lastEditedBy
+- `backend/routes/adminSocial.js` (continued) — post endpoints:
+  - `GET/POST /posts`, `GET/PUT /posts/:id`, `POST /posts/:id/autosave`
+  - `PATCH /posts/:id/posted-to` — marks platform as posted/unposted; auto-sets status='posted' when all enabled platform variations are checked
+  - `POST /posts/:id/images` — multer upload → Cloudinary `silkilinen/social`; appends to `defaultImages`
+  - `DELETE /posts/:id/images/:index` — removes by index, destroys Cloudinary asset
+  - `DELETE /posts/:id` — deletes post + all Cloudinary images
+- `frontend/app/admin/social/page.tsx` (NEW) — index page: status-filtered grid of post cards (thumbnail, title, status badge, platform count, updated time), quick-create with optional title
+- `frontend/app/admin/social/[id]/page.tsx` (NEW) — full composer:
+  - Left panel: title input, image grid (upload/delete/main-indicator), default caption textarea, default hashtags input, per-platform tabs with custom caption/hashtag editors, tip banners per platform, character count warnings, posting checklist (checkboxes auto-check when all enabled platforms posted)
+  - Right panel: phone-style preview with platform header bar, primary image, caption + hashtags rendered together, image spec table
+  - Top bar: autosave indicator (2.5s debounce), status dropdown (draft/ready/posted), "Export & track" button, delete button
+  - Export & track modal: platform picker, caption copy-to-clipboard, Cloudinary-transformed image downloads per spec (c_fill,w_N,h_M URL transform), mark-as-posted button; checking all platforms auto-advances status to 'posted'
+
+### Wired into the rest of the site
+
+- `backend/server.js` — `/api/admin/social` + `/api/social` mounted
+- `frontend/components/AdminLayout.tsx` — Social entry added under Journal in PUBLISH section (Share2 icon from lucide-react)
+- `frontend/components/Footer.tsx` — now an async server component; fetches active platforms with URLs from `/api/social/platforms` (revalidate 3600s, 3s timeout fallback); renders social icon row above bottom bar using `.socialIcon` CSS class with hover effect; `FOOTER_ICONS` inline SVG map covers all 7 platform keys
+- `frontend/components/InstagramGrid.tsx` — "Follow on Instagram" button URL now fetched from platform registry (`getInstagramUrl()`) instead of hardcoded string; falls back to `https://instagram.com/silkilinen` if registry unavailable
+
+### One-time setup needed
+
+Run the seed script once to populate platform registry: `node backend/scripts/seedSocialPlatforms.js`
+Then go to `/admin/social/connections` and enter each platform URL.
+
+---
+
+## Shipped 17 May 2026 — Cart Drawer Polish
+
+Cart drawer was flagged by an outside observer as "cheap feeling" — breaking the brand promise the rest of the site makes. Full visual redesign, no backend changes.
+
+**Files modified:**
+- `frontend/components/CartPanel.tsx` — full rewrite
+- `frontend/components/CartPanel.module.css` — full rewrite
+
+**Changes:**
+- **Image proportions fixed** — thumbnail container changed from 64×64 square to 80×100px (4:5 portrait) on desktop, 64×80px on mobile. `object-fit: cover` on the `<img>`. No more squashed/stretched models.
+- **Typography hierarchy** — product name: Cormorant Garamond 17px, charcoal, 2-line clamp. Color/size: 13px muted. Price: 15px semi-bold, charcoal, `font-variant-numeric: tabular-nums` so prices align across items.
+- **Quantity stepper redesigned** — container border changed from `var(--border)` (light gray) to `var(--dark)` (charcoal) — assertive and deliberate. Stepper is 36px tall × inline-flex. Buttons have proper hover (cream fill) and disabled (0.4 opacity) states.
+- **Remove button** — now a proper button using Lucide `X` icon (13px stroke 1.5), min 44×44px touch target, positioned on the price row (price left, remove right) within the info column. Previously floated outside the item as a literal `✕` character.
+- **Item layout restructured** — `align-items: flex-start` so image and info column align from top. Info column: name → color/size → (price + remove) → stepper. Clean two-column grid per item.
+- **Header** — reduced to 22px, added gray item count "(2 items)" beside the heading. Close button uses Lucide `X` icon (was `✕` character). 1px bottom border separator.
+- **Free shipping progress** — thin 3px charcoal progress bar in the footer. Shows "€XX more for free shipping to Ireland" (€150 threshold). When met: quiet green "Free shipping to Ireland ✓" line.
+- **Sticky footer — always visible** — Subtotal row (gray, 13px) + Shipping "Calculated at checkout" row + **Total row** (17px semi-bold charcoal, border-top separator). The "Total" equals subtotal since shipping is unknown at cart stage — honest and standard.
+- **Checkout button** — 52px tall on desktop, 56px on mobile. Same charcoal/cream brand style, 0.85 hover opacity.
+- **Trust signal** — "Secure checkout · Stripe" with Lucide `Lock` icon (11px). Replaces bare "Secure checkout via Stripe" text.
+- **Empty state redesigned** — "Your cart is empty." (Cormorant 22px, serif) + italic subtitle "When you add silk, it'll live here until you check out." + "Shop the collection" ghost button. Generous 64px vertical padding.
+- **Promo code** — was not in cart drawer; confirmed correct. Promo codes belong exclusively at /checkout.
+- **Responsive** — 480px breakpoint reduces image to 64×80, padding to 20px, checkout button to 56px tall. 360px breakpoint sets panel to 100vw and shrinks image further.
+
+**Post-build notes:**
+- The "Total" row at cart stage shows the same value as Subtotal since no shipping calculation has run yet. This is intentional and honest — exact total is shown at /checkout once country and promo code are applied.
+- Touch targets: stepper buttons are 36px visual but the stepper container's inline nature means they're tappable at their full size; remove button is 44×44px min. All primary actions meet WCAG 2.1 touch target minimums.
+- The cart drawer is the same CartPanel component used for the slide-out drawer. The /checkout page has its own order summary — changes here did not touch checkout.
+
+---
+
 ## Active scoped work, not yet built
 
 - **Finance tab phase 2** — receipt upload UI (backend done), cash runway projection (needs 2+ months data), dashboard "Finance action items" band, quarterly tax-prep export, VAT threshold tracking
+- **Social Composer phase 2** — per-platform custom image override (upload per-variation image), scheduled posting reminders, Instagram grid preview (shows last N posts alongside composer)
 - **THUMBNAIL slot auto-derive** — thumbnail generation still exists in AI workflow tiers but no named slot card shows for it; images with `slot: thumbnail` appear in Additional images. Future: auto-derive from HERO via Cloudinary transformation if needed.
 - **Collections header nav** — dynamic nav rebuild around collections (static category nav still in place)
 - **Collections heroImage upload** — admin edit page shows heroImage URL fields; Cloudinary upload widget not yet wired for collections
