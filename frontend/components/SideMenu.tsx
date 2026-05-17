@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { X, Heart, User } from 'lucide-react';
 import { useCustomer } from '@/context/CustomerContext';
@@ -23,12 +23,16 @@ export default function SideMenu({ isOpen, onClose }: Props) {
   const panelRef = useRef<HTMLElement>(null);
   const prevFocusRef = useRef<HTMLElement | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [catsLoading, setCatsLoading] = useState(true);
 
   useEffect(() => {
     fetch(`${API}/api/categories`)
       .then(r => r.ok ? r.json() : [])
-      .then((data: Category[]) => setCategories(data.filter(c => c.count > 0)))
-      .catch(() => {});
+      .then((data: Category[]) => {
+        setCategories(data.filter(c => c.count > 0));
+        setCatsLoading(false);
+      })
+      .catch(() => setCatsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -88,12 +92,13 @@ export default function SideMenu({ isOpen, onClose }: Props) {
     return () => document.removeEventListener('keydown', trap);
   }, [isOpen]);
 
-  function handleSearch(e: { preventDefault(): void }) {
+  function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     const q = searchRef.current?.value.trim();
     if (q) {
-      window.location.href = `/shop?q=${encodeURIComponent(q)}`;
       onClose();
+      // Use a brief delay so the panel closes before navigation
+      setTimeout(() => { window.location.href = `/shop?q=${encodeURIComponent(q)}`; }, 50);
     }
   }
 
@@ -137,16 +142,24 @@ export default function SideMenu({ isOpen, onClose }: Props) {
             <span className={styles.navArrow}>→</span>
           </Link>
 
-          {categories.map(cat => (
-            <Link
-              key={cat.slug}
-              href={`/shop?category=${cat.slug}`}
-              className={styles.navLink}
-              onClick={onClose}
-            >
-              <span>{cat.label.toUpperCase()}</span>
-            </Link>
-          ))}
+          {catsLoading ? (
+            <>
+              <span className={styles.navLinkSkeleton} aria-hidden="true" />
+              <span className={styles.navLinkSkeleton} aria-hidden="true" />
+              <span className={styles.navLinkSkeleton} aria-hidden="true" />
+            </>
+          ) : (
+            categories.map(cat => (
+              <Link
+                key={cat.slug}
+                href={`/shop?category=${cat.slug}`}
+                className={styles.navLink}
+                onClick={onClose}
+              >
+                <span>{cat.label.toUpperCase()}</span>
+              </Link>
+            ))
+          )}
 
           <Link href="/about" className={styles.navLink} onClick={onClose}>
             <span>ABOUT</span>

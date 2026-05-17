@@ -123,9 +123,17 @@ export default function ProductGrid({
       </div>
 
       {products.length === 0 ? (
-        <p className={styles.emptyState}>
-          No products in this category yet — check back soon.
-        </p>
+        <div className={styles.emptyState}>
+          <p className={styles.emptyStateText}>
+            No products in this category yet — check back soon.
+          </p>
+          <button
+            className={styles.emptyStateBtn}
+            onClick={() => selectCategory('all')}
+          >
+            Browse all products
+          </button>
+        </div>
       ) : (
         <div className={styles.grid}>
           {products.map(product => {

@@ -5,6 +5,18 @@
   margin-bottom: 48px;
 }
 
+@media (max-width: 768px) {
+  .filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    margin-bottom: 36px;
+  }
+  .filters::-webkit-scrollbar { display: none; }
+}
+
 .filterBtn {
   background: none;
   border: none;
@@ -17,6 +29,12 @@
   color: var(--muted, #8a8680);
   transition: color 0.2s ease;
   margin-right: 16px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  /* Minimum touch target height */
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .filterBtn:hover { color: var(--dark, #1a1916); }
@@ -27,10 +45,36 @@
 }
 
 .emptyState {
+  padding: 64px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.emptyStateText {
   font-size: 14px;
   color: var(--muted, #8a8680);
   font-style: italic;
-  padding: 24px 0;
+}
+
+.emptyStateBtn {
+  background: none;
+  border: 1px solid var(--dark, #1a1916);
+  padding: 13px 28px;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: var(--dark, #1a1916);
+  min-height: 44px;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.emptyStateBtn:hover {
+  background: var(--dark, #1a1916);
+  color: var(--warm-white, #faf8f4);
 }
 
 /* ── Grid ─────────────────────────────────────────── */
@@ -83,15 +127,15 @@
 
 .heartBtn {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: 6px;
+  right: 6px;
   z-index: 2;
   background: none;
   border: none;
   cursor: pointer;
   color: var(--dark, #1a1916);
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   display: flex;
   align-items: center;
@@ -185,8 +229,8 @@
 }
 
 .plusBtn {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   background: none;
   border: 1px solid var(--dark, #1a1916);
   color: var(--dark, #1a1916);
@@ -199,6 +243,13 @@
   line-height: 1;
   transition: background 0.2s ease, color 0.2s ease;
   flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .plusBtn {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 .plusBtn:hover { background: var(--dark, #1a1916); color: var(--warm-white, #faf8f4); }

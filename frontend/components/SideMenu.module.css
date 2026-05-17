@@ -126,6 +126,23 @@
 
 .navLink:first-child { border-top: 1px solid var(--border, #e0ddd7); }
 
+/* Loading skeleton for categories */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.navLinkSkeleton {
+  display: block;
+  height: 44px;
+  border-bottom: 1px solid var(--border, #e0ddd7);
+  background: linear-gradient(90deg, var(--cream, #f5f2ec) 25%, #ece9e2 50%, var(--cream, #f5f2ec) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+.navLinkSkeleton:first-of-type { border-top: 1px solid var(--border, #e0ddd7); }
+
 .navLink:hover { opacity: 0.55; }
 
 .navLinkFeatured {

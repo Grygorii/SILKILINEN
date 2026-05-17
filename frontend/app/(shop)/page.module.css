@@ -1,5 +1,8 @@
 .hero {
   height: 100vh;
+  /* Warm editorial fallback when no CMS image is set */
+  background-color: #e8e2d8;
+  background-image: linear-gradient(160deg, #ede7db 0%, #d9d0c3 100%);
   background-size: cover;
   background-position: center;
   display: flex;

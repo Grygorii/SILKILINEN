@@ -214,6 +214,42 @@
 
 .searchInput::-webkit-search-cancel-button { display: none; }
 
+/* ── Desktop navigation links ────────────────────── */
+
+.desktopNav {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .desktopNav {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-left: 16px;
+  }
+}
+
+.desktopNavLink {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted, #8a8680);
+  text-decoration: none;
+  padding: 4px 0;
+  border-bottom: 1px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.desktopNavLink:hover {
+  color: var(--dark, #1a1916);
+}
+
+.desktopNavLinkActive {
+  color: var(--dark, #1a1916);
+  border-bottom-color: var(--dark, #1a1916);
+}
+
 /* ── Mobile ───────────────────────────────────────── */
 
 @media (max-width: 767px) {

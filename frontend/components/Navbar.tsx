@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { Search, User, ShoppingBag, Menu, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -9,6 +10,15 @@ import { useCustomer } from '@/context/CustomerContext';
 import CartPanel from './CartPanel';
 import SideMenu from './SideMenu';
 import styles from './Navbar.module.css';
+
+const DESKTOP_NAV = [
+  { label: 'Shop', href: '/shop' },
+  { label: 'Robes', href: '/shop?category=robes' },
+  { label: 'Pyjamas', href: '/shop?category=pyjamas' },
+  { label: 'Sleepwear', href: '/shop?category=sleep-dresses' },
+  { label: 'Journal', href: '/journal' },
+  { label: 'About', href: '/about' },
+];
 
 export default function Navbar() {
   const { cartCount } = useCart();
@@ -21,6 +31,8 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const handler = () => setCartOpen(true);
@@ -54,7 +66,7 @@ export default function Navbar() {
     e.preventDefault();
     const q = searchRef.current?.value.trim();
     if (q) {
-      window.location.href = `/shop?q=${encodeURIComponent(q)}`;
+      router.push(`/shop?q=${encodeURIComponent(q)}`);
       setSearchOpen(false);
     }
   }
@@ -84,11 +96,25 @@ export default function Navbar() {
           </div>
         ) : (
           <>
-            {/* Left — hamburger */}
+            {/* Left — hamburger + desktop nav */}
             <div className={styles.navLeft}>
               <button className={styles.iconBtn} onClick={() => setMenuOpen(true)} aria-label="Open menu">
                 <Menu size={20} strokeWidth={1.5} />
               </button>
+              <nav className={styles.desktopNav} aria-label="Main navigation">
+                {DESKTOP_NAV.map(({ label, href }) => {
+                  const active = pathname === href || (href !== '/shop' && pathname.startsWith(href.split('?')[0]));
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={`${styles.desktopNavLink} ${active ? styles.desktopNavLinkActive : ''}`}
+                    >
+                      {label}
+                    </Link>
+                  );
+                })}
+              </nav>
             </div>
 
             {/* Centre — logo */}

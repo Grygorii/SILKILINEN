@@ -18,7 +18,9 @@
       "Bash(git rm *)",
       "Bash(mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/admin/customers/[id]\")",
       "Bash(mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/admin/journal\" \"d:/Programming/Course_!/Silkilinen/frontend/app/admin/journal/[id]\" \"d:/Programming/Course_!/Silkilinen/frontend/app/journal\" \"d:/Programming/Course_!/Silkilinen/frontend/app/journal/[slug]\")",
-      "Bash(mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/admin/social\" && mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/admin/social/connections\" && mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/admin/social/[id]\")"
+      "Bash(mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/admin/social\" && mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/admin/social/connections\" && mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/admin/social/[id]\")",
+      "Bash(Get-ChildItem -Path \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\frontend\\\\app\\\\\\(shop\\)\" -Name)",
+      "Bash(Head -20)"
     ],
     "additionalDirectories": [
       "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\admin\\collections",
