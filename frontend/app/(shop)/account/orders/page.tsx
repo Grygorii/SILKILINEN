@@ -50,8 +50,8 @@ export default function OrdersPage() {
 
       {!loading && orders.length === 0 && (
         <div className={styles.emptyState}>
-          <p>No orders yet.</p>
-          <a href="/shop">Browse the collection →</a>
+          <p>Nothing to show yet.</p>
+          <a href="/shop">Explore the collection</a>
         </div>
       )}
 

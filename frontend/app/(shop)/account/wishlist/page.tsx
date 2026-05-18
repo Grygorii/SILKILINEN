@@ -25,8 +25,8 @@ export default function WishlistPage() {
 
       {!loading && items.length === 0 && (
         <div className={styles.emptyState}>
-          <p>Your wishlist is empty.</p>
-          <a href="/shop">Browse the collection</a>
+          <p>Nothing saved yet.</p>
+          <a href="/shop">Explore the collection</a>
         </div>
       )}
 
@@ -42,7 +42,7 @@ export default function WishlistPage() {
                 <p className={styles.wishPrice}>€{Number(p.price).toFixed(2)}</p>
               </div>
               <div className={styles.wishActions}>
-                <button className={styles.wishBtn} onClick={() => moveToCart(p)}>Add to cart</button>
+                <button className={styles.wishBtn} onClick={() => moveToCart(p)}>Move to bag</button>
                 <button className={`${styles.wishBtn} ${styles.wishBtnRemove}`} onClick={() => toggle(p._id)}>Remove</button>
               </div>
             </div>

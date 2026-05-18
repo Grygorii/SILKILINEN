@@ -45,10 +45,10 @@ export default function ProductOptions({ colours, sizes, productName, productId,
     ctaLabel = 'ADDED TO BAG ✓';
     ctaDisabled = false;
   } else if (needsColour) {
-    ctaLabel = 'PLEASE SELECT A COLOUR';
+    ctaLabel = 'Choose a colour';
     ctaDisabled = true;
   } else if (needsSize) {
-    ctaLabel = 'PLEASE SELECT A SIZE';
+    ctaLabel = 'Choose a size';
     ctaDisabled = true;
   } else {
     ctaLabel = 'ADD TO BAG';

@@ -21,9 +21,9 @@ export default function SuccessPage() {
             <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
         </div>
-        <h1>Order confirmed</h1>
-        <p>Thank you for your purchase. You will receive a confirmation email shortly.</p>
-        <a href="/shop" className={styles.btn}>Continue shopping</a>
+        <h1>Order confirmed.</h1>
+        <p>You'll receive a confirmation email shortly.</p>
+        <a href="/shop" className={styles.btn}>Back to the collection</a>
       </div>
     </main>
   );

@@ -24,6 +24,7 @@ export default function StorySection({ content = {} }: { content?: Content }) {
           />
         ) : (
           <div className={styles.imagePlaceholder}>
+            {/* HUMAN: replace placeholder pull quote — see UX-PUBLIC.md M6 */}
             <p className={styles.pullQuote}>&ldquo;Made with love,<br />worn with intention.&rdquo;</p>
           </div>
         )}

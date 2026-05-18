@@ -7,7 +7,7 @@ const DEFAULT_MESSAGES = [
   'Free shipping on orders over <strong>€150</strong> to Ireland 🇮🇪',
   'New to Silkilinen? Use code <strong>SILK10</strong> for 10% off',
   'All silk is <strong>OEKO-TEX certified</strong> — gentle on skin',
-  'Handmade in Ireland with love',
+  'Made by hand in Donegal — silk and linen, in small batches',
 ];
 
 const INTERVAL = 5000;

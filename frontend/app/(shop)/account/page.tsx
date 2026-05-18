@@ -24,6 +24,7 @@ export default function AccountPage() {
 
   return (
     <>
+      {/* HUMAN: review proposed copy in UX-PUBLIC.md H4 before changing */}
       {isWelcome && (
         <div className={styles.welcomeBanner}>
           Welcome to SILKILINEN, {customer.firstName || customer.email.split('@')[0]}! Your account is ready.

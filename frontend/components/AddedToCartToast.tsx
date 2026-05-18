@@ -36,13 +36,13 @@ export default function AddedToCartToast() {
       {toasts.map(t => (
         <div key={t.id} className={styles.toast}>
           <span className={styles.check}>{t.isCapped ? '!' : '✓'}</span>
-          <span className={styles.msg}>{t.isCapped ? t.message : 'Added to cart'}</span>
+          <span className={styles.msg}>{t.isCapped ? t.message : 'Added to your bag'}</span>
           {!t.isCapped && (
             <button
               className={styles.viewBtn}
               onClick={() => window.dispatchEvent(new Event('openCart'))}
             >
-              View cart
+              View bag
             </button>
           )}
         </div>

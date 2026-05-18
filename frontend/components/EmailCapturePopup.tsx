@@ -101,7 +101,7 @@ export default function EmailCapturePopup() {
           </div>
         ) : (
           <>
-            <p className={styles.eyebrow}>PURE SILK, PURE COMFORT</p>
+            <p className={styles.eyebrow}>Pure silk. Pure linen. Made in Donegal.</p>
             <h2 className={styles.title}>10% off your first order</h2>
             <p className={styles.body}>
               Sign up for slow style notes, new collections,<br />
@@ -119,7 +119,7 @@ export default function EmailCapturePopup() {
                 autoFocus
               />
               <button type="submit" className={styles.btn} disabled={status === 'loading'}>
-                {status === 'loading' ? 'Joining…' : 'GET 10% OFF'}
+                {status === 'loading' ? 'Joining…' : 'Get 10% off'}
               </button>
             </form>
             <p className={styles.small}>No spam. Unsubscribe anytime.</p>
