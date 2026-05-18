@@ -23,7 +23,8 @@
       "Bash(Head -20)",
       "Bash(npm run *)",
       "Bash(New-Item -ItemType Directory -Force \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\frontend\\\\components\\\\icons\")",
-      "Bash(mkdir -p \"d:/Programming/Course_\\\\!/Silkilinen/frontend/components/icons\" && echo \"done\")"
+      "Bash(mkdir -p \"d:/Programming/Course_\\\\!/Silkilinen/frontend/components/icons\" && echo \"done\")",
+      "Bash(xargs grep -l -i \"gemini\\\\|imagen\\\\|generateImage\")"
     ],
     "additionalDirectories": [
       "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\admin\\collections",

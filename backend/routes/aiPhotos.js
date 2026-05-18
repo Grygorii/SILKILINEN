@@ -8,6 +8,8 @@ const { cloudinary } = require('../utils/cloudinary');
 const { requireAuth } = require('../middleware/auth');
 const { getTier, getDefaultTierKey } = require('../utils/imageValidation');
 const SystemState = require('../models/SystemState');
+const falImage = require('../services/falImage');
+const { shouldUseFal } = require('../services/aiImageRouter');
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash-preview-image-generation';
@@ -364,7 +366,7 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
     }
 
     // Fetch product once for SEO data
-    const product = await Product.findById(session.productId, 'name slug colours').lean();
+    const product = await Product.findById(session.productId, 'name slug colours category').lean();
     const productSlug = toSlug(product?.slug || product?.name || String(session.productId));
     const modelSlug = toSlug(aiModel.name);
 
@@ -379,7 +381,25 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
 
       let result;
       try {
-        result = await generate(aiModel, session.inputPhotos, position, null, tierKey, { publicId, altText });
+        if (shouldUseFal(product?.category)) {
+          console.log(`[aiImageRouter] Category '${product?.category}' → fal.ai (Flux Kontext)`);
+          const prompt = buildPrompt(aiModel, position, null);
+          const falResult = await falImage.generateImage({ referenceImageUrl: aiModel.referenceImageUrl, prompt });
+          const cloudinaryOpts = {
+            folder: 'silkilinen/ai-generated',
+            resource_type: 'image',
+            ...(publicId ? { public_id: publicId, overwrite: true, use_filename: false } : {}),
+            ...(altText ? { context: { alt: altText, caption: altText } } : {}),
+          };
+          const uploaded = await withTimeout(
+            cloudinary.uploader.upload(falResult.imageUrl, cloudinaryOpts),
+            30_000, 'Cloudinary upload (fal)'
+          );
+          result = { url: uploaded.secure_url, prompt, resolution: { width: uploaded.width, height: uploaded.height } };
+        } else {
+          console.log(`[aiImageRouter] Category '${product?.category}' → Gemini`);
+          result = await generate(aiModel, session.inputPhotos, position, null, tierKey, { publicId, altText });
+        }
       } catch (err) {
         console.error(`[AI Photo] Generation failed for ${position}: ${err.message}`);
         const { errorType, userMessage } = classifyError(err);
@@ -460,7 +480,7 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
     const tier = getTier(tierKey);
 
     // Rebuild SEO opts for the overwrite case
-    const product = await Product.findById(session.productId, 'name slug colours').lean();
+    const product = await Product.findById(session.productId, 'name slug colours category').lean();
     const productSlug = toSlug(product?.slug || product?.name || String(session.productId));
     const modelSlug = toSlug(session.selectedModel.name);
     const publicId = `${productSlug}-${modelSlug}-${position}`;
@@ -468,7 +488,25 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
 
     let result;
     try {
-      result = await generate(session.selectedModel, session.inputPhotos, position, feedback || null, tierKey, { publicId, altText });
+      if (shouldUseFal(product?.category)) {
+        console.log(`[aiImageRouter] Category '${product?.category}' → fal.ai (Flux Kontext) [iterate]`);
+        const prompt = buildPrompt(session.selectedModel, position, feedback || null);
+        const falResult = await falImage.generateImage({ referenceImageUrl: session.selectedModel.referenceImageUrl, prompt });
+        const cloudinaryOpts = {
+          folder: 'silkilinen/ai-generated',
+          resource_type: 'image',
+          ...(publicId ? { public_id: publicId, overwrite: true, use_filename: false } : {}),
+          ...(altText ? { context: { alt: altText, caption: altText } } : {}),
+        };
+        const uploaded = await withTimeout(
+          cloudinary.uploader.upload(falResult.imageUrl, cloudinaryOpts),
+          30_000, 'Cloudinary upload (fal)'
+        );
+        result = { url: uploaded.secure_url, prompt, resolution: { width: uploaded.width, height: uploaded.height } };
+      } else {
+        console.log(`[aiImageRouter] Category '${product?.category}' → Gemini [iterate]`);
+        result = await generate(session.selectedModel, session.inputPhotos, position, feedback || null, tierKey, { publicId, altText });
+      }
     } catch (err) {
       const { errorType, userMessage } = classifyError(err);
       return res.status(422).json({ error: `Generation failed: ${err.message}`, errorType, userMessage, ...costResponse(session) });
