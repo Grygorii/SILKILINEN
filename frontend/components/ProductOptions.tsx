@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import DropAHint from './DropAHint';
+import { Gift } from '@/components/icons';
 import styles from './ProductOptions.module.css';
 
 type Props = {
@@ -150,7 +151,7 @@ export default function ProductOptions({ colours, sizes, productName, productId,
 
       {/* Drop a Hint */}
       <button className={styles.hintBtn} onClick={() => setHintOpen(true)}>
-        🎁&nbsp; DROP A HINT
+        <Gift size={16} />&nbsp; DROP A HINT
       </button>
 
       {hintOpen && (
