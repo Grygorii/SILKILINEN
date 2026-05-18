@@ -49,8 +49,10 @@ async function generateImage({ modelImageUrl, productImageUrl, prompt, outputSiz
 
   const fluxPrompt =
     `Show the woman from the first image wearing the garment from the second image. ` +
-    `Preserve her face, hair, body proportions, and pose exactly. ` +
+    `Preserve her face, hair, body proportions, and pose exactly from the first image. ` +
     `Preserve the garment's color, fabric texture, cut, stitching detail, and design elements exactly from the second image. ` +
+    `Do NOT include any mannequin, dress form, torso form, or display stand in the output. ` +
+    `Only show the woman wearing the garment. The garment should appear naturally on her body. ` +
     `${prompt}. ` +
     `Professional editorial fashion photography, soft natural studio light, sharp focus on fabric, high detail.`;
 
