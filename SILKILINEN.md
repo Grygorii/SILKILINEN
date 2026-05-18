@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 17 May 2026 (Finance tab v1 + order total bug fix + Social Composer v1 + Cart drawer polish).
+Last updated: 18 May 2026 (Security audit findings + Frontend UX fixes).
 
 ---
 
@@ -526,6 +526,140 @@ Cart drawer was flagged by an outside observer as "cheap feeling" — breaking t
 - The "Total" row at cart stage shows the same value as Subtotal since no shipping calculation has run yet. This is intentional and honest — exact total is shown at /checkout once country and promo code are applied.
 - Touch targets: stepper buttons are 36px visual but the stepper container's inline nature means they're tappable at their full size; remove button is 44×44px min. All primary actions meet WCAG 2.1 touch target minimums.
 - The cart drawer is the same CartPanel component used for the slide-out drawer. The /checkout page has its own order summary — changes here did not touch checkout.
+
+---
+
+---
+
+## Shipped 18 May 2026 — Frontend UX Fixes
+
+Full React/UX review pass. Issues found by an AI senior-engineer review prompt.
+
+**Files modified:**
+- `frontend/components/Navbar.tsx`
+- `frontend/components/Navbar.module.css`
+- `frontend/components/ProductGrid.tsx`
+- `frontend/components/ProductGrid.module.css`
+- `frontend/components/SideMenu.tsx`
+- `frontend/components/SideMenu.module.css`
+- `frontend/app/(shop)/page.module.css`
+
+**Changes:**
+
+**1 — Desktop navigation links added (highest UX impact)**
+The navbar previously showed only a hamburger on every screen size — all category navigation was hidden behind a drawer on desktop. On screens ≥1024px, key nav links now appear directly in the left column: Shop · Robes · Pyjamas · Sleepwear · Journal · About. Active link gets an underline via `usePathname`. Hamburger stays for the full SideMenu drawer. `DESKTOP_NAV` constant at top of `Navbar.tsx` is the single place to add/remove entries.
+
+**2 — Touch targets fixed (mobile critical)**
+- `heartBtn` (wishlist): 36×36px → 44×44px; repositioned from `top: 14px / right: 14px` to `top: 6px / right: 6px` to preserve visual placement.
+- `plusBtn` (add to cart): remains 36px on desktop, expanded to 44×44px on mobile via `@media (max-width: 768px)`.
+- `filterBtn` (category filters): added `min-height: 44px` + `inline-flex` alignment for touch compliance.
+
+**3 — Filter bar horizontal scroll on mobile**
+At ≤768px: `flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none`. Previously nine categories + "All" wrapped to 3–4 rows and buried the product grid.
+
+**4 — SideMenu category skeleton loading state**
+Three shimmer skeleton rows (CSS `@keyframes shimmer` animation) replace the empty gap while `/api/categories` resolves. `catsLoading` boolean state, reset false on success or catch. Skeleton uses the same border-bottom styling as real nav links for visual continuity.
+
+**5 — Hero section fallback background**
+Added `background-color: #e8e2d8` + `background-image: linear-gradient(160deg, #ede7db, #d9d0c3)` as CSS fallback on `.hero`. When the CMS `homepage_hero_image` is unset, hero now renders a warm parchment gradient instead of white-on-white illegibility.
+
+**6 — Empty product state improvement**
+`ProductGrid` empty state now includes a "Browse all products" ghost button (charcoal border, 44px tall, uppercase Jost, hover fills dark) that calls `selectCategory('all')`. Previously only showed italic muted text.
+
+**7 — Search uses router.push**
+`Navbar.tsx` search now uses `router.push()` from `next/navigation` instead of `window.location.href`. SideMenu search retains `window.location.href` (closes panel first with 50ms delay, then navigates) because `router.push` inside a closing drawer causes a race condition.
+
+**Vercel TS fix (same session):**
+`frontend/components/Footer.tsx` — `FOOTER_ICONS` type changed from `JSX.Element` (global namespace unavailable in this Next.js version) to `ReactElement` from `'react'`. Import added: `import type { ReactElement } from 'react'`.
+
+---
+
+## Security Audit — 18 May 2026
+
+Full static-analysis security audit of the backend and frontend. No live exploitation testing was performed — all findings are from reading code. Findings are graded HIGH / MEDIUM / LOW.
+
+### HIGH — Fix immediately
+
+**H1 — Stored XSS via `dangerouslySetInnerHTML` on journal article body**
+- File: `frontend/app/journal/[slug]/page.tsx:84`
+- `article.body` is rendered via `dangerouslySetInnerHTML={{ __html: article.body }}` with no sanitization. If the admin account is compromised, an attacker can store arbitrary JavaScript in any article body — that script then runs in the `silkilinen.com` origin for every visitor.
+- Fix: install `isomorphic-dompurify`; wrap with `DOMPurify.sanitize(article.body)` before passing to `dangerouslySetInnerHTML`.
+- Status: **NOT YET FIXED** — pending.
+
+**H2 — Google OAuth audience check silently skipped when `GOOGLE_CLIENT_ID` env var is unset**
+- File: `backend/routes/customers.js` (Google auth handler)
+- `if (clientId && payload.aud !== clientId)` — if `GOOGLE_CLIENT_ID` is not set, the audience check is silently skipped. Any valid Google-issued token from any app is accepted.
+- Fix: fail closed — `if (!clientId) return res.status(503).json({ error: 'Google auth not configured' });` before the `aud` check.
+- **Manual check needed:** confirm `GOOGLE_CLIENT_ID` is set in Railway. If absent, this is exploitable in production right now.
+- Status: **NOT YET FIXED** — pending.
+
+**H3 — HTML injection in Drop a Hint email via unescaped user input**
+- File: `backend/services/email.js:375`
+- `message`, `recipientName`, `senderName` are interpolated directly into an HTML email template string without escaping. An attacker can inject arbitrary HTML into the recipient's email (phishing links, tracking pixels).
+- Fix: add an `esc(s)` helper function and apply to all user-supplied values before interpolation.
+- Status: **NOT YET FIXED** — pending.
+
+### MEDIUM
+
+**M1 — `jwt.verify()` without explicit `algorithms` option**
+- File: `backend/middleware/auth.js:7`
+- No `{ algorithms: ['HS256'] }` option. In jsonwebtoken < 9.0.0 this allows algorithm confusion attacks.
+- Fix: `jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] })`
+- Manual check needed: confirm jsonwebtoken version ≥ 9.0.0 in `backend/package.json`. If ≥9, library defaults mitigate this but explicit is still best practice.
+
+**M2 — Admin JWT returned in response body**
+- File: `backend/routes/auth.js` (login response)
+- `res.json({ success: true, token })` — if frontend stores in `localStorage`, any XSS (including H1) can exfiltrate admin credentials.
+- Manual check needed: verify how the admin frontend stores and reads this token.
+
+**M3 — Frontend admin middleware checks cookie presence only, not JWT validity**
+- File: `frontend/middleware.ts`
+- `request.cookies.get('token')` truthy check only. Any non-empty cookie named `token` bypasses the redirect to `/admin/login`. Actual API calls are still protected by `requireAuth`.
+- Fix: verify JWT format at minimum (`/^[\w-]+\.[\w-]+\.[\w-]+$/.test(token)`); ideally use `jose` for edge-compatible signature verification.
+
+**M4 — No HTTP security headers on the frontend**
+- File: `frontend/next.config.ts`
+- No `headers()` export. Missing: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`. CSP requires iterative rollout due to inline styles.
+- Fix: add `async headers()` to `next.config.ts` with the above headers on `source: '/(.*)'`.
+- Manual check needed: confirm whether Vercel sets `Strict-Transport-Security` automatically (check response headers in production before adding HSTS manually).
+
+**M5 — Mass assignment in admin products create and update**
+- File: `backend/routes/adminProducts.js` — create (`...req.body` spread), update (`Object.assign(product, rest)` where `rest = req.body` minus images)
+- Admin-only, so exploitable only post-admin-compromise. But combined with XSS (H1) → admin session → arbitrary field write.
+- Fix: explicit field allowlist on both create and update, matching the pattern already used in `campaigns.js` update route.
+
+**M6 — Internal error messages exposed to clients**
+- Files: `backend/routes/checkoutV2.js:173`, `backend/routes/aiPhotos.js:319`, `backend/routes/campaigns.js:109`, and most other route catch blocks
+- `res.status(500).json({ error: err.message })` exposes MongoDB error strings, Stripe error internals, and strings like `'GEMINI_API_KEY is not set'`.
+- Fix: `console.error('[route] error:', err); res.status(500).json({ error: 'Internal server error' })` in all generic catch blocks.
+
+### LOW
+
+**L1 — Google OAuth missing `iss` (issuer) validation**
+- File: `backend/routes/customers.js` (Google auth handler)
+- No check for `payload.iss === 'accounts.google.com'`. Theoretical in practice (Google's tokeninfo server only accepts valid Google tokens) but defense-in-depth recommends explicit validation.
+
+**L2 — Geolocation lookup over HTTP**
+- File: `backend/routes/track.js:24`
+- `fetch('http://ip-api.com/json/...')` — HTTP only; MITM could inject false geo data into analytics. No credentials exposed.
+
+**L3 — Magic link verify endpoint has no rate limiter**
+- File: `backend/routes/customers.js` — `POST /verify-magic-link`
+- Token entropy is 256-bit; brute force is infeasible. Single-use + 15-minute expiry limits replay. Low priority.
+- Fix: add `publicWriteRateLimit` to the route for defense-in-depth (one-line change).
+
+### Needs manual check (cannot verify from static analysis)
+
+1. **jsonwebtoken version** — `grep '"jsonwebtoken"' backend/package.json` — if < 9.0.0, M1 is actively exploitable.
+2. **Admin token storage** — check `frontend/context/` or wherever the admin login token is consumed. If `localStorage`, M2 + H1 together allow full admin takeover via a single XSS hit.
+3. **`GOOGLE_CLIENT_ID` in Railway** — if unset, H2 is actively exploitable right now.
+4. **Vercel HSTS** — `curl -I https://silkilinen.com` — check if `Strict-Transport-Security` header is already set by Vercel before adding it manually.
+5. **`unsubscribeToken` generation** — read `backend/models/Newsletter.js` to confirm token is `crypto.randomBytes()`-based. If weak, `GET /api/newsletter/unsubscribe/:token` can be enumerated to mass-unsubscribe all subscribers.
+6. **Drop a Hint call site** — find the route calling `sendDropAHint()` and verify whether `message`, `recipientName`, `senderName` have any input validation before reaching `services/email.js`. If none, H3 is live.
+
+### Priority order for remediation
+
+H2 (check env var today, zero-code fix) → H1 (DOMPurify install + one-line wrap) → H3 (escape helper in email.js) → M4 (security headers, 30-minute job) → M1 (add `algorithms` option, trivial) → M6 (generic 500 responses across routes) → M5 (product allowlist) → M3 (middleware JWT check) → L1–L3.
 
 ---
 
