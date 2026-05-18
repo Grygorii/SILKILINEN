@@ -7,9 +7,6 @@ function ensureConfigured() {
   fal.config({ credentials: process.env.FAL_KEY });
 }
 
-const FLUX_PREAMBLE = (prompt) =>
-  `Keep the woman's identity, hair, body, pose, and background exactly the same. Replace any existing clothing with: ${prompt}. The garment must match the described product precisely in colour, fabric texture, cut, and detail. Professional editorial fashion photography, soft natural studio light, high detail, sharp focus on fabric.`;
-
 // aspect_ratio: Flux Kontext accepts '16:9', '9:16', '4:3', '3:4', '1:1', '21:9'
 function resolveAspectRatio(outputSize) {
   if (!outputSize) return '3:4';
@@ -22,30 +19,49 @@ function resolveAspectRatio(outputSize) {
 }
 
 /**
- * Generate an image via fal.ai Flux Kontext Pro.
+ * Generate a product photo using fal.ai Flux Kontext [max] multi-image.
+ *
+ * image_urls order:
+ *   [0] modelImageUrl   — AI model identity photo (the person/pose to preserve)
+ *   [1] productImageUrl — actual product photo (the garment to apply)
+ *
  * @param {object} opts
- * @param {string}  opts.referenceImageUrl  - Cloudinary URL of the AI model reference photo
- * @param {string}  opts.prompt             - Garment description (ALWAYS_APPEND already included by caller via buildPrompt)
- * @param {object} [opts.outputSize]        - { width, height } for aspect ratio hint
- * @param {number} [opts.guidanceScale]     - Default 3.5
+ * @param {string}  opts.modelImageUrl   - Cloudinary URL of the AI model reference photo
+ * @param {string}  opts.productImageUrl - URL of the actual product (flat-lay or hero)
+ * @param {string}  opts.prompt          - Composed prompt (from buildPrompt in aiPhotos.js)
+ * @param {object} [opts.outputSize]     - { width, height } for aspect ratio hint
+ * @param {number} [opts.guidanceScale]  - Default 3.5
  * @returns {{ imageUrl: string, seed: number|null, cost: number, elapsedMs: number, provider: string }}
  */
-async function generateImage({ referenceImageUrl, prompt, outputSize, guidanceScale = 3.5 }) {
-  ensureConfigured();
-
-  if (!referenceImageUrl) {
-    throw new Error('referenceImageUrl is required for fal.ai Flux Kontext generation');
+async function generateImage({ modelImageUrl, productImageUrl, prompt, outputSize, guidanceScale = 3.5, referenceImageUrl }) {
+  if (referenceImageUrl !== undefined) {
+    throw new Error(
+      'falImage.generateImage: old signature detected (referenceImageUrl). ' +
+      'Update the caller to pass { modelImageUrl, productImageUrl, prompt } instead.'
+    );
   }
 
-  const fluxPrompt = FLUX_PREAMBLE(prompt);
+  ensureConfigured();
+
+  if (!modelImageUrl || !productImageUrl || !prompt) {
+    throw new Error('modelImageUrl, productImageUrl, and prompt are all required');
+  }
+
+  const fluxPrompt =
+    `Show the woman from the first image wearing the garment from the second image. ` +
+    `Preserve her face, hair, body proportions, and pose exactly. ` +
+    `Preserve the garment's color, fabric texture, cut, stitching detail, and design elements exactly from the second image. ` +
+    `${prompt}. ` +
+    `Professional editorial fashion photography, soft natural studio light, sharp focus on fabric, high detail.`;
+
   const aspect_ratio = resolveAspectRatio(outputSize);
 
-  console.log(`[fal.ai] START — aspect_ratio=${aspect_ratio}`);
+  console.log(`[fal.ai] START multi — aspect_ratio=${aspect_ratio}`);
   const t0 = Date.now();
 
-  const result = await fal.subscribe('fal-ai/flux-pro/kontext', {
+  const result = await fal.subscribe('fal-ai/flux-pro/kontext/max/multi', {
     input: {
-      image_url: referenceImageUrl,
+      image_urls: [modelImageUrl, productImageUrl],
       prompt: fluxPrompt,
       guidance_scale: guidanceScale,
       num_images: 1,
@@ -65,9 +81,9 @@ async function generateImage({ referenceImageUrl, prompt, outputSize, guidanceSc
   return {
     imageUrl,
     seed: result?.seed ?? null,
-    cost: 0.04,
+    cost: 0.08,
     elapsedMs,
-    provider: 'fal-flux-kontext-pro',
+    provider: 'fal-flux-kontext-max-multi',
   };
 }
 

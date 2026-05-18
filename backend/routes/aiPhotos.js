@@ -365,8 +365,8 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
       jobs = WORKFLOW_PRESETS.standard;
     }
 
-    // Fetch product once for SEO data
-    const product = await Product.findById(session.productId, 'name slug colours category').lean();
+    // Fetch product once for SEO data and fal.ai product image
+    const product = await Product.findById(session.productId, 'name slug colours category images').lean();
     const productSlug = toSlug(product?.slug || product?.name || String(session.productId));
     const modelSlug = toSlug(aiModel.name);
 
@@ -382,9 +382,18 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
       let result;
       try {
         if (shouldUseFal(product?.category)) {
-          console.log(`[aiImageRouter] Category '${product?.category}' → fal.ai (Flux Kontext)`);
+          console.log(`[aiImageRouter] Category '${product?.category}' → fal.ai (Flux Kontext multi)`);
+          const productImageUrl =
+            product?.images?.find(img => img.slot === 'hero')?.url ||
+            product?.images?.find(img => img.slot === 'front')?.url ||
+            product?.images?.find(img => img.isPrimary)?.url ||
+            product?.images?.[0]?.url;
+          if (!productImageUrl) {
+            results.push({ position, label, tier: tierKey, error: 'No product image found', errorType: 'no_product_image', userMessage: 'Cannot generate AI photo: product has no uploaded photo. Upload a hero or front photo first.' });
+            continue;
+          }
           const prompt = buildPrompt(aiModel, position, null);
-          const falResult = await falImage.generateImage({ referenceImageUrl: aiModel.referenceImageUrl, prompt });
+          const falResult = await falImage.generateImage({ modelImageUrl: aiModel.referenceImageUrl, productImageUrl, prompt });
           const cloudinaryOpts = {
             folder: 'silkilinen/ai-generated',
             resource_type: 'image',
@@ -480,7 +489,7 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
     const tier = getTier(tierKey);
 
     // Rebuild SEO opts for the overwrite case
-    const product = await Product.findById(session.productId, 'name slug colours category').lean();
+    const product = await Product.findById(session.productId, 'name slug colours category images').lean();
     const productSlug = toSlug(product?.slug || product?.name || String(session.productId));
     const modelSlug = toSlug(session.selectedModel.name);
     const publicId = `${productSlug}-${modelSlug}-${position}`;
@@ -489,9 +498,17 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
     let result;
     try {
       if (shouldUseFal(product?.category)) {
-        console.log(`[aiImageRouter] Category '${product?.category}' → fal.ai (Flux Kontext) [iterate]`);
+        console.log(`[aiImageRouter] Category '${product?.category}' → fal.ai (Flux Kontext multi) [iterate]`);
+        const productImageUrl =
+          product?.images?.find(img => img.slot === 'hero')?.url ||
+          product?.images?.find(img => img.slot === 'front')?.url ||
+          product?.images?.find(img => img.isPrimary)?.url ||
+          product?.images?.[0]?.url;
+        if (!productImageUrl) {
+          return res.status(400).json({ error: 'Cannot iterate: product has no uploaded photo. Upload a hero or front photo first.', errorType: 'no_product_image', ...costResponse(session) });
+        }
         const prompt = buildPrompt(session.selectedModel, position, feedback || null);
-        const falResult = await falImage.generateImage({ referenceImageUrl: session.selectedModel.referenceImageUrl, prompt });
+        const falResult = await falImage.generateImage({ modelImageUrl: session.selectedModel.referenceImageUrl, productImageUrl, prompt });
         const cloudinaryOpts = {
           folder: 'silkilinen/ai-generated',
           resource_type: 'image',
