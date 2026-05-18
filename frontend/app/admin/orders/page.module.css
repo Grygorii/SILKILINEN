@@ -339,3 +339,19 @@
   font-size: 13px;
   color: var(--muted);
 }
+
+@media (max-width: 768px) {
+  .filterSelect,
+  .filterInput,
+  .searchBtn,
+  .clearBtn { height: 44px; }
+}
+
+@media (max-width: 600px) {
+  .searchWrap { width: 100%; }
+  .searchWrap .filterInput { width: 100%; flex: 1; }
+}
+
+@media (max-width: 500px) {
+  .detailMeta { grid-template-columns: 1fr; }
+}

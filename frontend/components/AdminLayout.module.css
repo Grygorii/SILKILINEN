@@ -110,7 +110,11 @@
   color: var(--a-sidebar-text, #b0aca6);
   cursor: pointer;
   align-self: flex-end;
-  padding: 4px;
+  padding: 0;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 16px;
   border-radius: 4px;
   transition: background 0.15s;
@@ -160,8 +164,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--a-radius, 5px);
   flex-shrink: 0;
   transition: background 0.15s, color 0.15s;

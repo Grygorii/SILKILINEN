@@ -739,3 +739,16 @@
   align-items: center;
   gap: 12px;
 }
+
+@media (max-width: 768px) {
+  .filterSelect,
+  .filterInput,
+  .searchBtn,
+  .clearBtn { height: 44px; }
+
+  .bulkBar { top: 56px; }
+
+  .table colgroup col:nth-child(7),
+  .table thead th:nth-child(7),
+  .table tbody td:nth-child(7) { display: none; }
+}
