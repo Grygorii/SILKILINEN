@@ -57,6 +57,7 @@ async function generateImage({ modelImageUrl, productImageUrl, prompt, outputSiz
   const aspect_ratio = resolveAspectRatio(outputSize);
 
   console.log(`[fal.ai] START multi — aspect_ratio=${aspect_ratio}`);
+  console.log(`[fal.ai] image_urls: model=${modelImageUrl} product=${productImageUrl}`);
   const t0 = Date.now();
 
   const result = await fal.subscribe('fal-ai/flux-pro/kontext/max/multi', {

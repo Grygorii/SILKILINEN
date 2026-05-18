@@ -365,8 +365,8 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
       jobs = WORKFLOW_PRESETS.standard;
     }
 
-    // Fetch product once for SEO data and fal.ai product image
-    const product = await Product.findById(session.productId, 'name slug colours category images').lean();
+    // Fetch product once for SEO data
+    const product = await Product.findById(session.productId, 'name slug colours category').lean();
     const productSlug = toSlug(product?.slug || product?.name || String(session.productId));
     const modelSlug = toSlug(aiModel.name);
 
@@ -383,13 +383,9 @@ router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
       try {
         if (shouldUseFal(product?.category)) {
           console.log(`[aiImageRouter] Category '${product?.category}' → fal.ai (Flux Kontext multi)`);
-          const productImageUrl =
-            product?.images?.find(img => img.slot === 'hero')?.url ||
-            product?.images?.find(img => img.slot === 'front')?.url ||
-            product?.images?.find(img => img.isPrimary)?.url ||
-            product?.images?.[0]?.url;
+          const productImageUrl = session.inputPhotos?.[0];
           if (!productImageUrl) {
-            results.push({ position, label, tier: tierKey, error: 'No product image found', errorType: 'no_product_image', userMessage: 'Cannot generate AI photo: product has no uploaded photo. Upload a hero or front photo first.' });
+            results.push({ position, label, tier: tierKey, error: 'No input photo on session', errorType: 'no_product_image', userMessage: 'Cannot generate AI photo via fal.ai: session has no uploaded input photo. Upload a product reference photo first.' });
             continue;
           }
           const prompt = buildPrompt(aiModel, position, null);
@@ -489,7 +485,7 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
     const tier = getTier(tierKey);
 
     // Rebuild SEO opts for the overwrite case
-    const product = await Product.findById(session.productId, 'name slug colours category images').lean();
+    const product = await Product.findById(session.productId, 'name slug colours category').lean();
     const productSlug = toSlug(product?.slug || product?.name || String(session.productId));
     const modelSlug = toSlug(session.selectedModel.name);
     const publicId = `${productSlug}-${modelSlug}-${position}`;
@@ -499,13 +495,9 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
     try {
       if (shouldUseFal(product?.category)) {
         console.log(`[aiImageRouter] Category '${product?.category}' → fal.ai (Flux Kontext multi) [iterate]`);
-        const productImageUrl =
-          product?.images?.find(img => img.slot === 'hero')?.url ||
-          product?.images?.find(img => img.slot === 'front')?.url ||
-          product?.images?.find(img => img.isPrimary)?.url ||
-          product?.images?.[0]?.url;
+        const productImageUrl = session.inputPhotos?.[0];
         if (!productImageUrl) {
-          return res.status(400).json({ error: 'Cannot iterate: product has no uploaded photo. Upload a hero or front photo first.', errorType: 'no_product_image', ...costResponse(session) });
+          return res.status(400).json({ error: 'Cannot generate AI photo via fal.ai: session has no uploaded input photo. Upload a product reference photo first.', errorType: 'no_product_image', ...costResponse(session) });
         }
         const prompt = buildPrompt(session.selectedModel, position, feedback || null);
         const falResult = await falImage.generateImage({ modelImageUrl: session.selectedModel.referenceImageUrl, productImageUrl, prompt });
