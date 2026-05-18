@@ -78,22 +78,30 @@ export default function AdminLoginPage() {
         <p>Admin Panel</p>
         <form onSubmit={handleLogin} className={styles.form}>
           {error && <p className={styles.error}>{error}</p>}
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-          />
+          <label style={{ display: 'block', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6, textAlign: 'left' }}>
+            Email
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              style={{ display: 'block', marginTop: 4, width: '100%' }}
+            />
+          </label>
+          <label style={{ display: 'block', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6, textAlign: 'left' }}>
+            Password
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              style={{ display: 'block', marginTop: 4, width: '100%' }}
+            />
+          </label>
           <button type="submit" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
       </div>

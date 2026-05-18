@@ -320,6 +320,15 @@ export default function AdminProductsPage() {
   // SEO bulk
   const [seoGenerating, setSeoGenerating] = useState(false);
   const [seoResult, setSeoResult] = useState('');
+  const [seoConfirming, setSeoConfirming] = useState(false);
+
+  // Inline action feedback (replaces alert() for archive/delete/export results)
+  const [actionMessage, setActionMessage] = useState('');
+
+  function showAction(msg: string) {
+    setActionMessage(msg);
+    setTimeout(() => setActionMessage(''), 4000);
+  }
 
   // Read URL params on mount
   useEffect(() => {
@@ -426,9 +435,14 @@ export default function AdminProductsPage() {
 
   const hasActiveFilters = search || statusFilter || categoryFilter || stockFilter || issuesFilter;
 
-  // SEO bulk
+  // SEO bulk — two-step confirm (first click arms, second click fires)
   async function handleBulkSEO() {
-    if (!confirm('Generate missing SEO for all products? ~€0.001 per product.')) return;
+    if (!seoConfirming) {
+      setSeoConfirming(true);
+      setTimeout(() => setSeoConfirming(false), 5000);
+      return;
+    }
+    setSeoConfirming(false);
     setSeoGenerating(true); setSeoResult('');
     try {
       const res = await fetch(`${API}/api/admin/products/bulk-generate-seo`, { method: 'POST', credentials: 'include' });
@@ -453,9 +467,9 @@ export default function AdminProductsPage() {
         setProducts(prev => prev.filter(p => p._id !== product._id));
       } else if (data.archived) {
         setProducts(prev => prev.map(p => p._id === product._id ? { ...p, status: 'archived' } : p));
-        alert(data.message);
+        showAction(data.message);
       }
-    } catch { alert('Delete failed'); }
+    } catch { showAction('Delete failed'); }
   }
 
   // Bulk delete confirmation modal
@@ -505,7 +519,7 @@ export default function AdminProductsPage() {
         const a = document.createElement('a');
         a.href = url; a.download = `products-${Date.now()}.csv`; a.click();
         URL.revokeObjectURL(url);
-      } catch { alert('Export failed'); }
+      } catch { showAction('Export failed'); }
       return;
     }
 
@@ -595,12 +609,14 @@ export default function AdminProductsPage() {
         <h2>Products <span className={styles.totalCount}>{total > 0 ? `(${total})` : ''}</span></h2>
         <div className={styles.headerActions}>
           <button className={styles.bulkSeoBtn} onClick={handleBulkSEO} disabled={seoGenerating}>
-            {seoGenerating ? '✨ Generating…' : '✨ Generate missing SEO'}
+            {seoGenerating ? '✨ Generating…' : seoConfirming ? 'Confirm — generate SEO?' : '✨ Generate missing SEO'}
           </button>
           {seoResult && <span className={styles.bulkSeoResult}>{seoResult}</span>}
           <a href="/admin/products/new" className={styles.addBtn}>+ Add product</a>
         </div>
       </div>
+
+      {actionMessage && <div className={styles.actionMsg}>{actionMessage}</div>}
 
       {/* Filter bar */}
       <div className={styles.filterBar}>

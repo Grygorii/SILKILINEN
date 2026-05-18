@@ -35,6 +35,15 @@
   white-space: nowrap;
 }
 
+.actionMsg {
+  font-size: 13px;
+  color: var(--dark);
+  padding: 10px 16px;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
 .header h2 {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 32px;
