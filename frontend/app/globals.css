@@ -41,9 +41,10 @@ body {
 }
 
 @media (max-width: 767px) {
-  .shopContent {
-    padding-top: 74px; /* 30px announcement + ~44px compact mobile nav */
-  }
+  .shopContent { padding-top: 114px; } /* 38px bar + 76px nav */
+}
+@media (max-width: 600px) {
+  .shopContent { padding-top: 106px; } /* 30px bar + 76px nav */
 }
 
 /* Prevent iOS Safari from zooming in on input focus */

@@ -22,8 +22,8 @@
 .infoCol {
   padding: 60px 60px 60px 48px;
   position: sticky;
-  top: 100px;
-  max-height: calc(100vh - 120px);
+  top: 140px; /* 38px bar + 92px nav + 10px breathing room */
+  max-height: calc(100vh - 160px);
   overflow-y: auto;
   scrollbar-width: none;
 }
@@ -256,6 +256,7 @@
 
 /* ── Mobile ───────────────────────────────────────── */
 
+/* VISUAL-CHECK R11: at 900px collapse, confirm galleryCol images fill width correctly with no overflow or uncropped whitespace */
 @media (max-width: 900px) {
   .inner {
     grid-template-columns: 1fr;

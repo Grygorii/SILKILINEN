@@ -197,12 +197,12 @@
   display: inline-flex;
   align-items: stretch;
   border: 1px solid var(--dark);
-  height: 36px;
+  height: 44px;
 }
 
 .stepBtn {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   background: none;
   border: none;
   cursor: pointer;
@@ -214,7 +214,6 @@
   transition: background 0.15s;
   font-family: inherit;
   line-height: 1;
-  /* Expand touch target beyond visual bounds */
   padding: 0;
 }
 
@@ -233,11 +232,11 @@
 }
 
 .stepVal {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   text-align: center;
   font-size: 13px;
-  line-height: 36px;
+  line-height: 44px;
   border-left: 1px solid var(--dark);
   border-right: 1px solid var(--dark);
   font-variant-numeric: tabular-nums;

@@ -250,6 +250,12 @@
   border-bottom-color: var(--dark, #1a1916);
 }
 
+/* ── Hamburger — hidden on desktop where desktopNav takes over ── */
+
+@media (min-width: 1024px) {
+  .hamburger { display: none; }
+}
+
 /* ── Mobile ───────────────────────────────────────── */
 
 @media (max-width: 767px) {
@@ -267,6 +273,7 @@
   .logoSub {
     display: none;
   }
+  /* VISUAL-CHECK R2: navRight icons at 767px — verify each iconBtn renders ≥44×44px tap target on device */
   .navRight {
     gap: 0;
   }

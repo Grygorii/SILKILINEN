@@ -182,6 +182,7 @@
   border: 1px solid var(--border);
 }
 
+/* VISUAL-CHECK R12: orderRow at 375px — verify order number, date, total, and status pill don't overlap or clip */
 .orderRow {
   display: flex;
   align-items: center;
@@ -446,7 +447,8 @@
 
 .wishBtn {
   flex: 1;
-  padding: 10px 8px;
+  padding: 14px 8px;
+  min-height: 44px;
   background: none;
   border: none;
   font-family: 'Jost', sans-serif;

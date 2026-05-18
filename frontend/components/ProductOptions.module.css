@@ -37,7 +37,10 @@
 }
 
 .colourCube {
-  padding: 8px 14px;
+  padding: 12px 14px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   border: 1px solid var(--border, #e0ddd7);
   background: var(--warm-white, #faf8f4);
   color: var(--dark, #1a1916);
@@ -125,8 +128,8 @@
 }
 
 .stepperBtn {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   background: none;
   border: none;
   cursor: pointer;
@@ -143,11 +146,11 @@
 .stepperBtn:disabled { color: var(--muted, #8a8680); cursor: default; }
 
 .stepperVal {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   text-align: center;
   font-size: 14px;
-  line-height: 40px;
+  line-height: 44px;
   border-left: 1px solid var(--border, #e0ddd7);
   border-right: 1px solid var(--border, #e0ddd7);
 }
@@ -193,7 +196,10 @@
   text-transform: uppercase;
   color: var(--muted, #8a8680);
   font-family: inherit;
-  padding: 4px 0;
+  padding: 0;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   transition: color 0.15s;
   text-align: left;
 }

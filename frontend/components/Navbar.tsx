@@ -98,7 +98,7 @@ export default function Navbar() {
           <>
             {/* Left — hamburger + desktop nav */}
             <div className={styles.navLeft}>
-              <button className={styles.iconBtn} onClick={() => setMenuOpen(true)} aria-label="Open menu">
+              <button className={`${styles.iconBtn} ${styles.hamburger}`} onClick={() => setMenuOpen(true)} aria-label="Open menu">
                 <Menu size={20} strokeWidth={1.5} />
               </button>
               <nav className={styles.desktopNav} aria-label="Main navigation">
