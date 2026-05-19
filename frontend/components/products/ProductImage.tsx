@@ -1,27 +1,31 @@
 'use client';
 
+import { useState } from 'react';
 import { isValidImageUrl, cloudinaryUrl } from '@/lib/imageUtils';
+import styles from './ProductImage.module.css';
 
-type ProductImageData = { url: string; alt?: string; isPrimary?: boolean; order?: number };
+type Variant = 'card' | 'thumbnail' | 'cart';
 
-const WIDTHS: Record<string, number> = {
+const WIDTHS: Record<Variant, number> = {
   card: 400,
   thumbnail: 160,
   cart: 200,
 };
 
+type ProductImageData = { url: string; alt?: string; isPrimary?: boolean; order?: number };
+
 interface Props {
-  /** Pass the full images array to resolve primary/order automatically. */
+  /** Full images array — resolves primary/order automatically. */
   images?: ProductImageData[];
-  /** Or pass a single URL directly. */
+  /** Single URL fallback when no images array is available. */
   src?: string | null;
   alt: string;
-  variant: keyof typeof WIDTHS;
-  className?: string;
+  variant: Variant;
+  /** Extra class applied to the outer wrapper (caller sets dimensions). */
+  wrapClassName?: string;
   loading?: 'lazy' | 'eager';
 }
 
-/** Resolves the best valid URL from an images array (primary first, then by order). */
 function resolveUrl(images: ProductImageData[]): string | null {
   const valid = images
     .filter(img => isValidImageUrl(img.url))
@@ -34,25 +38,39 @@ function resolveUrl(images: ProductImageData[]): string | null {
 }
 
 /**
- * Renders a single product image with:
- * - Pre-validation (Gemini URLs and non-HTTP strings are rejected before load)
- * - Cloudinary width transform for the requested variant
- * - onError hiding when the image actually fails to load
- * Returns null when no valid URL is available.
+ * Renders a product image with three states:
+ *   loading  → shimmer skeleton
+ *   failed   → cream "Image coming soon" placeholder (text hidden at cart/thumbnail sizes)
+ *   loaded   → the actual image, faded in
+ *
+ * The caller's wrapClassName div must provide width + height (or aspect-ratio).
+ * ProductImage fills that space with position:absolute children.
  */
-export default function ProductImage({ images, src, alt, variant, className, loading = 'lazy' }: Props) {
+export default function ProductImage({ images, src, alt, variant, wrapClassName, loading = 'lazy' }: Props) {
   const url = images?.length ? resolveUrl(images) : (isValidImageUrl(src) ? src! : null);
-  if (!url) return null;
+  const [state, setState] = useState<'loading' | 'loaded' | 'failed'>(url ? 'loading' : 'failed');
 
-  const width = WIDTHS[variant] ?? 400;
+  const showText = variant === 'card';
 
   return (
-    <img
-      src={cloudinaryUrl(url, width)}
-      alt={alt}
-      className={className}
-      loading={loading}
-      onError={(e) => { e.currentTarget.style.display = 'none'; }}
-    />
+    <div className={`${styles.wrap}${wrapClassName ? ` ${wrapClassName}` : ''}`}>
+      {state === 'loading' && <div className={styles.skeleton} aria-hidden="true" />}
+      {state === 'failed' && (
+        <div className={styles.missing} aria-hidden="true">
+          {showText && <span className={styles.missingText}>Image coming soon</span>}
+        </div>
+      )}
+      {url && (
+        <img
+          src={cloudinaryUrl(url, WIDTHS[variant])}
+          alt={alt}
+          className={styles.img}
+          loading={loading}
+          onLoad={() => setState('loaded')}
+          onError={() => setState('failed')}
+          style={{ opacity: state === 'loaded' ? 1 : 0 }}
+        />
+      )}
+    </div>
   );
 }

@@ -123,6 +123,20 @@
 
 .card:hover .imgHover { opacity: 1; }
 
+.imgMissing {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted, #8a8680);
+  text-align: center;
+  padding: 0 16px;
+}
+
 /* ── Heart ────────────────────────────────────────── */
 
 .heartBtn {

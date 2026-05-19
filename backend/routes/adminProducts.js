@@ -723,6 +723,9 @@ router.post('/:id/images', imgUpload.array('images', 20), async function(req, re
     res.json(product.images);
   } catch (err) {
     console.error(err);
+    if (err.http_code) {
+      return res.status(502).json({ error: `Upload failed — ${err.message}` });
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 });

@@ -2,8 +2,9 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { X } from 'lucide-react';
+import { X, Heart, Package, LogOut } from 'lucide-react';
 import { useCustomer } from '@/context/CustomerContext';
+import { useWishlist } from '@/context/WishlistContext';
 import styles from './SideMenu.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -16,7 +17,8 @@ type Props = {
 };
 
 export default function SideMenu({ isOpen, onClose }: Props) {
-  const { customer } = useCustomer();
+  const { customer, signOut } = useCustomer();
+  const { count: wishlistCount } = useWishlist();
   const searchRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLElement>(null);
   const prevFocusRef = useRef<HTMLElement | null>(null);
@@ -235,13 +237,32 @@ export default function SideMenu({ isOpen, onClose }: Props) {
           </Link>
         </nav>
 
-        {/* Account section — single row */}
+        {/* Account section */}
         <div className={styles.accountSection}>
           {customer ? (
-            <a href="/account" className={styles.accountRow} onClick={onClose}>
-              <span>Hello, {customer.firstName || 'Account'}</span>
-              <span className={styles.navArrow}>→</span>
-            </a>
+            <>
+              <a href="/account" className={styles.accountRow} onClick={onClose}>
+                <span>Hello, {customer.firstName || 'Account'}</span>
+                <span className={styles.navArrow}>→</span>
+              </a>
+              <a href="/wishlist" className={styles.accountItem} onClick={onClose}>
+                <Heart size={13} strokeWidth={1.5} />
+                <span>Wishlist</span>
+                {wishlistCount > 0 && <span className={styles.accountBadge}>{wishlistCount}</span>}
+              </a>
+              <a href="/account/orders" className={styles.accountItem} onClick={onClose}>
+                <Package size={13} strokeWidth={1.5} />
+                <span>Orders</span>
+                <span className={styles.navArrow}>→</span>
+              </a>
+              <button
+                className={styles.accountSignOut}
+                onClick={async () => { await signOut(); onClose(); window.location.href = '/'; }}
+              >
+                <LogOut size={13} strokeWidth={1.5} />
+                <span>Sign out</span>
+              </button>
+            </>
           ) : (
             <a href="/account/sign-in" className={styles.accountRow} onClick={onClose}>
               <span>Sign in</span>

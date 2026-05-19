@@ -90,6 +90,7 @@
 .items {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 8px 24px;
 }
 
@@ -112,13 +113,6 @@
   flex-shrink: 0;
   overflow: hidden;
   background: #f0ece8;
-}
-
-.itemImgEl {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
 }
 
 /* Info column */

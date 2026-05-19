@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Lock } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import ProductImage from './products/ProductImage';
 import styles from './CartPanel.module.css';
 
 const FREE_SHIPPING_THRESHOLD = 150;
@@ -20,9 +21,74 @@ export default function CartPanel({ isOpen, onClose }: Props) {
   const prevFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    if (!isOpen) return;
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollY);
+    };
   }, [isOpen]);
+
+  // Swipe-right to close (panel slides in from right)
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || !isOpen) return;
+
+    let startX = 0, startY = 0, startTime = 0;
+    let direction: 'horizontal' | 'vertical' | null = null;
+
+    function onTouchStart(e: TouchEvent) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      startTime = Date.now();
+      direction = null;
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      if (direction === null && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
+        direction = Math.abs(dx) > Math.abs(dy) && dx > 0 ? 'horizontal' : 'vertical';
+      }
+      if (direction === 'horizontal' && dx > 0) {
+        e.preventDefault();
+        panel!.style.transition = 'none';
+        panel!.style.transform = `translateX(${dx}px)`;
+      }
+    }
+
+    function onTouchEnd(e: TouchEvent) {
+      if (direction !== 'horizontal') return;
+      const dx = e.changedTouches[0].clientX - startX;
+      const velocity = dx / (Date.now() - startTime);
+      const shouldClose = dx > panel!.offsetWidth * 0.3 || velocity > 0.5;
+
+      panel!.style.transition = '';
+      panel!.getBoundingClientRect();
+
+      if (shouldClose) {
+        panel!.style.transform = 'translateX(100%)';
+        setTimeout(() => { panel!.style.transform = ''; onClose(); }, 310);
+      } else {
+        panel!.style.transform = 'translateX(0)';
+        setTimeout(() => { panel!.style.transform = ''; }, 310);
+      }
+    }
+
+    panel.addEventListener('touchstart', onTouchStart, { passive: true });
+    panel.addEventListener('touchmove', onTouchMove, { passive: false });
+    panel.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      panel.removeEventListener('touchstart', onTouchStart);
+      panel.removeEventListener('touchmove', onTouchMove);
+      panel.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -116,12 +182,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
               return (
                 <div key={index} className={styles.item}>
                   {/* Thumbnail — 4:5 portrait */}
-                  <div className={styles.itemImg}>
-                    {item.image && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.image} alt={item.name} className={styles.itemImgEl} loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
-                    )}
-                  </div>
+                  <ProductImage src={item.image} alt={item.name} variant="cart" wrapClassName={styles.itemImg} />
 
                   {/* Info column */}
                   <div className={styles.itemInfo}>

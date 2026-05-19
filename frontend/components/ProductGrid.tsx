@@ -168,8 +168,10 @@ export default function ProductGrid({
 
                 <Link href={`/product/${product._id}`} className={styles.cardLink}>
                   <div className={styles.cardImg}>
-                    {heroUrl && (
+                    {heroUrl ? (
                       <img src={heroUrl} alt={heroAlt} className={styles.img} onError={e => { e.currentTarget.style.display = 'none'; }} />
+                    ) : (
+                      <span className={styles.imgMissing}>Image coming soon</span>
                     )}
                     {secondImg?.url && (
                       <img src={secondImg.url} alt={heroAlt} className={`${styles.img} ${styles.imgHover}`} onError={e => { e.currentTarget.style.display = 'none'; }} />

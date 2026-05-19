@@ -1,21 +1,59 @@
 /**
  * Audit script: find all broken image references in the database.
- * Run: node scripts/auditBrokenImages.js
  *
- * Broken = Gemini chat URL, non-HTTP string, or empty/missing URL.
+ * Usage:
+ *   node scripts/auditBrokenImages.js           — pattern-only (fast)
+ *   node scripts/auditBrokenImages.js --verify  — also HEAD-check Cloudinary URLs (slower)
+ *
+ * Broken = Gemini chat URL, non-HTTP string, empty/missing, or Cloudinary URL that 404s.
  * Output: one line per broken reference. Pipe to a file for review.
  */
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
+const https = require('https');
 const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const JournalArticle = require('../models/JournalArticle');
 
 const GEMINI_RE = /gemini\.google\.com/i;
+const VERIFY = process.argv.includes('--verify');
 
 function isBroken(url) {
   if (!url || typeof url !== 'string') return true;
   if (!url.startsWith('http')) return true;
   if (GEMINI_RE.test(url)) return true;
+  return false;
+}
+
+/** HEAD request to url. Returns status code, or 0 on timeout/error. */
+function headRequest(url) {
+  return new Promise(resolve => {
+    try {
+      const parsed = new URL(url);
+      const req = https.request(
+        { hostname: parsed.hostname, path: parsed.pathname + parsed.search, method: 'HEAD', timeout: 10000 },
+        res => resolve(res.statusCode),
+      );
+      req.on('timeout', () => { req.destroy(); resolve(0); });
+      req.on('error', () => resolve(0));
+      req.end();
+    } catch {
+      resolve(0);
+    }
+  });
+}
+
+/** Returns true if the URL is a Cloudinary URL that should be verified. */
+function isCloudinaryUrl(url) {
+  return typeof url === 'string' && url.includes('res.cloudinary.com');
+}
+
+async function checkUrl(url, label) {
+  if (!VERIFY || !isCloudinaryUrl(url)) return false;
+  const status = await headRequest(url);
+  if (status === 0 || status >= 400) {
+    console.log(`${label}  [HTTP ${status || 'ERR'}]`);
+    return true;
+  }
   return false;
 }
 
@@ -30,16 +68,22 @@ async function auditProducts() {
       continue;
     }
     for (const img of p.images) {
+      const slot = img.slot ? `[slot:${img.slot}]` : `[order:${img.order ?? '?'}]`;
       if (isBroken(img.url)) {
-        const slot = img.slot ? `[slot:${img.slot}]` : `[order:${img.order ?? '?'}]`;
         console.log(`PRODUCT BROKEN    : ${p._id}  "${p.name}"  ${slot}  → ${img.url || '(empty)'}`);
         count++;
+      } else {
+        const label = `PRODUCT 404       : ${p._id}  "${p.name}"  ${slot}  → ${img.url}`;
+        if (await checkUrl(img.url, label)) count++;
       }
     }
     // Legacy top-level image field (if still present)
     if (p.image && isBroken(p.image)) {
       console.log(`PRODUCT LEGACY    : ${p._id}  "${p.name}"  [image field]  → ${p.image}`);
       count++;
+    } else if (p.image) {
+      const label = `PRODUCT LEGACY 404: ${p._id}  "${p.name}"  [image field]  → ${p.image}`;
+      if (await checkUrl(p.image, label)) count++;
     }
   }
 
@@ -51,9 +95,13 @@ async function auditJournal() {
   let count = 0;
 
   for (const a of articles) {
-    if (isBroken(a.heroImage?.url)) {
-      console.log(`JOURNAL HERO      : ${a._id}  "${a.title}"  → ${a.heroImage?.url || '(empty)'}`);
+    const heroUrl = a.heroImage?.url;
+    if (isBroken(heroUrl)) {
+      console.log(`JOURNAL HERO      : ${a._id}  "${a.title}"  → ${heroUrl || '(empty)'}`);
       count++;
+    } else if (heroUrl) {
+      const label = `JOURNAL HERO 404  : ${a._id}  "${a.title}"  → ${heroUrl}`;
+      if (await checkUrl(heroUrl, label)) count++;
     }
     // Scan HTML body for embedded Gemini URLs (img src or href)
     if (a.body && GEMINI_RE.test(a.body)) {
@@ -69,6 +117,10 @@ async function auditJournal() {
 }
 
 async function run() {
+  if (VERIFY) {
+    console.log('Mode: --verify  (HEAD-checking all Cloudinary URLs — this may take a minute)\n');
+  }
+
   await mongoose.connect(process.env.MONGODB_URI);
   console.log('Connected. Scanning...\n');
 

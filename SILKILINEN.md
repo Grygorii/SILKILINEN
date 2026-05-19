@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 19 May 2026 (Header polish + product page sticky fixes + cookie banner GDPR + hero CTA + image fixes + button states polish + gallery broken-image fix + Cloudinary URL validation + admin panel UX fixes P1+P2 + abandoned cart recovery fix + recovery email automation + mobile header simplification + product image pipeline lockdown + hamburger drawer UX fixes).
+Last updated: 19 May 2026 (Header polish + product page sticky fixes + cookie banner GDPR + hero CTA + image fixes + button states polish + gallery broken-image fix + Cloudinary URL validation + admin panel UX fixes P1+P2 + abandoned cart recovery fix + recovery email automation + mobile header simplification + product image pipeline lockdown + hamburger drawer UX fixes + cart swipe + image placeholders + account section refinement + Cloudinary upload pipeline verification).
 
 ---
 
@@ -160,6 +160,49 @@ Both admin tables now have a parallel card layout at ≤768px (table is hidden, 
 
 ---
 
+## Shipped 19 May 2026 — cart swipe + image placeholders + account section refinement
+
+### Part 1 — Cart drawer swipe-right-to-close
+
+Same pattern as the hamburger swipe-to-close (already shipped), mirrored for a right-side drawer. Added native `addEventListener` touch handlers (with `passive: false` on `touchmove`) to `CartPanel.tsx`. Horizontal vs vertical direction determined on first >4px movement. Swipe right > 30% of panel width or velocity > 0.5 px/ms closes; `getBoundingClientRect()` flush re-enables the CSS transition before the close animation. Partial swipe snaps back.
+
+Also replaced the `overflow: hidden` body lock (ignored by iOS Safari) with the `position: fixed` + saved-scrollY approach. Added `overscroll-behavior: contain` to `.items`.
+
+**Files modified:** `frontend/components/CartPanel.tsx`, `frontend/components/CartPanel.module.css`
+
+### Part 2 — Account section refinement (SideMenu)
+
+Revised from the "single row" design shipped earlier. Logged-in state now shows:
+- **Hello, [Name] →** — navigates to `/account`
+- **Wishlist** (Heart icon, count badge if non-zero) — navigates to `/wishlist`
+- **Orders** (Package icon, chevron) — navigates to `/account/orders`
+- **Sign out** (LogOut icon, muted text) — calls `signOut()`, closes drawer, redirects to `/`
+
+Logged-out state remains a single "Sign in" row.
+
+Re-added `useWishlist`, `signOut` from `useCustomer`, and lucide icons `Heart`, `Package`, `LogOut`.
+
+New CSS classes: `.accountItem`, `.accountBadge`, `.accountSignOut`.
+
+**Files modified:** `frontend/components/SideMenu.tsx`, `frontend/components/SideMenu.module.css`
+
+### Part 3 — Branded image placeholders
+
+**`ProductImage` component** (`frontend/components/products/ProductImage.tsx`) fully rewritten with a three-state machine (`loading` → `loaded` | `failed`):
+- **Loading**: shimmer skeleton (`linear-gradient` animated with `background-position`, same pattern as the admin table skeletons)
+- **Failed / missing**: cream background + "Image coming soon" text (text suppressed at `thumbnail` and `cart` sizes where it would be illegible)
+- **Loaded**: image fades in via `opacity: 0 → 1`
+
+New CSS module: `frontend/components/products/ProductImage.module.css`.
+
+**CartPanel** now uses `<ProductImage wrapClassName={styles.itemImg} ... />` instead of the bare `<img>` pattern. Cart thumbnails show the shimmer skeleton while loading and a clean cream box on failure — no browser broken-image icon. Removed unused `.itemImgEl` from CartPanel CSS.
+
+**ProductGrid** shows `<span className={styles.imgMissing}>Image coming soon</span>` inside `.cardImg` when `heroUrl` is null (no valid image). The `.cardImg` container already has `background: var(--cream)` so the cream box shows for failed loads via the existing `onError` handler.
+
+**Files modified/created:** `frontend/components/products/ProductImage.tsx`, `frontend/components/products/ProductImage.module.css` (new), `frontend/components/CartPanel.tsx`, `frontend/components/CartPanel.module.css`, `frontend/components/ProductGrid.tsx`, `frontend/components/ProductGrid.module.css`
+
+---
+
 ## Shipped 19 May 2026 — hamburger drawer UX fixes
 
 Three fixes to `SideMenu.tsx` + `SideMenu.module.css`. No changes to Navbar.
@@ -244,6 +287,39 @@ Connects to MongoDB (reads `MONGODB_URI` from `.env`), scans all Products and Jo
 **Manual action still needed:** Run the audit script, then re-upload broken images for any affected products (known: boxer short product has 3 broken Gemini URLs in FRONT, BACK, SIDE slots).
 
 **Files created:** `backend/scripts/auditBrokenImages.js`, `frontend/lib/imageUtils.ts`, `frontend/components/products/ProductImage.tsx`
+
+---
+
+## Shipped 19 May 2026 — Cloudinary upload pipeline verification
+
+### Findings
+
+The upload pipeline in `adminProducts.js` was already correct: `uploadBuffer` wraps `upload_stream` in a Promise and is properly `await`-ed before the DB write; `result.secure_url` (not a pre-constructed URL) is stored. Root cause of any 404 Cloudinary URLs in the DB is most likely direct deletion via the Cloudinary dashboard after upload.
+
+### Audit script extended with `--verify` flag
+
+`backend/scripts/auditBrokenImages.js` now supports:
+
+```
+node scripts/auditBrokenImages.js            # pattern-only (Gemini URLs, non-HTTP, empty) — fast
+node scripts/auditBrokenImages.js --verify   # also HEAD-checks every Cloudinary URL — slower
+```
+
+In `--verify` mode the script makes an HTTPS `HEAD` request (10s timeout) to each `res.cloudinary.com` URL that passes the pattern check. Any URL returning 4xx/5xx (or timeout) is logged as `PRODUCT 404` or `JOURNAL HERO 404`. Uses Node's built-in `https` module — no extra dependencies.
+
+### Backend error propagation improved
+
+The catch block for the image upload route now detects Cloudinary SDK errors (which carry `err.http_code`) and returns a specific 502 with the actual error message instead of a generic 500 "Internal server error":
+
+```js
+if (err.http_code) {
+  return res.status(502).json({ error: `Upload failed — ${err.message}` });
+}
+```
+
+This surfaces the real failure (e.g. "Invalid API key", "Resource not found") to the admin UI toast instead of a blank error.
+
+**Files modified:** `backend/scripts/auditBrokenImages.js`, `backend/routes/adminProducts.js`
 
 ---
 
