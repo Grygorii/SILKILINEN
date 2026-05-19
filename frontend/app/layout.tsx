@@ -12,6 +12,7 @@ import { CookieConsentProvider } from "@/context/CookieConsentContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://silkilinen.com'),
   title: "Silkilinen — Pure Silk & Linen Intimates",
   description: "Handpicked silk and linen intimates, shipped worldwide from Donegal, Ireland.",
 };
