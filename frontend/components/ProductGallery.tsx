@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Heart, Play, X } from 'lucide-react';
 import { useWishlist } from '@/context/WishlistContext';
 import styles from './ProductGallery.module.css';
@@ -54,17 +54,20 @@ export default function ProductGallery({ images, name, productId, video }: Props
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
   const touchStartX = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toggle, isWished } = useWishlist();
   const wished = isWished(productId);
 
-  // Sort: primary first, then by order field
-  const sorted = [...images].sort((a, b) => {
-    if (a.isPrimary && !b.isPrimary) return -1;
-    if (!a.isPrimary && b.isPrimary) return 1;
-    return (a.order ?? 0) - (b.order ?? 0);
-  });
+  // Sort: primary first, then by order field; skip entries with missing or broken URLs
+  const sorted = [...images]
+    .filter(img => img.url && !failedUrls.has(img.url))
+    .sort((a, b) => {
+      if (a.isPrimary && !b.isPrimary) return -1;
+      if (!a.isPrimary && b.isPrimary) return 1;
+      return (a.order ?? 0) - (b.order ?? 0);
+    });
 
   const items: MediaItem[] = [
     ...sorted.map(img => ({ kind: 'image' as const, url: img.url, alt: img.alt || name })),
@@ -72,6 +75,11 @@ export default function ProductGallery({ images, name, productId, video }: Props
       ? [{ kind: 'video' as const, url: videoOptimized(video), poster: videoPoster(video) }]
       : []),
   ];
+
+  // Clamp current index when items shrink due to broken images being removed
+  useEffect(() => {
+    if (current >= items.length && items.length > 0) setCurrent(0);
+  }, [items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const hasMultiple = items.length > 1;
   const item = items[current];
@@ -117,6 +125,7 @@ export default function ProductGallery({ images, name, productId, video }: Props
                   alt=""
                   className={styles.thumbImg}
                   loading="lazy"
+                  onError={() => setFailedUrls(prev => new Set([...prev, it.url]))}
                 />
               ) : (
                 <div className={styles.thumbVideo}>
@@ -143,6 +152,7 @@ export default function ProductGallery({ images, name, productId, video }: Props
               src={cloudinaryThumb(item.url, 1200)}
               alt={item.alt}
               className={styles.heroImg}
+              onError={() => setFailedUrls(prev => new Set([...prev, item.url]))}
             />
           </div>
         )}
@@ -204,6 +214,7 @@ export default function ProductGallery({ images, name, productId, video }: Props
             alt={item.alt}
             className={styles.lightboxImg}
             onClick={e => e.stopPropagation()}
+            onError={() => setFailedUrls(prev => new Set([...prev, item.url]))}
           />
         </div>
       )}

@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 19 May 2026 (Header polish + product page sticky fixes + cookie banner GDPR + hero CTA + image fixes + button states polish).
+Last updated: 19 May 2026 (Header polish + product page sticky fixes + cookie banner GDPR + hero CTA + image fixes + button states polish + gallery broken-image fix + Cloudinary URL validation + admin panel UX fixes P1+P2).
 
 ---
 
@@ -69,6 +69,59 @@ Other admin pages:
 - Existing Dalia / Bastet / Ciara / Rehab dress and robe products from earlier build phase
 - **Silk panties** (the actual sales hero) — currently sold on Etsy, not yet migrated to silkilinen.com as primary
 
+## Shipped 19 May 2026 — admin panel UX fixes
+
+### P1.1 — Column header overflow fix (Products + Orders tables)
+
+Both admin tables use `table-layout: fixed` with `white-space: nowrap` on `<th>` cells, but lacked `overflow: hidden` — header text could visually bleed into adjacent columns.
+
+- Added `overflow: hidden` to `.table th` in `frontend/app/admin/products/page.module.css`
+- Added `overflow: hidden` to `.table th` in `frontend/app/admin/orders/page.module.css`
+
+**Files modified:** `frontend/app/admin/products/page.module.css`, `frontend/app/admin/orders/page.module.css`
+
+### P1.2 — Publish prevention validation error display
+
+Backend already validated name + variants + description ≥ 50 chars + images + category before allowing `status = 'active'` in `quick-update`. Frontend `InlineStatusEdit` was showing raw "ValidationError" string. Fixed to show human-readable list of missing fields: `"Cannot publish — missing: Description, Variants"`.
+
+**Manual action still needed:** Delete junk product "kjxzcj" (Draft, no variants, no description) via the admin Products page.
+
+**Files modified:** `frontend/app/admin/products/page.tsx`
+
+### P1.3 — P&L chart: label contrast + empty state
+
+- `.plLabel` (month names on bar chart) changed from `color: #aaa` (2.3:1 contrast) to `color: #666` (5.7:1, passes WCAG AA)
+- Added `allZero` check (`monthlyPL.every(m => m.revenue === 0 && m.orderCount === 0)`). When all months have zero revenue, the chart section is replaced with "No revenue yet — P&L will appear once orders come in." instead of 12 bars of "+€0"
+
+**Files modified:** `frontend/app/admin/finance/reports/page.module.css`, `frontend/app/admin/finance/reports/page.tsx`
+
+### P2.1 — Dashboard mobile reflow (Zone3Working)
+
+Zone3Working "What's Working" section used a hardcoded inline style `gridTemplateColumns: '1fr 1fr'` that CSS media queries couldn't override.
+
+- Created `Zone3Working.module.css` with `.grid { display: grid; grid-template-columns: 1fr 1fr; }` + `@media (max-width: 1024px) { .grid { grid-template-columns: 1fr; } }`
+- Replaced inline style in `Zone3Working.tsx` with the CSS class
+
+**Files modified/created:** `frontend/app/admin/_components/dashboard/Zone3Working.tsx`, `frontend/app/admin/_components/dashboard/Zone3Working.module.css` (new)
+
+### P2.2 — Mobile card layout (Orders + Products)
+
+Both admin tables now have a parallel card layout at ≤768px (table is hidden, cards shown).
+
+**Orders cards:** Each order is a tappable card showing status badge, date, total, customer name/email, and ship-to city + item count. Tapping expands the same full detail (customer info, shipping address, items sub-table, "View full order" link) as the desktop table row. Uses the same `expandedId` state — no duplication of logic.
+
+**Products cards:** Each product is a card showing thumbnail (or no-image warning icon), product name (link to edit page), status badge, price, stock badge, issue pills, and Edit/Delete actions. Bulk selection and inline price/status editing are desktop-only (edit page always available on mobile).
+
+**Files modified:** `frontend/app/admin/orders/page.module.css`, `frontend/app/admin/orders/page.tsx`, `frontend/app/admin/products/page.module.css`, `frontend/app/admin/products/page.tsx`
+
+### ProductGallery — useEffect import fix
+
+`useEffect` was called in `ProductGallery.tsx` (added in previous session) but was missing from the React import. Added to the import statement.
+
+**Files modified:** `components/ProductGallery.tsx`
+
+---
+
 ## Shipped 19 May 2026 — session 2
 
 ### Cookie banner + hero CTA visual hierarchy
@@ -97,6 +150,19 @@ Other admin pages:
 - **Icon consistency** — all header icons are now uniform outline `lucide-react` strokes (`strokeWidth={1.5}`). `Heart` no longer fills when wishlist has items (always outline). Logged-in state shows `<User>` icon (not filled avatar circle with initial). Signed-in greeting ("Hi, Firstname") moves inside the account dropdown as first item. `AnnouncementBar` and `Navbar` reverted to non-fixed positioning (SiteHeader owns it).
 
 **Files modified/created:** `SiteHeader.tsx`, `SiteHeader.module.css`, `components/Navbar.tsx`, `components/Navbar.module.css`, `components/AnnouncementBar.tsx`, `components/AnnouncementBar.module.css`, `app/(shop)/layout.tsx`
+
+### Product gallery — broken image URLs fix
+
+Root cause: the `POST /api/admin/products/:id/images/url` endpoint accepted any URL without validation. Non-Cloudinary URLs (e.g. expired Gemini chat URLs or other temporary URLs) could be stored in `product.images[].url`. The gallery would show the correct number of dots (data present) but all images rendered as broken icons.
+
+- **Backend validation (`backend/routes/adminProducts.js`):** Added `url.includes('res.cloudinary.com')` check to the `/images/url` endpoint. Non-Cloudinary URLs now return HTTP 400. This closes the data-entry path that allowed bad URLs in. All legitimate callers (AI Photoshoot approval, finalize) already produce Cloudinary `secure_url` values.
+- **Defensive gallery rendering (`components/ProductGallery.tsx`):** Added `failedUrls` state (Set). Images with empty `url` or a URL that triggers `onError` are removed from the `items[]` array and excluded from the dots count. `onError` applied to hero image, lightbox image, and thumbnail strip images. Added `useEffect` to clamp `current` index to valid range when items shrink. This ensures a product with partially-bad image data degrades gracefully rather than showing a wall of broken icons.
+
+**Data fix still needed:** Any product already in the database with broken image URLs needs manual cleanup in the admin panel — delete the broken images from the product's image list and re-upload proper Cloudinary-hosted photos.
+
+**Files modified:** `backend/routes/adminProducts.js`, `components/ProductGallery.tsx`
+
+---
 
 ### Button states + interaction polish (site-wide)
 

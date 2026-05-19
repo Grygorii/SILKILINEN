@@ -13,7 +13,7 @@
 .plNetLine { font-size: 11px; font-weight: 600; }
 .plNetPos  { color: #2e7d32; }
 .plNetNeg  { color: #c62828; }
-.plLabel   { font-size: 10px; color: #aaa; text-align: center; }
+.plLabel   { font-size: 10px; color: #666; text-align: center; }
 .plLegend  { display: flex; gap: 16px; margin-top: 12px; font-size: 12px; color: #666; }
 .plLegendDot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
 

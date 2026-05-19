@@ -142,7 +142,15 @@ function InlineStatusEdit({ product, onUpdate }: { product: Product; onUpdate: (
         body: JSON.stringify({ status }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Failed'); return; }
+      if (!res.ok) {
+        if (data.fields?.length) {
+          const missing = (data.fields as { label: string }[]).map(f => f.label).join(', ');
+          setError(`Cannot publish — missing: ${missing}`);
+        } else {
+          setError(data.error || 'Failed');
+        }
+        return;
+      }
       onUpdate(data);
     } catch {
       setError('Network error');
@@ -665,12 +673,13 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table + mobile cards */}
       {loading ? (
         <p className={styles.loadingText}>Loading…</p>
       ) : products.length === 0 ? (
         <p className={styles.emptyText}>No products found.</p>
       ) : (
+        <>
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <colgroup>
@@ -778,6 +787,47 @@ export default function AdminProductsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile card list */}
+        <div className={styles.productCardList}>
+          {products.map(product => {
+            const imgUrl = thumb(product);
+            return (
+              <div key={product._id} className={styles.productCard}>
+                {imgUrl ? (
+                  <img src={imgUrl} alt={product.name} className={styles.productCardImg} />
+                ) : (
+                  <div className={`${styles.productCardNoImg} ${styles.noImageWarn}`} title="No images">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                      <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                  </div>
+                )}
+                <div className={styles.productCardBody}>
+                  <div className={styles.productCardTop}>
+                    <a href={`/admin/products/${product._id}`} className={styles.productCardName}>
+                      {product.name}
+                    </a>
+                    <span className={`${styles.statusBadge} ${STATUS_CLASS[product.status] ?? ''}`}>
+                      {STATUS_LABEL[product.status] ?? product.status}
+                    </span>
+                  </div>
+                  {product.category && <div className={styles.productCardCat}>{product.category}</div>}
+                  <div className={styles.productCardMeta}>
+                    €{product.price.toFixed(2)} · <StockBadge product={product} />
+                  </div>
+                  <IssuePills product={product} />
+                  <div className={styles.productCardActions}>
+                    <a href={`/admin/products/${product._id}`} className={styles.editBtn}>Edit</a>
+                    <button className={styles.deleteBtn} onClick={() => setDeleteTarget(product)}>Delete</button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        </>
       )}
 
       {/* Pagination */}

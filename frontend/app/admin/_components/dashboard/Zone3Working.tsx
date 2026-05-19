@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import Card from '../Card';
+import styles from './Zone3Working.module.css';
 
 type TopProduct = {
   productId: string; productName: string; imageUrl: string | null;
@@ -41,7 +42,7 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
 
   return (
     <Card title="WHAT'S WORKING">
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      <div className={styles.grid}>
 
         {/* Top products */}
         <div>

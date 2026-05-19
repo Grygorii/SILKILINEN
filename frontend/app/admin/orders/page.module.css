@@ -133,6 +133,7 @@
   border-bottom: 1px solid var(--border);
   font-weight: 400;
   white-space: nowrap;
+  overflow: hidden;
 }
 
 .table td {
@@ -345,6 +346,39 @@
   .filterInput,
   .searchBtn,
   .clearBtn { height: 44px; }
+
+  .tableWrap { display: none; }
+  .cardList {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    background: var(--warm-white);
+  }
+  .orderCard {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    background: var(--warm-white);
+    transition: background 0.15s;
+  }
+  .orderCard:last-child { border-bottom: none; }
+  .orderCardOpen { background: var(--cream); }
+  .cardRow1 { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .cardBadgeDate { display: flex; align-items: center; gap: 8px; }
+  .cardDate { font-size: 12px; color: var(--muted); }
+  .cardTotalChevron { display: flex; align-items: center; gap: 6px; }
+  .cardTotal { font-size: 15px; font-weight: 600; color: var(--dark); white-space: nowrap; }
+  .cardChevron { color: var(--muted); transition: transform 0.2s; flex-shrink: 0; }
+  .cardChevronOpen { transform: rotate(180deg); }
+  .cardName { font-size: 14px; color: var(--dark); }
+  .cardEmail { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .cardMeta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .cardDetailInner { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 16px; }
+}
+
+/* Desktop: hide card list */
+@media (min-width: 769px) {
+  .cardList { display: none; }
 }
 
 @media (max-width: 600px) {

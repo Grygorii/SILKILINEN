@@ -631,6 +631,9 @@ router.post('/:id/images/url', async function(req, res) {
   try {
     const { url, cloudinaryPublicId, alt, slot } = req.body;
     if (!url) return res.status(400).json({ error: 'URL required' });
+    if (!url.includes('res.cloudinary.com')) {
+      return res.status(400).json({ error: 'Image URL must be a Cloudinary URL. Upload the image via the file uploader first.' });
+    }
 
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Not found' });

@@ -300,6 +300,95 @@ export default function AdminOrdersPage() {
             </table>
           </div>
 
+          {/* Mobile card list */}
+          <div className={styles.cardList}>
+            {orders.map(order => {
+              const expanded = expandedId === order._id;
+              const badgeClass = STATUS_BADGE[order.status] || styles.badgePending;
+              return (
+                <div
+                  key={order._id}
+                  className={`${styles.orderCard} ${expanded ? styles.orderCardOpen : ''}`}
+                  onClick={() => toggle(order._id)}
+                >
+                  <div className={styles.cardRow1}>
+                    <div className={styles.cardBadgeDate}>
+                      <span className={`${styles.badge} ${badgeClass}`}>{order.status}</span>
+                      <span className={styles.cardDate}>{formatDate(order.createdAt)}</span>
+                    </div>
+                    <div className={styles.cardTotalChevron}>
+                      <span className={styles.cardTotal}>€{(order.total ?? 0).toFixed(2)}</span>
+                      <svg
+                        className={`${styles.cardChevron} ${expanded ? styles.cardChevronOpen : ''}`}
+                        width="14" height="14" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" strokeWidth="2"
+                        strokeLinecap="round" strokeLinejoin="round"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className={styles.cardName}>{order.customerName || '—'}</div>
+                  <div className={styles.cardEmail}>{order.customerEmail || '—'}</div>
+                  <div className={styles.cardMeta}>
+                    {formatAddress(order.shippingAddress)} · {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
+                  </div>
+
+                  {expanded && (
+                    <div className={styles.cardDetailInner}>
+                      <div className={styles.detailMeta}>
+                        <div className={styles.metaBlock}>
+                          <h4>Customer</h4>
+                          <p>{order.customerName || '—'}</p>
+                          <p>{order.customerEmail || '—'}</p>
+                          {order.customerPhone && <p>{order.customerPhone}</p>}
+                        </div>
+                        <div className={styles.metaBlock}>
+                          <h4>Shipping address</h4>
+                          <p>{formatFullAddress(order.shippingAddress)}</p>
+                        </div>
+                        <div className={styles.metaBlock}>
+                          <h4>Order</h4>
+                          <p>Total — €{(order.total ?? 0).toFixed(2)}</p>
+                          <p className={styles.sessionId}>{order.stripeSessionId}</p>
+                        </div>
+                      </div>
+                      <table className={styles.itemsTable}>
+                        <thead>
+                          <tr>
+                            <th>Product</th>
+                            <th>Colour</th>
+                            <th>Size</th>
+                            <th>Qty</th>
+                            <th>Unit price</th>
+                            <th>Line total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {order.items.map((item, i) => (
+                            <tr key={i}>
+                              <td>{item.name}</td>
+                              <td>{item.colour || '—'}</td>
+                              <td>{item.size || '—'}</td>
+                              <td>{item.quantity}</td>
+                              <td>€{Number(item.price).toFixed(2)}</td>
+                              <td>€{(item.price * item.quantity).toFixed(2)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <div className={styles.detailFooter}>
+                        <Link href={`/admin/orders/${order._id}`} className={styles.viewLink}>
+                          View full order →
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
           {pages > 1 && (
             <div className={styles.pagination}>
               <button

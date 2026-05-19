@@ -59,6 +59,7 @@ export default function FinanceReportsPage() {
   if (!data)   return <AdminLayout active="finance"><p className={styles.loading}>Could not load reports.</p></AdminLayout>;
 
   const { monthlyPL, marginByProduct, marginBySource, anomalies } = data;
+  const allZero = monthlyPL.every(m => m.revenue === 0 && m.orderCount === 0);
   const maxRevenue = Math.max(...monthlyPL.map(m => m.revenue), 1);
 
   return (
@@ -68,57 +69,63 @@ export default function FinanceReportsPage() {
         {/* Monthly P&L */}
         <div className={styles.card}>
           <p className={styles.sectionTitle}>Monthly profit & loss</p>
-          <div className={styles.plGrid}>
-            {monthlyPL.map(m => {
-              const revH  = Math.round((m.revenue / maxRevenue) * 110);
-              const costH = Math.round(((m.revenue - m.netProfit) / maxRevenue) * 110);
-              return (
-                <div key={m.label} className={styles.plMonth} title={`${m.label}: Revenue €${m.revenue.toFixed(2)}, Net ${m.netProfit >= 0 ? '+' : ''}€${m.netProfit.toFixed(2)}`}>
-                  <div className={`${styles.plNetLine} ${m.netProfit >= 0 ? styles.plNetPos : styles.plNetNeg}`}>
-                    {m.netProfit >= 0 ? '+' : '−'}€{Math.abs(m.netProfit).toFixed(0)}
-                  </div>
-                  <div className={styles.plBars}>
-                    <div className={styles.plRevBar}  style={{ height: revH  }} />
-                    <div className={styles.plCostBar} style={{ height: costH }} />
-                  </div>
-                  <div className={styles.plLabel}>{m.label}</div>
-                </div>
-              );
-            })}
-          </div>
-          <div className={styles.plLegend}>
-            <span><span className={styles.plLegendDot} style={{ background: '#c5a572' }}/>Revenue</span>
-            <span><span className={styles.plLegendDot} style={{ background: '#e8c9ab' }}/>Total costs</span>
-          </div>
+          {allZero ? (
+            <p className={styles.anomalyNoData}>No revenue yet — P&L will appear once orders come in.</p>
+          ) : (
+            <>
+              <div className={styles.plGrid}>
+                {monthlyPL.map(m => {
+                  const revH  = Math.round((m.revenue / maxRevenue) * 110);
+                  const costH = Math.round(((m.revenue - m.netProfit) / maxRevenue) * 110);
+                  return (
+                    <div key={m.label} className={styles.plMonth} title={`${m.label}: Revenue €${m.revenue.toFixed(2)}, Net ${m.netProfit >= 0 ? '+' : ''}€${m.netProfit.toFixed(2)}`}>
+                      <div className={`${styles.plNetLine} ${m.netProfit >= 0 ? styles.plNetPos : styles.plNetNeg}`}>
+                        {m.netProfit >= 0 ? '+' : '−'}€{Math.abs(m.netProfit).toFixed(0)}
+                      </div>
+                      <div className={styles.plBars}>
+                        <div className={styles.plRevBar}  style={{ height: revH  }} />
+                        <div className={styles.plCostBar} style={{ height: costH }} />
+                      </div>
+                      <div className={styles.plLabel}>{m.label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className={styles.plLegend}>
+                <span><span className={styles.plLegendDot} style={{ background: '#c5a572' }}/>Revenue</span>
+                <span><span className={styles.plLegendDot} style={{ background: '#e8c9ab' }}/>Total costs</span>
+              </div>
 
-          {/* Monthly detail table */}
-          <div style={{ overflowX: 'auto', marginTop: 20 }}>
-            <table className={styles.marginTable}>
-              <thead>
-                <tr>
-                  <th>Month</th><th>Orders</th><th>Revenue</th><th>Refunds</th>
-                  <th>Stripe fees</th><th>COGS</th><th>Expenses</th>
-                  <th style={{ textAlign: 'right' }}>Net profit</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...monthlyPL].reverse().map(m => (
-                  <tr key={m.label}>
-                    <td>{m.label}</td>
-                    <td className={styles.tNum}>{m.orderCount}</td>
-                    <td className={styles.tNum}>{fmt(m.revenue)}</td>
-                    <td className={styles.tNum}>{m.refunds > 0 ? `−€${m.refunds.toFixed(2)}` : '—'}</td>
-                    <td className={styles.tNum}>{m.stripeFees > 0 ? `−€${m.stripeFees.toFixed(2)}` : '—'}</td>
-                    <td className={styles.tNum}>{m.cogs > 0 ? `−€${m.cogs.toFixed(2)}` : '—'}</td>
-                    <td className={styles.tNum}>{m.expenseTotal > 0 ? `−€${m.expenseTotal.toFixed(2)}` : '—'}</td>
-                    <td className={`${styles.tNum} ${styles.tRight}`} style={{ fontWeight: 600, color: m.netProfit >= 0 ? '#2e7d32' : '#c62828' }}>
-                      {m.netProfit >= 0 ? '+' : '−'}€{Math.abs(m.netProfit).toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              {/* Monthly detail table */}
+              <div style={{ overflowX: 'auto', marginTop: 20 }}>
+                <table className={styles.marginTable}>
+                  <thead>
+                    <tr>
+                      <th>Month</th><th>Orders</th><th>Revenue</th><th>Refunds</th>
+                      <th>Stripe fees</th><th>COGS</th><th>Expenses</th>
+                      <th style={{ textAlign: 'right' }}>Net profit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...monthlyPL].reverse().map(m => (
+                      <tr key={m.label}>
+                        <td>{m.label}</td>
+                        <td className={styles.tNum}>{m.orderCount}</td>
+                        <td className={styles.tNum}>{fmt(m.revenue)}</td>
+                        <td className={styles.tNum}>{m.refunds > 0 ? `−€${m.refunds.toFixed(2)}` : '—'}</td>
+                        <td className={styles.tNum}>{m.stripeFees > 0 ? `−€${m.stripeFees.toFixed(2)}` : '—'}</td>
+                        <td className={styles.tNum}>{m.cogs > 0 ? `−€${m.cogs.toFixed(2)}` : '—'}</td>
+                        <td className={styles.tNum}>{m.expenseTotal > 0 ? `−€${m.expenseTotal.toFixed(2)}` : '—'}</td>
+                        <td className={`${styles.tNum} ${styles.tRight}`} style={{ fontWeight: 600, color: m.netProfit >= 0 ? '#2e7d32' : '#c62828' }}>
+                          {m.netProfit >= 0 ? '+' : '−'}€{Math.abs(m.netProfit).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Margin by product */}
