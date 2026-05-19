@@ -49,6 +49,11 @@ export default function JournalEditorPage() {
   const [seoOpen, setSeoOpen] = useState(false);
   const [seoForm, setSeoForm] = useState({ slug: '', metaTitle: '', metaDescription: '', keywords: '', author: 'Sabreen' });
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const titleRef = useRef<HTMLDivElement>(null);
+  const excerptRef = useRef<HTMLDivElement>(null);
+  const heroFileRef = useRef<HTMLInputElement>(null);
+  const inlineImageRef = useRef<HTMLInputElement>(null);
+  const [uploadingHero, setUploadingHero] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -106,6 +111,49 @@ export default function JournalEditorPage() {
       editor.commands.setContent(article.body || '');
     }
   }, [editor, article]);
+
+  // Sync title/excerpt contentEditable divs from article state (skip if user is actively typing)
+  useEffect(() => {
+    if (!article) return;
+    if (titleRef.current && document.activeElement !== titleRef.current) {
+      titleRef.current.textContent = article.title || '';
+    }
+    if (excerptRef.current && document.activeElement !== excerptRef.current) {
+      excerptRef.current.textContent = article.excerpt || '';
+    }
+  }, [article]);
+
+  async function handleHeroUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingHero(true);
+    const form = new FormData();
+    form.append('file', file);
+    const uploadRes = await fetch(`${API}/api/admin/journal/upload`, {
+      method: 'POST', credentials: 'include', body: form,
+    });
+    const { url } = await uploadRes.json();
+    await fetch(`${API}/api/admin/journal/${id}`, {
+      method: 'PUT', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ heroImage: { url, alt: title, caption: '' } }),
+    });
+    setArticle(a => a ? { ...a, heroImage: { url, alt: title, caption: '' } } : a);
+    setUploadingHero(false);
+  }
+
+  async function handleInlineImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const form = new FormData();
+    form.append('file', file);
+    const uploadRes = await fetch(`${API}/api/admin/journal/upload`, {
+      method: 'POST', credentials: 'include', body: form,
+    });
+    const { url } = await uploadRes.json();
+    editor?.chain().focus().setImage({ src: url }).run();
+    if (inlineImageRef.current) inlineImageRef.current.value = '';
+  }
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -225,21 +273,17 @@ export default function JournalEditorPage() {
               <img src={article.heroImage.url} alt={article.heroImage.alt || title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               <div style={{ textAlign: 'center' }}>
-                <p style={{ fontSize: 13, color: '#a09380', marginBottom: 8 }}>Add hero image</p>
-                <input
-                  type="url"
-                  placeholder="Paste Cloudinary URL…"
-                  style={{ border: '1px solid #d0c9be', padding: '6px 12px', fontFamily: 'inherit', fontSize: 12, width: 260 }}
-                  onBlur={async e => {
-                    if (!e.target.value) return;
-                    await fetch(`${API}/api/admin/journal/${id}`, {
-                      method: 'PUT', credentials: 'include',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ heroImage: { url: e.target.value, alt: title, caption: '' } }),
-                    });
-                    setArticle(a => a ? { ...a, heroImage: { url: e.target.value, alt: title, caption: '' } } : a);
-                  }}
-                />
+                <p style={{ fontSize: 13, color: '#a09380', marginBottom: 12 }}>
+                  {uploadingHero ? 'Uploading…' : 'Add hero image'}
+                </p>
+                <input ref={heroFileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleHeroUpload} />
+                <button
+                  onClick={() => heroFileRef.current?.click()}
+                  disabled={uploadingHero}
+                  style={{ border: '1px solid #d0c9be', padding: '6px 18px', fontFamily: 'inherit', fontSize: 12, background: 'transparent', cursor: 'pointer' }}
+                >
+                  Choose file
+                </button>
               </div>
             )}
             {article.heroImage?.url && (
@@ -261,6 +305,7 @@ export default function JournalEditorPage() {
 
           {/* Title */}
           <div
+            ref={titleRef}
             contentEditable
             suppressContentEditableWarning
             onInput={e => { setTitle(e.currentTarget.textContent || ''); scheduleAutosave(); }}
@@ -275,11 +320,11 @@ export default function JournalEditorPage() {
               letterSpacing: '0.5px',
             }}
             data-placeholder="Article title"
-            dangerouslySetInnerHTML={{ __html: article.title }}
           />
 
           {/* Excerpt */}
           <div
+            ref={excerptRef}
             contentEditable
             suppressContentEditableWarning
             onInput={e => { setExcerpt(e.currentTarget.textContent || ''); scheduleAutosave(); }}
@@ -294,7 +339,6 @@ export default function JournalEditorPage() {
               paddingBottom: 24,
             }}
             data-placeholder="A line or two about what this is…"
-            dangerouslySetInnerHTML={{ __html: article.excerpt }}
           />
 
           {/* Toolbar */}
@@ -339,12 +383,12 @@ export default function JournalEditorPage() {
                 if (url) editor.chain().focus().setLink({ href: url }).run();
               }} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--border)', background: editor.isActive('link') ? 'var(--dark)' : 'white', color: editor.isActive('link') ? 'white' : 'var(--dark)', cursor: 'pointer' }}>🔗</button>
               <button onClick={() => editor.chain().focus().setHorizontalRule().run()} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--border)', background: 'white', color: 'var(--muted)', cursor: 'pointer' }}>—</button>
-              <button onClick={() => {
-                const url = window.prompt('Image URL:');
-                if (url) editor.chain().focus().setImage({ src: url }).run();
-              }} title="Insert image" style={{ padding: '4px 10px', fontSize: 12, border: '1px solid var(--border)', background: 'white', color: 'var(--muted)', cursor: 'pointer' }}>
-                + Image
-              </button>
+              <>
+                <input ref={inlineImageRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleInlineImageUpload} />
+                <button onClick={() => inlineImageRef.current?.click()} title="Insert image" style={{ padding: '4px 10px', fontSize: 12, border: '1px solid var(--border)', background: 'white', color: 'var(--muted)', cursor: 'pointer' }}>
+                  + Image
+                </button>
+              </>
             </div>
           )}
 

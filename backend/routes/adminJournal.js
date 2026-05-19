@@ -1,8 +1,35 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const jwt = require('jsonwebtoken');
+const cloudinary = require('cloudinary').v2;
 const { requireAuth } = require('../middleware/auth');
 const JournalArticle = require('../models/JournalArticle');
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const imgUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter(req, file, cb) {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Images only'));
+  },
+});
+
+function uploadBuffer(buffer, options) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(options, (err, result) => {
+      if (err) reject(err);
+      else resolve(result);
+    });
+    stream.end(buffer);
+  });
+}
 
 router.use(requireAuth);
 
@@ -32,6 +59,21 @@ router.post('/', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── POST /upload — upload image file to Cloudinary ────────────────────────────
+router.post('/upload', imgUpload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file provided' });
+    const result = await uploadBuffer(req.file.buffer, {
+      folder: 'silkilinen/journal',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    });
+    res.json({ url: result.secure_url });
+  } catch (err) {
+    console.error('[Journal upload]', err);
+    res.status(500).json({ error: 'Upload failed' });
   }
 });
 
