@@ -1,4 +1,5 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const checkoutRouter = express.Router();
 const webhookRouter = express.Router();
 const crypto = require('crypto');
@@ -12,6 +13,18 @@ const { calculateShipping } = require('../services/shipping');
 const { validateDiscount, redeemDiscount } = require('../services/discounts');
 const { calculateTax } = require('../services/tax');
 const { sendOrderConfirmation, sendAdminOrderNotification } = require('../services/email');
+
+// 20 intent operations per 5 minutes per IP. Generous enough for normal
+// browsing (edit address, change shipping, retry on network error) while
+// blocking abuse and price-probing.
+const checkoutRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many checkout attempts. Please wait a few minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV !== 'production',
+});
 
 // ── Meta Conversions API ─────────────────────────────────────────────────────
 // Fires server-side Purchase event after payment confirmation.
@@ -65,7 +78,7 @@ async function fireMetaCapi({ order, eventId }) {
 }
 
 // POST /api/v2/checkout/create-intent
-checkoutRouter.post('/create-intent', async (req, res) => {
+checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
   try {
     const { sessionId, shippingCountry, discountCode: incomingCode, attribution, email } = req.body;
     let cart = null;
@@ -178,7 +191,7 @@ checkoutRouter.post('/create-intent', async (req, res) => {
 // POST /api/v2/checkout/update-intent
 // Updates an existing PaymentIntent's amount when country or discount changes.
 // Keeps the same clientSecret so the mounted Elements context is preserved.
-checkoutRouter.post('/update-intent', async (req, res) => {
+checkoutRouter.post('/update-intent', checkoutRateLimit, async (req, res) => {
   try {
     const { paymentIntentId, shippingCountry, discountCode, email } = req.body;
     if (!paymentIntentId) return res.status(400).json({ error: 'paymentIntentId required' });
