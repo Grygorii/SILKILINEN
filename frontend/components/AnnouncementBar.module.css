@@ -5,16 +5,10 @@
   padding: 10px 20px;
   font-size: 12px;
   letter-spacing: 1.5px;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 150;
   min-height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Desktop: no scroll transition — bar stays put */
 }
 
 .message {
@@ -32,17 +26,6 @@
 
 .bar strong {
   font-weight: 500;
-}
-
-/* Mobile only: slide bar up/down on scroll */
-@media (max-width: 767px) {
-  .bar {
-    transition: transform 0.25s ease;
-  }
-
-  .barHidden {
-    transform: translateY(-100%);
-  }
 }
 
 @media (max-width: 600px) {

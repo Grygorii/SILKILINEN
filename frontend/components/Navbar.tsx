@@ -79,10 +79,6 @@ export default function Navbar() {
     }
   }
 
-  const avatarLetter = customer
-    ? (customer.firstName?.[0] || customer.email[0]).toUpperCase()
-    : null;
-
   return (
     <>
       <nav className={`${styles.nav} ${scrolled ? styles.scrolled : ''}`}>
@@ -144,7 +140,7 @@ export default function Navbar() {
                 className={styles.iconBtn}
                 aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} item${wishlistCount !== 1 ? 's' : ''}` : ''}`}
               >
-                <Heart size={20} strokeWidth={1.5} fill={wishlistCount > 0 ? 'currentColor' : 'none'} />
+                <Heart size={20} strokeWidth={1.5} fill="none" />
                 {wishlistCount > 0 && <span className={styles.badge}>{wishlistCount}</span>}
               </Link>
 
@@ -156,15 +152,15 @@ export default function Navbar() {
                   aria-expanded={accountOpen}
                   aria-haspopup="true"
                 >
-                  {customer
-                    ? <span className={styles.accountAvatar}>{avatarLetter}</span>
-                    : <User size={20} strokeWidth={1.5} />
-                  }
+                  <User size={20} strokeWidth={1.5} />
                 </button>
                 {accountOpen && (
                   <div className={styles.accountDropdown} role="menu">
                     {customer ? (
                       <>
+                        <div className={styles.dropGreeting}>
+                          Hi, {customer.firstName || customer.email}
+                        </div>
                         <a href="/account" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>My account</a>
                         <a href="/account/orders" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>Orders</a>
                         <a href="/wishlist" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>

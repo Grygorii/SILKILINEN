@@ -1,6 +1,5 @@
-import Navbar from "@/components/Navbar";
+import SiteHeader from "@/components/SiteHeader";
 import Footer from "@/components/Footer";
-import AnnouncementBar from "@/components/AnnouncementBar";
 import AddedToCartToast from "@/components/AddedToCartToast";
 import WishlistSignInNudge from "@/components/WishlistSignInNudge";
 import EmailCapturePopup from "@/components/EmailCapturePopup";
@@ -22,8 +21,7 @@ export default async function ShopLayout({
 
   return (
     <>
-      <AnnouncementBar messages={messages.length > 0 ? messages : undefined} />
-      <Navbar />
+      <SiteHeader messages={messages.length > 0 ? messages : undefined} />
       <div className="shopContent">
         {children}
       </div>

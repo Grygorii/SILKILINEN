@@ -1,0 +1,32 @@
+.block {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 150;
+  /* Desktop: always visible, no transition */
+}
+
+/* Mobile: slide whole block up by announcement bar height on scroll-down */
+@media (max-width: 767px) {
+  .block {
+    transition: transform 240ms ease;
+  }
+
+  .block[data-scrolled-down="true"] {
+    /* announcement bar is min-height: 38px (30px at ≤600px) */
+    transform: translateY(-38px);
+  }
+}
+
+@media (max-width: 600px) {
+  .block[data-scrolled-down="true"] {
+    transform: translateY(-30px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block {
+    transition: none;
+  }
+}
