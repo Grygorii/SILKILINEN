@@ -59,15 +59,25 @@ app.use(helmet());
 
 console.log('[boot] routes: admin/health, admin/dashboard, admin/site-audit, admin/insights, track');
 
+// Production origins should come from CORS_ORIGINS (comma-separated).
+// Localhost is allowed unconditionally only in non-production so dev keeps
+// working. FRONTEND_URL is honoured for backwards-compat.
+const envOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+const devOrigins = process.env.NODE_ENV === 'production'
+  ? []
+  : ['http://localhost:3000', 'http://localhost:3001'];
 const ALLOWED_ORIGINS = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'https://silkilinen.com',
-  'https://www.silkilinen.com',
-  'https://silkilinen.vercel.app',
-  'https://silkilinen-git-master-grishakinzerskyi-1780s-projects.vercel.app',
+  ...devOrigins,
+  ...envOrigins,
   ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
 ];
+if (process.env.NODE_ENV === 'production' && ALLOWED_ORIGINS.length === 0) {
+  console.error('FATAL: CORS_ORIGINS or FRONTEND_URL must be set in production.');
+  process.exit(1);
+}
 
 app.use(cors({
   origin: function(origin, callback) {
