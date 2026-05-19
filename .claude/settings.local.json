@@ -28,7 +28,16 @@
       "Bash(curl -s \"https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400&display=swap\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36\")",
       "Read(//tmp/**)",
       "Bash(curl -sL https://fonts.gstatic.com/s/cormorantgaramond/v21/co3umX5slCNuHLi8bLeY9MK7whWMhyjypVO7abI26QOD_v86KnTOig.woff2 -o d:/Programming/Course_!/Silkilinen/frontend/public/fonts/cormorant-garamond-400.woff2)",
-      "Bash(curl -L -o \"d:/Programming/Course_!/Silkilinen/frontend/public/fonts/cormorant-garamond-400.ttf\" \"https://github.com/google/fonts/raw/main/ofl/cormorantgaramond/CormorantGaramond-Regular.ttf\")"
+      "Bash(curl -L -o \"d:/Programming/Course_!/Silkilinen/frontend/public/fonts/cormorant-garamond-400.ttf\" \"https://github.com/google/fonts/raw/main/ofl/cormorantgaramond/CormorantGaramond-Regular.ttf\")",
+      "Bash(xxd \"d:/Programming/Course_!/Silkilinen/frontend/public/fonts/cormorant-garamond-400.ttf\")",
+      "Bash(curl -L -f -o \"d:/Programming/Course_!/Silkilinen/frontend/public/fonts/cormorant-garamond-400.ttf\" \"https://raw.githubusercontent.com/google/fonts/main/ofl/cormorantgaramond/CormorantGaramond-Regular.ttf\")",
+      "Bash(curl -s \"https://fonts.googleapis.com/css?family=Cormorant+Garamond:400\" -H \"User-Agent: Mozilla/4.0 \\(compatible; MSIE 5.5; Windows NT 5.0\\)\")",
+      "Bash(curl -s -o /tmp/testfont.bin \"https://fonts.gstatic.com/l/font?kit=co3umX5slCNuHLi8bLeY9MK7whWMhyjypVO7abI26QOD_v86KnTOjg&skey=a863d1376a24bd7a&v=v21\")",
+      "Bash(xxd /tmp/testfont.bin)",
+      "Bash(curl -s \"https://fonts.googleapis.com/css?family=Cormorant+Garamond:400\" -H \"User-Agent: Mozilla/5.0 \\(Macintosh; U; Intel Mac OS X 10_5_6; en-us\\) AppleWebKit/525.27.1 \\(KHTML, like Gecko\\) Version/3.2.1 Safari/525.27.1\")",
+      "Bash(curl -s -o /tmp/cg400.ttf \"https://fonts.gstatic.com/s/cormorantgaramond/v21/co3umX5slCNuHLi8bLeY9MK7whWMhyjypVO7abI26QOD_v86KnTOj9k9IfqBUg.ttf\")",
+      "Bash(xxd /tmp/cg400.ttf)",
+      "Bash(cp /tmp/cg400.ttf \"d:/Programming/Course_!/Silkilinen/frontend/public/fonts/cormorant-garamond-400.ttf\" && xxd \"d:/Programming/Course_!/Silkilinen/frontend/public/fonts/cormorant-garamond-400.ttf\" | head -2)"
     ],
     "additionalDirectories": [
       "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\admin\\collections",
@@ -36,7 +45,8 @@
       "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\admin\\customers",
       "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\admin\\journal",
       "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\admin\\social",
-      "d:\\Programming\\Course_\\!\\Silkilinen\\frontend\\components"
+      "d:\\Programming\\Course_\\!\\Silkilinen\\frontend\\components",
+      "\\tmp"
     ]
   }
 }
