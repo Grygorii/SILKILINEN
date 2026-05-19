@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from './AnnouncementBar.module.css';
 
 const DEFAULT_MESSAGES = [
@@ -16,7 +16,10 @@ export default function AnnouncementBar({ messages }: { messages?: string[] }) {
   const msgs = messages && messages.length > 0 ? messages : DEFAULT_MESSAGES;
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
+  const [scrollHidden, setScrollHidden] = useState(false);
+  const lastScrollY = useRef(0);
 
+  // Rotate messages
   useEffect(() => {
     if (msgs.length <= 1) return;
     const timer = setInterval(() => {
@@ -29,8 +32,25 @@ export default function AnnouncementBar({ messages }: { messages?: string[] }) {
     return () => clearInterval(timer);
   }, [msgs.length]);
 
+  // Hide on scroll-down, show on scroll-up (mobile only via CSS)
+  useEffect(() => {
+    function onScroll() {
+      const currentY = window.scrollY;
+      const scrollingDown = currentY > lastScrollY.current;
+      // Only hide after scrolling past the bar itself
+      if (scrollingDown && currentY > 38) {
+        setScrollHidden(true);
+      } else if (!scrollingDown) {
+        setScrollHidden(false);
+      }
+      lastScrollY.current = currentY;
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
-    <div className={styles.bar}>
+    <div className={`${styles.bar} ${scrollHidden ? styles.barHidden : ''}`}>
       <p
         className={`${styles.message} ${visible ? styles.visible : styles.hidden}`}
         dangerouslySetInnerHTML={{ __html: msgs[index] }}

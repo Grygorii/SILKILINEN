@@ -4,6 +4,8 @@
   margin-top: 80px;
 }
 
+/* ── Trust bar ───────────────────────────────────── */
+
 .trust {
   display: flex;
   justify-content: center;
@@ -26,6 +28,8 @@
   flex-shrink: 0;
   color: #9a9690;
 }
+
+/* ── Desktop column grid ─────────────────────────── */
 
 .inner {
   padding: 48px 6% 0;
@@ -85,6 +89,124 @@
   color: var(--warm-white);
 }
 
+/* ── Mobile brand (hidden on desktop) ────────────── */
+
+.mobileBrand {
+  display: none;
+}
+
+.mobileBrand h3 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 4px;
+  margin-bottom: 16px;
+}
+
+.mobileBrand p {
+  font-size: 13px;
+  color: #9a9690;
+  line-height: 1.8;
+}
+
+/* ── Mobile accordion (hidden on desktop) ─────────── */
+
+.mobileNav {
+  display: none;
+}
+
+.accordionSection {
+  border-bottom: 1px solid #2e2b27;
+}
+
+.accordionTrigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 6%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9a9690;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: left;
+  font-family: inherit;
+}
+
+.accordionCaret {
+  flex-shrink: 0;
+  color: #9a9690;
+  transition: transform 0.25s ease;
+}
+
+.accordionCaretOpen {
+  transform: rotate(180deg);
+}
+
+.accordionContent {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease;
+}
+
+.accordionContentOpen {
+  max-height: 360px;
+}
+
+.accordionInner {
+  padding: 4px 6% 16px;
+}
+
+.mobileNavLink {
+  display: block;
+  font-size: 13px;
+  color: #c8c4be;
+  text-decoration: none;
+  padding: 8px 0;
+  transition: color 0.2s ease;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  width: 100%;
+}
+
+.mobileNavLink:hover {
+  color: var(--warm-white);
+}
+
+/* ── Social icons row ────────────────────────────── */
+
+.socialRow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  padding: 8px 6%;
+  border-top: 1px solid #2e2b27;
+}
+
+.socialIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: #9a9690;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.socialIcon:hover {
+  color: var(--warm-white);
+}
+
+/* ── Bottom legal bar ────────────────────────────── */
+
 .bottom {
   border-top: 1px solid #2e2b27;
   padding: 24px 6%;
@@ -98,26 +220,27 @@
   color: #6a6660;
 }
 
-.socialIcon {
-  color: #9a9690;
-  display: inline-flex;
-  align-items: center;
-  transition: color 0.2s ease;
-  text-decoration: none;
-}
-
-.socialIcon:hover {
-  color: var(--warm-white);
-}
+/* ── Responsive ──────────────────────────────────── */
 
 @media (max-width: 768px) {
   .trust {
     gap: 20px;
   }
 
+  /* Hide desktop grid, show mobile brand + accordion */
   .inner {
-    grid-template-columns: 1fr 1fr;
-    gap: 32px;
+    display: none;
+  }
+
+  .mobileBrand {
+    display: block;
+    padding: 32px 6% 0;
+  }
+
+  .mobileNav {
+    display: block;
+    margin-top: 24px;
+    border-top: 1px solid #2e2b27;
   }
 }
 
@@ -127,11 +250,6 @@
     align-items: center;
     gap: 14px;
     text-align: center;
-  }
-
-  .inner {
-    grid-template-columns: 1fr;
-    gap: 28px;
   }
 
   .bottom {

@@ -14,6 +14,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Desktop: no scroll transition — bar stays put */
 }
 
 .message {
@@ -31,6 +32,17 @@
 
 .bar strong {
   font-weight: 500;
+}
+
+/* Mobile only: slide bar up/down on scroll */
+@media (max-width: 767px) {
+  .bar {
+    transition: transform 0.25s ease;
+  }
+
+  .barHidden {
+    transform: translateY(-100%);
+  }
 }
 
 @media (max-width: 600px) {
