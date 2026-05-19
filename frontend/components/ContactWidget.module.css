@@ -163,16 +163,21 @@
   border-top: 1px solid var(--border, #e0ddd7);
 }
 
-/* Lift above the mobile sticky buy bar (visible at ≤900px) */
-@media (max-width: 900px) {
+/* Small phone defaults */
+@media (max-width: 480px) {
   .root {
-    bottom: calc(72px + env(safe-area-inset-bottom) + 12px);
+    bottom: 20px;
     right: 16px;
+  }
+  .panel {
+    width: calc(100vw - 32px);
   }
 }
 
-@media (max-width: 480px) {
-  .panel {
-    width: calc(100vw - 32px);
+/* Product pages only — lift above the sticky Add to Bag bar (visible at ≤900px) */
+@media (max-width: 900px) {
+  .rootAboveBar {
+    bottom: calc(72px + env(safe-area-inset-bottom) + 12px);
+    right: 16px;
   }
 }

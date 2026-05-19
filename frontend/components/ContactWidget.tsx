@@ -30,8 +30,10 @@ export default function ContactWidget() {
 
   if (BLOCKED_PATHS.some(p => pathname.startsWith(p))) return null;
 
+  const isProductPage = pathname.startsWith('/product/');
+
   return (
-    <div className={styles.root}>
+    <div className={`${styles.root} ${isProductPage ? styles.rootAboveBar : ''}`}>
       {open && (
         <>
           <div className={styles.backdrop} onClick={() => setOpen(false)} />
