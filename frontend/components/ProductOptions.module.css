@@ -41,19 +41,18 @@
   min-height: 44px;
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--dark, #1a1916);
   background: var(--warm-white, #faf8f4);
   color: var(--dark, #1a1916);
   font-size: 11px;
   letter-spacing: 1px;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s;
   white-space: nowrap;
 }
 
 .colourCube:hover {
-  border-color: var(--dark, #1a1916);
   background: var(--cream, #f5f2ec);
 }
 
@@ -87,18 +86,24 @@
 .sizeBtn {
   width: 56px;
   height: 56px;
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--dark, #1a1916);
   background: var(--warm-white, #faf8f4);
   color: var(--dark, #1a1916);
   font-size: 12px;
   font-family: inherit;
   letter-spacing: 1px;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s;
   flex-shrink: 0;
 }
 
-.sizeBtn:hover { border-color: var(--dark, #1a1916); background: var(--cream, #f5f2ec); }
+.sizeBtn:hover:not(:disabled):not(.sizeBtnActive) { background: var(--cream, #f5f2ec); }
+
+.sizeBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
 
 .sizeBtnActive {
   background: var(--dark, #1a1916);

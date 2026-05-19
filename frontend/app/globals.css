@@ -4,6 +4,32 @@
   padding: 0;
 }
 
+/* ── Interaction system ───────────────────────────── */
+
+/* Kill browser blue tap highlight — apply branded active state instead */
+a, button, [role="button"],
+input[type="button"], input[type="submit"], input[type="reset"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Subtle active feedback replaces the blue flash */
+a:active,
+button:active:not(:disabled) {
+  opacity: 0.75;
+}
+
+/* Keyboard focus ring — visible only during keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--dark);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Remove default outline on mouse/touch focus */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
 html {
   overflow-x: hidden;
   max-width: 100vw;

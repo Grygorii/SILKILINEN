@@ -163,11 +163,15 @@
   border-top: 1px solid var(--border, #e0ddd7);
 }
 
-@media (max-width: 480px) {
+/* Lift above the mobile sticky buy bar (visible at ≤900px) */
+@media (max-width: 900px) {
   .root {
-    bottom: 20px;
+    bottom: calc(72px + env(safe-area-inset-bottom) + 12px);
     right: 16px;
   }
+}
+
+@media (max-width: 480px) {
   .panel {
     width: calc(100vw - 32px);
   }

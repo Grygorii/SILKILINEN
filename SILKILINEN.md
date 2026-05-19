@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 19 May 2026 (Header polish + Product page sticky panel + mobile buy bar + related/recently-viewed image fix + cookie banner GDPR + hero CTA).
+Last updated: 19 May 2026 (Header polish + product page sticky fixes + cookie banner GDPR + hero CTA + image fixes + button states polish).
 
 ---
 
@@ -97,6 +97,15 @@ Other admin pages:
 - **Icon consistency** — all header icons are now uniform outline `lucide-react` strokes (`strokeWidth={1.5}`). `Heart` no longer fills when wishlist has items (always outline). Logged-in state shows `<User>` icon (not filled avatar circle with initial). Signed-in greeting ("Hi, Firstname") moves inside the account dropdown as first item. `AnnouncementBar` and `Navbar` reverted to non-fixed positioning (SiteHeader owns it).
 
 **Files modified/created:** `SiteHeader.tsx`, `SiteHeader.module.css`, `components/Navbar.tsx`, `components/Navbar.module.css`, `components/AnnouncementBar.tsx`, `components/AnnouncementBar.module.css`, `app/(shop)/layout.tsx`
+
+### Button states + interaction polish (site-wide)
+
+- **Tap highlight** — `-webkit-tap-highlight-color: transparent` applied globally to `a, button, [role="button"], input[type="button/submit/reset"]`. Replaces blue flash with `opacity: 0.75` on `:active` (both `a` and `button`).
+- **Focus ring** — `*:focus-visible { outline: 2px solid var(--dark); outline-offset: 3px; border-radius: 2px }` globally. Visible during keyboard navigation only. `*:focus:not(:focus-visible) { outline: none }` removes default outline for mouse/touch.
+- **Size selector contrast** — `.sizeBtn` border changed from `var(--border)` (#e8e2d6, barely visible on warm-white bg) to `var(--dark)` (#2a2218). Same for `.colourCube`. Hover state border-color change removed (now redundant — hover shows background shift to cream only). `.sizeBtn:disabled` added (opacity 0.35, cursor not-allowed, line-through text).
+- **Chat widget overlap** — `ContactWidget` on ≤900px (matches `StickyBuyBar` breakpoint) now positioned at `bottom: calc(72px + env(safe-area-inset-bottom) + 12px)` — sits above the sticky buy bar. Replaced the old `@media (max-width: 480px)` bottom override.
+
+**Files modified:** `app/globals.css`, `components/ProductOptions.module.css`, `components/ContactWidget.module.css`
 
 ### Related products + recently viewed — missing images fix
 
