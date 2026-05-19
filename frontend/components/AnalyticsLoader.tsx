@@ -9,9 +9,10 @@ const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-XZG6XTZ3S8';
 const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || 'wkxxtbufn3';
 
 export default function AnalyticsLoader() {
-  const { consent } = useCookieConsent();
+  const { consent, preferences } = useCookieConsent();
+  const allowed = consent === 'accepted' || (consent === 'customised' && preferences?.analytics === true);
 
-  if (consent !== 'accepted') return null;
+  if (!allowed) return null;
 
   return (
     <>

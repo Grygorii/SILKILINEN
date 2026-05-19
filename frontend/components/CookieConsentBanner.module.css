@@ -26,37 +26,49 @@
   text-decoration: underline;
 }
 
+/* ── Stacked button group ─────────────────────────── */
+
 .buttons {
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   flex-shrink: 0;
+  min-width: 160px;
 }
 
 .btn {
-  padding: 10px 22px;
-  font-size: 13px;
+  width: 100%;
+  padding: 11px 20px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
   font-family: inherit;
   cursor: pointer;
-  border: 1px solid #f5f3ef;
-  letter-spacing: 0.04em;
-  transition: background 0.15s, color 0.15s;
+  text-align: center;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
 }
 
+/* Primary — filled light, dark text */
 .btnAccept {
   background: #f5f3ef;
+  border: 1px solid #f5f3ef;
   color: #1a1916;
 }
 
 .btnAccept:hover {
   background: #e8e4de;
+  border-color: #e8e4de;
 }
 
-.btnReject {
+/* Secondary — outlined, light stroke on dark banner */
+.btnSettings {
   background: transparent;
+  border: 1px solid rgba(245, 243, 239, 0.45);
   color: #f5f3ef;
 }
 
-.btnReject:hover {
+.btnSettings:hover {
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -70,10 +82,6 @@
 
   .buttons {
     width: 100%;
-  }
-
-  .btn {
-    flex: 1;
-    text-align: center;
+    min-width: 0;
   }
 }

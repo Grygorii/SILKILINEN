@@ -1,4 +1,5 @@
 .hero {
+  position: relative;
   height: 100vh;
   /* Warm editorial fallback when no CMS image is set */
   background-color: #e8e2d8;
@@ -8,6 +9,23 @@
   display: flex;
   align-items: center;
   padding: 0 8%;
+}
+
+/* Gradient scrim — lifts headline legibility over busy hero photos */
+.hero::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 55%;
+  height: 70%;
+  background: linear-gradient(to top right, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
 }
 
 .heroContent h2 {
@@ -29,21 +47,22 @@
   margin-bottom: 32px;
 }
 
+/* Solid filled CTA — visible against any hero photo */
 .heroBtn {
   display: inline-block;
   padding: 14px 36px;
+  background: var(--dark);
   border: 1px solid var(--dark);
-  color: var(--dark);
+  color: var(--warm-white);
   font-size: 11px;
   letter-spacing: 3px;
   text-transform: uppercase;
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .heroBtn:hover {
-  background: var(--dark);
-  color: var(--warm-white);
+  opacity: 0.82;
 }
 
 /* ── Reviews section ──────────────────────────────── */
@@ -98,6 +117,13 @@
     padding: 0 5%;
     align-items: flex-end;
     padding-bottom: 56px;
+  }
+
+  /* Mobile: content sits at bottom, scrim rises from below */
+  .hero::before {
+    width: 100%;
+    height: 55%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
   }
 
   .heroContent h2 {

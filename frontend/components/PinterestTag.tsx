@@ -18,15 +18,16 @@ export function trackPinEvent(event: string, params?: Record<string, unknown>) {
 }
 
 export default function PinterestTag() {
-  const { consent } = useCookieConsent();
+  const { consent, preferences } = useCookieConsent();
+  const allowed = consent === 'accepted' || (consent === 'customised' && preferences?.marketing === true);
 
   useEffect(() => {
-    if (consent === 'accepted' && typeof window !== 'undefined' && window.pintrk) {
+    if (allowed && typeof window !== 'undefined' && window.pintrk) {
       window.pintrk('track', 'pagevisit');
     }
-  }, [consent]);
+  }, [allowed]);
 
-  if (!TAG_ID || consent !== 'accepted') return null;
+  if (!TAG_ID || !allowed) return null;
 
   return (
     <Script

@@ -23,15 +23,16 @@ export function trackFbEvent(event: string, params?: Record<string, unknown>, ev
 }
 
 export default function MetaPixel() {
-  const { consent } = useCookieConsent();
+  const { consent, preferences } = useCookieConsent();
+  const allowed = consent === 'accepted' || (consent === 'customised' && preferences?.marketing === true);
 
   useEffect(() => {
-    if (consent === 'accepted' && typeof window !== 'undefined' && window.fbq) {
+    if (allowed && typeof window !== 'undefined' && window.fbq) {
       window.fbq('track', 'PageView');
     }
-  }, [consent]);
+  }, [allowed]);
 
-  if (!PIXEL_ID || consent !== 'accepted') return null;
+  if (!PIXEL_ID || !allowed) return null;
 
   return (
     <Script

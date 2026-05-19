@@ -69,6 +69,26 @@ Other admin pages:
 - Existing Dalia / Bastet / Ciara / Rehab dress and robe products from earlier build phase
 - **Silk panties** (the actual sales hero) — currently sold on Etsy, not yet migrated to silkilinen.com as primary
 
+## Shipped 19 May 2026 — session 2
+
+### Cookie banner + hero CTA visual hierarchy
+
+**Cookie banner (GDPR-compliant):**
+- Banner now shows two stacked buttons: **ACCEPT ALL** (filled, prominent) + **COOKIE SETTINGS** (outlined, neutral). No "Reject" dark pattern on the banner itself.
+- "Cookie Settings" opens a modal with per-category toggles (Necessary always-on, Functional, Analytics, Marketing) and two equal-weight action buttons: **REJECT ALL** + **SAVE PREFERENCES**.
+- User can reject all cookies in 2 clicks (banner → modal → reject all) — satisfies GDPR/Irish DPC requirement.
+- Consent state extended to `'accepted' | 'rejected' | 'customised' | null`. Per-category prefs stored as JSON in `silkilinen:cookiePrefs` localStorage key.
+- `AnalyticsLoader` (GA4, Clarity, Vercel Analytics), `MetaPixel`, and `PinterestTag` now each check `consent === 'customised' && preferences?.analytics/marketing` so per-category gating works correctly.
+- `CookiePreferencesLink` (footer) now opens settings modal directly instead of re-showing the banner.
+
+**Hero CTA:** `SHOP THE COLLECTION` button changed from outlined (transparent) to solid filled (`var(--dark)` background, `var(--warm-white)` text) — visible against any hero photo regardless of background tone.
+
+**Hero headline scrim:** Subtle gradient overlay added via `::before` pseudo-element. Desktop: rises from bottom-left (55% wide, 70% tall, 0.28 opacity). Mobile: full-width bottom-to-top gradient (0.3 opacity). Lifts headline legibility over busy photos without visually competing with the photo.
+
+**Files modified/created:** `context/CookieConsentContext.tsx`, `components/CookieConsentBanner.tsx`, `components/CookieConsentBanner.module.css`, `components/CookieSettingsModal.tsx` (new), `components/CookieSettingsModal.module.css` (new), `components/CookiePreferencesLink.tsx`, `components/AnalyticsLoader.tsx`, `components/MetaPixel.tsx`, `components/PinterestTag.tsx`, `app/(shop)/page.module.css`
+
+---
+
 ## Shipped 19 May 2026
 
 ### Header polish (sticky container + icon consistency)
