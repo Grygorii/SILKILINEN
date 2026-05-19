@@ -21,9 +21,10 @@
 
 .infoCol {
   padding: 60px 60px 60px 48px;
+  align-self: start; /* required for sticky in grid — without this sticky won't activate */
   position: sticky;
-  top: 140px; /* 38px bar + 92px nav + 10px breathing room */
-  max-height: calc(100vh - 160px);
+  top: 136px; /* 120px header (shopContent padding) + 16px breathing room */
+  max-height: calc(100vh - 136px - 16px);
   overflow-y: auto;
   scrollbar-width: none;
 }
@@ -265,7 +266,7 @@
     margin-top: 16px;
   }
   .infoCol {
-    padding: 40px 6% 60px;
+    padding: 40px 6% 80px; /* 80px bottom clears the sticky buy bar */
     position: static;
     max-height: none;
     overflow-y: visible;
@@ -274,6 +275,6 @@
 }
 
 @media (max-width: 480px) {
-  .infoCol { padding: 32px 5% 48px; }
+  .infoCol { padding: 32px 5% 80px; }
   .productName { font-size: 26px; }
 }

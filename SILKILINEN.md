@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 18 May 2026 (Security audit findings + Frontend UX fixes).
+Last updated: 19 May 2026 (Header polish + Product page sticky panel + mobile buy bar).
 
 ---
 
@@ -43,7 +43,7 @@ The site exists primarily to **escape Etsy's fee burden** (Etsy takes ~15-20% ef
 
 Browse / product detail pages, cart with quantity adjustment and stock caps, wishlist, magic-link or Google OAuth sign-in, Stripe checkout, customer accounts. Newsletter signup with welcome email + SILK10 code. "Just sold" social-proof popup (public endpoint, no auth required). Free-shipping-over-€150-to-Ireland banner.
 
-**Product page (as of 15 May 2026):** Multi-image gallery with desktop vertical thumbnail strip + main image; mobile touch-swipe with page dots. Video renders in gallery sequence (Cloudinary `so_0,f_jpg` poster). Story sentence from `description` visible above price. PRODUCT DETAILS accordion open by default. One-size products auto-select. Free shipping reminder below price. Heart: no white circle, charcoal fill, portal-fixed z-index. Contact button: speech bubble icon, response time line. Colour cubes instead of hex swatches (both on product page and shop grid). Footer: "14-day hassle-free returns".
+**Product page (as of 19 May 2026):** Multi-image gallery with desktop vertical thumbnail strip + main image; mobile touch-swipe with page dots. Video renders in gallery sequence (Cloudinary `so_0,f_jpg` poster). PRODUCT DETAILS accordion open by default. One-size products auto-select. Free shipping reminder below price. Heart: no white circle, charcoal fill, portal-fixed z-index. Contact button: speech bubble icon, response time line. Colour cubes instead of hex swatches (both on product page and shop grid). Footer: "14-day hassle-free returns". **Desktop:** right info panel is `position: sticky` + `align-self: start`; story sentence moved below Add to Bag so CTA is always above fold; no nested scroll on standard viewports (overflow-y:auto only kicks in as fallback on very short screens). **Mobile (≤900px):** single-column stack; persistent sticky bottom Add to Bag bar (`StickyBuyBar`) reads shared colour/size/qty state via `ProductSelectionContext` — tapping when no size selected scrolls to inline selectors; out-of-stock shows `OUT OF STOCK` state; iOS safe-area-inset-bottom applied.
 
 ## Admin tooling shipped
 
@@ -68,6 +68,27 @@ Other admin pages:
 - Aoife Terracotta Robe (first listed product) — AI-generated imagery, approved by Sabreena
 - Existing Dalia / Bastet / Ciara / Rehab dress and robe products from earlier build phase
 - **Silk panties** (the actual sales hero) — currently sold on Etsy, not yet migrated to silkilinen.com as primary
+
+## Shipped 19 May 2026
+
+### Header polish (sticky container + icon consistency)
+
+- **SiteHeader wrapper** (`components/SiteHeader.tsx` + `SiteHeader.module.css`) — single `position: fixed` container wraps both `AnnouncementBar` and `Navbar`. Mobile hide-on-scroll transforms the entire block via `data-scrolled-down` attribute, eliminating the empty gap left by the previous approach (transforming only the bar).
+- **Icon consistency** — all header icons are now uniform outline `lucide-react` strokes (`strokeWidth={1.5}`). `Heart` no longer fills when wishlist has items (always outline). Logged-in state shows `<User>` icon (not filled avatar circle with initial). Signed-in greeting ("Hi, Firstname") moves inside the account dropdown as first item. `AnnouncementBar` and `Navbar` reverted to non-fixed positioning (SiteHeader owns it).
+
+**Files modified/created:** `SiteHeader.tsx`, `SiteHeader.module.css`, `components/Navbar.tsx`, `components/Navbar.module.css`, `components/AnnouncementBar.tsx`, `components/AnnouncementBar.module.css`, `app/(shop)/layout.tsx`
+
+### Product page — sticky panel + mobile sticky buy bar
+
+Root cause: info column had `overflow-y: auto` and story sentence placed above price/selectors, pushing Add to Bag below the fold of the nested scroll. Customers couldn't find the buy button.
+
+- **Desktop:** `align-self: start` added to `.infoCol` (critical for sticky in CSS Grid); `top` corrected to `136px` (120px header + 16px breathing); story sentence moved below `ProductOptions` so Add to Bag is always above fold on standard viewports.
+- **Mobile:** `StickyBuyBar` component pinned to `bottom: 0` (hidden on desktop via `@media (min-width: 901px)`). Shows product name, price, Add to Bag. Shares colour/size/qty state with inline `ProductOptions` via `ProductSelectionContext`. Tapping when size/colour unselected scrolls to inline selectors. Out-of-stock state respected. iOS `env(safe-area-inset-bottom)` applied.
+- **State sharing:** `ProductSelectionContext.tsx` (new) provides `selectedColour`, `selectedSize`, `qty` to both `ProductOptions` and `StickyBuyBar`. `ProductSelectionProvider` wraps both components in `page.tsx`.
+
+**Files modified/created:** `app/(shop)/product/[id]/page.tsx`, `app/(shop)/product/[id]/page.module.css`, `components/ProductOptions.tsx`, `components/ProductSelectionContext.tsx` (new), `components/StickyBuyBar.tsx` (new), `components/StickyBuyBar.module.css` (new)
+
+---
 
 ## Shipped 16 May 2026 — hotfix bundle #7–11
 

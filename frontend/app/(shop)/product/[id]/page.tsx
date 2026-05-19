@@ -7,6 +7,8 @@ import PageTracker from '@/components/PageTracker';
 import CrossSell from '@/components/CrossSell';
 import RecentlyViewed from '@/components/RecentlyViewed';
 import ProductViewTracker from '@/components/ProductViewTracker';
+import { ProductSelectionProvider } from '@/components/ProductSelectionContext';
+import StickyBuyBar from '@/components/StickyBuyBar';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -150,112 +152,129 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         <ProductViewTracker id={product._id} name={product.name} price={product.price} />
         <PageTracker page="product" productId={product._id} />
 
-        <div className={styles.inner}>
-          {/* Gallery */}
-          <div className={styles.galleryCol}>
-            <ProductGallery
-              images={galleryImages}
-              name={product.name}
-              productId={product._id}
-              video={product.productVideo ?? null}
-            />
-          </div>
+        <ProductSelectionProvider
+          defaultColour={product.colours?.[0] ?? ''}
+          defaultSize={product.sizes?.length === 1 ? product.sizes[0] : ''}
+        >
+          <div className={styles.inner}>
+            {/* Gallery */}
+            <div className={styles.galleryCol}>
+              <ProductGallery
+                images={galleryImages}
+                name={product.name}
+                productId={product._id}
+                video={product.productVideo ?? null}
+              />
+            </div>
 
-          {/* Info */}
-          <div className={styles.infoCol}>
-            <a href="/shop" className={styles.back}>← Back to shop</a>
+            {/* Info — sticky on desktop, static on mobile */}
+            <div className={styles.infoCol}>
+              <a href="/shop" className={styles.back}>← Back to shop</a>
 
-            {showNew && <span className={styles.newTag}>new</span>}
-            <h1 className={styles.productName}>{product.name}</h1>
-            {materialSub && <p className={styles.materialSub}>{materialSub}</p>}
+              {showNew && <span className={styles.newTag}>new</span>}
+              <h1 className={styles.productName}>{product.name}</h1>
+              {materialSub && <p className={styles.materialSub}>{materialSub}</p>}
 
-            {/* Colour variant cubes — links to sibling colour products */}
-            {(product.colorName || (product.colorVariants && product.colorVariants.length > 0)) && (
-              <div className={styles.colourCubes}>
-                <p className={styles.colourLabel}>COLOUR</p>
-                <div className={styles.cubeRow}>
-                  <span className={styles.cubeActive}>
-                    {product.colorName || product.colours?.[0] || 'One Colour'}
-                  </span>
-                  {product.colorVariants?.map((v: { productId: string; colorName: string }) => (
-                    <Link
-                      key={v.productId}
-                      href={`/product/${v.productId}`}
-                      className={styles.cubeLink}
-                    >
-                      {v.colorName}
-                    </Link>
-                  ))}
+              {/* Colour variant cubes — links to sibling colour products */}
+              {(product.colorName || (product.colorVariants && product.colorVariants.length > 0)) && (
+                <div className={styles.colourCubes}>
+                  <p className={styles.colourLabel}>COLOUR</p>
+                  <div className={styles.cubeRow}>
+                    <span className={styles.cubeActive}>
+                      {product.colorName || product.colours?.[0] || 'One Colour'}
+                    </span>
+                    {product.colorVariants?.map((v: { productId: string; colorName: string }) => (
+                      <Link
+                        key={v.productId}
+                        href={`/product/${v.productId}`}
+                        className={styles.cubeLink}
+                      >
+                        {v.colorName}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Story sentence — brand voice visible above price */}
-            {snippet && (
-              <p className={styles.storySentence}>
-                {snippet.text}
-                {snippet.truncated && (
-                  <>{' '}<a href="#product-details" className={styles.readMore}>Read more</a></>
+              <p className={styles.price}>
+                <span className={product.compareAtPrice && product.compareAtPrice > product.price ? styles.priceSale : ''}>
+                  €{Number(product.price).toFixed(2)}
+                </span>
+                {product.compareAtPrice && product.compareAtPrice > product.price && (
+                  <span className={styles.priceCompare}>€{Number(product.compareAtPrice).toFixed(2)}</span>
                 )}
               </p>
-            )}
 
-            <p className={styles.price}>
-              <span className={product.compareAtPrice && product.compareAtPrice > product.price ? styles.priceSale : ''}>
-                €{Number(product.price).toFixed(2)}
-              </span>
-              {product.compareAtPrice && product.compareAtPrice > product.price && (
-                <span className={styles.priceCompare}>€{Number(product.compareAtPrice).toFixed(2)}</span>
+              <p className={styles.shippingNote}>{shippingMessage}</p>
+
+              <StockBadge product={product} />
+
+              <ProductOptions
+                colours={product.colours ?? []}
+                sizes={product.sizes ?? []}
+                productName={product.name}
+                productId={product._id}
+                price={product.price}
+                outOfStock={outOfStock}
+                stock={total ?? undefined}
+                image={galleryImages[0]?.url}
+              />
+
+              {/* Story sentence — below Add to Bag so CTA is always above fold */}
+              {snippet && (
+                <p className={styles.storySentence}>
+                  {snippet.text}
+                  {snippet.truncated && (
+                    <>{' '}<a href="#product-details" className={styles.readMore}>Read more</a></>
+                  )}
+                </p>
               )}
-            </p>
 
-            <p className={styles.shippingNote}>{shippingMessage}</p>
-
-            <StockBadge product={product} />
-
-            <ProductOptions
-              colours={product.colours ?? []}
-              sizes={product.sizes ?? []}
-              productName={product.name}
-              productId={product._id}
-              price={product.price}
-              outOfStock={outOfStock}
-              stock={total ?? undefined}
-              image={galleryImages[0]?.url}
-            />
-
-            {/* Accordions */}
-            <div className={styles.accordions}>
-              {product.description && (
-                <details id="product-details" className={styles.accordion} open>
-                  <summary className={styles.accordionSummary}>PRODUCT DETAILS</summary>
-                  <p className={styles.accordionBody}>{product.description}</p>
-                </details>
-              )}
-              {(product.materialComposition || product.careInstructions) && (
+              {/* Accordions */}
+              <div className={styles.accordions}>
+                {product.description && (
+                  <details id="product-details" className={styles.accordion} open>
+                    <summary className={styles.accordionSummary}>PRODUCT DETAILS</summary>
+                    <p className={styles.accordionBody}>{product.description}</p>
+                  </details>
+                )}
+                {(product.materialComposition || product.careInstructions) && (
+                  <details className={styles.accordion}>
+                    <summary className={styles.accordionSummary}>MATERIAL AND CARE</summary>
+                    <div className={styles.accordionBody}>
+                      {product.materialComposition && <p>{product.materialComposition}</p>}
+                      {product.careInstructions && <p style={{ marginTop: '8px' }}>{product.careInstructions}</p>}
+                    </div>
+                  </details>
+                )}
                 <details className={styles.accordion}>
-                  <summary className={styles.accordionSummary}>MATERIAL AND CARE</summary>
-                  <div className={styles.accordionBody}>
-                    {product.materialComposition && <p>{product.materialComposition}</p>}
-                    {product.careInstructions && <p style={{ marginTop: '8px' }}>{product.careInstructions}</p>}
-                  </div>
+                  <summary className={styles.accordionSummary}>DELIVERY & RETURNS</summary>
+                  <p className={styles.accordionBody}>
+                    We ship from Donegal, Ireland worldwide. Standard delivery 5–10 business days. Express shipping available at checkout. Returns accepted within 14 days of delivery for unworn items in their original condition.
+                  </p>
                 </details>
-              )}
-              <details className={styles.accordion}>
-                <summary className={styles.accordionSummary}>DELIVERY & RETURNS</summary>
-                <p className={styles.accordionBody}>
-                  We ship from Donegal, Ireland worldwide. Standard delivery 5–10 business days. Express shipping available at checkout. Returns accepted within 14 days of delivery for unworn items in their original condition.
-                </p>
-              </details>
-              <details className={styles.accordion}>
-                <summary className={styles.accordionSummary}>GIFT PACKAGING</summary>
-                <p className={styles.accordionBody}>
-                  Every order is wrapped in our signature tissue-lined box with ribbon — ready for gifting. Add a personal note in the order notes at checkout.
-                </p>
-              </details>
+                <details className={styles.accordion}>
+                  <summary className={styles.accordionSummary}>GIFT PACKAGING</summary>
+                  <p className={styles.accordionBody}>
+                    Every order is wrapped in our signature tissue-lined box with ribbon — ready for gifting. Add a personal note in the order notes at checkout.
+                  </p>
+                </details>
+              </div>
             </div>
           </div>
-        </div>
+
+          {/* Mobile sticky buy bar — hidden on desktop via CSS */}
+          <StickyBuyBar
+            productId={product._id}
+            productName={product.name}
+            price={product.price}
+            outOfStock={outOfStock}
+            stock={total ?? undefined}
+            image={galleryImages[0]?.url}
+            colours={product.colours ?? []}
+            sizes={product.sizes ?? []}
+          />
+        </ProductSelectionProvider>
       </main>
 
       <CrossSell productId={id} />

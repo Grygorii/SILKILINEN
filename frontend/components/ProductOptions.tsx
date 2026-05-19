@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
+import { useProductSelection } from './ProductSelectionContext';
 import DropAHint from './DropAHint';
 import { Gift } from '@/components/icons';
 import styles from './ProductOptions.module.css';
@@ -18,11 +19,9 @@ type Props = {
 };
 
 export default function ProductOptions({ colours, sizes, productName, productId, price, outOfStock, stock, image }: Props) {
-  const [selectedColour, setSelectedColour] = useState(colours[0] ?? '');
-  const [selectedSize, setSelectedSize] = useState(() => sizes.length === 1 ? sizes[0] : '');
+  const { selectedColour, setSelectedColour, selectedSize, setSelectedSize, qty, setQty } = useProductSelection();
   const [addState, setAddState] = useState<'idle' | 'adding' | 'added'>('idle');
   const [hintOpen, setHintOpen] = useState(false);
-  const [qty, setQty] = useState(1);
   const { addToCart } = useCart();
 
   const maxQty = Math.min(stock ?? 10, 10);
@@ -71,7 +70,7 @@ export default function ProductOptions({ colours, sizes, productName, productId,
   }
 
   return (
-    <div className={styles.root}>
+    <div className={styles.root} data-product-options>
       {/* Colour */}
       {colours.length > 0 && (
         <div className={styles.picker}>
