@@ -1,17 +1,16 @@
 require('dotenv').config();
 
-const DEFAULT_SECRET = 'silkilinen_super_secret_key_change_this_in_production';
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET === DEFAULT_SECRET) {
-  console.error('FATAL: JWT_SECRET is not set or is using the insecure default. Set a strong random secret in Railway environment variables.');
-  if (process.env.NODE_ENV === 'production') process.exit(1);
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  console.error('FATAL: JWT_SECRET must be set to a strong random value (>=32 chars).');
+  process.exit(1);
 }
-process.env.JWT_SECRET = process.env.JWT_SECRET || DEFAULT_SECRET;
 
 if (!process.env.DEEPSEEK_API_KEY) {
   console.warn('[warning] DEEPSEEK_API_KEY not set — AI SEO generation will fail until it is configured.');
 }
 
 const express = require('express');
+const helmet = require('helmet');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
@@ -55,6 +54,8 @@ const app = express();
 // Trust Railway's reverse proxy so express-rate-limit can read X-Forwarded-For.
 // Integer 1 = trust exactly one proxy hop; avoids IP spoofing via forged headers.
 app.set('trust proxy', 1);
+
+app.use(helmet());
 
 console.log('[boot] routes: admin/health, admin/dashboard, admin/site-audit, admin/insights, track');
 
