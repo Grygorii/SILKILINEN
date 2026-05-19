@@ -30,10 +30,19 @@ const productVideoSchema = new mongoose.Schema({
 }, { _id: false });
 
 const productSchema = new mongoose.Schema({
-  // required: false — application-level validation via validateForSave() / validateForPublish()
-  // handles required-on-save and required-on-publish checks. Schema required: true would
-  // block empty draft creation.
-  name: { type: String, required: false, default: '', trim: true },
+  // Schema-level defence in depth. routes/adminProducts.js validateForSave()
+  // already enforces these for admin writes, but anything that bypasses the
+  // route (seed scripts, migrations, direct Mongoose) used to be able to
+  // create nameless or zero-price products.
+  name: {
+    type: String,
+    required: [true, 'Product name is required'],
+    trim: true,
+    validate: {
+      validator: v => typeof v === 'string' && v.trim().length > 0,
+      message: 'Product name cannot be empty',
+    },
+  },
 
   status: {
     type: String,
@@ -42,7 +51,11 @@ const productSchema = new mongoose.Schema({
     index: true,
   },
 
-  price: { type: Number, required: false, default: 0, min: 0 },
+  price: {
+    type: Number,
+    required: [true, 'Price is required'],
+    min: [0, 'Price cannot be negative'],
+  },
   compareAtPrice: { type: Number, min: 0 },
   costPrice: { type: Number, min: 0 },
 
