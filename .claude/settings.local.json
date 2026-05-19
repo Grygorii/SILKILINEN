@@ -24,7 +24,11 @@
       "Bash(npm run *)",
       "Bash(New-Item -ItemType Directory -Force \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\frontend\\\\components\\\\icons\")",
       "Bash(mkdir -p \"d:/Programming/Course_\\\\!/Silkilinen/frontend/components/icons\" && echo \"done\")",
-      "Bash(xargs grep -l -i \"gemini\\\\|imagen\\\\|generateImage\")"
+      "Bash(xargs grep -l -i \"gemini\\\\|imagen\\\\|generateImage\")",
+      "Bash(curl -s \"https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400&display=swap\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36\")",
+      "Read(//tmp/**)",
+      "Bash(curl -sL https://fonts.gstatic.com/s/cormorantgaramond/v21/co3umX5slCNuHLi8bLeY9MK7whWMhyjypVO7abI26QOD_v86KnTOig.woff2 -o d:/Programming/Course_!/Silkilinen/frontend/public/fonts/cormorant-garamond-400.woff2)",
+      "Bash(curl -L -o \"d:/Programming/Course_!/Silkilinen/frontend/public/fonts/cormorant-garamond-400.ttf\" \"https://github.com/google/fonts/raw/main/ofl/cormorantgaramond/CormorantGaramond-Regular.ttf\")"
     ],
     "additionalDirectories": [
       "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\admin\\collections",
