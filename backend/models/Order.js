@@ -103,6 +103,14 @@ const orderSchema = new mongoose.Schema({
   },
 
   receiptIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Receipt' }],
+
+  // Cart recovery email tracking
+  recoveryEmails: [{
+    seq: { type: Number },         // 1, 2, or 3
+    sentAt: { type: Date },
+    _id: false,
+  }],
+  recoveryUnsubscribed: { type: Boolean, default: false },
 }, { timestamps: true });
 
 orderSchema.index({ status: 1, createdAt: -1 });

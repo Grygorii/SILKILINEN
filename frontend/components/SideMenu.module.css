@@ -159,18 +159,58 @@
 
 .spacer { flex: 1; min-height: 32px; }
 
+/* ── Account section ──────────────────────────────── */
+
+.accountSection {
+  padding: 0 28px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border, #e0ddd7);
+  margin-top: 8px;
+}
+
+.accountGreeting {
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  color: var(--muted, #8a8680);
+  padding: 14px 0 2px;
+  margin: 0;
+}
+
+.accountLink {
+  display: block;
+  padding: 11px 0;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  color: var(--dark, #1a1916);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border, #e0ddd7);
+  transition: opacity 0.15s;
+}
+
+.accountLink:hover { opacity: 0.6; }
+
+.accountSignOut {
+  background: none;
+  border: none;
+  padding: 11px 0;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  color: var(--muted, #8a8680);
+  cursor: pointer;
+  font-family: inherit;
+  display: block;
+  text-align: left;
+  width: 100%;
+  transition: color 0.15s;
+}
+
+.accountSignOut:hover { color: var(--dark, #1a1916); }
+
 /* ── Footer ───────────────────────────────────────── */
 
 .footer {
   padding: 0 28px 32px;
   flex-shrink: 0;
-  border-top: 1px solid var(--border, #e0ddd7);
-}
-
-.footerRow {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
 }
 
 .footerLink {
@@ -221,5 +261,6 @@
   .header { padding: 20px 20px 0; }
   .searchWrap { padding: 20px 20px 0; }
   .nav { padding: 24px 20px 0; }
+  .accountSection { padding: 0 20px; }
   .footer { padding: 0 20px 28px; }
 }

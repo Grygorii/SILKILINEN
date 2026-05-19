@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Heart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
+import { isValidImageUrl } from '@/lib/imageUtils';
 import styles from './ProductGrid.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -144,12 +145,10 @@ export default function ProductGrid({
             const materialSub = getMaterialSub(product.materialComposition);
             const showNew = isNew(product.createdAt);
 
-            const primaryImg = product.images?.find(i => i.isPrimary)
-              ?? product.images?.[0]
-              ?? null;
-            const secondImg = product.images?.find(i => !i.isPrimary && i !== primaryImg)
-              ?? (product.images && product.images.length > 1 ? product.images[1] : null);
-            const heroUrl = primaryImg?.url ?? product.image ?? null;
+            const validImages = product.images?.filter(i => isValidImageUrl(i.url)) ?? [];
+            const primaryImg = validImages.find(i => i.isPrimary) ?? validImages[0] ?? null;
+            const secondImg = validImages.find(i => i !== primaryImg) ?? null;
+            const heroUrl = primaryImg?.url ?? (isValidImageUrl(product.image) ? product.image : null);
             const heroAlt = primaryImg?.alt ?? product.name;
 
             return (
@@ -170,10 +169,10 @@ export default function ProductGrid({
                 <Link href={`/product/${product._id}`} className={styles.cardLink}>
                   <div className={styles.cardImg}>
                     {heroUrl && (
-                      <img src={heroUrl} alt={heroAlt} className={styles.img} />
+                      <img src={heroUrl} alt={heroAlt} className={styles.img} onError={e => { e.currentTarget.style.display = 'none'; }} />
                     )}
                     {secondImg?.url && (
-                      <img src={secondImg.url} alt={heroAlt} className={`${styles.img} ${styles.imgHover}`} />
+                      <img src={secondImg.url} alt={heroAlt} className={`${styles.img} ${styles.imgHover}`} onError={e => { e.currentTarget.style.display = 'none'; }} />
                     )}
                     {showNew && <span className={styles.newBadge}>new</span>}
                   </div>

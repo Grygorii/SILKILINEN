@@ -73,7 +73,7 @@ export default function AbandonedCartsPage() {
   }
 
   return (
-    <AdminLayout>
+    <AdminLayout active="marketing">
       <div className={styles.header}>
         <h2>Abandoned carts</h2>
         <p className={styles.subtitle}>

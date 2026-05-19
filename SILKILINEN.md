@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 19 May 2026 (Header polish + product page sticky fixes + cookie banner GDPR + hero CTA + image fixes + button states polish + gallery broken-image fix + Cloudinary URL validation + admin panel UX fixes P1+P2).
+Last updated: 19 May 2026 (Header polish + product page sticky fixes + cookie banner GDPR + hero CTA + image fixes + button states polish + gallery broken-image fix + Cloudinary URL validation + admin panel UX fixes P1+P2 + abandoned cart recovery fix + recovery email automation + mobile header simplification + product image pipeline lockdown).
 
 ---
 
@@ -69,6 +69,44 @@ Other admin pages:
 - Existing Dalia / Bastet / Ciara / Rehab dress and robe products from earlier build phase
 - **Silk panties** (the actual sales hero) — currently sold on Etsy, not yet migrated to silkilinen.com as primary
 
+## Shipped 19 May 2026 — abandoned cart recovery
+
+### Bug fix — abandoned carts page "Failed to load"
+
+Root cause: `GET /api/orders` accepted a `to` query parameter and appended `'T23:59:59.999Z'` to it unconditionally (intended for date-only strings from the date picker). The abandoned carts page passed a full ISO datetime string for `to` (to get a precise 2-hour cutoff), producing an invalid concatenation like `"2026-05-19T10:30:00.000ZT23:59:59.999Z"`. Mongoose threw a CastError when trying to serialize this, returning a 500 → frontend showed "Failed to load".
+
+Fix: detect whether `to` already contains a time component (`to.includes('T')`) and skip the suffix append if so.
+
+**Files modified:** `backend/routes/orders.js`
+
+### Recovery email automation (3-email sequence)
+
+**Order model** — added `recoveryEmails: [{ seq, sentAt }]` and `recoveryUnsubscribed: Boolean` fields.
+
+**Email function** (`services/email.js`) — added `sendCartRecoveryEmail(order, seq)`:
+- Email 1 (+4–5h): "You left something behind"
+- Email 2 (+24–25h): "Still thinking it over?"
+- Email 3 (+72–73h): "Last chance — your silk pieces are waiting"
+- Each email shows the cart items, subtotal, and a "Shop now" link to the product page
+- Includes RFC 8058 `List-Unsubscribe` header + one-click unsubscribe link
+
+**Cart recovery service** (`services/cartRecovery.js`) — `processCartRecovery()` queries pending orders in each time window (4–5h, 24–25h, 72–73h), skips orders where that seq has already been sent or `recoveryUnsubscribed: true`, sends email, records the send on the Order document.
+
+**Unsubscribe route** (`routes/cartRecovery.js`) — `GET /api/cart-recovery/unsubscribe?oid=<base64url-orderId>` — sets `recoveryUnsubscribed: true`, renders a branded confirmation page.
+
+**Cron** — `server.js` starts a `setInterval` after server boot (5-minute delay to allow DB connection) that calls `processCartRecovery()` every hour.
+
+**Required env vars** (both already exist for other features):
+- `RESEND_API_KEY` — email sending
+- `BACKEND_URL` (default: `https://silkilinen-production.up.railway.app`) — unsubscribe link base URL
+- `FRONTEND_URL` (default: `https://silkilinen.com`) — shop/product links in email
+
+**Files modified/created:** `backend/models/Order.js`, `backend/services/email.js`, `backend/services/cartRecovery.js` (new), `backend/routes/cartRecovery.js` (new), `backend/server.js`
+
+Also fixed: `AdminLayout active="marketing"` prop missing from abandoned-carts page (`frontend/app/admin/marketing/abandoned-carts/page.tsx`)
+
+---
+
 ## Shipped 19 May 2026 — admin panel UX fixes
 
 ### P1.1 — Column header overflow fix (Products + Orders tables)
@@ -119,6 +157,76 @@ Both admin tables now have a parallel card layout at ≤768px (table is hidden, 
 `useEffect` was called in `ProductGallery.tsx` (added in previous session) but was missing from the React import. Added to the import statement.
 
 **Files modified:** `components/ProductGallery.tsx`
+
+---
+
+## Shipped 19 May 2026 — product image pipeline lockdown
+
+Root cause of repeated broken-image bugs: Gemini chat session URLs (e.g. `https://gemini.google.com/app/...`) were pasted into image fields instead of saving the generated image as a file and uploading it. These URLs return HTML, not image data, so every `<img>` using them showed a broken-image icon.
+
+### Shared utilities — `frontend/lib/imageUtils.ts` (new)
+
+Two exported functions used across the frontend:
+- `isValidImageUrl(url)` — returns `false` for null/undefined, non-HTTP strings, and any URL matching `gemini.google.com`
+- `cloudinaryUrl(url, width)` — applies `w_{width},c_fill,f_auto,q_auto` Cloudinary transform
+
+### ProductGallery — proactive filter
+
+Added `isValidImageUrl` import. The `.filter()` that builds the sorted image list now uses `isValidImageUrl(img.url)` instead of the bare `img.url` truthiness check. Gemini URLs are stripped before any network request is attempted, so working images are no longer hidden by broken siblings.
+
+**Files modified:** `frontend/components/ProductGallery.tsx`
+
+### ProductGrid — proactive filter + onError
+
+`validImages` array now filters with `isValidImageUrl` before resolving `primaryImg` / `secondImg`. Legacy `product.image` string also validated before use. Both `<img>` tags have `onError` to hide if the URL passes validation but the actual fetch fails.
+
+**Files modified:** `frontend/components/ProductGrid.tsx`
+
+### CartPanel, NewArrivals, RecentlyViewed
+
+- `CartPanel`: added `onError` to the line-item thumbnail `<img>`
+- `NewArrivals`: `product.image` validated with `isValidImageUrl` before rendering (server component — no `onError` possible)
+- `RecentlyViewed`: `isValidImageUrl` check + `onError` on the thumbnail img
+
+**Files modified:** `frontend/components/CartPanel.tsx`, `frontend/components/NewArrivals.tsx`, `frontend/components/RecentlyViewed.tsx`
+
+### ProductImage component — `frontend/components/products/ProductImage.tsx` (new)
+
+Reusable client component for future surfaces. Accepts either an `images[]` array (resolves primary/order) or a direct `src` string. Validates with `isValidImageUrl`, applies Cloudinary width transform for the requested variant (`card` 400px, `thumbnail` 160px, `cart` 200px), returns `null` for missing/invalid URLs, and hides on `onError`.
+
+### Admin lockdown verification
+
+Confirmed: the product admin editor has no URL paste text input — all image inputs are file-upload-only. The backend `/api/admin/products/:id/images/url` endpoint (used by the AI Photoshoot approval flow) already rejects non-Cloudinary URLs server-side. Journal editor also uses file inputs only. No UI changes required.
+
+### Audit script — `backend/scripts/auditBrokenImages.js` (new)
+
+Run: `node scripts/auditBrokenImages.js`
+
+Connects to MongoDB (reads `MONGODB_URI` from `.env`), scans all Products and JournalArticles, outputs a line per broken reference (Gemini URL, non-HTTP string, or empty). Гріша runs this to get a list of every product/article needing a real image re-upload via admin.
+
+**Manual action still needed:** Run the audit script, then re-upload broken images for any affected products (known: boxer short product has 3 broken Gemini URLs in FRONT, BACK, SIDE slots).
+
+**Files created:** `backend/scripts/auditBrokenImages.js`, `frontend/lib/imageUtils.ts`, `frontend/components/products/ProductImage.tsx`
+
+---
+
+## Shipped 19 May 2026 — mobile header simplification
+
+Search and Account icons removed from mobile header (≤767px). Wishlist and Bag (both with count badges) remain visible in the mobile header.
+
+**Navbar changes (`Navbar.tsx` + `Navbar.module.css`):**
+- Search button and Account dropdown wrap both get an additional `styles.desktopOnly` class
+- `@media (max-width: 767px) { .desktopOnly { display: none; } }` hides them at mobile breakpoint
+- Desktop: all four icons (Search, Wishlist, Account, Bag) remain visible — no change
+
+**SideMenu changes (`SideMenu.tsx` + `SideMenu.module.css`):**
+- Full Account section added to the hamburger drawer, above the footer
+- Logged-in variant: "Signed in as [name]" greeting, My Account, Orders, Wishlist (with count), Sign out button
+- Logged-out variant: Sign in, Create account
+- Old minimal footerRow (single account link + wishlist link) removed
+- Unused `Heart` and `User` lucide imports removed from SideMenu
+
+**Files modified:** `frontend/components/Navbar.tsx`, `frontend/components/Navbar.module.css`, `frontend/components/SideMenu.tsx`, `frontend/components/SideMenu.module.css`
 
 ---
 

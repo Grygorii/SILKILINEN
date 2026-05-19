@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { X, Heart, User } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useCustomer } from '@/context/CustomerContext';
 import { useWishlist } from '@/context/WishlistContext';
 import styles from './SideMenu.module.css';
@@ -17,7 +17,7 @@ type Props = {
 };
 
 export default function SideMenu({ isOpen, onClose }: Props) {
-  const { customer } = useCustomer();
+  const { customer, signOut } = useCustomer();
   const { count: wishlistCount } = useWishlist();
   const searchRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLElement>(null);
@@ -166,25 +166,38 @@ export default function SideMenu({ isOpen, onClose }: Props) {
           </Link>
         </nav>
 
+        {/* Account section */}
+        <div className={styles.accountSection}>
+          {customer ? (
+            <>
+              <p className={styles.accountGreeting}>
+                Signed in as {customer.firstName || customer.email}
+              </p>
+              <a href="/account" className={styles.accountLink} onClick={onClose}>My Account</a>
+              <a href="/account/orders" className={styles.accountLink} onClick={onClose}>Orders</a>
+              <a href="/wishlist" className={styles.accountLink} onClick={onClose}>
+                Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ''}
+              </a>
+              <button
+                className={styles.accountSignOut}
+                onClick={async () => { await signOut(); onClose(); window.location.href = '/'; }}
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <a href="/account/sign-in" className={styles.accountLink} onClick={onClose}>Sign in</a>
+              <a href="/account/sign-in" className={styles.accountLink} onClick={onClose}>Create account</a>
+            </>
+          )}
+        </div>
+
         {/* Spacer */}
         <div className={styles.spacer} />
 
-        {/* Footer links */}
+        {/* Footer */}
         <div className={styles.footer}>
-          <div className={styles.footerRow}>
-            <a
-              href={customer ? '/account' : '/account/sign-in'}
-              className={styles.footerLink}
-              onClick={onClose}
-            >
-              <User size={15} strokeWidth={1.5} />
-              <span>{customer ? 'My Account' : 'Create Account / Log in'}</span>
-            </a>
-            <a href="/wishlist" className={styles.footerLink} onClick={onClose}>
-              <Heart size={15} strokeWidth={1.5} />
-              <span>Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ''}</span>
-            </a>
-          </div>
           <div className={styles.social}>
             <a href="https://instagram.com/silkilinen" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={styles.socialLink}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>

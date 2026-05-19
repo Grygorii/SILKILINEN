@@ -131,7 +131,7 @@ export default function Navbar() {
 
             {/* Right — search, wishlist, account, cart */}
             <div className={styles.navRight}>
-              <button className={styles.iconBtn} onClick={() => setSearchOpen(true)} aria-label="Search">
+              <button className={`${styles.iconBtn} ${styles.desktopOnly}`} onClick={() => setSearchOpen(true)} aria-label="Search">
                 <Search size={20} strokeWidth={1.5} />
               </button>
 
@@ -144,7 +144,7 @@ export default function Navbar() {
                 {wishlistCount > 0 && <span className={styles.badge}>{wishlistCount}</span>}
               </Link>
 
-              <div className={styles.accountWrap} ref={dropdownRef}>
+              <div className={`${styles.accountWrap} ${styles.desktopOnly}`} ref={dropdownRef}>
                 <button
                   className={styles.iconBtn}
                   onClick={() => setAccountOpen(o => !o)}

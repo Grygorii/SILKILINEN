@@ -437,4 +437,96 @@ ${messageBlock}
   });
 }
 
-module.exports = { sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail, sendDropAHint };
+const SUBJECTS = {
+  1: 'You left something behind',
+  2: 'Still thinking it over?',
+  3: 'Last chance — your silk pieces are waiting',
+};
+
+const HEADLINES = {
+  1: 'You left something behind',
+  2: 'Still thinking it over?',
+  3: 'Your silk pieces are still here',
+};
+
+const INTROS = {
+  1: name => `Hi ${name}, it looks like you left something in your cart. We've held it for you — it's just waiting.`,
+  2: name => `Hi ${name}, we noticed you haven't completed your order yet. No rush — but we wanted to make sure you didn't forget.`,
+  3: name => `Hi ${name}, this is your final reminder about the piece(s) you were considering. We'd love to see them find their home with you.`,
+};
+
+async function sendCartRecoveryEmail(order, seq) {
+  if (!process.env.RESEND_API_KEY || !order.customerEmail) return;
+
+  const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.com';
+  const BACKEND  = process.env.BACKEND_URL  || 'https://silkilinen-production.up.railway.app';
+
+  const firstName = order.customerName ? order.customerName.split(' ')[0] : 'there';
+  const subject   = SUBJECTS[seq] || SUBJECTS[1];
+  const headline  = HEADLINES[seq] || HEADLINES[1];
+  const intro     = (INTROS[seq] || INTROS[1])(esc(firstName));
+
+  // Resume link — go to the product page of the first item if we have an ID, else the shop
+  const firstProductId = order.items?.[0]?.productId;
+  const resumeLink = firstProductId
+    ? `${FRONTEND}/product/${firstProductId}`
+    : `${FRONTEND}/shop`;
+
+  // One-click unsubscribe — encode order ID in base64url so it's URL-safe
+  const oidToken = Buffer.from(String(order._id)).toString('base64url');
+  const unsubLink = `${BACKEND}/api/cart-recovery/unsubscribe?oid=${oidToken}`;
+
+  const itemRows = (order.items || []).map(item => `
+    <tr>
+      <td style="padding:12px 0;border-bottom:1px solid #eae8e3;">
+        <span style="font-family:Georgia,serif;font-size:15px;color:#1a1916;">${esc(item.name)}</span>
+        ${item.colour || item.size
+    ? `<br><span style="font-size:12px;color:#8a8680;">${[item.colour, item.size].filter(Boolean).map(esc).join(' / ')}</span>`
+    : ''}
+      </td>
+      <td style="padding:12px 0;border-bottom:1px solid #eae8e3;text-align:center;font-size:13px;color:#5a5650;white-space:nowrap;">× ${item.quantity || 1}</td>
+      <td style="padding:12px 0;border-bottom:1px solid #eae8e3;text-align:right;font-size:14px;color:#1a1916;white-space:nowrap;">€${(item.price * (item.quantity || 1)).toFixed(2)}</td>
+    </tr>
+  `).join('');
+
+  const subtotal = (order.items || []).reduce((s, i) => s + i.price * (i.quantity || 1), 0);
+
+  await getResend().emails.send({
+    from: FROM,
+    to: order.customerEmail,
+    subject,
+    headers: { 'List-Unsubscribe': `<${unsubLink}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
+    html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:40px 16px;">
+<tr><td align="center">
+<table cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;">
+<tr><td style="background:#1a1916;padding:32px 40px;text-align:center;">
+<p style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;letter-spacing:6px;color:#faf8f4;">SILKILINEN</p>
+<p style="margin:8px 0 0;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#7a7670;">Silk &amp; Linen Intimates</p>
+</td></tr>
+<tr><td style="background:#faf8f4;padding:40px 40px 32px;">
+<p style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1916;">${esc(headline)}</p>
+<p style="margin:0 0 32px;font-size:13px;color:#5a5650;line-height:1.8;">${intro}</p>
+<p style="margin:0 0 14px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8a8680;">Your cart</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+${itemRows}
+<tr>
+  <td colspan="2" style="padding:14px 0 0;font-size:13px;color:#5a5650;border-top:1px solid #eae8e3;">Subtotal</td>
+  <td style="padding:14px 0 0;font-size:15px;color:#1a1916;font-weight:600;text-align:right;border-top:1px solid #eae8e3;">€${subtotal.toFixed(2)}</td>
+</tr>
+</table>
+<a href="${resumeLink}" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:16px 40px;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:32px;">Shop now</a>
+<p style="margin:0;font-size:13px;color:#8a8680;line-height:1.8;">Slowly,<br>SILKILINEN</p>
+</td></tr>
+<tr><td style="background:#f0ede8;padding:20px 40px;text-align:center;">
+<p style="margin:0 0 6px;font-size:12px;color:#8a8680;">Questions? <a href="mailto:hello@silkilinen.com" style="color:#1a1916;text-decoration:underline;">hello@silkilinen.com</a></p>
+<p style="margin:0;font-size:11px;color:#aca8a2;">Donegal, Ireland &nbsp;·&nbsp; <a href="${unsubLink}" style="color:#aca8a2;text-decoration:underline;">Unsubscribe</a></p>
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>`,
+  });
+}
+
+module.exports = { sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail, sendDropAHint, sendCartRecoveryEmail };

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { colourToHex } from '@/lib/colours';
+import { isValidImageUrl } from '@/lib/imageUtils';
 import styles from './NewArrivals.module.css';
 
 type Product = {
@@ -44,8 +45,8 @@ export default async function NewArrivals() {
           <Link key={product._id} href={`/product/${product._id}`} className={styles.card}>
             <div className={styles.imgWrap}>
               {isNew(product.createdAt) && <span className={styles.newBadge}>New</span>}
-              {product.image ? (
-                <img src={product.image} alt={product.name} className={styles.img} />
+              {isValidImageUrl(product.image) ? (
+                <img src={product.image!} alt={product.name} className={styles.img} />
               ) : (
                 <div className={styles.imgPlaceholder} />
               )}

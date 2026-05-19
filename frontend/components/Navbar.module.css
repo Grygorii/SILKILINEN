@@ -265,4 +265,8 @@
   .navLeft {
     min-width: 44px;
   }
+  /* Search + Account live in the hamburger drawer on mobile */
+  .desktopOnly {
+    display: none;
+  }
 }

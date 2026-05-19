@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { isValidImageUrl } from '@/lib/imageUtils';
 import styles from './RecentlyViewed.module.css';
 
 type ViewedProduct = {
@@ -76,8 +77,8 @@ export default function RecentlyViewed({ excludeId }: { excludeId: string }) {
         {products.map(p => (
           <Link key={p.id} href={`/product/${p.id}`} className={styles.card}>
             <div className={styles.img}>
-              {p.image && (
-                <img src={p.image} alt={p.name} className={styles.imgTag} loading="lazy" />
+              {isValidImageUrl(p.image) && (
+                <img src={p.image!} alt={p.name} className={styles.imgTag} loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
               )}
             </div>
             <p className={styles.name}>{p.name}</p>

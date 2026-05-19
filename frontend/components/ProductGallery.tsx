@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Heart, Play, X } from 'lucide-react';
 import { useWishlist } from '@/context/WishlistContext';
+import { isValidImageUrl } from '@/lib/imageUtils';
 import styles from './ProductGallery.module.css';
 
 type ProductImage = {
@@ -62,7 +63,7 @@ export default function ProductGallery({ images, name, productId, video }: Props
 
   // Sort: primary first, then by order field; skip entries with missing or broken URLs
   const sorted = [...images]
-    .filter(img => img.url && !failedUrls.has(img.url))
+    .filter(img => isValidImageUrl(img.url) && !failedUrls.has(img.url))
     .sort((a, b) => {
       if (a.isPrimary && !b.isPrimary) return -1;
       if (!a.isPrimary && b.isPrimary) return 1;

@@ -119,7 +119,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                   <div className={styles.itemImg}>
                     {item.image && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.image} alt={item.name} className={styles.itemImgEl} loading="lazy" />
+                      <img src={item.image} alt={item.name} className={styles.itemImgEl} loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
                     )}
                   </div>
 

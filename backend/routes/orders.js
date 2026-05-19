@@ -133,7 +133,10 @@ router.get('/', requireAuth, async function(req, res) {
     if (from || to) {
       filter.createdAt = {};
       if (from) filter.createdAt.$gte = new Date(from);
-      if (to) filter.createdAt.$lte = new Date(to + 'T23:59:59.999Z');
+      // 'to' may be a date-only string ("2026-05-19") from the date picker — append end-of-day
+      // suffix for correct inclusive range. If it already contains a time component (full ISO),
+      // parse it directly to avoid producing an invalid date string.
+      if (to) filter.createdAt.$lte = to.includes('T') ? new Date(to) : new Date(to + 'T23:59:59.999Z');
     }
 
     const pageNum = Math.max(1, parseInt(page) || 1);

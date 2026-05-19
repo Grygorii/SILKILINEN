@@ -47,6 +47,8 @@ const adminFinanceRouter = require('./routes/adminFinance');
 const adminSocialRouter = require('./routes/adminSocial');
 const socialRouter = require('./routes/social');
 const adminSocialAssetsRouter = require('./routes/adminSocialAssets');
+const cartRecoveryRouter = require('./routes/cartRecovery');
+const { processCartRecovery } = require('./services/cartRecovery');
 
 const app = express();
 
@@ -113,6 +115,7 @@ app.use('/api/admin/finance', adminFinanceRouter);
 app.use('/api/admin/social', adminSocialRouter);
 app.use('/api/social', socialRouter);
 app.use('/api/admin/social-assets', adminSocialAssetsRouter);
+app.use('/api/cart-recovery', cartRecoveryRouter);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(function() { console.log('Connected to MongoDB'); })
@@ -125,4 +128,10 @@ app.get('/', function(req, res) {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, function() {
   console.log('Server running on port ' + PORT);
+
+  // Cart recovery cron — runs every hour. First run after 5 min to allow DB to settle.
+  setTimeout(function() {
+    processCartRecovery();
+    setInterval(processCartRecovery, 60 * 60 * 1000);
+  }, 5 * 60 * 1000);
 });
