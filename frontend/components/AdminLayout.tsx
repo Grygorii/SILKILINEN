@@ -6,6 +6,7 @@ import Link from 'next/link';
 import {
   LayoutDashboard, Package, FileText, Users,
   Megaphone, Settings, Menu, Bell, X, Layers, Tag, BookOpen, BookMarked, Share2,
+  Image as ImageIcon,
 } from 'lucide-react';
 import styles from './AdminLayout.module.css';
 import LogoutButton from './LogoutButton';
@@ -28,7 +29,8 @@ const NAV: NavEntry[] = [
   { label: 'Marketing',    href: '/admin/marketing',    icon: Megaphone },
   { label: 'Promo codes', href: '/admin/promo-codes', icon: Tag },
   { label: 'Journal',     href: '/admin/journal',     icon: BookOpen },
-  { label: 'Social',      href: '/admin/social',      icon: Share2 },
+  { label: 'Social',        href: '/admin/social',        icon: Share2 },
+  { label: 'Image Studio',  href: '/admin/social-assets', icon: ImageIcon },
   { section: 'Finance' },
   { label: 'Overview',   href: '/admin/finance',           icon: BookMarked, exact: true },
   { label: 'Expenses',   href: '/admin/finance/expenses',  icon: BookMarked },
