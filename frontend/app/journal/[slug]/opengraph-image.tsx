@@ -23,7 +23,7 @@ async function getArticle(slug: string) {
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const [font, article] = await Promise.all([
-    readFile(path.join(process.cwd(), 'public/fonts/cormorant-garamond-400.woff2')),
+    readFile(path.join(process.cwd(), 'public/fonts/cormorant-garamond-400.ttf')),
     getArticle(slug),
   ]);
 

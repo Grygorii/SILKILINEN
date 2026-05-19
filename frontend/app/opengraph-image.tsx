@@ -10,7 +10,7 @@ export const contentType = 'image/png';
 
 export default async function Image() {
   const font = await readFile(
-    path.join(process.cwd(), 'public/fonts/cormorant-garamond-400.woff2')
+    path.join(process.cwd(), 'public/fonts/cormorant-garamond-400.ttf')
   );
 
   return new ImageResponse(

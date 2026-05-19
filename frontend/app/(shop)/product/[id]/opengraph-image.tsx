@@ -23,7 +23,7 @@ async function getProduct(id: string) {
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const [font, product] = await Promise.all([
-    readFile(path.join(process.cwd(), 'public/fonts/cormorant-garamond-400.woff2')),
+    readFile(path.join(process.cwd(), 'public/fonts/cormorant-garamond-400.ttf')),
     getProduct(id),
   ]);
 
