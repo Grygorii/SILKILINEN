@@ -8,18 +8,19 @@ type ViewedProduct = {
   id: string;
   name: string;
   price: number;
+  image?: string;
 };
 
 const KEY = 'silkilinen_recently_viewed';
 const MAX = 4;
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-export function trackProductView(id: string, name: string, price: number) {
+export function trackProductView(id: string, name: string, price: number, image?: string) {
   try {
     const raw = localStorage.getItem(KEY);
     const existing: ViewedProduct[] = raw ? JSON.parse(raw) : [];
     const filtered = existing.filter(p => p.id !== id);
-    const updated = [{ id, name, price }, ...filtered].slice(0, MAX);
+    const updated = [{ id, name, price, image }, ...filtered].slice(0, MAX);
     localStorage.setItem(KEY, JSON.stringify(updated));
   } catch { /* ignore */ }
 }
@@ -42,7 +43,13 @@ export default function RecentlyViewed({ excludeId }: { excludeId: string }) {
               if (!res.ok) return null;
               const product = await res.json();
               if (product.status !== 'active') return null;
-              return p;
+              // Pull the best available image from the full product response
+              const image =
+                product.images?.find((i: { isPrimary: boolean }) => i.isPrimary)?.url ||
+                product.images?.[0]?.url ||
+                product.image ||
+                p.image;
+              return { ...p, image } as ViewedProduct;
             } catch {
               return null;
             }
@@ -68,7 +75,11 @@ export default function RecentlyViewed({ excludeId }: { excludeId: string }) {
       <div className={styles.grid}>
         {products.map(p => (
           <Link key={p.id} href={`/product/${p.id}`} className={styles.card}>
-            <div className={styles.img} />
+            <div className={styles.img}>
+              {p.image && (
+                <img src={p.image} alt={p.name} className={styles.imgTag} loading="lazy" />
+              )}
+            </div>
             <p className={styles.name}>{p.name}</p>
             <p className={styles.price}>€{Number(p.price).toFixed(2)}</p>
           </Link>

@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 19 May 2026 (Header polish + Product page sticky panel + mobile buy bar).
+Last updated: 19 May 2026 (Header polish + Product page sticky panel + mobile buy bar + related/recently-viewed image fix + cookie banner GDPR + hero CTA).
 
 ---
 
@@ -97,6 +97,16 @@ Other admin pages:
 - **Icon consistency** — all header icons are now uniform outline `lucide-react` strokes (`strokeWidth={1.5}`). `Heart` no longer fills when wishlist has items (always outline). Logged-in state shows `<User>` icon (not filled avatar circle with initial). Signed-in greeting ("Hi, Firstname") moves inside the account dropdown as first item. `AnnouncementBar` and `Navbar` reverted to non-fixed positioning (SiteHeader owns it).
 
 **Files modified/created:** `SiteHeader.tsx`, `SiteHeader.module.css`, `components/Navbar.tsx`, `components/Navbar.module.css`, `components/AnnouncementBar.tsx`, `components/AnnouncementBar.module.css`, `app/(shop)/layout.tsx`
+
+### Related products + recently viewed — missing images fix
+
+Root cause: both `CrossSell` and `RecentlyViewed` had hardcoded `<div className={styles.img} />` — a styled empty div, never an `<img>` tag. The image data existed in the API response but was never rendered.
+
+- `CrossSell`: updated `Product` type to include `images[]`; renders `<img>` inside the div using defensive accessor (`isPrimary` → first → `image` fallback). CSS: `overflow: hidden` + `.imgTag { object-fit: cover }`.
+- `RecentlyViewed`: `ViewedProduct` type extended with `image?`; validation fetch now extracts the primary/first image from the full product response and attaches it to the validated entry; `<img>` rendered. `trackProductView` extended to accept optional `image` arg so the localStorage entry carries the image on first write.
+- `ProductViewTracker`: passes `image={galleryImages[0]?.url}` from the product page.
+
+**Files modified:** `components/CrossSell.tsx`, `components/CrossSell.module.css`, `components/RecentlyViewed.tsx`, `components/RecentlyViewed.module.css`, `components/ProductViewTracker.tsx`, `app/(shop)/product/[id]/page.tsx`
 
 ### Product page — sticky panel + mobile sticky buy bar
 

@@ -3,10 +3,10 @@
 import { useEffect } from 'react';
 import { trackProductView } from './RecentlyViewed';
 
-export default function ProductViewTracker({ id, name, price }: { id: string; name: string; price: number }) {
+export default function ProductViewTracker({ id, name, price, image }: { id: string; name: string; price: number; image?: string }) {
   useEffect(() => {
-    trackProductView(id, name, price);
-  }, [id, name, price]);
+    trackProductView(id, name, price, image);
+  }, [id, name, price, image]);
 
   return null;
 }

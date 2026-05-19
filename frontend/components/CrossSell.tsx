@@ -7,6 +7,7 @@ type Product = {
   name: string;
   price: number;
   colours: string[];
+  images?: { url: string; isPrimary?: boolean }[];
   image?: string;
 };
 
@@ -33,7 +34,16 @@ export default async function CrossSell({ productId }: { productId: string }) {
       <div className={styles.grid}>
         {related.map(p => (
           <Link key={p._id} href={`/product/${p._id}`} className={styles.card}>
-            <div className={styles.img} />
+            <div className={styles.img}>
+              {(p.images?.find(i => i.isPrimary)?.url || p.images?.[0]?.url || p.image) && (
+                <img
+                  src={p.images?.find(i => i.isPrimary)?.url || p.images?.[0]?.url || p.image}
+                  alt={p.name}
+                  className={styles.imgTag}
+                  loading="lazy"
+                />
+              )}
+            </div>
             <div className={styles.info}>
               <p className={styles.name}>{p.name}</p>
               <div className={styles.colours}>
