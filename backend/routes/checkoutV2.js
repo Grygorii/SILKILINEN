@@ -370,8 +370,11 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
         } : undefined,
       });
 
-      // Fire Meta Conversions API server-side Purchase event
-      fireMetaCapi({ order, eventId: `order-${orderNumber}` });
+      // Fire Meta Conversions API server-side Purchase event.
+      // fireMetaCapi has its own try/catch, but an unawaited async call
+      // still produces unhandled rejections if the inner catch ever throws.
+      fireMetaCapi({ order, eventId: `order-${orderNumber}` })
+        .catch(err => console.error('[CAPI] unhandled:', err.message));
 
       // Record redemption (creates PromoCodeRedemption doc + increments usageCount)
       if (discountCode) {
