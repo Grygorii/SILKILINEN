@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "seed:ai-models": "node scripts/seedAiModels.js"
   },
   "keywords": [],
@@ -37,5 +38,9 @@
     "resend": "^6.12.2",
     "sharp": "^0.34.5",
     "stripe": "^22.1.0"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^11.1.0",
+    "vitest": "^4.1.6"
   }
 }
