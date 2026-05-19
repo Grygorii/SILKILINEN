@@ -126,6 +126,19 @@ app.get('/', function(req, res) {
   res.send('Silkilinen backend is running');
 });
 
+// Backstop error middleware. Existing route handlers still have their own
+// try/catch blocks with bespoke status codes — this catches anything they
+// miss (uncaught throws, sync errors, future routes that forget try/catch)
+// and prevents stack traces leaking through Express's default handler.
+// eslint-disable-next-line no-unused-vars
+app.use(function(err, req, res, next) {
+  console.error(`[err] ${req.method} ${req.path}: ${err.message}`);
+  if (res.headersSent) return;
+  const status = err.status || err.statusCode || 500;
+  const message = err.expose ? err.message : 'Internal server error';
+  res.status(status).json({ error: message });
+});
+
 const PORT = process.env.PORT || 3000;
 
 let cartRecoveryStartTimeout = null;
