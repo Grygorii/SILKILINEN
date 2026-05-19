@@ -14,6 +14,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
+const pinoHttp = require('pino-http');
 const productRoutes = require('./routes/products');
 const adminProductsRoutes = require('./routes/adminProducts');
 const authRoutes = require('./routes/auth');
@@ -56,6 +57,23 @@ const app = express();
 app.set('trust proxy', 1);
 
 app.use(helmet());
+
+// Request-scoped structured logging. Every request gets a unique id and a
+// JSON log line on completion with method/path/status/duration. Inside
+// handlers, req.log.{info,warn,error}() attaches the request id. Existing
+// console.log calls in routes are left untouched — they will surface as
+// regular lines in stdout and can be migrated incrementally.
+app.use(pinoHttp({
+  level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
+  // Skip the noisy /health endpoint and serverless cold-start probes.
+  autoLogging: {
+    ignore: req => req.url === '/' || req.url === '/api/admin/health',
+  },
+  redact: {
+    paths: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
+    censor: '[redacted]',
+  },
+}));
 
 console.log('[boot] routes: admin/health, admin/dashboard, admin/site-audit, admin/insights, track');
 
@@ -142,7 +160,8 @@ app.get('/', function(req, res) {
 // and prevents stack traces leaking through Express's default handler.
 // eslint-disable-next-line no-unused-vars
 app.use(function(err, req, res, next) {
-  console.error(`[err] ${req.method} ${req.path}: ${err.message}`);
+  const log = req.log || console;
+  log.error({ err, path: req.path, method: req.method }, 'unhandled');
   if (res.headersSent) return;
   const status = err.status || err.statusCode || 500;
   const message = err.expose ? err.message : 'Internal server error';
