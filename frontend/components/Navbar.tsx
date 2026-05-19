@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, User, ShoppingBag, Menu, X } from 'lucide-react';
+import { Search, User, ShoppingBag, Menu, X, Heart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCustomer } from '@/context/CustomerContext';
@@ -48,6 +48,14 @@ export default function Navbar() {
     }
     document.addEventListener('mousedown', outside);
     return () => document.removeEventListener('mousedown', outside);
+  }, []);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setAccountOpen(false);
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
   }, []);
 
   useEffect(() => {
@@ -125,44 +133,62 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* Right — search, account, cart */}
+            {/* Right — search, wishlist, account, cart */}
             <div className={styles.navRight}>
               <button className={styles.iconBtn} onClick={() => setSearchOpen(true)} aria-label="Search">
                 <Search size={20} strokeWidth={1.5} />
               </button>
 
-              {customer ? (
-                <div className={styles.accountWrap} ref={dropdownRef}>
-                  <button
-                    className={styles.iconBtn}
-                    onClick={() => setAccountOpen(o => !o)}
-                    aria-label="Account menu"
-                  >
-                    <span className={styles.accountAvatar}>{avatarLetter}</span>
-                  </button>
-                  {accountOpen && (
-                    <div className={styles.accountDropdown}>
-                      <a href="/account" className={styles.dropItem}>My account</a>
-                      <a href="/account/orders" className={styles.dropItem}>Orders</a>
-                      <a href="/wishlist" className={styles.dropItem}>
-                        Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ''}
-                      </a>
-                      <a href="/account/profile" className={styles.dropItem}>Profile</a>
-                      <div className={styles.dropDivider} />
-                      <button
-                        className={styles.dropSignOut}
-                        onClick={async () => { await signOut(); setAccountOpen(false); window.location.href = '/'; }}
-                      >
-                        Sign out
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <a href="/account/sign-in" className={styles.iconBtn} aria-label="Sign in">
-                  <User size={20} strokeWidth={1.5} />
-                </a>
-              )}
+              <Link
+                href="/wishlist"
+                className={styles.iconBtn}
+                aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} item${wishlistCount !== 1 ? 's' : ''}` : ''}`}
+              >
+                <Heart size={20} strokeWidth={1.5} fill={wishlistCount > 0 ? 'currentColor' : 'none'} />
+                {wishlistCount > 0 && <span className={styles.badge}>{wishlistCount}</span>}
+              </Link>
+
+              <div className={styles.accountWrap} ref={dropdownRef}>
+                <button
+                  className={styles.iconBtn}
+                  onClick={() => setAccountOpen(o => !o)}
+                  aria-label={customer ? 'Account menu' : 'Sign in'}
+                  aria-expanded={accountOpen}
+                  aria-haspopup="true"
+                >
+                  {customer
+                    ? <span className={styles.accountAvatar}>{avatarLetter}</span>
+                    : <User size={20} strokeWidth={1.5} />
+                  }
+                </button>
+                {accountOpen && (
+                  <div className={styles.accountDropdown} role="menu">
+                    {customer ? (
+                      <>
+                        <a href="/account" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>My account</a>
+                        <a href="/account/orders" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>Orders</a>
+                        <a href="/wishlist" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>
+                          Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ''}
+                        </a>
+                        <a href="/account/profile" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>Profile</a>
+                        <div className={styles.dropDivider} />
+                        <button
+                          className={styles.dropSignOut}
+                          role="menuitem"
+                          onClick={async () => { await signOut(); setAccountOpen(false); window.location.href = '/'; }}
+                        >
+                          Sign out
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <a href="/account/sign-in" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>Sign in</a>
+                        <a href="/account/sign-in" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>Create account</a>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <button
                 className={styles.iconBtn}
