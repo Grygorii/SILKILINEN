@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 19 May 2026 (Header polish + product page sticky fixes + cookie banner GDPR + hero CTA + image fixes + button states polish + gallery broken-image fix + Cloudinary URL validation + admin panel UX fixes P1+P2 + abandoned cart recovery fix + recovery email automation + mobile header simplification + product image pipeline lockdown).
+Last updated: 19 May 2026 (Header polish + product page sticky fixes + cookie banner GDPR + hero CTA + image fixes + button states polish + gallery broken-image fix + Cloudinary URL validation + admin panel UX fixes P1+P2 + abandoned cart recovery fix + recovery email automation + mobile header simplification + product image pipeline lockdown + hamburger drawer UX fixes).
 
 ---
 
@@ -157,6 +157,43 @@ Both admin tables now have a parallel card layout at ≤768px (table is hidden, 
 `useEffect` was called in `ProductGallery.tsx` (added in previous session) but was missing from the React import. Added to the import statement.
 
 **Files modified:** `components/ProductGallery.tsx`
+
+---
+
+## Shipped 19 May 2026 — hamburger drawer UX fixes
+
+Three fixes to `SideMenu.tsx` + `SideMenu.module.css`. No changes to Navbar.
+
+### Body scroll lock (iOS Safari fix)
+
+Previous implementation used `document.body.style.overflow = 'hidden'`, which iOS Safari ignores during touch events. Replaced with the position:fixed approach: on open, saves `window.scrollY`, sets `body.position = 'fixed'`, `body.top = -${scrollY}px`, `body.width = '100%'`. Cleanup restores all properties and calls `window.scrollTo(0, scrollY)` to restore scroll position.
+
+Added `overscroll-behavior: contain` to `.panel` in CSS — prevents scroll chaining to body when the user scrolls to the top/bottom of the drawer content and keeps scrolling.
+
+### Account section redesign
+
+Replaced the 5-item logged-in stack (greeting, My Account, Orders, Wishlist, Sign out) and 2-item logged-out stack (Sign in, Create account) with a single row in both states:
+- **Logged in:** "Hello, [First Name] →" — taps to `/account` (the full account dashboard has all sub-items)
+- **Logged out:** "Sign in" — taps to `/account/sign-in`
+
+Removed `useWishlist` import and `signOut` from `useCustomer` destructure — both were only used by the removed items. Removed CSS classes `.accountGreeting`, `.accountLink`, `.accountSignOut`. Added `.accountRow` (matches category link typography: 12px, 2.5px letter-spacing, `justify-content: space-between` for the chevron).
+
+**Files modified:** `frontend/components/SideMenu.tsx`, `frontend/components/SideMenu.module.css`
+
+### Swipe-left to close
+
+Native `addEventListener` (not React synthetic events) on the panel element so `touchmove` can be added with `{ passive: false }` — required to call `e.preventDefault()` and block body scroll during a horizontal swipe.
+
+Gesture logic:
+- `touchstart`: records start position + timestamp
+- `touchmove`: on first >4px movement, determines direction by comparing `|dx| > |dy|` AND `dx < 0`. Horizontal: sets `transition: none` and `transform: translateX(dx)` directly on the DOM (no React state). Vertical: ignored (drawer scroll proceeds normally).
+- `touchend`: calculates velocity (px/ms). Closes if dragged > 30% of panel width OR velocity < −0.5 px/ms. On close: clears `transition`, forces style flush via `getBoundingClientRect()`, animates `transform: translateX(-100%)`, waits 290ms, then clears inline style and calls `onClose()`. On snap-back: same flush + `translateX(0)`, inline style cleared after 290ms.
+
+Effect re-runs on `[isOpen, onClose]` — adds listeners when open, cleans up when closed or component unmounts.
+
+Part 0 clarification: no "bag in hamburger" — bag icon is in the Navbar header (Interpretation A), drawer is correct as-is.
+
+**Files modified:** `frontend/components/SideMenu.tsx`, `frontend/components/SideMenu.module.css`
 
 ---
 

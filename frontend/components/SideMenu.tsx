@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { X } from 'lucide-react';
 import { useCustomer } from '@/context/CustomerContext';
-import { useWishlist } from '@/context/WishlistContext';
 import styles from './SideMenu.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -17,8 +16,7 @@ type Props = {
 };
 
 export default function SideMenu({ isOpen, onClose }: Props) {
-  const { customer, signOut } = useCustomer();
-  const { count: wishlistCount } = useWishlist();
+  const { customer } = useCustomer();
   const searchRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLElement>(null);
   const prevFocusRef = useRef<HTMLElement | null>(null);
@@ -36,12 +34,18 @@ export default function SideMenu({ isOpen, onClose }: Props) {
   }, []);
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
+    if (!isOpen) return;
+    // iOS Safari ignores overflow:hidden on body during touch — use position:fixed instead
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollY);
+    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -70,6 +74,71 @@ export default function SideMenu({ isOpen, onClose }: Props) {
       prevFocusRef.current = null;
     }
   }, [isOpen]);
+
+  // Swipe-left to close
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || !isOpen) return;
+
+    let startX = 0, startY = 0, startTime = 0;
+    let direction: 'horizontal' | 'vertical' | null = null;
+
+    function onTouchStart(e: TouchEvent) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      startTime = Date.now();
+      direction = null;
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+
+      // Determine gesture direction on first meaningful movement
+      if (direction === null && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
+        direction = Math.abs(dx) > Math.abs(dy) && dx < 0 ? 'horizontal' : 'vertical';
+      }
+
+      if (direction === 'horizontal' && dx < 0) {
+        e.preventDefault(); // block body scroll during left swipe
+        panel!.style.transition = 'none';
+        panel!.style.transform = `translateX(${dx}px)`;
+      }
+    }
+
+    function onTouchEnd(e: TouchEvent) {
+      if (direction !== 'horizontal') return;
+      const dx = e.changedTouches[0].clientX - startX;
+      const velocity = dx / (Date.now() - startTime); // px/ms, negative = leftward
+
+      const shouldClose = dx < -(panel!.offsetWidth * 0.3) || velocity < -0.5;
+
+      // Re-enable CSS transition, force style flush, then animate to target
+      panel!.style.transition = '';
+      panel!.getBoundingClientRect();
+
+      if (shouldClose) {
+        panel!.style.transform = 'translateX(-100%)';
+        setTimeout(() => {
+          panel!.style.transform = '';
+          onClose();
+        }, 290);
+      } else {
+        panel!.style.transform = 'translateX(0)';
+        setTimeout(() => { panel!.style.transform = ''; }, 290);
+      }
+    }
+
+    panel.addEventListener('touchstart', onTouchStart, { passive: true });
+    panel.addEventListener('touchmove', onTouchMove, { passive: false });
+    panel.addEventListener('touchend', onTouchEnd, { passive: true });
+
+    return () => {
+      panel.removeEventListener('touchstart', onTouchStart);
+      panel.removeEventListener('touchmove', onTouchMove);
+      panel.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [isOpen, onClose]);
 
   // Focus trap: keep Tab cycling within the panel
   useEffect(() => {
@@ -166,30 +235,17 @@ export default function SideMenu({ isOpen, onClose }: Props) {
           </Link>
         </nav>
 
-        {/* Account section */}
+        {/* Account section — single row */}
         <div className={styles.accountSection}>
           {customer ? (
-            <>
-              <p className={styles.accountGreeting}>
-                Signed in as {customer.firstName || customer.email}
-              </p>
-              <a href="/account" className={styles.accountLink} onClick={onClose}>My Account</a>
-              <a href="/account/orders" className={styles.accountLink} onClick={onClose}>Orders</a>
-              <a href="/wishlist" className={styles.accountLink} onClick={onClose}>
-                Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ''}
-              </a>
-              <button
-                className={styles.accountSignOut}
-                onClick={async () => { await signOut(); onClose(); window.location.href = '/'; }}
-              >
-                Sign out
-              </button>
-            </>
+            <a href="/account" className={styles.accountRow} onClick={onClose}>
+              <span>Hello, {customer.firstName || 'Account'}</span>
+              <span className={styles.navArrow}>→</span>
+            </a>
           ) : (
-            <>
-              <a href="/account/sign-in" className={styles.accountLink} onClick={onClose}>Sign in</a>
-              <a href="/account/sign-in" className={styles.accountLink} onClick={onClose}>Create account</a>
-            </>
+            <a href="/account/sign-in" className={styles.accountRow} onClick={onClose}>
+              <span>Sign in</span>
+            </a>
           )}
         </div>
 
