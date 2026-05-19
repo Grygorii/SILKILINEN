@@ -8,6 +8,7 @@ const { requireAuth } = require('../middleware/auth');
 const { generateProductSEO, AIServiceError } = require('../services/aiText');
 const { SLOT_KEYS } = require('../config/imageSlots');
 const { SLUGS: CATEGORY_SLUGS } = require('../config/categories');
+const { detectImageType } = require('../utils/fileSignature');
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -675,6 +676,14 @@ router.post('/:id/images', imgUpload.array('images', 20), async function(req, re
   try {
     if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'No files' });
     if (!process.env.CLOUDINARY_CLOUD_NAME) return res.status(503).json({ error: 'Cloudinary not configured' });
+
+    // Magic-byte check: multer's fileFilter trusts the client MIME header.
+    // Reject anything that doesn't actually look like a real image format.
+    for (const file of req.files) {
+      if (!detectImageType(file.buffer)) {
+        return res.status(400).json({ error: `"${file.originalname}" is not a recognised image (jpeg/png/gif/webp).` });
+      }
+    }
 
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Not found' });
