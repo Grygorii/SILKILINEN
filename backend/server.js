@@ -127,12 +127,47 @@ app.get('/', function(req, res) {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, function() {
+
+let cartRecoveryStartTimeout = null;
+let cartRecoveryInterval = null;
+
+const server = app.listen(PORT, function() {
   console.log('Server running on port ' + PORT);
 
   // Cart recovery cron — runs every hour. First run after 5 min to allow DB to settle.
-  setTimeout(function() {
+  cartRecoveryStartTimeout = setTimeout(function() {
     processCartRecovery();
-    setInterval(processCartRecovery, 60 * 60 * 1000);
+    cartRecoveryInterval = setInterval(processCartRecovery, 60 * 60 * 1000);
   }, 5 * 60 * 1000);
 });
+
+let shuttingDown = false;
+function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`[shutdown] received ${signal}, draining...`);
+
+  if (cartRecoveryStartTimeout) clearTimeout(cartRecoveryStartTimeout);
+  if (cartRecoveryInterval) clearInterval(cartRecoveryInterval);
+
+  // Hard exit if graceful drain stalls (e.g. hung Mongo or stuck request).
+  const hardExit = setTimeout(() => {
+    console.error('[shutdown] graceful drain timed out, forcing exit');
+    process.exit(1);
+  }, 10000);
+  hardExit.unref();
+
+  server.close(async () => {
+    try {
+      await mongoose.connection.close();
+      console.log('[shutdown] clean exit');
+      process.exit(0);
+    } catch (err) {
+      console.error('[shutdown] error closing mongo:', err.message);
+      process.exit(1);
+    }
+  });
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
