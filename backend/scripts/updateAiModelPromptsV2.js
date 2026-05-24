@@ -1,6 +1,9 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const AiModel = require('../models/AiModel');
+const { hasRun, markRun } = require('./_lib/migrations');
+
+const MIGRATION_NAME = 'updateAiModelPromptsV2';
 
 const MODEL_PROMPTS_V2 = {
   'Aoife': `A 28-year-old fashion model with quiet Irish beauty. The brand's signature face — chosen not because she dominates the frame, but because she lets the garment breathe.
@@ -242,6 +245,12 @@ async function updatePromptsV2() {
   await mongoose.connect(process.env.MONGODB_URI);
   console.log('Connected. Beginning prompt updates.\n');
 
+  if (await hasRun(MIGRATION_NAME)) {
+    console.log(`[migrations] ${MIGRATION_NAME} already applied, skipping. Drop the marker in the 'migrations' collection to force re-run.`);
+    await mongoose.disconnect();
+    return;
+  }
+
   let updatedCount = 0;
   let notFoundCount = 0;
 
@@ -270,6 +279,12 @@ async function updatePromptsV2() {
   console.log(`  Updated: ${updatedCount}/5`);
   console.log(`  Not found: ${notFoundCount}/5`);
   console.log(`\nNext step: admin user should regenerate reference images for all 5 models via /admin/models`);
+
+  if (notFoundCount === 0) {
+    await markRun(MIGRATION_NAME, { updatedCount });
+  } else {
+    console.log('[migrations] not marking run — some models were missing. Seed AiModels then re-run.');
+  }
 
   await mongoose.disconnect();
   console.log('Disconnected.');

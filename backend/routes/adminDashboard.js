@@ -94,11 +94,8 @@ function getTimeWindows() {
 function calculateConversion(buyers, visitors) {
   if (!visitors || visitors < 5) return null; // too sparse to be meaningful
   if (!buyers) return 0;
-  if (buyers > visitors) {
-    console.warn(`[dashboard] Suspicious conversion: ${buyers} buyers vs ${visitors} visitors`);
-    return 100;
-  }
-  return Math.round((buyers / visitors) * 1000) / 10;
+  const effectiveBuyers = Math.min(buyers, visitors); // guard against stale data
+  return Math.round((effectiveBuyers / visitors) * 1000) / 10;
 }
 
 function computeDelta(thisCents, lastCents) {
@@ -296,21 +293,32 @@ async function getZone3Data({ thirtyDaysAgo }) {
 
   // Traffic sources, best-converting product, and geo breakdown from Visit model
   const [sourcesData, bestConvertingData, topCountriesData, topCitiesData, totalVisitorCount, totalGeoVisitorCount] = await Promise.all([
-    // Group by sessionId first to assign each session to exactly one source
-    // (the first source seen for that session). This prevents multi-source
-    // inflation where % of traffic columns sum to > 100%.
+    // Group visits by sessionId (first source seen = first-touch attribution).
+    // Then $lookup orders by browserSessionId so conversion is always live
+    // from the Orders collection — no need to maintain Visit.convertedToOrder.
     Visit.aggregate([
       { $match: { createdAt: { $gte: thirtyDaysAgo } } },
       { $sort: { createdAt: 1 } },
       { $group: {
-        _id:      '$sessionId',
-        source:   { $first: '$source' },
-        hasOrder: { $max: { $cond: [{ $ne: ['$convertedToOrder', null] }, 1, 0] } },
+        _id:    '$sessionId',
+        source: { $first: '$source' },
+      }},
+      { $lookup: {
+        from:     'orders',
+        let:      { sid: '$_id' },
+        pipeline: [
+          { $match: { $expr: { $and: [
+            { $eq: ['$browserSessionId', '$$sid'] },
+            { $in: ['$status', PAID_STATUSES] },
+          ]}}},
+          { $limit: 1 },
+        ],
+        as: 'matchedOrders',
       }},
       { $group: {
         _id:      '$source',
         visitors: { $sum: 1 },
-        buyers:   { $sum: '$hasOrder' },
+        buyers:   { $sum: { $cond: [{ $gt: [{ $size: '$matchedOrders' }, 0] }, 1, 0] } },
       }},
       { $sort: { visitors: -1 } },
       { $limit: 5 },

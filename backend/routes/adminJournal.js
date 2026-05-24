@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const cloudinary = require('cloudinary').v2;
 const { requireAuth } = require('../middleware/auth');
 const JournalArticle = require('../models/JournalArticle');
+const { detectImageType } = require('../utils/fileSignature');
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -66,6 +67,9 @@ router.post('/', async (req, res) => {
 router.post('/upload', imgUpload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file provided' });
+    if (!detectImageType(req.file.buffer)) {
+      return res.status(400).json({ error: 'File is not a recognised image (jpeg/png/gif/webp).' });
+    }
     const result = await uploadBuffer(req.file.buffer, {
       folder: 'silkilinen/journal',
       allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],

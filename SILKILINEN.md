@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 19 May 2026 (Header polish + product page sticky fixes + cookie banner GDPR + hero CTA + image fixes + button states polish + gallery broken-image fix + Cloudinary URL validation + admin panel UX fixes P1+P2 + abandoned cart recovery fix + recovery email automation + mobile header simplification + product image pipeline lockdown + hamburger drawer UX fixes + cart swipe + image placeholders + account section refinement + Cloudinary upload pipeline verification).
+Last updated: 19 May 2026 (Header polish + product page sticky fixes + cookie banner GDPR + hero CTA + image fixes + button states polish + gallery broken-image fix + Cloudinary URL validation + admin panel UX fixes P1+P2 + abandoned cart recovery fix + recovery email automation + mobile header simplification + product image pipeline lockdown + hamburger drawer UX fixes + cart swipe + image placeholders + account section refinement + Cloudinary upload pipeline verification + dashboard conversion rate fix + preview page crash fix + font preload warning fix + audit-fix branch merge: F1-F23 security/reliability hardening).
 
 ---
 
@@ -68,6 +68,85 @@ Other admin pages:
 - Aoife Terracotta Robe (first listed product) — AI-generated imagery, approved by Sabreena
 - Existing Dalia / Bastet / Ciara / Rehab dress and robe products from earlier build phase
 - **Silk panties** (the actual sales hero) — currently sold on Etsy, not yet migrated to silkilinen.com as primary
+
+## Shipped 19 May 2026 — preview page crash fix + preload warning
+
+### Crash: `useProductSelection must be inside ProductSelectionProvider`
+
+**Root cause:** The preview page at `/app/(shop)/preview/[id]/page.tsx` renders `<ProductOptions>`, which calls `useProductSelection()` at the top level. `useProductSelection()` throws if no `<ProductSelectionProvider>` is in the ancestor tree. The live PDP (`/app/(shop)/product/[id]/page.tsx`) wraps `ProductOptions` + `StickyBuyBar` inside `<ProductSelectionProvider>` — the preview page had neither.
+
+**Fix:** Added `ProductSelectionProvider` and `StickyBuyBar` imports to the preview page. The product content is now wrapped in `<ProductSelectionProvider defaultColour={...} defaultSize={...}>`, matching the live PDP structure exactly (same default-colour/size initialisation logic, same `StickyBuyBar` for mobile parity, same `image` prop passed to `ProductOptions`).
+
+### Preload warning: `<link rel="preload">` resource not used in time
+
+**Root cause:** `layout.tsx` had a manual `<head>` block containing a `<link rel="stylesheet">` for Google Fonts. Next.js App Router auto-generates a `<link rel="preload" as="style">` for any `<link rel="stylesheet">` it finds in the root layout's `<head>`, producing an external-resource preload that the browser can't always consume within its expected window.
+
+**Fix:** Removed the manual `<head>` block from `layout.tsx`. Moved the Google Fonts import to `globals.css` as an `@import url(...)` at the top of the file — Next.js doesn't instrument `@import` rules, so no spurious preload is generated. Font loading behaviour is unchanged.
+
+**Files modified:** `frontend/app/(shop)/preview/[id]/page.tsx`, `frontend/app/layout.tsx`, `frontend/app/globals.css`
+
+---
+
+## Shipped 19 May 2026 — dashboard conversion rate fix
+
+### Root cause
+
+`Visit.convertedToOrder` (an ObjectId field on the Visit model intended to mark a visit's session as having converted to an order) was **never written anywhere in the backend**. The Stripe webhook (`checkoutV2.js`) read the last Visit for attribution info but never wrote back. The dashboard aggregation depended entirely on this field:
+
+```js
+hasOrder: { $max: { $cond: [{ $ne: ['$convertedToOrder', null] }, 1, 0] } }
+```
+
+Because the field was always null, `buyers` was always 0, making conversionPercent 0.0% for all sources. The 100.0% shown on the dashboard was caused by stale `convertedToOrder` values left from an older code version that incorrectly set the field (likely on all visits, not just the converting session's) — this made `buyers = visitors` for those sources, computing as 100%.
+
+### Fix 1 — Write `convertedToOrder` in checkout webhook
+
+In `checkoutV2.js`, after `Order.create(...)`, added:
+
+```js
+if (sessionId) {
+  Visit.updateMany({ sessionId }, { convertedToOrder: order._id })
+    .catch(err => console.error('[checkoutV2] visit attribution write failed:', err.message));
+}
+```
+
+This marks all page views in the converting session so product-level conversion tracking (`bestConvertingProduct` aggregation) also works going forward.
+
+### Fix 2 — Replace Visit.convertedToOrder with `$lookup` in source aggregation
+
+The top-sources aggregation now joins sessions with the Orders collection via `browserSessionId` (stored on every order at creation time) instead of relying on the pre-written `convertedToOrder` field. This retroactively fixes historical data: any order that exists with a valid `browserSessionId` is counted correctly without needing a data migration.
+
+```js
+Visit.aggregate([
+  { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+  { $sort: { createdAt: 1 } },
+  { $group: { _id: '$sessionId', source: { $first: '$source' } } },
+  { $lookup: {
+    from: 'orders', let: { sid: '$_id' },
+    pipeline: [
+      { $match: { $expr: { $and: [
+        { $eq: ['$browserSessionId', '$$sid'] },
+        { $in: ['$status', PAID_STATUSES] },
+      ]}}},
+      { $limit: 1 },
+    ],
+    as: 'matchedOrders',
+  }},
+  { $group: {
+    _id: '$source', visitors: { $sum: 1 },
+    buyers: { $sum: { $cond: [{ $gt: [{ $size: '$matchedOrders' }, 0] }, 1, 0] } },
+  }},
+  ...
+])
+```
+
+### Fix 3 — `calculateConversion` defensive cap
+
+Removed the `buyers > visitors → return 100` branch (dead code with the new aggregation, since buyers ≤ visitors is now guaranteed). Replaced with `Math.min(buyers, visitors)` before dividing, so stale DB data can never display >100% even if encountered.
+
+**Files modified:** `backend/routes/checkoutV2.js`, `backend/routes/adminDashboard.js`
+
+---
 
 ## Shipped 19 May 2026 — abandoned cart recovery
 

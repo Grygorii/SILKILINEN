@@ -11,6 +11,9 @@
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const mongoose = require('mongoose');
 const Product = require('../models/Product');
+const { hasRun, markRun } = require('./_lib/migrations');
+
+const MIGRATION_NAME = 'migrateProductsToVariants';
 
 function slugify(str) {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -27,6 +30,12 @@ function buildSku(name, colour, size) {
 async function migrate() {
   await mongoose.connect(process.env.MONGODB_URI);
   console.log('Connected to MongoDB');
+
+  if (await hasRun(MIGRATION_NAME)) {
+    console.log(`[migrations] ${MIGRATION_NAME} already applied, skipping. Drop the marker in the 'migrations' collection to force re-run.`);
+    await mongoose.disconnect();
+    return;
+  }
 
   const products = await Product.find({}).lean();
   console.log(`Found ${products.length} products`);
@@ -105,6 +114,11 @@ async function migrate() {
   }
 
   console.log(`\nMigration complete: ${migrated} migrated, ${skipped} skipped (already had variants), ${errors} errors`);
+  if (errors === 0) {
+    await markRun(MIGRATION_NAME, { migrated, skipped });
+  } else {
+    console.log('[migrations] not marking run — errors occurred, re-run after fixing.');
+  }
   await mongoose.disconnect();
 }
 

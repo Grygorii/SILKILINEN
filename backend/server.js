@@ -1,20 +1,20 @@
 require('dotenv').config();
 
-const DEFAULT_SECRET = 'silkilinen_super_secret_key_change_this_in_production';
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET === DEFAULT_SECRET) {
-  console.error('FATAL: JWT_SECRET is not set or is using the insecure default. Set a strong random secret in Railway environment variables.');
-  if (process.env.NODE_ENV === 'production') process.exit(1);
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  console.error('FATAL: JWT_SECRET must be set to a strong random value (>=32 chars).');
+  process.exit(1);
 }
-process.env.JWT_SECRET = process.env.JWT_SECRET || DEFAULT_SECRET;
 
 if (!process.env.DEEPSEEK_API_KEY) {
   console.warn('[warning] DEEPSEEK_API_KEY not set — AI SEO generation will fail until it is configured.');
 }
 
 const express = require('express');
+const helmet = require('helmet');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
+const pinoHttp = require('pino-http');
 const productRoutes = require('./routes/products');
 const adminProductsRoutes = require('./routes/adminProducts');
 const authRoutes = require('./routes/auth');
@@ -56,17 +56,46 @@ const app = express();
 // Integer 1 = trust exactly one proxy hop; avoids IP spoofing via forged headers.
 app.set('trust proxy', 1);
 
+app.use(helmet());
+
+// Request-scoped structured logging. Every request gets a unique id and a
+// JSON log line on completion with method/path/status/duration. Inside
+// handlers, req.log.{info,warn,error}() attaches the request id. Existing
+// console.log calls in routes are left untouched — they will surface as
+// regular lines in stdout and can be migrated incrementally.
+app.use(pinoHttp({
+  level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
+  // Skip the noisy /health endpoint and serverless cold-start probes.
+  autoLogging: {
+    ignore: req => req.url === '/' || req.url === '/api/admin/health',
+  },
+  redact: {
+    paths: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
+    censor: '[redacted]',
+  },
+}));
+
 console.log('[boot] routes: admin/health, admin/dashboard, admin/site-audit, admin/insights, track');
 
+// Production origins should come from CORS_ORIGINS (comma-separated).
+// Localhost is allowed unconditionally only in non-production so dev keeps
+// working. FRONTEND_URL is honoured for backwards-compat.
+const envOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+const devOrigins = process.env.NODE_ENV === 'production'
+  ? []
+  : ['http://localhost:3000', 'http://localhost:3001'];
 const ALLOWED_ORIGINS = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'https://silkilinen.com',
-  'https://www.silkilinen.com',
-  'https://silkilinen.vercel.app',
-  'https://silkilinen-git-master-grishakinzerskyi-1780s-projects.vercel.app',
+  ...devOrigins,
+  ...envOrigins,
   ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
 ];
+if (process.env.NODE_ENV === 'production' && ALLOWED_ORIGINS.length === 0) {
+  console.error('FATAL: CORS_ORIGINS or FRONTEND_URL must be set in production.');
+  process.exit(1);
+}
 
 app.use(cors({
   origin: function(origin, callback) {
@@ -76,6 +105,8 @@ app.use(cors({
     callback(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true,
+  // Permit the CSRF header on preflight responses.
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With'],
 }));
 app.use(cookieParser());
 
@@ -83,6 +114,10 @@ app.use(cookieParser());
 app.use('/api/webhook', webhookRouter);
 
 app.use(express.json());
+
+// CSRF defence: require a custom header on every write. See middleware/csrf.js.
+const { csrf } = require('./middleware/csrf');
+app.use(csrf);
 app.use('/api/v2/checkout', checkoutRouter);
 app.use('/api/products', productRoutes);
 app.use('/api/admin/products', adminProductsRoutes);
@@ -125,13 +160,62 @@ app.get('/', function(req, res) {
   res.send('Silkilinen backend is running');
 });
 
+// Backstop error middleware. Existing route handlers still have their own
+// try/catch blocks with bespoke status codes — this catches anything they
+// miss (uncaught throws, sync errors, future routes that forget try/catch)
+// and prevents stack traces leaking through Express's default handler.
+// eslint-disable-next-line no-unused-vars
+app.use(function(err, req, res, next) {
+  const log = req.log || console;
+  log.error({ err, path: req.path, method: req.method }, 'unhandled');
+  if (res.headersSent) return;
+  const status = err.status || err.statusCode || 500;
+  const message = err.expose ? err.message : 'Internal server error';
+  res.status(status).json({ error: message });
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, function() {
+
+let cartRecoveryStartTimeout = null;
+let cartRecoveryInterval = null;
+
+const server = app.listen(PORT, function() {
   console.log('Server running on port ' + PORT);
 
   // Cart recovery cron — runs every hour. First run after 5 min to allow DB to settle.
-  setTimeout(function() {
+  cartRecoveryStartTimeout = setTimeout(function() {
     processCartRecovery();
-    setInterval(processCartRecovery, 60 * 60 * 1000);
+    cartRecoveryInterval = setInterval(processCartRecovery, 60 * 60 * 1000);
   }, 5 * 60 * 1000);
 });
+
+let shuttingDown = false;
+function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`[shutdown] received ${signal}, draining...`);
+
+  if (cartRecoveryStartTimeout) clearTimeout(cartRecoveryStartTimeout);
+  if (cartRecoveryInterval) clearInterval(cartRecoveryInterval);
+
+  // Hard exit if graceful drain stalls (e.g. hung Mongo or stuck request).
+  const hardExit = setTimeout(() => {
+    console.error('[shutdown] graceful drain timed out, forcing exit');
+    process.exit(1);
+  }, 10000);
+  hardExit.unref();
+
+  server.close(async () => {
+    try {
+      await mongoose.connection.close();
+      console.log('[shutdown] clean exit');
+      process.exit(0);
+    } catch (err) {
+      console.error('[shutdown] error closing mongo:', err.message);
+      process.exit(1);
+    }
+  });
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

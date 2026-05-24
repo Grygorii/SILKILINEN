@@ -44,7 +44,11 @@
       "Bash(node --check \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\backend\\\\services\\\\cartRecovery.js\")",
       "Bash(node --check \"d:\\\\Programming\\\\Course_!\\\\Silkilinen\\\\backend\\\\server.js\")",
       "Bash(xargs grep -l \"wishlist\\\\|recently.*view\\\\|order.*confirm\")",
-      "Bash(xargs grep -l \"NewArrivals\\\\|FeaturedCollections\\\\|ProductGrid\")"
+      "Bash(xargs grep -l \"NewArrivals\\\\|FeaturedCollections\\\\|ProductGrid\")",
+      "Bash(cd /d/Programming && grep -n \"convertedToOrder.*Visit\\\\|Visit.*updateOne.*convertedToOrder\" \"Course_!\\\\Silkilinen/backend/routes/checkoutV2.js\")",
+      "Read(//d/Programming/**)",
+      "Bash(cd \"/d/Programming/Course_!\\\\Silkilinen\" && wc -l backend/routes/checkoutV2.js)",
+      "Read(//d/d/Programming/Course_!/Silkilinen/backend/routes/**)"
     ],
     "additionalDirectories": [
       "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\admin\\collections",

@@ -5,6 +5,7 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import AnalyticsLoader from "@/components/AnalyticsLoader";
 import UTMCapture from "@/components/UTMCapture";
 import GoogleAuthProvider from "@/components/GoogleAuthProvider";
+import CsrfFetchPatch from "@/components/CsrfFetchPatch";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { CustomerProvider } from "@/context/CustomerContext";
@@ -24,10 +25,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
-      </head>
       <body>
+        <CsrfFetchPatch />
         <GoogleAuthProvider>
           <CookieConsentProvider>
             <CustomerProvider>

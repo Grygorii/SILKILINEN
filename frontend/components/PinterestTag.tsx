@@ -27,7 +27,10 @@ export default function PinterestTag() {
     }
   }, [allowed]);
 
-  if (!TAG_ID || !allowed) return null;
+  // Pinterest tag IDs are numeric; strip anything else to defeat script
+  // injection if the env var is ever set to something hostile.
+  const safeTagId = String(TAG_ID).replace(/[^a-zA-Z0-9_-]/g, '');
+  if (!safeTagId || !allowed) return null;
 
   return (
     <Script
@@ -40,7 +43,7 @@ export default function PinterestTag() {
           var t=document.createElement("script");t.async=!0,t.src=e;
           var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(t,r)}}
           ("https://s.pinimg.com/ct/core.js");
-          pintrk('load', '${TAG_ID}', {em: ''});
+          pintrk('load', '${safeTagId}', {em: ''});
           pintrk('page');
         `,
       }}

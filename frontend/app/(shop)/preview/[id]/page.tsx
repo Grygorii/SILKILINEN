@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import styles from './page.module.css';
 import ProductOptions from '@/components/ProductOptions';
 import ProductGallery from '@/components/ProductGallery';
+import StickyBuyBar from '@/components/StickyBuyBar';
+import { ProductSelectionProvider } from '@/components/ProductSelectionContext';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -75,31 +77,48 @@ export default async function PreviewPage({
         PREVIEW MODE — not yet published
       </div>
       <main className={styles.page}>
-        <div className={styles.inner}>
-          <div className={styles.galleryCol}>
-            <ProductGallery images={galleryImages} name={product.name} productId={product._id} />
+        <ProductSelectionProvider
+          defaultColour={product.colours?.[0] ?? ''}
+          defaultSize={product.sizes?.length === 1 ? product.sizes[0] : ''}
+        >
+          <div className={styles.inner}>
+            <div className={styles.galleryCol}>
+              <ProductGallery images={galleryImages} name={product.name} productId={product._id} />
+            </div>
+            <div className={styles.infoCol}>
+              <span className={styles.statusPill}>{product.status}</span>
+              <h1 className={styles.productName}>{product.name}</h1>
+              <p className={styles.price}>€{Number(product.price).toFixed(2)}</p>
+              <ProductOptions
+                colours={product.colours ?? []}
+                sizes={product.sizes ?? []}
+                productName={product.name}
+                productId={product._id}
+                price={product.price}
+                outOfStock={outOfStock}
+                stock={total ?? undefined}
+                image={galleryImages[0]?.url}
+              />
+              {product.description && (
+                <details className={styles.accordion} open>
+                  <summary className={styles.accordionSummary}>PRODUCT DETAILS</summary>
+                  <p className={styles.accordionBody}>{product.description}</p>
+                </details>
+              )}
+            </div>
           </div>
-          <div className={styles.infoCol}>
-            <span className={styles.statusPill}>{product.status}</span>
-            <h1 className={styles.productName}>{product.name}</h1>
-            <p className={styles.price}>€{Number(product.price).toFixed(2)}</p>
-            <ProductOptions
-              colours={product.colours ?? []}
-              sizes={product.sizes ?? []}
-              productName={product.name}
-              productId={product._id}
-              price={product.price}
-              outOfStock={outOfStock}
-              stock={total ?? undefined}
-            />
-            {product.description && (
-              <details className={styles.accordion} open>
-                <summary className={styles.accordionSummary}>PRODUCT DETAILS</summary>
-                <p className={styles.accordionBody}>{product.description}</p>
-              </details>
-            )}
-          </div>
-        </div>
+
+          <StickyBuyBar
+            productId={product._id}
+            productName={product.name}
+            price={product.price}
+            outOfStock={outOfStock}
+            stock={total ?? undefined}
+            image={galleryImages[0]?.url}
+            colours={product.colours ?? []}
+            sizes={product.sizes ?? []}
+          />
+        </ProductSelectionProvider>
       </main>
     </>
   );

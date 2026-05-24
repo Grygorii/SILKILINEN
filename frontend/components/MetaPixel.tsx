@@ -32,7 +32,10 @@ export default function MetaPixel() {
     }
   }, [allowed]);
 
-  if (!PIXEL_ID || !allowed) return null;
+  // Meta pixel IDs are numeric; strip anything else to defeat script
+  // injection if the env var ever contains quotes or HTML.
+  const safePixelId = String(PIXEL_ID).replace(/[^a-zA-Z0-9_-]/g, '');
+  if (!safePixelId || !allowed) return null;
 
   return (
     <Script
@@ -48,7 +51,7 @@ export default function MetaPixel() {
           t.src=v;s=b.getElementsByTagName(e)[0];
           s.parentNode.insertBefore(t,s)}(window, document,'script',
           'https://connect.facebook.net/en_US/fbevents.js');
-          fbq('init', '${PIXEL_ID}');
+          fbq('init', '${safePixelId}');
           fbq('track', 'PageView');
         `,
       }}

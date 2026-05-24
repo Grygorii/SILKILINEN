@@ -1,4 +1,6 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
+const mongoose = require('mongoose');
 const checkoutRouter = express.Router();
 const webhookRouter = express.Router();
 const crypto = require('crypto');
@@ -12,6 +14,18 @@ const { calculateShipping } = require('../services/shipping');
 const { validateDiscount, redeemDiscount } = require('../services/discounts');
 const { calculateTax } = require('../services/tax');
 const { sendOrderConfirmation, sendAdminOrderNotification } = require('../services/email');
+
+// 20 intent operations per 5 minutes per IP. Generous enough for normal
+// browsing (edit address, change shipping, retry on network error) while
+// blocking abuse and price-probing.
+const checkoutRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many checkout attempts. Please wait a few minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV !== 'production',
+});
 
 // ── Meta Conversions API ─────────────────────────────────────────────────────
 // Fires server-side Purchase event after payment confirmation.
@@ -65,7 +79,7 @@ async function fireMetaCapi({ order, eventId }) {
 }
 
 // POST /api/v2/checkout/create-intent
-checkoutRouter.post('/create-intent', async (req, res) => {
+checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
   try {
     const { sessionId, shippingCountry, discountCode: incomingCode, attribution, email } = req.body;
     let cart = null;
@@ -178,7 +192,7 @@ checkoutRouter.post('/create-intent', async (req, res) => {
 // POST /api/v2/checkout/update-intent
 // Updates an existing PaymentIntent's amount when country or discount changes.
 // Keeps the same clientSecret so the mounted Elements context is preserved.
-checkoutRouter.post('/update-intent', async (req, res) => {
+checkoutRouter.post('/update-intent', checkoutRateLimit, async (req, res) => {
   try {
     const { paymentIntentId, shippingCountry, discountCode, email } = req.body;
     if (!paymentIntentId) return res.status(400).json({ error: 'paymentIntentId required' });
@@ -314,7 +328,8 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
 
       const stripeShipping = intent.shipping;
       const customerEmail = intent.receipt_email || intent.metadata?.customerEmail || null;
-      const order = await Order.create({
+
+      const orderDoc = {
         stripePaymentIntentId: intent.id,
         stripeChargeId: intent.latest_charge,
         orderNumber,
@@ -355,24 +370,48 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
           term:     visit.utm.term,
           content:  visit.utm.content,
         } : undefined,
-      });
+      };
 
-      // Fire Meta Conversions API server-side Purchase event
-      fireMetaCapi({ order, eventId: `order-${orderNumber}` });
-
-      // Record redemption (creates PromoCodeRedemption doc + increments usageCount)
-      if (discountCode) {
-        await redeemDiscount(discountCode, {
-          orderId:       order._id,
-          orderNumber:   order.orderNumber,
-          customerEmail: order.customerEmail,
-          discountAmount: order.discountAmount,
-        }).catch(() => {});
+      // Wrap Order create + discount redemption in a Mongo transaction.
+      // Either both succeed or neither does; prevents the bug where an
+      // order ships but the promo code's usage counter never increments,
+      // letting a single-use code be redeemed twice.
+      // Requires a replica set (Atlas free/shared/dedicated all qualify).
+      const session = await mongoose.startSession();
+      let order;
+      try {
+        await session.withTransaction(async () => {
+          const created = await Order.create([orderDoc], { session });
+          order = created[0];
+          if (discountCode) {
+            await redeemDiscount(discountCode, {
+              orderId:       order._id,
+              orderNumber:   order.orderNumber,
+              customerEmail: order.customerEmail,
+              discountAmount: order.discountAmount,
+              session,
+            });
+          }
+        });
+      } finally {
+        await session.endSession();
       }
+
+      // Fire Meta Conversions API server-side Purchase event.
+      // fireMetaCapi has its own try/catch, but an unawaited async call
+      // still produces unhandled rejections if the inner catch ever throws.
+      fireMetaCapi({ order, eventId: `order-${orderNumber}` })
+        .catch(err => console.error('[CAPI] unhandled:', err.message));
 
       // Clear cart
       if (cart) {
         await Cart.deleteOne({ _id: cart._id }).catch(() => {});
+      }
+
+      // Link every visit in this session to the order for source-conversion attribution
+      if (sessionId) {
+        Visit.updateMany({ sessionId }, { convertedToOrder: order._id })
+          .catch(err => console.error('[checkoutV2] visit attribution write failed:', err.message));
       }
 
       await Promise.allSettled([

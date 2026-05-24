@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import DOMPurify from 'isomorphic-dompurify';
 import styles from './AnnouncementBar.module.css';
 
 const DEFAULT_MESSAGES = [
@@ -29,11 +30,16 @@ export default function AnnouncementBar({ messages }: { messages?: string[] }) {
     return () => clearInterval(timer);
   }, [msgs.length]);
 
+  const safeHtml = DOMPurify.sanitize(msgs[index], {
+    ALLOWED_TAGS: ['strong', 'em', 'b', 'i', 'br'],
+    ALLOWED_ATTR: [],
+  });
+
   return (
     <div className={styles.bar}>
       <p
         className={`${styles.message} ${visible ? styles.visible : styles.hidden}`}
-        dangerouslySetInnerHTML={{ __html: msgs[index] }}
+        dangerouslySetInnerHTML={{ __html: safeHtml }}
       />
     </div>
   );

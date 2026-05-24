@@ -21,29 +21,41 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/admin-session — sets a Vercel-domain httpOnly token cookie
-// after the browser has already called Railway /api/auth/login.
-// Railway's Set-Cookie applies to the Railway domain only, so
-// Next.js middleware and Server Components can't see it. We receive the
-// JWT from the login response body and reissue it as a first-party cookie.
-// We verify the token with Railway before trusting it.
+// after the browser has called Railway /api/auth/login. Railway's
+// Set-Cookie applies to the Railway domain only, so Next.js middleware
+// and Server Components can't see it.
+//
+// The browser hands us a single-use 60-second bootstrap nonce (NOT the
+// JWT itself). We exchange it server-to-server with Railway for the
+// actual JWT, then set our own first-party cookie. The JWT never
+// appears in browser-visible network traffic or storage.
 export async function POST(request: NextRequest) {
-  const { token } = await request.json();
-  if (!token || typeof token !== 'string') {
-    return NextResponse.json({ error: 'Missing token' }, { status: 400 });
+  const { bootstrap } = await request.json();
+  if (!bootstrap || typeof bootstrap !== 'string') {
+    return NextResponse.json({ error: 'Missing bootstrap nonce' }, { status: 400 });
   }
 
-  // Verify the token is real and belongs to an admin before issuing a session cookie.
-  // Prevents anyone from POSTing arbitrary strings and getting them set as the cookie.
+  let token: string;
   try {
-    const verifyRes = await fetch(`${API}/api/auth/me`, {
-      headers: { Cookie: `token=${token}` },
+    const exchangeRes = await fetch(`${API}/api/auth/redeem-bootstrap`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': '1', // F8: server-to-server still goes through CSRF middleware
+      },
+      body: JSON.stringify({ bootstrap }),
       cache: 'no-store',
     });
-    if (!verifyRes.ok) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    if (!exchangeRes.ok) {
+      return NextResponse.json({ error: 'Invalid or expired bootstrap' }, { status: 401 });
     }
+    const data = await exchangeRes.json();
+    if (!data?.token || typeof data.token !== 'string') {
+      return NextResponse.json({ error: 'Bootstrap exchange returned no token' }, { status: 503 });
+    }
+    token = data.token;
   } catch {
-    return NextResponse.json({ error: 'Verification failed' }, { status: 503 });
+    return NextResponse.json({ error: 'Bootstrap exchange failed' }, { status: 503 });
   }
 
   const response = NextResponse.json({ ok: true });
