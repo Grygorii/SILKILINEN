@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const { requireAuth } = require('../middleware/auth');
+const loginBootstrap = require('../utils/loginBootstrap');
 
 // 5 attempts per IP per 15 minutes
 const loginLimiter = rateLimit({
@@ -58,13 +59,30 @@ router.post('/login', loginLimiter, async function(req, res) {
     });
 
     console.log(`[AUTH] Admin login: ${email} | ip=${ip}`);
-    // Return token in body so the Vercel frontend can set a same-domain
-    // httpOnly cookie for its Edge middleware (cross-domain cookie workaround).
-    res.json({ success: true, token });
+    // Cross-domain cookie workaround: the Vercel frontend needs the JWT to
+    // set its own first-party cookie that Next.js middleware can read.
+    // Returning the JWT in the body leaks it to network logs / dev tools,
+    // so instead we hand out an opaque 60s single-use bootstrap nonce. The
+    // frontend exchanges it server-to-server at /auth/redeem-bootstrap.
+    const bootstrap = loginBootstrap.issue(token);
+    res.json({ success: true, bootstrap });
   } catch (err) {
     console.error(`[AUTH] Login error: ip=${ip} | ${err.message}`);
     res.status(503).json({ error: 'Something went wrong on our end. Please try again in a moment.' });
   }
+});
+
+// POST /auth/redeem-bootstrap — exchange a 60s nonce for the JWT.
+// Called server-to-server by the Vercel /api/admin-session route handler
+// (never directly by the browser). Single-use: nonce is consumed even on
+// validation failure to defeat replay.
+router.post('/redeem-bootstrap', function(req, res) {
+  const { bootstrap } = req.body || {};
+  const token = loginBootstrap.redeem(bootstrap);
+  if (!token) {
+    return res.status(401).json({ error: 'Invalid or expired bootstrap nonce' });
+  }
+  res.json({ token });
 });
 
 router.post('/logout', function(req, res) {
