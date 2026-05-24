@@ -1,5 +1,6 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
+const mongoose = require('mongoose');
 const checkoutRouter = express.Router();
 const webhookRouter = express.Router();
 const crypto = require('crypto');
@@ -327,7 +328,8 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
 
       const stripeShipping = intent.shipping;
       const customerEmail = intent.receipt_email || intent.metadata?.customerEmail || null;
-      const order = await Order.create({
+
+      const orderDoc = {
         stripePaymentIntentId: intent.id,
         stripeChargeId: intent.latest_charge,
         orderNumber,
@@ -368,23 +370,38 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
           term:     visit.utm.term,
           content:  visit.utm.content,
         } : undefined,
-      });
+      };
+
+      // Wrap Order create + discount redemption in a Mongo transaction.
+      // Either both succeed or neither does; prevents the bug where an
+      // order ships but the promo code's usage counter never increments,
+      // letting a single-use code be redeemed twice.
+      // Requires a replica set (Atlas free/shared/dedicated all qualify).
+      const session = await mongoose.startSession();
+      let order;
+      try {
+        await session.withTransaction(async () => {
+          const created = await Order.create([orderDoc], { session });
+          order = created[0];
+          if (discountCode) {
+            await redeemDiscount(discountCode, {
+              orderId:       order._id,
+              orderNumber:   order.orderNumber,
+              customerEmail: order.customerEmail,
+              discountAmount: order.discountAmount,
+              session,
+            });
+          }
+        });
+      } finally {
+        await session.endSession();
+      }
 
       // Fire Meta Conversions API server-side Purchase event.
       // fireMetaCapi has its own try/catch, but an unawaited async call
       // still produces unhandled rejections if the inner catch ever throws.
       fireMetaCapi({ order, eventId: `order-${orderNumber}` })
         .catch(err => console.error('[CAPI] unhandled:', err.message));
-
-      // Record redemption (creates PromoCodeRedemption doc + increments usageCount)
-      if (discountCode) {
-        await redeemDiscount(discountCode, {
-          orderId:       order._id,
-          orderNumber:   order.orderNumber,
-          customerEmail: order.customerEmail,
-          discountAmount: order.discountAmount,
-        }).catch(() => {});
-      }
 
       // Clear cart
       if (cart) {
