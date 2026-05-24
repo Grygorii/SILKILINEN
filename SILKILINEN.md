@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 19 May 2026 (Header polish + product page sticky fixes + cookie banner GDPR + hero CTA + image fixes + button states polish + gallery broken-image fix + Cloudinary URL validation + admin panel UX fixes P1+P2 + abandoned cart recovery fix + recovery email automation + mobile header simplification + product image pipeline lockdown + hamburger drawer UX fixes + cart swipe + image placeholders + account section refinement + Cloudinary upload pipeline verification + dashboard conversion rate fix).
+Last updated: 19 May 2026 (Header polish + product page sticky fixes + cookie banner GDPR + hero CTA + image fixes + button states polish + gallery broken-image fix + Cloudinary URL validation + admin panel UX fixes P1+P2 + abandoned cart recovery fix + recovery email automation + mobile header simplification + product image pipeline lockdown + hamburger drawer UX fixes + cart swipe + image placeholders + account section refinement + Cloudinary upload pipeline verification + dashboard conversion rate fix + preview page crash fix + font preload warning fix).
 
 ---
 
@@ -68,6 +68,24 @@ Other admin pages:
 - Aoife Terracotta Robe (first listed product) — AI-generated imagery, approved by Sabreena
 - Existing Dalia / Bastet / Ciara / Rehab dress and robe products from earlier build phase
 - **Silk panties** (the actual sales hero) — currently sold on Etsy, not yet migrated to silkilinen.com as primary
+
+## Shipped 19 May 2026 — preview page crash fix + preload warning
+
+### Crash: `useProductSelection must be inside ProductSelectionProvider`
+
+**Root cause:** The preview page at `/app/(shop)/preview/[id]/page.tsx` renders `<ProductOptions>`, which calls `useProductSelection()` at the top level. `useProductSelection()` throws if no `<ProductSelectionProvider>` is in the ancestor tree. The live PDP (`/app/(shop)/product/[id]/page.tsx`) wraps `ProductOptions` + `StickyBuyBar` inside `<ProductSelectionProvider>` — the preview page had neither.
+
+**Fix:** Added `ProductSelectionProvider` and `StickyBuyBar` imports to the preview page. The product content is now wrapped in `<ProductSelectionProvider defaultColour={...} defaultSize={...}>`, matching the live PDP structure exactly (same default-colour/size initialisation logic, same `StickyBuyBar` for mobile parity, same `image` prop passed to `ProductOptions`).
+
+### Preload warning: `<link rel="preload">` resource not used in time
+
+**Root cause:** `layout.tsx` had a manual `<head>` block containing a `<link rel="stylesheet">` for Google Fonts. Next.js App Router auto-generates a `<link rel="preload" as="style">` for any `<link rel="stylesheet">` it finds in the root layout's `<head>`, producing an external-resource preload that the browser can't always consume within its expected window.
+
+**Fix:** Removed the manual `<head>` block from `layout.tsx`. Moved the Google Fonts import to `globals.css` as an `@import url(...)` at the top of the file — Next.js doesn't instrument `@import` rules, so no spurious preload is generated. Font loading behaviour is unchanged.
+
+**Files modified:** `frontend/app/(shop)/preview/[id]/page.tsx`, `frontend/app/layout.tsx`, `frontend/app/globals.css`
+
+---
 
 ## Shipped 19 May 2026 — dashboard conversion rate fix
 
