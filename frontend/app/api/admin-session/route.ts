@@ -39,7 +39,10 @@ export async function POST(request: NextRequest) {
   try {
     const exchangeRes = await fetch(`${API}/api/auth/redeem-bootstrap`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': '1', // F8: server-to-server still goes through CSRF middleware
+      },
       body: JSON.stringify({ bootstrap }),
       cache: 'no-store',
     });

@@ -5,6 +5,7 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import AnalyticsLoader from "@/components/AnalyticsLoader";
 import UTMCapture from "@/components/UTMCapture";
 import GoogleAuthProvider from "@/components/GoogleAuthProvider";
+import CsrfFetchPatch from "@/components/CsrfFetchPatch";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { CustomerProvider } from "@/context/CustomerContext";
@@ -25,6 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <CsrfFetchPatch />
         <GoogleAuthProvider>
           <CookieConsentProvider>
             <CustomerProvider>
