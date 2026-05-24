@@ -391,6 +391,12 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
         await Cart.deleteOne({ _id: cart._id }).catch(() => {});
       }
 
+      // Link every visit in this session to the order for source-conversion attribution
+      if (sessionId) {
+        Visit.updateMany({ sessionId }, { convertedToOrder: order._id })
+          .catch(err => console.error('[checkoutV2] visit attribution write failed:', err.message));
+      }
+
       await Promise.allSettled([
         sendOrderConfirmation(order),
         sendAdminOrderNotification(order),
