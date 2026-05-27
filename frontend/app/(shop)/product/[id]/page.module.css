@@ -31,29 +31,35 @@
 
 .infoCol::-webkit-scrollbar { display: none; }
 
-/* ── Back link ────────────────────────────────────── */
+/* ── Back link (notFound only — top-of-page back was removed by v1) ── */
 
 .back {
   display: inline-block;
+  font-family: 'Jost', sans-serif;
   font-size: 11px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--muted, #8a8680);
+  color: var(--color-ink-muted);
   text-decoration: none;
-  margin-bottom: 28px;
-  transition: color 0.15s;
+  margin-bottom: var(--s-6, 28px);
+  transition: color var(--t-fast, 120ms) var(--ease, ease);
 }
-.back:hover { color: var(--dark, #1a1916); }
+.back:hover { color: var(--color-ink); }
 
-/* ── New tag ──────────────────────────────────────── */
+/* ── New tag (design-system v1: warm-beige uppercase pill) ───────── */
 
 .newTag {
-  display: block;
-  font-size: 11px;
-  font-style: italic;
-  color: var(--muted, #8a8680);
-  margin-bottom: 8px;
-  letter-spacing: 0.5px;
+  display: inline-block;
+  margin-bottom: var(--s-3, 12px);
+  padding: 4px 10px;
+  background: var(--color-surface-warm);
+  color: var(--color-ink);
+  font-family: 'Jost', sans-serif;
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border-radius: var(--radius-control);
 }
 
 /* ── Product name ─────────────────────────────────── */
@@ -156,14 +162,16 @@
   gap: 10px;
 }
 
-/* ── Shipping note ────────────────────────────────── */
+/* ── Shipping note (design-system v1: 12px muted meta line) ─────── */
 
 .shippingNote {
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
   font-size: 12px;
-  font-style: italic;
-  color: var(--muted, #8a8680);
-  margin-bottom: 20px;
+  color: var(--color-ink-muted);
+  margin-bottom: var(--s-5, 24px);
   line-height: 1.5;
+  letter-spacing: 0.2px;
 }
 
 .priceSale {
@@ -194,52 +202,11 @@
   margin-bottom: 20px;
 }
 
-/* ── Accordions ───────────────────────────────────── */
+/* ── Accordions wrapper — visual styling lives in Accordion.module.css.
+   This class only adds the top spacing on the PDP. ─────────────────── */
 
 .accordions {
-  margin-top: 32px;
-  border-top: 1px solid var(--border, #e0ddd7);
-}
-
-.accordion {
-  border-bottom: 1px solid var(--border, #e0ddd7);
-}
-
-.accordionSummary {
-  padding: 20px 0;
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--dark, #1a1916);
-  cursor: pointer;
-  list-style: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  user-select: none;
-}
-
-.accordionSummary::-webkit-details-marker { display: none; }
-
-.accordionSummary::after {
-  content: '+';
-  font-size: 18px;
-  font-weight: 300;
-  color: var(--muted, #8a8680);
-  line-height: 1;
-  transition: transform 0.2s ease;
-}
-
-.accordion[open] .accordionSummary::after {
-  content: '−';
-}
-
-.accordionBody {
-  font-size: 13px;
-  color: var(--muted, #8a8680);
-  line-height: 1.85;
-  padding-bottom: 20px;
-  margin: 0;
+  margin-top: var(--s-6, 32px);
 }
 
 /* ── Not found ────────────────────────────────────── */

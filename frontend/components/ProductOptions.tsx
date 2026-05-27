@@ -5,10 +5,18 @@ import { useCart } from '@/context/CartContext';
 import { useProductSelection } from './ProductSelectionContext';
 import DropAHint from './DropAHint';
 import { Gift } from '@/components/icons';
+import Button from '@/components/ui/Button';
+import { OptionPill, OptionPillGroup } from '@/components/ui/OptionPill';
+import { ColourSwatchGroup, type Swatch } from '@/components/ui/ColourSwatch';
 import styles from './ProductOptions.module.css';
 
 type Props = {
   colours: string[];
+  // Optional per-variant hex map for the new swatch component.
+  // Keys are colour names (lowercased); values are hex strings.
+  // If absent, the swatch falls back to the warm-beige placeholder
+  // with the colour name centred — the layout never collapses.
+  colourHexMap?: Record<string, string>;
   sizes: string[];
   productName: string;
   productId: string;
@@ -18,7 +26,7 @@ type Props = {
   image?: string;
 };
 
-export default function ProductOptions({ colours, sizes, productName, productId, price, outOfStock, stock, image }: Props) {
+export default function ProductOptions({ colours, colourHexMap, sizes, productName, productId, price, outOfStock, stock, image }: Props) {
   const { selectedColour, setSelectedColour, selectedSize, setSelectedSize, qty, setQty } = useProductSelection();
   const [addState, setAddState] = useState<'idle' | 'adding' | 'added'>('idle');
   const [hintOpen, setHintOpen] = useState(false);
@@ -30,29 +38,33 @@ export default function ProductOptions({ colours, sizes, productName, productId,
   const needsSize = sizes.length > 0 && !selectedSize;
   const canAdd = !outOfStock && !needsColour && !needsSize;
 
+  // CTA variant + label resolution (design-system v1):
+  //   - out of stock → secondary "Notify when available"
+  //   - mid-add      → primary disabled "Adding…"
+  //   - just added   → primary "Added to bag ✓"
+  //   - needs choice → disabled primary "Select a colour / size"
+  //   - default      → primary "Add to bag"
+  type CtaVariant = 'primary' | 'secondary' | 'disabled';
   let ctaLabel: string;
-  let ctaDisabled: boolean;
-  let ctaOutline = false;
-
+  let ctaVariant: CtaVariant;
   if (outOfStock) {
     ctaLabel = 'NOTIFY WHEN AVAILABLE';
-    ctaDisabled = false;
-    ctaOutline = true;
+    ctaVariant = 'secondary';
   } else if (addState === 'adding') {
     ctaLabel = 'ADDING…';
-    ctaDisabled = true;
+    ctaVariant = 'primary';
   } else if (addState === 'added') {
     ctaLabel = 'ADDED TO BAG ✓';
-    ctaDisabled = false;
+    ctaVariant = 'primary';
   } else if (needsColour) {
-    ctaLabel = 'Choose a colour';
-    ctaDisabled = true;
+    ctaLabel = 'SELECT A COLOUR';
+    ctaVariant = 'disabled';
   } else if (needsSize) {
-    ctaLabel = 'Choose a size';
-    ctaDisabled = true;
+    ctaLabel = 'SELECT A SIZE';
+    ctaVariant = 'disabled';
   } else {
     ctaLabel = 'ADD TO BAG';
-    ctaDisabled = false;
+    ctaVariant = 'primary';
   }
 
   function handleAdd() {
@@ -69,55 +81,59 @@ export default function ProductOptions({ colours, sizes, productName, productId,
     }, 400);
   }
 
+  // Build the swatch list. Per-variant hex isn't stored on the variant
+  // subdocument today, so we look up by colour name via an optional map.
+  // Sold-out detection for individual colours is out of scope here (the
+  // whole product is either in stock or not via outOfStock).
+  const swatches: Swatch[] = colours.map(name => ({
+    name,
+    hex: colourHexMap?.[name.toLowerCase()] ?? null,
+  }));
+
   return (
     <div className={styles.root} data-product-options>
-      {/* Colour */}
+      {/* Colour — design-system v1 labelled swatch */}
       {colours.length > 0 && (
         <div className={styles.picker}>
-          <p className={styles.pickerLabel}>
-            COLOUR:{' '}
-            <span className={styles.pickerValue}>{selectedColour || '—'}</span>
-          </p>
-          <div className={styles.colourCubes}>
-            {colours.map(colour => (
-              <button
-                key={colour}
-                className={`${styles.colourCube} ${selectedColour === colour ? styles.colourCubeActive : ''}`}
-                onClick={() => setSelectedColour(colour)}
-                aria-pressed={selectedColour === colour}
-              >
-                {colour}
-              </button>
-            ))}
-          </div>
+          <ColourSwatchGroup
+            swatches={swatches}
+            selectedName={selectedColour || undefined}
+            onSelect={setSelectedColour}
+          />
         </div>
       )}
 
-      {/* Size */}
+      {/* Size — design-system v1 OptionPill grid + sizing chart footnote */}
       {sizes.length > 0 && (
         <div className={styles.picker}>
-          <p className={styles.pickerLabel}>
-            <span>SIZE</span>
-            <a href="/size-guide" target="_blank" rel="noopener noreferrer" className={styles.sizeGuideLink}>
+          <p className={styles.sizeRow}>
+            <span className={styles.pickerLabel}>SIZE</span>
+            <a
+              href="/size-guide"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.sizeGuideLink}
+            >
               SIZING CHART
             </a>
           </p>
-          <div className={styles.sizes}>
+          <OptionPillGroup ariaLabel="Size">
             {sizes.map(size => (
-              <button
+              <OptionPill
                 key={size}
-                className={`${styles.sizeBtn} ${selectedSize === size ? styles.sizeBtnActive : ''}`}
-                onClick={() => setSelectedSize(size)}
-                aria-pressed={selectedSize === size}
+                selected={selectedSize === size}
+                onSelect={() => setSelectedSize(size)}
+                ariaLabel={`Size ${size}`}
               >
                 {size}
-              </button>
+              </OptionPill>
             ))}
-          </div>
+          </OptionPillGroup>
         </div>
       )}
 
-      {/* Quantity stepper */}
+      {/* Quantity stepper — keep existing styling for now; not in
+          the four-primitive set defined by v1 */}
       {!outOfStock && (
         <div className={styles.stepper}>
           <p className={styles.stepperLabel}>QUANTITY</p>
@@ -140,15 +156,18 @@ export default function ProductOptions({ colours, sizes, productName, productId,
       )}
 
       {/* CTA */}
-      <button
-        className={`${styles.cta} ${ctaOutline ? styles.ctaOutline : ''} ${addState === 'added' ? styles.ctaAdded : ''}`}
-        onClick={handleAdd}
-        disabled={ctaDisabled}
-      >
-        {ctaLabel}
-      </button>
+      <div className={styles.ctaWrap}>
+        <Button
+          variant={ctaVariant}
+          onClick={handleAdd}
+          aria-disabled={ctaVariant === 'disabled' || addState === 'adding'}
+        >
+          {ctaLabel}
+        </Button>
+      </div>
 
-      {/* Drop a Hint */}
+      {/* Drop a Hint — quiet uppercase link with a hairline gift glyph,
+          sits at the foot of the panel by design proposal. */}
       <button className={styles.hintBtn} onClick={() => setHintOpen(true)}>
         <Gift size={16} />&nbsp; DROP A HINT
       </button>
