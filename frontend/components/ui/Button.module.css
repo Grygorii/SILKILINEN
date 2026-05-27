@@ -1,0 +1,54 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: var(--ctrl-h-desktop);
+  border: var(--stroke) solid var(--color-ink);
+  border-radius: var(--radius-control);
+  font-family: 'Jost', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease),
+              color var(--t-fast) var(--ease),
+              opacity var(--t-fast) var(--ease);
+  user-select: none;
+}
+
+@media (max-width: 767px) {
+  .btn { height: var(--ctrl-h-mobile); }
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 3px;
+}
+
+/* Primary — filled charcoal */
+.primary {
+  background: var(--color-ink);
+  color: var(--color-bg);
+}
+.primary:hover:not(:disabled) { opacity: 0.85; }
+.primary:active:not(:disabled) { opacity: 0.75; }
+
+/* Secondary — outlined */
+.secondary {
+  background: transparent;
+  color: var(--color-ink);
+}
+.secondary:hover:not(:disabled) { background: var(--color-surface); }
+.secondary:active:not(:disabled) { background: var(--color-surface); opacity: 0.85; }
+
+/* Disabled primary — warm-beige fill, full-charcoal text at 0.5 */
+.disabledPrimary {
+  background: var(--color-surface-warm);
+  color: var(--color-ink);
+  border-color: var(--color-surface-warm);
+  cursor: not-allowed;
+}
+.disabledPrimary > * { opacity: 0.5; }

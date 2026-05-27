@@ -44,12 +44,57 @@ img {
 }
 
 :root {
-  --cream: #f5f0e8;
-  --warm-white: #faf8f4;
-  --dark: #2a2218;
-  --border: #e8e2d6;
-  --muted: #8a8278;
-  --rose: #c4a882;
+  /* ── Design System v1 tokens ──────────────────────────────────────────
+     Five token sets. Every component reads from these only — no magic
+     numbers in module CSS. See SILKILINEN — Design System Proposal v1.
+  */
+
+  /* Colour roles (7 tokens, same palette as before, formalised) */
+  --color-bg:           #FAF8F4;  /* canvas */
+  --color-surface:      #F5F0E8;  /* hover, soft fills */
+  --color-surface-warm: #ECE4D4;  /* disabled, NEW tag */
+  --color-line:         #E8E2D6;  /* dividers only */
+  --color-ink-muted:    #8A8278;  /* meta, labels */
+  --color-ink:          #2A2218;  /* text, primary fill */
+  --color-accent:       #C4A882;  /* rose-gold, used sparingly */
+
+  /* Spacing scale (4px base, 8 steps) */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+
+  /* Stroke + radius (locked, ends current drift) */
+  --stroke: 1px;
+  --radius-control: 2px;  /* buttons, pills, steppers, inputs */
+  --radius-surface: 2px;  /* toasts, popovers, modals */
+
+  /* Motion */
+  --t-fast: 120ms;
+  --t-base: 200ms;
+  --t-slow: 320ms;
+  --ease: cubic-bezier(.2, .6, .2, 1);
+
+  /* Control heights */
+  --ctrl-h-desktop: 52px;
+  --ctrl-h-mobile:  56px;
+  --pill-h:         44px;
+
+  /* ── Legacy aliases ───────────────────────────────────────────────────
+     Point old var names at the new tokens so existing module CSS keeps
+     working during the refactor. New code should use the --color-*
+     tokens directly.
+  */
+  --warm-white: var(--color-bg);
+  --cream:      var(--color-surface);
+  --dark:       var(--color-ink);
+  --border:     var(--color-line);
+  --muted:      var(--color-ink-muted);
+  --rose:       var(--color-accent);
 }
 
 body {
