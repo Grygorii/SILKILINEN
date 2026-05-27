@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useCustomer } from '@/context/CustomerContext';
 import { useWishlist } from '@/context/WishlistContext';
+import Button from '@/components/ui/Button';
 import styles from './account.module.css';
 import { Package, Wishlist, Profile, Address } from '@/components/icons';
 
@@ -65,9 +66,11 @@ export default function AccountPage() {
       </div>
 
       <div className={styles.signOutRow}>
-        <button className={styles.signOutBtn} onClick={async () => { await signOut(); window.location.href = '/'; }}>
-          Sign out
-        </button>
+        <div className={styles.signOutBtnWrap}>
+          <Button variant="secondary" onClick={async () => { await signOut(); window.location.href = '/'; }}>
+            SIGN OUT
+          </Button>
+        </div>
       </div>
     </>
   );

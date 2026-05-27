@@ -51,6 +51,10 @@ const productSchema = new mongoose.Schema({
     index: true,
   },
 
+  // Design-system v1 "NEW" badge — manual flag, admin controlled.
+  // Show as a warm-beige uppercase pill on the PDP and shop card when true.
+  isNew: { type: Boolean, default: false },
+
   price: {
     type: Number,
     required: [true, 'Price is required'],

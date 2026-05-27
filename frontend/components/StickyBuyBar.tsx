@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useProductSelection } from './ProductSelectionContext';
+import Button from '@/components/ui/Button';
 import styles from './StickyBuyBar.module.css';
 
 type Props = {
@@ -42,13 +43,31 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
     }, 400);
   }
 
+  // Design-system v1: skin the button via the shared primitive. Outline
+  // when out-of-stock so it reads as a secondary action; disabled when
+  // a selection is missing.
+  type CtaVariant = 'primary' | 'secondary' | 'disabled';
   let label: string;
-  if (outOfStock) label = 'OUT OF STOCK';
-  else if (addState === 'adding') label = 'ADDING…';
-  else if (addState === 'added') label = 'ADDED ✓';
-  else if (needsColour) label = 'Choose colour';
-  else if (needsSize) label = 'Choose size';
-  else label = 'ADD TO BAG';
+  let variant: CtaVariant;
+  if (outOfStock) {
+    label = 'NOTIFY';
+    variant = 'secondary';
+  } else if (addState === 'adding') {
+    label = 'ADDING…';
+    variant = 'primary';
+  } else if (addState === 'added') {
+    label = 'ADDED ✓';
+    variant = 'primary';
+  } else if (needsColour) {
+    label = 'CHOOSE COLOUR';
+    variant = 'disabled';
+  } else if (needsSize) {
+    label = 'CHOOSE SIZE';
+    variant = 'disabled';
+  } else {
+    label = 'ADD TO BAG';
+    variant = 'primary';
+  }
 
   return (
     <div className={styles.bar}>
@@ -56,13 +75,11 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
         <span className={styles.name}>{productName}</span>
         <span className={styles.price}>€{Number(price).toFixed(2)}</span>
       </div>
-      <button
-        className={`${styles.btn} ${outOfStock ? styles.btnOut : ''} ${addState === 'added' ? styles.btnAdded : ''}`}
-        onClick={handleAdd}
-        disabled={addState === 'adding'}
-      >
-        {label}
-      </button>
+      <div className={styles.btnWrap}>
+        <Button variant={variant} onClick={handleAdd}>
+          {label}
+        </Button>
+      </div>
     </div>
   );
 }

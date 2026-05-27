@@ -55,6 +55,7 @@ type Form = {
   careInstructions: string;
   origin: string;
   certifications: string;
+  isNew: boolean;
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -86,6 +87,7 @@ const EMPTY_FORM: Form = {
   category: 'robes', description: '', tags: '',
   metaTitle: '', metaDescription: '', slug: '', keywords: '', altTextTemplate: '',
   materialComposition: '', careInstructions: '', origin: 'Made in Donegal', certifications: '',
+  isNew: false,
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -214,6 +216,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           careInstructions: p.careInstructions ?? '',
           origin: p.origin ?? 'Made in Donegal',
           certifications: (p.certifications ?? []).join(', '),
+          isNew: Boolean(p.isNew),
         });
         const sorted = (p.images ?? []).slice().sort((a: ProductImage, b: ProductImage) => a.order - b.order);
         setImages(sorted);
@@ -245,7 +248,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     return () => clearTimeout(t);
   }, [seoToast]);
 
-  function setField(field: keyof Form, value: string) {
+  function setField<K extends keyof Form>(field: K, value: Form[K]) {
     setForm(f => ({ ...f, [field]: value }));
     markDirty();
     if (aiFilledFields.has(field)) {
@@ -619,7 +622,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           <select
             className={`${styles.statusSelect} ${styles[`s_${form.status}`]}`}
             value={form.status}
-            onChange={e => setField('status', e.target.value)}
+            onChange={e => setField('status', e.target.value as Status)}
           >
             <option value="draft">Draft</option>
             <option value="active">Active</option>
@@ -1045,6 +1048,19 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 {margin}% margin · €{(price - costPrice).toFixed(2)} profit per unit
               </div>
             )}
+            {/* Design-system v1 — manual NEW badge flag. Shows the warm-beige
+                "NEW" pill on the PDP and shop card when enabled. Operator
+                turns it off when the product is no longer a new arrival. */}
+            <div className={styles.fg} style={{ marginTop: 16 }}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={form.isNew}
+                  onChange={e => setField('isNew', e.target.checked)}
+                />
+                Show <strong>NEW</strong> badge on storefront
+              </label>
+            </div>
           </section>
 
           {/* Costing */}

@@ -262,22 +262,11 @@
   font-style: italic;
 }
 
-.shopBtn {
-  background: none;
-  border: 1px solid var(--dark);
-  padding: 13px 28px;
-  font-family: 'Jost', sans-serif;
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  cursor: pointer;
-  color: var(--dark);
-  transition: background 0.25s ease, color 0.25s ease;
-}
-
-.shopBtn:hover {
-  background: var(--dark);
-  color: var(--warm-white);
+/* Sized container so the Button primitive doesn't stretch full-width
+   inside the empty-cart message. */
+.shopBtnWrap {
+  display: inline-block;
+  width: 220px;
 }
 
 /* ─── Footer — sticky, never scrolls ──────────────────────────────────────── */
@@ -360,29 +349,9 @@
   border-top: 1px solid var(--border);
 }
 
-/* Checkout button */
-.checkout {
-  width: 100%;
-  padding: 0 16px;
-  height: 52px;
-  background: var(--dark);
-  color: var(--warm-white);
-  border: none;
-  font-family: 'Jost', sans-serif;
-  font-size: 11px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-  margin-bottom: 12px;
-}
-
-.checkout:hover {
-  opacity: 0.85;
-}
-
-.checkout:active {
-  opacity: 0.7;
+/* Checkout button now uses the Button primitive — only spacing remains. */
+.footer > button {
+  margin-bottom: var(--s-3, 12px);
 }
 
 /* Trust line */

@@ -89,20 +89,6 @@
 }
 .input:focus { border-color: var(--dark, #1a1916); }
 
-.btn {
-  padding: 14px 16px;
-  background: var(--dark, #1a1916);
-  color: var(--warm-white, #faf8f4);
-  border: none;
-  font-size: 11px;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  font-family: inherit;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-.btn:hover:not(:disabled) { opacity: 0.85; }
-.btn:disabled { opacity: 0.5; cursor: default; }
 
 .small {
   font-size: 11px;

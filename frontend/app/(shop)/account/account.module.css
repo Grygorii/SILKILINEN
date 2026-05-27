@@ -503,21 +503,9 @@
   border-top: 1px solid var(--border);
 }
 
-.signOutBtn {
-  background: none;
-  border: 1px solid var(--border);
-  padding: 10px 20px;
-  font-family: 'Jost', sans-serif;
-  font-size: 12px;
-  letter-spacing: 1px;
-  color: var(--muted);
-  cursor: pointer;
-  transition: border-color 0.2s, color 0.2s;
-}
-
-.signOutBtn:hover {
-  border-color: var(--dark);
-  color: var(--dark);
+/* Sized container so the secondary Button doesn't stretch full width. */
+.signOutBtnWrap {
+  width: 160px;
 }
 
 /* Responsive */

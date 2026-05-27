@@ -1,135 +1,70 @@
+/* Container for the right-rail picker stack. Spacing between blocks is
+   handled via per-block margins below so the layout reads top-down. */
 .root {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-/* ── Picker row ───────────────────────────────────── */
-
 .picker {
-  margin-bottom: 24px;
+  margin-bottom: var(--s-5, 24px);
 }
 
-.pickerLabel {
+/* SIZE row — label on the left, SIZING CHART footnote on the right.
+   Design-system v1 puts the chart 10px muted, not a competing button. */
+.sizeRow {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--muted, #8a8680);
-  margin-bottom: 12px;
-  gap: 12px;
+  margin-bottom: var(--s-3, 12px);
+  gap: var(--s-3, 12px);
 }
 
-.pickerValue {
-  color: var(--dark, #1a1916);
-  font-weight: 500;
-  letter-spacing: 1px;
-}
-
-/* ── Colour cubes ─────────────────────────────────── */
-
-.colourCubes {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.colourCube {
-  padding: 12px 14px;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--dark, #1a1916);
-  background: var(--warm-white, #faf8f4);
-  color: var(--dark, #1a1916);
+.pickerLabel {
+  font-family: 'Jost', sans-serif;
+  font-weight: 400;
   font-size: 11px;
-  letter-spacing: 1px;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  white-space: nowrap;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--color-ink);
 }
-
-.colourCube:hover {
-  background: var(--cream, #f5f2ec);
-}
-
-.colourCubeActive {
-  background: var(--dark, #1a1916);
-  color: var(--warm-white, #faf8f4);
-  border-color: var(--dark, #1a1916);
-}
-
-/* ── Size boxes ───────────────────────────────────── */
 
 .sizeGuideLink {
+  font-family: 'Jost', sans-serif;
+  font-weight: 400;
   font-size: 10px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--muted, #8a8680);
+  color: var(--color-ink-muted);
   text-decoration: underline;
-  transition: color 0.15s;
   flex-shrink: 0;
   white-space: nowrap;
+  transition: color var(--t-fast, 120ms) var(--ease, ease);
 }
+.sizeGuideLink:hover { color: var(--color-ink); }
 
-.sizeGuideLink:hover { color: var(--dark, #1a1916); }
-
-.sizes {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.sizeBtn {
-  width: 56px;
-  height: 56px;
-  border: 1px solid var(--dark, #1a1916);
-  background: var(--warm-white, #faf8f4);
-  color: var(--dark, #1a1916);
-  font-size: 12px;
-  font-family: inherit;
-  letter-spacing: 1px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  flex-shrink: 0;
-}
-
-.sizeBtn:hover:not(:disabled):not(.sizeBtnActive) { background: var(--cream, #f5f2ec); }
-
-.sizeBtn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-  text-decoration: line-through;
-}
-
-.sizeBtnActive {
-  background: var(--dark, #1a1916);
-  color: var(--warm-white, #faf8f4);
-  border-color: var(--dark, #1a1916);
-}
-
-/* ── Quantity stepper ─────────────────────────────── */
-
+/* Quantity stepper — not part of the four-primitive set, retained
+   from previous markup with token-aligned styling. */
 .stepper {
-  margin-bottom: 20px;
+  margin-bottom: var(--s-5, 24px);
 }
 
 .stepperLabel {
-  font-size: 10px;
-  letter-spacing: 2px;
+  font-family: 'Jost', sans-serif;
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: var(--muted, #8a8680);
-  margin-bottom: 10px;
+  color: var(--color-ink);
+  margin-bottom: var(--s-3, 12px);
 }
 
 .stepperControls {
   display: flex;
   align-items: center;
   width: fit-content;
-  border: 1px solid var(--border, #e0ddd7);
+  border: var(--stroke, 1px) solid var(--color-line);
+  border-radius: var(--radius-control, 2px);
 }
 
 .stepperBtn {
@@ -139,74 +74,51 @@
   border: none;
   cursor: pointer;
   font-size: 18px;
-  color: var(--dark, #1a1916);
+  color: var(--color-ink);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s;
   font-family: inherit;
+  transition: background var(--t-fast, 120ms) var(--ease, ease);
 }
 
-.stepperBtn:hover:not(:disabled) { background: var(--cream, #f5f2ec); }
-.stepperBtn:disabled { color: var(--muted, #8a8680); cursor: default; }
+.stepperBtn:hover:not(:disabled) { background: var(--color-surface); }
+.stepperBtn:disabled { color: var(--color-ink-muted); cursor: default; }
 
 .stepperVal {
   width: 44px;
   height: 44px;
   text-align: center;
+  font-family: 'Jost', sans-serif;
   font-size: 14px;
   line-height: 44px;
-  border-left: 1px solid var(--border, #e0ddd7);
-  border-right: 1px solid var(--border, #e0ddd7);
+  border-left: var(--stroke, 1px) solid var(--color-line);
+  border-right: var(--stroke, 1px) solid var(--color-line);
 }
 
-/* ── CTA ──────────────────────────────────────────── */
-
-.cta {
-  width: 100%;
-  height: 56px;
-  background: var(--dark, #1a1916);
-  color: var(--warm-white, #faf8f4);
-  border: 1px solid var(--dark, #1a1916);
-  font-size: 12px;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  font-family: inherit;
-  cursor: pointer;
-  transition: opacity 0.2s;
-  margin-bottom: 16px;
+/* CTA wrapper — the Button component owns its own height + variants. */
+.ctaWrap {
+  margin-bottom: var(--s-4, 16px);
 }
 
-.cta:hover:not(:disabled) { opacity: 0.88; }
-.cta:disabled { background: var(--cream, #f5f2ec); color: var(--muted, #8a8680); border-color: var(--border, #e0ddd7); cursor: default; }
-
-.ctaOutline {
-  background: transparent;
-  color: var(--dark, #1a1916);
-}
-.ctaOutline:hover:not(:disabled) { background: var(--dark, #1a1916); color: var(--warm-white, #faf8f4); }
-
-.ctaAdded {
-  opacity: 0.75;
-}
-
-/* ── Drop a Hint ──────────────────────────────────── */
-
+/* Drop a Hint — quiet uppercase link with hairline gift glyph,
+   sits at the foot of the panel by v1 proposal. */
 .hintBtn {
   background: none;
   border: none;
   cursor: pointer;
+  font-family: 'Jost', sans-serif;
+  font-weight: 400;
   font-size: 11px;
-  letter-spacing: 2px;
+  letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: var(--muted, #8a8680);
-  font-family: inherit;
+  color: var(--color-ink-muted);
   padding: 0;
   min-height: 44px;
   display: inline-flex;
   align-items: center;
-  transition: color 0.15s;
   text-align: left;
+  transition: color var(--t-fast, 120ms) var(--ease, ease);
 }
 
-.hintBtn:hover { color: var(--dark, #1a1916); }
+.hintBtn:hover { color: var(--color-ink); }

@@ -1,0 +1,62 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  align-items: center;
+}
+
+.label {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  margin-bottom: var(--s-3);
+  font-family: 'Jost', sans-serif;
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+.labelName {
+  font-weight: 500;
+}
+
+.swatch {
+  position: relative;
+  width: var(--pill-h);
+  height: var(--pill-h);
+  border: var(--stroke) solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  cursor: pointer;
+  padding: 0;
+  transition: opacity var(--t-fast) var(--ease);
+}
+
+.swatch:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 3px;
+}
+
+/* Selected — 2px offset charcoal ring so the swatch itself doesn't jiggle */
+.selected {
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 calc(2px + 1px) var(--color-ink);
+}
+
+/* Sold out — diagonal slash + reduced opacity */
+.soldOut {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+.soldOut::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top right,
+      transparent calc(50% - 1px),
+      var(--color-ink) calc(50% - 1px),
+      var(--color-ink) calc(50% + 1px),
+      transparent calc(50% + 1px));
+  border-radius: var(--radius-control);
+}

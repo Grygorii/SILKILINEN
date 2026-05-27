@@ -9,6 +9,7 @@ import RecentlyViewed from '@/components/RecentlyViewed';
 import ProductViewTracker from '@/components/ProductViewTracker';
 import { ProductSelectionProvider } from '@/components/ProductSelectionContext';
 import StickyBuyBar from '@/components/StickyBuyBar';
+import { AccordionGroup, AccordionItem, AccordionSubLabel } from '@/components/ui/Accordion';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -107,9 +108,14 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const total = product.totalStock ?? product.stockLevel ?? null;
   const outOfStock = total === 0;
   const materialSub = getMaterialSub(product.materialComposition);
-  const showNew = product.createdAt
-    ? Date.now() - new Date(product.createdAt).getTime() < 30 * 86_400_000
-    : false;
+  // Design-system v1: manual isNew flag set in admin. Fall back to the
+  // 30-day-since-createdAt heuristic for products that pre-date the field
+  // so the badge doesn't suddenly disappear from existing recent products.
+  const showNew = typeof product.isNew === 'boolean'
+    ? product.isNew
+    : (product.createdAt
+        ? Date.now() - new Date(product.createdAt).getTime() < 30 * 86_400_000
+        : false);
 
   const galleryImages = product.images?.length > 0
     ? product.images
@@ -119,10 +125,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   const snippet = getStorySnippet(product.description);
 
+  // Design-system v1: consolidate the price meta to one quiet line.
+  // Free-shipping threshold logic still drives copy below — eligible
+  // products get the full reassurance, ineligible products get the
+  // "add €X" prompt instead.
   const shippingThreshold = 150;
-  const shippingMessage = product.price >= shippingThreshold
-    ? '✨ Free shipping to Ireland included'
-    : `Add €${Math.ceil(shippingThreshold - product.price)} for free shipping to Ireland`;
+  const eligibleForFreeShipping = product.price >= shippingThreshold;
+  const shippingMessage = eligibleForFreeShipping
+    ? 'Free shipping to Ireland · 14-day returns'
+    : `Add €${Math.ceil(shippingThreshold - product.price)} for free shipping · 14-day returns`;
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -169,9 +180,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
             {/* Info — sticky on desktop, static on mobile */}
             <div className={styles.infoCol}>
-              <a href="/shop" className={styles.back}>← Back to shop</a>
-
-              {showNew && <span className={styles.newTag}>new</span>}
+              {/* Design-system v1: NEW badge is a warm-beige uppercase pill,
+                  sits as a label rather than an afterthought. The previous
+                  "← Back to shop" link was removed — browser back is enough,
+                  the link added noise above the title. */}
+              {showNew && <span className={styles.newTag}>NEW</span>}
               <h1 className={styles.productName}>{product.name}</h1>
               {materialSub && <p className={styles.materialSub}>{materialSub}</p>}
 
@@ -211,6 +224,19 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
               <ProductOptions
                 colours={product.colours ?? []}
+                colourHexMap={
+                  // Build a name→hex map from the product's own colorName/Hex
+                  // (single-colour case) plus any sibling colorVariants that
+                  // happen to carry a hex. Missing colours fall through to
+                  // the warm-beige placeholder in the swatch component.
+                  (() => {
+                    const map: Record<string, string> = {};
+                    if (product.colorName && product.colorHex) {
+                      map[String(product.colorName).toLowerCase()] = product.colorHex;
+                    }
+                    return map;
+                  })()
+                }
                 sizes={product.sizes ?? []}
                 productName={product.name}
                 productId={product._id}
@@ -230,35 +256,38 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 </p>
               )}
 
-              {/* Accordions */}
-              <div className={styles.accordions}>
-                {product.description && (
-                  <details id="product-details" className={styles.accordion} open>
-                    <summary className={styles.accordionSummary}>PRODUCT DETAILS</summary>
-                    <p className={styles.accordionBody}>{product.description}</p>
-                  </details>
-                )}
-                {(product.materialComposition || product.careInstructions) && (
-                  <details className={styles.accordion}>
-                    <summary className={styles.accordionSummary}>MATERIAL AND CARE</summary>
-                    <div className={styles.accordionBody}>
-                      {product.materialComposition && <p>{product.materialComposition}</p>}
-                      {product.careInstructions && <p style={{ marginTop: '8px' }}>{product.careInstructions}</p>}
-                    </div>
-                  </details>
-                )}
-                <details className={styles.accordion}>
-                  <summary className={styles.accordionSummary}>DELIVERY & RETURNS</summary>
-                  <p className={styles.accordionBody}>
+              {/* Accordions — design-system v1. Only Product Details open by
+                  default; the others reveal on click. 320ms ease. */}
+              <div id="product-details" className={styles.accordions}>
+                <AccordionGroup>
+                  {product.description && (
+                    <AccordionItem label="Product details" defaultOpen>
+                      {product.description}
+                    </AccordionItem>
+                  )}
+                  {(product.materialComposition || product.careInstructions) && (
+                    <AccordionItem label="Material & care">
+                      {product.materialComposition && (
+                        <>
+                          <AccordionSubLabel>Composition</AccordionSubLabel>
+                          <p>{product.materialComposition}</p>
+                        </>
+                      )}
+                      {product.careInstructions && (
+                        <>
+                          <AccordionSubLabel>Care</AccordionSubLabel>
+                          <p>{product.careInstructions}</p>
+                        </>
+                      )}
+                    </AccordionItem>
+                  )}
+                  <AccordionItem label="Delivery & returns">
                     We ship from Donegal, Ireland worldwide. Standard delivery 5–10 business days. Express shipping available at checkout. Returns accepted within 14 days of delivery for unworn items in their original condition.
-                  </p>
-                </details>
-                <details className={styles.accordion}>
-                  <summary className={styles.accordionSummary}>GIFT PACKAGING</summary>
-                  <p className={styles.accordionBody}>
+                  </AccordionItem>
+                  <AccordionItem label="Gift packaging">
                     Every order is wrapped in our signature tissue-lined box with ribbon — ready for gifting. Add a personal note in the order notes at checkout.
-                  </p>
-                </details>
+                  </AccordionItem>
+                </AccordionGroup>
               </div>
             </div>
           </div>

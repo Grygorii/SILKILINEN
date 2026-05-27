@@ -1,0 +1,74 @@
+.group > * + * {
+  border-top: var(--stroke) solid var(--color-line);
+}
+.group {
+  border-top: var(--stroke) solid var(--color-line);
+  border-bottom: var(--stroke) solid var(--color-line);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 56px;
+  padding: 0 var(--s-1);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-family: 'Jost', sans-serif;
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  text-align: left;
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 3px;
+}
+
+.chev {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  transition: transform var(--t-slow) var(--ease);
+}
+.chevOpen { transform: rotate(180deg); }
+
+.content {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height var(--t-slow) var(--ease),
+              opacity var(--t-slow) var(--ease),
+              padding var(--t-slow) var(--ease);
+  padding: 0 var(--s-1);
+}
+
+.contentOpen {
+  max-height: 1200px;
+  opacity: 1;
+  padding: 0 var(--s-1) var(--s-5);
+}
+
+.contentInner {
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-ink);
+}
+
+/* Internal sub-label inside accordion body (COMPOSITION, CUT, ORIGIN, etc) */
+.sub {
+  margin-top: var(--s-4);
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+.sub:first-child { margin-top: 0; }
