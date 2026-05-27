@@ -119,21 +119,6 @@
   color: #c0392b;
 }
 
-.payBtn {
-  background: var(--dark, #1a1916);
-  color: var(--warm-white, #faf8f4);
-  border: none;
-  padding: 18px 32px;
-  font-size: 13px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  font-family: inherit;
-  cursor: pointer;
-  transition: opacity 0.2s;
-  width: 100%;
-}
-.payBtn:hover:not(:disabled) { opacity: 0.85; }
-.payBtn:disabled { opacity: 0.5; cursor: default; }
 
 /* Order summary items */
 .itemList {
@@ -196,19 +181,16 @@
 }
 .discountInput:focus { outline: none; border-color: var(--dark); }
 
-.discountBtn {
-  padding: 10px 16px;
-  border: 1px solid var(--border, #e0ddd7);
-  background: transparent;
-  font-size: 12px;
-  letter-spacing: 0.5px;
-  font-family: inherit;
-  cursor: pointer;
-  color: var(--dark);
-  transition: background 0.15s;
-  white-space: nowrap;
+/* Apply-discount Button — sized container so the primitive doesn't
+   stretch the whole row. */
+.discountBtnWrap {
+  width: 100px;
+  flex-shrink: 0;
 }
-.discountBtn:hover:not(:disabled) { background: var(--cream, #f5f2ec); }
+.discountBtnWrap > button {
+  height: 44px;
+  font-size: 11px;
+}
 
 .discountError {
   font-size: 12px;

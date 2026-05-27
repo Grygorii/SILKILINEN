@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { X, Lock } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import ProductImage from './products/ProductImage';
+import Button from './ui/Button';
 import styles from './CartPanel.module.css';
 
 const FREE_SHIPPING_THRESHOLD = 150;
@@ -173,7 +174,9 @@ export default function CartPanel({ isOpen, onClose }: Props) {
             <div className={styles.empty}>
               <p className={styles.emptyTitle}>Your cart is empty.</p>
               <p className={styles.emptySub}>When you add silk, it&apos;ll live here until you check out.</p>
-              <button className={styles.shopBtn} onClick={onClose}>Shop the collection</button>
+              <div className={styles.shopBtnWrap}>
+                <Button variant="secondary" onClick={onClose}>Shop the collection</Button>
+              </div>
             </div>
           ) : (
             cart.map((item, index) => {
@@ -263,12 +266,9 @@ export default function CartPanel({ isOpen, onClose }: Props) {
               </div>
             </div>
 
-            <button
-              className={styles.checkout}
-              onClick={() => { onClose(); router.push('/checkout'); }}
-            >
-              Checkout
-            </button>
+            <Button onClick={() => { onClose(); router.push('/checkout'); }}>
+              CHECKOUT
+            </Button>
 
             <p className={styles.trust}>
               <Lock size={11} strokeWidth={1.5} aria-hidden="true" />

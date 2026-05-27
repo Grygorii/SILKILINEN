@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
+import Button from './ui/Button';
 import styles from './EmailCapturePopup.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -118,9 +119,12 @@ export default function EmailCapturePopup() {
                 disabled={status === 'loading'}
                 autoFocus
               />
-              <button type="submit" className={styles.btn} disabled={status === 'loading'}>
-                {status === 'loading' ? 'Joining…' : 'Get 10% off'}
-              </button>
+              <Button
+                type="submit"
+                variant={status === 'loading' ? 'disabled' : 'primary'}
+              >
+                {status === 'loading' ? 'JOINING…' : 'GET 10% OFF'}
+              </Button>
             </form>
             <p className={styles.small}>No spam. Unsubscribe anytime.</p>
           </>

@@ -11,6 +11,7 @@ import {
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js';
+import Button from '@/components/ui/Button';
 import styles from './page.module.css';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -123,13 +124,12 @@ function PaymentForm({
       <PaymentElement options={{ layout: 'tabs' }} />
 
       {error && <p className={styles.payError}>{error}</p>}
-      <button
+      <Button
         type="submit"
-        className={styles.payBtn}
-        disabled={!stripe || submitting}
+        variant={(!stripe || submitting) ? 'disabled' : 'primary'}
       >
-        {submitting ? 'Processing…' : `Pay €${summary.total.toFixed(2)}`}
-      </button>
+        {submitting ? 'PROCESSING…' : `PAY €${summary.total.toFixed(2)}`}
+      </Button>
     </form>
   );
 }
@@ -348,9 +348,14 @@ export default function CheckoutPage() {
                 placeholder="Discount code"
                 onKeyDown={(e) => e.key === 'Enter' && applyDiscount()}
               />
-              <button className={styles.discountBtn} onClick={applyDiscount} disabled={loading}>
-                Apply
-              </button>
+              <div className={styles.discountBtnWrap}>
+                <Button
+                  variant={loading ? 'disabled' : 'secondary'}
+                  onClick={applyDiscount}
+                >
+                  APPLY
+                </Button>
+              </div>
             </div>
             {discountError && <p className={styles.discountError}>{discountError}</p>}
             {appliedCode && summary?.discountAmount && summary.discountAmount > 0 && (
