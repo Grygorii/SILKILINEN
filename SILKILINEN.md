@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 19 May 2026 (Header polish + product page sticky fixes + cookie banner GDPR + hero CTA + image fixes + button states polish + gallery broken-image fix + Cloudinary URL validation + admin panel UX fixes P1+P2 + abandoned cart recovery fix + recovery email automation + mobile header simplification + product image pipeline lockdown + hamburger drawer UX fixes + cart swipe + image placeholders + account section refinement + Cloudinary upload pipeline verification + dashboard conversion rate fix + preview page crash fix + font preload warning fix + audit-fix branch merge: F1-F23 security/reliability hardening).
+Last updated: 28 May 2026 (Security audit verification pass — H1/H2/H3/M1/M5/L1 confirmed fixed in code; M6 partial. Stripe live mode confirmed: first real order €5.49 cleared 16 May 2026, payout €5.08 deposited 21 May 2026).
 
 ---
 
@@ -20,7 +20,7 @@ The site exists primarily to **escape Etsy's fee burden** (Etsy takes ~15-20% ef
 - **Backend:** Express on Railway at `silkilinen-production.up.railway.app`
 - **Database:** MongoDB Atlas (Mongoose models)
 - **Image hosting:** Cloudinary, cloud name `dzybw5t5z`
-- **Payments:** Stripe (currently test mode — verify before launch)
+- **Payments:** Stripe (LIVE mode as of 16 May 2026; first real order €5.49 cleared, payout €5.08 deposited 21 May 2026)
 - **Email:** Resend (welcome emails, magic-link sign-in, transactional)
 - **Auth:** Magic-link via email + Google OAuth for customers, JWT for admin
 - **AI image gen:** Gemini integration with 5 model identities (Aoife, Charlotte, Sofia, Maya, Yuki) using v2 prompts
@@ -1000,92 +1000,81 @@ Added `background-color: #e8e2d8` + `background-image: linear-gradient(160deg, #
 
 ---
 
-## Security Audit — 18 May 2026
+## Security Audit — 18 May 2026 (verification pass 28 May 2026)
 
-Full static-analysis security audit of the backend and frontend. No live exploitation testing was performed — all findings are from reading code. Findings are graded HIGH / MEDIUM / LOW.
+Full static-analysis security audit on 18 May 2026. Verification pass 28 May 2026 confirmed H1, H2, H3, M1, M5, L1 are FIXED with quoted code evidence. M6 partially fixed (3 specific leak sites remain, all admin-only). M2, M3, M4, L2, L3 not yet verified.
 
-### HIGH — Fix immediately
+### HIGH — Status
 
 **H1 — Stored XSS via `dangerouslySetInnerHTML` on journal article body**
-- File: `frontend/app/journal/[slug]/page.tsx:84`
-- `article.body` is rendered via `dangerouslySetInnerHTML={{ __html: article.body }}` with no sanitization. If the admin account is compromised, an attacker can store arbitrary JavaScript in any article body — that script then runs in the `silkilinen.com` origin for every visitor.
-- Fix: install `isomorphic-dompurify`; wrap with `DOMPurify.sanitize(article.body)` before passing to `dangerouslySetInnerHTML`.
-- Status: **NOT YET FIXED** — pending.
+- File: `frontend/app/journal/[slug]/page.tsx`
+- Status (28 May 2026): **FIXED.** `isomorphic-dompurify ^3.13.0` pinned in `frontend/package.json`. Import at top of file; `DOMPurify.sanitize(article.body)` wraps the single render point.
 
-**H2 — Google OAuth audience check silently skipped when `GOOGLE_CLIENT_ID` env var is unset**
-- File: `backend/routes/customers.js` (Google auth handler)
-- `if (clientId && payload.aud !== clientId)` — if `GOOGLE_CLIENT_ID` is not set, the audience check is silently skipped. Any valid Google-issued token from any app is accepted.
-- Fix: fail closed — `if (!clientId) return res.status(503).json({ error: 'Google auth not configured' });` before the `aud` check.
-- **Manual check needed:** confirm `GOOGLE_CLIENT_ID` is set in Railway. If absent, this is exploitable in production right now.
-- Status: **NOT YET FIXED** — pending.
+**H2 — Google OAuth audience check fails open when `GOOGLE_CLIENT_ID` is unset**
+- File: `backend/routes/customers.js`
+- Status (28 May 2026): **FIXED.** Fail-closed guard `if (!clientId) return 503` runs before the `aud` check. Issuer (`iss`) check also implemented against both canonical Google issuers — this closes L1 in the same change.
 
 **H3 — HTML injection in Drop a Hint email via unescaped user input**
-- File: `backend/services/email.js:375`
-- `message`, `recipientName`, `senderName` are interpolated directly into an HTML email template string without escaping. An attacker can inject arbitrary HTML into the recipient's email (phishing links, tracking pixels).
-- Fix: add an `esc(s)` helper function and apply to all user-supplied values before interpolation.
-- Status: **NOT YET FIXED** — pending.
+- File: `backend/services/email.js`
+- Status (28 May 2026): **FIXED.** `esc()` helper at top of file does HTML entity escaping. All three originally vulnerable fields (`message`, `recipientName`, `senderName`) routed through `esc()` before interpolation. URL fields (`productUrl`, `productImage`) have an `^https?://` allowlist guard.
 
-### MEDIUM
+### MEDIUM — Status
 
 **M1 — `jwt.verify()` without explicit `algorithms` option**
-- File: `backend/middleware/auth.js:7`
-- No `{ algorithms: ['HS256'] }` option. In jsonwebtoken < 9.0.0 this allows algorithm confusion attacks.
-- Fix: `jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] })`
-- Manual check needed: confirm jsonwebtoken version ≥ 9.0.0 in `backend/package.json`. If ≥9, library defaults mitigate this but explicit is still best practice.
+- File: `backend/middleware/auth.js`
+- Status (28 May 2026): **FIXED.** `{ algorithms: ['HS256'] }` explicitly set.
 
 **M2 — Admin JWT returned in response body**
-- File: `backend/routes/auth.js` (login response)
-- `res.json({ success: true, token })` — if frontend stores in `localStorage`, any XSS (including H1) can exfiltrate admin credentials.
-- Manual check needed: verify how the admin frontend stores and reads this token.
+- File: `backend/routes/auth.js`
+- Status: Not yet verified. Manual check needed: confirm whether admin frontend stores token in `localStorage` (high risk in combination with any future XSS) or in an `HttpOnly` cookie.
 
 **M3 — Frontend admin middleware checks cookie presence only, not JWT validity**
 - File: `frontend/middleware.ts`
-- `request.cookies.get('token')` truthy check only. Any non-empty cookie named `token` bypasses the redirect to `/admin/login`. Actual API calls are still protected by `requireAuth`.
-- Fix: verify JWT format at minimum (`/^[\w-]+\.[\w-]+\.[\w-]+$/.test(token)`); ideally use `jose` for edge-compatible signature verification.
+- Status: Not yet verified.
 
 **M4 — No HTTP security headers on the frontend**
 - File: `frontend/next.config.ts`
-- No `headers()` export. Missing: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`. CSP requires iterative rollout due to inline styles.
-- Fix: add `async headers()` to `next.config.ts` with the above headers on `source: '/(.*)'`.
-- Manual check needed: confirm whether Vercel sets `Strict-Transport-Security` automatically (check response headers in production before adding HSTS manually).
+- Status: Not yet verified. Manual check: `curl -I https://silkilinen.com` to see which headers Vercel sets automatically vs which need to be added.
 
 **M5 — Mass assignment in admin products create and update**
-- File: `backend/routes/adminProducts.js` — create (`...req.body` spread), update (`Object.assign(product, rest)` where `rest = req.body` minus images)
-- Admin-only, so exploitable only post-admin-compromise. But combined with XSS (H1) → admin session → arbitrary field write.
-- Fix: explicit field allowlist on both create and update, matching the pattern already used in `campaigns.js` update route.
+- File: `backend/routes/adminProducts.js`
+- Status (28 May 2026): **FIXED.** `PRODUCT_ALLOWED_FIELDS` allowlist with `pickProductFields()` applied in both create and update handlers. Stripped fields logged server-side via `console.warn`.
 
 **M6 — Internal error messages exposed to clients**
-- Files: `backend/routes/checkoutV2.js:173`, `backend/routes/aiPhotos.js:319`, `backend/routes/campaigns.js:109`, and most other route catch blocks
-- `res.status(500).json({ error: err.message })` exposes MongoDB error strings, Stripe error internals, and strings like `'GEMINI_API_KEY is not set'`.
-- Fix: `console.error('[route] error:', err); res.status(500).json({ error: 'Internal server error' })` in all generic catch blocks.
+- Files: `backend/routes/checkoutV2.js`, `backend/routes/aiPhotos.js`, `backend/routes/campaigns.js`
+- Status (28 May 2026): **PARTIAL.** Most catch blocks fixed; three leak sites remain, all admin-only:
+  - `checkoutV2.js` line 261–262 — Stripe webhook signature error leaks `err.message` in the 400 response. Caller is Stripe servers, not customers. Low risk.
+  - `aiPhotos.js` line 411 — per-item generation result pushes raw `err.message` into the response array. Admin panel surface. Exposes Gemini/Cloudinary internals to admins.
+  - `aiPhotos.js` line 269 — `classifyError` daily_limit branch returns raw `err.message` as `userMessage`. Same admin surface.
+- `campaigns.js` fully fixed (all 4 handlers return generic 'Internal server error').
 
-### LOW
+### LOW — Status
 
 **L1 — Google OAuth missing `iss` (issuer) validation**
-- File: `backend/routes/customers.js` (Google auth handler)
-- No check for `payload.iss === 'accounts.google.com'`. Theoretical in practice (Google's tokeninfo server only accepts valid Google tokens) but defense-in-depth recommends explicit validation.
+- File: `backend/routes/customers.js`
+- Status (28 May 2026): **FIXED** (as side-effect of H2 fix). Both `accounts.google.com` and `https://accounts.google.com` checked.
 
 **L2 — Geolocation lookup over HTTP**
 - File: `backend/routes/track.js:24`
-- `fetch('http://ip-api.com/json/...')` — HTTP only; MITM could inject false geo data into analytics. No credentials exposed.
+- Status: Not changed. Still HTTP. Low risk.
 
 **L3 — Magic link verify endpoint has no rate limiter**
 - File: `backend/routes/customers.js` — `POST /verify-magic-link`
-- Token entropy is 256-bit; brute force is infeasible. Single-use + 15-minute expiry limits replay. Low priority.
-- Fix: add `publicWriteRateLimit` to the route for defense-in-depth (one-line change).
+- Status: Not yet verified.
 
-### Needs manual check (cannot verify from static analysis)
+### Still open / next pass
 
-1. **jsonwebtoken version** — `grep '"jsonwebtoken"' backend/package.json` — if < 9.0.0, M1 is actively exploitable.
-2. **Admin token storage** — check `frontend/context/` or wherever the admin login token is consumed. If `localStorage`, M2 + H1 together allow full admin takeover via a single XSS hit.
-3. **`GOOGLE_CLIENT_ID` in Railway** — if unset, H2 is actively exploitable right now.
-4. **Vercel HSTS** — `curl -I https://silkilinen.com` — check if `Strict-Transport-Security` header is already set by Vercel before adding it manually.
-5. **`unsubscribeToken` generation** — read `backend/models/Newsletter.js` to confirm token is `crypto.randomBytes()`-based. If weak, `GET /api/newsletter/unsubscribe/:token` can be enumerated to mass-unsubscribe all subscribers.
-6. **Drop a Hint call site** — find the route calling `sendDropAHint()` and verify whether `message`, `recipientName`, `senderName` have any input validation before reaching `services/email.js`. If none, H3 is live.
+In priority order:
+1. **M6 partial cleanup** — fix the 3 remaining admin-facing error leaks in `aiPhotos.js` (replace raw `err.message` with classified codes).
+2. **M2 + M3** — verify how admin frontend stores and reads the JWT; tighten middleware check if needed.
+3. **M4** — add HTTP security headers to `next.config.ts`; check HSTS first via `curl -I https://silkilinen.com`.
+4. **L2** — switch ip-api.com call to HTTPS (one-character change).
+5. **L3** — add `publicWriteRateLimit` to magic-link verify route.
 
-### Priority order for remediation
+### Needs manual check
 
-H2 (check env var today, zero-code fix) → H1 (DOMPurify install + one-line wrap) → H3 (escape helper in email.js) → M4 (security headers, 30-minute job) → M1 (add `algorithms` option, trivial) → M6 (generic 500 responses across routes) → M5 (product allowlist) → M3 (middleware JWT check) → L1–L3.
+1. `unsubscribeToken` generation in `backend/models/Newsletter.js` — confirm it uses `crypto.randomBytes()`.
+2. Drop a Hint route caller — confirm whether `message`, `recipientName`, `senderName` have input validation (e.g. max length) before reaching `services/email.js`. The HTML injection vector is closed, but request-size DoS is still possible if there's no length cap.
 
 ---
 
@@ -1096,8 +1085,7 @@ H2 (check env var today, zero-code fix) → H1 (DOMPurify install + one-line wra
 - **THUMBNAIL slot auto-derive** — thumbnail generation still exists in AI workflow tiers but no named slot card shows for it; images with `slot: thumbnail` appear in Additional images. Future: auto-derive from HERO via Cloudinary transformation if needed.
 - **Collections header nav** — dynamic nav rebuild around collections (static category nav still in place)
 - **Collections heroImage upload** — admin edit page shows heroImage URL fields; Cloudinary upload widget not yet wired for collections
-- **Stripe test orders** — register `STRIPE_WEBHOOK_SECRET` in Railway pointing at `POST /api/webhook` (events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`, `charge.succeeded`), then place a real end-to-end order on the live site to verify the checkout flow
-- **Stripe test orders** — must place real test orders on the v2 checkout path before going live
+- ~~**Stripe live mode + real test order**~~ ✓ Shipped 16 May 2026 (€5.49 order from Sabreena, €5.08 payout deposited 21 May 2026, fee €0.41 captured by `charge.succeeded` webhook). Refund path not yet tested with a real card — do this on the second real order, not by refunding Sabreena's.
 - **Pricing spreadsheet** for the actual catalogue with cost-up + margin + Etsy fee comparison. Needs real Etsy sales data first.
 - **Finance admin tab** ("captain's cabin") — daily revenue, monthly P&L, margin tracking, cash flow. Phase 2D.
 - ~~**GDPR cookie banner**~~ ✓ Shipped 16 May 2026
