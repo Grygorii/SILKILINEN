@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 28 May 2026 (Olivia von Halle Tier A polish — hover image swap on every product card, newsletter copy refresh to "first access" voice, OEKO-TEX line dropped from announcement bar rotation. Tier B reassurance-row spec waiting in docs/ for founder content.).
+Last updated: 28 May 2026 (Journal article 500 hotfix — `isomorphic-dompurify` was SSR-failing under Next.js 16 / Turbopack on both journal article slug pages. Replaced with a small server-safe `sanitizeArticleHtml` helper. Articles render again.).
 
 ---
 
@@ -113,6 +113,23 @@ Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--co
 **Out of scope (left untouched):** PDP, cart drawer, checkout. Per-card colour swatches stay off the grid (colour selection lives on the PDP). Pre-existing dead CSS `.colours` / `.colourDot` left in place (not created by this change).
 
 Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (`.wrapCard` 3:4 enforcement; `.skeleton` and `.missing` hardened with explicit `width: 100%; height: 100%` so the loading + failed states cannot collapse below the 3:4 box).
+
+---
+
+## Shipped 28 May 2026 — Journal article 500 hotfix (isomorphic-dompurify SSR replacement)
+
+Founder reported "This page couldn't load" on `/journal/how-to-wash-silk` from a mobile homepage tap. Verified with curl:
+- Railway `/api/journal/slug/how-to-wash-silk` returned **HTTP 200** with the article JSON — backend healthy.
+- Vercel `/journal/how-to-wash-silk` returned **HTTP 500**.
+- Both journal slug articles 500'd; the journal list page (`/journal`) returned 200.
+
+**Diagnosis:** the slug page was the only SSR route calling `DOMPurify.sanitize(...)` from `isomorphic-dompurify` — the list page doesn't sanitize anything, AnnouncementBar's `DOMPurify` usage is `'use client'`, the preview page is `'use client'`. `isomorphic-dompurify` ships a jsdom dependency for the Node code path and that combination doesn't load under Next.js 16 / Turbopack server rendering — the page module fails on import and every render returns 500.
+
+**Fix:** new `frontend/lib/sanitize.ts` exports `sanitizeArticleHtml(html)` — a pure regex sanitizer that runs in any JS environment without touching the DOM. Strips `<script>`/`<style>`/`<iframe>`/`<object>`/`<embed>`/`<frame>`/`<applet>`/`<base>`/`<link>`/`<meta>` shells, drops every `on*` inline event handler, and neuters `javascript:`/`vbscript:`/`data:` URIs in `href`/`src`. Scoped to the threat model: the only writer is the admin TipTap editor, which emits a predictable structured tag set. Article slug page now imports this instead of `isomorphic-dompurify` and renders cleanly.
+
+The preview route (`/journal/preview`) and AnnouncementBar keep `isomorphic-dompurify` since both are `'use client'` (browser-only execution, no SSR path to break). Removing the package entirely is a follow-up cleanup once we confirm the client paths stay healthy.
+
+Files: `frontend/lib/sanitize.ts` (new), `frontend/app/journal/(public)/[slug]/page.tsx`.
 
 ---
 

@@ -1,7 +1,7 @@
-import DOMPurify from 'isomorphic-dompurify';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { sanitizeArticleHtml } from '@/lib/sanitize';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -82,7 +82,7 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
 
         {/* Body */}
         <div
-          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.body) }}
+          dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(article.body) }}
           style={{
             fontFamily: "'Cormorant Garamond', Georgia, serif",
             fontSize: 18, lineHeight: 1.85, color: '#2a2520',
