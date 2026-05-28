@@ -74,30 +74,34 @@ async function validateDiscount(codeStr, subtotal, customerEmail) {
  * Record a redemption and increment usage count after a successful order.
  * Idempotent: won't double-count if called twice for the same order.
  */
-async function redeemDiscount(codeStr, { orderId, orderNumber, customerEmail, discountAmount } = {}) {
-  const promo = await PromoCode.findOne({ code: codeStr.toUpperCase().trim() });
+async function redeemDiscount(codeStr, { orderId, orderNumber, customerEmail, discountAmount, session } = {}) {
+  const promo = await PromoCode.findOne({ code: codeStr.toUpperCase().trim() }).session(session || null);
   if (!promo) return;
 
   // Guard: skip if this order was already recorded (webhook retry safety)
   if (orderId) {
-    const existing = await PromoCodeRedemption.findOne({ promoCodeId: promo._id, orderId });
+    const existing = await PromoCodeRedemption.findOne({ promoCodeId: promo._id, orderId }).session(session || null);
     if (existing) return;
   }
 
   await Promise.all([
     PromoCode.updateOne(
       { _id: promo._id },
-      { $inc: { usageCount: 1 } }
+      { $inc: { usageCount: 1 } },
+      { session: session || null }
     ),
     orderId
-      ? PromoCodeRedemption.create({
-          promoCodeId:   promo._id,
-          code:          promo.code,
-          orderId,
-          orderNumber:   orderNumber || '',
-          customerEmail: customerEmail ? customerEmail.toLowerCase().trim() : '',
-          discountAmount: discountAmount || 0,
-        })
+      ? PromoCodeRedemption.create(
+          [{
+            promoCodeId:   promo._id,
+            code:          promo.code,
+            orderId,
+            orderNumber:   orderNumber || '',
+            customerEmail: customerEmail ? customerEmail.toLowerCase().trim() : '',
+            discountAmount: discountAmount || 0,
+          }],
+          { session: session || null }
+        )
       : Promise.resolve(),
   ]);
 }

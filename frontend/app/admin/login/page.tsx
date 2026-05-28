@@ -44,22 +44,24 @@ export default function AdminLoginPage() {
         return;
       }
 
-      // Step 2: set a Vercel-domain cookie so Next.js middleware can see it.
-      // Railway's cookie is invisible to middleware (cross-domain).
-      if (data.token) {
+      // Step 2: exchange the single-use bootstrap nonce for a
+      // Vercel-domain cookie so Next.js middleware can see the session.
+      // The JWT itself is exchanged server-to-server inside
+      // /api/admin-session and never enters the browser.
+      if (data.bootstrap) {
         const sessionRes = await fetch('/api/admin-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: data.token }),
+          body: JSON.stringify({ bootstrap: data.bootstrap }),
         });
         if (!sessionRes.ok) {
           setError('Session could not be established. Please try again.');
           return;
         }
       } else {
-        // Backend hasn't deployed the token-in-body change yet.
-        // Fall back: middleware won't see the cookie; layout still validates.
-        console.warn('Login response did not include token in body — middleware guard will not work until backend redeploys.');
+        // Backend on an older deploy that still returns data.token.
+        // Fall back so login keeps working during the rollout window.
+        console.warn('Login response did not include bootstrap nonce — backend may need a redeploy.');
       }
 
       // Step 3: full page reload so middleware evaluates the new cookie.

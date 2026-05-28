@@ -78,4 +78,13 @@ customerSchema.index({ segments: 1 });
 customerSchema.index({ lastOrderAt: -1 });
 customerSchema.index({ totalSpend: -1 });
 
+// F22: sparse index on the magic-link token. Removes the linear collection
+// scan that findOne({ emailVerificationToken }) used to do, and closes the
+// per-character timing channel that scan introduced. Partial filter keeps
+// the index small — only customers with a pending token appear in it.
+customerSchema.index(
+  { emailVerificationToken: 1 },
+  { sparse: true, partialFilterExpression: { emailVerificationToken: { $type: 'string' } } }
+);
+
 module.exports = mongoose.model('Customer', customerSchema);

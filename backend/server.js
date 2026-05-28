@@ -105,6 +105,8 @@ app.use(cors({
     callback(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true,
+  // Permit the CSRF header on preflight responses.
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With'],
 }));
 app.use(cookieParser());
 
@@ -112,6 +114,10 @@ app.use(cookieParser());
 app.use('/api/webhook', webhookRouter);
 
 app.use(express.json());
+
+// CSRF defence: require a custom header on every write. See middleware/csrf.js.
+const { csrf } = require('./middleware/csrf');
+app.use(csrf);
 app.use('/api/v2/checkout', checkoutRouter);
 app.use('/api/products', productRoutes);
 app.use('/api/admin/products', adminProductsRoutes);
