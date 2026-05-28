@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   LayoutDashboard, Package, FileText, Users,
   Megaphone, Settings, Menu, Bell, X, Layers, Tag, BookOpen, BookMarked, Share2,
-  Folder, Image as ImageIcon,
+  Folder, Gift, Image as ImageIcon,
 } from 'lucide-react';
 import styles from './AdminLayout.module.css';
 import LogoutButton from './LogoutButton';
@@ -26,6 +26,7 @@ const NAV: NavEntry[] = [
   { section: 'Publish' },
   { label: 'Collections', href: '/admin/collections', icon: Layers },
   { label: 'Categories',  href: '/admin/categories',  icon: Folder },
+  { label: 'Bundles',     href: '/admin/bundles',     icon: Gift },
   { label: 'Content',     href: '/admin/content',     icon: FileText },
   { label: 'Marketing',    href: '/admin/marketing',    icon: Megaphone },
   { label: 'Promo codes', href: '/admin/promo-codes', icon: Tag },

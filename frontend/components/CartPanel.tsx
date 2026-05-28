@@ -182,6 +182,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
             cart.map((item, index) => {
               const maxQty = Math.min(item.stock ?? 10, 10);
               const atStockLimit = item.stock !== undefined && item.stock < 10 && item.quantity >= maxQty;
+              const isBundle = !!item.bundleId;
               return (
                 <div key={index} className={styles.item}>
                   {/* Thumbnail — 4:5 portrait */}
@@ -190,9 +191,22 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                   {/* Info column */}
                   <div className={styles.itemInfo}>
                     <p className={styles.itemName}>{item.name}</p>
-                    <p className={styles.itemDetails}>
-                      {item.colour}{item.size ? ` / ${item.size}` : ''}
-                    </p>
+                    {isBundle ? (
+                      <>
+                        <p className={styles.itemDetails}>Bundle</p>
+                        {item.includedProducts && item.includedProducts.length > 0 && (
+                          <ul className={styles.bundleList}>
+                            {item.includedProducts.map((c, i) => (
+                              <li key={i}>{c.name}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </>
+                    ) : (
+                      <p className={styles.itemDetails}>
+                        {item.colour}{item.size ? ` / ${item.size}` : ''}
+                      </p>
+                    )}
 
                     {/* Price row — price left, remove × right */}
                     <div className={styles.itemPriceRow}>

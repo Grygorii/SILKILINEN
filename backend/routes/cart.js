@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
+const Bundle = require('../models/Bundle');
 const { calculateShipping } = require('../services/shipping');
 const { validateDiscount } = require('../services/discounts');
 
@@ -27,34 +28,76 @@ router.get('/:sessionId', async (req, res) => {
   }
 });
 
-// POST /api/cart/:sessionId/items — add or increment item
+// POST /api/cart/:sessionId/items — add or increment item.
+// Accepts either { productId, colour?, size?, quantity? } for a regular
+// product line or { bundleId, quantity? } for a bundle line. Bundle price
+// is recomputed server-side from the current child product prices + the
+// bundle's discountPercent — the client never sets the price.
 router.post('/:sessionId/items', async (req, res) => {
   try {
-    const { productId, colour, size, quantity = 1 } = req.body;
-    if (!productId) return res.status(400).json({ error: 'productId required' });
-
-    const product = await Product.findOne({ _id: productId, status: { $in: ['active', 'sold_out'] } }).lean();
-    if (!product) return res.status(400).json({ error: 'Product not found or unavailable' });
+    const { productId, bundleId, colour, size, quantity = 1 } = req.body;
+    if (!productId && !bundleId) {
+      return res.status(400).json({ error: 'productId or bundleId required' });
+    }
+    if (productId && bundleId) {
+      return res.status(400).json({ error: 'Send productId OR bundleId, not both' });
+    }
 
     let cart = await Cart.findOne({ sessionId: req.params.sessionId });
     if (!cart) cart = new Cart({ sessionId: req.params.sessionId });
 
-    const existing = cart.items.find(
-      i => i.productId.toString() === productId && i.colour === (colour || '') && i.size === (size || '')
-    );
-    if (existing) {
-      existing.quantity = Math.min(99, existing.quantity + quantity);
+    if (bundleId) {
+      const bundle = await Bundle.findOne({ _id: bundleId, status: 'active' })
+        .populate({ path: 'products.productId', select: 'name price status' });
+      if (!bundle) return res.status(400).json({ error: 'Bundle not found or unavailable' });
+
+      const children = (bundle.products || []).map(p => p.productId).filter(Boolean);
+      if (children.length === 0) return res.status(400).json({ error: 'Bundle has no products' });
+
+      const pricing = Bundle.computePricing(children, bundle.discountPercent);
+
+      const existing = cart.items.find(i => i.bundleId && i.bundleId.toString() === String(bundle._id));
+      if (existing) {
+        existing.quantity = Math.min(99, existing.quantity + quantity);
+        // Keep price fresh in case admin nudged the discount or a child price
+        existing.price = pricing.bundlePrice;
+      } else {
+        cart.items.push({
+          bundleId: bundle._id,
+          name: bundle.name,
+          price: pricing.bundlePrice,
+          image: bundle.heroImage?.url || '',
+          colour: '',
+          size: '',
+          quantity,
+          includedProducts: children.map(c => ({
+            productId: c._id,
+            name: c.name,
+            quantity: 1,
+          })),
+        });
+      }
     } else {
-      const primaryImg = product.images?.find(img => img.isPrimary) || product.images?.[0];
-      cart.items.push({
-        productId: product._id,
-        name: product.name,
-        price: product.price,
-        image: primaryImg?.url || product.image || '',
-        colour: colour || '',
-        size: size || '',
-        quantity,
-      });
+      const product = await Product.findOne({ _id: productId, status: { $in: ['active', 'sold_out'] } }).lean();
+      if (!product) return res.status(400).json({ error: 'Product not found or unavailable' });
+
+      const existing = cart.items.find(
+        i => i.productId && i.productId.toString() === productId && i.colour === (colour || '') && i.size === (size || '')
+      );
+      if (existing) {
+        existing.quantity = Math.min(99, existing.quantity + quantity);
+      } else {
+        const primaryImg = product.images?.find(img => img.isPrimary) || product.images?.[0];
+        cart.items.push({
+          productId: product._id,
+          name: product.name,
+          price: product.price,
+          image: primaryImg?.url || product.image || '',
+          colour: colour || '',
+          size: size || '',
+          quantity,
+        });
+      }
     }
 
     // Bump expiry on activity

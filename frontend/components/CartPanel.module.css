@@ -143,6 +143,20 @@
   line-height: 1.4;
 }
 
+/* Sub-list under a bundle cart line — shows the included products read-only
+   so the customer can verify what's in the bundle they just added. */
+.bundleList {
+  list-style: none;
+  padding: 0;
+  margin: -4px 0 8px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.bundleList li::before {
+  content: '— ';
+}
+
 /* Price row — price left, remove × right */
 .itemPriceRow {
   display: flex;

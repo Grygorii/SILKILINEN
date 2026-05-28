@@ -3,8 +3,20 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { trackAddToCart, trackRemoveFromCart } from '@/lib/analytics';
 
+// A cart line is either a regular product OR a bundle — never both. Bundle
+// lines set `bundleId` + `includedProducts` (read-only sub-list shown under
+// the line in the cart UI) and ignore colour/size. The backend recomputes
+// bundle price at checkout — `price` here is just for display.
+type IncludedProduct = {
+  productId: string;
+  name: string;
+  quantity: number;
+};
+
 type CartItem = {
   productId?: string;
+  bundleId?: string;
+  includedProducts?: IncludedProduct[];
   name: string;
   price: number;
   colour: string;
@@ -48,9 +60,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     trackAddToCart({ name: item.name, price: item.price });
 
     const maxQty = Math.min(item.stock ?? 10, 10);
-    const matchFn = (i: CartItem) => item.productId
-      ? i.productId === item.productId && i.colour === item.colour && i.size === item.size
-      : i.name === item.name && i.colour === item.colour && i.size === item.size;
+    const matchFn = (i: CartItem) => {
+      if (item.bundleId) return i.bundleId === item.bundleId;
+      if (item.productId) return i.productId === item.productId && i.colour === item.colour && i.size === item.size;
+      return i.name === item.name && i.colour === item.colour && i.size === item.size;
+    };
 
     // Compute event before setState to avoid side effects in updater
     const existing = cart.find(matchFn);

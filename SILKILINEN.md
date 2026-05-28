@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 28 May 2026 (Categories rework Phase 1 — moved categories from hardcoded enum to admin-managed DB collection; full admin CRUD + product dropdown now reads from API. Phase 2 = Bundles model + admin + storefront.).
+Last updated: 28 May 2026 (Bundles Phase 2 — new commerce-bundle concept: model + admin CRUD + storefront /bundles/[slug] page + cart-as-single-line-item integration through checkoutV2's PaymentIntent metadata pipeline. Phase 1 categories rework already live.).
 
 ---
 
@@ -113,6 +113,41 @@ Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--co
 **Out of scope (left untouched):** PDP, cart drawer, checkout. Per-card colour swatches stay off the grid (colour selection lives on the PDP). Pre-existing dead CSS `.colours` / `.colourDot` left in place (not created by this change).
 
 Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (`.wrapCard` 3:4 enforcement; `.skeleton` and `.missing` hardened with explicit `width: 100%; height: 100%` so the loading + failed states cannot collapse below the 3:4 box).
+
+---
+
+## Shipped 28 May 2026 — Bundles Phase 2 (commerce sets sold as one line item)
+
+Introduces "Bundle" as a distinct commerce concept from Category and Collection. A Bundle is a curated set of products sold together at a single discounted total (percentage off the sum of child prices). Cart treats a bundle as ONE line item with a read-only sub-list of included children; Stripe sees a single dollar amount and the webhook stores one Order item with a `bundleId` + `includedProducts` array for fulfilment.
+
+**Backend**
+- New `backend/models/Bundle.js` — name, slug (unique, lowercase, immutable post-create), description, heroImage{url,cloudinaryPublicId,alt}, products[{productId ref, displayOrder}], `discountPercent` (0-100), `isFeatured`, featuredOrder, displayOrder, status (active/draft/archived), SEO. Static helper `Bundle.computePricing(populatedProducts, discountPercent)` returns rounded-to-cents `{originalTotal, bundlePrice, savings, discountPercent}` — pricing is **never denormalised**, always recomputed from live child prices so admin can adjust a product price without touching every bundle.
+- New `backend/routes/bundles.js` (public) — `GET /api/bundles` (active), `GET /api/bundles/featured` (isFeatured+active), `GET /api/bundles/:slug` (populates children with public-safe fields only, attaches computed pricing).
+- New `backend/routes/adminBundles.js` (admin) — full CRUD + product assign/remove + reorder. Same `requireAuth` pattern as `adminCollections`. PATCH validates discountPercent within 0-100 via schema. DELETE soft-archives.
+- Mounted at `/api/bundles` and `/api/admin/bundles` in `backend/server.js`.
+
+**Cart + checkout (the tricky bit)**
+- `backend/models/Cart.js` — cartItemSchema's `productId` no longer `required: true`; added optional `bundleId` ref + `includedProducts[]` sub-list (productId, name, quantity). Route-level validation in `POST /api/cart/:sessionId/items` enforces one of `productId`/`bundleId`. When a bundle is added, server recomputes pricing from live child product prices + bundle.discountPercent — client price is never trusted.
+- `backend/models/Order.js` — items[] subschema gained `bundleId` (default null) and `includedProducts[]`. One Order item per bundle line; the bundle is **never expanded** into multiple Order lines (would break fulfilment expectations).
+- `backend/routes/cart.js` — `POST /items` now branches on `bundleId`; matches existing bundle lines by bundleId (no colour/size variants on bundles).
+- `backend/routes/checkoutV2.js` — `create-intent`'s validation loop branches on `item.bundleId`: bundles get re-fetched + re-priced server-side same as products do. Stripe PaymentIntent metadata serialises bundleId per item (omits the includedProducts array to stay under Stripe's 500-char-per-key cap — webhook re-fetches children from Cart doc, or from Bundle DB if it has to fall back to metadata). Webhook order creation passes bundleId + includedProducts straight through from the Cart doc.
+- Known limitation deliberately deferred: COGS calculation in the webhook (`costs.cogs`) sets to null when a bundle is present (productId is null on the bundle line so the per-item costing lookup short-circuits). Admin can edit COGS manually in Finance until we add bundle-child cost rollup.
+
+**Frontend**
+- `frontend/context/CartContext.tsx` — CartItem type extended additively with optional `bundleId` + `includedProducts`. `addToCart` matching function prefers `bundleId` for bundle lines (so a 2nd "add" increments the existing bundle line rather than creating a duplicate).
+- `frontend/components/CartPanel.tsx` — cart line renders the "Bundle" tag in place of colour/size for bundle items, then a small dashed sub-list of included product names underneath (new `.bundleList` CSS).
+- New `frontend/app/admin/bundles/page.tsx` + `[id]/page.tsx` (+ matching .module.css) — list with name/slug/status/featured/productCount/discount/price/updated; edit with name, slug (locked post-create), description, heroImage URL + alt + live preview, SEO, product assignment (search-add-remove same UX as collections), discount% input, **live computed pricing box** (original total, bundle price, savings), featured toggle, displayOrder.
+- New storefront `frontend/app/(shop)/bundles/[slug]/page.tsx` (Server Component with `generateMetadata`) + `BundlePageClient.tsx` (the Add-to-Bag interaction) + `page.module.css`. Hero image, "save N%" eyebrow, title, bundle price + struck-through original + savings line, single "Add bundle to bag" CTA, grid of included children linking to their PDPs.
+- `frontend/components/AdminLayout.tsx` — added "Bundles" entry under PUBLISH (Gift icon, after Categories).
+
+**Deliberately deferred to follow-ups**
+- File upload for bundle heroImage (URL paste only this round — matches Categories + Collections).
+- Bundle COGS rollup from child product costing (currently null for bundle orders).
+- Auto-archive a bundle when any included product becomes archived/sold-out.
+- "Featured bundles" homepage section (the data is already in `/api/bundles/featured` — only the React section needs writing).
+- Drag-to-reorder bundle children (admin uses displayOrder field via the products API order, no UI for now).
+
+Files: `backend/models/{Bundle,Cart,Order}.js`, `backend/routes/{bundles,adminBundles,cart,checkoutV2}.js`, `backend/server.js`, `frontend/context/CartContext.tsx`, `frontend/components/{CartPanel.tsx,CartPanel.module.css,AdminLayout.tsx}`, `frontend/app/admin/bundles/**`, `frontend/app/(shop)/bundles/[slug]/**`.
 
 ---
 

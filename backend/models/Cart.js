@@ -1,7 +1,19 @@
 const mongoose = require('mongoose');
 
 const cartItemSchema = new mongoose.Schema({
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+  // Exactly one of productId / bundleId is set per item. Single-product
+  // lines keep `productId`; bundle lines use `bundleId` and store the
+  // discounted bundle price as the line price plus a read-only
+  // `includedProducts` list for cart display. Route-level validation in
+  // POST /api/cart/:sessionId/items enforces the either/or.
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+  bundleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bundle' },
+  includedProducts: [{
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+    name: { type: String },
+    quantity: { type: Number, default: 1 },
+    _id: false,
+  }],
   name: { type: String, required: true },
   price: { type: Number, required: true },
   image: { type: String },

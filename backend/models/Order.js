@@ -22,6 +22,17 @@ const orderSchema = new mongoose.Schema({
   },
   items: [{
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', default: null },
+    // Bundle lines: bundleId set + includedProducts populated. The cart /
+    // checkout pipeline never expands a bundle into multiple Order lines —
+    // one bundle = one Order item at the discounted price, with the
+    // constituent products listed read-only for fulfilment.
+    bundleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bundle', default: null },
+    includedProducts: [{
+      productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+      name: { type: String },
+      quantity: { type: Number, default: 1 },
+      _id: false,
+    }],
     name: { type: String },
     price: { type: Number },
     colour: { type: String },

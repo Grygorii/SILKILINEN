@@ -9,6 +9,7 @@ const Cart = require('../models/Cart');
 const Order = require('../models/Order');
 const Visit = require('../models/Visit');
 const Product = require('../models/Product');
+const Bundle = require('../models/Bundle');
 const Expense = require('../models/Expense');
 const { calculateShipping } = require('../services/shipping');
 const { validateDiscount, redeemDiscount } = require('../services/discounts');
@@ -96,25 +97,55 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
       return res.status(400).json({ error: 'Cart is empty' });
     }
 
-    // Re-validate all items against live DB prices
+    // Re-validate all items against live DB prices. Two shapes are accepted:
+    //   product line — { productId, colour?, size?, quantity }
+    //   bundle line  — { bundleId, quantity, includedProducts? }
+    // The client never sets the price; we always recompute from the DB so a
+    // tampered cart can't underpay.
     const validatedItems = [];
     for (const item of sourceItems) {
-      const productId = item.productId || item._id;
-      const product = await Product.findOne({
-        _id: productId,
-        status: { $in: ['active', 'sold_out'] },
-      }).lean();
-      if (!product) {
-        return res.status(400).json({ error: `"${item.name}" is no longer available` });
+      if (item.bundleId) {
+        const bundle = await Bundle.findOne({
+          _id: item.bundleId,
+          status: 'active',
+        }).populate({ path: 'products.productId', select: 'name price status' });
+        if (!bundle) {
+          return res.status(400).json({ error: `"${item.name || 'Bundle'}" is no longer available` });
+        }
+        const children = (bundle.products || []).map(p => p.productId).filter(Boolean);
+        if (children.length === 0) {
+          return res.status(400).json({ error: `Bundle "${bundle.name}" has no products` });
+        }
+        const pricing = Bundle.computePricing(children, bundle.discountPercent);
+        validatedItems.push({
+          productId: null,
+          bundleId: bundle._id,
+          includedProducts: children.map(c => ({ productId: c._id, name: c.name, quantity: 1 })),
+          name: bundle.name,
+          price: pricing.bundlePrice, // authoritative bundle price from DB
+          colour: '',
+          size: '',
+          quantity: item.quantity,
+        });
+      } else {
+        const productId = item.productId || item._id;
+        const product = await Product.findOne({
+          _id: productId,
+          status: { $in: ['active', 'sold_out'] },
+        }).lean();
+        if (!product) {
+          return res.status(400).json({ error: `"${item.name}" is no longer available` });
+        }
+        validatedItems.push({
+          productId: product._id,
+          bundleId: null,
+          name: product.name,
+          price: product.price, // authoritative price from DB
+          colour: item.colour || '',
+          size: item.size || '',
+          quantity: item.quantity,
+        });
       }
-      validatedItems.push({
-        productId: product._id,
-        name: product.name,
-        price: product.price, // authoritative price from DB
-        colour: item.colour || '',
-        size: item.size || '',
-        quantity: item.quantity,
-      });
     }
 
     const subtotal = validatedItems.reduce((s, i) => s + i.price * i.quantity, 0);
@@ -148,9 +179,13 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
         shippingCost: String(shipping.cost),
         shippingCountry: country,
         subtotal: String(subtotal),
-        // Serialise items so webhook can reconstruct order even without Cart doc
+        // Serialise items so webhook can reconstruct order even without Cart doc.
+        // includedProducts is intentionally omitted from the JSON to stay under
+        // Stripe's 500-char metadata-value cap — the webhook re-populates a
+        // bundle's child list from the DB if it has to fall back to this path.
         items: JSON.stringify(validatedItems.map(i => ({
-          productId: String(i.productId),
+          productId: i.productId ? String(i.productId) : null,
+          bundleId: i.bundleId ? String(i.bundleId) : null,
           name: i.name,
           price: i.price,
           colour: i.colour,
@@ -284,11 +319,20 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
       const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
       const orderNumber = `${prefix}-${rand}`;
 
-      // Use cart items if available; fall back to items serialised in metadata
+      // Use cart items if available; fall back to items serialised in metadata.
+      // Bundle lines carry bundleId + includedProducts when they come from the
+      // Cart doc; the metadata-fallback path only carries bundleId (children
+      // are re-fetched on-demand if Finance / fulfilment needs them).
       let items = [];
       if (cart && cart.items.length > 0) {
         items = cart.items.map(i => ({
-          productId: i.productId,
+          productId: i.productId || null,
+          bundleId: i.bundleId || null,
+          includedProducts: (i.includedProducts || []).map(c => ({
+            productId: c.productId,
+            name: c.name,
+            quantity: c.quantity || 1,
+          })),
           name: i.name,
           price: i.price,
           colour: i.colour,
