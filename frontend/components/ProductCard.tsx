@@ -85,6 +85,11 @@ export default function ProductCard({
   const primaryImg = validImages.find(i => i.isPrimary) ?? validImages[0] ?? null;
   const heroUrl = primaryImg?.url ?? (isValidImageUrl(product.image) ? product.image : null);
   const heroAlt = primaryImg?.alt ?? product.name;
+  // Second-image hover swap (OvH-style). Use the first non-primary valid
+  // image, falling back to validImages[1] if no isPrimary flag is set.
+  // CSS handles the actual fade — see .hoverImg in ProductCard.module.css.
+  const hoverImg = validImages.find(i => i !== primaryImg) ?? null;
+  const hoverUrl = hoverImg?.url ?? null;
 
   function handleAdd(e: React.MouseEvent) {
     e.preventDefault();
@@ -135,6 +140,16 @@ export default function ProductCard({
       <Link href={`/product/${product._id}`} className={styles.cardLink}>
         <div className={styles.cardImg}>
           <ProductImage src={heroUrl} alt={heroAlt} variant="card" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {hoverUrl && (
+            <img
+              src={hoverUrl}
+              alt=""
+              aria-hidden="true"
+              className={styles.hoverImg}
+              loading="lazy"
+            />
+          )}
           {showNew && <span className={styles.newBadge}>new</span>}
         </div>
       </Link>

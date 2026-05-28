@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 28 May 2026 (Console hygiene pass + mobile New Arrivals tightening — fixed three tracking guards that were leaking "undefined" strings into Meta/Pinterest/Vercel scripts, tightened the public product filter so imageless products stop polluting the homepage grid, and collapsed New Arrivals to the same hairline 2-column rhythm as the shop grid on mobile per Olivia von Halle reference.).
+Last updated: 28 May 2026 (Olivia von Halle Tier A polish — hover image swap on every product card, newsletter copy refresh to "first access" voice, OEKO-TEX line dropped from announcement bar rotation. Tier B reassurance-row spec waiting in docs/ for founder content.).
 
 ---
 
@@ -113,6 +113,26 @@ Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--co
 **Out of scope (left untouched):** PDP, cart drawer, checkout. Per-card colour swatches stay off the grid (colour selection lives on the PDP). Pre-existing dead CSS `.colours` / `.colourDot` left in place (not created by this change).
 
 Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (`.wrapCard` 3:4 enforcement; `.skeleton` and `.missing` hardened with explicit `width: 100%; height: 100%` so the loading + failed states cannot collapse below the 3:4 box).
+
+---
+
+## Shipped 28 May 2026 — Olivia von Halle Tier A polish (hover swap, newsletter, announcement bar)
+
+Three small wins from auditing oliviavonhalle.com against silkilinen.com — kept whatever already aligned (cream background, narrative product names, lowercase voice, tight mobile grid), stole what didn't.
+
+**1. Hover image swap on every product card (desktop).**
+ProductCard renders the first non-primary valid image as a stacked `<img className={styles.hoverImg}>` with `opacity: 0` over the primary ProductImage. CSS handles the fade entirely — no React state, no re-renders, just `transition: opacity 0.4s ease` under `@media (hover: hover) .card:hover .hoverImg { opacity: 1 }`. Touch devices never see it (no hover capability), reduced-motion users get `display: none` so the secondary image never even paints. The `.cardImg img` scale-on-hover from earlier still applies to both stacked images so the swap zoom-glides together. Works on every grid surface (shop, new arrivals, collections, cross-sell, recently viewed, wishlist, bundle children) since they all delegate to ProductCard.
+
+**2. Newsletter band copy refresh.**
+Was: "New arrivals, care guides, and 10% off your first order — delivered to your inbox." Now: "First access to new silk drops, seasonal pre-orders, and a 10% welcome offer." Drops the practical "care guides" line; adds OvH-style aspirational "first access" / "seasonal pre-orders" framing. Conversion offer (10% welcome) preserved.
+
+**3. AnnouncementBar — OEKO-TEX message dropped from rotation.**
+Was rotating 4 messages: free shipping, SILK10 promo, OEKO-TEX certification, Donegal heritage. Now rotates 3 (OEKO-TEX gone). Logic: certification messages read as defensive trust-badge content (the same energy we deleted from the footer last session); the Donegal heritage line stays because it's aspirational brand identity, not reassurance.
+
+**4. Tier B reassurance row — spec drafted, blocked on founder content.**
+Wrote `docs/reassurance-row-spec.md` with layout, copy slots, code stub, and four open questions (which three services, monogramming yes/no, gift-wrap mechanic, icon style). No component shipped — waiting for the founder to fill in the actual services before I build it. The doc is self-contained: anyone can pick it up later, fill the answers, and the code stub at the bottom is ready to drop into `frontend/components/ReassuranceRow.tsx`.
+
+Files: `frontend/components/{ProductCard.tsx,ProductCard.module.css,NewsletterBand.tsx,AnnouncementBar.tsx}`, `docs/reassurance-row-spec.md`.
 
 ---
 

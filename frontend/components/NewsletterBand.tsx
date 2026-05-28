@@ -46,7 +46,7 @@ export default function NewsletterBand() {
             <div className={styles.text}>
               <h2 className={styles.title}>Join the circle</h2>
               <p className={styles.sub}>
-                New arrivals, care guides, and 10% off your first order — delivered to your inbox.
+                First access to new silk drops, seasonal pre-orders, and a 10% welcome offer.
               </p>
             </div>
             <form className={styles.form} onSubmit={handleSubmit}>

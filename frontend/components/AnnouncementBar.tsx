@@ -4,10 +4,13 @@ import { useState, useEffect } from 'react';
 import DOMPurify from 'isomorphic-dompurify';
 import styles from './AnnouncementBar.module.css';
 
+// OvH-style restraint pass — dropped the OEKO-TEX certification line
+// because reading like a trust-badge undercuts the luxury voice. Kept the
+// two functional lines (shipping + promo) and the brand heritage line
+// (Donegal heritage = aspirational, not defensive).
 const DEFAULT_MESSAGES = [
   'Free shipping on orders over <strong>€150</strong> to Ireland 🇮🇪',
   'New to Silkilinen? Use code <strong>SILK10</strong> for 10% off',
-  'All silk is <strong>OEKO-TEX certified</strong> — gentle on skin',
   'Made by hand in Donegal — silk and linen, in small batches',
 ];
 

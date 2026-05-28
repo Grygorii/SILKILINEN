@@ -69,6 +69,28 @@
   }
 }
 
+/* ── Hover image swap (OvH-style) ─────────────────────
+   Secondary product image sits stacked on top of the primary with
+   opacity 0; fades in on card hover. Only the FIRST image change in
+   the gallery — keeps the front-of-card UX a glance, not a slideshow.
+   Touch devices (no hover capability) never see the swap. Reduced-
+   motion users get it suppressed entirely so it doesn't even flash.
+*/
+.hoverImg {
+  opacity: 0;
+  z-index: 1;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .card:hover .hoverImg { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hoverImg { display: none; }
+}
+
 /* ── Heart ────────────────────────────────────────────
    Thin dark stroke on every photo — semi-transparent so it reads as a
    refined outline against pale silk while still grounding on the cream
