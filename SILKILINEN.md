@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 28 May 2026 (Security audit verification pass — H1/H2/H3/M1/M5/L1 confirmed fixed in code; M6 partial. Stripe live mode confirmed: first real order €5.49 cleared 16 May 2026, payout €5.08 deposited 21 May 2026).
+Last updated: 28 May 2026 (Categories rework Phase 1 — moved categories from hardcoded enum to admin-managed DB collection; full admin CRUD + product dropdown now reads from API. Phase 2 = Bundles model + admin + storefront.).
 
 ---
 
@@ -113,6 +113,33 @@ Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--co
 **Out of scope (left untouched):** PDP, cart drawer, checkout. Per-card colour swatches stay off the grid (colour selection lives on the PDP). Pre-existing dead CSS `.colours` / `.colourDot` left in place (not created by this change).
 
 Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (`.wrapCard` 3:4 enforcement; `.skeleton` and `.missing` hardened with explicit `width: 100%; height: 100%` so the loading + failed states cannot collapse below the 3:4 box).
+
+---
+
+## Shipped 28 May 2026 — Categories Phase 1 (admin-managed DB-backed categories)
+
+Replaces the hardcoded `backend/config/categories.js` enum with a proper Mongo collection so categories are admin-CRUDable without an app deploy. Step 1 of the broader Categories + Bundles rework — Phase 2 (Bundles as a commerce-set model) is queued behind this one being verified on prod.
+
+**Backend**
+- New `backend/models/Category.js` — slug (unique, lowercase), label, description, heroImage {url, cloudinaryPublicId, alt}, displayOrder, status (active/archived), timestamps. Slug uniqueness via the `unique: true` field option only (no duplicate `index({ slug:1 })` declaration).
+- New `backend/scripts/seedCategories.js` — idempotent, upserts the 9 historical slugs from `backend/config/categories.js` so existing products keep validating. Run on prod 28 May 2026 — all 9 created, no skips.
+- `backend/routes/categories.js` rewritten — GET /api/categories now reads active categories from the DB sorted by displayOrder, attaches a Product aggregation count, and returns `{ slug, label, count, description, heroImage }`. Response shape stays backwards-compatible with `ProductGrid` and `CategoryTiles` (both already fetched this endpoint at runtime — they just see fresh DB-driven data now).
+- New `backend/routes/adminCategories.js` mounted at `/api/admin/categories` — GET (list with productCount), POST (create), GET/:id, PATCH/:id (label, description, heroImage, displayOrder, status — **slug intentionally immutable** to prevent orphaning products that reference the old slug; admin must archive + create new to "rename"), DELETE/:id (soft archive, existing tagged products untouched). All routes behind `requireAuth`.
+- `backend/models/Product.js` — `category` field stripped of `enum: CATEGORY_SLUGS` constraint so admin-created slugs can be assigned without redeploying. Default kept as `CATEGORY_SLUGS[0]` for legacy compat. Slug validity for **publish** is enforced at the route level (see below), not by the schema.
+- `backend/routes/adminProducts.js` — `validateForPublish()` no longer checks against the static `CATEGORY_SLUGS` array; just requires `product.category?.trim()`. The admin dropdown is the source of truth (populated from `/api/categories` so only valid slugs are selectable). `POST /api/admin/products/bulk-category` swapped its static `SLUGS.includes(...)` guard for `Category.exists({ slug, status: 'active' })`.
+
+**Frontend**
+- New `frontend/app/admin/categories/page.tsx` + `page.module.css` — list with status pill, product count, displayOrder, edit + archive actions. Mirrors the `/admin/collections` aesthetic.
+- New `frontend/app/admin/categories/[id]/page.tsx` + `page.module.css` — create + edit form: label (auto-derives slug on create), slug (locked after create), description, heroImage URL + alt (text input only this round — file upload deferred; admin pastes a Cloudinary URL), displayOrder, status. Live image preview when URL is filled.
+- `frontend/components/AdminLayout.tsx` — new "Categories" sidebar entry under PUBLISH (Folder icon, between Collections and Content).
+- `frontend/app/admin/products/[id]/page.tsx` — hardcoded `CATEGORIES` const removed; new `useEffect` fetches `/api/categories` once on mount and populates `categories` state. The Category dropdown renders from that state. If a product holds a slug that's been archived (i.e. not in the active list), the dropdown injects a fallback `(archived)` option so admin can see and reassign rather than silently dropping the value.
+
+**Deliberately deferred**
+- File upload for category heroImage (text URL only this round — matches the existing Collections heroImage UX, where the field is in the schema but no upload widget exists yet either).
+- Reordering categories via drag (admin enters displayOrder manually).
+- Cleaning up `backend/config/categories.js` — left in place because `backend/models/Product.js` still references `CATEGORY_SLUGS[0]` for the default, and removing the config file is a cosmetic follow-up.
+
+Files: `backend/models/Category.js`, `backend/scripts/seedCategories.js`, `backend/routes/adminCategories.js`, `backend/routes/categories.js`, `backend/routes/adminProducts.js`, `backend/models/Product.js`, `backend/server.js`, `frontend/app/admin/categories/{page.tsx,page.module.css,[id]/page.tsx,[id]/page.module.css}`, `frontend/app/admin/products/[id]/page.tsx`, `frontend/components/AdminLayout.tsx`.
 
 ---
 

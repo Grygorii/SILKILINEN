@@ -63,7 +63,13 @@ const productSchema = new mongoose.Schema({
   compareAtPrice: { type: Number, min: 0 },
   costPrice: { type: Number, min: 0 },
 
-  category: { type: String, required: false, trim: true, enum: CATEGORY_SLUGS, default: CATEGORY_SLUGS[0] },
+  // Category is a slug string matched against the Category collection (DB
+  // model added in Phase 1 of the categories rework). The enum constraint
+  // was removed so admin-created categories can be assigned without an
+  // app deploy. Slug validity is enforced at write time by
+  // routes/adminProducts.js validateForSave(), not at the schema level —
+  // schema kept permissive so legacy/migration data keeps loading.
+  category: { type: String, required: false, trim: true, default: CATEGORY_SLUGS[0] },
   description: { type: String, trim: true },
   tags: [String],
 

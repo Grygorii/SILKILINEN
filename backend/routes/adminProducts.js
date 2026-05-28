@@ -7,7 +7,7 @@ const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
 const { generateProductSEO, AIServiceError } = require('../services/aiText');
 const { SLOT_KEYS } = require('../config/imageSlots');
-const { SLUGS: CATEGORY_SLUGS } = require('../config/categories');
+const Category = require('../models/Category');
 const { detectImageType } = require('../utils/fileSignature');
 
 cloudinary.config({
@@ -112,7 +112,11 @@ function validateForPublish(product) {
   if (!product.price || product.price <= 0) {
     fields.push({ field: 'price', label: 'Price', message: 'Price must be greater than 0' });
   }
-  if (!product.category || !CATEGORY_SLUGS.includes(product.category)) {
+  // Slug membership against the Category DB is enforced by the admin
+  // dropdown (populated from /api/categories) — schema-level validation
+  // here just requires a non-empty value so direct-API callers can't
+  // publish a category-less product.
+  if (!product.category?.trim()) {
     fields.push({ field: 'category', label: 'Category', message: 'Valid category is required' });
   }
   if (!product.description?.trim() || product.description.trim().length < 50) {
@@ -404,9 +408,9 @@ router.post('/bulk-delete', async function(req, res) {
 router.post('/bulk-category', async function(req, res) {
   try {
     const { productIds, category } = req.body;
-    const { SLUGS } = require('../config/categories');
-    if (!SLUGS.includes(category)) return res.status(400).json({ error: 'Invalid category' });
     if (!Array.isArray(productIds) || productIds.length === 0) return res.status(400).json({ error: 'No products selected' });
+    const exists = await Category.exists({ slug: category, status: 'active' });
+    if (!exists) return res.status(400).json({ error: 'Invalid category' });
     const result = await Product.updateMany({ _id: { $in: productIds } }, { $set: { category } });
     res.json({ updated: result.modifiedCount });
   } catch (err) {

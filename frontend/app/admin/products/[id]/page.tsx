@@ -61,17 +61,10 @@ type Form = {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const STANDARD_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
-const CATEGORIES = [
-  { slug: 'robes',         label: 'Robes' },
-  { slug: 'pyjamas',       label: 'Pyjama Sets' },
-  { slug: 'sleep-dresses', label: 'Sleep Dresses' },
-  { slug: 'lingerie',      label: 'Lingerie' },
-  { slug: 'shorts',        label: 'Lounge Shorts' },
-  { slug: 'shirts',        label: 'Lounge Shirts' },
-  { slug: 'pillowcases',   label: 'Pillowcases' },
-  { slug: 'eye-masks',     label: 'Eye Masks' },
-  { slug: 'scarves',       label: 'Scarves' },
-];
+// Categories are now fetched from /api/categories at runtime — see the
+// `categories` state + useEffect below. Editing the list is admin-driven
+// via /admin/categories rather than this hardcoded array.
+type CategoryOption = { slug: string; label: string };
 
 const IMAGE_SLOTS = [
   { key: 'hero',      label: 'Hero',      description: 'Main listing photo', required: true  },
@@ -173,6 +166,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const [seoToast, setSeoToast]             = useState('');
   // Slot picker modal
   const [pickerSlot, setPickerSlot] = useState<string | null>(null);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
   // Generate wizard
   const [showWizard, setShowWizard] = useState(false);
   const [genColours, setGenColours] = useState('');
@@ -240,6 +234,16 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(() => doSaveRef.current?.(), 30_000);
   }, []); // eslint-disable-line
+
+  // Load active categories for the category dropdown
+  useEffect(() => {
+    fetch(`${API}/api/categories`)
+      .then(r => r.ok ? r.json() : [])
+      .then((data: { slug: string; label: string }[]) => {
+        setCategories(data.map(c => ({ slug: c.slug, label: c.label })));
+      })
+      .catch(() => {});
+  }, []);
 
   // Auto-clear SEO toast after 4s
   useEffect(() => {
@@ -716,7 +720,13 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               <div className={styles.fg}>
                 <label className={styles.label}>Category</label>
                 <select className={styles.input} value={form.category} onChange={e => setField('category', e.target.value)}>
-                  {CATEGORIES.map(c => (
+                  {/* If the saved slug isn't in the fetched active list (e.g.
+                      its category was archived), keep it visible as a fallback
+                      option so the admin can see and reassign. */}
+                  {form.category && !categories.some(c => c.slug === form.category) && (
+                    <option value={form.category}>{form.category} (archived)</option>
+                  )}
+                  {categories.map(c => (
                     <option key={c.slug} value={c.slug}>{c.label}</option>
                   ))}
                 </select>
