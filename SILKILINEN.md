@@ -80,14 +80,20 @@ Authoritative grid redesign — supersedes earlier image-forward draft from the 
 
 **Image**
 - Every cell is `aspect-ratio: 3 / 4`, `object-fit: cover`, `object-position: top center` (necklines and faces stay in frame; product hems may crop — acceptable per spec).
-- 3:4 is enforced in **two** places as belt-and-braces: on `.cardImg` (caller-side) and inside `ProductImage` via a new `.wrapCard` rule that fires when `variant === 'card'`. Cell can never collapse shorter than its neighbour, even if a caller forgets the wrapper aspect-ratio.
-- Existing `ProductImage` shimmer (loading) and cream "Image coming soon" (failed) states are preserved and now constrained to the 3:4 box.
+- 3:4 is enforced in **two** places as belt-and-braces: on `.cardImg` (caller-side) and inside `ProductImage` via a `.wrapCard` rule that fires when `variant === 'card'`. Cell can never collapse shorter than its neighbour, even if a caller forgets the wrapper aspect-ratio.
+- **Image-state hygiene fix (this pass)**: every state inside the 3:4 box now carries explicit `position: absolute; inset: 0; width: 100%; height: 100%` — the actual `<img>` (via `.img` class in `ProductImage.module.css` and again via a defensive `.cardImg img` selector in `ProductGrid.module.css`), the loading shimmer (`.skeleton`), and the failed/missing placeholder (`.missing`). No card can render at a height other than 3:4 of its column — pixel-uniform across boxer shorts and full-body shots alike. The redundant declaration on `.cardImg img` also catches any future caller-supplied img inside the container.
+- Existing `ProductImage` shimmer (loading) and cream "Image coming soon" (failed) states are preserved and constrained to the 3:4 box.
 
 **Heart (wishlist)**
 - Lucide `Heart`, top-right of each photo at `top / right: var(--s-3)`.
-- Default: white stroke, no fill. Favorited: filled white. Always layered with `filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))` so the white shape stays visible against both pale silk and dark photography.
-- 44×44 hit area, `aria-label` reflects state, `aria-pressed={wished}` added.
+- Default: white stroke, no fill.
+- **Favorited (this pass)**: filled charcoal via CSS `.heartFilled { fill: var(--color-ink) }` overriding the lucide `fill="currentColor"` presentation attribute on the SVG (CSS > attributes per SVG spec). The white stroke and dark drop-shadow stay — the favorited heart reads as a solid black shape with a thin white outline, visible on both pale silk and dark garnet photography.
+- Always layered with `filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))`.
+- 44×44 hit area, `aria-label` reflects state, `aria-pressed={wished}`.
 - `heartPop` keyframe + `@media (hover: hover)` scale unchanged.
+
+**"New" badge** (this pass)
+- Italic 11px, bottom-right of the image. Color changed from charcoal to `#FFFFFF` with `text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5)` — same over-photo treatment as the heart, so the word `new` stays legible on dark silk. (Picking option (a) from the prior flag — consistent with the heart, no layout churn.)
 
 **Caption block** (small left inset, tight rhythm)
 - `padding: var(--s-3) 0 var(--s-3) var(--s-2)` — ~8px left inset; ~12px top + bottom so the caption breathes inside the otherwise-zero row gap.
@@ -97,11 +103,16 @@ Authoritative grid redesign — supersedes earlier image-forward draft from the 
 
 **Hover lift** — `transform: scale(1.03)` on the image only, behind `@media (hover: hover)`, over `--t-slow`. Reduced-motion disables it cleanly.
 
-**Deliberate literals.** Two non-token values appear in the CSS by spec and are commented at the top of the file: `2px` (column-gap — no token below `--s-1 = 4px`) and `#FFFFFF` (the white line — design system canvas `--color-bg = #FAF8F4` is warm cream, deliberately not this). Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--color-bg`, `--stroke`, `--t-fast / --t-base / --t-slow`, `--ease`.
+**Deliberate literals.** Three non-token values appear in the CSS by spec and are commented at the top of the file:
+- `2px` (column-gap — no token below `--s-1 = 4px`).
+- `#FFFFFF` — grid background line **and** the white-on-photo controls (heart stroke + "new" badge text). Design system canvas `--color-bg = #FAF8F4` is warm cream, deliberately not this.
+- `rgba(0, 0, 0, 0.5)` — the dark drop-shadow / text-shadow behind the white-on-photo elements; same literal used for both `filter` (heart) and `text-shadow` (new badge) so they stay visually in sync.
+
+Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--color-bg`, `--stroke`, `--t-fast / --t-base / --t-slow`, `--ease`.
 
 **Out of scope (left untouched):** PDP, cart drawer, checkout. Per-card colour swatches stay off the grid (colour selection lives on the PDP). Pre-existing dead CSS `.colours` / `.colourDot` left in place (not created by this change).
 
-Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (added `.wrapCard` + applied conditional class for `variant === 'card'`).
+Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (`.wrapCard` 3:4 enforcement; `.skeleton` and `.missing` hardened with explicit `width: 100%; height: 100%` so the loading + failed states cannot collapse below the 3:4 box).
 
 ---
 

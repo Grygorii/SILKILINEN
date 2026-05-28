@@ -1,12 +1,17 @@
 /* ── Deliberate literals (not tokens) ─────────────────
-   Two non-token values appear in this file by spec:
+   Three non-token values appear in this file by spec:
      - `2px` for `column-gap` — the spec asks for a "near-zero" hairline
        gap; there is no design-system token below `--s-1 = 4px`.
-     - `#FFFFFF` for the grid background — the spec calls for one clean
-       PURE-WHITE vertical line between columns; the design system's
+     - `#FFFFFF` — used for the grid background (one clean white
+       vertical line between columns) AND for the over-photo controls
+       (heart icon stroke + "new" badge text). The design system's
        canvas (`--color-bg = #FAF8F4`) is warm cream, deliberately not
-       this.
-   Do not "fix" either of these without re-reading the locked grid spec.
+       this; over-photo legibility needs pure white.
+     - `rgba(0, 0, 0, 0.5)` — the dark drop-shadow / text-shadow behind
+       the white-on-photo controls. Same literal used for both the
+       heart's `filter` and the new badge's `text-shadow` so the two
+       over-photo elements stay visually in sync.
+   Do not "fix" any of these without re-reading the locked grid spec.
 */
 
 .filters {
@@ -132,6 +137,16 @@
    3:4 ratio, every grid cell has identical visual height, so captions
    align perfectly across columns. */
 .cardImg img {
+  /* Defensive layout — every img inside .cardImg is forced to fill the
+     3:4 box. Redundant with ProductImage's `.img` class for the loaded
+     state, but this selector ALSO catches any future caller-supplied
+     img and guarantees identical cell heights across every card. */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
   object-position: top center;
   transition: opacity 0.25s ease, transform var(--t-slow) var(--ease);
 }
@@ -178,7 +193,13 @@
   .heartBtn:hover { transform: scale(1.12); }
 }
 
-.heartFilled { color: #FFFFFF; }
+.heartFilled {
+  /* SVG fill overrides the lucide presentation attribute. Stroke stays
+     #FFFFFF via inheritance from .heartBtn so the favorited heart reads
+     as a solid charcoal shape with a thin white outline + drop-shadow —
+     visible against both pale silk and dark garnet photography. */
+  fill: var(--color-ink);
+}
 
 @keyframes heartPop {
   0%   { transform: scale(1); }
@@ -202,7 +223,8 @@
   right: var(--s-3);
   font-size: 11px;
   font-style: italic;
-  color: var(--color-ink);
+  color: #FFFFFF;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   letter-spacing: 0.5px;
   pointer-events: none;
   z-index: 2;
