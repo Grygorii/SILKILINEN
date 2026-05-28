@@ -30,17 +30,7 @@
   background: var(--color-surface);
   cursor: pointer;
   padding: 0;
-  transition: opacity var(--t-fast) var(--ease),
-              transform var(--t-fast) var(--ease);
-}
-
-.swatch:active:not(.soldOut) {
-  transform: scale(var(--press-scale));
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .swatch { transition: none; }
-  .swatch:active:not(.soldOut) { transform: none; }
+  transition: opacity var(--t-fast) var(--ease);
 }
 
 .swatch:focus-visible {

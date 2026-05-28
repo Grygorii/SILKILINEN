@@ -54,20 +54,3 @@
   height: 48px;
   font-size: 11px;
 }
-
-/* Breath — one quiet pulse when the button enters the "added" state.
-   Composes with the existing primitives' :active scale and the global
-   cartItemAdded delight. */
-.btnWrapBreathing > button {
-  animation: silki-breath 600ms var(--ease);
-}
-
-@keyframes silki-breath {
-  0%   { transform: scale(1); }
-  35%  { transform: scale(1.04); }
-  100% { transform: scale(1); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .btnWrapBreathing > button { animation: none; }
-}

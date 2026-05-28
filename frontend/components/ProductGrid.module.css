@@ -92,27 +92,6 @@
   position: relative;
 }
 
-/* LIFT — soft rise on hover, desktop only. Token-driven. */
-@media (hover: hover) {
-  .card {
-    transition: transform var(--t-base) var(--ease),
-                box-shadow var(--t-base) var(--ease);
-  }
-  .card:hover {
-    transform: translateY(var(--lift-y));
-    box-shadow: var(--lift-shadow);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .card,
-  .card:hover {
-    transition: none;
-    transform: none;
-    box-shadow: none;
-  }
-}
-
 .cardLink {
   display: block;
   text-decoration: none;
@@ -128,6 +107,21 @@
   aspect-ratio: 4 / 5;
   overflow: hidden;
 }
+
+.img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.4s ease;
+}
+
+.imgHover {
+  opacity: 0;
+}
+
+.card:hover .imgHover { opacity: 1; }
 
 .imgMissing {
   position: absolute;
@@ -278,17 +272,6 @@
   background: var(--dark, #1a1916);
   color: var(--warm-white, #faf8f4);
   font-size: 14px;
-  animation: silki-breath 600ms var(--ease);
-}
-
-@keyframes silki-breath {
-  0%   { transform: scale(1); }
-  35%  { transform: scale(1.06); }
-  100% { transform: scale(1); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .plusAdded { animation: none; }
 }
 
 /* ── Responsive ───────────────────────────────────── */

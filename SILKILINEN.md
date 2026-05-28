@@ -69,36 +69,6 @@ Other admin pages:
 - Existing Dalia / Bastet / Ciara / Rehab dress and robe products from earlier build phase
 - **Silk panties** (the actual sales hero) — currently sold on Etsy, not yet migrated to silkilinen.com as primary
 
-## Shipped 28 May 2026 — sensory motion layer
-
-Adds motion on top of the quiet v1 design system without changing any colour, type, radius, or layout. Five behaviours, all token-driven, all pure-CSS + one tiny IntersectionObserver hook. **`prefers-reduced-motion: reduce` disables every behaviour cleanly** — fallback is the existing quiet v1.
-
-- **SHEEN.** New `components/ui/SilkImage.tsx` — wraps product imagery with a slow ambient light-sweep (`--t-sheen: 8s`), faster on `:hover` (desktop only, gated by `@media (hover: hover)`). Video-ready: a `video?: string` prop swaps in `<video poster={image}>` without touching callers. Overlay is `pointer-events: none` + `mix-blend-mode: screen`, never sits over text. Used in `ProductGrid` cards and on the `ProductGallery` PDP hero image (image branch only; gallery's own `kind: 'video'` branch stays as-is).
-- **LIFT.** ProductGrid `.card` translates up `var(--lift-y)` (-4px) with `var(--lift-shadow)` on `:hover`, behind `@media (hover: hover)` so touch devices don't stick lifted. Transform + box-shadow only — no layout reflow.
-- **PRESS.** `transform: scale(var(--press-scale))` (0.96) applied once in the `Button`, `OptionPill`, and `ColourSwatch` primitives on `:active:not(:disabled / .disabled / .soldOut)`. Composes with the existing global `:active { opacity: 0.75 }` for a layered press feel. Inherited everywhere those primitives are used.
-- **REVEAL.** New `lib/useReveal.ts` — single shared `IntersectionObserver` across the page (lazy singleton, SSR-safe). Returns a ref. On mount, checks `getBoundingClientRect()`; **if the element is already in or above the viewport, no class is added** (so above-the-fold content appears immediately — no flash). Below-fold elements get a `.revealing` class (fade + 16px ducking) until the observer fires `.revealed`. Threshold 0.15, `rootMargin: '0px 0px -10% 0px'`. Reveal classes are global in `globals.css` so the hook can apply them imperatively without module-scope coupling. Applied via a tiny `<RevealCard>` wrapper inside `ProductGrid` (one `useReveal()` call per card, rules-of-hooks compliant).
-- **ADD-TO-BAG DELIGHT.** Centralised via the existing `cartItemAdded` custom event already dispatched by `CartContext`. Navbar listens, debounces 600ms (so Reorder's multi-add fires the delight once), and triggers:
-  - The cart icon pulses (`cart-pulse` keyframe, ~600ms).
-  - A small silk wisp rises from the cart icon (`wisp-rise` keyframe, ~700ms, accent-gold gradient).
-  - The triggering button "breathes" one cycle (`silki-breath`, ~600ms). Added to the existing `addState === 'added'` state in `StickyBuyBar`, `ProductOptions`, and `ProductGrid` quick-add.
-  - The existing `AddedToCartToast` still fires unchanged — that's the semantic confirmation; the motion is the sensory layer.
-  Listener skips the wisp + pulse while the cart drawer is already open (drawer is its own confirmation surface).
-
-**New tokens added to `globals.css`** (extend the existing `--t-*` / `--ease` set, no changes to existing tokens):
-```
---t-sheen: 8s;          --reveal-y: 16px;       --lift-y: -4px;
---t-reveal: 520ms;      --lift-shadow: 0 16px 40px rgba(42,34,24,.13);
---press-scale: 0.96;
-```
-
-**Bundle cost: 0 KB.** No animation library added — pure CSS + ~30 lines of JS for the IO hook + ~30 lines for the Navbar listener. Animates only `transform` and `opacity` (compositor-only, no reflow). Touch devices get ambient sheen + reveal + press + delight; lift and hover-faster-sheen are desktop-only enhancements.
-
-**Decision recorded in `decisions.md`** (new ADR 0008): why pure CSS + IntersectionObserver over Framer Motion.
-
-Files touched: `frontend/app/globals.css`, `frontend/components/ui/{Button,OptionPill,ColourSwatch}.module.css`, `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/ProductGallery.tsx`, `frontend/components/{StickyBuyBar,ProductOptions}.{tsx,module.css}`, `frontend/components/Navbar.tsx`. New: `frontend/lib/useReveal.ts`, `frontend/components/ui/SilkImage.{tsx,module.css}`, `frontend/components/CartDelight.module.css`.
-
----
-
 ## Shipped 28 May 2026 — promo codes bulk archive UX
 
 Make `/admin/promo-codes` actually usable for ongoing cleanup. New layout: four tabs (Active / Used / Archive / All) replace the old status chips, with the existing "All codes / Personal only / Broad only" filter and search box kept as secondary filters scoped to each tab. "Active" tab includes paused and draft codes; "Used" is `usageCount > 0` excluding archived; "Archive" is the new bucket; "All" is everything except archived.

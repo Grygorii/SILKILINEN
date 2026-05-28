@@ -156,7 +156,7 @@ export default function ProductOptions({ colours, colourHexMap, sizes, productNa
       )}
 
       {/* CTA */}
-      <div className={`${styles.ctaWrap} ${addState === 'added' ? styles.ctaWrapBreathing : ''}`}>
+      <div className={styles.ctaWrap}>
         <Button
           variant={ctaVariant}
           onClick={handleAdd}

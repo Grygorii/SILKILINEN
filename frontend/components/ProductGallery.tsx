@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Heart, Play, X } from 'lucide-react';
 import { useWishlist } from '@/context/WishlistContext';
 import { isValidImageUrl } from '@/lib/imageUtils';
-import SilkImage from '@/components/ui/SilkImage';
 import styles from './ProductGallery.module.css';
 
 type ProductImage = {
@@ -150,10 +149,10 @@ export default function ProductGallery({ images, name, productId, video }: Props
       >
         {item?.kind === 'image' && (
           <div className={styles.imageWrap} onClick={() => setLightboxOpen(true)}>
-            <SilkImage
+            <img
               src={cloudinaryThumb(item.url, 1200)}
               alt={item.alt}
-              loading="eager"
+              className={styles.heroImg}
               onError={() => setFailedUrls(prev => new Set([...prev, item.url]))}
             />
           </div>

@@ -101,21 +101,6 @@
   margin-bottom: var(--s-4, 16px);
 }
 
-/* Breath — one quiet pulse when the button enters the "added" state. */
-.ctaWrapBreathing > button {
-  animation: silki-breath 600ms var(--ease);
-}
-
-@keyframes silki-breath {
-  0%   { transform: scale(1); }
-  35%  { transform: scale(1.04); }
-  100% { transform: scale(1); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ctaWrapBreathing > button { animation: none; }
-}
-
 /* Drop a Hint — quiet uppercase link with hairline gift glyph,
    sits at the foot of the panel by v1 proposal. */
 .hintBtn {

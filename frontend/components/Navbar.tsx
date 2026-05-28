@@ -10,7 +10,6 @@ import { useCustomer } from '@/context/CustomerContext';
 import CartPanel from './CartPanel';
 import SideMenu from './SideMenu';
 import styles from './Navbar.module.css';
-import delight from './CartDelight.module.css';
 
 const DESKTOP_NAV = [
   { label: 'Shop', href: '/shop' },
@@ -30,32 +29,10 @@ export default function Navbar() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [delightKey, setDelightKey] = useState(0); // bump to re-trigger keyframe
-  const [delightActive, setDelightActive] = useState(false);
-  const lastDelightRef = useRef(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const pathname = usePathname();
-
-  // Sensory motion: when CartContext dispatches cartItemAdded, do one quiet
-  // confirmation here — the cart icon pulses and a silk wisp rises from it.
-  // Debounced 600ms so rapid multi-add (e.g. Reorder) fires only once.
-  useEffect(() => {
-    function onAdd() {
-      // Skip the visual delight while the cart drawer is open — the drawer
-      // is its own confirmation surface.
-      if (cartOpen) return;
-      const now = Date.now();
-      if (now - lastDelightRef.current < 600) return;
-      lastDelightRef.current = now;
-      setDelightKey(k => k + 1);
-      setDelightActive(true);
-      window.setTimeout(() => setDelightActive(false), 700);
-    }
-    window.addEventListener('cartItemAdded', onAdd);
-    return () => window.removeEventListener('cartItemAdded', onAdd);
-  }, [cartOpen]);
 
   useEffect(() => {
     const handler = () => setCartOpen(true);
@@ -210,19 +187,12 @@ export default function Navbar() {
               </div>
 
               <button
-                className={`${styles.iconBtn} ${delightActive ? delight.pulsing : ''}`}
-                style={{ position: 'relative' }}
+                className={styles.iconBtn}
                 onClick={() => setCartOpen(true)}
                 aria-label={`Cart${cartCount > 0 ? `, ${cartCount} item${cartCount !== 1 ? 's' : ''}` : ''}`}
-                key={delightKey}
               >
                 <ShoppingBag size={20} strokeWidth={1.5} />
                 {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
-                {delightActive && (
-                  <span className={delight.wispWrap} aria-hidden="true">
-                    <span className={delight.wisp} />
-                  </span>
-                )}
               </button>
             </div>
           </>
