@@ -231,9 +231,10 @@
 /* ── Caption block ────────────────────────────────────
    Tight rhythm. Small left inset so the type doesn't sit flush against
    the white column-gap line. The "+" pins to the row's right edge.
-   Both name and material clamp to ONE line — the material row keeps a
-   reserved height (via min-height) so cells without material data
-   still align with neighbour cells.
+   Name clamps to TWO lines with a reserved 2-line min-height — locks
+   the price row's Y position across the grid even when names vary in
+   length. Material clamps to one line with its own reserved height so
+   cells without material data still align with neighbour cells.
 */
 
 .caption {
@@ -251,10 +252,15 @@
   margin-bottom: var(--s-1);
   color: var(--color-ink);
   line-height: 1.3;
-  /* One line, ellipsis on overflow. Full name available via title attr. */
+  /* Up to two lines, clamped — and reserve the full 2-line height even
+     for short names so every card's price row sits at the same Y across
+     the grid (matches the Olivia von Halle reference). Full name still
+     available via the title attr. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-height: calc(15px * 1.3 * 2);
 }
 
 .materialSub {

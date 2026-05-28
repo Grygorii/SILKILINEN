@@ -124,6 +124,7 @@ Tweaks on top of the locked grid spec above, in response to the cream "Image com
 - **Heart:** white stroke + dark drop-shadow replaced with semi-transparent dark ink (`rgba(42, 34, 24, 0.7)`, hover → `var(--color-ink)`). No `filter: drop-shadow(...)` — the cream placeholder no longer haloes a white-on-cream heart. Trade-off accepted: against very dark product photography the dark heart is less crisp than the old white-on-shadow treatment, but per spec the cream-placeholder professionalism wins.
 - **Favorited state:** still `fill: var(--color-ink)` — reads as a solid dark heart paired with the new transparent dark stroke.
 - **"new" badge unchanged:** still `#FFFFFF` + `rgba(0, 0, 0, 0.5)` text-shadow; spec for the badge wasn't part of this pass.
+- **Caption rhythm (follow-up, same day):** `.cardName` no longer single-line-truncates. Switched to `-webkit-line-clamp: 2` over a `display: -webkit-box` with `-webkit-box-orient: vertical`, and added `min-height: calc(15px * 1.3 * 2)` so even one-word product names reserve the same 2-line block. Result: the price row sits at an identical Y position across every card in a row regardless of name length, matching the Olivia von Halle reference. Material subtitle's existing reserved `min-height: 1.4em` was already enough — left as-is.
 
 Files: `frontend/components/ProductGrid.module.css`, `frontend/components/products/ProductImage.module.css`.
 
