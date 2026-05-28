@@ -157,6 +157,7 @@ export default function ProductGrid({
                   className={`${styles.heartBtn} ${animating ? styles.heartAnimating : ''}`}
                   onClick={e => handleHeart(e, product._id)}
                   aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+                  aria-pressed={wished}
                 >
                   <Heart
                     size={18}
@@ -179,7 +180,10 @@ export default function ProductGrid({
 
                 <div className={styles.caption}>
                   <h3 className={styles.cardName} title={product.name}>{product.name}</h3>
-                  {materialSub && <p className={styles.materialSub}>{materialSub}</p>}
+                  {/* Always-render so the reserved 1-line height keeps every
+                      caption the same total height — rows can't drift out of
+                      alignment when some products lack materialComposition. */}
+                  <p className={styles.materialSub}>{materialSub}</p>
                   <div className={styles.priceRow}>
                     <span className={styles.price}>€{Number(product.price).toFixed(2)}</span>
                     <button

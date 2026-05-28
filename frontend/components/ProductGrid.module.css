@@ -1,3 +1,14 @@
+/* ── Deliberate literals (not tokens) ─────────────────
+   Two non-token values appear in this file by spec:
+     - `2px` for `column-gap` — the spec asks for a "near-zero" hairline
+       gap; there is no design-system token below `--s-1 = 4px`.
+     - `#FFFFFF` for the grid background — the spec calls for one clean
+       PURE-WHITE vertical line between columns; the design system's
+       canvas (`--color-bg = #FAF8F4`) is warm cream, deliberately not
+       this.
+   Do not "fix" either of these without re-reading the locked grid spec.
+*/
+
 .filters {
   display: flex;
   gap: 8px;
@@ -77,17 +88,17 @@
 }
 
 /* ── Grid ─────────────────────────────────────────────
-   Image-forward, magazine-dense. 2px hairline column gap is intentional
-   (the only literal — there's no token below --s-1 = 4px and the spec
-   asks for "near-zero gutter"). Row gap stays generous (--s-7 / --s-6)
-   for vertical rhythm between caption + next image.
+   Pure-white background fills the 2px column gap → one clean vertical
+   white line per gap. Row gap is 0 — captions sit directly above next
+   row's image, no horizontal white line.
 */
 
 .grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   column-gap: 2px;
-  row-gap: var(--s-7);
+  row-gap: 0;
+  background: #FFFFFF;
 }
 
 .card {
@@ -95,7 +106,7 @@
   display: flex;
   flex-direction: column;
   color: var(--color-ink);
-  /* No background, no border, no padding — image is the product. */
+  /* No background, no border — image is the product. */
 }
 
 .cardLink {
@@ -104,10 +115,10 @@
   color: inherit;
 }
 
-/* ── Image ───────────────────────────────────────────
-   Edge-to-edge of the column, portrait 3:4. No chrome — ProductImage
-   handles the loading shimmer and "Image coming soon" failed state
-   internally, so we don't need a cream fallback background here.
+/* ── Image ────────────────────────────────────────────
+   Edge-to-edge, portrait 3:4. ProductImage handles loading shimmer
+   and "Image coming soon" failed state internally; its `card` variant
+   also enforces 3:4 internally as a defensive guarantee.
 */
 
 .cardImg {
@@ -116,11 +127,12 @@
   overflow: hidden;
 }
 
-/* Subtle scale-on-hover on the IMAGE itself, not the card.
-   Overrides ProductImage's own opacity-only transition with one that
-   composes opacity + transform so both still animate. Desktop only;
-   reduced-motion users get neither. */
+/* object-position: top center keeps necklines / faces in frame on
+   portrait-oriented product photography. Combined with the shared
+   3:4 ratio, every grid cell has identical visual height, so captions
+   align perfectly across columns. */
 .cardImg img {
+  object-position: top center;
   transition: opacity 0.25s ease, transform var(--t-slow) var(--ease);
 }
 
@@ -137,8 +149,9 @@
 }
 
 /* ── Heart ────────────────────────────────────────────
-   Bare icon top-right of image, no background circle. 44px hit area
-   with the icon centred. Drop-shadow keeps it legible over any photo.
+   White heart on every photo with a dark drop-shadow so it stays
+   readable on both bright/silk and dark photography. 44px hit area
+   with the icon centred.
 */
 
 .heartBtn {
@@ -152,11 +165,11 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  color: var(--color-ink);
+  color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 1px 3px rgba(250, 248, 244, 0.8));
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
   -webkit-tap-highlight-color: transparent;
   transition: transform var(--t-fast) var(--ease);
 }
@@ -165,7 +178,7 @@
   .heartBtn:hover { transform: scale(1.12); }
 }
 
-.heartFilled { color: var(--color-ink); }
+.heartFilled { color: #FFFFFF; }
 
 @keyframes heartPop {
   0%   { transform: scale(1); }
@@ -196,19 +209,24 @@
 }
 
 /* ── Caption block ────────────────────────────────────
-   Tight vertical rhythm. Sits flush to the column edges so the line
-   from image to caption to next image reads as one column.
+   Tight rhythm. Small left inset so the type doesn't sit flush against
+   the white column-gap line. The "+" pins to the row's right edge.
+   Both name and material clamp to ONE line — the material row keeps a
+   reserved height (via min-height) so cells without material data
+   still align with neighbour cells.
 */
 
 .caption {
   padding-top: var(--s-3);
+  padding-bottom: var(--s-3);
+  padding-left: var(--s-2);
   display: flex;
   flex-direction: column;
 }
 
 .cardName {
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 400;
   margin-bottom: var(--s-1);
   color: var(--color-ink);
@@ -220,10 +238,16 @@
 }
 
 .materialSub {
-  font-size: 13px;
+  font-size: 12px;
   font-style: italic;
   color: var(--color-ink-muted);
   margin-bottom: var(--s-2);
+  /* Clamp to one line — and reserve the line even if empty so cells
+     without material composition still align with cells that have it. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-height: 1.4em;
 }
 
 .priceRow {
@@ -234,18 +258,15 @@
 }
 
 .price {
-  font-size: 15px;
+  font-size: 12px;
   color: var(--color-ink);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
 /* ── Bare "+" icon button ─────────────────────────────
-   44×44 hit area with the visible icon (~18px lucide-react Plus / Check)
-   centred. No border, no background. Hover/press feedback only. The hit
-   area touches the column-right edge on the rightmost column — verify
-   the page wrapper has enough horizontal padding that this doesn't sit
-   against the viewport edge.
+   44×44 hit area, ~18px visible icon (lucide-react Plus / Check)
+   centred. No border, no background.
 */
 
 .plusIconBtn {
@@ -274,8 +295,7 @@
 }
 
 /* ── Responsive — 4 / 3 / 2 columns ──────────────────
-   Hairline column-gap holds at every breakpoint. Row-gap tightens
-   slightly on smaller screens.
+   Hairline column-gap and zero row-gap hold at every breakpoint.
 */
 
 @media (max-width: 1200px) {
@@ -283,13 +303,5 @@
 }
 
 @media (max-width: 768px) {
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-    row-gap: var(--s-6);
-  }
-  .cardName { font-size: 15px; }
-}
-
-@media (max-width: 400px) {
-  .grid { row-gap: var(--s-5); }
+  .grid { grid-template-columns: repeat(2, 1fr); }
 }

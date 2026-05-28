@@ -69,24 +69,39 @@ Other admin pages:
 - Existing Dalia / Bastet / Ciara / Rehab dress and robe products from earlier build phase
 - **Silk panties** (the actual sales hero) — currently sold on Etsy, not yet migrated to silkilinen.com as primary
 
-## Shipped 28 May 2026 — image-forward shop grid
+## Shipped 28 May 2026 — image-forward shop grid (locked spec)
 
-Redesigned `/shop` grid to read editorially — tall photos doing the work, near-zero gutter, calm caption. The PDP already felt elegant; the grid now matches.
+Authoritative grid redesign — supersedes earlier image-forward draft from the same day. Tall uniform photos, one clean white line down the middle, white Lucide heart on each photo, tight caption with a small price. Locked specs below.
 
-- **3:4 portrait images, edge-to-edge of column.** `.cardImg` uses `aspect-ratio: 3 / 4` with `overflow: hidden` and no background, no border, no padding. Plain `<img>` swapped for `<ProductImage>` so the loading shimmer and "Image coming soon" failed state are reused (cream + 9px small-caps reads as intentional editorial at this size).
-- **Hairline column gap.** `column-gap: 2px` (the only literal in the file — there is no token below `--s-1 = 4px` and the spec asked for "near-zero gutter"). Row-gap stays generous (`--s-7 / --s-6 / --s-5` across breakpoints) for vertical rhythm between caption and next image. 4 / 3 / 2 columns at desktop / tablet / mobile.
-- **No card chrome.** No cream backing, no border, no inset. The card is purely a layout container for image + caption.
-- **Caption block** — `name → material → priceRow`. Name: Cormorant Garamond, charcoal, one line, `text-overflow: ellipsis`, `title` attr with the full name. Material: italic muted, e.g. "in mulberry silk". Price: tabular-nums for column alignment. Tight rhythm via `--s-1 / --s-2 / --s-3`.
-- **Bare "+" icon** replaces the old bordered square. 44×44 hit area centred around an 18px lucide-react `Plus` (switches to `Check` for 1.5s after add). No border, no background. Hover/press feedback only (opacity + a small scale on `:active`). Existing add-to-cart handler is unchanged — just rewired to the new icon button.
-- **Image hover scale.** Lift moved from a card-level transform/shadow (removed entirely; there's no chrome to lift) to a slow scale on the image itself (`transform: scale(1.03)` over `--t-slow`). Desktop-only via `@media (hover: hover)`. `prefers-reduced-motion: reduce` disables both the scale and the `+` press transform cleanly.
-- **Two-image hover swap dropped.** The previous "swap to secondary photo on hover" interaction was removed for v1 — one image per card, simpler grid, matches the Olivia von Halle reference. JSX and CSS for `secondImg / .imgHover` are gone.
-- **Heart unchanged in behaviour** — bare icon top-right, no circle, 44px hit area, drop-shadow for legibility, `heartPop` animation on toggle. Position moved from `top:6 right:6` to `top: var(--s-3) right: var(--s-3)` so it reads as inset rather than flush-to-edge.
+**Layout**
+- 2 / 3 / 4 columns at mobile / tablet / desktop (≤768 / ≤1200 / default).
+- `column-gap: 2px`, `row-gap: 0`, `background: #FFFFFF` on `.grid` → one pure-white vertical line per column-gap visible against the warm-cream page; **no** horizontal white lines between rows.
+- Images run edge-to-edge of the container. No outer padding / frame.
 
-**Tokens only.** No new variables added. Consumes `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--color-bg`, `--stroke`, `--t-fast / --t-base / --t-slow`, `--ease`. The "near-zero" 2px gutter is the single deliberate literal (commented in the CSS).
+**Image**
+- Every cell is `aspect-ratio: 3 / 4`, `object-fit: cover`, `object-position: top center` (necklines and faces stay in frame; product hems may crop — acceptable per spec).
+- 3:4 is enforced in **two** places as belt-and-braces: on `.cardImg` (caller-side) and inside `ProductImage` via a new `.wrapCard` rule that fires when `variant === 'card'`. Cell can never collapse shorter than its neighbour, even if a caller forgets the wrapper aspect-ratio.
+- Existing `ProductImage` shimmer (loading) and cream "Image coming soon" (failed) states are preserved and now constrained to the 3:4 box.
 
-**Pre-existing dead CSS** (`.colours`, `.colourDot`) was left in place — those classes aren't referenced from any JSX and weren't created by this change. Per-card colour swatches stay out of the grid (colour selection lives on the PDP).
+**Heart (wishlist)**
+- Lucide `Heart`, top-right of each photo at `top / right: var(--s-3)`.
+- Default: white stroke, no fill. Favorited: filled white. Always layered with `filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))` so the white shape stays visible against both pale silk and dark photography.
+- 44×44 hit area, `aria-label` reflects state, `aria-pressed={wished}` added.
+- `heartPop` keyframe + `@media (hover: hover)` scale unchanged.
 
-Files: `frontend/components/ProductGrid.{tsx,module.css}`. `ProductImage.tsx` unchanged — the 3:4 proportion lives on the caller-side `.cardImg` wrapper.
+**Caption block** (small left inset, tight rhythm)
+- `padding: var(--s-3) 0 var(--s-3) var(--s-2)` — ~8px left inset; ~12px top + bottom so the caption breathes inside the otherwise-zero row gap.
+- **Name** — Cormorant Garamond, 15px, charcoal, `overflow: hidden; text-overflow: ellipsis; white-space: nowrap`; full name carried in `title` attribute.
+- **Material** — italic, 12px, muted, same single-line clamp + `min-height: 1.4em` so the row reserves a line even when `materialComposition` is empty. The JSX always renders the `<p>` so heights stay aligned across cards.
+- **Price row** — flex space-between. Price left (12px, charcoal, `font-variant-numeric: tabular-nums`); bare Lucide `Plus` / `Check` right (44×44 hit area, ~18px visible icon, no border, no background, opacity + `scale(0.92)` on `:active`).
+
+**Hover lift** — `transform: scale(1.03)` on the image only, behind `@media (hover: hover)`, over `--t-slow`. Reduced-motion disables it cleanly.
+
+**Deliberate literals.** Two non-token values appear in the CSS by spec and are commented at the top of the file: `2px` (column-gap — no token below `--s-1 = 4px`) and `#FFFFFF` (the white line — design system canvas `--color-bg = #FAF8F4` is warm cream, deliberately not this). Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--color-bg`, `--stroke`, `--t-fast / --t-base / --t-slow`, `--ease`.
+
+**Out of scope (left untouched):** PDP, cart drawer, checkout. Per-card colour swatches stay off the grid (colour selection lives on the PDP). Pre-existing dead CSS `.colours` / `.colourDot` left in place (not created by this change).
+
+Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (added `.wrapCard` + applied conditional class for `variant === 'card'`).
 
 ---
 

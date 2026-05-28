@@ -5,6 +5,15 @@
   height: 100%;
 }
 
+/* The card variant lives in the shop grid (and anywhere else asking
+   for a portrait product cell). Locking the aspect-ratio here means
+   the placeholder/shimmer/failed states can never make a cell
+   shorter than its neighbour — captions stay row-aligned even when
+   the caller's container forgets to set aspect-ratio. */
+.wrapCard {
+  aspect-ratio: 3 / 4;
+}
+
 @keyframes shimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }

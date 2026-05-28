@@ -52,8 +52,10 @@ export default function ProductImage({ images, src, alt, variant, wrapClassName,
 
   const showText = variant === 'card';
 
+  const variantClass = variant === 'card' ? styles.wrapCard : '';
+
   return (
-    <div className={`${styles.wrap}${wrapClassName ? ` ${wrapClassName}` : ''}`}>
+    <div className={`${styles.wrap}${variantClass ? ` ${variantClass}` : ''}${wrapClassName ? ` ${wrapClassName}` : ''}`}>
       {state === 'loading' && <div className={styles.skeleton} aria-hidden="true" />}
       {state === 'failed' && (
         <div className={styles.missing} aria-hidden="true">
