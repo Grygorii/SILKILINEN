@@ -3,15 +3,16 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Heart } from 'lucide-react';
+import { Heart, Plus, Check } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { isValidImageUrl } from '@/lib/imageUtils';
+import ProductImage from './products/ProductImage';
 import styles from './ProductGrid.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-type ProductImage = { url: string; isPrimary?: boolean; alt?: string };
+type ProductImageData = { url: string; isPrimary?: boolean; alt?: string; order?: number };
 type Category = { slug: string; label: string; count: number };
 
 type Product = {
@@ -24,7 +25,7 @@ type Product = {
   description: string;
   materialComposition?: string;
   createdAt?: string;
-  images?: ProductImage[];
+  images?: ProductImageData[];
   image?: string;
 };
 
@@ -33,11 +34,11 @@ const NEW_DAYS = 30;
 function getMaterialSub(mat?: string): string {
   if (!mat) return '';
   const m = mat.toLowerCase();
-  if (m.includes('mulberry silk')) return 'in Mulberry Silk';
-  if (m.includes('silk satin')) return 'in Silk Satin';
-  if (m.includes('silk') && m.includes('linen')) return 'in Silk & Linen';
-  if (m.includes('silk')) return 'in Pure Silk';
-  if (m.includes('linen')) return 'in Pure Linen';
+  if (m.includes('mulberry silk')) return 'in mulberry silk';
+  if (m.includes('silk satin')) return 'in silk satin';
+  if (m.includes('silk') && m.includes('linen')) return 'in silk & linen';
+  if (m.includes('silk')) return 'in pure silk';
+  if (m.includes('linen')) return 'in pure linen';
   return '';
 }
 
@@ -147,7 +148,6 @@ export default function ProductGrid({
 
             const validImages = product.images?.filter(i => isValidImageUrl(i.url)) ?? [];
             const primaryImg = validImages.find(i => i.isPrimary) ?? validImages[0] ?? null;
-            const secondImg = validImages.find(i => i !== primaryImg) ?? null;
             const heroUrl = primaryImg?.url ?? (isValidImageUrl(product.image) ? product.image : null);
             const heroAlt = primaryImg?.alt ?? product.name;
 
@@ -159,7 +159,7 @@ export default function ProductGrid({
                   aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
                 >
                   <Heart
-                    size={16}
+                    size={18}
                     strokeWidth={1.5}
                     fill={wished ? 'currentColor' : 'none'}
                     className={wished ? styles.heartFilled : ''}
@@ -168,31 +168,30 @@ export default function ProductGrid({
 
                 <Link href={`/product/${product._id}`} className={styles.cardLink}>
                   <div className={styles.cardImg}>
-                    {heroUrl ? (
-                      <img src={heroUrl} alt={heroAlt} className={styles.img} onError={e => { e.currentTarget.style.display = 'none'; }} />
-                    ) : (
-                      <span className={styles.imgMissing}>Image coming soon</span>
-                    )}
-                    {secondImg?.url && (
-                      <img src={secondImg.url} alt={heroAlt} className={`${styles.img} ${styles.imgHover}`} onError={e => { e.currentTarget.style.display = 'none'; }} />
-                    )}
+                    <ProductImage
+                      src={heroUrl}
+                      alt={heroAlt}
+                      variant="card"
+                    />
                     {showNew && <span className={styles.newBadge}>new</span>}
-                  </div>
-                  <div className={styles.cardInfo}>
-                    <h3 className={styles.cardName}>{product.name}</h3>
-                    {materialSub && <p className={styles.materialSub}>{materialSub}</p>}
                   </div>
                 </Link>
 
-                <div className={styles.cardBottom}>
-                  <span className={styles.price}>€{Number(product.price).toFixed(2)}</span>
-                  <button
-                    className={`${styles.plusBtn} ${isAdded ? styles.plusAdded : ''}`}
-                    onClick={e => handleAdd(e, product)}
-                    aria-label={isAdded ? 'Added to bag' : hasSizes ? 'Select size' : 'Add to bag'}
-                  >
-                    {isAdded ? '✓' : '+'}
-                  </button>
+                <div className={styles.caption}>
+                  <h3 className={styles.cardName} title={product.name}>{product.name}</h3>
+                  {materialSub && <p className={styles.materialSub}>{materialSub}</p>}
+                  <div className={styles.priceRow}>
+                    <span className={styles.price}>€{Number(product.price).toFixed(2)}</span>
+                    <button
+                      className={styles.plusIconBtn}
+                      onClick={e => handleAdd(e, product)}
+                      aria-label={isAdded ? 'Added to bag' : hasSizes ? 'Select size' : 'Add to bag'}
+                    >
+                      {isAdded
+                        ? <Check size={18} strokeWidth={1.5} />
+                        : <Plus size={18} strokeWidth={1.5} />}
+                    </button>
+                  </div>
                 </div>
               </div>
             );

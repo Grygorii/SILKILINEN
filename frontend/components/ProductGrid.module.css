@@ -26,22 +26,21 @@
   letter-spacing: 2px;
   text-transform: uppercase;
   cursor: pointer;
-  color: var(--muted, #8a8680);
-  transition: color 0.2s ease;
+  color: var(--color-ink-muted);
+  transition: color var(--t-fast) var(--ease);
   margin-right: 16px;
   white-space: nowrap;
   flex-shrink: 0;
-  /* Minimum touch target height */
   min-height: 44px;
   display: inline-flex;
   align-items: center;
 }
 
-.filterBtn:hover { color: var(--dark, #1a1916); }
+.filterBtn:hover { color: var(--color-ink); }
 
 .active {
-  color: var(--dark, #1a1916);
-  border-bottom: 1px solid var(--dark, #1a1916);
+  color: var(--color-ink);
+  border-bottom: var(--stroke) solid var(--color-ink);
 }
 
 .emptyState {
@@ -54,116 +53,119 @@
 
 .emptyStateText {
   font-size: 14px;
-  color: var(--muted, #8a8680);
+  color: var(--color-ink-muted);
   font-style: italic;
 }
 
 .emptyStateBtn {
   background: none;
-  border: 1px solid var(--dark, #1a1916);
+  border: var(--stroke) solid var(--color-ink);
   padding: 13px 28px;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
   cursor: pointer;
-  color: var(--dark, #1a1916);
+  color: var(--color-ink);
   min-height: 44px;
-  transition: background 0.25s ease, color 0.25s ease;
+  transition: background var(--t-base) var(--ease), color var(--t-base) var(--ease);
 }
 
 .emptyStateBtn:hover {
-  background: var(--dark, #1a1916);
-  color: var(--warm-white, #faf8f4);
+  background: var(--color-ink);
+  color: var(--color-bg);
 }
 
-/* ── Grid ─────────────────────────────────────────── */
+/* ── Grid ─────────────────────────────────────────────
+   Image-forward, magazine-dense. 2px hairline column gap is intentional
+   (the only literal — there's no token below --s-1 = 4px and the spec
+   asks for "near-zero gutter"). Row gap stays generous (--s-7 / --s-6)
+   for vertical rhythm between caption + next image.
+*/
 
 .grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 40px 20px;
+  column-gap: 2px;
+  row-gap: var(--s-7);
 }
 
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  color: var(--dark, #1a1916);
-  position: relative;
+  color: var(--color-ink);
+  /* No background, no border, no padding — image is the product. */
 }
 
 .cardLink {
   display: block;
   text-decoration: none;
   color: inherit;
-  flex: 1;
 }
 
-/* ── Image ────────────────────────────────────────── */
+/* ── Image ───────────────────────────────────────────
+   Edge-to-edge of the column, portrait 3:4. No chrome — ProductImage
+   handles the loading shimmer and "Image coming soon" failed state
+   internally, so we don't need a cream fallback background here.
+*/
 
 .cardImg {
   position: relative;
-  background: var(--cream, #f5f2ec);
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
 }
 
-.img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: opacity 0.4s ease;
+/* Subtle scale-on-hover on the IMAGE itself, not the card.
+   Overrides ProductImage's own opacity-only transition with one that
+   composes opacity + transform so both still animate. Desktop only;
+   reduced-motion users get neither. */
+.cardImg img {
+  transition: opacity 0.25s ease, transform var(--t-slow) var(--ease);
 }
 
-.imgHover {
-  opacity: 0;
+@media (hover: hover) {
+  .card:hover .cardImg img { transform: scale(1.03); }
 }
 
-.card:hover .imgHover { opacity: 1; }
-
-.imgMissing {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--muted, #8a8680);
-  text-align: center;
-  padding: 0 16px;
+@media (prefers-reduced-motion: reduce) {
+  .cardImg img,
+  .card:hover .cardImg img {
+    transition: none;
+    transform: none;
+  }
 }
 
-/* ── Heart ────────────────────────────────────────── */
+/* ── Heart ────────────────────────────────────────────
+   Bare icon top-right of image, no background circle. 44px hit area
+   with the icon centred. Drop-shadow keeps it legible over any photo.
+*/
 
 .heartBtn {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: var(--s-3);
+  right: var(--s-3);
   z-index: 2;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--dark, #1a1916);
   width: 44px;
   height: 44px;
+  background: none;
+  border: none;
   padding: 0;
+  cursor: pointer;
+  color: var(--color-ink);
   display: flex;
   align-items: center;
   justify-content: center;
   filter: drop-shadow(0 1px 3px rgba(250, 248, 244, 0.8));
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.2s ease;
+  transition: transform var(--t-fast) var(--ease);
 }
 
 @media (hover: hover) {
   .heartBtn:hover { transform: scale(1.12); }
 }
 
-.heartFilled { color: var(--dark, #1a1916); }
+.heartFilled { color: var(--color-ink); }
 
 @keyframes heartPop {
   0%   { transform: scale(1); }
@@ -171,120 +173,123 @@
   100% { transform: scale(1); }
 }
 
-.heartAnimating { animation: heartPop 0.3s ease; }
+.heartAnimating { animation: heartPop var(--t-slow) var(--ease); }
 
-/* ── "New" badge ──────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .heartBtn,
+  .heartBtn:hover { transition: none; transform: none; }
+  .heartAnimating { animation: none; }
+}
+
+/* ── "New" badge — small italic serif, no chrome ───── */
 
 .newBadge {
   position: absolute;
-  bottom: 14px;
-  right: 14px;
+  bottom: var(--s-3);
+  right: var(--s-3);
   font-size: 11px;
   font-style: italic;
-  color: var(--dark, #1a1916);
+  color: var(--color-ink);
   letter-spacing: 0.5px;
   pointer-events: none;
+  z-index: 2;
 }
 
-/* ── Info ─────────────────────────────────────────── */
+/* ── Caption block ────────────────────────────────────
+   Tight vertical rhythm. Sits flush to the column edges so the line
+   from image to caption to next image reads as one column.
+*/
 
-.cardInfo {
-  padding-top: 14px;
+.caption {
+  padding-top: var(--s-3);
   display: flex;
   flex-direction: column;
-  flex: 1;
 }
 
 .cardName {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 17px;
   font-weight: 400;
-  margin-bottom: 4px;
-  color: var(--dark, #1a1916);
+  margin-bottom: var(--s-1);
+  color: var(--color-ink);
   line-height: 1.3;
+  /* One line, ellipsis on overflow. Full name available via title attr. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .materialSub {
   font-size: 13px;
   font-style: italic;
-  color: var(--muted, #8a8680);
-  margin-bottom: 10px;
+  color: var(--color-ink-muted);
+  margin-bottom: var(--s-2);
 }
 
-.colours {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-
-.colourDot {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  border: 1px solid var(--border, #e0ddd7);
-  background: var(--cream, #f5f2ec);
-  display: inline-block;
-}
-
-/* ── Bottom row ───────────────────────────────────── */
-
-.cardBottom {
+.priceRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding-top: 12px;
+  gap: var(--s-3);
 }
 
 .price {
   font-size: 15px;
-  color: var(--dark, #1a1916);
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
-.plusBtn {
-  width: 36px;
-  height: 36px;
+/* ── Bare "+" icon button ─────────────────────────────
+   44×44 hit area with the visible icon (~18px lucide-react Plus / Check)
+   centred. No border, no background. Hover/press feedback only. The hit
+   area touches the column-right edge on the rightmost column — verify
+   the page wrapper has enough horizontal padding that this doesn't sit
+   against the viewport edge.
+*/
+
+.plusIconBtn {
+  width: 44px;
+  height: 44px;
   background: none;
-  border: 1px solid var(--dark, #1a1916);
-  color: var(--dark, #1a1916);
-  font-size: 18px;
-  font-weight: 300;
+  border: none;
+  padding: 0;
   cursor: pointer;
+  color: var(--color-ink);
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
-  transition: background 0.2s ease, color 0.2s ease;
   flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--t-fast) var(--ease),
+              transform var(--t-fast) var(--ease);
 }
 
-@media (max-width: 768px) {
-  .plusBtn {
-    width: 44px;
-    height: 44px;
-  }
+.plusIconBtn:hover:not(:disabled) { opacity: 0.65; }
+.plusIconBtn:active:not(:disabled) { opacity: 0.4; transform: scale(0.92); }
+
+@media (prefers-reduced-motion: reduce) {
+  .plusIconBtn { transition: none; }
+  .plusIconBtn:active:not(:disabled) { transform: none; }
 }
 
-.plusBtn:hover { background: var(--dark, #1a1916); color: var(--warm-white, #faf8f4); }
-
-.plusAdded {
-  background: var(--dark, #1a1916);
-  color: var(--warm-white, #faf8f4);
-  font-size: 14px;
-}
-
-/* ── Responsive ───────────────────────────────────── */
+/* ── Responsive — 4 / 3 / 2 columns ──────────────────
+   Hairline column-gap holds at every breakpoint. Row-gap tightens
+   slightly on smaller screens.
+*/
 
 @media (max-width: 1200px) {
   .grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 768px) {
-  .grid { grid-template-columns: repeat(2, 1fr); gap: 28px 14px; }
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: var(--s-6);
+  }
   .cardName { font-size: 15px; }
 }
 
 @media (max-width: 400px) {
-  .grid { gap: 24px 10px; }
+  .grid { row-gap: var(--s-5); }
 }
