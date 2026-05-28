@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { isValidImageUrl } from '@/lib/imageUtils';
+import ProductCard, { type ProductCardData } from './ProductCard';
 import styles from './RecentlyViewed.module.css';
 
 type ViewedProduct = {
@@ -27,7 +26,7 @@ export function trackProductView(id: string, name: string, price: number, image?
 }
 
 export default function RecentlyViewed({ excludeId }: { excludeId: string }) {
-  const [products, setProducts] = useState<ViewedProduct[]>([]);
+  const [products, setProducts] = useState<ProductCardData[]>([]);
 
   useEffect(() => {
     async function loadAndValidate() {
@@ -37,6 +36,8 @@ export default function RecentlyViewed({ excludeId }: { excludeId: string }) {
         const candidates = all.filter(p => p.id !== excludeId);
         if (candidates.length === 0) return;
 
+        // Re-fetch each product so the card has full data (images, material,
+        // createdAt) — localStorage only stored the bare minimum.
         const validated = (await Promise.all(
           candidates.map(async (p) => {
             try {
@@ -44,23 +45,17 @@ export default function RecentlyViewed({ excludeId }: { excludeId: string }) {
               if (!res.ok) return null;
               const product = await res.json();
               if (product.status !== 'active') return null;
-              // Pull the best available image from the full product response
-              const image =
-                product.images?.find((i: { isPrimary: boolean }) => i.isPrimary)?.url ||
-                product.images?.[0]?.url ||
-                product.image ||
-                p.image;
-              return { ...p, image } as ViewedProduct;
+              return product as ProductCardData;
             } catch {
               return null;
             }
           })
-        )).filter((p): p is ViewedProduct => p !== null);
+        )).filter((p): p is ProductCardData => p !== null);
 
         // Write back only valid IDs so future loads skip deleted products
-        const validIds = validated.map(p => p.id);
+        const validIds = new Set(validated.map(p => p._id));
         const fullList: ViewedProduct[] = raw ? JSON.parse(raw) : [];
-        localStorage.setItem(KEY, JSON.stringify(fullList.filter(p => validIds.includes(p.id))));
+        localStorage.setItem(KEY, JSON.stringify(fullList.filter(p => validIds.has(p.id))));
 
         setProducts(validated);
       } catch { /* ignore */ }
@@ -75,15 +70,7 @@ export default function RecentlyViewed({ excludeId }: { excludeId: string }) {
       <h2 className={styles.heading}>Recently viewed</h2>
       <div className={styles.grid}>
         {products.map(p => (
-          <Link key={p.id} href={`/product/${p.id}`} className={styles.card}>
-            <div className={styles.img}>
-              {isValidImageUrl(p.image) && (
-                <img src={p.image!} alt={p.name} className={styles.imgTag} loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
-              )}
-            </div>
-            <p className={styles.name}>{p.name}</p>
-            <p className={styles.price}>€{Number(p.price).toFixed(2)}</p>
-          </Link>
+          <ProductCard key={p._id} product={p} />
         ))}
       </div>
     </section>

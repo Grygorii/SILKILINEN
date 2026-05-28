@@ -1,10 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
-import { isValidImageUrl } from '@/lib/imageUtils';
-import ProductImage from '@/components/products/ProductImage';
+import ProductCard from '@/components/ProductCard';
 import type { BundleData } from './page';
 import styles from './page.module.css';
 
@@ -72,22 +70,9 @@ export default function BundlePageClient({ bundle }: { bundle: BundleData }) {
       <section className={styles.included}>
         <h2 className={styles.includedTitle}>What&apos;s in this bundle</h2>
         <div className={styles.grid}>
-          {bundle.products.map(p => {
-            const img = p.images?.find(i => isValidImageUrl(i.url)) || p.images?.[0] || null;
-            return (
-              <Link key={p._id} href={`/product/${p._id}`} className={styles.card}>
-                <div className={styles.cardImg}>
-                  <ProductImage
-                    src={img?.url || null}
-                    alt={img?.alt || p.name}
-                    variant="card"
-                  />
-                </div>
-                <p className={styles.cardName}>{p.name}</p>
-                <p className={styles.cardPrice}>€{Number(p.price).toFixed(2)}</p>
-              </Link>
-            );
-          })}
+          {bundle.products.map(p => (
+            <ProductCard key={p._id} product={p} />
+          ))}
         </div>
       </section>
     </main>

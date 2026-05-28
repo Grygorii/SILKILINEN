@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 28 May 2026 (Bundles Phase 2 — new commerce-bundle concept: model + admin CRUD + storefront /bundles/[slug] page + cart-as-single-line-item integration through checkoutV2's PaymentIntent metadata pipeline. Phase 1 categories rework already live.).
+Last updated: 28 May 2026 (ProductCard unification — every product-card surface on the storefront now renders through one shared component. 7 surfaces collapsed to a single source of truth: shop, collections, new arrivals, recently viewed, cross-sell, wishlist, account wishlist, bundle children.).
 
 ---
 
@@ -113,6 +113,33 @@ Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--co
 **Out of scope (left untouched):** PDP, cart drawer, checkout. Per-card colour swatches stay off the grid (colour selection lives on the PDP). Pre-existing dead CSS `.colours` / `.colourDot` left in place (not created by this change).
 
 Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (`.wrapCard` 3:4 enforcement; `.skeleton` and `.missing` hardened with explicit `width: 100%; height: 100%` so the loading + failed states cannot collapse below the 3:4 box).
+
+---
+
+## Shipped 28 May 2026 — ProductCard unification (one card everywhere)
+
+Per founder feedback the storefront had **seven** different product-card variants — shop grid, homepage new arrivals (square cream cards with dark NEW pill), recently viewed (tiny minimal cards), cross-sell with colour dots, /wishlist with explicit View/Remove buttons, /account/wishlist with Move-to-bag stacked buttons, bundle children grid (minimal thumbnails). Inconsistency screamed "this site grew organically" instead of "this is a luxury brand". Now every surface renders the same canonical shop-grid card (tall 2:3 portrait photo, dark transparent heart top-right, italic "new" badge bottom-right, 2-line clamped name + reserved-height material subtitle + price + Plus/Check add button).
+
+**Extraction**
+- New `frontend/components/ProductCard.tsx` — self-contained client component. Reads `useCart()` + `useWishlist()` directly so each card owns its own ephemeral animation state (no parent boilerplate at every surface). Props: `{ product, showHeart?, showAddButton? }` — both flags default true. Surfaces drop in `<ProductCard product={p} />` and get the canonical look + behaviour.
+- New `frontend/components/ProductCard.module.css` — owns `.card / .cardLink / .cardImg / .heartBtn / .heartFilled / .heartAnimating / .newBadge / .caption / .cardName / .materialSub / .priceRow / .price / .plusIconBtn`, plus the hover/reduced-motion media queries. Carries forward the locked 2:3 aspect ratio, dark transparent heart `rgba(42,34,24,0.7)`, 2-line clamped name with reserved min-height, and reserved 1-line material subtitle from the prior shop-grid passes.
+- Defensive `handleAdd` fix while we were in there — when a surface passes `sizes: undefined` (e.g. minimal wishlist payload), the card now redirects to the PDP instead of risking a size-less cart line. Surfaces with full data (`sizes: []`) keep direct-add behaviour for one-size products.
+
+**Surfaces refactored**
+- `frontend/components/ProductGrid.tsx` — kept the filter chrome + grid container + empty state; replaced the inline card map with `<ProductCard />`. `ProductGrid.module.css` slimmed to only filter/grid/empty rules (card CSS migrated to ProductCard.module.css). `/shop` and `/collections/[slug]` get the unification for free since they already delegated to ProductGrid.
+- `frontend/components/NewArrivals.tsx` — Server Component embeds the Client `ProductCard`. Dropped the homepage "cream rectangle + dark NEW pill + colour dots" look in favour of the canonical card. CSS trimmed to section/header/grid.
+- `frontend/components/RecentlyViewed.tsx` — refactored from minimal id/name/price renders to full ProductCard. Re-fetches each tracked product (was already doing this for image enrichment) so the card has full data.
+- `frontend/components/CrossSell.tsx` — same treatment, dropped the colour-dots-under-name look.
+- `frontend/app/(shop)/wishlist/page.tsx` — dropped explicit "View product" / "Remove" buttons. Heart toggle on the card now removes from wishlist (card disappears via context re-render); + button adds to bag. Page chrome (guest banner, header, empty state) kept; only the card render changed.
+- `frontend/app/(shop)/account/wishlist/page.tsx` — same UX shift: dropped "Move to bag" / "Remove" stacked-button card for the canonical shop card. Slimmed `account.module.css` `.wishGrid` + dropped 8 orphan wish* class rules.
+- `frontend/app/(shop)/bundles/[slug]/BundlePageClient.tsx` — "What's in this bundle" grid swapped from minimal cards to ProductCard.
+
+**Trade-offs accepted (in line with the user's "make them all look the same" directive)**
+- Homepage New Arrivals lost the dark uppercase "NEW" pill in favour of the small italic "new" badge from the shop card. More consistent, slightly less attention-grabbing.
+- Wishlist pages lost explicit "Remove" / "Move to bag" CTAs. Two-tap workflow (tap +, tap heart) replaces single "Move to bag" tap. Visual cohesion > workflow brevity per the founder's call.
+- Each surface's outer grid container kept its own `gap`/`columns` so the existing per-section rhythm (shop's 2px white-line columns vs homepage's 28px gap vs bundle's 24px) survives. The CARD is identical; the GRID is per-surface.
+
+Files: `frontend/components/{ProductCard.tsx,ProductCard.module.css,ProductGrid.tsx,ProductGrid.module.css,NewArrivals.tsx,NewArrivals.module.css,RecentlyViewed.tsx,RecentlyViewed.module.css,CrossSell.tsx,CrossSell.module.css}`, `frontend/app/(shop)/{wishlist/page.tsx,wishlist/page.module.css,account/wishlist/page.tsx,account/account.module.css,bundles/[slug]/BundlePageClient.tsx,bundles/[slug]/page.module.css}`.
 
 ---
 

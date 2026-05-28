@@ -4,10 +4,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCustomer } from '@/context/CustomerContext';
+import ProductCard from '@/components/ProductCard';
 import styles from './page.module.css';
 
 export default function WishlistPage() {
-  const { items, toggle, loading } = useWishlist();
+  const { items, loading } = useWishlist();
   const { customer } = useCustomer();
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
@@ -38,19 +39,7 @@ export default function WishlistPage() {
         ) : (
           <div className={styles.grid}>
             {items.map(p => (
-              <div key={p._id} className={styles.card}>
-                <Link href={`/product/${p._id}`} className={styles.imgLink}>
-                  <div className={styles.img} />
-                </Link>
-                <div className={styles.info}>
-                  <Link href={`/product/${p._id}`} className={styles.name}>{p.name}</Link>
-                  <p className={styles.price}>€{Number(p.price).toFixed(2)}</p>
-                  <div className={styles.actions}>
-                    <Link href={`/product/${p._id}`} className={styles.viewBtn}>View product</Link>
-                    <button className={styles.removeBtn} onClick={() => toggle(p._id)}>Remove</button>
-                  </div>
-                </div>
-              </div>
+              <ProductCard key={p._id} product={p} />
             ))}
           </div>
         )}

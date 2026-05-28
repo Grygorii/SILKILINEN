@@ -1,17 +1,7 @@
-import Link from 'next/link';
-import { colourToHex } from '@/lib/colours';
+import ProductCard, { type ProductCardData } from './ProductCard';
 import styles from './CrossSell.module.css';
 
-type Product = {
-  _id: string;
-  name: string;
-  price: number;
-  colours: string[];
-  images?: { url: string; isPrimary?: boolean }[];
-  image?: string;
-};
-
-async function getRelated(id: string): Promise<Product[]> {
+async function getRelated(id: string): Promise<ProductCardData[]> {
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/products/related/${id}`,
@@ -33,35 +23,7 @@ export default async function CrossSell({ productId }: { productId: string }) {
       <h2 className={styles.heading}>You might also like</h2>
       <div className={styles.grid}>
         {related.map(p => (
-          <Link key={p._id} href={`/product/${p._id}`} className={styles.card}>
-            <div className={styles.img}>
-              {(p.images?.find(i => i.isPrimary)?.url || p.images?.[0]?.url || p.image) && (
-                <img
-                  src={p.images?.find(i => i.isPrimary)?.url || p.images?.[0]?.url || p.image}
-                  alt={p.name}
-                  className={styles.imgTag}
-                  loading="lazy"
-                />
-              )}
-            </div>
-            <div className={styles.info}>
-              <p className={styles.name}>{p.name}</p>
-              <div className={styles.colours}>
-                {p.colours?.slice(0, 4).map(c => {
-                  const hex = colourToHex(c);
-                  return (
-                    <span
-                      key={c}
-                      className={styles.dot}
-                      title={c}
-                      style={hex ? { background: hex } : undefined}
-                    />
-                  );
-                })}
-              </div>
-              <p className={styles.price}>€{Number(p.price).toFixed(2)}</p>
-            </div>
-          </Link>
+          <ProductCard key={p._id} product={p} />
         ))}
       </div>
     </section>

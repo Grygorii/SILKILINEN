@@ -18,42 +18,6 @@
   gap: 20px;
 }
 
-.card {
-  text-decoration: none;
-  color: var(--dark);
-}
-
-.img {
-  background: var(--cream);
-  height: 180px;
-  margin-bottom: 10px;
-  overflow: hidden;
-  transition: opacity 0.2s ease;
-}
-
-.imgTag {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.card:hover .img {
-  opacity: 0.85;
-}
-
-.name {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 14px;
-  font-weight: 400;
-  margin-bottom: 4px;
-}
-
-.price {
-  font-size: 13px;
-  color: var(--muted);
-}
-
 @media (max-width: 768px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);

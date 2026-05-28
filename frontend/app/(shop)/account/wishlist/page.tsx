@@ -1,17 +1,11 @@
 'use client';
 
-import { useCart } from '@/context/CartContext';
-import { useWishlist, type WishlistProduct } from '@/context/WishlistContext';
+import { useWishlist } from '@/context/WishlistContext';
+import ProductCard from '@/components/ProductCard';
 import styles from '../account.module.css';
 
 export default function WishlistPage() {
-  const { addToCart } = useCart();
-  const { items, toggle, loading } = useWishlist();
-
-  function moveToCart(product: WishlistProduct) {
-    addToCart({ productId: product._id, name: product.name, price: product.price, colour: '', size: '', quantity: 1 });
-    toggle(product._id);
-  }
+  const { items, loading } = useWishlist();
 
   return (
     <>
@@ -33,19 +27,7 @@ export default function WishlistPage() {
       {!loading && items.length > 0 && (
         <div className={styles.wishGrid}>
           {items.map(p => (
-            <div key={p._id} className={styles.wishCard}>
-              <div className={styles.wishImg}>
-                {p.image && <img src={p.image} alt={p.name} />}
-              </div>
-              <div className={styles.wishInfo}>
-                <p className={styles.wishName}>{p.name}</p>
-                <p className={styles.wishPrice}>€{Number(p.price).toFixed(2)}</p>
-              </div>
-              <div className={styles.wishActions}>
-                <button className={styles.wishBtn} onClick={() => moveToCart(p)}>Move to bag</button>
-                <button className={`${styles.wishBtn} ${styles.wishBtnRemove}`} onClick={() => toggle(p._id)}>Remove</button>
-              </div>
-            </div>
+            <ProductCard key={p._id} product={p} />
           ))}
         </div>
       )}

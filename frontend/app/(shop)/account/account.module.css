@@ -398,73 +398,17 @@
 
 .reorderBtn:hover { opacity: 0.8; }
 
-/* Wishlist grid */
+/* Wishlist grid — each cell is a ProductCard, so the container only
+   needs to manage columns + spacing. The card itself owns its visuals. */
 .wishGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 
-.wishCard {
-  border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+@media (max-width: 768px) {
+  .wishGrid { grid-template-columns: repeat(2, 1fr); }
 }
-
-.wishImg {
-  height: 200px;
-  background: var(--cream);
-  overflow: hidden;
-}
-
-.wishImg img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.wishInfo {
-  padding: 16px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.wishName {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 17px;
-  font-weight: 400;
-  color: var(--dark);
-}
-
-.wishPrice { font-size: 14px; color: var(--dark); }
-
-.wishActions {
-  display: flex;
-  gap: 1px;
-  border-top: 1px solid var(--border);
-}
-
-.wishBtn {
-  flex: 1;
-  padding: 14px 8px;
-  min-height: 44px;
-  background: none;
-  border: none;
-  font-family: 'Jost', sans-serif;
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  cursor: pointer;
-  color: var(--dark);
-  transition: background 0.15s ease;
-}
-
-.wishBtn:hover { background: #f5f3ef; }
-.wishBtnRemove { color: var(--muted); }
-.wishBtnRemove:hover { color: #c0392b; }
 
 .emptyState {
   text-align: center;
