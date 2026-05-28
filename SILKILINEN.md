@@ -69,6 +69,24 @@ Other admin pages:
 - Existing Dalia / Bastet / Ciara / Rehab dress and robe products from earlier build phase
 - **Silk panties** (the actual sales hero) — currently sold on Etsy, not yet migrated to silkilinen.com as primary
 
+## Shipped 28 May 2026 — promo codes bulk archive UX
+
+Make `/admin/promo-codes` actually usable for ongoing cleanup. New layout: four tabs (Active / Used / Archive / All) replace the old status chips, with the existing "All codes / Personal only / Broad only" filter and search box kept as secondary filters scoped to each tab. "Active" tab includes paused and draft codes; "Used" is `usageCount > 0` excluding archived; "Archive" is the new bucket; "All" is everything except archived.
+
+- Backend: added `'archived'` to the `PromoCode.status` enum. Existing DELETE route now sets `status: 'archived'` (was `'expired'`). Existing `'expired'`-status codes left as-is — they appear under the "All" tab (which excludes only archived) — migration out of scope per spec.
+- Backend: `POST /api/promo-codes/bulk` accepts `{ action, ids }` with action ∈ archive/restore/pause/resume (validated against `BULK_ACTIONS` allowlist matching the `PRODUCT_ALLOWED_FIELDS` pattern). Per-id status check (e.g. resume only succeeds if current status is paused). Response shape `{ succeeded, failed }` lets the UI surface partial-failure cleanly.
+- Backend: `GET /api/promo-codes/export?ids=a,b,c` returns text/csv (code, type, value, minOrderValue, status, usageCount, maxUses, validUntil, createdAt, description). Mounted before `GET /:id` so the static path isn't shadowed by the id param.
+- Both new routes go through `requireAuth` middleware.
+- Frontend: checkbox column added to the table; master checkbox in the header has indeterminate state when some-but-not-all visible rows are selected. Row highlight on selection.
+- Frontend: bottom-fixed action bar appears when ≥1 selected — shows "N selected", Archive (or Restore on Archive tab), Pause / Resume (on Active tab only, only enabled if ≥1 selected code matches the required current status), Export CSV, Clear (×). Destructive actions (Archive / Restore) open a confirmation modal reusing the existing `.overlay`/`.modal` CSS. Selection clears on tab change.
+- Frontend: row-level "Delete" renamed to "Archive" (semantic rename — behavior unchanged, soft-archives in our DB and deletes the Stripe coupon).
+- Selection state lives in `useState<Set<string>>` in the page (matches existing `/admin/products` bulk-select precedent; no Context, no URL state — Context would be overkill for two co-located consumers and URL state was rejected since ~30 IDs × 24 chars would bloat the URL and selection is ephemeral anyway).
+- Caveat: restored codes whose Stripe coupon was deleted on archive may need re-syncing via the per-code detail page. Restore modal copy warns the user.
+
+Files: `backend/models/PromoCode.js`, `backend/routes/promoCodes.js`, `frontend/app/admin/promo-codes/page.tsx`, `frontend/app/admin/promo-codes/page.module.css`.
+
+---
+
 ## Shipped 19 May 2026 — preview page crash fix + preload warning
 
 ### Crash: `useProductSelection must be inside ProductSelectionProvider`

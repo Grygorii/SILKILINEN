@@ -16,7 +16,7 @@ const promoCodeSchema = new mongoose.Schema({
   stripePromotionCodeId: { type: String, default: null },
 
   // Extended fields (added for richer admin UX — backward compatible, all optional)
-  status: { type: String, enum: ['active', 'paused', 'expired', 'draft'], default: null },
+  status: { type: String, enum: ['active', 'paused', 'expired', 'draft', 'archived'], default: null },
   redemptionType: { type: String, enum: ['single_use_per_customer', 'unlimited', 'capped_total'], default: null },
   appliesTo: { type: String, enum: ['all', 'specific_products', 'specific_collections'], default: 'all' },
   source: { type: String, default: '' },

@@ -10,19 +10,143 @@ const { requireAuth } = require('../middleware/auth');
 router.get('/', requireAuth, async function(req, res) {
   try {
     const filter = {};
-    if (req.query.status && req.query.status !== 'all') {
+
+    // Tab filter (new primary axis). 'active' bucket includes paused + draft per spec.
+    // 'used' and 'all' both exclude archived.
+    if (req.query.tab && req.query.tab !== 'all') {
+      if (req.query.tab === 'active') {
+        filter.$or = [
+          { status: { $in: ['active', 'paused', 'draft'] } },
+          { status: null },
+        ];
+      } else if (req.query.tab === 'used') {
+        filter.usageCount = { $gt: 0 };
+        filter.status = { $ne: 'archived' };
+      } else if (req.query.tab === 'archive') {
+        filter.status = 'archived';
+      }
+    } else if (req.query.tab === 'all') {
+      filter.status = { $ne: 'archived' };
+    } else if (req.query.status && req.query.status !== 'all') {
+      // Legacy status filter (kept for backwards compat).
       if (req.query.status === 'active') {
-        // Match either status field or legacy active boolean
         filter.$or = [{ status: 'active' }, { status: null, active: true }];
       } else if (req.query.status === 'paused' || req.query.status === 'expired' || req.query.status === 'draft') {
         filter.$or = [{ status: req.query.status }, { status: null, active: false }];
       }
     }
+
     if (req.query.search) {
       filter.code = { $regex: req.query.search.toUpperCase(), $options: 'i' };
     }
     const codes = await PromoCode.find(filter).sort({ createdAt: -1 });
     res.json(codes);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/promo-codes/bulk — { action, ids } where action in BULK_ACTIONS.
+// Per-id status validation; partial failure is OK — response reports succeeded/failed.
+const BULK_ACTIONS = ['archive', 'restore', 'pause', 'resume'];
+
+router.post('/bulk', requireAuth, async function(req, res) {
+  try {
+    const { action, ids } = req.body || {};
+    if (!BULK_ACTIONS.includes(action)) {
+      return res.status(400).json({ error: 'Invalid action' });
+    }
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids must be a non-empty array' });
+    }
+
+    const succeeded = [];
+    const failed = [];
+
+    for (const id of ids) {
+      try {
+        const promo = await PromoCode.findById(id);
+        if (!promo) { failed.push({ id, reason: 'not_found' }); continue; }
+
+        const current = promo.status || (promo.active ? 'active' : 'paused');
+
+        if (action === 'archive') {
+          promo.active = false;
+          promo.status = 'archived';
+          await promo.save();
+          if (promo.stripeCouponId && process.env.STRIPE_SECRET_KEY) {
+            try { await stripe.coupons.del(promo.stripeCouponId); } catch {}
+          }
+          succeeded.push(id);
+        } else if (action === 'restore') {
+          if (current !== 'archived') { failed.push({ id, reason: 'not_archived' }); continue; }
+          promo.status = 'active';
+          promo.active = true;
+          await promo.save();
+          succeeded.push(id);
+        } else if (action === 'pause') {
+          if (current !== 'active') { failed.push({ id, reason: 'not_active' }); continue; }
+          promo.status = 'paused';
+          promo.active = false;
+          await promo.save();
+          succeeded.push(id);
+        } else if (action === 'resume') {
+          if (current !== 'paused') { failed.push({ id, reason: 'not_paused' }); continue; }
+          promo.status = 'active';
+          promo.active = true;
+          await promo.save();
+          succeeded.push(id);
+        }
+      } catch (err) {
+        console.error('[promoCodes/bulk] id', id, err);
+        failed.push({ id, reason: 'error' });
+      }
+    }
+
+    res.json({ succeeded, failed });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/promo-codes/export?ids=a,b,c — CSV of selected codes.
+// Must be declared BEFORE GET /:id so the static path isn't shadowed.
+router.get('/export', requireAuth, async function(req, res) {
+  try {
+    const ids = (req.query.ids || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (ids.length === 0) {
+      return res.status(400).json({ error: 'ids query param required' });
+    }
+    const codes = await PromoCode.find({ _id: { $in: ids } }).lean();
+
+    const esc = v => {
+      if (v === null || v === undefined) return '';
+      const s = String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const header = ['code','type','value','minOrderValue','status','usageCount','maxUses','validUntil','createdAt','description'];
+    const rows = [header.join(',')];
+    for (const c of codes) {
+      rows.push([
+        esc(c.code),
+        esc(c.type),
+        esc(c.value),
+        esc(c.minOrderValue),
+        esc(c.status || (c.active ? 'active' : 'paused')),
+        esc(c.usageCount),
+        esc(c.maxUses),
+        esc(c.validUntil ? new Date(c.validUntil).toISOString() : ''),
+        esc(c.createdAt ? new Date(c.createdAt).toISOString() : ''),
+        esc(c.description),
+      ].join(','));
+    }
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="promo-codes-${Date.now()}.csv"`);
+    res.send(rows.join('\n'));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -158,14 +282,14 @@ router.put('/:id', requireAuth, async function(req, res) {
   }
 });
 
-// DELETE /api/promo-codes/:id — soft deactivate, archives in Stripe
+// DELETE /api/promo-codes/:id — archive the code (restorable from Archive tab)
 router.delete('/:id', requireAuth, async function(req, res) {
   try {
     const promo = await PromoCode.findById(req.params.id);
     if (!promo) return res.status(404).json({ error: 'Not found' });
 
     promo.active = false;
-    promo.status = 'expired';
+    promo.status = 'archived';
     await promo.save();
 
     if (promo.stripeCouponId && process.env.STRIPE_SECRET_KEY) {
