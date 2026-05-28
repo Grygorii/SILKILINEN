@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 28 May 2026 (Mobile PDP polish — dropped the free-shipping meta line, moved gallery dots onto the photo, flipped sticky-bar typography so name leads and price reads as quiet meta, lifted the chat bubble clear of the buy bar, and lowercased the PDP material subtitle to match the shop card voice.).
+Last updated: 28 May 2026 (StickyBuyBar removed from mobile PDP — luxury-brand aesthetic over Shopify-default conversion crutch. Chat-bubble lift reverted alongside since the bar that motivated it is gone. Component file kept in the codebase as restorable in case conversion data later argues for adding it back.).
 
 ---
 
@@ -113,6 +113,20 @@ Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--co
 **Out of scope (left untouched):** PDP, cart drawer, checkout. Per-card colour swatches stay off the grid (colour selection lives on the PDP). Pre-existing dead CSS `.colours` / `.colourDot` left in place (not created by this change).
 
 Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (`.wrapCard` 3:4 enforcement; `.skeleton` and `.missing` hardened with explicit `width: 100%; height: 100%` so the loading + failed states cannot collapse below the 3:4 box).
+
+---
+
+## Shipped 28 May 2026 — StickyBuyBar removed from PDP
+
+Hours after we polished the bar (lift chat bubble, flip typography hierarchy) the founder asked whether we should remove it entirely. After weighing the trade-off — the bar is a proven conversion booster (~5-15% add-to-cart lift on long PDPs) but reads as Shopify-default rather than considered-luxury, and every luxury reference brand (Olivia von Halle, Hermès, Loewe, La Perla) ships their mobile PDPs without one — we cut it.
+
+- Removed `<StickyBuyBar />` import + render from `frontend/app/(shop)/product/[id]/page.tsx`. The PDP's existing Add-to-Bag block in the info column carries the action now.
+- Reverted the `:global(body.has-sticky-buy-bar) .root` rule in `ContactWidget.module.css` that lifted the chat FAB clear of the bar — no consumer left for the body class.
+- Left `StickyBuyBar.tsx` + `StickyBuyBar.module.css` in the codebase as **unused but restorable**. Re-adding is one import + one JSX call. The `body.classList` side-effect inside the component is a no-op while it's unmounted, so it costs nothing to keep around.
+
+Trade-off accepted: if mobile add-to-cart rate drops, we revert this commit. Easier than rebuilding the component from scratch.
+
+Files: `frontend/app/(shop)/product/[id]/page.tsx`, `frontend/components/ContactWidget.module.css`.
 
 ---
 

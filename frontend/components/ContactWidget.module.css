@@ -9,17 +9,6 @@
   gap: 12px;
 }
 
-/* When the mobile StickyBuyBar is mounted (PDP only), it tags the body
-   with .has-sticky-buy-bar. The bar is ~72px tall — lift the chat
-   bubble clear so it doesn't sit on top of the price / CTA. Desktop
-   doesn't render the buy bar, so the lift only applies under the same
-   breakpoint where the bar shows. */
-@media (max-width: 900px) {
-  :global(body.has-sticky-buy-bar) .root {
-    bottom: calc(28px + 72px + env(safe-area-inset-bottom));
-  }
-}
-
 /* ── Trigger button ──────────────────────────────────── */
 
 .trigger {

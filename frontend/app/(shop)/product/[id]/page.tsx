@@ -8,7 +8,6 @@ import CrossSell from '@/components/CrossSell';
 import RecentlyViewed from '@/components/RecentlyViewed';
 import ProductViewTracker from '@/components/ProductViewTracker';
 import { ProductSelectionProvider } from '@/components/ProductSelectionContext';
-import StickyBuyBar from '@/components/StickyBuyBar';
 import { AccordionGroup, AccordionItem, AccordionSubLabel } from '@/components/ui/Accordion';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -281,18 +280,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               </div>
             </div>
           </div>
-
-          {/* Mobile sticky buy bar — hidden on desktop via CSS */}
-          <StickyBuyBar
-            productId={product._id}
-            productName={product.name}
-            price={product.price}
-            outOfStock={outOfStock}
-            stock={total ?? undefined}
-            image={galleryImages[0]?.url}
-            colours={product.colours ?? []}
-            sizes={product.sizes ?? []}
-          />
         </ProductSelectionProvider>
       </main>
 
