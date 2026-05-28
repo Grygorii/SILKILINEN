@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 28 May 2026 (StickyBuyBar removed from mobile PDP — luxury-brand aesthetic over Shopify-default conversion crutch. Chat-bubble lift reverted alongside since the bar that motivated it is gone. Component file kept in the codebase as restorable in case conversion data later argues for adding it back.).
+Last updated: 28 May 2026 (Console hygiene pass + mobile New Arrivals tightening — fixed three tracking guards that were leaking "undefined" strings into Meta/Pinterest/Vercel scripts, tightened the public product filter so imageless products stop polluting the homepage grid, and collapsed New Arrivals to the same hairline 2-column rhythm as the shop grid on mobile per Olivia von Halle reference.).
 
 ---
 
@@ -113,6 +113,25 @@ Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--co
 **Out of scope (left untouched):** PDP, cart drawer, checkout. Per-card colour swatches stay off the grid (colour selection lives on the PDP). Pre-existing dead CSS `.colours` / `.colourDot` left in place (not created by this change).
 
 Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (`.wrapCard` 3:4 enforcement; `.skeleton` and `.missing` hardened with explicit `width: 100%; height: 100%` so the loading + failed states cannot collapse below the 3:4 box).
+
+---
+
+## Shipped 28 May 2026 — Console hygiene + mobile New Arrivals tightening
+
+Five fixes in one pass — four were silent production bugs visible in the browser console; the fifth was a mobile-grid request matching the Olivia von Halle reference.
+
+**Tracking script guards (the silent bugs)**
+1. **MetaPixel** — guard was `if (!safePixelId)` after `safePixelId = String(PIXEL_ID).replace(...)`. When `PIXEL_ID` is undefined, `String(undefined)` returns the literal string `"undefined"` (truthy, alphanumeric, survives the regex untouched), so the guard failed open and the inline script ran `fbq('init', 'undefined')` — Meta's `fbevents.js` then logged `[Meta Pixel] - Invalid PixelID: null` on every page view. Fixed by checking the raw env var (and rejecting the strings `"undefined"` / `"null"` explicitly) before stringification.
+2. **PinterestTag** — identical bug, identical fix. `pintrk('load', 'undefined', {em: ''})` was responsible for the `ct.pinterest.com/v3/...` 400s in the console.
+3. **Vercel Analytics + Speed Insights** — the `@vercel/analytics` package fetches `/_vercel/insights/script.js` from the Vercel CDN, but Vercel only serves that script when Web Analytics is enabled in the project dashboard. With the dashboard toggle off, the request 404s and the browser refuses the response under strict MIME-type checking. Gated `<Analytics />` + `<SpeedInsights />` behind a `NEXT_PUBLIC_ENABLE_VERCEL_ANALYTICS === 'true'` flag in `AnalyticsLoader.tsx` (default off). To enable later: set the env var in Vercel AND flip the dashboard toggle. The guard belongs in code rather than just "don't import the package" so the import survives if/when the toggle is flipped back on.
+
+**Product filter (the visible bug)**
+4. `PUBLIC_FILTER` in `backend/routes/products.js` checked `'images.0': { $exists: true }` — which passes when the first image sub-doc exists with a `null` or empty-string `url`. That was leaking imageless products onto the homepage as cream placeholders (3 of 4 cards on desktop). Tightened to `'images.0.url': { $type: 'string', $ne: '' }` so only products with a real first-image URL appear in any public listing. Applied through every public endpoint that uses `PUBLIC_FILTER` (list, detail, related).
+
+**Mobile New Arrivals grid (the OvH-style ask)**
+5. `NewArrivals.module.css` kept its desktop `28px 20px` gap at every breakpoint. On mobile that read as four standalone tiles rather than one cohesive surface. Collapsed the `@media (max-width: 900px)` rule to the same hairline pattern as the shop grid — `column-gap: 2px`, `row-gap: 0`, `background: #FFFFFF` — so the cards run edge-to-edge with the single clean white seam between columns. Section padding drops to `0` horizontally so photos go viewport-edge-to-viewport-edge; the header keeps its `6%` inset so the heading text doesn't slam against the screen edge.
+
+Files: `frontend/components/{MetaPixel.tsx,PinterestTag.tsx,AnalyticsLoader.tsx,NewArrivals.module.css}`, `backend/routes/products.js`.
 
 ---
 

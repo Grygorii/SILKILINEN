@@ -142,12 +142,15 @@ function csvToProducts(records, platform) {
 }
 
 // ── Public filter — applied to every customer-facing product query ─────────────
-// A product is only visible publicly if it is active, has at least one image,
-// and has a price > 0. This prevents drafts, archived items, image-less products,
-// and free/unconfigured products from leaking to the storefront.
+// A product is only visible publicly if it is active, has at least one image
+// with a real URL, and has a price > 0. `images.0: { $exists: true }` alone
+// passes when the first image subdoc exists but its url is null/empty — that
+// was leaking imageless products onto the homepage as cream placeholders.
+// Require images.0.url to be a non-empty string so the public listings only
+// show products that actually render.
 const PUBLIC_FILTER = {
   status: 'active',
-  'images.0': { $exists: true },
+  'images.0.url': { $type: 'string', $ne: '' },
   price: { $gt: 0 },
 };
 

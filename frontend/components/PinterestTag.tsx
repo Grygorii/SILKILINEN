@@ -4,7 +4,14 @@ import Script from 'next/script';
 import { useEffect } from 'react';
 import { useCookieConsent } from '@/context/CookieConsentContext';
 
-const TAG_ID = process.env.NEXT_PUBLIC_PINTEREST_TAG_ID;
+const RAW_TAG_ID = process.env.NEXT_PUBLIC_PINTEREST_TAG_ID;
+// `String(undefined)` is the literal "undefined" which is truthy — that
+// was leaking into the script as pintrk('load', 'undefined', ...) and
+// causing the ct.pinterest.com/v3/... 400s on every page load.
+// Treat the string "undefined"/"null" as missing.
+const TAG_ID = RAW_TAG_ID && RAW_TAG_ID !== 'undefined' && RAW_TAG_ID !== 'null'
+  ? RAW_TAG_ID
+  : '';
 
 declare global {
   interface Window {
@@ -27,10 +34,11 @@ export default function PinterestTag() {
     }
   }, [allowed]);
 
+  if (!TAG_ID || !allowed) return null;
   // Pinterest tag IDs are numeric; strip anything else to defeat script
   // injection if the env var is ever set to something hostile.
-  const safeTagId = String(TAG_ID).replace(/[^a-zA-Z0-9_-]/g, '');
-  if (!safeTagId || !allowed) return null;
+  const safeTagId = TAG_ID.replace(/[^a-zA-Z0-9_-]/g, '');
+  if (!safeTagId) return null;
 
   return (
     <Script

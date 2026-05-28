@@ -4,7 +4,14 @@ import Script from 'next/script';
 import { useEffect } from 'react';
 import { useCookieConsent } from '@/context/CookieConsentContext';
 
-const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+const RAW_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+// `String(undefined)` is the literal "undefined" which is truthy — that
+// was leaking into the script as fbq('init', 'undefined') and tripping
+// Meta's "Invalid PixelID: null" console error on every page load.
+// Treat the string "undefined"/"null" as missing.
+const PIXEL_ID = RAW_PIXEL_ID && RAW_PIXEL_ID !== 'undefined' && RAW_PIXEL_ID !== 'null'
+  ? RAW_PIXEL_ID
+  : '';
 
 declare global {
   interface Window {
@@ -32,10 +39,11 @@ export default function MetaPixel() {
     }
   }, [allowed]);
 
+  if (!PIXEL_ID || !allowed) return null;
   // Meta pixel IDs are numeric; strip anything else to defeat script
   // injection if the env var ever contains quotes or HTML.
-  const safePixelId = String(PIXEL_ID).replace(/[^a-zA-Z0-9_-]/g, '');
-  if (!safePixelId || !allowed) return null;
+  const safePixelId = PIXEL_ID.replace(/[^a-zA-Z0-9_-]/g, '');
+  if (!safePixelId) return null;
 
   return (
     <Script

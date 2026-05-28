@@ -32,24 +32,24 @@
   gap: 28px 20px;
 }
 
+/* On mobile the grid collapses to the same tight 2-column rhythm as the
+   shop grid — hairline 2px column-gap + zero row-gap + pure-white fill
+   so the cards read as one cohesive surface (matches the Olivia von
+   Halle pattern). Outer section padding drops to zero so the photos go
+   edge-to-edge of the viewport. */
 @media (max-width: 900px) {
   .header {
     flex-wrap: wrap;
     gap: 8px;
+    padding: 0 6%;
+  }
+  .section {
+    padding: 60px 0;
   }
   .grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 500px) {
-  .section {
-    padding: 60px 5%;
-  }
-}
-
-@media (max-width: 400px) {
-  .grid {
-    grid-template-columns: 1fr;
+    column-gap: 2px;
+    row-gap: 0;
+    background: #FFFFFF;
   }
 }
