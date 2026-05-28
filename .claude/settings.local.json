@@ -48,7 +48,13 @@
       "Bash(cd /d/Programming && grep -n \"convertedToOrder.*Visit\\\\|Visit.*updateOne.*convertedToOrder\" \"Course_!\\\\Silkilinen/backend/routes/checkoutV2.js\")",
       "Read(//d/Programming/**)",
       "Bash(cd \"/d/Programming/Course_!\\\\Silkilinen\" && wc -l backend/routes/checkoutV2.js)",
-      "Read(//d/d/Programming/Course_!/Silkilinen/backend/routes/**)"
+      "Read(//d/d/Programming/Course_!/Silkilinen/backend/routes/**)",
+      "Bash(grep -E \"\\\\.\\(css|ts|tsx|js\\)$\")",
+      "Read(//d/Packing/**)",
+      "Bash(rm -rf \"/d/Packing\")",
+      "Bash(git rev-list *)",
+      "Bash(git revert *)",
+      "Bash(git stash *)"
     ],
     "additionalDirectories": [
       "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\admin\\collections",
