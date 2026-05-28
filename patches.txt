@@ -1,0 +1,188 @@
+I need you to apply 8 documentation updates across 4 files. For each edit, show me the diff and ask permission before writing. Do not commit to git — I'll review and commit manually after.
+
+=== FILE 1: SILKILINEN.md ===
+
+EDIT 1A: Update the "Last updated" line. Find:
+"Last updated: 19 May 2026 (Header polish + product page sticky fixes + cookie banner GDPR + hero CTA + image fixes + button states polish + gallery broken-image fix + Cloudinary URL validation + admin panel UX fixes P1+P2 + abandoned cart recovery fix + recovery email automation + mobile header simplification + product image pipeline lockdown + hamburger drawer UX fixes + cart swipe + image placeholders + account section refinement + Cloudinary upload pipeline verification + dashboard conversion rate fix + preview page crash fix + font preload warning fix + audit-fix branch merge: F1-F23 security/reliability hardening)."
+
+Replace with:
+"Last updated: 28 May 2026 (Security audit verification pass — H1/H2/H3/M1/M5/L1 confirmed fixed in code; M6 partial. Stripe live mode confirmed: first real order €5.49 cleared 16 May 2026, payout €5.08 deposited 21 May 2026)."
+
+EDIT 1B: Update Stripe line in Confirmed stack. Find:
+"- **Payments:** Stripe (currently test mode — verify before launch)"
+
+Replace with:
+"- **Payments:** Stripe (LIVE mode as of 16 May 2026; first real order €5.49 cleared, payout €5.08 deposited 21 May 2026)"
+
+EDIT 1C: Replace the entire Security Audit section (lines 927-1015, from "## Security Audit — 18 May 2026" down to but NOT including "## Active scoped work, not yet built"). The new content should be:
+
+## Security Audit — 18 May 2026 (verification pass 28 May 2026)
+
+Full static-analysis security audit on 18 May 2026. Verification pass 28 May 2026 confirmed H1, H2, H3, M1, M5, L1 are FIXED with quoted code evidence. M6 partially fixed (3 specific leak sites remain, all admin-only). M2, M3, M4, L2, L3 not yet verified.
+
+### HIGH — Status
+
+**H1 — Stored XSS via `dangerouslySetInnerHTML` on journal article body**
+- File: `frontend/app/journal/[slug]/page.tsx`
+- Status (28 May 2026): **FIXED.** `isomorphic-dompurify ^3.13.0` pinned in `frontend/package.json`. Import at top of file; `DOMPurify.sanitize(article.body)` wraps the single render point.
+
+**H2 — Google OAuth audience check fails open when `GOOGLE_CLIENT_ID` is unset**
+- File: `backend/routes/customers.js`
+- Status (28 May 2026): **FIXED.** Fail-closed guard `if (!clientId) return 503` runs before the `aud` check. Issuer (`iss`) check also implemented against both canonical Google issuers — this closes L1 in the same change.
+
+**H3 — HTML injection in Drop a Hint email via unescaped user input**
+- File: `backend/services/email.js`
+- Status (28 May 2026): **FIXED.** `esc()` helper at top of file does HTML entity escaping. All three originally vulnerable fields (`message`, `recipientName`, `senderName`) routed through `esc()` before interpolation. URL fields (`productUrl`, `productImage`) have an `^https?://` allowlist guard.
+
+### MEDIUM — Status
+
+**M1 — `jwt.verify()` without explicit `algorithms` option**
+- File: `backend/middleware/auth.js`
+- Status (28 May 2026): **FIXED.** `{ algorithms: ['HS256'] }` explicitly set.
+
+**M2 — Admin JWT returned in response body**
+- File: `backend/routes/auth.js`
+- Status: Not yet verified. Manual check needed: confirm whether admin frontend stores token in `localStorage` (high risk in combination with any future XSS) or in an `HttpOnly` cookie.
+
+**M3 — Frontend admin middleware checks cookie presence only, not JWT validity**
+- File: `frontend/middleware.ts`
+- Status: Not yet verified.
+
+**M4 — No HTTP security headers on the frontend**
+- File: `frontend/next.config.ts`
+- Status: Not yet verified. Manual check: `curl -I https://silkilinen.com` to see which headers Vercel sets automatically vs which need to be added.
+
+**M5 — Mass assignment in admin products create and update**
+- File: `backend/routes/adminProducts.js`
+- Status (28 May 2026): **FIXED.** `PRODUCT_ALLOWED_FIELDS` allowlist with `pickProductFields()` applied in both create and update handlers. Stripped fields logged server-side via `console.warn`.
+
+**M6 — Internal error messages exposed to clients**
+- Files: `backend/routes/checkoutV2.js`, `backend/routes/aiPhotos.js`, `backend/routes/campaigns.js`
+- Status (28 May 2026): **PARTIAL.** Most catch blocks fixed; three leak sites remain, all admin-only:
+  - `checkoutV2.js` line 261–262 — Stripe webhook signature error leaks `err.message` in the 400 response. Caller is Stripe servers, not customers. Low risk.
+  - `aiPhotos.js` line 411 — per-item generation result pushes raw `err.message` into the response array. Admin panel surface. Exposes Gemini/Cloudinary internals to admins.
+  - `aiPhotos.js` line 269 — `classifyError` daily_limit branch returns raw `err.message` as `userMessage`. Same admin surface.
+- `campaigns.js` fully fixed (all 4 handlers return generic 'Internal server error').
+
+### LOW — Status
+
+**L1 — Google OAuth missing `iss` (issuer) validation**
+- File: `backend/routes/customers.js`
+- Status (28 May 2026): **FIXED** (as side-effect of H2 fix). Both `accounts.google.com` and `https://accounts.google.com` checked.
+
+**L2 — Geolocation lookup over HTTP**
+- File: `backend/routes/track.js:24`
+- Status: Not changed. Still HTTP. Low risk.
+
+**L3 — Magic link verify endpoint has no rate limiter**
+- File: `backend/routes/customers.js` — `POST /verify-magic-link`
+- Status: Not yet verified.
+
+### Still open / next pass
+
+In priority order:
+1. **M6 partial cleanup** — fix the 3 remaining admin-facing error leaks in `aiPhotos.js` (replace raw `err.message` with classified codes).
+2. **M2 + M3** — verify how admin frontend stores and reads the JWT; tighten middleware check if needed.
+3. **M4** — add HTTP security headers to `next.config.ts`; check HSTS first via `curl -I https://silkilinen.com`.
+4. **L2** — switch ip-api.com call to HTTPS (one-character change).
+5. **L3** — add `publicWriteRateLimit` to magic-link verify route.
+
+### Needs manual check
+
+1. `unsubscribeToken` generation in `backend/models/Newsletter.js` — confirm it uses `crypto.randomBytes()`.
+2. Drop a Hint route caller — confirm whether `message`, `recipientName`, `senderName` have input validation (e.g. max length) before reaching `services/email.js`. The HTML injection vector is closed, but request-size DoS is still possible if there's no length cap.
+
+EDIT 1D: In the "Active scoped work, not yet built" section, find these two bullet points (consecutive lines):
+
+"- **Stripe test orders** — register `STRIPE_WEBHOOK_SECRET` in Railway pointing at `POST /api/webhook` (events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`, `charge.succeeded`), then place a real end-to-end order on the live site to verify the checkout flow
+- **Stripe test orders** — must place real test orders on the v2 checkout path before going live"
+
+Replace with:
+"- ~~**Stripe live mode + real test order**~~ ✓ Shipped 16 May 2026 (€5.49 order from Sabreena, €5.08 payout deposited 21 May 2026, fee €0.41 captured by `charge.succeeded` webhook). Refund path not yet tested with a real card — do this on the second real order, not by refunding Sabreena's."
+
+=== FILE 2: gotchas.md ===
+
+EDIT 2: Find this exact paragraph:
+"**`GOOGLE_CLIENT_ID` is critical.** If unset, Google OAuth audience check fails open and accepts tokens from any Google app. See security audit H2. Confirm it's set in Railway before going live."
+
+Replace with:
+"**`GOOGLE_CLIENT_ID` is critical.** Required for Google OAuth. Set in Railway. As of 28 May 2026, `backend/routes/customers.js` fails closed if the env var is unset (returns 503) and validates both `aud` and `iss` claims. If you ever fork or duplicate this route in a new auth flow, replicate the fail-closed guard — the original code shipped with a fail-open bug for two weeks (audit H2)."
+
+=== FILE 3: decisions.md ===
+
+EDIT 3A: In entry "# 0001 — Magic-link + Google OAuth for customers, JWT for admin", find this exact line:
+"**Watch out:** Google OAuth `aud` check fails open if `GOOGLE_CLIENT_ID` env var is unset. Confirmed in security audit H2 as pending fix. Also pin `algorithms: ['HS256']` explicitly on `jwt.verify` (audit M1)."
+
+Replace with:
+"**Watch out:** Google OAuth `aud` check originally failed open if `GOOGLE_CLIENT_ID` was unset — fixed 28 May 2026 with a fail-closed guard plus `iss` validation (audit H2 + L1). `algorithms: ['HS256']` now pinned on `jwt.verify` (audit M1). If you build a new auth handler, replicate both patterns — they're the canonical shape for this codebase."
+
+EDIT 3B: Find the placeholder template at the bottom of the file:
+"# [next] — Title
+Date: YYYY-MM-DD
+
+**Chose:**
+**Over:**
+**Because:**
+**Reusable for:**
+**Code:**
+**Watch out:**"
+
+Replace with this (two new ADRs, then the placeholder restored at the bottom):
+
+# 0006 — Defense-in-depth on user-touchable HTML surfaces
+Date: 2026-05-28
+
+**Chose:** Three patterns applied across the codebase for any place user-supplied content reaches an HTML surface:
+  1. Stored content rendered via `dangerouslySetInnerHTML` must pass through `DOMPurify.sanitize()` (`isomorphic-dompurify`).
+  2. Email templates interpolate user input only through an `esc()` helper that escapes `&`, `<`, `>`, `"`, `'`, `/`.
+  3. URL attributes in HTML are validated against an `^https?://` allowlist; non-matching values render as `#` or empty string.
+
+**Over:** Trusting input validation alone, or blocklist-based escaping.
+**Because:** Audit H1 and H3 both originated from "the input is from an admin, so it's safe" assumptions. Admin accounts get compromised. The fix has to be at the render layer, not the input layer.
+**Reusable for:** Every client project. Especially any with an admin-authored content surface (CMS, journal, product descriptions, transactional emails).
+**Code:** `frontend/app/journal/[slug]/page.tsx` (DOMPurify), `backend/services/email.js` (`esc()` helper + URL allowlist).
+**Watch out:** If you swap `dangerouslySetInnerHTML` for a renderer that takes structured input (e.g. Tiptap's React renderer), DOMPurify becomes redundant — but only if the renderer is genuinely structured, not just `innerHTML` with extra steps.
+
+---
+
+# 0007 — Mass-assignment allowlist on admin write routes
+Date: 2026-05-28
+
+**Chose:** Admin routes that accept JSON bodies for create/update use an explicit `ALLOWED_FIELDS` constant + `pickFields(req.body)` helper. Stripped fields logged via `console.warn` so we see attempted overreach.
+**Over:** Spreading `...req.body` directly (the original pattern), or `Object.assign(model, req.body)`.
+**Because:** Admin authentication doesn't make the input trustworthy. A compromised admin session or a future bug exposing the route still can't escalate by writing arbitrary fields. Logging stripped fields catches both bugs (typos in legitimate frontend) and intrusion attempts (unexpected field names).
+**Reusable for:** Every admin write route in every project.
+**Code:** `backend/routes/adminProducts.js` (`PRODUCT_ALLOWED_FIELDS`, `pickProductFields`).
+**Watch out:** When adding a new field to the model, you have to add it to the allowlist too. The save-with-no-error-but-field-doesn't-persist symptom is the signature of a missing allowlist entry. The `console.warn` log catches this — check server logs when "save isn't sticking" reports come in.
+
+---
+
+# [next] — Title
+Date: YYYY-MM-DD
+
+**Chose:**
+**Over:**
+**Because:**
+**Reusable for:**
+**Code:**
+**Watch out:**
+
+=== FILE 4: stack.md ===
+
+EDIT 4: Find this exact block in the Payments section:
+"- **Stripe** (Payment Intents API, embedded Elements)
+- Webhook at `POST /api/webhook` consuming `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`, `charge.succeeded`
+- Webhook secret: `STRIPE_WEBHOOK_SECRET`
+- **Current mode: test.** Verify before launch.
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is needed on Vercel only (do not set on Railway)"
+
+Replace with:
+"- **Stripe** (Payment Intents API, embedded Elements) — **LIVE mode**, transacting real EUR since 16 May 2026
+- Webhook at `POST /api/webhook` consuming `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`, `charge.succeeded`
+- Webhook secret: `STRIPE_WEBHOOK_SECRET`
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is needed on Vercel only (do not set on Railway)
+- Refund path verified by code review (`POST /api/orders/:id/refund` creates Stripe refund, updates `refunds[]`, sets status). Not yet tested with a real card refund — do it on the second real order"
+
+=== END ===
+
+After all 8 edits are applied, give me a summary of what changed and any text you couldn't find for find-and-replace (so I can investigate manually).
