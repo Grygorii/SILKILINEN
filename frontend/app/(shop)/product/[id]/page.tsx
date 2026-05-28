@@ -60,14 +60,16 @@ export async function generateMetadata(
   };
 }
 
+// Lowercase to match the ProductCard caption voice — keeps the brand
+// language consistent between the shop grid card and the PDP subtitle.
 function getMaterialSub(mat?: string): string {
   if (!mat) return '';
   const m = mat.toLowerCase();
-  if (m.includes('mulberry silk')) return 'In Mulberry Silk';
-  if (m.includes('silk satin')) return 'In Silk Satin';
-  if (m.includes('silk') && m.includes('linen')) return 'In Silk & Linen';
-  if (m.includes('silk')) return 'In Pure Silk';
-  if (m.includes('linen')) return 'In Pure Linen';
+  if (m.includes('mulberry silk')) return 'in mulberry silk';
+  if (m.includes('silk satin')) return 'in silk satin';
+  if (m.includes('silk') && m.includes('linen')) return 'in silk & linen';
+  if (m.includes('silk')) return 'in pure silk';
+  if (m.includes('linen')) return 'in pure linen';
   return '';
 }
 
@@ -124,16 +126,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       : [];
 
   const snippet = getStorySnippet(product.description);
-
-  // Design-system v1: consolidate the price meta to one quiet line.
-  // Free-shipping threshold logic still drives copy below — eligible
-  // products get the full reassurance, ineligible products get the
-  // "add €X" prompt instead.
-  const shippingThreshold = 150;
-  const eligibleForFreeShipping = product.price >= shippingThreshold;
-  const shippingMessage = eligibleForFreeShipping
-    ? 'Free shipping to Ireland · 14-day returns'
-    : `Add €${Math.ceil(shippingThreshold - product.price)} for free shipping · 14-day returns`;
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -217,8 +209,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                   <span className={styles.priceCompare}>€{Number(product.compareAtPrice).toFixed(2)}</span>
                 )}
               </p>
-
-              <p className={styles.shippingNote}>{shippingMessage}</p>
 
               <StockBadge product={product} />
 

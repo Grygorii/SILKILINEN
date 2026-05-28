@@ -146,22 +146,31 @@
 
 /* ── Page dots (mobile only) ──────────────────────── */
 
+/* Dots overlay the bottom of the image rather than stealing a strip
+   below it. Semi-transparent dark dots read against pale silk
+   photography; active state goes fully opaque. */
 .dots {
   display: none;
+  position: absolute;
+  bottom: 14px;
+  left: 0;
+  right: 0;
   justify-content: center;
   gap: 8px;
-  padding-top: 14px;
+  z-index: 3;
+  pointer-events: none;
 }
 
 .dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--border, #e0ddd7);
+  background: rgba(26, 25, 22, 0.4);
   border: none;
   cursor: pointer;
   padding: 0;
   transition: background 0.2s ease;
+  pointer-events: auto;
 }
 
 .dotActive { background: var(--dark, #1a1916); }

@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 28 May 2026 (ProductCard unification — every product-card surface on the storefront now renders through one shared component. 7 surfaces collapsed to a single source of truth: shop, collections, new arrivals, recently viewed, cross-sell, wishlist, account wishlist, bundle children.).
+Last updated: 28 May 2026 (Mobile PDP polish — dropped the free-shipping meta line, moved gallery dots onto the photo, flipped sticky-bar typography so name leads and price reads as quiet meta, lifted the chat bubble clear of the buy bar, and lowercased the PDP material subtitle to match the shop card voice.).
 
 ---
 
@@ -113,6 +113,20 @@ Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--co
 **Out of scope (left untouched):** PDP, cart drawer, checkout. Per-card colour swatches stay off the grid (colour selection lives on the PDP). Pre-existing dead CSS `.colours` / `.colourDot` left in place (not created by this change).
 
 Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (`.wrapCard` 3:4 enforcement; `.skeleton` and `.missing` hardened with explicit `width: 100%; height: 100%` so the loading + failed states cannot collapse below the 3:4 box).
+
+---
+
+## Shipped 28 May 2026 — Mobile PDP polish (gallery dots overlay, sticky-bar hierarchy, chat-bubble lift)
+
+Five small surgical fixes on the mobile product detail page in response to founder feedback that the screen felt cramped and visually noisy.
+
+1. **Dropped the "Free shipping to Ireland · 14-day returns" line.** Both the conditional copy computation and the `<p className={styles.shippingNote}>{shippingMessage}</p>` render are gone, plus the orphan `.shippingNote` CSS block. The same reassurance lives in the footer + cart drawer; the PDP doesn't need to repeat it under every price.
+2. **Carousel page dots moved INTO the photo.** The `.dots` div is now a child of `.mainArea` (was a sibling) with `position: absolute; bottom: 14px` so it overlays the bottom of the image instead of stealing a 14px strip below. Dot colours swapped from `var(--border)` (cream, invisible on the cream placeholder) to `rgba(26, 25, 22, 0.4)` so the inactive dots read against pale silk photography; active state stays full `var(--dark)`. Container has `pointer-events: none` and the dots themselves have `pointer-events: auto` so the rest of the image area stays clickable / swipeable.
+3. **Sticky buy bar typography flipped.** Was `.name 12px dark / .price 13px muted` — i.e. the price was literally bigger than the product name. Now `.name 13px dark / .price 11px muted` so the name leads and the price reads as quiet meta. The CTA stays the dominant element.
+4. **Chat bubble lifts above the sticky bar (mobile only).** StickyBuyBar adds a `body.has-sticky-buy-bar` class on mount via `useEffect` (cleans up on unmount). ContactWidget's `:global(body.has-sticky-buy-bar) .root` rule under `@media (max-width: 900px)` bumps the chat FAB's `bottom` by `72px + env(safe-area-inset-bottom)` so it clears the buy bar on notched devices too. Loose coupling — neither component takes a direct dependency on the other; the body class is the contract.
+5. **PDP material subtitle lowercased.** `getMaterialSub` in `app/(shop)/product/[id]/page.tsx` now returns `'in mulberry silk'` etc. instead of `'In Mulberry Silk'`. Matches the ProductCard caption voice so the brand reads consistently between shop grid and PDP.
+
+Files: `frontend/app/(shop)/product/[id]/{page.tsx,page.module.css}`, `frontend/components/{ProductGallery.tsx,ProductGallery.module.css,StickyBuyBar.tsx,StickyBuyBar.module.css,ContactWidget.module.css}`.
 
 ---
 

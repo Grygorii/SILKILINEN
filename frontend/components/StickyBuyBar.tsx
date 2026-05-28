@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useProductSelection } from './ProductSelectionContext';
 import Button from '@/components/ui/Button';
@@ -21,6 +21,14 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
   const { selectedColour, selectedSize, qty } = useProductSelection();
   const [addState, setAddState] = useState<'idle' | 'adding' | 'added'>('idle');
   const { addToCart } = useCart();
+
+  // Tag the body while this bar is mounted so global mobile fixed-bottom
+  // elements (e.g. ContactWidget chat bubble) can lift themselves clear
+  // of the buy bar without taking a direct dependency on this component.
+  useEffect(() => {
+    document.body.classList.add('has-sticky-buy-bar');
+    return () => { document.body.classList.remove('has-sticky-buy-bar'); };
+  }, []);
 
   const needsColour = colours.length > 0 && !selectedColour;
   const needsSize = sizes.length > 0 && !selectedSize;

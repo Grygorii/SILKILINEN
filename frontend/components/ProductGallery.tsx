@@ -184,21 +184,22 @@ export default function ProductGallery({ images, name, productId, video }: Props
         >
           <Heart size={18} strokeWidth={1.5} fill={wished ? 'currentColor' : 'none'} />
         </button>
-      </div>
 
-      {/* Mobile: page dots */}
-      {hasMultiple && (
-        <div className={styles.dots}>
-          {items.map((_, i) => (
-            <button
-              key={i}
-              className={`${styles.dot} ${i === current ? styles.dotActive : ''}`}
-              onClick={() => goTo(i)}
-              aria-label={`Go to ${i + 1}`}
-            />
-          ))}
-        </div>
-      )}
+        {/* Mobile: page dots — overlay at the bottom of the media area
+            so they don't steal a strip below the image. */}
+        {hasMultiple && (
+          <div className={styles.dots}>
+            {items.map((_, i) => (
+              <button
+                key={i}
+                className={`${styles.dot} ${i === current ? styles.dotActive : ''}`}
+                onClick={() => goTo(i)}
+                aria-label={`Go to ${i + 1}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Lightbox — desktop, images only */}
       {lightboxOpen && item?.kind === 'image' && (
