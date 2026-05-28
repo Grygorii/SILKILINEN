@@ -7,7 +7,14 @@ import { Heart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { isValidImageUrl } from '@/lib/imageUtils';
+import { useReveal } from '@/lib/useReveal';
+import SilkImage from '@/components/ui/SilkImage';
 import styles from './ProductGrid.module.css';
+
+function RevealCard({ children }: { children: React.ReactNode }) {
+  const ref = useReveal<HTMLDivElement>();
+  return <div ref={ref} className={styles.card}>{children}</div>;
+}
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -152,7 +159,7 @@ export default function ProductGrid({
             const heroAlt = primaryImg?.alt ?? product.name;
 
             return (
-              <div key={product._id} className={styles.card}>
+              <RevealCard key={product._id}>
                 <button
                   className={`${styles.heartBtn} ${animating ? styles.heartAnimating : ''}`}
                   onClick={e => handleHeart(e, product._id)}
@@ -169,12 +176,9 @@ export default function ProductGrid({
                 <Link href={`/product/${product._id}`} className={styles.cardLink}>
                   <div className={styles.cardImg}>
                     {heroUrl ? (
-                      <img src={heroUrl} alt={heroAlt} className={styles.img} onError={e => { e.currentTarget.style.display = 'none'; }} />
+                      <SilkImage src={heroUrl} alt={heroAlt} hoverSrc={secondImg?.url} />
                     ) : (
                       <span className={styles.imgMissing}>Image coming soon</span>
-                    )}
-                    {secondImg?.url && (
-                      <img src={secondImg.url} alt={heroAlt} className={`${styles.img} ${styles.imgHover}`} onError={e => { e.currentTarget.style.display = 'none'; }} />
                     )}
                     {showNew && <span className={styles.newBadge}>new</span>}
                   </div>
@@ -194,7 +198,7 @@ export default function ProductGrid({
                     {isAdded ? '✓' : '+'}
                   </button>
                 </div>
-              </div>
+              </RevealCard>
             );
           })}
         </div>

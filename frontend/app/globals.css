@@ -79,6 +79,14 @@ img {
   --t-slow: 320ms;
   --ease: cubic-bezier(.2, .6, .2, 1);
 
+  /* Motion — sensory layer (sheen / lift / press / reveal) */
+  --t-sheen: 8s;
+  --t-reveal: 520ms;
+  --reveal-y: 16px;
+  --lift-y: -4px;
+  --lift-shadow: 0 16px 40px rgba(42, 34, 24, 0.13);
+  --press-scale: 0.96;
+
   /* Control heights */
   --ctrl-h-desktop: 52px;
   --ctrl-h-mobile:  56px;
@@ -131,5 +139,36 @@ body {
   select,
   textarea {
     font-size: 16px !important;
+  }
+}
+
+/* ── Reveal (scroll-in fade-up) ───────────────────────
+   Applied imperatively by lib/useReveal.ts. Global classes so the
+   hook can call classList.add('revealing' | 'revealed') without
+   module-scope coupling. SSR-safe: server-rendered HTML has neither
+   class, so content is always visible if JS never runs.
+*/
+.revealing {
+  opacity: 0;
+  transform: translateY(var(--reveal-y));
+  transition: opacity var(--t-reveal) var(--ease), transform var(--t-reveal) var(--ease);
+  will-change: opacity, transform;
+}
+.revealing.revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Reduced-motion override ──────────────────────────
+   Disables every sensory motion behaviour cleanly. Falls back to the
+   quiet v1 design system. Reveal stays visible (no translate), sheen
+   stops, lift/press are inert, wisp + pulse + breath stop.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .revealing,
+  .revealing.revealed {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }

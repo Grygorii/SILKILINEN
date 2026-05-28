@@ -75,7 +75,7 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
         <span className={styles.name}>{productName}</span>
         <span className={styles.price}>€{Number(price).toFixed(2)}</span>
       </div>
-      <div className={styles.btnWrap}>
+      <div className={`${styles.btnWrap} ${addState === 'added' ? styles.btnWrapBreathing : ''}`}>
         <Button variant={variant} onClick={handleAdd}>
           {label}
         </Button>

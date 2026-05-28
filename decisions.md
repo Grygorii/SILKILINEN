@@ -105,6 +105,33 @@ Date: 2026-05-28
 
 ---
 
+# 0008 — Sensory motion via pure CSS + a single IntersectionObserver, not Framer Motion
+Date: 2026-05-28
+
+**Chose:** Implement the sensory motion layer (sheen, lift, press, reveal, add-to-bag delight) with CSS tokens, CSS transitions, CSS keyframes, and one ~30-line `useReveal` hook backed by a single shared `IntersectionObserver`. Centralise the add-to-bag confirmation via the existing `cartItemAdded` custom event already dispatched by `CartContext`. Disable everything cleanly under `prefers-reduced-motion: reduce`.
+
+**Over:** Framer Motion (or a hybrid where Framer drives only the delight moment). Framer would have been the conventional pick for orchestrated UI motion.
+
+**Because:**
+1. **Existing precedent.** The codebase already has explicit "no animation library" discipline — keyframes live in module CSS, transitions consume the `--t-*` / `--ease` tokens, the v1 design system was designed flat-and-quiet. Adding Framer would create one corner of the app with a different mental model from the rest.
+2. **Bundle.** Framer Motion is ~30–55 KB gzipped client-side, with limited tree-shaking. Mobile-first traffic; that's a real tax. Pure CSS adds 0 KB.
+3. **No gesture needs.** Framer's superpower is gesture-driven animation (drag, spring, layout transitions). None of the five behaviours need that. Hover, active, intersection, and a one-shot keyframe on an event are all trivially CSS.
+4. **`prefers-reduced-motion` is one-liner CSS** (`@media (prefers-reduced-motion: reduce) { ... transition: none; animation: none; }`). Framer requires `useReducedMotion()` calls and conditional variants throughout.
+5. **The delight isn't actually orchestrated.** It looks like a timeline (button breathes, wisp rises, cart pulses) but those three keyframes start at the same moment and run independently. No sequencing logic needed — the existing `cartItemAdded` event is the single trigger; three CSS classes do the rest.
+
+**Reusable for:** Every client project where the visual identity is editorial / quiet / restrained. Especially e-commerce with mobile-heavy traffic where bundle weight matters and brand asks for refined motion, not bouncy/playful motion. The pattern — token block → primitives consume tokens → reveal via one shared IO singleton → delight via a single custom event listener — generalises cleanly.
+
+**Code:** `frontend/app/globals.css` (token block + reveal classes + reduced-motion overrides), `frontend/lib/useReveal.ts` (IO singleton + hook), `frontend/components/ui/SilkImage.{tsx,module.css}` (sheen, video-ready), `frontend/components/CartDelight.module.css` (cart icon pulse + silk wisp), `frontend/components/Navbar.tsx` (event listener, debounced 600ms). PRESS lives directly in the three primitives' module CSS so it's inherited site-wide.
+
+**Watch out:**
+- **CSS Modules scope keyframe names.** Defining `@keyframes silki-breath` inside three different `*.module.css` files creates three separately-scoped keyframes with the same visual result. Don't try to share one across modules by name — that's a global lookup CSS Modules doesn't reliably do. Globals.css is the only place where a keyframe is genuinely global.
+- **`prefers-reduced-motion` must be tested by hand.** TypeScript and the build won't catch a missing `@media (prefers-reduced-motion: reduce) { ... }` block. Every new motion behaviour needs an explicit override; without it, motion-sensitive users get the full sweep. Treat it as non-negotiable test-pass before shipping new motion.
+- **Reveal flash trap.** If you add the `.revealing` class unconditionally on mount, above-the-fold content briefly renders visible, then ducks down, then animates back in — a "jump" the user sees. `useReveal` avoids this by checking `getBoundingClientRect()` on mount and skipping the class entirely for elements already in/above the viewport. If you ever swap this hook for a different reveal mechanism, replicate that check.
+- **Re-triggering one-shot CSS animations.** Adding a class that has `animation: foo 600ms` once plays the animation. Removing then re-adding the class in the same React batch may not replay. Patterns that work: (a) `key` on the animating element (forces remount), (b) mount-on-condition (the wisp pattern — `{active && <span/>}`), (c) double-rAF off-then-on. For the cart icon pulse here, the listener uses `setDelightActive(false)` after 700ms before any next event can fire (debounce is 600ms, so by next event the class is gone), but the button's `key={delightKey}` is the belt to the suspenders.
+- **`mix-blend-mode: screen` on sheen** lightens whatever is under it. Looks beautiful on darker product imagery, less visible on already-light fabric. Acceptable for v1; if a product image is near-white, the sheen is barely perceptible there. Real fabric video (later) will solve this naturally.
+
+---
+
 # [next] — Title
 Date: YYYY-MM-DD
 

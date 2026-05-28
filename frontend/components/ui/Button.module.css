@@ -15,8 +15,18 @@
   cursor: pointer;
   transition: background var(--t-fast) var(--ease),
               color var(--t-fast) var(--ease),
-              opacity var(--t-fast) var(--ease);
+              opacity var(--t-fast) var(--ease),
+              transform var(--t-fast) var(--ease);
   user-select: none;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(var(--press-scale));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+  .btn:active:not(:disabled) { transform: none; }
 }
 
 @media (max-width: 767px) {
