@@ -11,7 +11,7 @@
    shorter than its neighbour — captions stay row-aligned even when
    the caller's container forgets to set aspect-ratio. */
 .wrapCard {
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 2 / 3;
 }
 
 @keyframes shimmer {

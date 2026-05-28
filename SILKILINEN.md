@@ -116,6 +116,19 @@ Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/
 
 ---
 
+## Shipped 28 May 2026 — shop grid revision (2:3 portrait + dark transparent heart)
+
+Tweaks on top of the locked grid spec above, in response to the cream "Image coming soon" placeholder making the white-heart-with-drop-shadow read as a washed-out white blob, and the request to make every photo column read as taller / slimmer.
+
+- **Aspect ratio:** `.cardImg` and `.wrapCard` moved from `aspect-ratio: 3 / 4` to `2 / 3`. The belt-and-braces enforcement (caller-side + ProductImage defensive lock) is preserved, just at the new ratio. Loading-shimmer and failed-state placeholder still cannot collapse below a neighbouring photo.
+- **Heart:** white stroke + dark drop-shadow replaced with semi-transparent dark ink (`rgba(42, 34, 24, 0.7)`, hover → `var(--color-ink)`). No `filter: drop-shadow(...)` — the cream placeholder no longer haloes a white-on-cream heart. Trade-off accepted: against very dark product photography the dark heart is less crisp than the old white-on-shadow treatment, but per spec the cream-placeholder professionalism wins.
+- **Favorited state:** still `fill: var(--color-ink)` — reads as a solid dark heart paired with the new transparent dark stroke.
+- **"new" badge unchanged:** still `#FFFFFF` + `rgba(0, 0, 0, 0.5)` text-shadow; spec for the badge wasn't part of this pass.
+
+Files: `frontend/components/ProductGrid.module.css`, `frontend/components/products/ProductImage.module.css`.
+
+---
+
 ## Shipped 28 May 2026 — promo codes bulk archive UX
 
 Make `/admin/promo-codes` actually usable for ongoing cleanup. New layout: four tabs (Active / Used / Archive / All) replace the old status chips, with the existing "All codes / Personal only / Broad only" filter and search box kept as secondary filters scoped to each tab. "Active" tab includes paused and draft codes; "Used" is `usageCount > 0` excluding archived; "Archive" is the new bucket; "All" is everything except archived.

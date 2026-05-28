@@ -1,16 +1,14 @@
 /* ── Deliberate literals (not tokens) ─────────────────
-   Three non-token values appear in this file by spec:
+   Non-token values appearing in this file by spec:
      - `2px` for `column-gap` — the spec asks for a "near-zero" hairline
        gap; there is no design-system token below `--s-1 = 4px`.
      - `#FFFFFF` — used for the grid background (one clean white
-       vertical line between columns) AND for the over-photo controls
-       (heart icon stroke + "new" badge text). The design system's
+       vertical line between columns) AND for the "new" badge text
+       (which needs to read over photography). The design system's
        canvas (`--color-bg = #FAF8F4`) is warm cream, deliberately not
        this; over-photo legibility needs pure white.
-     - `rgba(0, 0, 0, 0.5)` — the dark drop-shadow / text-shadow behind
-       the white-on-photo controls. Same literal used for both the
-       heart's `filter` and the new badge's `text-shadow` so the two
-       over-photo elements stay visually in sync.
+     - `rgba(0, 0, 0, 0.5)` — the dark text-shadow behind the white
+       "new" badge for legibility on bright photography.
    Do not "fix" any of these without re-reading the locked grid spec.
 */
 
@@ -121,24 +119,24 @@
 }
 
 /* ── Image ────────────────────────────────────────────
-   Edge-to-edge, portrait 3:4. ProductImage handles loading shimmer
+   Edge-to-edge, portrait 2:3. ProductImage handles loading shimmer
    and "Image coming soon" failed state internally; its `card` variant
-   also enforces 3:4 internally as a defensive guarantee.
+   also enforces 2:3 internally as a defensive guarantee.
 */
 
 .cardImg {
   position: relative;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 2 / 3;
   overflow: hidden;
 }
 
 /* object-position: top center keeps necklines / faces in frame on
    portrait-oriented product photography. Combined with the shared
-   3:4 ratio, every grid cell has identical visual height, so captions
+   2:3 ratio, every grid cell has identical visual height, so captions
    align perfectly across columns. */
 .cardImg img {
   /* Defensive layout — every img inside .cardImg is forced to fill the
-     3:4 box. Redundant with ProductImage's `.img` class for the loaded
+     2:3 box. Redundant with ProductImage's `.img` class for the loaded
      state, but this selector ALSO catches any future caller-supplied
      img and guarantees identical cell heights across every card. */
   position: absolute;
@@ -164,9 +162,9 @@
 }
 
 /* ── Heart ────────────────────────────────────────────
-   White heart on every photo with a dark drop-shadow so it stays
-   readable on both bright/silk and dark photography. 44px hit area
-   with the icon centred.
+   Thin dark stroke on every photo — semi-transparent so it reads as a
+   refined outline against pale silk while still grounding on the cream
+   placeholder. 44px hit area with the icon centred.
 */
 
 .heartBtn {
@@ -180,24 +178,24 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  color: #FFFFFF;
+  color: rgba(42, 34, 24, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
   -webkit-tap-highlight-color: transparent;
-  transition: transform var(--t-fast) var(--ease);
+  transition: transform var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }
+
+.heartBtn:hover { color: var(--color-ink); }
 
 @media (hover: hover) {
   .heartBtn:hover { transform: scale(1.12); }
 }
 
 .heartFilled {
-  /* SVG fill overrides the lucide presentation attribute. Stroke stays
-     #FFFFFF via inheritance from .heartBtn so the favorited heart reads
-     as a solid charcoal shape with a thin white outline + drop-shadow —
-     visible against both pale silk and dark garnet photography. */
+  /* SVG fill overrides the lucide presentation attribute — favorited
+     heart reads as a solid dark shape against the photo, paired with
+     the heartBtn's transparent dark stroke. */
   fill: var(--color-ink);
 }
 
