@@ -4,31 +4,6 @@
   margin-top: 80px;
 }
 
-/* ── Trust bar ───────────────────────────────────── */
-
-.trust {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-  flex-wrap: wrap;
-  padding: 20px 6%;
-  border-bottom: 1px solid #2e2b27;
-}
-
-.trustBadge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  letter-spacing: 1px;
-  color: #9a9690;
-}
-
-.trustBadge svg {
-  flex-shrink: 0;
-  color: #9a9690;
-}
-
 /* ── Desktop column grid ─────────────────────────── */
 
 .inner {
@@ -181,13 +156,16 @@
 
 /* ── Social icons row ────────────────────────────── */
 
+/* Social row sits inside the brand block (left-aligned, no top border) —
+   reads as part of the brand identity rather than a standalone strip. The
+   negative left margin pulls the first icon flush with the brand text so
+   the 44px tap target doesn't visually indent the row. */
 .socialRow {
   display: flex;
-  justify-content: center;
   align-items: center;
   gap: 0;
-  padding: 8px 6%;
-  border-top: 1px solid #2e2b27;
+  margin-top: 16px;
+  margin-left: -10px;
 }
 
 .socialIcon {
@@ -223,10 +201,6 @@
 /* ── Responsive ──────────────────────────────────── */
 
 @media (max-width: 768px) {
-  .trust {
-    gap: 20px;
-  }
-
   /* Hide desktop grid, show mobile brand + accordion */
   .inner {
     display: none;
@@ -245,13 +219,6 @@
 }
 
 @media (max-width: 480px) {
-  .trust {
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    text-align: center;
-  }
-
   .bottom {
     flex-direction: column;
     gap: 6px;

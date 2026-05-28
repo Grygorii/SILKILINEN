@@ -116,6 +116,16 @@ Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/
 
 ---
 
+## Shipped 28 May 2026 — Footer cleanup (trust bar removed, socials moved into brand block)
+
+Per founder feedback the top trust strip ("Free shipping over €150 · 14-day returns · OEKO-TEX · Stripe checkout") read as noise on a brand site — removed entirely. Social icons (Instagram + Pinterest, driven by the existing `/api/social/platforms` data) moved out of their own bordered strip above the legal line and into the SILKILINEN brand block (left side on desktop, top stack on mobile) so they read as part of the brand identity. Same icons + tap targets, just left-aligned with a 16px margin above and a -10px left margin so the first icon sits flush with the brand text.
+
+Orphan `.trust` / `.trustBadge` CSS rules and their `@media` overrides deleted alongside the JSX so nothing dangles.
+
+Files: `frontend/components/Footer.tsx`, `frontend/components/Footer.module.css`.
+
+---
+
 ## Shipped 28 May 2026 — Bundles Phase 2 (commerce sets sold as one line item)
 
 Introduces "Bundle" as a distinct commerce concept from Category and Collection. A Bundle is a curated set of products sold together at a single discounted total (percentage off the sum of child prices). Cart treats a bundle as ONE line item with a read-only sub-list of included children; Stripe sees a single dollar amount and the webhook stores one Order item with a `bundleId` + `includedProducts` array for fulfilment.
