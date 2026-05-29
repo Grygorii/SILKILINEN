@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import DOMPurify from 'isomorphic-dompurify';
+import { sanitizeArticleHtml } from '@/lib/sanitize';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -72,7 +72,7 @@ function PreviewContent() {
           )}
         </div>
         <hr style={{ border: 'none', borderTop: '1px solid #d0c9be', margin: '32px 0' }} />
-        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.body) }}
+        <div dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(article.body) }}
           style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, lineHeight: 1.85, color: '#2a2520' }} />
       </article>
     </main>

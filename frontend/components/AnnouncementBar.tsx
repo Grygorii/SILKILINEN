@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import DOMPurify from 'isomorphic-dompurify';
+import { sanitizeArticleHtml } from '@/lib/sanitize';
 import styles from './AnnouncementBar.module.css';
 
 // OvH-style restraint pass — dropped the OEKO-TEX certification line
@@ -33,10 +33,10 @@ export default function AnnouncementBar({ messages }: { messages?: string[] }) {
     return () => clearInterval(timer);
   }, [msgs.length]);
 
-  const safeHtml = DOMPurify.sanitize(msgs[index], {
-    ALLOWED_TAGS: ['strong', 'em', 'b', 'i', 'br'],
-    ALLOWED_ATTR: [],
-  });
+  // Admin-authored banner copy — strip script shells + handlers via the
+  // shared regex sanitizer. Allowed inline tags (strong/em/b/i/br) pass
+  // through untouched since they're not in the strip list.
+  const safeHtml = sanitizeArticleHtml(msgs[index]);
 
   return (
     <div className={styles.bar}>
