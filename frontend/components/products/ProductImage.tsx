@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { isValidImageUrl, cloudinaryUrl } from '@/lib/imageUtils';
 import styles from './ProductImage.module.css';
 
@@ -49,6 +49,24 @@ function resolveUrl(images: ProductImageData[]): string | null {
 export default function ProductImage({ images, src, alt, variant, wrapClassName, loading = 'lazy' }: Props) {
   const url = images?.length ? resolveUrl(images) : (isValidImageUrl(src) ? src! : null);
   const [state, setState] = useState<'loading' | 'loaded' | 'failed'>(url ? 'loading' : 'failed');
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Hydration race fix: when the browser fetches the image BEFORE React
+  // hydrates (cached images, fast networks, mobile Safari), the onLoad
+  // event fires while React isn't listening yet — state stays "loading"
+  // forever and opacity stays at 0, so the image is invisible until the
+  // user interacts. On mount, check whether the underlying <img> is
+  // already complete and skip the loading state if so.
+  useEffect(() => {
+    if (!url) return;
+    const img = imgRef.current;
+    if (!img) return;
+    if (img.complete) {
+      // naturalHeight === 0 on a complete-but-broken image (failed fetch).
+      if (img.naturalHeight > 0) setState('loaded');
+      else setState('failed');
+    }
+  }, [url]);
 
   const showText = variant === 'card';
 
@@ -64,6 +82,7 @@ export default function ProductImage({ images, src, alt, variant, wrapClassName,
       )}
       {url && (
         <img
+          ref={imgRef}
           src={cloudinaryUrl(url, WIDTHS[variant])}
           alt={alt}
           className={styles.img}
