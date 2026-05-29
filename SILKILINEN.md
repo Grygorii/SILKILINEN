@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 28 May 2026 (Journal article 500 hotfix — `isomorphic-dompurify` was SSR-failing under Next.js 16 / Turbopack on both journal article slug pages. Replaced with a small server-safe `sanitizeArticleHtml` helper. Articles render again.).
+Last updated: 29 May 2026 (Dynamic-route 500 fix landed — Vercel runtime trace pinned the cause to isomorphic-dompurify dragging jsdom into every dynamic SSR bundle under Next.js 16 + Turbopack, where ERR_REQUIRE_ESM killed the function. Dropped the last two isomorphic-dompurify imports (AnnouncementBar, journal preview) in favour of the existing sanitizeArticleHtml regex helper. Static homepage was unaffected because it prerenders at build time; dynamic /shop, /collections, /product, /bundles, /journal/[slug] hit the failure at request time. Now all back to 200.).
 
 ---
 
@@ -113,6 +113,31 @@ Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--co
 **Out of scope (left untouched):** PDP, cart drawer, checkout. Per-card colour swatches stay off the grid (colour selection lives on the PDP). Pre-existing dead CSS `.colours` / `.colourDot` left in place (not created by this change).
 
 Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (`.wrapCard` 3:4 enforcement; `.skeleton` and `.missing` hardened with explicit `width: 100%; height: 100%` so the loading + failed states cannot collapse below the 3:4 box).
+
+---
+
+## Shipped 29 May 2026 — Dynamic-route 500 fix (final isomorphic-dompurify imports dropped)
+
+Follow-up to the previous journal-article hotfix. Founder reported `/journal/how-to-wash-silk` still 500ing. Walking it revealed **every dynamic route** was 500ing — `/shop`, `/collections/[slug]`, `/product/[id]`, `/bundles/[slug]`, `/journal/[slug]`. Static routes (`/`, `/about`, `/journal`, `/wishlist`, `/checkout`, `/contact`, `/faq`, `/reviews`) all 200'd. Local `next build` succeeded cleanly.
+
+**The trace** (from Vercel runtime logs):
+```
+Failed to load external module jsdom-49d9fb57d33aa4ad:
+Error [ERR_REQUIRE_ESM]: require() of ES Module
+/var/task/frontend/node_modules/@exodus/bytes/encoding-lite.js
+from /var/task/frontend/node_modules/html-encoding-sniffer/lib/html-encoding-sniffer.js
+not supported.
+```
+
+**Root cause.** `html-encoding-sniffer` is a transitive dep of **jsdom**, pulled in by **isomorphic-dompurify**. Under Next.js 16 + Turbopack, the SSR halves of `'use client'` components get bundled into dynamic-route server functions — and that pulled `isomorphic-dompurify → jsdom → html-encoding-sniffer → @exodus/bytes/encoding-lite.js` into `/var/task` on Vercel. The `@exodus/bytes` package ships as ESM-only, but `html-encoding-sniffer` is CommonJS doing `require('@exodus/bytes/encoding-lite.js')` — which Node refuses with `ERR_REQUIRE_ESM`. Module load fails → the entire dynamic-route function 500s before user code runs. The static homepage was prerendered at build time (older module-resolution path) and dodged it.
+
+I had killed the import in `frontend/app/journal/(public)/[slug]/page.tsx` in the previous hotfix, but two consumers remained: `frontend/components/AnnouncementBar.tsx` (rendered by both the shop and journal layouts → present in every dynamic-route SSR) and `frontend/app/journal/preview/page.tsx`. Both stayed `'use client'` but Next.js 16 still bundles the SSR side, so jsdom was still in the dynamic-route container.
+
+**Fix.** Replaced both remaining imports with the shared `sanitizeArticleHtml` regex helper (`frontend/lib/sanitize.ts`). No more `isomorphic-dompurify` references anywhere in the source tree → no more jsdom in the bundle → dynamic routes recover. Trade-off accepted: the AnnouncementBar previously allowed `<strong>`/`<em>`/`<b>`/`<i>`/`<br>` via DOMPurify's `ALLOWED_TAGS`; the regex sanitizer doesn't have a tag-allow-list, it strips dangerous shells (script/style/iframe/object/embed/frame/applet/base/link/meta) and inline event handlers. Admin-authored banner copy keeps the same effective trust model.
+
+**Debug journey, for the record.** Before the trace landed I bisected by stripping the journal slug page to literally `<h1>{slug}</h1>` with no awaits, no fetch, no metadata, no notFound — it still 500'd. Disabled the co-located `opengraph-image.tsx` — still 500'd. Confirmed `npm run build` succeeded locally and the GitHub status reported Vercel deploys as successful. The pattern (every page that awaits params/searchParams = 500, every static page = 200) pointed at request-time module resolution rather than per-page code — but I couldn't see the actual error without the runtime log. **Lesson:** for SSR-only failures on a working build, always pull the Vercel runtime trace first instead of guessing from response codes.
+
+Files: `frontend/app/journal/preview/page.tsx`, `frontend/components/AnnouncementBar.tsx`.
 
 ---
 
