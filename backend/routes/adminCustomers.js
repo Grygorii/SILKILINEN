@@ -53,6 +53,49 @@ router.post('/segments/recompute', async (req, res) => {
   }
 });
 
+// ── POST /api/admin/customers/winback — email the at-risk segment a gentle ────
+// reminder that the existing 10% offer (SILK10) is still available. Founder
+// choice: NO new codes minted — just a reminder. We skip anyone who has
+// already redeemed SILK10 (so the offer in the email is actually usable).
+// Mounted before /:id so the static path isn't shadowed.
+router.post('/winback', async (req, res) => {
+  try {
+    const { sendWinbackReminder } = require('../services/email');
+    if (!process.env.RESEND_API_KEY) return res.status(503).json({ error: 'Email not configured' });
+
+    const customers = await Customer.find({
+      segments: 'at-risk',
+      gdprDeletedAt: null,
+      marketingConsent: true,
+      email: { $exists: true, $nin: [null, ''] },
+    }).select('email firstName').limit(300).lean();
+
+    // Emails that already redeemed SILK10 — exclude them (code is single-use
+    // per customer, so reminding them would be hollow).
+    const usedSilk10 = new Set(
+      (await Order.find({ discountCode: { $regex: '^silk10$', $options: 'i' } }).select('customerEmail').lean())
+        .map(o => (o.customerEmail || '').toLowerCase())
+    );
+
+    let sent = 0, skipped = 0;
+    for (const c of customers) {
+      if (usedSilk10.has((c.email || '').toLowerCase())) { skipped++; continue; }
+      try {
+        await sendWinbackReminder({ email: c.email, firstName: c.firstName });
+        sent++;
+      } catch (err) {
+        console.error('[winback] send failed:', maskEmail(c.email), err.message);
+        skipped++;
+      }
+    }
+
+    res.json({ sent, skipped, eligible: customers.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ── GET /api/admin/customers/:id — full detail ────────────────────────────────
 router.get('/:id', async (req, res) => {
   try {

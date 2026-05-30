@@ -7,6 +7,7 @@ import Zone1ActionItems from './_components/dashboard/Zone1ActionItems';
 import Zone2Metrics from './_components/dashboard/Zone2Metrics';
 import Zone3Working from './_components/dashboard/Zone3Working';
 import FounderPulse from '@/components/dashboard/FounderPulse';
+import FinanceAnomalies from '@/components/dashboard/FinanceAnomalies';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -131,6 +132,9 @@ export default function AdminDashboard() {
         <>
           {/* This week's ad pulse — links to the full founder page (#17) */}
           <FounderPulse />
+
+          {/* Finance anomalies surfaced from Reports (#19) */}
+          <FinanceAnomalies />
 
           {/* Zones 1 + 2 side by side on desktop */}
           <div className={styles.zonesTopRow}>

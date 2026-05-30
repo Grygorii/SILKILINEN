@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 29 May 2026 (Connection-audit batches A+B — founder answered the 4 gating product decisions; shipped #13 bundle COGS rollup, #8 Customer.acquisitionSource (webhook + backfill script), #5 Bundles↔Categories (model + admin multi-select + shop BundleStrip). #1 campaign-spend→Finance found already-implemented (audit false positive). 8 of 20 improvements now shipped; remaining 11 queued in backlog with founder decisions recorded.).
+Last updated: 29 May 2026 (Connection-audit COMPLETE — all 20 ranked improvements shipped across batches 1/A/B/C/D/E/final. Latest batches: #2 promo usage report, #12b product publish toast, #17 founder pulse on dashboard, #4+#7 abandoned-cart recovery visibility, #10 category archive guard, #6 lite image picker, #14 Image Studio→product, #20 per-product campaign backlink, #19 finance anomalies on dashboard, #15 at-risk win-back reminder. #1 was already implemented; #11 skipped as redundant with the existing Zone2 week view.).
 
 ---
 
@@ -113,6 +113,36 @@ Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--co
 **Out of scope (left untouched):** PDP, cart drawer, checkout. Per-card colour swatches stay off the grid (colour selection lives on the PDP). Pre-existing dead CSS `.colours` / `.colourDot` left in place (not created by this change).
 
 Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (`.wrapCard` 3:4 enforcement; `.skeleton` and `.missing` hardened with explicit `width: 100%; height: 100%` so the loading + failed states cannot collapse below the 3:4 box).
+
+---
+
+## Shipped 29 May 2026 — Connection-audit batches C/D/E/final (improvements 11–20 complete)
+
+Completed the remaining connection-audit improvements after the founder said "tackle everything." All 20 now shipped. Each batch was build-verified locally before push.
+
+**Batch C — contained items**
+- **#2 Promo usage report.** New `GET /api/promo-codes/usage-report?days=` aggregates `Order.discountCode` (paid+ statuses only) into per-code orders / revenue / AOV / discount-given. Collapsible 30/90/365-day panel on the Promo codes page. (Real-redemption numbers, vs the existing `usageCount` counter.)
+- **#12b Product publish "view live" toast.** Product edit page tracks last-saved status in a ref; on a →active transition it shows a green bar with the live `/product/[id]` URL + copy-link. Mirrors the journal publish confirm shipped in batch 1.
+- **#17 Founder pulse on dashboard.** New `FounderPulse` client component surfaces this-week ad revenue/spend/ROAS/orders on the main dashboard (reuses the existing `/marketing/founder` endpoint), linking to the full page. Hidden when no ad activity.
+
+**Batch D — abandoned-cart recovery visibility**
+- **#4** New `POST /api/orders/:id/recovery-email` — admin-triggered manual (re)send of the next un-sent recovery sequence (mirrors the `cartRecovery.js` cron). Abandoned-carts page shows which sequence emails went out + when, plus a per-cart "Send recovery email" button.
+- **#7** Customer detail shows an "Abandoned cart" pill when the customer has a pending order >2h old, with a one-click recovery CTA (same endpoint).
+
+**Batch E — category guard + image reuse**
+- **#10 Category archive guard.** `DELETE /categories/:id` now 409s if products still reference the slug, unless `?reassignTo=<slug>` is passed (then it bulk-moves products first). Frontend catches the 409 and prompts for a target category. No more silently orphaning products to a dead filter.
+- **#6 Lite image picker.** New `GET /social-assets/winners` returns all Image Studio winners across surfaces; the Content image-edit modal shows them as pickable thumbnails ("reuse an Image Studio winner") — removes the download-then-reupload loop.
+- **#14 Image Studio → product image.** "→ Product" button on each Studio candidate/winner searches products and assigns the Cloudinary URL via the existing `/products/:id/images/url` route (no re-upload).
+- **#11 SKIPPED** as redundant: Zone2 on the dashboard already shows today/this-week/this-month metric blocks, so a separate 7-day toggle on Zone3 would duplicate the existing week view for marginal gain. Per "simplicity first" — noted rather than over-built.
+
+**Final batch — marketing + win-back**
+- **#20 Per-product campaign backlink.** New `GET /api/admin/campaigns/by-product/:productId` reverse-indexes campaigns that drove orders containing the product (30d). New `ProductCampaigns` panel on the product edit page shows "featured in N campaigns · M orders" with links. Renders nothing if the product isn't advertised.
+- **#19 Finance anomalies on dashboard.** New `FinanceAnomalies` client component fetches the existing `/finance/reports` anomalies and surfaces them as an amber card on the dashboard (orders without shipping cost, products missing costing, months with orders but no expenses), linking to Reports. No backend change.
+- **#15 At-risk win-back reminder.** Per founder decision: a *reminder* of the existing 10% offer (SILK10), **no new codes minted**. New `sendWinbackReminder` email (warm Donegal "we've missed you" tone) + `POST /api/admin/customers/winback` that emails the at-risk segment — **excluding anyone who already redeemed SILK10** (the code is single-use-per-customer, so reminding redeemers would be hollow — this was the flagged caveat, now handled). "Send win-back reminder" button appears on the customers page only when the at-risk segment is selected; reports sent/skipped counts.
+
+**Process note.** #1 (campaign spend → Finance) was found already implemented when I went to build it — the campaign spend route already auto-creates a `marketing_ads` Expense. The connection-audit (which wasn't adversarially verified, unlike the security audit) had it as a gap. Building-before-trusting caught the false positive. Worth remembering: verify single-agent audit claims at the code before acting.
+
+Files (this set): `backend/routes/{promoCodes,orders,adminCategories,adminSocialAssets,campaigns,adminCustomers}.js`, `backend/services/email.js`, `frontend/app/admin/{promo-codes,products/[id],marketing/abandoned-carts,customers,customers/[id],categories,content,social-assets,page}.tsx`, `frontend/components/{dashboard/FounderPulse,dashboard/FinanceAnomalies,admin/ProductCampaigns}.tsx`.
 
 ---
 

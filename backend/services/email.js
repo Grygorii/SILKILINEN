@@ -227,6 +227,39 @@ async function sendWelcome({ email, firstName }) {
   });
 }
 
+// Win-back reminder (#15) — gentle "we miss you" nudge to lapsed customers,
+// reminding them the existing 10% welcome offer is still available. No new
+// code minted (founder choice). Only send to customers who haven't already
+// redeemed SILK10 — the caller filters those out.
+async function sendWinbackReminder({ email, firstName }) {
+  if (!process.env.RESEND_API_KEY) return;
+  const name = firstName || 'there';
+  await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: 'We saved your spot — 10% off when you’re ready',
+    html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:40px 16px;">
+<tr><td align="center">
+<table cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;">
+<tr><td style="background:#1a1916;padding:32px 40px;text-align:center;">
+<p style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;letter-spacing:6px;color:#faf8f4;">SILKILINEN</p>
+<p style="margin:8px 0 0;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#7a7670;">Silk &amp; Linen Intimates</p>
+</td></tr>
+<tr><td style="background:#faf8f4;padding:48px 40px;">
+<p style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1916;">We’ve missed you, ${esc(name)}</p>
+<p style="margin:0 0 24px;font-size:13px;color:#5a5650;line-height:1.8;">It’s been a little while. Our silk is still cut and finished by hand in Donegal, in the small batches you know — and a few quiet new pieces have arrived since you last visited.</p>
+<p style="margin:0 0 36px;font-size:13px;color:#5a5650;line-height:1.8;">If you’d like to treat yourself, your <strong style="color:#1a1916;letter-spacing:1px;">SILK10</strong> code is still good for 10% off whenever you’re ready.</p>
+<a href="https://silkilinen.com/shop" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">See what's new</a>
+</td></tr>
+<tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
+<p style="margin:0;font-size:11px;color:#aca8a2;">Donegal, Ireland &nbsp;·&nbsp; hello@silkilinen.com</p>
+</td></tr>
+</table></td></tr></table></body></html>`,
+  });
+}
+
 function buildStatusHtml({ order, heading, body, trackingBlock }) {
   const id = shortId(order._id);
   const firstName = order.customerName ? order.customerName.split(' ')[0] : 'there';
@@ -529,4 +562,4 @@ ${itemRows}
   });
 }
 
-module.exports = { sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail, sendDropAHint, sendCartRecoveryEmail };
+module.exports = { sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail, sendDropAHint, sendCartRecoveryEmail, sendWinbackReminder };

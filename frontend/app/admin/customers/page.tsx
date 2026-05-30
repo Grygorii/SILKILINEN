@@ -86,6 +86,24 @@ export default function CustomersPage() {
     }
   }
 
+  const [winbackSending, setWinbackSending] = useState(false);
+  async function sendWinback() {
+    if (!confirm('Email all at-risk customers a reminder about the existing 10% offer (SILK10)? Customers who already used SILK10 are skipped automatically.')) return;
+    setWinbackSending(true);
+    try {
+      const res = await fetch(`${API}/api/admin/customers/winback`, {
+        method: 'POST', credentials: 'include', headers: { 'X-CSRF-Token': '1' },
+      });
+      const data = await res.json();
+      if (res.ok) alert(`Win-back sent to ${data.sent} customer(s). ${data.skipped} skipped (already used SILK10 or no consent).`);
+      else alert(data.error || 'Failed to send');
+    } catch {
+      alert('Network error');
+    } finally {
+      setWinbackSending(false);
+    }
+  }
+
   const thStyle: React.CSSProperties = {
     textAlign: 'left', padding: '8px 12px', fontSize: 10, letterSpacing: '1.2px',
     textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 400,
@@ -106,6 +124,11 @@ export default function CustomersPage() {
             <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>{total} total</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
+            {segmentFilter === 'at-risk' && (
+              <button onClick={sendWinback} disabled={winbackSending} style={{ padding: '8px 14px', fontSize: 12, border: '1px solid #c62828', background: '#fff5f5', cursor: 'pointer', color: '#c62828', fontFamily: 'inherit' }}>
+                {winbackSending ? 'Sending…' : 'Send win-back reminder'}
+              </button>
+            )}
             <Link href="/admin/customers/founder" style={{ padding: '8px 14px', fontSize: 12, border: '1px solid var(--border)', color: 'var(--dark)', textDecoration: 'none' }}>
               Founder view
             </Link>

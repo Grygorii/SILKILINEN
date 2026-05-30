@@ -227,6 +227,54 @@ router.put('/:id/status', requireAuth, async (req, res) => {
   }
 });
 
+// GET /by-product/:productId — campaigns that drove orders containing this
+// product in the last 30d (#20). Reverse of the campaign→topProducts view:
+// given a product, which campaigns featured it and how many orders attributed.
+router.get('/by-product/:productId', requireAuth, async (req, res) => {
+  try {
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const orders = await Order.find({
+      createdAt: { $gte: since },
+      status: { $in: ['paid', 'processing', 'shipped', 'delivered'] },
+      'items.productId': req.params.productId,
+      $or: [
+        { 'utm.campaign': { $exists: true, $nin: [null, '', 'none'] } },
+        { 'attribution.campaign': { $exists: true, $nin: [null, '', 'none'] } },
+      ],
+    }).select('utm attribution total').lean();
+
+    const bySlug = {};
+    for (const o of orders) {
+      const slug = o.utm?.campaign || o.attribution?.campaign;
+      if (!slug || slug === 'none') continue;
+      if (!bySlug[slug]) bySlug[slug] = { slug, orders: 0, revenue: 0 };
+      bySlug[slug].orders += 1;
+      bySlug[slug].revenue += o.total || 0;
+    }
+
+    const slugs = Object.keys(bySlug);
+    const campaigns = slugs.length
+      ? await Campaign.find({ slug: { $in: slugs } }).select('name slug status').lean()
+      : [];
+    const nameMap = {};
+    campaigns.forEach(c => { nameMap[c.slug] = c; });
+
+    const result = slugs.map(slug => ({
+      slug,
+      name: nameMap[slug]?.name || slug,
+      campaignId: nameMap[slug]?._id || null,
+      status: nameMap[slug]?.status || null,
+      orders: bySlug[slug].orders,
+      revenue: Math.round(bySlug[slug].revenue * 100) / 100,
+    })).sort((a, b) => b.orders - a.orders);
+
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ── Duplicate campaign ────────────────────────────────────────────────────────
 router.post('/:id/duplicate', requireAuth, async (req, res) => {
   try {

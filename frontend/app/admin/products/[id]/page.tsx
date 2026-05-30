@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, use, useCallback } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import AiPhotoshoot from '@/components/AiPhotoshoot';
+import ProductCampaigns from '@/components/admin/ProductCampaigns';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -1275,6 +1276,9 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               }
             }}
           />
+
+          {/* Marketing pull-through (#20) — campaigns featuring this product */}
+          <ProductCampaigns productId={id} />
         </div>
       </div>
 
