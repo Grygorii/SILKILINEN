@@ -16,6 +16,7 @@ type Form = {
   description: string;
   status: BundleStatus;
   discountPercent: string;
+  categories: string[];
   isFeatured: boolean;
   featuredOrder: string;
   displayOrder: string;
@@ -24,6 +25,8 @@ type Form = {
   metaTitle: string;
   metaDescription: string;
 };
+
+type CategoryOption = { slug: string; label: string };
 
 type Product = {
   _id: string;
@@ -41,7 +44,7 @@ type BundleChild = {
 
 const EMPTY_FORM: Form = {
   name: '', slug: '', description: '',
-  status: 'draft', discountPercent: '0',
+  status: 'draft', discountPercent: '0', categories: [],
   isFeatured: false, featuredOrder: '', displayOrder: '0',
   heroImageUrl: '', heroImageAlt: '',
   metaTitle: '', metaDescription: '',
@@ -80,6 +83,15 @@ export default function AdminBundleEditPage({ params }: { params: Promise<{ id: 
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [searching, setSearching] = useState(false);
 
+  // Category options for the multi-select
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
+  useEffect(() => {
+    fetch(`${API}/api/categories`)
+      .then(r => r.ok ? r.json() : [])
+      .then((data: { slug: string; label: string }[]) => setCategoryOptions(data.map(c => ({ slug: c.slug, label: c.label }))))
+      .catch(() => {});
+  }, []);
+
   const load = useCallback(async () => {
     if (isNew) return;
     try {
@@ -92,6 +104,7 @@ export default function AdminBundleEditPage({ params }: { params: Promise<{ id: 
         description: data.description || '',
         status: data.status || 'draft',
         discountPercent: data.discountPercent != null ? String(data.discountPercent) : '0',
+        categories: Array.isArray(data.categories) ? data.categories : [],
         isFeatured: data.isFeatured || false,
         featuredOrder: data.featuredOrder != null ? String(data.featuredOrder) : '',
         displayOrder: data.displayOrder != null ? String(data.displayOrder) : '0',
@@ -135,6 +148,7 @@ export default function AdminBundleEditPage({ params }: { params: Promise<{ id: 
         description: form.description,
         status: form.status,
         discountPercent: form.discountPercent !== '' ? Number(form.discountPercent) : 0,
+        categories: form.categories,
         isFeatured: form.isFeatured,
         featuredOrder: form.featuredOrder !== '' ? Number(form.featuredOrder) : undefined,
         displayOrder: form.displayOrder !== '' ? Number(form.displayOrder) : 0,
@@ -408,6 +422,30 @@ export default function AdminBundleEditPage({ params }: { params: Promise<{ id: 
               <p className={styles.pricingRow}><span>Bundle price</span><strong>€{pricing.bundlePrice.toFixed(2)}</strong></p>
               <p className={styles.pricingRow}><span>Savings</span><span className={styles.pricingSavings}>−€{pricing.savings.toFixed(2)}</span></p>
             </div>
+
+            <label className={styles.label} style={{ marginTop: 16 }}>Categories</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {categoryOptions.length === 0 && <span className={styles.hint}>No categories yet.</span>}
+              {categoryOptions.map(cat => (
+                <label key={cat.slug} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--dark)', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={form.categories.includes(cat.slug)}
+                    onChange={(e) => {
+                      setForm(f => ({
+                        ...f,
+                        categories: e.target.checked
+                          ? [...f.categories, cat.slug]
+                          : f.categories.filter(s => s !== cat.slug),
+                      }));
+                      setSaved(false);
+                    }}
+                  />
+                  {cat.label}
+                </label>
+              ))}
+            </div>
+            <p className={styles.hint}>Tagged categories show this bundle in /shop?category=…</p>
 
             <label className={styles.label} style={{ marginTop: 16 }}>
               <input

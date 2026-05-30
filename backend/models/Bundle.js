@@ -26,6 +26,11 @@ const bundleSchema = new mongoose.Schema({
   // 0-100. e.g. 10 = 10% off the sum of included product prices.
   discountPercent: { type: Number, required: true, min: 0, max: 100, default: 0 },
 
+  // Category slugs this bundle belongs to (matches Category.slug). Lets a
+  // bundle surface in /shop?category=robes alongside individual robes —
+  // a discovery boost so browsers see the curated set, not just loose items.
+  categories: { type: [String], default: [] },
+
   isFeatured: { type: Boolean, default: false },
   featuredOrder: { type: Number },
   displayOrder: { type: Number, default: 0 },

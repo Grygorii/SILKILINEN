@@ -1,0 +1,83 @@
+.section {
+  margin-bottom: 40px;
+}
+
+.heading {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  color: var(--color-ink, #2A2218);
+  margin-bottom: 18px;
+}
+
+/* Horizontal scroll on mobile, wrap-free row on desktop. */
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  text-decoration: none;
+  color: var(--color-ink, #2A2218);
+  display: block;
+}
+
+.imgWrap {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  background: var(--cream, #f5f2ec);
+  margin-bottom: 10px;
+}
+
+.img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.imgPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: var(--cream, #f5f2ec);
+}
+
+.badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--color-ink, #2A2218);
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 4px 8px;
+}
+
+.name {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 15px;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+.priceRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.price {
+  font-size: 13px;
+  color: var(--color-ink, #2A2218);
+}
+
+.was {
+  font-size: 11px;
+  color: var(--color-ink-muted, #8a8278);
+  text-decoration: line-through;
+}

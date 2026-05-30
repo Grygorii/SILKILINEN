@@ -79,7 +79,7 @@ router.get('/:id', async (req, res) => {
 // PATCH /api/admin/bundles/:id
 router.patch('/:id', async (req, res) => {
   try {
-    const allowed = ['name', 'slug', 'description', 'heroImage', 'discountPercent', 'isFeatured', 'featuredOrder', 'displayOrder', 'status', 'metaTitle', 'metaDescription'];
+    const allowed = ['name', 'slug', 'description', 'heroImage', 'discountPercent', 'categories', 'isFeatured', 'featuredOrder', 'displayOrder', 'status', 'metaTitle', 'metaDescription'];
     const updates = {};
     for (const key of allowed) {
       if (key in req.body) updates[key] = req.body[key];

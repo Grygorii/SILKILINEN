@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import ProductGrid from '@/components/ProductGrid';
+import BundleStrip from '@/components/BundleStrip';
 import styles from './page.module.css';
 
 export const metadata: Metadata = {
@@ -94,6 +95,7 @@ export default async function ShopPage({
           <p className={styles.description}>{copy.description}</p>
         )}
       </div>
+      {category && <BundleStrip category={category} />}
       <ProductGrid products={products} currentCategory={category ?? 'all'} />
     </main>
   );

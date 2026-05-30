@@ -34,7 +34,11 @@ function shapeBundle(doc) {
 // GET /api/bundles — all active bundles, sorted by displayOrder
 router.get('/', async function(req, res) {
   try {
-    const bundles = await Bundle.find({ status: 'active' })
+    const filter = { status: 'active' };
+    // Optional ?category=slug — used by the shop page to surface bundles
+    // tagged with the category the customer is browsing.
+    if (req.query.category) filter.categories = req.query.category;
+    const bundles = await Bundle.find(filter)
       .sort({ displayOrder: 1, createdAt: -1 })
       .populate({ path: 'products.productId', select: PUBLIC_PRODUCT_FIELDS });
     res.json(bundles.map(shapeBundle));
