@@ -243,6 +243,34 @@ router.put('/:id/notes', requireAuth, async function(req, res) {
   }
 });
 
+// POST /api/orders/:id/recovery-email — manually (re)send a cart-recovery email.
+// Sends the next un-sent sequence by default, or a specific ?seq=. Mirrors the
+// automated cron logic in services/cartRecovery.js but admin-triggered.
+router.post('/:id/recovery-email', requireAuth, async function(req, res) {
+  try {
+    const { sendCartRecoveryEmail } = require('../services/email');
+    const order = await Order.findById(req.params.id).lean();
+    if (!order) return res.status(404).json({ error: 'Not found' });
+    if (order.status !== 'pending') return res.status(400).json({ error: 'Order is not a pending (abandoned) cart' });
+    if (!order.customerEmail) return res.status(400).json({ error: 'No customer email on this order' });
+    if (order.recoveryUnsubscribed) return res.status(400).json({ error: 'Customer unsubscribed from recovery emails' });
+
+    const sentSeqs = new Set((order.recoveryEmails || []).map(r => r.seq));
+    const seq = req.body.seq ? Number(req.body.seq) : ([1, 2, 3].find(s => !sentSeqs.has(s)) || 3);
+
+    await sendCartRecoveryEmail(order, seq);
+    const updated = await Order.findByIdAndUpdate(
+      req.params.id,
+      { $push: { recoveryEmails: { seq, sentAt: new Date() } } },
+      { new: true }
+    );
+    res.json({ sent: seq, recoveryEmails: updated.recoveryEmails });
+  } catch (err) {
+    console.error('[orders/recovery-email]', err.message);
+    res.status(500).json({ error: 'Failed to send recovery email' });
+  }
+});
+
 // POST /api/orders/:id/refund — issue a (partial or full) Stripe refund
 router.post('/:id/refund', requireAuth, async function(req, res) {
   try {

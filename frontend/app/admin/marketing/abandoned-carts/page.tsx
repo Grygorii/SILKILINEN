@@ -8,6 +8,7 @@ import styles from './page.module.css';
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 type OrderItem = { name: string; quantity: number; price: number; colour?: string; size?: string };
+type RecoveryEmail = { seq: number; sentAt: string };
 type AbandonedOrder = {
   _id: string;
   customerEmail: string | null;
@@ -17,6 +18,8 @@ type AbandonedOrder = {
   stripeSessionId: string | null;
   createdAt: string;
   updatedAt: string;
+  recoveryEmails?: RecoveryEmail[];
+  recoveryUnsubscribed?: boolean;
 };
 
 function relativeTime(iso: string): string {
@@ -41,6 +44,24 @@ export default function AbandonedCartsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [resending, setResending] = useState<string | null>(null);
+
+  async function resendRecovery(orderId: string) {
+    setResending(orderId);
+    try {
+      const res = await fetch(`${API}/api/orders/${orderId}/recovery-email`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' },
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || 'Failed to send'); return; }
+      setOrders(prev => prev.map(o => o._id === orderId ? { ...o, recoveryEmails: data.recoveryEmails } : o));
+    } catch {
+      alert('Network error');
+    } finally {
+      setResending(null);
+    }
+  }
 
   useEffect(() => {
     const now = new Date();
@@ -118,6 +139,30 @@ export default function AbandonedCartsPage() {
                   View order →
                 </Link>
               </div>
+            </div>
+
+            {/* Recovery-email status (#4) — which sequence emails went out + resend */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border, #eee)' }}>
+              {(order.recoveryEmails || []).length === 0 ? (
+                <span style={{ fontSize: 12, color: 'var(--muted)', fontStyle: 'italic' }}>No recovery email sent yet</span>
+              ) : (
+                (order.recoveryEmails || []).sort((a, b) => a.seq - b.seq).map(r => (
+                  <span key={r.seq} style={{ fontSize: 11, background: '#e8f5e9', color: '#2d7d47', padding: '3px 8px' }}>
+                    Email {r.seq} · {relativeTime(r.sentAt)}
+                  </span>
+                ))
+              )}
+              {order.recoveryUnsubscribed ? (
+                <span style={{ fontSize: 11, color: '#c0392b' }}>Unsubscribed</span>
+              ) : order.customerEmail ? (
+                <button
+                  onClick={() => resendRecovery(order._id)}
+                  disabled={resending === order._id}
+                  style={{ marginLeft: 'auto', padding: '5px 12px', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', border: '1px solid var(--dark)', background: 'white', color: 'var(--dark)' }}
+                >
+                  {resending === order._id ? 'Sending…' : 'Send recovery email'}
+                </button>
+              ) : null}
             </div>
 
             {isOpen && (

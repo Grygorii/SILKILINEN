@@ -154,6 +154,23 @@ export default function CustomerDetailPage() {
     router.push('/admin/customers');
   }
 
+  // Abandoned cart = a pending order older than 2h (#7)
+  const abandonedCart = orders.find(o =>
+    o.status === 'pending' && Date.now() - new Date(o.createdAt).getTime() > 2 * 3600 * 1000
+  );
+  const [recoverySent, setRecoverySent] = useState(false);
+  async function sendCartRecovery() {
+    if (!abandonedCart) return;
+    try {
+      const res = await fetch(`${API}/api/orders/${abandonedCart._id}/recovery-email`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' },
+      });
+      if (res.ok) setRecoverySent(true);
+      else { const d = await res.json(); alert(d.error || 'Failed'); }
+    } catch { alert('Network error'); }
+  }
+
   const card: React.CSSProperties = { background: 'white', border: '1px solid var(--border)', padding: '20px 24px', marginBottom: 16 };
   const label: React.CSSProperties = { fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 };
   const val: React.CSSProperties = { fontSize: 14, color: 'var(--dark)' };
@@ -293,6 +310,23 @@ export default function CustomerDetailPage() {
             ))}
           </div>
         </div>
+
+        {/* Abandoned-cart nudge (#7) */}
+        {abandonedCart && (
+          <div style={{ ...card, background: '#fff8e1', borderColor: '#f0e0a0', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 11, background: '#b07d00', color: 'white', padding: '3px 8px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Abandoned cart</span>
+            <span style={{ fontSize: 13, color: 'var(--dark)' }}>
+              €{abandonedCart.total.toFixed(2)} pending since {new Date(abandonedCart.createdAt).toLocaleDateString('en-IE', { day: 'numeric', month: 'short' })}
+            </span>
+            {recoverySent ? (
+              <span style={{ marginLeft: 'auto', fontSize: 13, color: '#2d7d47' }}>✓ Recovery email sent</span>
+            ) : (
+              <button onClick={sendCartRecovery} style={{ marginLeft: 'auto', padding: '7px 16px', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer', border: 'none', background: 'var(--dark)', color: 'white' }}>
+                Send recovery email
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Orders */}
         <div style={card}>
