@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 29 May 2026 (Dynamic-route 500 fix landed — Vercel runtime trace pinned the cause to isomorphic-dompurify dragging jsdom into every dynamic SSR bundle under Next.js 16 + Turbopack, where ERR_REQUIRE_ESM killed the function. Dropped the last two isomorphic-dompurify imports (AnnouncementBar, journal preview) in favour of the existing sanitizeArticleHtml regex helper. Static homepage was unaffected because it prerenders at build time; dynamic /shop, /collections, /product, /bundles, /journal/[slug] hit the failure at request time. Now all back to 200.).
+Last updated: 29 May 2026 (Visit geo-tracking rewrite — Warsaw visit was missing from admin dashboard because the backend's ipapi.co lookup silently failed, dropping the geo fields and excluding the Visit from the aggregation `{ country: { $exists: true, $ne: null } }`. New flow: browser → Next.js proxy on Vercel reads `x-vercel-ip-country/city/country-region` from incoming request → forwards to Railway in the body. Backend uses Vercel headers if present (free + instant), falls back to ipapi.co only for direct hits. Also added IP sha256 hash on Visit for future unique-visitor analytics + warn-level logging when geo resolves to null so silent drops are visible.).
 
 ---
 
@@ -113,6 +113,32 @@ Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--co
 **Out of scope (left untouched):** PDP, cart drawer, checkout. Per-card colour swatches stay off the grid (colour selection lives on the PDP). Pre-existing dead CSS `.colours` / `.colourDot` left in place (not created by this change).
 
 Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (`.wrapCard` 3:4 enforcement; `.skeleton` and `.missing` hardened with explicit `width: 100%; height: 100%` so the loading + failed states cannot collapse below the 3:4 box).
+
+---
+
+## Shipped 29 May 2026 — Visit geo-tracking rewrite (Vercel headers + IP hash + diagnostic logging)
+
+Founder reported a Warsaw friend's visit wasn't showing in the admin dashboard's "Top countries" / "Top cities" widgets. Audit found the silent-failure path:
+
+**Diagnosis.** Browser POSTed to `${API}/api/track/visit` (direct to Railway). Backend extracted client IP via Express `trust proxy = 1`, called `https://ipapi.co/${ip}/json/` with a 3-second timeout, and on **any** failure (timeout, rate-limit, 5xx, network blip) silently caught the error and returned `null`. The Visit doc then saved with `country/city/region = undefined`. Admin aggregation in `adminDashboard.js` filters `{ country: { $exists: true, $ne: null } }` for the top-countries widget, so a no-geo Visit silently disappears from analytics. No log, no diagnostic, just a missing row.
+
+Compounding problems: in-memory geo cache evaporates on every Railway redeploy; ipapi.co free tier (30k req/day, shared pool) can rate-limit unpredictably; the Visit doc didn't even store the IP, so no retro backfill was possible.
+
+**The rewrite — three tiers shipped together.**
+
+**Tier C (the primary fix): Vercel geo headers via Next.js proxy.** New route `frontend/app/api/track/visit/route.ts` reads the request's `x-vercel-ip-country` / `x-vercel-ip-city` / `x-vercel-ip-country-region` (every Vercel request carries these — free, instant, no API call) and forwards them to the Railway backend as a `geo` object in the body. Browser now POSTs to `/api/track/visit` (relative) so the Vercel proxy is in the path. Original `X-Forwarded-For` is preserved so the backend's `req.ip` still resolves correctly for the IP hash and ipapi.co fallback. The proxy uses `runtime = 'nodejs'` (not edge) for fetch + env-var compatibility.
+
+`backend/routes/track.js` now prefers the body's `geo` object when present (with `Intl.DisplayNames` mapping the country code to a display name — `"PL"` → `"Poland"` — so the aggregation still groups cleanly on the legacy `country` field). Falls back to ipapi.co only for direct backend hits or dev environments where Vercel isn't in the path. Effect: geo resolution is now free + instant for ~100% of real traffic.
+
+**Tier A: diagnostic logging + timeout bump.** Every previously-silent failure in `getGeoFromIpapi` now `console.warn`s the IP and the reason (HTTP status, error message, ipapi error reason). When the final resolved `geo` is null, the POST handler logs the sessionId, IP, and pathname so the dropped visit is at least visible in Railway logs. Timeout raised from 3s → 5s so slow-but-eventually-correct responses aren't abandoned.
+
+**Tier B: SHA-256 IP hash on Visit.** New `ipHash` field on `backend/models/Visit.js` (`String, index: true, sparse: true`). Computed via `crypto.createHash('sha256').update(req.ip).digest('hex')`. Not reversible to a person without the original IP + a dictionary attack — GDPR-friendly. Enables future "unique visitors" analytics that survives localStorage `sessionId` resets (which currently makes the same person look like multiple visitors).
+
+**Recovery for yesterday's Warsaw visit:** Not possible. The IP wasn't stored on the Visit doc, so there's nothing to look up. Fix forward only.
+
+**Privacy note for the founder:** The hashed IP is a soft form of PII under strict GDPR readings (it can be correlated across visits). The privacy policy may want a one-line addition: "We store an irreversible hash of your IP address for fraud prevention and analytics." Not blocking, but worth a sentence before any future audit.
+
+Files: `backend/routes/track.js` (full rewrite), `backend/models/Visit.js` (+ipHash), `frontend/app/api/track/visit/route.ts` (new), `frontend/lib/track.ts` (point at `/api/track/visit`).
 
 ---
 

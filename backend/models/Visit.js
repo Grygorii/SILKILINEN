@@ -18,6 +18,11 @@ const visitSchema = new mongoose.Schema({
   countryCode: String,
   city:        String,
   region:      String,
+  // sha256 hash of the visitor's IP — for unique-visitor analytics that
+  // survives localStorage sessionId resets. Not reversible to a person
+  // without the original IP, so GDPR-friendly. Indexed for fast
+  // distinct-count aggregations in the admin dashboard.
+  ipHash:      { type: String, index: true, sparse: true },
   createdAt:   { type: Date, default: Date.now, index: true },
   customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', sparse: true, index: true },
   convertedToOrder: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', sparse: true },

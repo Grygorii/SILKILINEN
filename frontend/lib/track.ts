@@ -1,4 +1,3 @@
-const API = process.env.NEXT_PUBLIC_API_URL;
 const SESSION_KEY = 'silkilinen_sid';
 
 export function getSessionId(): string {
@@ -55,7 +54,13 @@ export function trackVisit({ page, productId }: { page: string; productId?: stri
     const referrer  = document.referrer || null;
     const search    = window.location.search;
 
-    fetch(`${API}/api/track/visit`, {
+    // POST to the Vercel Next.js proxy at /api/track/visit (NOT directly
+    // to the Railway backend). The proxy reads Vercel's geo headers
+    // (x-vercel-ip-country / x-vercel-ip-city / x-vercel-ip-country-region)
+    // and forwards them to the backend in the body — free + instant geo
+    // resolution that doesn't depend on the backend's flaky ipapi.co
+    // lookup. See frontend/app/api/track/visit/route.ts.
+    fetch(`/api/track/visit`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
