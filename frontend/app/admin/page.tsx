@@ -6,6 +6,7 @@ import StatusPill from './_components/StatusPill';
 import Zone1ActionItems from './_components/dashboard/Zone1ActionItems';
 import Zone2Metrics from './_components/dashboard/Zone2Metrics';
 import Zone3Working from './_components/dashboard/Zone3Working';
+import FounderPulse from '@/components/dashboard/FounderPulse';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -128,6 +129,9 @@ export default function AdminDashboard() {
 
       {(dashData || dashError) && (
         <>
+          {/* This week's ad pulse — links to the full founder page (#17) */}
+          <FounderPulse />
+
           {/* Zones 1 + 2 side by side on desktop */}
           <div className={styles.zonesTopRow}>
             {dashData

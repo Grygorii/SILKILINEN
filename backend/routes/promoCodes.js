@@ -47,6 +47,44 @@ router.get('/', requireAuth, async function(req, res) {
   }
 });
 
+// GET /api/promo-codes/usage-report?days=30 — per-code revenue / AOV / redemptions
+// from actual orders (Order.discountCode), not just the usageCount counter.
+// Mounted BEFORE the /:id param routes so the static path isn't shadowed.
+router.get('/usage-report', requireAuth, async function(req, res) {
+  try {
+    const days = Math.min(365, Math.max(1, parseInt(req.query.days) || 30));
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const rows = await Order.aggregate([
+      { $match: {
+        createdAt: { $gte: since },
+        discountCode: { $exists: true, $nin: [null, ''] },
+        status: { $in: ['paid', 'processing', 'shipped', 'delivered'] },
+      } },
+      { $group: {
+        _id: { $toUpper: '$discountCode' },
+        orders: { $sum: 1 },
+        revenue: { $sum: '$total' },
+        discountGiven: { $sum: '$discountAmount' },
+      } },
+      { $project: {
+        code: '$_id',
+        orders: 1,
+        revenue: { $round: ['$revenue', 2] },
+        discountGiven: { $round: ['$discountGiven', 2] },
+        aov: { $round: [{ $cond: [{ $gt: ['$orders', 0] }, { $divide: ['$revenue', '$orders'] }, 0] }, 2] },
+        _id: 0,
+      } },
+      { $sort: { revenue: -1 } },
+    ]);
+
+    res.json({ days, rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /api/promo-codes/bulk — { action, ids } where action in BULK_ACTIONS.
 // Per-id status validation; partial failure is OK — response reports succeeded/failed.
 const BULK_ACTIONS = ['archive', 'restore', 'pause', 'resume'];

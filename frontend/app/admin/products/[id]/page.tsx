@@ -152,6 +152,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const [variants, setVariants] = useState<Variant[]>([]);
   const [saveState, setSaveState] = useState<SaveState>('saved');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [justPublished, setJustPublished] = useState(false);
+  // Tracks the last persisted status so we can detect a draft→active
+  // transition on save and show the "view live" confirmation once.
+  const lastSavedStatus = useRef<string>('draft');
   const [saveError, setSaveError] = useState('');
   const [validationErrors, setValidationErrors] = useState<{ field: string; label: string; message: string }[]>([]);
   const [invalidFields, setInvalidFields] = useState<Set<string>>(new Set());
@@ -223,6 +227,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           notes:        p.costing?.notes ?? '',
         });
         setLastSaved(new Date(p.updatedAt));
+        lastSavedStatus.current = p.status ?? 'draft';
         setSaveState('saved');
       })
       .finally(() => setLoading(false));
@@ -349,6 +354,11 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       }
       const updated = await res.json();
       if (updated.slug) setForm(f => ({ ...f, slug: updated.slug }));
+      // Detect a publish (anything → active) so we can confirm with a live link.
+      if (updated.status === 'active' && lastSavedStatus.current !== 'active') {
+        setJustPublished(true);
+      }
+      lastSavedStatus.current = updated.status ?? form.status;
       setSaveState('saved');
       setLastSaved(new Date());
     } catch (err) {
@@ -681,6 +691,28 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           </button>
         </div>
       </div>
+
+      {/* Publish confirmation — shows the live URL when a product goes active. */}
+      {justPublished && form.status === 'active' && (
+        <div style={{
+          background: '#e6f4ec', borderBottom: '1px solid #b7e0c7', color: '#1f6b3b',
+          padding: '10px 24px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', fontSize: 13,
+        }}>
+          <span>✓ Live at</span>
+          <a href={`/product/${id}`} target="_blank" rel="noopener noreferrer" style={{ color: '#1f6b3b', fontWeight: 600, textDecoration: 'underline' }}>
+            silkilinen.com/product/{id}
+          </a>
+          <button
+            onClick={() => { navigator.clipboard.writeText(`https://silkilinen.com/product/${id}`); }}
+            style={{ padding: '3px 10px', fontSize: 11, border: '1px solid #1f6b3b', background: 'transparent', color: '#1f6b3b', cursor: 'pointer', fontFamily: 'inherit' }}
+          >Copy link</button>
+          <button
+            onClick={() => setJustPublished(false)}
+            style={{ marginLeft: 'auto', padding: '3px 8px', fontSize: 11, border: 'none', background: 'transparent', color: '#1f6b3b', cursor: 'pointer', fontFamily: 'inherit' }}
+            aria-label="Dismiss"
+          >✕</button>
+        </div>
+      )}
 
       {/* ── Two-column grid ──────────────────────────────────────────────── */}
       <div className={styles.editGrid}>

@@ -82,6 +82,29 @@ export default function PromoCodesPage() {
   const [confirmDialog, setConfirmDialog] = useState<{ action: BulkAction; ids: string[] } | null>(null);
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
 
+  // Usage report (#2) — real revenue/AOV/redemptions from orders, last N days.
+  const [showUsage, setShowUsage] = useState(false);
+  const [usageDays, setUsageDays] = useState(30);
+  const [usageRows, setUsageRows] = useState<{ code: string; orders: number; revenue: number; discountGiven: number; aov: number }[]>([]);
+  const [usageLoading, setUsageLoading] = useState(false);
+
+  const loadUsage = useCallback(async (days: number) => {
+    setUsageLoading(true);
+    try {
+      const res = await fetch(`${API}/api/promo-codes/usage-report?days=${days}`, { credentials: 'include' });
+      const data = await res.json();
+      setUsageRows(Array.isArray(data.rows) ? data.rows : []);
+    } catch {
+      setUsageRows([]);
+    } finally {
+      setUsageLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (showUsage) loadUsage(usageDays);
+  }, [showUsage, usageDays, loadUsage]);
+
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
@@ -223,8 +246,62 @@ export default function PromoCodesPage() {
             <h1 className={styles.title}>Promo codes</h1>
             <p className={styles.sub}>Discount codes synced with Stripe Checkout</p>
           </div>
-          <Link href="/admin/promo-codes/new" className={styles.newBtn}>+ New code</Link>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button
+              onClick={() => setShowUsage(s => !s)}
+              style={{ padding: '9px 18px', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer', border: '1px solid var(--border)', background: showUsage ? 'var(--dark)' : 'white', color: showUsage ? 'white' : 'var(--dark)' }}
+            >
+              {showUsage ? 'Hide usage' : '📊 Usage report'}
+            </button>
+            <Link href="/admin/promo-codes/new" className={styles.newBtn}>+ New code</Link>
+          </div>
         </div>
+
+        {/* Usage report panel (#2) */}
+        {showUsage && (
+          <div style={{ border: '1px solid var(--border)', padding: 18, marginBottom: 24, background: 'white' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--dark)', margin: 0 }}>Code usage — last {usageDays} days</h2>
+              <div style={{ display: 'flex', gap: 2 }}>
+                {[30, 90, 365].map(d => (
+                  <button key={d} onClick={() => setUsageDays(d)} style={{
+                    padding: '5px 12px', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer',
+                    border: '1px solid var(--border)',
+                    background: usageDays === d ? '#5c35a8' : 'white', color: usageDays === d ? 'white' : 'var(--dark)',
+                  }}>{d === 365 ? '1y' : `${d}d`}</button>
+                ))}
+              </div>
+            </div>
+            {usageLoading ? (
+              <p style={{ fontSize: 13, color: 'var(--muted)' }}>Loading…</p>
+            ) : usageRows.length === 0 ? (
+              <p style={{ fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' }}>No code redemptions in this window.</p>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ textAlign: 'left', color: 'var(--muted)', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                    <th style={{ padding: '6px 8px' }}>Code</th>
+                    <th style={{ padding: '6px 8px', textAlign: 'right' }}>Orders</th>
+                    <th style={{ padding: '6px 8px', textAlign: 'right' }}>Revenue</th>
+                    <th style={{ padding: '6px 8px', textAlign: 'right' }}>AOV</th>
+                    <th style={{ padding: '6px 8px', textAlign: 'right' }}>Discount given</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {usageRows.map(r => (
+                    <tr key={r.code} style={{ borderTop: '1px solid var(--border)' }}>
+                      <td style={{ padding: '8px', fontFamily: 'monospace', fontWeight: 600 }}>{r.code}</td>
+                      <td style={{ padding: '8px', textAlign: 'right' }}>{r.orders}</td>
+                      <td style={{ padding: '8px', textAlign: 'right' }}>€{r.revenue.toFixed(2)}</td>
+                      <td style={{ padding: '8px', textAlign: 'right' }}>€{r.aov.toFixed(2)}</td>
+                      <td style={{ padding: '8px', textAlign: 'right', color: '#c0392b' }}>−€{r.discountGiven.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
 
         {/* Tabs */}
         <div className={styles.tabs}>
