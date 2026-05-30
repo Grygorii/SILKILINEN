@@ -11,6 +11,7 @@ const Visit = require('../models/Visit');
 const Product = require('../models/Product');
 const Bundle = require('../models/Bundle');
 const Expense = require('../models/Expense');
+const Customer = require('../models/Customer');
 const { calculateShipping } = require('../services/shipping');
 const { validateDiscount, redeemDiscount } = require('../services/discounts');
 const { calculateTax } = require('../services/tax');
@@ -343,11 +344,17 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
         try { items = JSON.parse(meta.items); } catch { /* ignore */ }
       }
 
-      // Snapshot COGS from product costing data at time of sale
+      // Snapshot COGS from product costing data at time of sale. Bundle
+      // lines have productId=null + an includedProducts array — their unit
+      // cost is the sum of the member products' costs. Collect every product
+      // id involved (direct lines AND bundle children) so a single query
+      // builds the cost map.
       let cogsTotal = null;
-      const productIds = items.map(i => i.productId).filter(Boolean);
-      if (productIds.length > 0) {
-        const products = await Product.find({ _id: { $in: productIds } }).select('costing').lean();
+      const directIds = items.map(i => i.productId).filter(Boolean);
+      const childIds  = items.flatMap(i => (i.includedProducts || []).map(c => c.productId)).filter(Boolean);
+      const allProductIds = [...new Set([...directIds, ...childIds].map(String))];
+      if (allProductIds.length > 0) {
+        const products = await Product.find({ _id: { $in: allProductIds } }).select('costing').lean();
         const costMap = {};
         for (const p of products) {
           costMap[String(p._id)] = p.costing?.totalUnitCost ?? null;
@@ -355,7 +362,21 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
         let allHaveCost = true;
         let sum = 0;
         for (const item of items) {
-          const unitCost = costMap[String(item.productId)] ?? null;
+          let unitCost = null;
+          if (item.bundleId) {
+            // Bundle unit cost = sum of member-product costs. If ANY member
+            // lacks costing data, the whole bundle's cost is unknown.
+            let bundleCost = 0;
+            let bundleComplete = (item.includedProducts || []).length > 0;
+            for (const child of (item.includedProducts || [])) {
+              const c = costMap[String(child.productId)] ?? null;
+              if (c === null) { bundleComplete = false; break; }
+              bundleCost += c * (child.quantity || 1);
+            }
+            unitCost = bundleComplete ? bundleCost : null;
+          } else {
+            unitCost = costMap[String(item.productId)] ?? null;
+          }
           if (unitCost === null) { allHaveCost = false; break; }
           sum += unitCost * (item.quantity || 1);
         }
@@ -456,6 +477,29 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
       if (sessionId) {
         Visit.updateMany({ sessionId }, { convertedToOrder: order._id })
           .catch(err => console.error('[checkoutV2] visit attribution write failed:', err.message));
+      }
+
+      // Stamp the customer's first-touch acquisition source from this order's
+      // attribution — but only if a Customer record exists (signed-up; guest
+      // checkouts have no Customer to update) and the field isn't already set
+      // (first order wins, so it reflects how we ACQUIRED them, not their
+      // latest visit). Fire-and-forget; never blocks order completion.
+      if (customerEmail) {
+        Customer.findOneAndUpdate(
+          {
+            email: customerEmail,
+            $or: [{ acquisitionSource: { $in: [null, ''] } }, { acquisitionSource: { $exists: false } }],
+          },
+          {
+            $set: {
+              acquisitionSource:   orderDoc.attribution.source,
+              acquisitionMedium:   orderDoc.attribution.medium,
+              acquisitionCampaign: orderDoc.attribution.campaign,
+              acquisitionVisitId:  visit?._id || null,
+              acquiredAt:          new Date(),
+            },
+          }
+        ).catch(err => console.error('[checkoutV2] acquisitionSource write failed:', err.message));
       }
 
       await Promise.allSettled([
