@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 const { requireAuth } = require('../middleware/auth');
+const PromoCode = require('../models/PromoCode');
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -21,6 +22,50 @@ async function timedFetch(url, options, ms = 5000) {
     return await fetch(url, { ...options, signal: ctrl.signal });
   } finally {
     clearTimeout(t);
+  }
+}
+
+/**
+ * Promo-coupon drift check. Stripe auto-deletes coupons after expiry, so an
+ * active PromoCode in our DB can point at a Stripe coupon that's gone — the
+ * code then silently fails at checkout. Verify up to 25 active codes that
+ * carry a stripeCouponId and report how many no longer resolve.
+ */
+async function checkPromoCouponDrift() {
+  const base = { name: 'promo_coupons', label: 'Promo codes (Stripe sync)' };
+  try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return { ...base, status: 'healthy', detail: 'Stripe not configured — skipped' };
+    }
+    const codes = await PromoCode.find({
+      status: 'active',
+      stripeCouponId: { $exists: true, $nin: [null, ''] },
+    }).select('code stripeCouponId').limit(25).lean();
+
+    if (codes.length === 0) {
+      return { ...base, status: 'healthy', detail: 'No active Stripe-linked codes' };
+    }
+
+    const results = await Promise.allSettled(codes.map(c =>
+      timedFetch(`https://api.stripe.com/v1/coupons/${encodeURIComponent(c.stripeCouponId)}`, {
+        headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
+      }, 4000).then(r => ({ code: c.code, ok: r.ok, status: r.status }))
+    ));
+
+    const dead = results
+      .map((r, i) => (r.status === 'fulfilled' && r.value.ok === false && r.value.status === 404) ? codes[i].code : null)
+      .filter(Boolean);
+
+    if (dead.length > 0) {
+      return {
+        ...base,
+        status: 'warning',
+        detail: `${dead.length} active code${dead.length > 1 ? 's' : ''} point at a deleted Stripe coupon: ${dead.slice(0, 5).join(', ')}${dead.length > 5 ? '…' : ''}`,
+      };
+    }
+    return { ...base, status: 'healthy', detail: `${codes.length} active code${codes.length > 1 ? 's' : ''} verified` };
+  } catch (err) {
+    return { ...base, status: 'warning', detail: `Drift check failed: ${err.message}` };
   }
 }
 
@@ -75,6 +120,8 @@ async function runChecks() {
         detail: missing.length === 0 ? 'All required vars set' : `Missing: ${missing.join(', ')}`,
       };
     }),
+
+    checkPromoCouponDrift(),
   ]);
 
   const checks = results.map(r =>

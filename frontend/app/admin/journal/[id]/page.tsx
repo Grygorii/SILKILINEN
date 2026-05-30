@@ -46,6 +46,8 @@ export default function JournalEditorPage() {
   const [excerpt, setExcerpt] = useState('');
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [saving, setSaving] = useState(false);
+  const [justPublished, setJustPublished] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState(false);
   const [seoOpen, setSeoOpen] = useState(false);
   const [seoForm, setSeoForm] = useState({ slug: '', metaTitle: '', metaDescription: '', keywords: '', author: 'Sabreen' });
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -198,10 +200,12 @@ export default function JournalEditorPage() {
   async function publish() {
     if (!confirm('Publish this article? It will be visible on the live site.')) return;
     await save('published');
+    setJustPublished(true);
   }
 
   async function unpublish() {
     await save('draft');
+    setJustPublished(false);
   }
 
   if (loading || !article) {
@@ -257,6 +261,42 @@ export default function JournalEditorPage() {
             )}
           </div>
         </div>
+
+        {/* Publish-success confirmation — shows the live URL so the founder
+            knows the article actually went public + can grab the link. */}
+        {justPublished && article.status === 'published' && (
+          <div style={{
+            background: '#e6f4ec', borderBottom: '1px solid #b7e0c7', color: '#1f6b3b',
+            padding: '10px 24px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', fontSize: 13,
+          }}>
+            <span>✓ Published live at</span>
+            <a
+              href={`/journal/${article.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#1f6b3b', fontWeight: 600, textDecoration: 'underline' }}
+            >
+              silkilinen.com/journal/{article.slug}
+            </a>
+            <button
+              onClick={async () => {
+                await navigator.clipboard.writeText(`https://silkilinen.com/journal/${article.slug}`);
+                setCopiedUrl(true);
+                setTimeout(() => setCopiedUrl(false), 2000);
+              }}
+              style={{ padding: '3px 10px', fontSize: 11, border: '1px solid #1f6b3b', background: 'transparent', color: '#1f6b3b', cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              {copiedUrl ? 'Copied!' : 'Copy link'}
+            </button>
+            <button
+              onClick={() => setJustPublished(false)}
+              style={{ marginLeft: 'auto', padding: '3px 8px', fontSize: 11, border: 'none', background: 'transparent', color: '#1f6b3b', cursor: 'pointer', fontFamily: 'inherit' }}
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Canvas */}
         <div style={{ maxWidth: 720, margin: '0 auto', padding: '48px 24px 120px' }}>
