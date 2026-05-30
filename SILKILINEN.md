@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 29 May 2026 (Admin audit fix pass — shipped 10 verified findings from a fan-out audit + adversarial verification Workflow. Security: detectImageType on 3 upload routes (Finance/Social/Content); rate-limit on AI generation endpoints; field allowlist on aiModels create/update; GDPR export GET→POST behind CSRF; mask emails in auth failure logs. UX: fixed broken Products search (q vs search mismatch); error banners on 5 admin pages that previously swallowed fetch errors silently; product autosave 30s→7s. Workflow: combined Mark-as-shipped action on Order detail (was 2 separate saves). Info: Marketing dashboard Spend windowed to 30d so ROAS is no longer mathematically wrong.).
+Last updated: 29 May 2026 (Connection-audit quick wins batch 1 — shipped 4 of the 20 ranked feature/connection improvements: Site Audit promoted to top-level nav; Stripe coupon-drift health check; UTM Builder "Save as campaign" button; journal publish "view live" confirmation bar. Remaining 16 tracked in the backlog section below with the 3 product decisions that gate the bigger ones.).
 
 ---
 
@@ -113,6 +113,43 @@ Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--co
 **Out of scope (left untouched):** PDP, cart drawer, checkout. Per-card colour swatches stay off the grid (colour selection lives on the PDP). Pre-existing dead CSS `.colours` / `.colourDot` left in place (not created by this change).
 
 Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (`.wrapCard` 3:4 enforcement; `.skeleton` and `.missing` hardened with explicit `width: 100%; height: 100%` so the loading + failed states cannot collapse below the 3:4 box).
+
+---
+
+## Shipped 29 May 2026 — Connection-audit quick wins (batch 1 of the 20 ranked improvements)
+
+The connection/feature audit produced 20 ranked improvement ideas (distinct from the security/UX audit's 10 findings). Shipped the 4 that are clean, decision-free, and high-leverage. The other 16 either need a founder product decision or are MEDIUM/LARGE — tracked in the backlog section below.
+
+1. **#18 — Site Audit promoted to top-level Config nav.** Was buried 3 levels deep at `/admin/settings/advanced/site-audit` (the most useful "is anything broken" screen, basically invisible). New "Site Audit" entry in `AdminLayout.tsx` Config section (Activity icon), pointing at the real page.
+2. **#16 — Stripe coupon-drift health check.** Stripe auto-deletes coupons after expiry, so an active PromoCode in our DB can point at a coupon that's gone — and the code then silently fails at checkout. New `checkPromoCouponDrift()` in `adminHealth.js` queries up to 25 active Stripe-linked codes, verifies each against `GET /v1/coupons/:id`, and returns a `warning` status (with the dead code names) if any 404. Surfaces on the Dashboard Zone-4 system-health panel.
+3. **#9 — UTM Builder "Save as campaign".** The builder slugifies the campaign name for `utm_campaign`; the campaign create route slugifies the name for its `slug` — **identical slugify functions**, so a campaign created from the builder auto-matches its own UTM links for attribution. New button POSTs `{ name, channel }` (channel mapped from utm_source) to `/api/admin/campaigns` and redirects to the created campaign. Eliminates the type-the-name-twice problem. Caveat: if a campaign with that slug already exists, the create route appends a timestamp and the slug diverges from the link — acceptable since the button is for creating *new* campaigns.
+4. **#12 — Journal publish "view live" confirmation.** After publishing, a green bar drops under the editor's sticky top bar showing `silkilinen.com/journal/<slug>` as a clickable live link + a copy-link button + dismiss. Answers the founder's "did it actually publish?" question. (Product publish is a trivial follow-up but its status-dropdown popover is fiddlier — left for batch 2.)
+
+Files: `frontend/components/AdminLayout.tsx`, `backend/routes/adminHealth.js`, `frontend/app/admin/marketing/utm-builder/page.tsx`, `frontend/app/admin/journal/[id]/page.tsx`.
+
+### Backlog — remaining 16 of the 20, grouped
+
+**Need a founder product decision before building:**
+- **#1 Campaign spend → Finance** (M): auto-create an Expense per spendUpdate, OR have Finance sum Campaign spend directly. Eliminates the double ad-spend ledger. *Decision: which direction.*
+- **#5 Bundles ↔ Categories** (M): should a bundle of 3 robes appear in `/shop?category=robes`? *Decision: do bundles surface in browse filters.*
+- **#15 Auto-issue promo to at-risk customers** (M): bulk-creates personal codes + sends email. *Decision: the offer % + email copy.*
+- **#6 Unified image picker across Image Studio + Content** (L): pick homepage hero from AI winners. *Decision: scope + design.*
+
+**Clean MEDIUM, no decision (batch 2 candidates):**
+- #2 Promo code usage report (revenue/AOV/redemption per code)
+- #4 Abandoned-cart "email sent" indicator + manual resend
+- #7 Customer detail → abandoned-cart pill + one-click recovery
+- #10 Category bulk-reassign + archive guard
+- #13 Bundles inherit COGS from member products (Finance margin)
+- #14 Image Studio → assign winner directly as product image
+- #17 Promote marketing "founder pulse" KPIs onto main Dashboard
+- #20 Per-product "featured in N campaigns, M attributed orders" panel
+
+**SMALL, no decision (could fold into batch 2):**
+- #8 Backfill `Customer.acquisitionSource` from `Order.utm_source` (touches the Stripe webhook — handle carefully)
+- #11 Dashboard "last 7 days" toggle alongside the 30-day view
+- #19 Surface Finance anomalies on the Dashboard health zone
+- #12-products Product publish "view live" toast (the journal half shipped)
 
 ---
 
