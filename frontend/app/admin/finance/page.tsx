@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import AdminErrorBanner from '@/components/AdminErrorBanner';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -67,13 +68,22 @@ export default function FinanceOverviewPage() {
   const [shippingNotes, setShippingNotes] = useState('');
   const [shippingSaving, setShippingSaving] = useState(false);
 
-  useEffect(() => {
+  const [loadError, setLoadError] = useState('');
+
+  const load = useCallback(() => {
+    setLoading(true);
+    setLoadError('');
     fetch(`${API}/api/admin/finance/overview`, { credentials: 'include' })
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(setData)
-      .catch(() => {})
+      .catch(err => {
+        console.error('[finance] load failed:', err);
+        setLoadError('Could not load finance data. Check your connection and try again.');
+      })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   async function saveShippingCost() {
     if (!shippingModal) return;
@@ -101,7 +111,14 @@ export default function FinanceOverviewPage() {
   }
 
   if (loading) return <AdminLayout active="finance"><p className={styles.loading}>Loading…</p></AdminLayout>;
-  if (!data)   return <AdminLayout active="finance"><p className={styles.empty}>Could not load finance data.</p></AdminLayout>;
+  if (!data)   return (
+    <AdminLayout active="finance">
+      <div style={{ padding: 24 }}>
+        <AdminErrorBanner error={loadError} onRetry={load} />
+        {!loadError && <p className={styles.empty}>No finance data yet.</p>}
+      </div>
+    </AdminLayout>
+  );
 
   const { currentMonth: cm, last30: l30, perOrderRows, expenseBreakdown, prompts } = data;
 

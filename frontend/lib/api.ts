@@ -82,3 +82,41 @@ export const api = {
   patch:  <T = unknown>(p: string, body?: unknown, init?: ApiInit) => apiFetch<T>(p, { ...init, method: 'PATCH', body }),
   delete: <T = unknown>(p: string, init?: ApiInit) => apiFetch<T>(p, { ...init, method: 'DELETE' }),
 };
+
+/**
+ * Download the response body as a file. Used by admin exports (GDPR JSON,
+ * customer CSV) — they're POSTs (not GETs) so they're covered by the CSRF
+ * middleware, but the browser still has to write the response to a blob
+ * + trigger an a[download] click manually.
+ */
+export async function downloadBlob(path: string, filename: string, init: ApiInit = {}): Promise<void> {
+  const { body: _body, local, headers: initHeaders, credentials, method: initMethod, ...rest } = init;
+  void _body; // downloadBlob never sends a body; drop it from the spread so TS doesn't see the BodyInit-incompatible `unknown` type
+  const method = (initMethod || 'POST').toUpperCase();
+  const headers = new Headers(initHeaders);
+  if (shouldSendCsrf(method) && !headers.has('X-CSRF-Token')) {
+    headers.set('X-CSRF-Token', '1');
+  }
+  const res = await fetch(buildUrl(path, local), {
+    ...rest,
+    method,
+    headers,
+    credentials: credentials ?? 'include',
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new ApiError(res.status, body, `Download failed (${res.status})`);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  try {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}

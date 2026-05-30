@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import AdminErrorBanner from '@/components/AdminErrorBanner';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -49,14 +50,32 @@ function marginColor(m: number | null) {
 export default function FinanceReportsPage() {
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true);
+    setLoadError('');
     fetch(`${API}/api/admin/finance/reports`, { credentials: 'include' })
-      .then(r => r.json()).then(setData).catch(() => {}).finally(() => setLoading(false));
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(setData)
+      .catch(err => {
+        console.error('[finance/reports] load failed:', err);
+        setLoadError('Could not load reports. Check your connection and try again.');
+      })
+      .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => { load(); }, [load]);
+
   if (loading) return <AdminLayout active="finance"><p className={styles.loading}>Loading…</p></AdminLayout>;
-  if (!data)   return <AdminLayout active="finance"><p className={styles.loading}>Could not load reports.</p></AdminLayout>;
+  if (!data) return (
+    <AdminLayout active="finance">
+      <div style={{ padding: 24 }}>
+        <AdminErrorBanner error={loadError} onRetry={load} />
+        {!loadError && <p className={styles.loading}>No reports yet.</p>}
+      </div>
+    </AdminLayout>
+  );
 
   const { monthlyPL, marginByProduct, marginBySource, anomalies } = data;
   const allZero = monthlyPL.every(m => m.revenue === 0 && m.orderCount === 0);

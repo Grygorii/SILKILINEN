@@ -193,6 +193,56 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
     }
   }
 
+  /**
+   * Combined ship action — saves tracking + flips status to 'shipped'
+   * + (optionally) emails the customer in one click. Replaces the
+   * previous two-step "Save tracking → scroll → Update status" flow
+   * which was the most-clicked admin workflow.
+   */
+  async function markAsShipped() {
+    if (!order) return;
+    if (!trackingNumber.trim()) {
+      setTrackingMsg('Add a tracking number first.');
+      return;
+    }
+    setTrackingSaving(true);
+    setStatusSaving(true);
+    setTrackingMsg('');
+    setStatusMsg('');
+    try {
+      const trackRes = await fetch(`${API}/api/orders/${id}/tracking`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trackingNumber, trackingUrl, carrier, estimatedDelivery: estimatedDelivery || null }),
+      });
+      if (!trackRes.ok) {
+        setTrackingMsg('Tracking save failed — order not shipped.');
+        return;
+      }
+      const statusRes = await fetch(`${API}/api/orders/${id}/status`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'shipped', note: statusNote || `Shipped via ${carrier || 'carrier'} (${trackingNumber})`, sendEmail }),
+      });
+      const data = await statusRes.json();
+      if (statusRes.ok) {
+        setOrder(data);
+        setNewStatus('shipped');
+        setStatusNote('');
+        setTrackingMsg('Shipped ✓');
+      } else {
+        setStatusMsg(data.error || 'Status update failed (tracking saved).');
+      }
+    } catch {
+      setTrackingMsg('Ship failed — try again.');
+    } finally {
+      setTrackingSaving(false);
+      setStatusSaving(false);
+    }
+  }
+
   async function issueRefund() {
     const amount = parseFloat(refundAmount);
     if (!amount || amount <= 0) { setRefundMsg('Enter a valid amount'); return; }
@@ -336,8 +386,21 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
             </div>
             <div className={styles.cardFooter}>
               {trackingMsg && <span className={styles.saveMsg}>{trackingMsg}</span>}
-              <button className={styles.saveBtn} onClick={saveTracking} disabled={trackingSaving}>
-                {trackingSaving ? 'Saving…' : 'Save tracking'}
+              <button
+                className={styles.saveBtn}
+                onClick={markAsShipped}
+                disabled={trackingSaving || statusSaving || order.status === 'shipped' || order.status === 'delivered'}
+                style={{ background: 'var(--dark)', color: 'var(--warm-white)' }}
+              >
+                {trackingSaving ? 'Shipping…' : 'Mark as shipped'}
+              </button>
+              <button
+                className={styles.saveBtn}
+                onClick={saveTracking}
+                disabled={trackingSaving}
+                style={{ background: 'transparent', color: 'var(--dark)', border: '1px solid var(--border)' }}
+              >
+                {trackingSaving ? 'Saving…' : 'Save tracking only'}
               </button>
             </div>
           </section>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
+import AdminErrorBanner from '@/components/AdminErrorBanner';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -50,6 +51,7 @@ export default function CustomerDetailPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [totalSpend, setTotalSpend] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ firstName: '', lastName: '', phone: '', customerType: 'retail', internalRating: '', tags: '' });
@@ -79,7 +81,10 @@ export default function CustomerDetailPage() {
           tags: (data.customer.tags || []).join(', '),
         });
       }
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error('[customer] load failed:', err);
+      setLoadError('Could not load customer. Check your connection and try again.');
+    }
     setLoading(false);
   }, [id]);
 
@@ -135,7 +140,12 @@ export default function CustomerDetailPage() {
   }
 
   async function gdprExport() {
-    window.open(`${API}/api/admin/customers/${id}/gdpr-export`, '_blank');
+    const { downloadBlob } = await import('@/lib/api');
+    try {
+      await downloadBlob(`/api/admin/customers/${id}/gdpr-export`, `gdpr-export-${id}.json`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Export failed');
+    }
   }
 
   async function gdprDelete() {
@@ -154,7 +164,14 @@ export default function CustomerDetailPage() {
     return <AdminLayout><div style={{ padding: 28, color: 'var(--muted)', fontSize: 13 }}>Loading…</div></AdminLayout>;
   }
   if (!customer) {
-    return <AdminLayout><div style={{ padding: 28, color: 'var(--muted)', fontSize: 13 }}>Customer not found.</div></AdminLayout>;
+    return (
+      <AdminLayout>
+        <div style={{ padding: 28 }}>
+          <AdminErrorBanner error={loadError} onRetry={load} />
+          {!loadError && <div style={{ color: 'var(--muted)', fontSize: 13 }}>Customer not found.</div>}
+        </div>
+      </AdminLayout>
+    );
   }
 
   const name = [customer.firstName, customer.lastName].filter(Boolean).join(' ') || customer.email;

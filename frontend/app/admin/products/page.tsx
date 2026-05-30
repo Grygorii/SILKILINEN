@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import AdminErrorBanner from '@/components/AdminErrorBanner';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -300,6 +301,7 @@ export default function AdminProductsPage() {
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   // Filters
   const [searchInput, setSearchInput] = useState('');
@@ -364,7 +366,7 @@ export default function AdminProductsPage() {
   const load = useCallback(() => {
     setLoading(true);
     const params = new URLSearchParams();
-    if (search) params.set('q', search);
+    if (search) params.set('search', search);
     if (statusFilter) params.set('status', statusFilter);
     if (categoryFilter) params.set('category', categoryFilter);
     if (stockFilter) params.set('stock', stockFilter);
@@ -386,15 +388,20 @@ export default function AdminProductsPage() {
     if (page > 1) urlParams.set('page', String(page));
     window.history.replaceState({}, '', `${window.location.pathname}${urlParams.toString() ? '?' + urlParams : ''}`);
 
+    setLoadError('');
     fetch(`${API}/api/admin/products?${params}`, { credentials: 'include' })
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(data => {
         setProducts(Array.isArray(data) ? data : (data.products ?? []));
         setTotal(data.total ?? 0);
         setPages(data.pages ?? 1);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(err => {
+        console.error('[products] load failed:', err);
+        setLoadError('Could not load products. Check your connection and try again.');
+        setLoading(false);
+      });
   }, [search, statusFilter, categoryFilter, stockFilter, issuesFilter, sortField, sortDir, page]);
 
   useEffect(() => { load(); }, [load]);
@@ -680,6 +687,7 @@ export default function AdminProductsPage() {
         <p className={styles.emptyText}>No products found.</p>
       ) : (
         <>
+        <AdminErrorBanner error={loadError} onRetry={load} />
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <colgroup>

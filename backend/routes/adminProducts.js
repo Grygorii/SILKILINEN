@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const cloudinary = require('cloudinary').v2;
 const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
@@ -9,6 +10,19 @@ const { generateProductSEO, AIServiceError } = require('../services/aiText');
 const { SLOT_KEYS } = require('../config/imageSlots');
 const Category = require('../models/Category');
 const { detectImageType } = require('../utils/fileSignature');
+
+// Burst-protection for AI generation endpoints — 20 calls per IP per hour.
+// Sized so the founder's normal daily rhythm (a handful of generations) is
+// nowhere near the cap, but a runaway loop or compromised cookie can't
+// blow the AI budget in a minute. Each generation costs real money via
+// Gemini/DeepSeek API calls.
+const aiRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many AI generation calls in the last hour. Wait a few minutes and try again.' },
+});
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -474,7 +488,7 @@ router.post('/export', async function(req, res) {
 });
 
 // POST /api/admin/products/bulk-generate-seo — generate SEO for all products missing it
-router.post('/bulk-generate-seo', async function(req, res) {
+router.post('/bulk-generate-seo', aiRateLimit, async function(req, res) {
   try {
     const products = await Product.find({
       status: { $ne: 'archived' },
@@ -521,7 +535,7 @@ router.post('/bulk-generate-seo', async function(req, res) {
 });
 
 // POST /api/admin/products/:id/generate-seo — generate SEO for one product (no auto-save)
-router.post('/:id/generate-seo', async function(req, res) {
+router.post('/:id/generate-seo', aiRateLimit, async function(req, res) {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Product not found' });

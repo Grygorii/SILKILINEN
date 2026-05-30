@@ -72,13 +72,20 @@ router.get('/dashboard', requireAuth, async (req, res) => {
       ? 'No active campaigns running right now.'
       : `You're running ${activeCampaigns.length} active campaign${activeCampaigns.length !== 1 ? 's' : ''}. €${todaySpend.toFixed(2)} spent today, ${todayAdOrders} order${todayAdOrders !== 1 ? 's' : ''} attributed.`;
 
-    // Campaign list with quick stats
+    // Campaign list with quick stats.
+    // Spend is windowed to last 30d (sum of spendUpdates dated within that
+    // window) so it lines up apples-to-apples with revenue and ROAS.
+    // The previous behaviour used lifetime c.spend / 30d revenue which
+    // gave a systematically wrong ROAS — see SILKILINEN.md INFO-1 entry.
     const campaignRows = campaigns.map(c => {
       const campOrders = adOrders30d.filter(o =>
         o.utm?.campaign === c.slug || o.attribution?.campaign === c.slug
       );
       const revenue = campOrders.reduce((s, o) => s + (o.total || 0) - (o.refundedAmount || 0), 0);
-      const roas    = c.spend > 0 ? revenue / c.spend : null;
+      const spend30d = (c.spendUpdates || [])
+        .filter(u => new Date(u.date) >= ago30d)
+        .reduce((s, u) => s + (u.amount || 0), 0);
+      const roas    = spend30d > 0 ? revenue / spend30d : null;
       const lastCreative = c.creatives?.length > 0 ? c.creatives[c.creatives.length - 1].name : null;
       return {
         _id:         c._id,
@@ -86,7 +93,8 @@ router.get('/dashboard', requireAuth, async (req, res) => {
         slug:        c.slug,
         channel:     c.channel,
         status:      c.status,
-        spend:       c.spend || 0,
+        spend:       spend30d,
+        spendLifetime: c.spend || 0,
         budget:      c.budget || 0,
         orders:      campOrders.length,
         revenue,

@@ -198,7 +198,7 @@ export default function MarketingDashboardPage() {
               <th>Name</th>
               <th>Channel</th>
               <th>Status</th>
-              <th>Spend</th>
+              <th>Spend (30d)</th>
               <th>Revenue (30d)</th>
               <th>ROAS</th>
               <th>Orders</th>

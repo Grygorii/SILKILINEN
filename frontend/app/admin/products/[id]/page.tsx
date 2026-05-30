@@ -232,7 +232,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     setSaveState('unsaved');
     setSaveError('');
     clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => doSaveRef.current?.(), 30_000);
+    autoSaveTimer.current = setTimeout(() => doSaveRef.current?.(), 7_000);
   }, []); // eslint-disable-line
 
   // Load active categories for the category dropdown

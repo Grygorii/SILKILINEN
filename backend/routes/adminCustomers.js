@@ -7,16 +7,9 @@ const Order = require('../models/Order');
 const PromoCode = require('../models/PromoCode');
 const Segment = require('../models/Segment');
 const { recomputeAll, ensureSegmentDocs } = require('../services/segments');
+const { maskEmail } = require('../utils/maskEmail');
 
 router.use(requireAuth);
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function maskEmail(email) {
-  if (!email) return '';
-  const [local, domain] = email.split('@');
-  return `${local[0]}***@${domain}`;
-}
 
 // ── GET /api/admin/customers — paginated list ─────────────────────────────────
 router.get('/', async (req, res) => {

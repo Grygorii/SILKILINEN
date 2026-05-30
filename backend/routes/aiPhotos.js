@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const rateLimit = require('express-rate-limit');
 const { GoogleGenAI } = require('@google/genai');
 const AiModel = require('../models/AiModel');
 const PhotoshootSession = require('../models/PhotoshootSession');
@@ -10,6 +11,18 @@ const { getTier, getDefaultTierKey } = require('../utils/imageValidation');
 const SystemState = require('../models/SystemState');
 const falImage = require('../services/falImage');
 const { shouldUseFal } = require('../services/aiImageRouter');
+
+// Shared AI rate limiter — 20/hr per IP. Same shape as adminProducts.js.
+// aiPhotos already has a per-day Gemini quota counter at the DB level,
+// but that's not an HTTP rate limit — bursts within a minute weren't
+// constrained.
+const aiRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many AI generation calls in the last hour. Wait a few minutes and try again.' },
+});
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash-preview-image-generation';
@@ -323,7 +336,7 @@ router.post('/sessions', requireAuth, async function(req, res) {
   }
 });
 
-router.post('/sessions/:id/generate', requireAuth, async function(req, res) {
+router.post('/sessions/:id/generate', requireAuth, aiRateLimit, async function(req, res) {
   try {
     const { preset, positions, forceOverride } = req.body;
     const session = await PhotoshootSession.findById(req.params.id).populate('selectedModel');

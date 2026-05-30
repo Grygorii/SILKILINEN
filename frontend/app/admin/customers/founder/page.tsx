@@ -129,9 +129,16 @@ export default function CustomersFounderPage() {
           <Link href="/admin/customers/new" style={{ padding: '10px 18px', background: 'var(--dark)', color: 'white', textDecoration: 'none', fontSize: 13 }}>
             + Add customer manually
           </Link>
-          <Link href={`${API}/api/admin/customers/export/csv`} target="_blank" style={{ padding: '10px 18px', border: '1px solid var(--border)', color: 'var(--dark)', textDecoration: 'none', fontSize: 13 }}>
+          <button
+            onClick={async () => {
+              const { downloadBlob } = await import('@/lib/api');
+              try { await downloadBlob('/api/admin/customers/export/csv', 'customers.csv'); }
+              catch (err) { alert(err instanceof Error ? err.message : 'Export failed'); }
+            }}
+            style={{ padding: '10px 18px', border: '1px solid var(--border)', color: 'var(--dark)', background: 'transparent', textDecoration: 'none', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
             Export all (CSV)
-          </Link>
+          </button>
           <Link href="/admin/customers?segment=lapsed" style={{ padding: '10px 18px', border: '1px solid var(--border)', color: 'var(--dark)', textDecoration: 'none', fontSize: 13 }}>
             View lapsed customers
           </Link>

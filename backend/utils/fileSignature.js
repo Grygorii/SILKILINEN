@@ -31,6 +31,21 @@ function detectImageType(buf) {
   return null;
 }
 
+function detectPdfType(buf) {
+  if (!buf || buf.length < 4) return null;
+  // PDF: 25 50 44 46  ("%PDF")
+  if (buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46) return 'pdf';
+  return null;
+}
+
+/**
+ * For receipt uploads (finance tab) — receipts arrive as either a scanned
+ * image OR a PDF straight from the supplier's invoice email. Accept both.
+ */
+function detectReceiptType(buf) {
+  return detectImageType(buf) || detectPdfType(buf);
+}
+
 function assertIsImage(file) {
   const type = detectImageType(file && file.buffer);
   if (!type) {
@@ -42,4 +57,4 @@ function assertIsImage(file) {
   return type;
 }
 
-module.exports = { detectImageType, assertIsImage };
+module.exports = { detectImageType, detectPdfType, detectReceiptType, assertIsImage };

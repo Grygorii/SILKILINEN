@@ -78,7 +78,12 @@ export default function CustomersPage() {
   async function exportCsv() {
     const params = new URLSearchParams();
     if (segmentFilter) params.set('segment', segmentFilter);
-    window.open(`${API}/api/admin/customers/export/csv?${params}`, '_blank');
+    const { downloadBlob } = await import('@/lib/api');
+    try {
+      await downloadBlob(`/api/admin/customers/export/csv?${params}`, 'customers.csv');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Export failed');
+    }
   }
 
   const thStyle: React.CSSProperties = {

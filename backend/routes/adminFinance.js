@@ -351,6 +351,13 @@ router.post('/receipts', requireAuth, upload.single('file'), async (req, res) =>
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
+    // Magic-byte check — multer's mime filter is trivially spoofable; refuse
+    // anything that isn't a real image or PDF before pushing to Cloudinary.
+    const { detectReceiptType } = require('../utils/fileSignature');
+    if (!detectReceiptType(req.file.buffer)) {
+      return res.status(400).json({ error: 'Receipt must be an image (jpeg/png/gif/webp) or PDF.' });
+    }
+
     const result = await uploadToCloudinary(req.file.buffer, {
       folder: 'silkilinen/receipts',
       resource_type: 'auto',

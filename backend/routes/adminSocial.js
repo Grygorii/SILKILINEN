@@ -181,6 +181,14 @@ router.post('/posts/:id/images', requireAuth, upload.array('images', 10), async 
     const post = await SocialPost.findById(req.params.id);
     if (!post) return res.status(404).json({ error: 'Not found' });
 
+    // Magic-byte check on every file — multer's MIME filter is spoofable.
+    const { detectImageType } = require('../utils/fileSignature');
+    for (const file of req.files || []) {
+      if (!detectImageType(file.buffer)) {
+        return res.status(400).json({ error: `"${file.originalname}" is not a recognised image (jpeg/png/gif/webp).` });
+      }
+    }
+
     const uploaded = [];
     for (const file of req.files || []) {
       const result = await uploadToCloudinary(file.buffer, {

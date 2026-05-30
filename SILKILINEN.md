@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 29 May 2026 (Visit geo-tracking rewrite — Warsaw visit was missing from admin dashboard because the backend's ipapi.co lookup silently failed, dropping the geo fields and excluding the Visit from the aggregation `{ country: { $exists: true, $ne: null } }`. New flow: browser → Next.js proxy on Vercel reads `x-vercel-ip-country/city/country-region` from incoming request → forwards to Railway in the body. Backend uses Vercel headers if present (free + instant), falls back to ipapi.co only for direct hits. Also added IP sha256 hash on Visit for future unique-visitor analytics + warn-level logging when geo resolves to null so silent drops are visible.).
+Last updated: 29 May 2026 (Admin audit fix pass — shipped 10 verified findings from a fan-out audit + adversarial verification Workflow. Security: detectImageType on 3 upload routes (Finance/Social/Content); rate-limit on AI generation endpoints; field allowlist on aiModels create/update; GDPR export GET→POST behind CSRF; mask emails in auth failure logs. UX: fixed broken Products search (q vs search mismatch); error banners on 5 admin pages that previously swallowed fetch errors silently; product autosave 30s→7s. Workflow: combined Mark-as-shipped action on Order detail (was 2 separate saves). Info: Marketing dashboard Spend windowed to 30d so ROAS is no longer mathematically wrong.).
 
 ---
 
@@ -113,6 +113,38 @@ Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--co
 **Out of scope (left untouched):** PDP, cart drawer, checkout. Per-card colour swatches stay off the grid (colour selection lives on the PDP). Pre-existing dead CSS `.colours` / `.colourDot` left in place (not created by this change).
 
 Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (`.wrapCard` 3:4 enforcement; `.skeleton` and `.missing` hardened with explicit `width: 100%; height: 100%` so the loading + failed states cannot collapse below the 3:4 box).
+
+---
+
+## Shipped 29 May 2026 — Admin audit fix pass (10 verified findings, 4 lenses)
+
+After running a security/UX/workflow/info-arch audit across every admin tab and then a Workflow-orchestrated adversarial-verification pass (10 parallel verifiers each reading the cited file and quoting evidence — 10/10 confirmed, zero false positives), shipped all 10 in one commit.
+
+**Security (5)**
+
+1. **detectImageType on Finance/Social/Content uploads.** Reference impl already existed in `adminProducts.js:687` + `adminJournal.js:70`; was missing in `adminFinance.js:354` (receipts), `adminSocial.js:186` (post images), `content.js:124` (homepage/about CMS uploads). multer's MIME filter is spoofable — a malicious admin (or a stolen cookie) could push arbitrary bytes through with a fake `image/jpeg` header. Added magic-byte gating. Receipts get a new `detectReceiptType` helper that accepts JPEG/PNG/GIF/WebP **or** PDF (receipts arrive as scanned images OR supplier PDFs).
+2. **Rate-limit AI generation endpoints.** `bulk-generate-seo`, `generate-seo`, `aiModels/:id/generate-reference`, `aiPhotos/sessions/:id/generate` — none had express-rate-limit. Each call costs real money via Gemini/DeepSeek. Added 20/hr per IP. aiPhotos already had a per-day DB quota counter but that's not an HTTP rate limit — bursts within a minute were uncapped.
+3. **Field allowlist on `aiModels` POST/PUT.** Were spreading raw `req.body` into `AiModel.create` and `findByIdAndUpdate`. Added `AI_MODEL_ALLOWED_FIELDS` + `pickAiModelFields` matching the existing `PRODUCT_ALLOWED_FIELDS` pattern. Stops a tampered request from flipping `locked` outside the official lock-model flow.
+4. **GDPR export GET → POST.** Both `/admin/customers/:id/gdpr-export` and `/admin/customers/export/csv` were GETs guarded only by cookie auth — vulnerable to a phishing `<a href>` click. CSRF middleware exempts safe methods, so GETs sailed past. Switched both to POST so the existing custom-header CSRF defence covers them. Frontend call sites (3: customer detail, customer list, founder dashboard) migrated from `window.open` to a new shared `downloadBlob()` helper in `frontend/lib/api.ts` that POSTs and writes the response to an `a[download]` click.
+5. **Mask emails in auth failure logs.** `auth.js` lines 31/37/42/61 interpolated raw email into `console.warn` on failed logins. Promoted the existing `maskEmail` helper from `adminCustomers.js` to a shared `backend/utils/maskEmail.js` so both can use it. Failed-login probes against real customer emails no longer splatter plaintext addresses into Railway log retention.
+
+**UX (3)**
+
+6. **Fixed broken Products search.** Frontend `products/page.tsx:367` sent `?q=search-term`; backend `adminProducts.js:140` destructured `search`. Mismatch — backend never saw the query. Founder typed product names and got the unfiltered list back. One-line fix: `params.set('q', ...)` → `params.set('search', ...)`.
+7. **Error banners on 5 admin pages.** Orders, Products list, Customer detail, Finance Overview, Finance Reports all caught fetch errors silently and rendered an empty state — making "API down" look identical to "no data yet". New `frontend/components/AdminErrorBanner.tsx` (self-contained inline styles, no CSS-module dependency) renders a cream-on-red banner with a `Try again` button that re-invokes the loader. Wired into all 5 pages with proper `loadError` state + non-2xx response throwing.
+8. **Product autosave 30s → 7s.** `products/[id]/page.tsx:235` debounce. Founder used to edit a variant, walk away to grab a photo, come back — change lost if she didn't manually save. 7s is the conventional window.
+
+**Workflow (1)**
+
+9. **"Mark as shipped" action on Order detail.** Previously: type tracking number → click "Save tracking" → scroll → change Status dropdown to "shipped" → click "Update status" = 2 saves for the most common admin action. New primary button on the Tracking card calls a combined `markAsShipped()` that PUTs tracking THEN flips status to `shipped` in sequence (with a default status note `Shipped via <carrier> (<tracking>)` if the admin didn't add one). Refuses to fire if tracking number is blank. The old "Save tracking only" stays as a secondary button for the rare case of saving tracking before the parcel actually ships.
+
+**Information architecture (1)**
+
+10. **Marketing dashboard Spend windowed to 30d.** `marketingDashboard.js:81` was computing `roas = revenue30d / c.spend` where `c.spend` is the lifetime aggregate — a systematic ROAS overestimate. Rewrote to sum `c.spendUpdates` filtered to the last 30 days; ROAS now uses 30d-spend / 30d-revenue (apples-to-apples). Column header in `marketing/page.tsx` relabelled to `Spend (30d)` so the founder knows what she's looking at. Lifetime spend still available on the response as `spendLifetime` for any future "all-time" view.
+
+**Process note.** Before shipping, fed all 10 findings to a Workflow with 10 parallel verifier agents — each one had to read the cited file:line and produce a literal code quote as evidence before the claim was confirmed. 10/10 confirmed, zero refuted, zero partial — meaning the upstream audit was clean. Worth doing every time the audit comes from a single agent; saves the founder from fixing things that aren't actually broken.
+
+Files: `backend/utils/{fileSignature,maskEmail}.js`, `backend/routes/{adminProducts,adminCustomers,adminFinance,adminSocial,adminFinance,aiModels,aiPhotos,auth,content,marketingDashboard}.js`, `frontend/lib/api.ts`, `frontend/components/AdminErrorBanner.tsx` (new), `frontend/app/admin/orders/{page.tsx,[id]/page.tsx}`, `frontend/app/admin/products/{page.tsx,[id]/page.tsx}`, `frontend/app/admin/customers/{page.tsx,[id]/page.tsx,founder/page.tsx}`, `frontend/app/admin/finance/{page.tsx,reports/page.tsx}`, `frontend/app/admin/marketing/page.tsx`.
 
 ---
 

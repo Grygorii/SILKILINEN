@@ -1,10 +1,37 @@
 const express = require('express');
 const router = express.Router();
+const rateLimit = require('express-rate-limit');
 const { GoogleGenAI } = require('@google/genai');
 const AiModel = require('../models/AiModel');
 const { cloudinary } = require('../utils/cloudinary');
 const { requireAuth } = require('../middleware/auth');
 const { getTier } = require('../utils/imageValidation');
+
+// Shared AI rate limiter — 20/hr per IP. Same shape as adminProducts.js.
+const aiRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many AI generation calls in the last hour. Wait a few minutes and try again.' },
+});
+
+// Field allowlist for direct create/update — anything else in req.body
+// is dropped before it hits Mongoose. Stops a tampered request from
+// flipping server-controlled flags like `locked` from outside the
+// official "lock model" flow.
+const AI_MODEL_ALLOWED_FIELDS = [
+  'name', 'prompt', 'productShotPromptTemplate', 'lifestyleShotPromptTemplate',
+  'referenceImageUrl', 'active', 'notes',
+];
+
+function pickAiModelFields(body) {
+  const out = {};
+  for (const k of AI_MODEL_ALLOWED_FIELDS) {
+    if (k in body) out[k] = body[k];
+  }
+  return out;
+}
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash-preview-image-generation';
 
@@ -45,7 +72,7 @@ router.get('/', requireAuth, async function(req, res) {
 
 router.post('/', requireAuth, async function(req, res) {
   try {
-    const model = await AiModel.create(req.body);
+    const model = await AiModel.create(pickAiModelFields(req.body));
     res.status(201).json(model);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -54,7 +81,7 @@ router.post('/', requireAuth, async function(req, res) {
 
 router.put('/:id', requireAuth, async function(req, res) {
   try {
-    const model = await AiModel.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const model = await AiModel.findByIdAndUpdate(req.params.id, pickAiModelFields(req.body), { new: true, runValidators: true });
     if (!model) return res.status(404).json({ error: 'Model not found' });
     res.json(model);
   } catch (err) {
@@ -73,7 +100,7 @@ router.delete('/:id', requireAuth, async function(req, res) {
   }
 });
 
-router.post('/:id/generate-reference', requireAuth, async function(req, res) {
+router.post('/:id/generate-reference', requireAuth, aiRateLimit, async function(req, res) {
   try {
     const aiModel = await AiModel.findById(req.params.id);
     if (!aiModel) return res.status(404).json({ error: 'Model not found' });

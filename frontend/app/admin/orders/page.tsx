@@ -3,6 +3,7 @@
 import { useState, useEffect, Fragment, useCallback } from 'react';
 import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
+import AdminErrorBanner from '@/components/AdminErrorBanner';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -78,6 +79,7 @@ export default function AdminOrdersPage() {
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const [statusFilter, setStatusFilter] = useState('all');
@@ -96,13 +98,17 @@ export default function AdminOrdersPage() {
     params.set('page', String(page));
     params.set('limit', '50');
 
+    setLoadError('');
     try {
       const res = await fetch(`${API}/api/orders?${params}`, { credentials: 'include' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setOrders(Array.isArray(data.orders) ? data.orders : []);
       setTotal(data.total ?? 0);
       setPages(data.pages ?? 1);
-    } catch {
+    } catch (err) {
+      console.error('[orders] load failed:', err);
+      setLoadError('Could not load orders. Check your connection and try again.');
       setOrders([]);
     } finally {
       setLoading(false);
@@ -174,6 +180,8 @@ export default function AdminOrdersPage() {
           }}>Clear</button>
         )}
       </div>
+
+      <AdminErrorBanner error={loadError} onRetry={load} />
 
       {loading ? (
         <p className={styles.loading}>Loading…</p>

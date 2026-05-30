@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const { requireAuth } = require('../middleware/auth');
 const loginBootstrap = require('../utils/loginBootstrap');
+const { maskEmail } = require('../utils/maskEmail');
 
 // 5 attempts per IP per 15 minutes
 const loginLimiter = rateLimit({
@@ -28,18 +29,18 @@ router.post('/login', loginLimiter, async function(req, res) {
 
     const user = await User.findOne({ email });
     if (!user) {
-      console.warn(`[AUTH] Failed login (no user): ${email} | ip=${ip}`);
+      console.warn(`[AUTH] Failed login (no user): ${maskEmail(email)} | ip=${ip}`);
       return res.status(401).json({ error: 'Incorrect email or password.' });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      console.warn(`[AUTH] Failed login (bad password): ${email} | ip=${ip}`);
+      console.warn(`[AUTH] Failed login (bad password): ${maskEmail(email)} | ip=${ip}`);
       return res.status(401).json({ error: 'Incorrect email or password.' });
     }
 
     if (user.role !== 'admin') {
-      console.warn(`[AUTH] Non-admin login attempt: ${email} | role=${user.role} | ip=${ip}`);
+      console.warn(`[AUTH] Non-admin login attempt: ${maskEmail(email)} | role=${user.role} | ip=${ip}`);
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -58,7 +59,7 @@ router.post('/login', loginLimiter, async function(req, res) {
       path: '/',
     });
 
-    console.log(`[AUTH] Admin login: ${email} | ip=${ip}`);
+    console.log(`[AUTH] Admin login: ${maskEmail(email)} | ip=${ip}`);
     // Cross-domain cookie workaround: the Vercel frontend needs the JWT to
     // set its own first-party cookie that Next.js middleware can read.
     // Returning the JWT in the body leaks it to network logs / dev tools,

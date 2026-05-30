@@ -79,6 +79,13 @@ router.post('/upload', requireAuth, upload.single('image'), async function(req, 
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
+    // Magic-byte check — multer's mime filter is spoofable; refuse anything
+    // that isn't a real image before involving Cloudinary or sharp.
+    const { detectImageType } = require('../utils/fileSignature');
+    if (!detectImageType(req.file.buffer)) {
+      return res.status(400).json({ error: 'File is not a recognised image (jpeg/png/gif/webp).' });
+    }
+
     const missingVars = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET']
       .filter(v => !process.env[v]);
     if (missingVars.length) {
