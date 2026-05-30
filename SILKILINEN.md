@@ -2,7 +2,7 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
-Last updated: 29 May 2026 (Connection-audit quick wins batch 1 — shipped 4 of the 20 ranked feature/connection improvements: Site Audit promoted to top-level nav; Stripe coupon-drift health check; UTM Builder "Save as campaign" button; journal publish "view live" confirmation bar. Remaining 16 tracked in the backlog section below with the 3 product decisions that gate the bigger ones.).
+Last updated: 29 May 2026 (Connection-audit batches A+B — founder answered the 4 gating product decisions; shipped #13 bundle COGS rollup, #8 Customer.acquisitionSource (webhook + backfill script), #5 Bundles↔Categories (model + admin multi-select + shop BundleStrip). #1 campaign-spend→Finance found already-implemented (audit false positive). 8 of 20 improvements now shipped; remaining 11 queued in backlog with founder decisions recorded.).
 
 ---
 
@@ -113,6 +113,39 @@ Everything else reads from `--s-1..7`, `--color-ink`, `--color-ink-muted`, `--co
 **Out of scope (left untouched):** PDP, cart drawer, checkout. Per-card colour swatches stay off the grid (colour selection lives on the PDP). Pre-existing dead CSS `.colours` / `.colourDot` left in place (not created by this change).
 
 Files: `frontend/components/ProductGrid.{tsx,module.css}`, `frontend/components/products/ProductImage.{tsx,module.css}` (`.wrapCard` 3:4 enforcement; `.skeleton` and `.missing` hardened with explicit `width: 100%; height: 100%` so the loading + failed states cannot collapse below the 3:4 box).
+
+---
+
+## Shipped 29 May 2026 — Connection-audit batches A + B (decided items + Finance plumbing)
+
+Founder answered the 4 gating decisions: **#1** auto-log spend as Expense; **#5** yes, bundles in category browse; **#15** win-back is a *reminder of the existing 10% offer*, not a new code; **#6** lite image picker. Shipped the Finance + Bundles work; the rest of the decided items are queued.
+
+**Batch A — Finance plumbing**
+- **#1 — already implemented (audit false positive).** `campaigns.js` POST `/:id/spend` already auto-creates a `marketing_ads` Expense (`isAutomatic: true`, `sourceRef: campaign:<id>`). The connection-audit claimed this connection was missing, but that audit wasn't adversarially verified — building-before-trusting caught it. No change needed. (Double-counting only happens if the founder *also* manually logs a marketing_ads expense for the same spend — user behaviour, not a code gap.)
+- **#13 — Bundle COGS rollup.** The checkout webhook's COGS snapshot previously set `cogs: null` for any order containing a bundle (the bundle line has `productId: null`). Rewrote the COGS block to collect direct product IDs *and* bundle-child IDs into one cost-map query, then compute each bundle line's unit cost as the sum of its `includedProducts` costs (× child qty). If any member lacks costing data the bundle cost is unknown (consistent with the per-product rule). Bundle orders now carry a real COGS figure into Finance margin reports.
+- **#8 — Customer.acquisitionSource.** The webhook now stamps `acquisitionSource/medium/campaign + acquiredAt` from the order's attribution on the customer's FIRST order — only if a Customer record exists (guest checkouts have none) and the field is empty (first-touch wins). Fire-and-forget, wrapped so it never blocks order completion. New `backend/scripts/backfillAcquisitionSource.js` backfills existing customers from their earliest order (dry-run confirmed: 3 customers, none with orders yet — nothing to backfill, webhook handles it forward).
+
+**Batch B — Bundles ↔ Categories (#5)**
+- `Bundle` model gains `categories: [String]` (Category.slug values). `adminBundles` PATCH allowlist accepts it; public `GET /api/bundles` accepts `?category=` filter.
+- Bundle admin editor: a category checkbox multi-select (options fetched from `/api/categories`), loaded + saved with the bundle.
+- New `frontend/components/BundleStrip.tsx` (+ `.module.css`) — a server component that fetches active bundles tagged with a category and renders them as a strip above the shop grid (save-% badge, struck price, links to `/bundles/[slug]`). Renders nothing when no bundles match, so it drops into every category page unconditionally. Mounted in `shop/page.tsx` when a category is selected. A customer browsing robes now sees the robe bundle too.
+
+Files: `backend/routes/checkoutV2.js`, `backend/scripts/backfillAcquisitionSource.js`, `backend/models/Bundle.js`, `backend/routes/{bundles,adminBundles}.js`, `frontend/app/admin/bundles/[id]/page.tsx`, `frontend/components/BundleStrip.{tsx,module.css}`, `frontend/app/(shop)/shop/page.tsx`.
+
+### Backlog — remaining 11 of 20 (founder decisions recorded)
+
+- **#15** Win-back: build a "Send win-back reminder" action on the at-risk segment that emails the existing 10% offer (SILK10) — **no new codes**. ⚠️ Verify lapsed customers can still redeem SILK10 if they used it as newcomers before building.
+- **#6** Lite image picker: surface Image Studio winners as a source in the Content image picker.
+- **#2** Promo code usage report (revenue/AOV/redemption per code).
+- **#4** Abandoned-cart "email sent" indicator + manual resend.
+- **#7** Customer detail → abandoned-cart pill + one-click recovery.
+- **#10** Category bulk-reassign + archive guard.
+- **#14** Image Studio → assign winner directly as a product image.
+- **#17** Promote marketing "founder pulse" KPIs onto the main Dashboard.
+- **#19** Surface Finance anomalies on the Dashboard health zone.
+- **#11** Dashboard "last 7 days" toggle.
+- **#20** Per-product "featured in N campaigns" backlink panel.
+- **#12b** Product publish "view live" toast (journal half already shipped).
 
 ---
 
