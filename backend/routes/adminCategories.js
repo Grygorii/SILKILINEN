@@ -88,13 +88,33 @@ router.patch('/:id', async (req, res) => {
 });
 
 // DELETE /api/admin/categories/:id  (soft archive)
-// Existing products that reference this slug are intentionally not touched —
-// they keep their category string and will simply stop appearing in the
-// public categories list. Admin can reassign them via the product edit page.
+// Guard: if products still reference this category slug, refuse to archive
+// (409) unless the caller passes ?reassignTo=<slug> to move them first.
+// Without the guard, archiving silently orphaned products to a dead filter.
 router.delete('/:id', async (req, res) => {
   try {
-    const category = await Category.findByIdAndUpdate(req.params.id, { status: 'archived' }, { new: true });
+    const category = await Category.findById(req.params.id);
     if (!category) return res.status(404).json({ error: 'Not found' });
+
+    const productCount = await Product.countDocuments({ category: category.slug });
+    const reassignTo = req.query.reassignTo;
+
+    if (productCount > 0 && !reassignTo) {
+      return res.status(409).json({
+        error: 'category_has_products',
+        productCount,
+        message: `${productCount} product${productCount > 1 ? 's are' : ' is'} still tagged "${category.slug}". Reassign them to another category before archiving.`,
+      });
+    }
+
+    if (productCount > 0 && reassignTo) {
+      const target = await Category.findOne({ slug: reassignTo, status: 'active' });
+      if (!target) return res.status(400).json({ error: 'reassignTo category not found or not active' });
+      await Product.updateMany({ category: category.slug }, { $set: { category: reassignTo } });
+    }
+
+    category.status = 'archived';
+    await category.save();
     res.json({ message: 'Archived', category });
   } catch (err) {
     console.error(err);

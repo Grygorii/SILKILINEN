@@ -52,8 +52,26 @@ export default function AdminCategoriesPage() {
   useEffect(() => { load(); }, [load]);
 
   async function archive(id: string) {
-    if (!confirm('Archive this category? Existing products keep their tag — they\'ll just stop appearing in public category filters.')) return;
-    await fetch(`${API}/api/admin/categories/${id}`, { method: 'DELETE', credentials: 'include' });
+    if (!confirm('Archive this category?')) return;
+    const res = await fetch(`${API}/api/admin/categories/${id}`, { method: 'DELETE', credentials: 'include', headers: { 'X-CSRF-Token': '1' } });
+    if (res.status === 409) {
+      // Category still has products — offer to reassign them first.
+      const data = await res.json();
+      const active = categories.filter(c => c._id !== id && c.status === 'active');
+      const options = active.map(c => c.slug).join(', ');
+      const target = prompt(
+        `${data.message}\n\nType the slug of the category to move them to (or Cancel):\n${options}`
+      );
+      if (!target) return;
+      if (!active.some(c => c.slug === target.trim())) { alert(`"${target}" is not an active category.`); return; }
+      const retry = await fetch(`${API}/api/admin/categories/${id}?reassignTo=${encodeURIComponent(target.trim())}`, {
+        method: 'DELETE', credentials: 'include', headers: { 'X-CSRF-Token': '1' },
+      });
+      if (!retry.ok) { const d = await retry.json(); alert(d.error || 'Failed'); return; }
+    } else if (!res.ok) {
+      alert('Failed to archive category.');
+      return;
+    }
     load();
   }
 

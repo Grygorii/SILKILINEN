@@ -97,6 +97,34 @@ function SurfaceCard({ surface }: { surface: Surface }) {
     });
   }, [winner]);
 
+  // Assign this asset directly as a product image (#14) — reuses the
+  // Cloudinary URL via the product images/url route, no download/reupload.
+  const handleAssignToProduct = useCallback(async (asset: Asset) => {
+    const term = window.prompt('Assign to which product? Type part of the product name:');
+    if (!term || !term.trim()) return;
+    try {
+      const sr = await fetch(`${API}/api/admin/products?search=${encodeURIComponent(term.trim())}&limit=6`, { credentials: 'include' });
+      const data = await sr.json();
+      const matches: { _id: string; name: string }[] = Array.isArray(data) ? data : (data.products || []);
+      if (matches.length === 0) { alert('No products matched that search.'); return; }
+      const chosen = matches.length === 1
+        ? matches[0]
+        : matches.find(m => m.name.toLowerCase() === term.trim().toLowerCase())
+          || (() => { alert(`Multiple matches — be more specific:\n${matches.map(m => m.name).join('\n')}`); return null; })();
+      if (!chosen) return;
+      if (!confirm(`Add this image to "${chosen.name}"?`)) return;
+      const res = await fetch(`${API}/api/admin/products/${chosen._id}/images/url`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' },
+        body: JSON.stringify({ url: asset.url }),
+      });
+      if (res.ok) alert(`Added to "${chosen.name}".`);
+      else { const d = await res.json(); alert(d.error || 'Failed to assign'); }
+    } catch {
+      alert('Network error');
+    }
+  }, []);
+
   const handleResetPrompt = useCallback(() => {
     if (promptDirty && !confirm('Reset prompt to seed? Your edits will be lost.')) return;
     setPrompt(surface.seedPrompt);
@@ -171,6 +199,9 @@ function SurfaceCard({ surface }: { surface: Surface }) {
                   )}
                   <button onClick={() => window.open(asset.downloadUrl, '_blank')} className={styles.overlayBtn}>
                     Download
+                  </button>
+                  <button onClick={() => handleAssignToProduct(asset)} className={styles.overlayBtn}>
+                    → Product
                   </button>
                   <button onClick={() => handleDelete(asset)} className={`${styles.overlayBtn} ${styles.overlayBtnDelete}`}>
                     Delete

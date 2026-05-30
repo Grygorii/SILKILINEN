@@ -84,6 +84,25 @@ router.get('/', requireAuth, async function(req, res) {
   }
 });
 
+// GET /winners — every chosen winner across all surfaces. Used by the
+// Content image picker (#6) so the founder can reuse an Image Studio
+// winner as a homepage / about image without the download-then-reupload loop.
+router.get('/winners', requireAuth, async function(req, res) {
+  try {
+    const winners = await SocialAsset.find({ isWinner: true }).sort({ generatedAt: -1 }).limit(40).lean();
+    const out = winners
+      .filter(a => SURFACES_MAP.has(a.surface))
+      .map(a => {
+        const surface = SURFACES_MAP.get(a.surface);
+        return { ...formatAsset(a, surface), surfaceLabel: surface.label || a.surface };
+      });
+    res.json(out);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /generate — generate 4 candidates via Imagen 3
 router.post('/generate', requireAuth, generateRateLimit, async function(req, res) {
   try {

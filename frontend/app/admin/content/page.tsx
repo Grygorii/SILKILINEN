@@ -154,6 +154,16 @@ export default function ContentPage() {
   const [saving, setSaving] = useState(false);
   const [savedKey, setSavedKey] = useState('');
   const [error, setError] = useState('');
+
+  // Image Studio winners — selectable as content images (#6), so the founder
+  // can reuse an AI-generated winner without download-then-reupload.
+  const [studioWinners, setStudioWinners] = useState<{ _id: string; url: string; surfaceLabel: string }[]>([]);
+  useEffect(() => {
+    fetch(`${API}/api/admin/social-assets/winners`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : [])
+      .then((data) => setStudioWinners(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
   const fileRef = useRef<HTMLInputElement>(null);
 
   type IgStatus = { configured: boolean; cachedPostCount: number; fetchedAt: string | null; tokenRefreshedAt: string | null; lastError: string | null };
@@ -451,6 +461,28 @@ export default function ContentPage() {
                   <button className={styles.uploadBtn} onClick={() => fileRef.current?.click()}>
                     {edit.value ? 'Replace image' : 'Upload image'}
                   </button>
+
+                  {/* Image Studio winners (#6) — pick one instead of uploading */}
+                  {studioWinners.length > 0 && (
+                    <div style={{ marginTop: 18 }}>
+                      <p style={{ fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 10 }}>
+                        Or reuse an Image Studio winner
+                      </p>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))', gap: 8 }}>
+                        {studioWinners.map(w => (
+                          <button
+                            key={w._id}
+                            onClick={() => reuseImage(w.url)}
+                            title={w.surfaceLabel}
+                            style={{ padding: 0, border: edit.value === w.url ? '2px solid var(--dark)' : '1px solid var(--border)', background: 'none', cursor: 'pointer', aspectRatio: '1', overflow: 'hidden' }}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={w.url} alt={w.surfaceLabel} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {libraryImages.length > 1 && (
                     <details className={styles.libraryPicker}>
