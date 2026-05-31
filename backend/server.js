@@ -177,6 +177,24 @@ app.use(function(err, req, res, next) {
   if (res.headersSent) return;
   const status = err.status || err.statusCode || 500;
   const message = err.expose ? err.message : 'Internal server error';
+  // TEMP diagnostic — leak err details on admin product image uploads so
+  // we can stop guessing which middleware is throwing. Admin-auth-gated
+  // path; revert this branch once the cause is identified.
+  const isImageUpload = req.method === 'POST'
+    && /^\/api\/admin\/products\/[^/]+\/images$/.test(req.path);
+  if (isImageUpload) {
+    return res.status(status).json({
+      error: message,
+      _diag: {
+        from: 'backstop',
+        name: err.name,
+        code: err.code,
+        field: err.field,
+        message: err.message,
+        stackHead: typeof err.stack === 'string' ? err.stack.split('\n').slice(0, 5).join(' | ') : undefined,
+      },
+    });
+  }
   res.status(status).json({ error: message });
 });
 
