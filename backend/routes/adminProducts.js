@@ -107,7 +107,7 @@ const PRODUCT_ALLOWED_FIELDS = [
   'name', 'price', 'compareAtPrice', 'description', 'category',
   'colours', 'materialComposition', 'variants', 'totalStock', 'inStock',
   'status', 'keywords', 'metaTitle', 'metaDescription', 'slug',
-  'altTextTemplate', 'origin', 'isNewArrival',
+  'altTextTemplate', 'origin', 'isNewArrival', 'aiPhotoDescriptor',
 ];
 
 function pickProductFields(body) {

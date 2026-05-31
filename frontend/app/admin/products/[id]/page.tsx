@@ -57,6 +57,7 @@ type Form = {
   origin: string;
   certifications: string;
   isNewArrival: boolean;
+  aiPhotoDescriptor: string;
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -82,6 +83,7 @@ const EMPTY_FORM: Form = {
   metaTitle: '', metaDescription: '', slug: '', keywords: '', altTextTemplate: '',
   materialComposition: '', careInstructions: '', origin: 'Made in Donegal', certifications: '',
   isNewArrival: false,
+  aiPhotoDescriptor: '',
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -219,6 +221,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           // (for products saved before the rename, in case the migration
           // hasn't run yet).
           isNewArrival: Boolean(p.isNewArrival ?? p.isNew),
+          aiPhotoDescriptor: p.aiPhotoDescriptor ?? '',
         });
         const sorted = (p.images ?? []).slice().sort((a: ProductImage, b: ProductImage) => a.order - b.order);
         setImages(sorted);
@@ -1054,6 +1057,27 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 <label className={styles.label}>Certifications (comma separated)</label>
                 <input className={styles.input} value={form.certifications} onChange={e => setField('certifications', e.target.value)} placeholder="OEKO-TEX Standard 100, GOTS" />
               </div>
+            </div>
+          </section>
+
+          {/* AI photoshoot descriptor — pins length, sleeve cut, trim,
+              piping, pockets so Gemini's image-edit pass doesn't drift
+              on attributes the reference photo doesn't fully show. */}
+          <section className={styles.card}>
+            <h3 className={styles.cardTitle}>AI photoshoot — garment descriptor</h3>
+            <p style={{ fontSize: 12, color: 'var(--color-ink-muted, #8A8278)', margin: '0 0 12px', lineHeight: 1.5 }}>
+              Optional. Written once per product, then injected verbatim into every AI generation as a
+              GARMENT — exact specification block. Pin the things Gemini drifts on: length, sleeve cut,
+              hem treatment, trim, piping, pockets.
+            </p>
+            <div className={styles.fg}>
+              <textarea
+                className={`${styles.input} ${styles.textareaSm}`}
+                rows={6}
+                value={form.aiPhotoDescriptor}
+                onChange={e => setField('aiPhotoDescriptor', e.target.value)}
+                placeholder={`Ankle-length kimono robe (falls to mid-calf on a 5'9" model).\nFull kimono sleeves to mid-forearm.\nCream contrast collar continuing into a wide tie-belt at the natural waist.\nSubtle cream piping at the cuff edge and along the front-opening seam.\nWrap front with no buttons. No pockets.`}
+              />
             </div>
           </section>
         </div>
