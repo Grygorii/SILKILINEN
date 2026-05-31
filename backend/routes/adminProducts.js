@@ -81,7 +81,7 @@ const PRODUCT_ALLOWED_FIELDS = [
   'name', 'price', 'compareAtPrice', 'description', 'category',
   'colours', 'materialComposition', 'variants', 'totalStock', 'inStock',
   'status', 'keywords', 'metaTitle', 'metaDescription', 'slug',
-  'altTextTemplate', 'origin', 'isNew',
+  'altTextTemplate', 'origin', 'isNewArrival',
 ];
 
 function pickProductFields(body) {
@@ -753,21 +753,7 @@ router.post('/:id/images', imgUpload.array('images', 20), async function(req, re
     if (err.http_code) {
       return res.status(502).json({ error: `Upload failed — ${err.message}` });
     }
-    // Diagnostic: this endpoint is admin-auth-gated so leaking err.name +
-    // err.message back to the client is acceptable while we figure out
-    // why the active-product path keeps 500ing. Revert to the plain
-    // generic body once the root cause is identified.
-    return res.status(500).json({
-      error: 'Internal server error',
-      debug: {
-        name: err.name,
-        code: err.code,
-        message: err.message,
-        path: err.path,
-        kind: err.kind,
-        errors: err.errors ? Object.keys(err.errors) : undefined,
-      },
-    });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 

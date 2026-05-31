@@ -109,11 +109,14 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const total = product.totalStock ?? product.stockLevel ?? null;
   const outOfStock = total === 0;
   const materialSub = getMaterialSub(product.materialComposition);
-  // Design-system v1: manual isNew flag set in admin. Fall back to the
-  // 30-day-since-createdAt heuristic for products that pre-date the field
-  // so the badge doesn't suddenly disappear from existing recent products.
-  const showNew = typeof product.isNew === 'boolean'
-    ? product.isNew
+  // Design-system v1: manual isNewArrival flag set in admin. Fall back to
+  // the 30-day-since-createdAt heuristic for products that pre-date the
+  // field so the badge doesn't suddenly disappear from existing recent
+  // products. Accept the legacy `isNew` value too for products migrated
+  // from the original bad-field-name shipping.
+  const manualFlag = product.isNewArrival ?? product.isNew;
+  const showNew = typeof manualFlag === 'boolean'
+    ? manualFlag
     : (product.createdAt
         ? Date.now() - new Date(product.createdAt).getTime() < 30 * 86_400_000
         : false);
