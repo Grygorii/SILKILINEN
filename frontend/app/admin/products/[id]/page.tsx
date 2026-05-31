@@ -56,7 +56,7 @@ type Form = {
   careInstructions: string;
   origin: string;
   certifications: string;
-  isNew: boolean;
+  isNewArrival: boolean;
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -81,7 +81,7 @@ const EMPTY_FORM: Form = {
   category: 'robes', description: '', tags: '',
   metaTitle: '', metaDescription: '', slug: '', keywords: '', altTextTemplate: '',
   materialComposition: '', careInstructions: '', origin: 'Made in Donegal', certifications: '',
-  isNew: false,
+  isNewArrival: false,
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -215,7 +215,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           careInstructions: p.careInstructions ?? '',
           origin: p.origin ?? 'Made in Donegal',
           certifications: (p.certifications ?? []).join(', '),
-          isNew: Boolean(p.isNew),
+          // Accept the new schema field and the legacy `isNew` value
+          // (for products saved before the rename, in case the migration
+          // hasn't run yet).
+          isNewArrival: Boolean(p.isNewArrival ?? p.isNew),
         });
         const sorted = (p.images ?? []).slice().sort((a: ProductImage, b: ProductImage) => a.order - b.order);
         setImages(sorted);
@@ -1098,8 +1101,8 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer' }}>
                 <input
                   type="checkbox"
-                  checked={form.isNew}
-                  onChange={e => setField('isNew', e.target.checked)}
+                  checked={form.isNewArrival}
+                  onChange={e => setField('isNewArrival', e.target.checked)}
                 />
                 Show <strong>NEW</strong> badge on storefront
               </label>

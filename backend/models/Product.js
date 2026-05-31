@@ -53,7 +53,11 @@ const productSchema = new mongoose.Schema({
 
   // Design-system v1 "NEW" badge — manual flag, admin controlled.
   // Show as a warm-beige uppercase pill on the PDP and shop card when true.
-  isNew: { type: Boolean, default: false },
+  // NOTE: NOT `isNew` — Mongoose reserves that pathname on every document
+  // (doc.isNew is the internal "not yet persisted" flag). A schema field
+  // called isNew shadows it and breaks save() — the doc thinks it's a
+  // fresh insert and hits a duplicate-key error on _id. Bug fixed.
+  isNewArrival: { type: Boolean, default: false },
 
   price: {
     type: Number,
