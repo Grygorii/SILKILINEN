@@ -59,6 +59,13 @@ const productSchema = new mongoose.Schema({
   // fresh insert and hits a duplicate-key error on _id. Bug fixed.
   isNewArrival: { type: Boolean, default: false },
 
+  // Per-product description fed verbatim to the AI photoshoot prompt.
+  // Pins the attributes Gemini drifts on (length, sleeve cut, trim, piping,
+  // hem treatment, pockets). Written once per SKU; injected into every
+  // generation as a "GARMENT — exact specification" block. Empty string is
+  // fine — the system falls back to the generic garment-preservation rule.
+  aiPhotoDescriptor: { type: String, default: '', trim: true },
+
   price: {
     type: Number,
     required: [true, 'Price is required'],

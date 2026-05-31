@@ -221,9 +221,18 @@ function buildPrompt(aiModel, position, iterationFeedback, product) {
   // ALWAYS_APPEND for whichever shot this is, so the generator picks the
   // right contrast direction for the specific colourway.
   const backdrop = product ? backdropForGarment(product) : null;
+  // The per-product descriptor pins the attributes Gemini drifts on
+  // (length, sleeve cut, trim, piping, pockets, hem). Empty descriptor =
+  // skip the block; the generic preservation rule in ALWAYS_APPEND still
+  // applies.
+  const descriptorText = (product?.aiPhotoDescriptor || '').trim();
+  const descriptor = descriptorText
+    ? `GARMENT — exact specification (must match precisely; this is the actual product being sold):\n${descriptorText}`
+    : null;
   return [
     aiModel.prompt,
     POSITION_PROMPTS[position] || POSITION_PROMPTS.front,
+    descriptor,
     backdrop,
     feedback ? `Improvement request: ${feedback}` : '',
     ALWAYS_APPEND,
@@ -497,7 +506,7 @@ router.post('/sessions/:id/generate', requireAuth, aiRateLimit, async function(r
     }
 
     // Fetch product once for SEO data
-    const product = await Product.findById(session.productId, 'name slug colours category colorName colorHex').lean();
+    const product = await Product.findById(session.productId, 'name slug colours category colorName colorHex aiPhotoDescriptor').lean();
     const productSlug = toSlug(product?.slug || product?.name || String(session.productId));
     const modelSlug = toSlug(aiModel.name);
 
@@ -616,7 +625,7 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
     const tier = getTier(tierKey);
 
     // Rebuild SEO opts for the overwrite case
-    const product = await Product.findById(session.productId, 'name slug colours category colorName colorHex').lean();
+    const product = await Product.findById(session.productId, 'name slug colours category colorName colorHex aiPhotoDescriptor').lean();
     const productSlug = toSlug(product?.slug || product?.name || String(session.productId));
     const modelSlug = toSlug(session.selectedModel.name);
     const publicId = `${productSlug}-${modelSlug}-${position}`;
