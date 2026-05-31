@@ -77,29 +77,93 @@ const POSITION_LABELS = {
 };
 
 // ── Prompts ──────────────────────────────────────────────────────────────────
+// ── Per-position prompts ──────────────────────────────────────────────────────
+// Each position is a flowing Gemini-native description of the shot, not a
+// keyword list. The garment is always coming from the reference image
+// alongside this text — the position prompt only directs the camera, pose,
+// crop, and framing. The garment-preservation language and the silk-specific
+// lighting live in ALWAYS_APPEND so they're applied identically to every
+// frame in the set.
 const POSITION_PROMPTS = {
-  thumbnail: 'Tight editorial crop from waist to crown, model centred. Garment clearly visible from shoulders to hips. Clean cream-white studio backdrop. Tighter framing than a full-length portrait — optimised for shop grid display.',
-  front:     'Full-length front view, model centred, straight-on camera angle, hands relaxed at sides, vertical 3:4 aspect ratio.',
-  side:      'Three-quarter side angle, model facing camera with subtle hip shift, one hand softly at hip.',
-  detail:    'Closer crop showing garment details — fabric texture, neckline, sleeves, buttons, piping. Focus on craftsmanship.',
-  lifestyle: 'Editorial lifestyle setting appropriate to product (bedroom for sleepwear, vanity for accessories), soft natural daylight, magazine quality.',
+  thumbnail:
+    'A tight editorial crop of the model from the waist to the crown, centred and relaxed. ' +
+    'The garment is clearly visible from the shoulders to the hips with natural drape. ' +
+    'Same lighting and backdrop as the full-length frames in the set so the shop-grid card reads ' +
+    'as part of one consistent series. Face mostly cropped above the brow — product-led, not portrait-led.',
+
+  front:
+    'A full-length front view of the model standing relaxed and centred, barefoot, arms loose at her sides. ' +
+    'Photograph her from just above the brow down to the floor so the face is mostly out of frame and the garment leads. ' +
+    'Vertical 4:5 portrait. The silk falls in natural soft vertical folds.',
+
+  side:
+    'A three-quarter side angle of the model, body turned roughly thirty degrees from camera, ' +
+    'one hand softly at the hip, the other relaxed at the side. Full-length framing matching the front view crop. ' +
+    'The drape on the side profile should reveal the cut and the satin sheen along the body.',
+
+  back:
+    'A full-length back view of the model centred, arms loose, hair tucked aside so the neckline and back construction read clearly. ' +
+    'The fabric falls in natural soft vertical folds. Same lighting, backdrop, and crop as the front view in the set.',
+
+  detail:
+    'A tight macro close-up on the garment itself — a cuff, the self-tie belt knot, the collar piping, ' +
+    'or a section of fabric where the weave catches the light. Shallow depth of field, sharp focus on the textile. ' +
+    'The frame must convince the viewer this is real 19-momme mulberry silk: visible weave, soft satin sheen along the fold, ' +
+    'natural drape, never plasticky, never flat matte. The garment can be hand-held or worn close to camera; the face is not necessarily in frame.',
+
+  lifestyle:
+    'An intimate, lived-in interior — a deep velvet sofa, a linen-dressed bed, or a softly lit bedroom corner — ' +
+    'the model relaxed and unposed wearing the garment. Low warm directional window light from one side, ' +
+    'soft and golden, gentle shadows, film-like atmosphere. The silk catches the light softly and shows natural creasing as it is worn. ' +
+    'Mood takes priority over exact colour fidelity — this frame is for atmosphere and never used as the HERO or FRONT reference.',
 };
 
+// ── Universal appendix ────────────────────────────────────────────────────────
+// Applied to every generation in every position. The four blocks below are
+// non-negotiable: garment preservation, silk lighting, backdrop adapted to
+// the colourway, and the editorial-restraint register.
 const ALWAYS_APPEND = [
-  'Crucially preserve the exact garment from the reference photos: keep colour, texture, cut, buttons, piping, pocket placement, and length identical.',
-  'Do not alter the garment design in any way.',
-  'Background: clean cream-white studio backdrop, evenly lit, no harsh shadows.',
-  'Style: La Perla, Eberjey, Lunya editorial aesthetic.',
-  'Barefoot, no shoes, no jewellery. Soft diffused daylight.',
-].join(' ');
+  // 1 — garment preservation (the most important block; phrased as positive
+  //     instructions because Gemini ignores AVOID/negative-prompt syntax)
+  'CRITICAL — preserve the garment exactly. The garment shown in the reference photo is the actual product being sold. ' +
+  'Reproduce it identically: the same colour, the same fabric, the same cut and length, the same trim, the same belt and tie, ' +
+  'the same neckline and sleeves, the same piping, the same pocket placement. ' +
+  'Do not restyle, recolour, or redesign the garment in any way. ' +
+  'If the reference shows a sky-blue silk robe with a cream contrast collar, the output must show a sky-blue silk robe with a cream contrast collar — never any other colour.',
+
+  // 2 — silk-specific lighting (the thing OvH-style flat high-key kills)
+  'LIGHTING — directional for silk. A single large soft key light from camera-left at roughly forty-five degrees, ' +
+  'with gentle fill from the right. The light rakes across the silk so a soft specular sheen runs along the folds and ' +
+  'the satin reads fluid and liquid. The fabric is soft mulberry silk, never plasticky-glossy, never flat matte. ' +
+  'Avoid harsh shadows and blown highlights.',
+
+  // 3 — backdrop that flexes with the colourway (cream silk on warm sand dissolves)
+  'BACKDROP — seamless studio, colour-aware. Use a seamless warm sand backdrop for dark or saturated colourways ' +
+  '(garnet, navy, forest, black). Switch to a deep greige or taupe backdrop for pale, cream, ivory, oat, or pastel ' +
+  'colourways so the garment never dissolves into the ground. A soft natural shadow at the feet.',
+
+  // 4 — overall register
+  'STYLE — editorial restraint. True-to-life colour, sharp focus, barefoot, no shoes, no jewellery. ' +
+  'The register is Toast UK, &Daughter, Lunya, Eberjey — quiet, considered, never commercial-glossy. ' +
+  'Hands and feet rendered with correct anatomy.',
+].join('\n\n');
 
 const FEEDBACK_MAP = {
-  'Different pose':           'Same model, same garment, alternative editorial pose',
-  'Brighter lighting':        'Increase ambient daylight, lift shadows, more luminous',
-  'Closer crop':              'Tighter framing, focus on upper body and garment detail',
-  'More elegant expression':  'More refined neutral magazine expression, calm composed',
-  'Show garment detail':      'Adjust pose to better display garment cut, drape, and detail',
-  'Different background':     'Alternative editorial background while keeping model identical',
+  'Different pose':
+    'Same model and the exact same garment from the reference (no colour or trim change). Adjust body angle, ' +
+    'hand position, or gaze for an alternative editorial pose. Lighting and backdrop unchanged.',
+  'Brighter lighting':
+    'Lift the overall exposure roughly half a stop. Soften the shadows on the garment side and make the daylight ' +
+    'feel more luminous, while keeping the directional key light from camera-left so the silk sheen still reads.',
+  'Closer crop':
+    'Tighter framing focused on the upper body and garment detail — shoulders to mid-thigh. Same backdrop, same lighting.',
+  'More elegant expression':
+    'More refined neutral magazine expression — calm, composed, brow relaxed, gaze direct but unforced. No smile, no performance.',
+  'Show garment detail':
+    'Adjust the pose so the garment cut, drape, and trim read more clearly — open the front slightly, lift one sleeve, ' +
+    'or move the belt knot into frame.',
+  'Different background':
+    'Alternative editorial backdrop in the same family (warm sand ↔ deep taupe ↔ soft cream). Model and garment identical.',
 };
 
 function buildPrompt(aiModel, position, iterationFeedback) {
