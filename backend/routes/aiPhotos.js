@@ -57,12 +57,13 @@ const WORKFLOW_PRESETS = {
   ],
   standard: [
     { position: 'thumbnail', tier: 'standard', label: 'Shop card' },
-    { position: 'front',     tier: 'hd',       label: 'Product page hero' },
+    { position: 'back',      tier: 'hd',       label: 'Back view' },
     { position: 'detail',    tier: 'hd',       label: 'Detail close-up' },
   ],
   full_launch: [
     { position: 'thumbnail', tier: 'standard', label: 'Shop card' },
     { position: 'front',     tier: 'premium',  label: 'Product page hero' },
+    { position: 'back',      tier: 'hd',       label: 'Back view' },
     { position: 'side',      tier: 'hd',       label: 'Side angle' },
     { position: 'detail',    tier: 'hd',       label: 'Detail close-up' },
   ],
@@ -137,10 +138,18 @@ const ALWAYS_APPEND = [
   'the satin reads fluid and liquid. The fabric is soft mulberry silk, never plasticky-glossy, never flat matte. ' +
   'Avoid harsh shadows and blown highlights.',
 
-  // 3 — backdrop that flexes with the colourway (cream silk on warm sand dissolves)
-  'BACKDROP — seamless studio, colour-aware. Use a seamless warm sand backdrop for dark or saturated colourways ' +
-  '(garnet, navy, forest, black). Switch to a deep greige or taupe backdrop for pale, cream, ivory, oat, or pastel ' +
-  'colourways so the garment never dissolves into the ground. A soft natural shadow at the feet.',
+  // 3 — face-cropping (lifted from OvH's grid pattern and from the practical
+  //     limit that AI image gen is least reliable at faces). Applies to every
+  //     product position; LIFESTYLE relaxes this in its own POSITION_PROMPTS
+  //     entry by describing the gaze explicitly.
+  'FACE FRAMING — product-led. For HERO / FRONT / BACK / SIDE / DETAIL frames, ' +
+  'the model is photographed from just above the brow downward — face mostly out of frame, no portrait. ' +
+  'The garment is the subject; the model is its quiet setting. Even if the model identity description ' +
+  'emphasises the face, in product shots the face is cropped. This rule does not apply to the LIFESTYLE frame.',
+
+  // Note: the BACKDROP block is computed per-product upstream via
+  // backdropForGarment() and inserted by buildPrompt(); we don't include a
+  // generic backdrop line here to avoid contradicting it.
 
   // 4 — overall register
   'STYLE — editorial restraint. True-to-life colour, sharp focus, barefoot, no shoes, no jewellery. ' +
@@ -166,11 +175,56 @@ const FEEDBACK_MAP = {
     'Alternative editorial backdrop in the same family (warm sand ↔ deep taupe ↔ soft cream). Model and garment identical.',
 };
 
-function buildPrompt(aiModel, position, iterationFeedback) {
+// ── Backdrop selection from product colour ────────────────────────────────────
+// A pale silk on a pale backdrop dissolves into the ground (see OvH's Queenie
+// Swan + Lila Blanca in their grid). A saturated silk on a too-bright backdrop
+// loses its colour bias. Compute the relative luminance of the product's
+// colorHex and pick a backdrop that creates contrast in the right direction.
+
+function relativeLuminance(hex) {
+  const h = String(hex || '').replace(/^#/, '');
+  if (!/^[0-9a-f]{6}$/i.test(h)) return null;
+  const channel = i => {
+    const c = parseInt(h.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4);
+}
+
+function backdropForGarment(product) {
+  const colourName = product?.colorName || product?.colours?.[0] || 'the garment';
+  const lum = relativeLuminance(product?.colorHex);
+  if (lum === null) {
+    return `BACKDROP — adaptive: choose a seamless studio ground that contrasts with the garment. ` +
+      `If the silk reads pale or cream, use a deeper greige/taupe backdrop. ` +
+      `If the silk reads saturated or dark, use a warm sand backdrop. Soft natural shadow at the feet.`;
+  }
+  if (lum > 0.7) {
+    return `BACKDROP — pale-aware: the garment is a pale colourway (${colourName}). ` +
+      `Use a seamless deep greige/taupe backdrop (warm grey-brown, mid-tone, around #8C7C6E). ` +
+      `The backdrop must be visibly deeper than the silk so the garment never dissolves into the ground. ` +
+      `Soft natural shadow at the feet.`;
+  }
+  if (lum < 0.15) {
+    return `BACKDROP — dark-aware: the garment is a very dark colourway (${colourName}). ` +
+      `Use a seamless warm-cream backdrop (around #F2E8D6) so the garment silhouette reads cleanly ` +
+      `and the silk sheen is visible against the lighter ground. Soft natural shadow at the feet.`;
+  }
+  return `BACKDROP — saturated-aware: the garment is a saturated mid-tone colourway (${colourName}). ` +
+    `Use a seamless warm sand backdrop (around #D9C9AE) so the silk colour stays the focal point ` +
+    `and the warm ground complements without competing. Soft natural shadow at the feet.`;
+}
+
+function buildPrompt(aiModel, position, iterationFeedback, product) {
   const feedback = iterationFeedback ? (FEEDBACK_MAP[iterationFeedback] || iterationFeedback) : null;
+  // The product-aware backdrop overrides the generic backdrop line in
+  // ALWAYS_APPEND for whichever shot this is, so the generator picks the
+  // right contrast direction for the specific colourway.
+  const backdrop = product ? backdropForGarment(product) : null;
   return [
     aiModel.prompt,
     POSITION_PROMPTS[position] || POSITION_PROMPTS.front,
+    backdrop,
     feedback ? `Improvement request: ${feedback}` : '',
     ALWAYS_APPEND,
   ].filter(Boolean).join('\n\n');
@@ -257,7 +311,7 @@ async function generate(aiModel, inputPhotos, position, iterationFeedback, tierK
     imageParts.push({ inlineData: { mimeType: guessMimeType(inputPhotos[i]), data } });
   }
 
-  const prompt = buildPrompt(aiModel, position, iterationFeedback);
+  const prompt = buildPrompt(aiModel, position, iterationFeedback, opts.product);
   const genai = getGenAI();
   console.log(`${tag} Calling Gemini (${GEMINI_MODEL}) with ${imageParts.length} image(s)…`);
   const t0 = Date.now();
@@ -443,7 +497,7 @@ router.post('/sessions/:id/generate', requireAuth, aiRateLimit, async function(r
     }
 
     // Fetch product once for SEO data
-    const product = await Product.findById(session.productId, 'name slug colours category').lean();
+    const product = await Product.findById(session.productId, 'name slug colours category colorName colorHex').lean();
     const productSlug = toSlug(product?.slug || product?.name || String(session.productId));
     const modelSlug = toSlug(aiModel.name);
 
@@ -465,7 +519,7 @@ router.post('/sessions/:id/generate', requireAuth, aiRateLimit, async function(r
             results.push({ position, label, tier: tierKey, error: 'No input photo on session', errorType: 'no_product_image', userMessage: 'Cannot generate AI photo via fal.ai: session has no uploaded input photo. Upload a product reference photo first.' });
             continue;
           }
-          const prompt = buildPrompt(aiModel, position, null);
+          const prompt = buildPrompt(aiModel, position, null, product);
           const falResult = await falImage.generateImage({ modelImageUrl: aiModel.referenceImageUrl, productImageUrl, prompt });
           const cloudinaryOpts = {
             folder: 'silkilinen/ai-generated',
@@ -480,7 +534,7 @@ router.post('/sessions/:id/generate', requireAuth, aiRateLimit, async function(r
           result = { url: uploaded.secure_url, prompt, resolution: { width: uploaded.width, height: uploaded.height } };
         } else {
           console.log(`[aiImageRouter] Category '${product?.category}' → Gemini`);
-          result = await generate(aiModel, session.inputPhotos, position, null, tierKey, { publicId, altText });
+          result = await generate(aiModel, session.inputPhotos, position, null, tierKey, { publicId, altText, product });
         }
       } catch (err) {
         console.error(`[AI Photo] Generation failed for ${position}: ${err.message}`);
@@ -562,7 +616,7 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
     const tier = getTier(tierKey);
 
     // Rebuild SEO opts for the overwrite case
-    const product = await Product.findById(session.productId, 'name slug colours category').lean();
+    const product = await Product.findById(session.productId, 'name slug colours category colorName colorHex').lean();
     const productSlug = toSlug(product?.slug || product?.name || String(session.productId));
     const modelSlug = toSlug(session.selectedModel.name);
     const publicId = `${productSlug}-${modelSlug}-${position}`;
@@ -576,7 +630,7 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
         if (!productImageUrl) {
           return res.status(400).json({ error: 'Cannot generate AI photo via fal.ai: session has no uploaded input photo. Upload a product reference photo first.', errorType: 'no_product_image', ...costResponse(session) });
         }
-        const prompt = buildPrompt(session.selectedModel, position, feedback || null);
+        const prompt = buildPrompt(session.selectedModel, position, feedback || null, product);
         const falResult = await falImage.generateImage({ modelImageUrl: session.selectedModel.referenceImageUrl, productImageUrl, prompt });
         const cloudinaryOpts = {
           folder: 'silkilinen/ai-generated',
@@ -591,7 +645,7 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
         result = { url: uploaded.secure_url, prompt, resolution: { width: uploaded.width, height: uploaded.height } };
       } else {
         console.log(`[aiImageRouter] Category '${product?.category}' → Gemini [iterate]`);
-        result = await generate(session.selectedModel, session.inputPhotos, position, feedback || null, tierKey, { publicId, altText });
+        result = await generate(session.selectedModel, session.inputPhotos, position, feedback || null, tierKey, { publicId, altText, product });
       }
     } catch (err) {
       const { errorType, userMessage } = classifyError(err);
