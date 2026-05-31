@@ -14,14 +14,14 @@ type AiModel = {
   prompt: string;
   referenceImageUrl: string;
   useCases: string[];
-  market: string[];
+  markets: string[];
   active: boolean;
   locked: boolean;
 };
 
 const BLANK: Omit<AiModel, '_id'> = {
   name: '', heritage: '', description: '', prompt: '',
-  referenceImageUrl: '', useCases: [], market: [],
+  referenceImageUrl: '', useCases: [], markets: [],
   active: true, locked: false,
 };
 
@@ -50,7 +50,7 @@ export default function ModelsPage() {
   function setField(field: string, value: string | boolean | string[]) {
     setEditing(e => e ? { ...e, [field]: value } : e);
   }
-  function toggleArrayField(field: 'useCases' | 'market', value: string) {
+  function toggleArrayField(field: 'useCases' | 'markets', value: string) {
     setEditing(e => {
       if (!e) return e;
       const arr = (e[field] as string[]) || [];
@@ -247,7 +247,7 @@ export default function ModelsPage() {
                   <div className={styles.checkGroup}>
                     {MARKET_OPTIONS.map(m => (
                       <label key={m} className={styles.checkLabel}>
-                        <input type="checkbox" checked={(editing.market || []).includes(m)} onChange={() => toggleArrayField('market', m)} />
+                        <input type="checkbox" checked={(editing.markets || []).includes(m)} onChange={() => toggleArrayField('markets', m)} />
                         {m}
                       </label>
                     ))}
