@@ -20,9 +20,15 @@ const aiRateLimit = rateLimit({
 // is dropped before it hits Mongoose. Stops a tampered request from
 // flipping server-controlled flags like `locked` from outside the
 // official "lock model" flow.
+// Fields an admin may set on an AI model via create/update. Anything not on
+// this list is silently dropped by pickAiModelFields() before the DB write —
+// keep this in sync with both the AiModel schema and the admin form so
+// fields the operator fills in actually persist.
 const AI_MODEL_ALLOWED_FIELDS = [
-  'name', 'prompt', 'productShotPromptTemplate', 'lifestyleShotPromptTemplate',
-  'referenceImageUrl', 'active', 'notes',
+  'name', 'heritage', 'description', 'prompt',
+  'productShotPromptTemplate', 'lifestyleShotPromptTemplate',
+  'referenceImageUrl', 'useCases', 'markets',
+  'active', 'locked',
 ];
 
 function pickAiModelFields(body) {
