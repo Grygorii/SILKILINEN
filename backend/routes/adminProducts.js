@@ -753,7 +753,20 @@ router.post('/:id/images', imgUpload.array('images', 20), async function(req, re
     if (err.http_code) {
       return res.status(502).json({ error: `Upload failed — ${err.message}` });
     }
-    return res.status(500).json({ error: 'Internal server error' });
+    // TEMP diagnostic — see also the matching block in server.js backstop.
+    return res.status(500).json({
+      error: 'Internal server error',
+      _diag: {
+        from: 'route',
+        name: err.name,
+        code: err.code,
+        message: err.message,
+        path: err.path,
+        kind: err.kind,
+        errors: err.errors ? Object.keys(err.errors) : undefined,
+        stackHead: typeof err.stack === 'string' ? err.stack.split('\n').slice(0, 5).join(' | ') : undefined,
+      },
+    });
   }
 });
 
