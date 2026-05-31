@@ -32,7 +32,10 @@ cloudinary.config({
 
 const imgUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  // 25 MB per file — covers modern phone shots (5-15 MB) and studio
+  // shots (up to ~20 MB). Cloudinary's transformation pipeline handles
+  // the downsizing to the 1200x1500 storefront size in its own service.
+  limits: { fileSize: 25 * 1024 * 1024 },
   fileFilter(req, file, cb) {
     if (file.mimetype.startsWith('image/')) cb(null, true);
     else cb(new Error('Images only'));
@@ -753,20 +756,7 @@ router.post('/:id/images', imgUpload.array('images', 20), async function(req, re
     if (err.http_code) {
       return res.status(502).json({ error: `Upload failed — ${err.message}` });
     }
-    // TEMP diagnostic — see also the matching block in server.js backstop.
-    return res.status(500).json({
-      error: 'Internal server error',
-      _diag: {
-        from: 'route',
-        name: err.name,
-        code: err.code,
-        message: err.message,
-        path: err.path,
-        kind: err.kind,
-        errors: err.errors ? Object.keys(err.errors) : undefined,
-        stackHead: typeof err.stack === 'string' ? err.stack.split('\n').slice(0, 5).join(' | ') : undefined,
-      },
-    });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
