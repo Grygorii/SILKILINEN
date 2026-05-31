@@ -4,12 +4,30 @@ const multer = require('multer');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const cloudinary = require('cloudinary').v2;
+const sharp = require('sharp');
 const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
 const { generateProductSEO, AIServiceError } = require('../services/aiText');
 const { SLOT_KEYS } = require('../config/imageSlots');
 const Category = require('../models/Category');
 const { detectImageType } = require('../utils/fileSignature');
+
+// Cloudinary's free-tier raw upload limit is 10 MB. Pre-compress every
+// upload through sharp first: cap the longest edge at 2400px (Cloudinary
+// then crops to the 1200x1500 storefront target) and re-encode as JPEG
+// quality 85. Typical 12-20 MB phone shots land at 1-3 MB after this —
+// well under Cloudinary's cap, no perceptible quality loss at the size
+// the storefront actually renders. PNGs with transparency stay PNG to
+// preserve the alpha channel.
+async function compressForCloudinary(buffer) {
+  const img = sharp(buffer, { failOn: 'none' }).rotate(); // honour EXIF orientation
+  const meta = await img.metadata();
+  const isPng = meta.format === 'png' && meta.hasAlpha;
+  const resized = img.resize({ width: 2400, height: 2400, fit: 'inside', withoutEnlargement: true });
+  return isPng
+    ? resized.png({ compressionLevel: 9 }).toBuffer()
+    : resized.jpeg({ quality: 85, mozjpeg: true }).toBuffer();
+}
 
 // Burst-protection for AI generation endpoints — 20 calls per IP per hour.
 // Sized so the founder's normal daily rhythm (a handful of generations) is
@@ -730,7 +748,10 @@ router.post('/:id/images', imgUpload.array('images', 20), async function(req, re
     const filesToProcess = slot ? [req.files[0]] : req.files;
 
     for (const file of filesToProcess) {
-      const result = await uploadBuffer(file.buffer, {
+      // Cap source size before Cloudinary sees it (10 MB free-tier limit).
+      // Sharp handles EXIF rotation, 2400px max edge, and JPEG re-encode.
+      const compressed = await compressForCloudinary(file.buffer);
+      const result = await uploadBuffer(compressed, {
         folder: `silkilinen/products/${req.params.id}`,
         resource_type: 'image',
         transformation: [{ width: 1200, height: 1500, crop: 'fill', gravity: 'auto' }],
