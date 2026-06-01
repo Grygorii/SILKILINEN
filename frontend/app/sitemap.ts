@@ -3,14 +3,30 @@ import { BLOG_POSTS } from '@/lib/blogPosts';
 
 const BASE = 'https://silkilinen.com';
 
+// Cap the backend fetch so a slow/cold Railway never makes the whole
+// sitemap route hang past Google's fetch timeout. Returns an empty list
+// on any failure — Google still gets the static + blog pages, and the
+// product URLs reappear on the next ISR revalidation.
+const PRODUCT_FETCH_TIMEOUT_MS = 8000;
+
 async function getProductIds(): Promise<string[]> {
+  if (!process.env.NEXT_PUBLIC_API_URL) return [];
   try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), PRODUCT_FETCH_TIMEOUT_MS);
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products`, {
       next: { revalidate: 3600 },
+      signal: controller.signal,
     });
+    clearTimeout(timer);
     if (!res.ok) return [];
     const products = await res.json();
-    return Array.isArray(products) ? products.map((p: { _id: string }) => p._id) : [];
+    if (!Array.isArray(products)) return [];
+    // Filter to active products only — drafts shouldn't be in the
+    // public sitemap, and archived ones should drop off too.
+    return products
+      .filter((p: { _id: string; status?: string }) => !p.status || p.status === 'active' || p.status === 'sold_out')
+      .map((p: { _id: string }) => p._id);
   } catch {
     return [];
   }
