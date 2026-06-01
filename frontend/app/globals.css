@@ -1,5 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500&display=swap');
-
+/* Google Fonts are now loaded via next/font/google in app/layout.tsx —
+   that path self-hosts the WOFF2 files, preloads them, and removes the
+   2-second render-blocking @import that PageSpeed flagged. The font
+   families are exposed via CSS vars so existing rules referring to
+   'Cormorant Garamond' and 'Jost' keep working. */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;

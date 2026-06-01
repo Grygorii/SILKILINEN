@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Cormorant_Garamond, Jost } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AnnouncementBar from "@/components/AnnouncementBar";
@@ -11,6 +12,25 @@ import { WishlistProvider } from "@/context/WishlistContext";
 import { CustomerProvider } from "@/context/CustomerContext";
 import { CookieConsentProvider } from "@/context/CookieConsentContext";
 import "./globals.css";
+
+// next/font self-hosts the WOFF2 files and inlines a CSS preload, killing
+// the ~2 second render-blocking @import that PageSpeed flagged. Display
+// swap so text shows in fallback first instead of waiting. The font names
+// are aliased to the same names existing CSS uses so module styles don't
+// need to be rewritten.
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["300", "400", "600"],
+  display: "swap",
+  variable: "--font-cormorant",
+});
+
+const jost = Jost({
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+  display: "swap",
+  variable: "--font-jost",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.silkilinen.com'),
@@ -102,7 +122,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en">
+    <html lang="en" className={`${cormorant.variable} ${jost.variable}`}>
       <head>
         <script
           type="application/ld+json"
