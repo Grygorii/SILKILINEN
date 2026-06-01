@@ -42,7 +42,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { slug } = await params;
   const bundle = await getBundle(slug);
-  if (!bundle) return { title: 'Bundle Not Found — SILKILINEN' };
+  if (!bundle) return { title: 'Bundle Not Found' };
 
   const title = bundle.metaTitle || `${bundle.name} — SILKILINEN`;
   const description = bundle.metaDescription || bundle.description

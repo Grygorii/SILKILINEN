@@ -3,7 +3,7 @@ import { BLOG_POSTS } from '@/lib/blogPosts';
 import styles from './page.module.css';
 
 export const metadata = {
-  title: 'Journal — SILKILINEN',
+  title: 'Journal',
   description: 'Care guides, material stories, and quiet inspiration from the world of silk and linen.',
 };
 

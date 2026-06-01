@@ -29,11 +29,14 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { id } = await params;
   const product = await getProduct(id);
-  if (!product) return { title: 'Product Not Found — SILKILINEN' };
+  if (!product) return { title: 'Product Not Found' };
 
-  const title = product.metaTitle || `${product.name} — SILKILINEN`;
+  // Title template in app/layout.tsx appends " | Silkilinen", so the
+  // per-page title shouldn't include the brand. metaTitle from the admin
+  // editor is honoured as an absolute override when set.
+  const title = product.metaTitle || product.name;
   const description = product.metaDescription
-    || (product.description ? product.description.slice(0, 155) : `Shop ${product.name} at SILKILINEN. Pure silk and linen intimates, shipped worldwide from Donegal.`);
+    || (product.description ? product.description.slice(0, 155) : `Shop ${product.name} at Silkilinen. Pure silk and linen intimates, shipped worldwide from Donegal.`);
   const url = `https://silkilinen.com/product/${id}`;
   const primaryImage = product.images?.find((i: { isPrimary: boolean }) => i.isPrimary);
   const image = primaryImage?.url || product.images?.[0]?.url || product.image || 'https://silkilinen.com/og-default.jpg';

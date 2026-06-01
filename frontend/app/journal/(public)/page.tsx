@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Journal — SILKILINEN',
+  title: 'Journal',
   description: 'Stories about silk, linen, and slow living from Donegal.',
 };
 
