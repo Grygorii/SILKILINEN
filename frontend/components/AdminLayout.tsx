@@ -33,6 +33,7 @@ const NAV: NavEntry[] = [
   { label: 'Journal',     href: '/admin/journal',     icon: BookOpen },
   { label: 'Social',        href: '/admin/social',        icon: Share2 },
   { label: 'Image Studio',  href: '/admin/social-assets', icon: ImageIcon },
+  { label: 'Pages',         href: '/admin/pages',         icon: FileText },
   { section: 'Finance' },
   { label: 'Overview',   href: '/admin/finance',           icon: BookMarked, exact: true },
   { label: 'Expenses',   href: '/admin/finance/expenses',  icon: BookMarked },
