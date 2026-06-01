@@ -1,4 +1,5 @@
 import styles from './page.module.css';
+import { cloudinaryAuto } from '@/lib/imageUtils';
 import PageTracker from '@/components/PageTracker';
 import ReviewsCarousel, { type ReviewData } from '@/components/ReviewsCarousel';
 import NewArrivals from '@/components/NewArrivals';
@@ -43,10 +44,22 @@ export default async function Home() {
 
   return (
     <main>
-      <section
-        className={styles.hero}
-        style={heroImage ? { backgroundImage: `url(${heroImage})` } : undefined}
-      >
+      <section className={styles.hero}>
+        {heroImage && (
+          // Real <img> with fetchpriority="high" so the browser preloads
+          // it immediately on first byte instead of waiting to discover
+          // it from a CSS background-image rule. This is the LCP element
+          // and was responsible for the 18-second Lighthouse score.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={cloudinaryAuto(heroImage, 1920)}
+            alt=""
+            className={styles.heroImg}
+            fetchPriority="high"
+            decoding="async"
+            sizes="100vw"
+          />
+        )}
         <div className={styles.heroContent}>
           <h2>{heroTitle}</h2>
           <p>{heroSubtitle}</p>
