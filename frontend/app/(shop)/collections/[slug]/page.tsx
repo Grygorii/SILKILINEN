@@ -45,7 +45,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { slug } = await params;
   const collection = await getCollection(slug);
-  if (!collection) return { title: 'Collection Not Found — SILKILINEN' };
+  if (!collection) return { title: 'Collection Not Found' };
 
   const title = collection.metaTitle || `${collection.name} — SILKILINEN`;
   const description = collection.metaDescription || collection.description

@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const post = BLOG_POSTS.find(p => p.slug === slug);
   if (!post) return {};
   return {
-    title: `${post.title} — SILKILINEN Journal`,
+    title: { absolute: `${post.title} | Silkilinen Journal` },
     description: post.excerpt,
   };
 }

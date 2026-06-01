@@ -23,9 +23,11 @@ async function getArticle(slug: string): Promise<Article | null> {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const article = await getArticle(slug);
-  if (!article) return { title: 'Not Found — SILKILINEN' };
+  if (!article) return { title: 'Article Not Found' };
   return {
-    title: article.metaTitle || `${article.title} — SILKILINEN Journal`,
+    // Title template appends " | Silkilinen"; build the journal-suffixed
+    // version ourselves so we don't end up with "X | Silkilinen Journal | Silkilinen".
+    title: { absolute: article.metaTitle || `${article.title} | Silkilinen Journal` },
     description: article.metaDescription || article.excerpt,
     openGraph: {
       title: article.metaTitle || article.title,

@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'Order Confirmed — SILKILINEN',
+  title: 'Order Confirmed',
   description: 'Your SILKILINEN order has been confirmed. Thank you for your purchase.',
 };
 

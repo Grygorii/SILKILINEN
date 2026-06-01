@@ -1,7 +1,7 @@
 import styles from '../legal.module.css';
 
 export const metadata = {
-  title: 'Returns & Refunds — SILKILINEN',
+  title: 'Returns & Refunds',
   description: '14-day returns policy for SILKILINEN. Free returns, full refunds, easy process.',
 };
 

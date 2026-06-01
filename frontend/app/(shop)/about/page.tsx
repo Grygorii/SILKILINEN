@@ -2,7 +2,7 @@ import { getContent, val } from '@/lib/content';
 import styles from './page.module.css';
 
 export const metadata = {
-  title: 'About Us — SILKILINEN',
+  title: 'About Us',
   description: 'The story behind SILKILINEN — pure silk and linen intimates made for everyday luxury, shipped worldwide from Donegal, Ireland.',
 };
 

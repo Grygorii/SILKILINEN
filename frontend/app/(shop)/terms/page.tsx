@@ -1,7 +1,7 @@
 import styles from '../legal.module.css';
 
 export const metadata = {
-  title: 'Terms & Conditions — SILKILINEN',
+  title: 'Terms & Conditions',
   description: 'Terms and conditions for purchasing from SILKILINEN, governed by Irish law.',
 };
 
