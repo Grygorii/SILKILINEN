@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { cloudinaryAuto } from '@/lib/imageUtils';
 import styles from './BlogTeaser.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -37,8 +38,13 @@ export default async function BlogTeaser() {
             <div className={styles.imgWrap}>
               {post.heroImage?.url && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={post.heroImage.url} alt={post.heroImage.alt || post.title}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img
+                  src={cloudinaryAuto(post.heroImage.url, 600)}
+                  alt={post.heroImage.alt || post.title}
+                  loading="lazy"
+                  decoding="async"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
               )}
             </div>
             <div className={styles.cardBody}>

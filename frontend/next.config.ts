@@ -9,6 +9,9 @@ const securityHeaders = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   // Disable browser features the site doesn't use
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  // 2-year HSTS with includeSubDomains + preload — what Lighthouse Best-
+  // Practices wants and what's required for the chromium HSTS preload list.
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
 ];
 
 const nextConfig: NextConfig = {

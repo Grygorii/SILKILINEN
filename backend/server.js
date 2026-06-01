@@ -59,7 +59,20 @@ const app = express();
 // Integer 1 = trust exactly one proxy hop; avoids IP spoofing via forged headers.
 app.set('trust proxy', 1);
 
-app.use(helmet());
+app.use(helmet({
+  // Stronger HSTS — Lighthouse Best-Practices flagged the default as weak.
+  // 2-year max-age + includeSubDomains + preload is the level Google's
+  // HSTS preload list and the Lighthouse audit both want to see.
+  strictTransportSecurity: { maxAge: 63072000, includeSubDomains: true, preload: true },
+  // The default helmet CSP is overly strict for an API; the frontend
+  // serves the storefront HTML, so the API doesn't need its own CSP.
+  contentSecurityPolicy: false,
+  // Don't isolate cross-origin requests — Stripe + Cloudinary + Gemini
+  // all need to talk to this API, and the frontend lives on a different
+  // origin. CORS already handles the real boundary.
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 
 // Request-scoped structured logging. Every request gets a unique id and a
 // JSON log line on completion with method/path/status/duration. Inside
