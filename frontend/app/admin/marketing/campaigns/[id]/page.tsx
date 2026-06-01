@@ -131,7 +131,7 @@ export default function CampaignDetailPage() {
   const inputStyle: React.CSSProperties = { padding: '9px 12px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, color: 'var(--dark)', background: 'white', outline: 'none' };
   const sectionTitle: React.CSSProperties = { fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 14, display: 'block' };
 
-  const utmBase = `https://silkilinen.com?utm_source=${camp.channel}&utm_medium=paid&utm_campaign=${camp.slug}`;
+  const utmBase = `https://www.silkilinen.com?utm_source=${camp.channel}&utm_medium=paid&utm_campaign=${camp.slug}`;
 
   return (
     <AdminLayout>

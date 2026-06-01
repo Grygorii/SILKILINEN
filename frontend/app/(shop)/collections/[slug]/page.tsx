@@ -54,11 +54,11 @@ export async function generateMetadata(
   return {
     title,
     description,
-    alternates: { canonical: `https://silkilinen.com/collections/${slug}` },
+    alternates: { canonical: `https://www.silkilinen.com/collections/${slug}` },
     openGraph: {
       title,
       description,
-      url: `https://silkilinen.com/collections/${slug}`,
+      url: `https://www.silkilinen.com/collections/${slug}`,
       siteName: 'SILKILINEN',
     },
   };

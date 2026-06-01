@@ -36,7 +36,7 @@ const label: React.CSSProperties = {
 export default function UtmBuilderPage() {
   const router = useRouter();
   const [form, setForm] = useState({
-    base: 'https://silkilinen.com',
+    base: 'https://www.silkilinen.com',
     source: 'meta',
     medium: 'paid',
     campaign: '',
@@ -111,7 +111,7 @@ export default function UtmBuilderPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div>
             <label style={label}>Destination URL</label>
-            <input style={field} value={form.base} onChange={e => set('base', e.target.value)} placeholder="https://silkilinen.com/shop" />
+            <input style={field} value={form.base} onChange={e => set('base', e.target.value)} placeholder="https://www.silkilinen.com/shop" />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>

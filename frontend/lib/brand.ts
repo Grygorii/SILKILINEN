@@ -1,6 +1,6 @@
 export const brand = {
   name: 'SILKILINEN',
-  url: 'https://silkilinen.com',
+  url: 'https://www.silkilinen.com',
   tagline: 'Pure Silk & Linen Intimates',
   og: {
     bg: '#f5f0e8',
