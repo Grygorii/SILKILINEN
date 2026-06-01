@@ -3,10 +3,31 @@ import ProductGrid from '@/components/ProductGrid';
 import BundleStrip from '@/components/BundleStrip';
 import styles from './page.module.css';
 
-export const metadata: Metadata = {
-  title: 'Shop',
-  description: 'Browse the full SILKILINEN collection of pure silk and linen intimates. Robes, slips, dresses and sets, shipped worldwide from Donegal.',
-};
+// Per-category metadata so /shop?category=robes gets a different
+// title + description from /shop?category=pyjamas. The base /shop URL
+// keeps the collection-wide description. Without this, every category
+// variant shared one generic meta and Google's audit flagged it as
+// duplicate content.
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}): Promise<Metadata> {
+  const { category } = await searchParams;
+  if (category && CATEGORY_COPY[category]) {
+    const c = CATEGORY_COPY[category];
+    return {
+      title: c.title,
+      description: c.description,
+      alternates: { canonical: `https://www.silkilinen.com/shop?category=${category}` },
+    };
+  }
+  return {
+    title: 'Shop',
+    description: 'The full Silkilinen collection of pure silk and linen intimates — robes, slips, dresses, lounge, sleep. Made by hand in Donegal, shipped worldwide.',
+    alternates: { canonical: 'https://www.silkilinen.com/shop' },
+  };
+}
 
 const CATEGORY_COPY: Record<string, { title: string; description: string }> = {
   robes: {

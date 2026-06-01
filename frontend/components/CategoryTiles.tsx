@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { type Content, val } from '@/lib/content';
+import { cloudinaryAuto } from '@/lib/imageUtils';
 import styles from './CategoryTiles.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -39,7 +40,16 @@ export default async function CategoryTiles({ content = {} }: { content?: Conten
             className={`${styles.tile} ${tile.image ? styles.tileWithImage : ''}`}
           >
             {tile.image && (
-              <img src={tile.image} alt={tile.alt} className={styles.tileImg} />
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={cloudinaryAuto(tile.image, 600)}
+                alt={tile.alt}
+                className={styles.tileImg}
+                loading="lazy"
+                decoding="async"
+                width={600}
+                height={600}
+              />
             )}
             <span className={styles.label}>{tile.label}</span>
           </Link>

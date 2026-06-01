@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { isValidImageUrl } from '@/lib/imageUtils';
+import { isValidImageUrl, cloudinaryAuto } from '@/lib/imageUtils';
 import styles from './BundleStrip.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -53,7 +53,14 @@ export default async function BundleStrip({ category }: { category: string }) {
               <div className={styles.imgWrap}>
                 {hero ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={hero} alt={b.heroImage?.alt || b.name} className={styles.img} />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={cloudinaryAuto(hero, 600)}
+                    alt={b.heroImage?.alt || b.name}
+                    className={styles.img}
+                    loading="lazy"
+                    decoding="async"
+                  />
                 ) : (
                   <div className={styles.imgPlaceholder} />
                 )}

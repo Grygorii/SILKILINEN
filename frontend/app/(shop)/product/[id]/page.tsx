@@ -150,12 +150,31 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     },
   };
 
+  // Breadcrumb JSON-LD — surfaces a structured trail in Google results
+  // (Home > Shop > Category > Product) instead of the raw URL.
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.silkilinen.com' },
+      { '@type': 'ListItem', position: 2, name: 'Shop', item: 'https://www.silkilinen.com/shop' },
+      ...(product.category
+        ? [{ '@type': 'ListItem', position: 3, name: String(product.category).replace(/-/g, ' '), item: `https://www.silkilinen.com/shop?category=${product.category}` }]
+        : []),
+      { '@type': 'ListItem', position: product.category ? 4 : 3, name: product.name, item: `https://www.silkilinen.com/product/${id}` },
+    ],
+  };
+
   return (
     <>
       <main className={styles.page}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
         />
         <ProductViewTracker id={product._id} name={product.name} price={product.price} image={galleryImages[0]?.url} />
         <PageTracker page="product" productId={product._id} />
