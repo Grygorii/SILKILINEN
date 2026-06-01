@@ -3,7 +3,7 @@ import Link from 'next/link';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
-const BASE = 'https://silkilinen.com';
+const BASE = 'https://www.silkilinen.com';
 
 type Family =
   | { kind: 'static'; label: string; path: string; section: string; note?: string }

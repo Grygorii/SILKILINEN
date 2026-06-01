@@ -710,7 +710,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             silkilinen.com/product/{id}
           </a>
           <button
-            onClick={() => { navigator.clipboard.writeText(`https://silkilinen.com/product/${id}`); }}
+            onClick={() => { navigator.clipboard.writeText(`https://www.silkilinen.com/product/${id}`); }}
             style={{ padding: '3px 10px', fontSize: 11, border: '1px solid #1f6b3b', background: 'transparent', color: '#1f6b3b', cursor: 'pointer', fontFamily: 'inherit' }}
           >Copy link</button>
           <button

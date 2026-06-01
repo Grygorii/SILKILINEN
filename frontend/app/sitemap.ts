@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-const BASE = 'https://silkilinen.com';
+const BASE = 'https://www.silkilinen.com';
 
 // Cap the backend fetch so a slow/cold Railway never makes the whole
 // sitemap route hang past Google's fetch timeout. Returns an empty list

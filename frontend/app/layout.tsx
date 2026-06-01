@@ -13,7 +13,7 @@ import { CookieConsentProvider } from "@/context/CookieConsentContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://silkilinen.com'),
+  metadataBase: new URL('https://www.silkilinen.com'),
   // Title template — every page that sets a `title` becomes
   // "Page Name | Silkilinen". Pages can opt out by setting
   // title: { absolute: '...' }. Brand casing is title-case in
@@ -69,8 +69,8 @@ export default function RootLayout({
     '@type': 'Organization',
     name: 'Silkilinen',
     alternateName: 'SILKILINEN',
-    url: 'https://silkilinen.com',
-    logo: 'https://silkilinen.com/og-default.jpg', // replace with a square-format logo when available
+    url: 'https://www.silkilinen.com',
+    logo: 'https://www.silkilinen.com/og-default.jpg', // replace with a square-format logo when available
     description: 'Handpicked silk and linen intimates, shipped worldwide from Donegal, Ireland.',
     foundingLocation: { '@type': 'Place', address: { '@type': 'PostalAddress', addressLocality: 'Donegal', addressCountry: 'IE' } },
     contactPoint: {
@@ -93,10 +93,10 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'Silkilinen',
-    url: 'https://silkilinen.com',
+    url: 'https://www.silkilinen.com',
     potentialAction: {
       '@type': 'SearchAction',
-      target: { '@type': 'EntryPoint', urlTemplate: 'https://silkilinen.com/shop?search={search_term_string}' },
+      target: { '@type': 'EntryPoint', urlTemplate: 'https://www.silkilinen.com/shop?search={search_term_string}' },
       'query-input': 'required name=search_term_string',
     },
   };

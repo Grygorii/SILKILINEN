@@ -280,7 +280,7 @@ export default function JournalEditorPage() {
             </a>
             <button
               onClick={async () => {
-                await navigator.clipboard.writeText(`https://silkilinen.com/journal/${article.slug}`);
+                await navigator.clipboard.writeText(`https://www.silkilinen.com/journal/${article.slug}`);
                 setCopiedUrl(true);
                 setTimeout(() => setCopiedUrl(false), 2000);
               }}

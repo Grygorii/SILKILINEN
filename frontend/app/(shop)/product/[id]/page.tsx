@@ -37,9 +37,9 @@ export async function generateMetadata(
   const title = product.metaTitle || product.name;
   const description = product.metaDescription
     || (product.description ? product.description.slice(0, 155) : `Shop ${product.name} at Silkilinen. Pure silk and linen intimates, shipped worldwide from Donegal.`);
-  const url = `https://silkilinen.com/product/${id}`;
+  const url = `https://www.silkilinen.com/product/${id}`;
   const primaryImage = product.images?.find((i: { isPrimary: boolean }) => i.isPrimary);
-  const image = primaryImage?.url || product.images?.[0]?.url || product.image || 'https://silkilinen.com/og-default.jpg';
+  const image = primaryImage?.url || product.images?.[0]?.url || product.image || 'https://www.silkilinen.com/og-default.jpg';
 
   return {
     title,
@@ -146,7 +146,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       availability: outOfStock
         ? 'https://schema.org/OutOfStock'
         : 'https://schema.org/InStock',
-      url: `https://silkilinen.com/product/${id}`,
+      url: `https://www.silkilinen.com/product/${id}`,
     },
   };
 
