@@ -96,7 +96,7 @@
   margin-top: 2px;
 }
 
-code {
+.table tbody td :global(code) {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;
   background: var(--color-surface);
