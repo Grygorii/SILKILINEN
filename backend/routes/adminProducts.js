@@ -4,12 +4,35 @@ const multer = require('multer');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const cloudinary = require('cloudinary').v2;
+const sharp = require('sharp');
 const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
 const { generateProductSEO, AIServiceError } = require('../services/aiText');
 const { SLOT_KEYS } = require('../config/imageSlots');
 const Category = require('../models/Category');
 const { detectImageType } = require('../utils/fileSignature');
+
+// Cloudinary's free-tier raw upload limit is 10 MB. We only pre-compress
+// when a file is going to bust that ceiling — anything under the threshold
+// goes through untouched so the original quality reaches Cloudinary
+// (which is then doing its own crop to 1200x1500 anyway). Avoids the
+// "I uploaded a clean studio shot and it came back softer" complaint:
+// untouched files are never re-encoded.
+//
+// When sharp does run (large source), bump quality to 92 from the
+// previous 85 — slightly bigger output, still comfortably under 10 MB.
+const CLOUDINARY_RAW_LIMIT = 10 * 1024 * 1024;
+const COMPRESS_THRESHOLD = CLOUDINARY_RAW_LIMIT - 500 * 1024; // 500 KB headroom for upload framing
+
+async function compressForCloudinary(buffer) {
+  const img = sharp(buffer, { failOn: 'none' }).rotate(); // honour EXIF orientation
+  const meta = await img.metadata();
+  const isPng = meta.format === 'png' && meta.hasAlpha;
+  const resized = img.resize({ width: 2400, height: 2400, fit: 'inside', withoutEnlargement: true });
+  return isPng
+    ? resized.png({ compressionLevel: 9 }).toBuffer()
+    : resized.jpeg({ quality: 92, mozjpeg: true }).toBuffer();
+}
 
 // Burst-protection for AI generation endpoints — 20 calls per IP per hour.
 // Sized so the founder's normal daily rhythm (a handful of generations) is
@@ -32,7 +55,10 @@ cloudinary.config({
 
 const imgUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  // 25 MB per file — covers modern phone shots (5-15 MB) and studio
+  // shots (up to ~20 MB). Cloudinary's transformation pipeline handles
+  // the downsizing to the 1200x1500 storefront size in its own service.
+  limits: { fileSize: 25 * 1024 * 1024 },
   fileFilter(req, file, cb) {
     if (file.mimetype.startsWith('image/')) cb(null, true);
     else cb(new Error('Images only'));
@@ -81,7 +107,7 @@ const PRODUCT_ALLOWED_FIELDS = [
   'name', 'price', 'compareAtPrice', 'description', 'category',
   'colours', 'materialComposition', 'variants', 'totalStock', 'inStock',
   'status', 'keywords', 'metaTitle', 'metaDescription', 'slug',
-  'altTextTemplate', 'origin', 'isNewArrival',
+  'altTextTemplate', 'origin', 'isNewArrival', 'aiPhotoDescriptor',
 ];
 
 function pickProductFields(body) {
@@ -727,7 +753,13 @@ router.post('/:id/images', imgUpload.array('images', 20), async function(req, re
     const filesToProcess = slot ? [req.files[0]] : req.files;
 
     for (const file of filesToProcess) {
-      const result = await uploadBuffer(file.buffer, {
+      // Only run sharp when the source would bust Cloudinary's 10 MB cap.
+      // Smaller files keep their original encoding so quality doesn't
+      // degrade on routine uploads.
+      const payload = file.buffer.length > COMPRESS_THRESHOLD
+        ? await compressForCloudinary(file.buffer)
+        : file.buffer;
+      const result = await uploadBuffer(payload, {
         folder: `silkilinen/products/${req.params.id}`,
         resource_type: 'image',
         transformation: [{ width: 1200, height: 1500, crop: 'fill', gravity: 'auto' }],

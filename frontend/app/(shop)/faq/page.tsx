@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import styles from './page.module.css';
 
 export const metadata: Metadata = {
-  title: 'FAQ — SILKILINEN',
+  title: 'FAQ',
   description: 'Answers to common questions about SILKILINEN silk and linen products — materials, sizing, care, shipping, and returns.',
   alternates: { canonical: 'https://silkilinen.com/faq' },
 };

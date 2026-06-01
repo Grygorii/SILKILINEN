@@ -166,6 +166,26 @@ app.get('/', function(req, res) {
   res.send('Silkilinen backend is running');
 });
 
+// Multer errors arrive through next(err) during multipart parsing, so the
+// route handler's try/catch never sees them. Map the common ones to clear
+// 413/400 responses so the admin UI can show a useful toast instead of
+// the generic "Internal server error" the backstop would otherwise emit.
+const MULTER_MAX_MB = 25;
+// eslint-disable-next-line no-unused-vars
+app.use(function(err, req, res, next) {
+  if (err && err.name === 'MulterError') {
+    const map = {
+      LIMIT_FILE_SIZE:      { status: 413, msg: `File too large. Max ${MULTER_MAX_MB} MB per image — re-export at a smaller size and try again.` },
+      LIMIT_FILE_COUNT:     { status: 413, msg: 'Too many files at once. Upload in smaller batches.' },
+      LIMIT_UNEXPECTED_FILE:{ status: 400, msg: `Unexpected field "${err.field}". Use the upload form.` },
+      LIMIT_PART_COUNT:     { status: 413, msg: 'Too many parts in upload.' },
+    };
+    const out = map[err.code] || { status: 400, msg: `Upload rejected: ${err.message}` };
+    return res.status(out.status).json({ error: out.msg });
+  }
+  next(err);
+});
+
 // Backstop error middleware. Existing route handlers still have their own
 // try/catch blocks with bespoke status codes — this catches anything they
 // miss (uncaught throws, sync errors, future routes that forget try/catch)

@@ -4,7 +4,7 @@ import BundleStrip from '@/components/BundleStrip';
 import styles from './page.module.css';
 
 export const metadata: Metadata = {
-  title: 'Shop — SILKILINEN',
+  title: 'Shop',
   description: 'Browse the full SILKILINEN collection of pure silk and linen intimates. Robes, slips, dresses and sets, shipped worldwide from Donegal.',
 };
 
