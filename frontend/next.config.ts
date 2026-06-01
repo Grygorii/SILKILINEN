@@ -28,6 +28,16 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      // /blog was replaced by /journal. 301 so any Google-indexed
+      // legacy URLs (caring-for-your-silk, the-linen-story,
+      // sleep-better-in-silk) keep working and forward equity to
+      // the journal route.
+      { source: '/blog', destination: '/journal', permanent: true },
+      { source: '/blog/:slug', destination: '/journal/:slug', permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;
