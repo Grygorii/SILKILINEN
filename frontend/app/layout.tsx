@@ -83,8 +83,8 @@ export default function RootLayout({
     sameAs: [
       // Fill these in as the accounts go live; each verified profile
       // strengthens Google's brand-identity confidence.
-      // 'https://www.instagram.com/silkilinen/',
-      // 'https://www.pinterest.com/silkilinen/',
+      'https://www.instagram.com/silkilinen/',
+      'https://www.pinterest.com/silkilinen/',
       // 'https://www.tiktok.com/@silkilinen',
     ].filter(Boolean),
   };
