@@ -83,7 +83,7 @@ const EMPTY_FORM: Form = {
   name: '', status: 'draft', price: '', compareAtPrice: '', costPrice: '',
   category: 'robes', description: '', tags: '',
   metaTitle: '', metaDescription: '', slug: '', keywords: '', altTextTemplate: '',
-  materialComposition: '', careInstructions: '', origin: 'Made in Donegal', certifications: '',
+  materialComposition: '', careInstructions: '', origin: '', certifications: '',
   isNewArrival: false,
   aiPhotoDescriptor: '',
   gender: 'unisex',
@@ -219,7 +219,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           altTextTemplate: p.altTextTemplate ?? '',
           materialComposition: p.materialComposition ?? '',
           careInstructions: p.careInstructions ?? '',
-          origin: p.origin ?? 'Made in Donegal',
+          origin: p.origin ?? '',
           certifications: (p.certifications ?? []).join(', '),
           // Accept the new schema field and the legacy `isNew` value
           // (for products saved before the rename, in case the migration
@@ -1060,7 +1060,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             <div className={styles.frow}>
               <div className={styles.fg}>
                 <label className={styles.label}>Country of origin</label>
-                <input className={styles.input} value={form.origin} onChange={e => setField('origin', e.target.value)} placeholder="Made in Donegal" />
+                <input className={styles.input} value={form.origin} onChange={e => setField('origin', e.target.value)} placeholder="Real origin only — e.g. Made by hand in Donegal / Made in India. Leave blank if unverified." />
               </div>
               <div className={styles.fg}>
                 <label className={styles.label}>Certifications (comma separated)</label>

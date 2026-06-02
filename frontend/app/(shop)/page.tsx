@@ -39,7 +39,7 @@ export default async function Home() {
 
   const heroImage = val(content, 'homepage_hero_image');
   const heroTitle = val(content, 'homepage_hero_title', 'Pure silk, pure comfort.');
-  const heroSubtitle = val(content, 'homepage_hero_subtitle', 'Handcrafted silk & linen intimates');
+  const heroSubtitle = val(content, 'homepage_hero_subtitle', 'Pure silk & linen intimates');
   const heroCta = val(content, 'homepage_hero_cta', 'Shop the collection');
 
   return (

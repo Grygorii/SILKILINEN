@@ -102,7 +102,7 @@ export default function EmailCapturePopup() {
           </div>
         ) : (
           <>
-            <p className={styles.eyebrow}>Pure silk. Pure linen. Made in Donegal.</p>
+            <p className={styles.eyebrow}>Pure silk &amp; linen · an Irish brand</p>
             <h2 className={styles.title}>10% off your first order</h2>
             <p className={styles.body}>
               Sign up for slow style notes, new collections,<br />
