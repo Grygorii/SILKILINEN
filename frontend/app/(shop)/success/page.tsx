@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useCart } from '@/context/CartContext';
+import GoogleCustomerReviews from '@/components/GoogleCustomerReviews';
 import styles from './page.module.css';
 
 export default function SuccessPage() {
@@ -25,6 +26,11 @@ export default function SuccessPage() {
         <p>You'll receive a confirmation email shortly.</p>
         <a href="/shop" className={styles.btn}>Back to the collection</a>
       </div>
+      {/* Google Customer Reviews opt-in — reads the Stripe params Stripe
+          appends to this URL. Renders nothing if they're absent. */}
+      <Suspense fallback={null}>
+        <GoogleCustomerReviews />
+      </Suspense>
     </main>
   );
 }

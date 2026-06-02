@@ -12,7 +12,7 @@ const Product = require('../models/Product');
 const Bundle = require('../models/Bundle');
 const Expense = require('../models/Expense');
 const Customer = require('../models/Customer');
-const { calculateShipping } = require('../services/shipping');
+const { calculateShipping, getTierForCountry } = require('../services/shipping');
 const { validateDiscount, redeemDiscount } = require('../services/discounts');
 const { calculateTax } = require('../services/tax');
 const { sendOrderConfirmation, sendAdminOrderNotification } = require('../services/email');
@@ -299,6 +299,52 @@ checkoutRouter.post('/update-intent', checkoutRateLimit, async (req, res) => {
   } catch (err) {
     console.error('[checkoutV2] update-intent error:', err.message);
     console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/v2/checkout/confirmation
+// Minimal order summary for the post-purchase success page — feeds the
+// Google Customer Reviews opt-in (order id, email, delivery country,
+// estimated delivery date). Reads straight from the PaymentIntent so it
+// works immediately on redirect, before the webhook has created the Order.
+//
+// Authorisation is the Stripe client_secret, which only the buyer who just
+// paid holds (Stripe puts it in the success-page URL). Without a matching
+// secret this returns 403, so it can't be used to enumerate other
+// customers' email/country by guessing pi_ ids.
+checkoutRouter.get('/confirmation', checkoutRateLimit, async (req, res) => {
+  try {
+    const paymentIntentId = req.query.payment_intent;
+    const clientSecret = req.query.client_secret;
+    if (!paymentIntentId || !clientSecret) {
+      return res.status(400).json({ error: 'payment_intent and client_secret required' });
+    }
+
+    const intent = await stripe.paymentIntents.retrieve(String(paymentIntentId));
+    if (!intent || intent.client_secret !== String(clientSecret)) {
+      return res.status(403).json({ error: 'Not authorised' });
+    }
+    if (intent.status !== 'succeeded') {
+      return res.status(409).json({ error: 'Payment not completed' });
+    }
+
+    const country = intent.shipping?.address?.country || intent.metadata?.shippingCountry || 'IE';
+    const email = intent.receipt_email || intent.metadata?.customerEmail || '';
+
+    // Estimate the delivery date conservatively (handling + the tier's
+    // upper transit bound) so Google doesn't email the review survey before
+    // the parcel could realistically have arrived.
+    const tier = getTierForCountry(country);
+    const transitMax = tier?.deliveryMax || 21;
+    const HANDLING_DAYS = 2;
+    const created = new Date((intent.created || Math.floor(Date.now() / 1000)) * 1000);
+    const eta = new Date(created.getTime() + (HANDLING_DAYS + transitMax) * 24 * 60 * 60 * 1000);
+    const estimatedDeliveryDate = eta.toISOString().slice(0, 10); // YYYY-MM-DD
+
+    res.json({ orderId: intent.id, email, country, estimatedDeliveryDate });
+  } catch (err) {
+    console.error('[checkoutV2] confirmation error:', err.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
