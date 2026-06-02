@@ -66,11 +66,41 @@ export const viewport: Viewport = {
   themeColor: '#FAF8F4',
 };
 
-export default function RootLayout({
+// Fetch the brand-level review summary at request time so the
+// Organization JSON-LD includes a real aggregateRating. 5s timeout +
+// graceful fallback so a slow backend never blocks the layout from
+// rendering. GSC flagged Product snippets as missing aggregateRating;
+// since reviews aren't linked to specific products in the data model,
+// we surface the brand-level rating on Organization instead of
+// misattributing brand reviews to individual products.
+async function getReviewSummary(): Promise<{ average: number; count: number } | null> {
+  const API = process.env.NEXT_PUBLIC_API_URL;
+  if (!API) return null;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(`${API}/api/reviews/summary`, {
+      next: { revalidate: 3600 },
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (typeof data?.average === 'number' && typeof data?.count === 'number' && data.count > 0) {
+      return { average: data.average, count: data.count };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const reviewSummary = await getReviewSummary();
   // ── JSON-LD structured data ──────────────────────────────────────────
   // Two schemas on the root layout, applied to every page:
   //
@@ -107,6 +137,22 @@ export default function RootLayout({
       'https://www.pinterest.com/silkilinen/',
       // 'https://www.tiktok.com/@silkilinen',
     ].filter(Boolean),
+    // Brand-level aggregateRating. Only emitted when we actually have
+    // verified reviews — Google rejects schemas with zero-count or
+    // missing values. Reviews aren't linked to products in the data
+    // model, so this surfaces here instead of on individual Product
+    // schemas (which would misattribute brand reviews per SKU).
+    ...(reviewSummary
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: reviewSummary.average,
+            reviewCount: reviewSummary.count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
   };
 
   const websiteJsonLd = {
