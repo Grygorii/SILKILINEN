@@ -150,22 +150,31 @@ function PaymentForm({
   return (
     <form onSubmit={handleSubmit} className={styles.paymentForm}>
       <h2 className={styles.sectionTitle}>Contact</h2>
-      <input
-        type="email"
-        required
-        className={styles.emailInput}
-        value={email}
-        onChange={e => { setEmail(e.target.value); if (emailError) setEmailError(''); }}
-        onBlur={handleEmailBlur}
-        placeholder="Email address"
-        autoComplete="email"
-        aria-invalid={!!emailError}
-      />
-      {emailError && (
-        <p style={{ marginTop: 6, fontSize: 12, color: '#c9572a' }}>{emailError}</p>
-      )}
+      <div>
+        <label className={styles.fieldLabel} htmlFor="checkout-email">
+          Email address <span className={styles.req} aria-hidden="true">*</span>
+        </label>
+        <input
+          id="checkout-email"
+          type="email"
+          required
+          className={styles.emailInput}
+          value={email}
+          onChange={e => { setEmail(e.target.value); if (emailError) setEmailError(''); }}
+          onBlur={handleEmailBlur}
+          placeholder="you@example.com"
+          autoComplete="email"
+          aria-invalid={!!emailError}
+        />
+        {emailError && (
+          <p style={{ marginTop: 6, fontSize: 12, color: '#c9572a' }}>{emailError}</p>
+        )}
+      </div>
 
-      <h2 className={styles.sectionTitle}>Delivery address</h2>
+      <div>
+        <h2 className={styles.sectionTitle} style={{ marginBottom: 6 }}>Delivery address</h2>
+        <p className={styles.requiredNote}>All fields are required unless shown as optional.</p>
+      </div>
       <AddressElement
         key={prefillVersion}
         options={{

@@ -107,6 +107,29 @@
 }
 .emailInput:focus { border-color: var(--dark, #1a1916); }
 
+/* Field label + required marker (custom fields outside Stripe's iframe) */
+.fieldLabel {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  color: var(--dark, #1a1916);
+  margin-bottom: 6px;
+}
+.req {
+  color: #c0392b;
+  margin-left: 1px;
+}
+
+/* Note under the Stripe address block. Stripe marks its own optional
+   fields with "(optional)", so this establishes the convention without
+   per-field asterisks we can't inject into the iframe. */
+.requiredNote {
+  font-size: 12px;
+  color: var(--muted, #8a8680);
+  font-style: italic;
+  margin: 0;
+}
+
 /* Payment form */
 .paymentForm {
   display: flex;
