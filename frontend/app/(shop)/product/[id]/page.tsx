@@ -9,6 +9,7 @@ import RecentlyViewed from '@/components/RecentlyViewed';
 import ProductViewTracker from '@/components/ProductViewTracker';
 import { ProductSelectionProvider } from '@/components/ProductSelectionContext';
 import { AccordionGroup, AccordionItem, AccordionSubLabel } from '@/components/ui/Accordion';
+import { shippingDetailsFor, merchantReturnPolicy } from '@/lib/shippingSchema';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -147,7 +148,16 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         ? 'https://schema.org/OutOfStock'
         : 'https://schema.org/InStock',
       url: `https://www.silkilinen.com/product/${id}`,
+      // GSC merchant-listing audit flagged these two as missing. Both are
+      // policy-level (not per-product) so we always emit them.
+      shippingDetails: shippingDetailsFor(Number(product.price) || 0),
+      hasMerchantReturnPolicy: merchantReturnPolicy,
     },
+    // Note: GSC also flags aggregateRating + review as missing on
+    // Product. The Review model is brand-level (no productId field), so
+    // we emit aggregateRating on the Organization in layout.tsx instead
+    // of misattributing brand reviews to individual products. Adding
+    // per-product reviews is a separate roadmap item.
   };
 
   // Breadcrumb JSON-LD — surfaces a structured trail in Google results
