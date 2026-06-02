@@ -43,6 +43,10 @@ function Stars({ n }: { n: number }) {
 
 function ReviewRequestTrigger({ onSent }: { onSent: () => void }) {
   const [busy, setBusy] = useState(false);
+  // Days since order required before an order is eligible. 14 is the
+  // sensible default for production (gives the customer time to actually
+  // try the silk). Drop to 0 to test on a fresh order.
+  const [ageDays, setAgeDays] = useState(14);
   const [result, setResult] = useState<{ eligible: number; sent: number; skipped: number; errors: number } | null>(null);
   const [err, setErr] = useState('');
 
@@ -55,7 +59,7 @@ function ReviewRequestTrigger({ onSent }: { onSent: () => void }) {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dryRun, ageDays: 14 }),
+        body: JSON.stringify({ dryRun, ageDays }),
       });
       if (!res.ok) throw new Error(`Request failed (${res.status})`);
       const data = await res.json();
@@ -74,10 +78,28 @@ function ReviewRequestTrigger({ onSent }: { onSent: () => void }) {
         <div>
           <p style={{ margin: 0, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18 }}>Review requests</p>
           <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-ink-muted, #8A8278)' }}>
-            Send a tokenised &ldquo;how was it?&rdquo; email to every order ≥14 days old that hasn&rsquo;t received one yet.
+            Send a tokenised &ldquo;how was it?&rdquo; email to every order at least
+            <em style={{ fontStyle: 'normal', fontWeight: 500 }}> {ageDays} {ageDays === 1 ? 'day' : 'days'} </em>
+            old that hasn&rsquo;t received one yet.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--color-ink-muted, #8A8278)' }}>
+            Days
+            <input
+              type="number"
+              min={0}
+              max={365}
+              step={1}
+              value={ageDays}
+              onChange={e => setAgeDays(Math.max(0, Math.min(365, parseInt(e.target.value, 10) || 0)))}
+              style={{
+                width: 60, height: 32, padding: '0 8px',
+                border: '1px solid var(--color-line, #E8E2D6)', background: 'var(--color-bg, #FAF8F4)',
+                borderRadius: 2, fontFamily: 'Jost, sans-serif', fontSize: 13, color: 'var(--color-ink, #2A2218)',
+              }}
+            />
+          </label>
           <button onClick={() => run(true)} disabled={busy}
             style={{ padding: '8px 16px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', border: '1px solid var(--color-line, #E8E2D6)', background: 'transparent', cursor: 'pointer', borderRadius: 2 }}>
             {busy ? 'Checking…' : 'Dry run'}
@@ -92,6 +114,11 @@ function ReviewRequestTrigger({ onSent }: { onSent: () => void }) {
         <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--color-ink, #2A2218)' }}>
           Eligible: <strong>{result.eligible}</strong> · Sent: <strong>{result.sent}</strong> · Skipped (no products): <strong>{result.skipped}</strong>
           {result.errors > 0 && <> · Errors: <strong style={{ color: '#c9572a' }}>{result.errors}</strong></>}
+        </p>
+      )}
+      {ageDays < 7 && (
+        <p style={{ margin: '8px 0 0', fontSize: 11, color: '#c9572a' }}>
+          Low age threshold — useful for testing, but customers usually need ≥7 days to have actually tried the product.
         </p>
       )}
       {err && <p style={{ margin: '12px 0 0', fontSize: 12, color: '#c9572a' }}>{err}</p>}
