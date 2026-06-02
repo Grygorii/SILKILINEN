@@ -47,7 +47,15 @@ function ReviewRequestTrigger({ onSent }: { onSent: () => void }) {
   // sensible default for production (gives the customer time to actually
   // try the silk). Drop to 0 to test on a fresh order.
   const [ageDays, setAgeDays] = useState(14);
-  const [result, setResult] = useState<{ eligible: number; sent: number; skipped: number; errors: number } | null>(null);
+  type Diagnostics = {
+    totalOrders: number;
+    excludedByStatus: number;
+    excludedByMissingEmail: number;
+    excludedByTooFresh: number;
+    excludedByAlreadySent: number;
+    excludedByNoItems: number;
+  };
+  const [result, setResult] = useState<{ eligible: number; sent: number; skipped: number; errors: number; diagnostics?: Diagnostics } | null>(null);
   const [err, setErr] = useState('');
 
   async function run(dryRun: boolean) {
@@ -63,7 +71,7 @@ function ReviewRequestTrigger({ onSent }: { onSent: () => void }) {
       });
       if (!res.ok) throw new Error(`Request failed (${res.status})`);
       const data = await res.json();
-      setResult({ eligible: data.eligible, sent: data.sent, skipped: data.skipped, errors: data.errors });
+      setResult({ eligible: data.eligible, sent: data.sent, skipped: data.skipped, errors: data.errors, diagnostics: data.diagnostics });
       if (!dryRun && data.sent > 0) onSent();
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Request failed');
@@ -111,10 +119,36 @@ function ReviewRequestTrigger({ onSent }: { onSent: () => void }) {
         </div>
       </div>
       {result && (
-        <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--color-ink, #2A2218)' }}>
-          Eligible: <strong>{result.eligible}</strong> · Sent: <strong>{result.sent}</strong> · Skipped (no products): <strong>{result.skipped}</strong>
-          {result.errors > 0 && <> · Errors: <strong style={{ color: '#c9572a' }}>{result.errors}</strong></>}
-        </p>
+        <>
+          <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--color-ink, #2A2218)' }}>
+            Eligible: <strong>{result.eligible}</strong> · Sent: <strong>{result.sent}</strong> · Skipped (no products): <strong>{result.skipped}</strong>
+            {result.errors > 0 && <> · Errors: <strong style={{ color: '#c9572a' }}>{result.errors}</strong></>}
+          </p>
+          {result.diagnostics && result.eligible === 0 && result.diagnostics.totalOrders > 0 && (
+            <div style={{ marginTop: 8, padding: 10, background: 'var(--color-bg, #FAF8F4)', border: '1px dashed var(--color-line, #E8E2D6)', borderRadius: 2 }}>
+              <p style={{ margin: 0, fontSize: 11, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--color-ink-muted, #8A8278)' }}>
+                Why no orders matched ({result.diagnostics.totalOrders} total)
+              </p>
+              <ul style={{ margin: '6px 0 0', paddingLeft: 16, fontSize: 12, color: 'var(--color-ink, #2A2218)', lineHeight: 1.7 }}>
+                {result.diagnostics.excludedByStatus > 0 && (
+                  <li><strong>{result.diagnostics.excludedByStatus}</strong> not in paid/processing/shipped/delivered status</li>
+                )}
+                {result.diagnostics.excludedByMissingEmail > 0 && (
+                  <li><strong>{result.diagnostics.excludedByMissingEmail}</strong> have no customer email on file</li>
+                )}
+                {result.diagnostics.excludedByTooFresh > 0 && (
+                  <li><strong>{result.diagnostics.excludedByTooFresh}</strong> too fresh (younger than {ageDays} {ageDays === 1 ? 'day' : 'days'})</li>
+                )}
+                {result.diagnostics.excludedByAlreadySent > 0 && (
+                  <li><strong>{result.diagnostics.excludedByAlreadySent}</strong> already received a request</li>
+                )}
+                {result.diagnostics.excludedByNoItems > 0 && (
+                  <li><strong>{result.diagnostics.excludedByNoItems}</strong> have no items on the order</li>
+                )}
+              </ul>
+            </div>
+          )}
+        </>
       )}
       {ageDays < 7 && (
         <p style={{ margin: '8px 0 0', fontSize: 11, color: '#c9572a' }}>
