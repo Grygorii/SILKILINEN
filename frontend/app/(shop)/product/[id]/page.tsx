@@ -25,6 +25,29 @@ async function getProduct(id: string) {
   }
 }
 
+type ProductReviewSummary = { average: number; count: number };
+type ProductReview = { _id: string; reviewer: string; title?: string; message?: string; starRating: number; dateReviewed: string };
+
+async function getProductReviews(productId: string): Promise<{ summary: ProductReviewSummary; recent: ProductReview[] } | null> {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 3000);
+    const [summaryRes, listRes] = await Promise.all([
+      fetch(`${API}/api/reviews/summary?productId=${productId}`, { signal: ctrl.signal, next: { revalidate: 600 } }),
+      fetch(`${API}/api/reviews?productId=${productId}&limit=6`, { signal: ctrl.signal, next: { revalidate: 600 } }),
+    ]);
+    clearTimeout(t);
+    if (!summaryRes.ok) return null;
+    const summary = await summaryRes.json();
+    const listData = listRes.ok ? await listRes.json() : { reviews: [] };
+    const recent = Array.isArray(listData) ? listData : (listData.reviews || []);
+    if (!summary || typeof summary.count !== 'number' || summary.count === 0) return null;
+    return { summary, recent };
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Metadata> {
@@ -98,6 +121,10 @@ function StockBadge({ product }: { product: { inStock?: boolean; totalStock?: nu
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const product = await getProduct(id);
+  // Reviews specifically for this product; null when no approved reviews
+  // exist yet (skip the aggregateRating/review JSON-LD fields when null
+  // — Google rejects schemas with zero-count or missing values).
+  const productReviews = product ? await getProductReviews(id) : null;
 
   if (!product) {
     return (
@@ -153,11 +180,30 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       shippingDetails: shippingDetailsFor(Number(product.price) || 0),
       hasMerchantReturnPolicy: merchantReturnPolicy,
     },
-    // Note: GSC also flags aggregateRating + review as missing on
-    // Product. The Review model is brand-level (no productId field), so
-    // we emit aggregateRating on the Organization in layout.tsx instead
-    // of misattributing brand reviews to individual products. Adding
-    // per-product reviews is a separate roadmap item.
+    // Per-product aggregateRating + review — emitted only when there are
+    // approved reviews linked to this productId. When count===0 the
+    // fields are omitted (Google rejects empty/zero schemas) and the
+    // GSC "missing aggregateRating" warning persists until the first
+    // real review lands. Brand-level rating is still on Organization
+    // in layout.tsx for the rest of the storefront.
+    ...(productReviews
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: productReviews.summary.average,
+            reviewCount: productReviews.summary.count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+          review: productReviews.recent.slice(0, 5).map(r => ({
+            '@type': 'Review',
+            reviewRating: { '@type': 'Rating', ratingValue: r.starRating, bestRating: 5, worstRating: 1 },
+            author: { '@type': 'Person', name: r.reviewer },
+            datePublished: r.dateReviewed,
+            reviewBody: r.message || r.title || '',
+          })),
+        }
+      : {}),
   };
 
   // Breadcrumb JSON-LD — surfaces a structured trail in Google results

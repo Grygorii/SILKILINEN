@@ -1,0 +1,82 @@
+.page { max-width: 1100px; padding: var(--s-6, 32px); }
+.header { margin-bottom: var(--s-5, 24px); }
+.title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 32px; font-weight: 400; color: var(--color-ink); margin: 0 0 var(--s-2, 8px); }
+.sub   { font-family: 'Jost', sans-serif; font-size: 14px; color: var(--color-ink-muted); margin: 0; }
+
+.tabs { display: flex; gap: var(--s-3, 12px); border-bottom: var(--stroke, 1px) solid var(--color-line); margin-bottom: var(--s-4, 16px); }
+.tab {
+  background: none; border: none; border-bottom: 2px solid transparent;
+  font-family: 'Jost', sans-serif; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--color-ink-muted); padding: var(--s-3, 12px) 0; cursor: pointer; display: inline-flex; align-items: center; gap: var(--s-2, 8px);
+}
+.tabActive { color: var(--color-ink); border-bottom-color: var(--color-ink); }
+.count { background: var(--color-surface-warm); color: var(--color-ink); border-radius: 999px; padding: 1px 7px; font-size: 11px; letter-spacing: 0; }
+
+.filters { display: flex; gap: var(--s-3, 12px); align-items: center; margin-bottom: var(--s-5, 24px); }
+.input {
+  flex: 1; max-width: 360px; height: 36px; padding: 0 var(--s-3, 12px);
+  border: var(--stroke, 1px) solid var(--color-line); border-radius: var(--radius-control, 2px);
+  font-family: 'Jost', sans-serif; font-size: 13px; color: var(--color-ink); background: var(--color-bg);
+}
+.checkbox { display: inline-flex; align-items: center; gap: 6px; font-family: 'Jost', sans-serif; font-size: 13px; color: var(--color-ink-muted); cursor: pointer; }
+
+.error { background: #fde2e2; border: 1px solid #c9572a; color: #c9572a; padding: var(--s-3, 12px); border-radius: var(--radius-control, 2px); font-size: 13px; margin-bottom: var(--s-4, 16px); }
+.loading, .empty { font-family: 'Jost', sans-serif; font-size: 14px; color: var(--color-ink-muted); padding: var(--s-6, 32px) 0; text-align: center; }
+
+.list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--s-4, 16px); }
+
+.card {
+  background: var(--color-bg);
+  border: var(--stroke, 1px) solid var(--color-line);
+  border-radius: var(--radius-control, 2px);
+  padding: var(--s-4, 16px) var(--s-5, 24px);
+}
+
+.cardHead { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-3, 12px); flex-wrap: wrap; margin-bottom: var(--s-2, 8px); }
+.who      { display: inline-flex; align-items: center; gap: var(--s-2, 8px); flex-wrap: wrap; }
+.reviewer { font-family: 'Jost', sans-serif; font-weight: 500; font-size: 14px; color: var(--color-ink); }
+.verifiedBadge { font-family: 'Jost', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; background: var(--color-surface-warm); color: var(--color-ink); padding: 2px 8px; border-radius: var(--radius-control, 2px); }
+.source { font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--color-ink-muted); }
+.meta { display: inline-flex; align-items: center; gap: var(--s-3, 12px); }
+.stars { color: #c4a882; font-size: 14px; }
+.date  { font-family: 'Jost', sans-serif; font-size: 12px; color: var(--color-ink-muted); }
+
+.reviewTitle { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 20px; color: var(--color-ink); margin: 0 0 var(--s-2, 8px); }
+.message     { font-family: 'Jost', sans-serif; font-size: 14px; line-height: 1.65; color: var(--color-ink); margin: 0 0 var(--s-3, 12px); white-space: pre-wrap; }
+
+.cardFoot { display: flex; align-items: center; gap: var(--s-3, 12px); flex-wrap: wrap; padding-top: var(--s-3, 12px); border-top: var(--stroke, 1px) solid var(--color-line); }
+
+.productChip {
+  display: inline-flex; align-items: center; gap: var(--s-2, 8px);
+  background: var(--color-surface); padding: 4px 10px 4px 4px;
+  border-radius: 999px; text-decoration: none;
+  font-family: 'Jost', sans-serif; font-size: 12px; color: var(--color-ink);
+}
+.productChip img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+.productChip:hover { background: var(--color-surface-warm); }
+.noProduct { font-family: 'Jost', sans-serif; font-size: 12px; color: var(--color-ink-muted); font-style: italic; }
+
+.flags { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.flag {
+  font-family: 'Jost', sans-serif; font-size: 11px; color: #c9572a;
+  background: #fdf0e8; border: 1px solid #f4c9aa; border-radius: var(--radius-control, 2px);
+  padding: 2px 8px;
+}
+
+.actions { margin-left: auto; display: inline-flex; gap: var(--s-2, 8px); }
+.approve, .reject, .spam, .del {
+  font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 6px 14px; border-radius: var(--radius-control, 2px); cursor: pointer;
+}
+.approve { background: var(--color-ink); color: var(--color-bg); border: 1px solid var(--color-ink); }
+.reject  { background: transparent; color: var(--color-ink); border: 1px solid var(--color-line); }
+.spam    { background: transparent; color: #c9572a; border: 1px solid #f4c9aa; }
+.del     { background: transparent; color: var(--color-ink-muted); border: 1px solid transparent; }
+.approve:hover, .reject:hover, .spam:hover, .del:hover { opacity: 0.85; }
+.approve:disabled, .reject:disabled, .spam:disabled, .del:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.rejectionNote {
+  margin-top: var(--s-3, 12px); padding: var(--s-2, 8px) var(--s-3, 12px);
+  background: var(--color-surface); font-family: 'Jost', sans-serif; font-size: 12px; color: var(--color-ink-muted);
+  border-left: 2px solid var(--color-line);
+}

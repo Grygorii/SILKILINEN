@@ -23,6 +23,7 @@ const NAV: NavEntry[] = [
   { label: 'Import',     href: '/admin/import',     icon: FileText },
   { label: 'Orders',     href: '/admin/orders',     icon: FileText },
   { label: 'Customers',  href: '/admin/customers',  icon: Users },
+  { label: 'Reviews',    href: '/admin/reviews',    icon: FileText },
   { section: 'Publish' },
   { label: 'Collections', href: '/admin/collections', icon: Layers },
   { label: 'Categories',  href: '/admin/categories',  icon: Folder },
