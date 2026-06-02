@@ -155,12 +155,15 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
     // Re-validate discount if present
     let discountCode = null;
     let discountAmount = 0;
+    let discountError = null;
     const codeToTry = incomingCode || cart?.discountCode;
     if (codeToTry) {
       const dr = await validateDiscount(codeToTry, subtotal);
       if (dr.valid) {
         discountCode = dr.code;
         discountAmount = dr.discountAmount;
+      } else {
+        discountError = dr.error || 'This code could not be applied.';
       }
     }
 
@@ -213,6 +216,7 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
         subtotal,
         discountCode,
         discountAmount,
+        discountError,
         shipping: { cost: shipping.cost, label: shipping.label, isFree: shipping.isFree },
         tax,
         total,
@@ -244,12 +248,21 @@ checkoutRouter.post('/update-intent', checkoutRateLimit, async (req, res) => {
 
     let discountCodeResult = null;
     let discountAmount = 0;
+    let discountError = null;
     // discountCode === '' means "remove"; undefined means "keep existing"
     const codeToTry = discountCode !== undefined ? discountCode : (meta.discountCode || '');
     const knownEmail = email || meta.customerEmail || undefined;
     if (codeToTry) {
       const dr = await validateDiscount(codeToTry, subtotal, knownEmail);
-      if (dr.valid) { discountCodeResult = dr.code; discountAmount = dr.discountAmount; }
+      if (dr.valid) {
+        discountCodeResult = dr.code;
+        discountAmount = dr.discountAmount;
+      } else {
+        // Surface the specific reason so the checkout UI can tell the
+        // customer WHY (expired vs already used vs min order vs unknown).
+        // Falls back to a generic for safety.
+        discountError = dr.error || 'This code could not be applied.';
+      }
     }
 
     const discountedSubtotal = Math.max(0, subtotal - discountAmount);
@@ -278,6 +291,7 @@ checkoutRouter.post('/update-intent', checkoutRateLimit, async (req, res) => {
         subtotal,
         discountCode: discountCodeResult,
         discountAmount,
+        discountError,
         shipping: { cost: ship.cost, label: ship.label, isFree: ship.isFree },
         total,
       },
