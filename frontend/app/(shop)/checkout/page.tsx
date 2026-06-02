@@ -12,6 +12,7 @@ import {
   useElements,
 } from '@stripe/react-stripe-js';
 import Button from '@/components/ui/Button';
+import GoogleCheckoutSignIn from '@/components/GoogleCheckoutSignIn';
 import styles from './page.module.css';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -46,12 +47,23 @@ function PaymentForm({
   onSuccess,
   onCountryChange,
   defaultEmail,
+  defaultName,
+  defaultPhone,
+  defaultAddress,
+  prefillVersion,
   onBeforeSubmit,
 }: {
   summary: OrderSummary;
   onSuccess: () => void;
   onCountryChange: (country: string) => void;
   defaultEmail: string;
+  defaultName?: string;
+  defaultPhone?: string;
+  defaultAddress?: { line1?: string; line2?: string; city?: string; state?: string; postal_code?: string; country?: string } | null;
+  // Bump when the signed-in identity changes so AddressElement re-mounts
+  // and picks up the new defaultValues (Stripe Elements don't update
+  // their defaults after mount).
+  prefillVersion: number;
   onBeforeSubmit: (email: string) => Promise<void>;
 }) {
   const stripe = useStripe();
@@ -59,6 +71,7 @@ function PaymentForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [email, setEmail] = useState(defaultEmail);
+  const [emailError, setEmailError] = useState('');
 
   // Pre-fill when logged-in customer loads after mount
   useEffect(() => {
@@ -66,14 +79,34 @@ function PaymentForm({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultEmail]);
 
+  // Conservative email regex — must have local@domain.tld with a real
+  // TLD. Catches typos ("foo@bar", "foo@bar.") that HTML5 `type=email`
+  // sometimes lets through. Won't catch valid-but-rare addresses; if a
+  // real customer hits it we tighten or relax later.
+  function isValidEmail(value: string): boolean {
+    const trimmed = value.trim();
+    if (trimmed.length < 5 || trimmed.length > 254) return false;
+    return /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(trimmed);
+  }
+
+  function handleEmailBlur() {
+    if (email.trim() && !isValidEmail(email)) {
+      setEmailError('Please enter a valid email address (e.g. you@example.com).');
+    } else {
+      setEmailError('');
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!stripe || !elements) return;
 
-    if (!email.trim() || !email.includes('@')) {
+    if (!isValidEmail(email)) {
+      setEmailError('Please enter a valid email address.');
       setError('Please enter a valid email address.');
       return;
     }
+    setEmailError('');
 
     setSubmitting(true);
     setError('');
@@ -95,6 +128,25 @@ function PaymentForm({
     }
   }
 
+  // Build the AddressElement defaultValues from any data we know about
+  // the signed-in customer. Stripe's AddressElement reads these on mount
+  // only — the parent re-mounts via prefillVersion when sign-in happens
+  // mid-checkout so the defaults take effect.
+  const addressDefaults = defaultName || defaultAddress
+    ? {
+        name: defaultName,
+        phone: defaultPhone,
+        address: {
+          line1: defaultAddress?.line1 || '',
+          line2: defaultAddress?.line2 || '',
+          city: defaultAddress?.city || '',
+          state: defaultAddress?.state || '',
+          postal_code: defaultAddress?.postal_code || '',
+          country: defaultAddress?.country || 'IE',
+        },
+      }
+    : { address: { country: 'IE' as const } };
+
   return (
     <form onSubmit={handleSubmit} className={styles.paymentForm}>
       <h2 className={styles.sectionTitle}>Contact</h2>
@@ -103,19 +155,28 @@ function PaymentForm({
         required
         className={styles.emailInput}
         value={email}
-        onChange={e => setEmail(e.target.value)}
+        onChange={e => { setEmail(e.target.value); if (emailError) setEmailError(''); }}
+        onBlur={handleEmailBlur}
         placeholder="Email address"
         autoComplete="email"
+        aria-invalid={!!emailError}
       />
+      {emailError && (
+        <p style={{ marginTop: 6, fontSize: 12, color: '#c9572a' }}>{emailError}</p>
+      )}
 
       <h2 className={styles.sectionTitle}>Delivery address</h2>
       <AddressElement
+        key={prefillVersion}
         options={{
           mode: 'shipping',
           allowedCountries: [...ALLOWED_COUNTRIES],
+          // Phone is shown but the customer can leave it blank — every
+          // other address field stays required by Stripe's per-country
+          // rules (name, line1, city, state where applicable, postcode).
           fields: { phone: 'always' },
-          validation: { phone: { required: 'always' } },
-          defaultValues: { address: { country: 'IE' } },
+          validation: { phone: { required: 'never' } },
+          defaultValues: addressDefaults,
         }}
         onChange={(event) => {
           const country = event.value?.address?.country;
@@ -141,12 +202,20 @@ function PaymentForm({
 
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
-  const { customer } = useCustomer();
+  const { customer, refresh: refreshCustomer } = useCustomer();
   const [discountInput, setDiscountInput] = useState('');
   const [clientSecret, setClientSecret] = useState('');
   const [summary, setSummary] = useState<OrderSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [intentError, setIntentError] = useState('');
+
+  // Bumped every time the signed-in customer identity changes so the
+  // Stripe AddressElement (which doesn't update defaultValues after
+  // mount) re-mounts with fresh prefill values.
+  const [prefillVersion, setPrefillVersion] = useState(0);
+  useEffect(() => {
+    if (customer?._id) setPrefillVersion(v => v + 1);
+  }, [customer?._id]);
   const [discountError, setDiscountError] = useState('');
   const [appliedCode, setAppliedCode] = useState('');
 
@@ -295,6 +364,12 @@ export default function CheckoutPage() {
       <div className={styles.layout}>
         {/* Left — address + payment */}
         <div className={styles.paymentCol}>
+          {!customer && (
+            // Faster checkout for returning customers — pre-fills email
+            // and address from the Customer record. Hidden when already
+            // signed in to avoid confusion.
+            <GoogleCheckoutSignIn onSignedIn={refreshCustomer} />
+          )}
           {intentError && <p className={styles.intentError}>{intentError}</p>}
 
           {clientSecret && summary ? (
@@ -317,6 +392,17 @@ export default function CheckoutPage() {
                 onSuccess={handleSuccess}
                 onCountryChange={handleCountryChange}
                 defaultEmail={customer?.email || ''}
+                defaultName={customer ? `${customer.firstName || ''} ${customer.lastName || ''}`.trim() : undefined}
+                defaultPhone={customer?.phone || undefined}
+                defaultAddress={customer?.defaultShippingAddress ? {
+                  line1:       customer.defaultShippingAddress.line1,
+                  line2:       customer.defaultShippingAddress.line2,
+                  city:        customer.defaultShippingAddress.city,
+                  state:       customer.defaultShippingAddress.county,
+                  postal_code: customer.defaultShippingAddress.postcode,
+                  country:     customer.defaultShippingAddress.country,
+                } : null}
+                prefillVersion={prefillVersion}
                 onBeforeSubmit={setIntentEmail}
               />
             </Elements>
