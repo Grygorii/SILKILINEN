@@ -65,6 +65,11 @@ const orderSchema = new mongoose.Schema({
   deliveredAt: { type: Date },
   estimatedDelivery: { type: Date },
 
+  // Set when the post-purchase review-request email goes out — used by
+  // scripts/sendReviewRequests.js to avoid double-sending. One email per
+  // order covers every item in that order.
+  reviewRequestSentAt: { type: Date, default: null, index: true },
+
   customerNote: { type: String },
   internalNote: { type: String },
 

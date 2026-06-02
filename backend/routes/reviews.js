@@ -3,7 +3,9 @@ const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const Review = require('../models/Review');
 const Product = require('../models/Product');
+const Order = require('../models/Order');
 const { flagReview } = require('../services/reviewModeration');
+const { signReviewToken, verifyReviewToken } = require('../utils/reviewToken');
 
 // 3 review submissions per IP per hour. Reviews are usually a once-per-
 // product action, so any IP submitting more is either a moderator
@@ -151,6 +153,118 @@ router.post('/', submitRateLimit, async function(req, res) {
     });
   } catch (err) {
     console.error('[reviews] submission error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── GET /api/reviews/from-token — verify token + return product info ──
+// Used by the public /write-review page to validate a click before
+// showing the form. Returns the product header info and whether this
+// token has already been redeemed.
+router.get('/from-token', async function(req, res) {
+  try {
+    const decoded = verifyReviewToken(req.query.token);
+    if (!decoded) return res.status(401).json({ error: 'Invalid or expired link.' });
+
+    const [order, product, existing] = await Promise.all([
+      Order.findById(decoded.orderId).select('_id customerEmail customerName').lean(),
+      Product.findById(decoded.productId).select('name images slug').lean(),
+      Review.findOne({
+        orderRefId: String(decoded.orderId),
+        productId: decoded.productId,
+        source: 'order',
+      }).select('_id status').lean(),
+    ]);
+
+    if (!order || !product) return res.status(404).json({ error: 'Order or product not found.' });
+    if ((order.customerEmail || '').toLowerCase() !== decoded.customerEmail) {
+      return res.status(401).json({ error: 'Token does not match this order.' });
+    }
+
+    const primary = (product.images || []).find(img => img.isPrimary) || (product.images || [])[0];
+
+    res.json({
+      product: {
+        _id: String(product._id),
+        name: product.name,
+        slug: product.slug,
+        image: primary?.url || null,
+      },
+      customerName: order.customerName || '',
+      alreadyReviewed: !!existing,
+    });
+  } catch (err) {
+    console.error('[reviews/from-token] verify error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── POST /api/reviews/from-token — verified-purchase submission ───────
+// Consumes a token, creates a review with verifiedPurchase=true and
+// source='order'. Still lands as status='pending' — verified-purchase
+// is a trust badge, not an auto-approve. Admin still reviews the body.
+router.post('/from-token', async function(req, res) {
+  try {
+    const decoded = verifyReviewToken(req.body.token);
+    if (!decoded) return res.status(401).json({ error: 'Invalid or expired link.' });
+
+    const order = await Order.findById(decoded.orderId).select('_id customerEmail customerName').lean();
+    if (!order) return res.status(404).json({ error: 'Order not found.' });
+    if ((order.customerEmail || '').toLowerCase() !== decoded.customerEmail) {
+      return res.status(401).json({ error: 'Token does not match this order.' });
+    }
+
+    // Single-use per (order, product): the orderRefId + productId pair
+    // is unique to a real order line and prevents the same token from
+    // being submitted twice if the user reloads or clicks again.
+    const alreadyReviewed = await Review.findOne({
+      orderRefId: String(decoded.orderId),
+      productId: decoded.productId,
+      source: 'order',
+    }).select('_id').lean();
+    if (alreadyReviewed) return res.status(409).json({ error: 'A review already exists for this item.' });
+
+    const { reviewer, title, message, starRating } = req.body;
+    if (!reviewer || typeof reviewer !== 'string') {
+      return res.status(400).json({ error: 'Reviewer name is required.' });
+    }
+    const rating = Number(starRating);
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: 'Rating must be an integer between 1 and 5.' });
+    }
+    if (typeof message === 'string' && message.length > 2000) {
+      return res.status(400).json({ error: 'Review is too long (max 2000 characters).' });
+    }
+    if (req.body.website || req.body.url) return res.json({ success: true });
+
+    const flagReasons = flagReview({ reviewer, title, message });
+
+    const review = await Review.create({
+      reviewer: reviewer.trim(),
+      title: typeof title === 'string' ? title.trim() : '',
+      message: typeof message === 'string' ? message.trim() : '',
+      starRating: rating,
+      productId: decoded.productId,
+      orderRefId: String(decoded.orderId),
+      source: 'order',
+      status: 'pending',
+      verified: false,
+      verifiedPurchase: true, // the only place this gets set automatically
+      flagReasons,
+      ip: req.ip,
+      userAgent: req.get('user-agent') || '',
+    });
+
+    res.status(201).json({
+      success: true,
+      review: {
+        _id: review._id,
+        status: review.status,
+        message: 'Thank you — your review will appear once approved.',
+      },
+    });
+  } catch (err) {
+    console.error('[reviews/from-token] submit error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

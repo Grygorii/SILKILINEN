@@ -1,8 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const Review = require('../models/Review');
+const Order = require('../models/Order');
+const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
 const { flagLabel } = require('../services/reviewModeration');
+const { signReviewToken } = require('../utils/reviewToken');
+const { sendReviewRequest } = require('../services/email');
+
+const SITE_URL = (process.env.SITE_URL || 'https://www.silkilinen.com').replace(/\/$/, '');
 
 router.use(requireAuth);
 
@@ -127,6 +133,69 @@ router.delete('/:id', async function(req, res) {
     res.json({ success: true });
   } catch (err) {
     console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── POST /api/admin/reviews/send-pending-requests ────────────────────
+// Manually trigger the post-purchase review-request scan. Same logic as
+// scripts/sendReviewRequests.js but callable from the admin UI so the
+// operator doesn't need shell access. Body: { ageDays?: number, dryRun?: boolean }
+router.post('/send-pending-requests', async function(req, res) {
+  try {
+    const ageDays = Number.isInteger(req.body?.ageDays) ? req.body.ageDays : 14;
+    const dryRun = Boolean(req.body?.dryRun);
+
+    if (!dryRun && !process.env.RESEND_API_KEY) {
+      return res.status(503).json({ error: 'RESEND_API_KEY not configured; cannot send.' });
+    }
+
+    const cutoff = new Date(Date.now() - ageDays * 24 * 60 * 60 * 1000);
+    const eligible = await Order.find({
+      status: { $in: ['paid', 'shipped', 'delivered'] },
+      customerEmail: { $exists: true, $ne: '' },
+      createdAt: { $lte: cutoff },
+      reviewRequestSentAt: null,
+      'items.0': { $exists: true },
+    }).select('_id customerEmail customerName items createdAt').lean();
+
+    const summary = { eligible: eligible.length, sent: 0, skipped: 0, errors: 0, sample: [] };
+
+    for (const order of eligible) {
+      const productIds = [...new Set((order.items || []).map(i => String(i.productId)).filter(Boolean))];
+      if (productIds.length === 0) { summary.skipped++; continue; }
+
+      const products = await Product.find({ _id: { $in: productIds }, status: { $ne: 'archived' } }).select('_id name').lean();
+      if (products.length === 0) { summary.skipped++; continue; }
+
+      const links = products.map(p => ({
+        name: p.name,
+        url: `${SITE_URL}/write-review?token=${signReviewToken({
+          orderId: order._id,
+          productId: p._id,
+          customerEmail: order.customerEmail,
+        })}`,
+      }));
+
+      if (summary.sample.length < 5) {
+        summary.sample.push({ orderId: String(order._id), email: order.customerEmail, items: links.map(l => l.name) });
+      }
+
+      if (!dryRun) {
+        try {
+          await sendReviewRequest({ order, links });
+          await Order.updateOne({ _id: order._id }, { $set: { reviewRequestSentAt: new Date() } });
+          summary.sent++;
+        } catch (err) {
+          console.error(`[adminReviews] send failure for order ${order._id}: ${err.message}`);
+          summary.errors++;
+        }
+      }
+    }
+
+    res.json({ success: true, dryRun, ageDays, ...summary });
+  } catch (err) {
+    console.error('[adminReviews] send-pending-requests error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
