@@ -108,6 +108,7 @@ const PRODUCT_ALLOWED_FIELDS = [
   'colours', 'materialComposition', 'variants', 'totalStock', 'inStock',
   'status', 'keywords', 'metaTitle', 'metaDescription', 'slug',
   'altTextTemplate', 'origin', 'isNewArrival', 'aiPhotoDescriptor',
+  'gender', 'ageGroup',
 ];
 
 function pickProductFields(body) {

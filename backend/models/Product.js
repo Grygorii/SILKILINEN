@@ -123,6 +123,14 @@ const productSchema = new mongoose.Schema({
   origin: { type: String, default: 'Made in Donegal' },
   certifications: [String],
 
+  // Google Shopping / Merchant Center apparel attributes. Required by
+  // Google for clothing & accessories; without them products show
+  // "Missing gender / age group" and lose visibility. Defaults match the
+  // brand (unisex adult); overridable per product in the admin editor.
+  // Existing products created before this field default in the feed.
+  gender:   { type: String, enum: ['female', 'male', 'unisex'], default: 'unisex' },
+  ageGroup: { type: String, enum: ['newborn', 'infant', 'toddler', 'kids', 'adult'], default: 'adult' },
+
   lastUpdatedBy: { type: ObjectId, ref: 'User' },
 
   costing: {

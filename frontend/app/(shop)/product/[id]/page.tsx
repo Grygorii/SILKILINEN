@@ -167,6 +167,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     description: product.description || '',
     image: galleryImages[0]?.url || undefined,
     brand: { '@type': 'Brand', name: 'SILKILINEN' },
+    // Apparel attributes — also published authoritatively in /feed/google.xml,
+    // but emitting the valid schema.org props here helps free listings and
+    // rich results. Each is omitted when the product lacks the data.
+    ...(product.colorName || product.colours?.[0] ? { color: product.colorName || product.colours[0] } : {}),
+    ...(Array.isArray(product.sizes) && product.sizes.length ? { size: product.sizes } : {}),
+    ...(product.materialComposition ? { material: product.materialComposition } : {}),
     offers: {
       '@type': 'Offer',
       priceCurrency: 'EUR',

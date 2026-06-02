@@ -58,6 +58,8 @@ type Form = {
   certifications: string;
   isNewArrival: boolean;
   aiPhotoDescriptor: string;
+  gender: string;
+  ageGroup: string;
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -84,6 +86,8 @@ const EMPTY_FORM: Form = {
   materialComposition: '', careInstructions: '', origin: 'Made in Donegal', certifications: '',
   isNewArrival: false,
   aiPhotoDescriptor: '',
+  gender: 'unisex',
+  ageGroup: 'adult',
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -222,6 +226,11 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           // hasn't run yet).
           isNewArrival: Boolean(p.isNewArrival ?? p.isNew),
           aiPhotoDescriptor: p.aiPhotoDescriptor ?? '',
+          // Fall back to the brand defaults for products saved before
+          // these Google Shopping fields existed, so the selects are never
+          // blank and the feed stays valid even before a re-save.
+          gender: p.gender ?? 'unisex',
+          ageGroup: p.ageGroup ?? 'adult',
         });
         const sorted = (p.images ?? []).slice().sort((a: ProductImage, b: ProductImage) => a.order - b.order);
         setImages(sorted);
@@ -1056,6 +1065,33 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               <div className={styles.fg}>
                 <label className={styles.label}>Certifications (comma separated)</label>
                 <input className={styles.input} value={form.certifications} onChange={e => setField('certifications', e.target.value)} placeholder="OEKO-TEX Standard 100, GOTS" />
+              </div>
+            </div>
+          </section>
+
+          {/* Google Shopping — apparel attributes required by Merchant
+              Center. These feed into /feed/google.xml. Colour and size come
+              from the variants; gender and age group are set here. */}
+          <section className={styles.card}>
+            <h3 className={styles.cardTitle}>Google Shopping</h3>
+            <div className={styles.frow}>
+              <div className={styles.fg}>
+                <label className={styles.label}>Gender</label>
+                <select className={styles.input} value={form.gender} onChange={e => setField('gender', e.target.value)}>
+                  <option value="unisex">Unisex</option>
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                </select>
+              </div>
+              <div className={styles.fg}>
+                <label className={styles.label}>Age group</label>
+                <select className={styles.input} value={form.ageGroup} onChange={e => setField('ageGroup', e.target.value)}>
+                  <option value="adult">Adult</option>
+                  <option value="kids">Kids</option>
+                  <option value="toddler">Toddler</option>
+                  <option value="infant">Infant</option>
+                  <option value="newborn">Newborn</option>
+                </select>
               </div>
             </div>
           </section>
