@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Jost } from "next/font/google";
+import { Cormorant_Garamond, Jost, EB_Garamond } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AnnouncementBar from "@/components/AnnouncementBar";
@@ -30,6 +30,18 @@ const jost = Jost({
   weight: ["300", "400", "500"],
   display: "swap",
   variable: "--font-jost",
+});
+
+// Text serif for long-form reading (journal articles). Cormorant is a
+// display face — its hairline strokes look anaemic at body size. EB
+// Garamond is a Garamond cut for text: same classical character, proper
+// ink at 18px. Cormorant stays for large display headings.
+const ebGaramond = EB_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-eb-garamond",
 });
 
 export const metadata: Metadata = {
@@ -168,7 +180,7 @@ export default async function RootLayout({
   };
 
   return (
-    <html lang="en" className={`${cormorant.variable} ${jost.variable}`}>
+    <html lang="en" className={`${cormorant.variable} ${jost.variable} ${ebGaramond.variable}`}>
       <head>
         <script
           type="application/ld+json"

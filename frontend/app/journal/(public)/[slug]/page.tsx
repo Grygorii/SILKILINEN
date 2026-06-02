@@ -86,8 +86,10 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
         <div
           dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(article.body) }}
           style={{
-            fontFamily: "'Cormorant Garamond', Georgia, serif",
-            fontSize: 18, lineHeight: 1.85, color: '#2a2520',
+            // EB Garamond (text serif) instead of Cormorant (display) — far
+            // more legible at body size; no more "out of ink" thinness.
+            fontFamily: "var(--font-eb-garamond), 'EB Garamond', Georgia, serif",
+            fontSize: 19, lineHeight: 1.85, color: 'var(--color-ink, #2a2218)',
           }}
         />
 
