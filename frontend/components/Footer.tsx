@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import styles from './Footer.module.css';
 import CookiePreferencesLink from './CookiePreferencesLink';
 import FooterMobileNav from './FooterMobileNav';
+import GoogleReviewsBadge from './GoogleReviewsBadge';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -103,6 +104,8 @@ export default async function Footer() {
         <p>© {new Date().getFullYear()} SILKILINEN. All rights reserved.</p>
         <p>Registered in Donegal, Ireland · VAT not applicable — small business exemption (Ireland)</p>
       </div>
+
+      <GoogleReviewsBadge />
     </footer>
   );
 }
