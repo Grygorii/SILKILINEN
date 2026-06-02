@@ -40,7 +40,7 @@ async function main() {
 
   const cutoff = new Date(Date.now() - AGE_DAYS * 24 * 60 * 60 * 1000);
   const eligible = await Order.find({
-    status: { $in: ['paid', 'shipped', 'delivered'] },
+    status: { $in: ['paid', 'processing', 'shipped', 'delivered'] },
     customerEmail: { $exists: true, $ne: '' },
     createdAt: { $lte: cutoff },
     reviewRequestSentAt: null,

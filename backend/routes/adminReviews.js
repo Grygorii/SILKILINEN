@@ -141,6 +141,10 @@ router.delete('/:id', async function(req, res) {
 // Manually trigger the post-purchase review-request scan. Same logic as
 // scripts/sendReviewRequests.js but callable from the admin UI so the
 // operator doesn't need shell access. Body: { ageDays?: number, dryRun?: boolean }
+//
+// Returns a `diagnostics` block that breaks down WHY each order didn't
+// qualify — without it "Eligible: 0" is impossible to debug from the
+// admin UI alone. Each non-eligible order falls into exactly one bucket.
 router.post('/send-pending-requests', async function(req, res) {
   try {
     const ageDays = Number.isInteger(req.body?.ageDays) ? req.body.ageDays : 14;
@@ -151,15 +155,35 @@ router.post('/send-pending-requests', async function(req, res) {
     }
 
     const cutoff = new Date(Date.now() - ageDays * 24 * 60 * 60 * 1000);
-    const eligible = await Order.find({
-      status: { $in: ['paid', 'shipped', 'delivered'] },
-      customerEmail: { $exists: true, $ne: '' },
-      createdAt: { $lte: cutoff },
-      reviewRequestSentAt: null,
-      'items.0': { $exists: true },
-    }).select('_id customerEmail customerName items createdAt').lean();
 
-    const summary = { eligible: eligible.length, sent: 0, skipped: 0, errors: 0, sample: [] };
+    // Pull every order, then bucket on the JS side so we can report on
+    // each disqualification reason. Cheap at <10k orders; revisit if
+    // the order table outgrows that.
+    const allOrders = await Order.find({}).select('_id status customerEmail items createdAt reviewRequestSentAt').lean();
+
+    const diagnostics = {
+      totalOrders: allOrders.length,
+      excludedByStatus: 0,
+      excludedByMissingEmail: 0,
+      excludedByTooFresh: 0,
+      excludedByAlreadySent: 0,
+      excludedByNoItems: 0,
+    };
+    const ELIGIBLE_STATUSES = new Set(['paid', 'processing', 'shipped', 'delivered']);
+    const eligible = [];
+
+    for (const o of allOrders) {
+      // Order of checks mirrors how the operator typically thinks: real
+      // order? cooled down? not already sent? has products?
+      if (!ELIGIBLE_STATUSES.has(o.status)) { diagnostics.excludedByStatus++; continue; }
+      if (!o.customerEmail || o.customerEmail.trim() === '') { diagnostics.excludedByMissingEmail++; continue; }
+      if (!o.createdAt || new Date(o.createdAt) > cutoff) { diagnostics.excludedByTooFresh++; continue; }
+      if (o.reviewRequestSentAt) { diagnostics.excludedByAlreadySent++; continue; }
+      if (!o.items || o.items.length === 0) { diagnostics.excludedByNoItems++; continue; }
+      eligible.push(o);
+    }
+
+    const summary = { eligible: eligible.length, sent: 0, skipped: 0, errors: 0, sample: [], diagnostics };
 
     for (const order of eligible) {
       const productIds = [...new Set((order.items || []).map(i => String(i.productId)).filter(Boolean))];
