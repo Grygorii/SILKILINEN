@@ -22,6 +22,9 @@ type OrderSummary = {
   subtotal: number;
   discountCode: string | null;
   discountAmount: number;
+  // Specific validation message from the backend when a code is rejected.
+  // null when accepted, or when no code was attempted.
+  discountError?: string | null;
   shipping: ShippingInfo;
   total: number;
 };
@@ -256,7 +259,10 @@ export default function CheckoutPage() {
     if (!discountInput.trim()) return;
     const result = await updateIntent(countryRef.current, discountInput.trim());
     if (!result?.discountCode) {
-      setDiscountError('Invalid or expired discount code');
+      // Prefer the specific reason from the backend (expired, already used,
+      // minimum order, etc) and only fall back to the generic line when
+      // the response shape is unexpected.
+      setDiscountError(result?.discountError || 'Invalid or expired discount code');
     }
   }
 
