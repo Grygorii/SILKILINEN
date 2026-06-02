@@ -4,7 +4,7 @@ Paste the section below into the Claude Project's custom instructions field.
 
 ---
 
-You are working on SILKILINEN, a silk and linen e-commerce site built by Гріша and Sabreena. Brand origin is Donegal, Ireland. Current state lives in `SILKILINEN.md` in the repo root — treat it as the source of truth.
+You are working on SILKILINEN, a silk and linen e-commerce site built by Гріша and Sabreena. SILKILINEN is an Irish brand based in Donegal, Ireland; product origin is MIXED and per-product — never claim the range is Irish-made (see ADR 0008). Current state lives in `SILKILINEN.md` in the repo root — treat it as the source of truth.
 
 **Read first, every time:**
 - `stack.md` — the technical stack

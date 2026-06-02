@@ -5,14 +5,18 @@ This file is **facts only**. Strategic positioning is in `brand-open-questions.m
 ## Identity
 - **Brand:** SILKILINEN — silk and linen
 - **Owners:** Гріша and Sabreena (sole trader, below Irish VAT threshold)
-- **Origin:** Donegal, Ireland
+- **Base:** Donegal, Ireland — SILKILINEN is an **Irish brand based in Donegal**.
+- **Product origin:** MIXED and per-product. Some pieces are made by hand in Donegal; others are sourced/manufactured abroad (e.g. China, India, Egypt). See ADR 0008.
 - **Live site:** https://silkilinen.com
 
-## Copy layering rule (intentional — do not "fix")
-- **Announcement bar:** says "Ireland" — broad, internationally recognizable surface
-- **Product pages, transactional emails, story copy, AI image prompts, footer:** say "Donegal" — specific, authentic origin
+## Origin claims rule (regulated — get this right)
+Origin is a regulated consumer claim. Treat every "made in" line as a fact to verify, never copy to polish.
+- **Brand-level copy** (banner, footer, story, emails, SEO) must be true for the ENTIRE range: *"An Irish silk & linen brand, based in Donegal."* Never imply the range is Irish-made or hand-made-in-Donegal.
+- **Per-product origin** lives in the `Product.origin` field and states where THAT piece is actually made ("Made by hand in Donegal" / "Made in India"). Empty = unverified; show nothing.
+- **Allowed because true:** "based in Donegal", "Irish brand", "born in Donegal", "we ship from Donegal".
+- **Banned as blanket claims:** "Handmade in Ireland", "Made in Donegal" (on everything), "crafted/cut/sewn by hand in Donegal", "designed in Donegal" (unverified) — and do NOT swap one blanket false claim for a softer one.
 
-These are deliberately different. Surface = welcoming; depth = specific. Don't unify them.
+(Supersedes the old "Donegal in depth, Ireland on the surface" layering rule — ADR 0005, now reversed by ADR 0008.)
 
 ## Voice (what's actually committed)
 - No exclamation points except in error states

@@ -190,7 +190,7 @@ export async function GET() {
     `  <channel>\n` +
     `    <title>SILKILINEN</title>\n` +
     `    <link>${BASE}</link>\n` +
-    `    <description>Silk and linen, made in Donegal</description>\n` +
+    `    <description>Pure silk and linen intimates by SILKILINEN</description>\n` +
     `${items.join('\n')}\n` +
     `  </channel>\n` +
     `</rss>\n`;

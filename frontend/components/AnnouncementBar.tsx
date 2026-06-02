@@ -11,7 +11,7 @@ import styles from './AnnouncementBar.module.css';
 const DEFAULT_MESSAGES = [
   'Free shipping on orders over <strong>€150</strong> to Ireland 🇮🇪',
   'New to Silkilinen? Use code <strong>SILK10</strong> for 10% off',
-  'Made by hand in Donegal — silk and linen, in small batches',
+  'An Irish silk & linen brand, based in Donegal',
 ];
 
 const INTERVAL = 5000;

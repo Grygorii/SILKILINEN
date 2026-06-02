@@ -265,7 +265,6 @@ router.post('/', async function(req, res) {
     if (req.body.createEmptyDraft) {
       const product = new Product({
         status: 'draft',
-        origin: 'Made in Donegal',
         lastUpdatedBy: req.user.userId,
       });
       await product.save();
@@ -697,7 +696,7 @@ router.post('/:id/images/url', async function(req, res) {
 
     const defaultAlt = alt || (product.altTextTemplate
       ? product.altTextTemplate.replace('{position}', validSlot || 'product photo')
-      : `${product.name} — handmade silk by SILKILINEN, Donegal`);
+      : `${product.name} — silk by SILKILINEN`);
 
     product.images.push({
       url,
@@ -767,7 +766,7 @@ router.post('/:id/images', imgUpload.array('images', 20), async function(req, re
       });
       const defaultAlt = product.altTextTemplate
         ? product.altTextTemplate.replace('{position}', slot || 'product photo')
-        : `${product.name} — handmade silk by SILKILINEN, Donegal`;
+        : `${product.name} — silk by SILKILINEN`;
       product.images.push({
         url: result.secure_url,
         alt: defaultAlt,

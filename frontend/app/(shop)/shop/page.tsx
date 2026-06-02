@@ -24,7 +24,7 @@ export async function generateMetadata({
   }
   return {
     title: 'Shop',
-    description: 'The full Silkilinen collection of pure silk and linen intimates — robes, slips, dresses, lounge, sleep. Made by hand in Donegal, shipped worldwide.',
+    description: 'The full Silkilinen collection of pure silk and linen intimates — robes, slips, dresses, lounge, sleep. From an Irish brand based in Donegal, shipped worldwide.',
     alternates: { canonical: 'https://www.silkilinen.com/shop' },
   };
 }

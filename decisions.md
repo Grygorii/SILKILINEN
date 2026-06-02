@@ -68,6 +68,11 @@ Date: 2026-05-16
 # 0005 — Donegal in depth, Ireland on the surface (copy layering)
 Date: 2026-05-14
 
+> **⚠️ SUPERSEDED by ADR 0008 (2026-06-02).** This decision rested on the
+> assumption that the whole range is Irish-made. It is not — origin is mixed.
+> Both "Ireland" and "Donegal" as blanket origin claims were inaccurate. Do
+> not reinstate this layering. See 0008.
+
 **Chose:** Announcement bar says "Ireland". Product pages, emails, story copy, AI image prompts, footer say "Donegal".
 **Over:** Unifying everything to "Ireland" (broad) or "Donegal" (specific).
 **Because:** International visitors recognize "Ireland" instantly. "Donegal" rewards the visitor who reads further with specificity and authenticity. Pretending the difference is a bug invites someone to "fix" it.
@@ -102,6 +107,24 @@ Date: 2026-05-28
 **Reusable for:** Every admin write route in every project.
 **Code:** `backend/routes/adminProducts.js` (`PRODUCT_ALLOWED_FIELDS`, `pickProductFields`).
 **Watch out:** When adding a new field to the model, you have to add it to the allowlist too. The save-with-no-error-but-field-doesn't-persist symptom is the signature of a missing allowlist entry. The `console.warn` log catches this — check server logs when "save isn't sticking" reports come in.
+
+---
+
+# 0008 — Per-product origin + honest brand-level line (supersedes 0005)
+Date: 2026-06-02
+
+**Chose:** Origin is stated PER PRODUCT (`Product.origin`), and brand-level copy says only what's true for the entire range: *"An Irish silk & linen brand, based in Donegal."* Genuinely Donegal-made pieces may say "Made by hand in Donegal"; imported pieces state their real origin ("Made in India"). Unverified = blank, shown as nothing.
+**Over:** The 0005 layering ("Ireland" on the surface, "Donegal" in depth) — and over the lazier fix of swapping one blanket claim for a softer-but-still-false one ("Irish silk", "designed in Donegal" on everything).
+**Because:** The range is NOT all Irish-made — some pieces are sourced/manufactured abroad (China, India, Egypt). "Handmade in Ireland" / "Made in Donegal" as a whole-range claim is a false, regulated consumer claim. A specific Donegal claim is only meaningful (and legal) once it's no longer on everything. A wrong origin is worse than a flagged blank, so we NEVER guess.
+**Reusable for:** Any brand with mixed sourcing and a strong home-country identity. Separate "where the brand is based" (always true) from "where this product is made" (per-item, verified).
+**Code:** `backend/models/Product.js` (origin default removed: `''`, no blanket claim); `backend/services/aiText.js` (SEO prompt origin-neutral); `backend/routes/adminProducts.js` + `backend/routes/aiPhotos.js` (alt-text fallbacks); `backend/services/email.js`, `backend/scripts/seedSiteContent.js`, `frontend/components/AnnouncementBar.tsx`, `StorySection.tsx`, `EmailCapturePopup.tsx`, About/Shop copy. Tooling: `backend/scripts/fixOriginContent.js` (live SiteContent), `backend/scripts/auditOrigin.js` (founder map).
+**Watch out (silent-failure surface):**
+  - **Live DB ≠ seed.** Editing `seedSiteContent.js` does NOT change live content (seed skips existing keys). Must run `fixOriginContent.js`.
+  - **Already-generated SEO meta** in the DB (metaTitle/metaDescription/keywords/altText) still asserts Donegal even after the prompt fix. Must REGENERATE per product.
+  - **Existing `Product.origin` values are all "Made in Donegal"** from a prior migration — they will NOT trip a "missing data" check yet are unverified. `auditOrigin.js` flags them as suspect. Founders must verify each.
+  - **Free-text product `description`s** may embed "Made in Ireland" (see `backend/seed.js`). Not machine-fixable — founder review.
+  - **Google Merchant feed:** does NOT currently send a country-of-origin attribute (good). Do NOT add `g:product_country_of_origin` until per-product origin is verified, or it will assert false origin to Google.
+  - **`product.origin` is not yet shown on the storefront.** If anyone wires it to the PDP/feed, it must read the verified value and show nothing when blank.
 
 ---
 

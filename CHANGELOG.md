@@ -1,5 +1,31 @@
 # SILKILINEN Changelog
 
+## 2026-06-02 — Origin-claim correction (mixed origin, per-product)
+
+**Why:** Copy across the site implied the whole range is handmade in Donegal/Ireland. That is inaccurate — origin is MIXED (some Donegal-made, some imported from China/India/Egypt). "Made in Donegal" / "Handmade in Ireland" as a blanket claim is a false, regulated consumer claim. See ADR 0008 (supersedes ADR 0005).
+
+**Principle:** Brand-level copy says only what's true for the entire range — *"An Irish silk & linen brand, based in Donegal."* Per-product origin lives in `Product.origin`, shown only when verified. **Never guess an origin** — a wrong origin is worse than a blank.
+
+**Generative sources fixed (were minting new false claims):**
+- `backend/services/aiText.js` — DeepSeek SEO system prompt made origin-neutral; explicitly forbids stating a place of manufacture; removed "Donegal/Ireland" from examples + keyword guidance.
+- `backend/routes/adminProducts.js`, `backend/routes/aiPhotos.js` — alt-text fallbacks no longer append "handmade silk … Donegal".
+
+**Structural:**
+- `backend/models/Product.js` — `origin` default changed from `'Made in Donegal'` → `''` (no blanket default). `createEmptyDraft` no longer injects it. Admin product form default/placeholder updated.
+
+**Blanket copy → honest brand line** (hardcoded defaults + seed): AnnouncementBar, EmailCapturePopup, StorySection (title + body), About page (story + value card), Shop SEO, homepage hero subtitle, Google feed channel description, three transactional/marketing emails, `seedSiteContent.js`.
+
+**Tooling added:**
+- `backend/scripts/fixOriginContent.js` — force-updates the LIVE `SiteContent` keys (seed only creates, never updates existing).
+- `backend/scripts/auditOrigin.js` — read-only founder map: lists every product + current origin, flags unverified/blanket values. **Founders must run this and fill real per-product origins.**
+
+**Deferred / still needed (NOT done — require founder input or a follow-up):**
+- Run `fixOriginContent.js` + `auditOrigin.js` against the live DB.
+- **Regenerate stored SEO meta** (metaTitle/metaDescription/keywords/altText) for products — existing DB values still assert Donegal.
+- Verify each product's real origin and set it in admin (all existing `Product.origin` are the legacy "Made in Donegal").
+- Founder review of free-text product `description`s that may contain "Made in Ireland".
+- AI image prompt templates set a *Donegal studio scene* (art direction, not a manufacture claim) — left as-is.
+
 ## 2026-05-15 — Product page polish (7 improvements for soft launch)
 
 **What changed:**

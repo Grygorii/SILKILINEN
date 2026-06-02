@@ -8,9 +8,9 @@ Last updated: 29 May 2026 (Connection-audit COMPLETE — all 20 ranked improveme
 
 ## What it is
 
-E-commerce platform for a silk and linen brand, live at https://silkilinen.com. Owned by Гріша and his wife Sabreena. Brand origin is **Donegal, Ireland** (not Dublin — all customer-facing copy updated 14 May 2026). Built over roughly 12 working days using AI-augmented development (Claude in the chat for design and planning, Claude Code in VS Code for implementation).
+E-commerce platform for a silk and linen brand, live at https://silkilinen.com. Owned by Гріша and his wife Sabreena. **SILKILINEN is an Irish brand based in Donegal, Ireland.** Built over roughly 12 working days using AI-augmented development (Claude in the chat for design and planning, Claude Code in VS Code for implementation).
 
-**Brand copy layering (intentional):** The main announcement bar says "Ireland" (broad, internationally recognizable, welcoming surface). Product pages, emails, story copy, AI prompts, and footer all say "Donegal" (specific, evocative, the authentic depth of origin). This is deliberate — not a contradiction.
+**Origin is MIXED and per-product (ADR 0008, supersedes 0005).** Some pieces are made by hand in Donegal; others are sourced/manufactured abroad (China, India, Egypt). Brand-level copy must be true for the whole range — *"An Irish silk & linen brand, based in Donegal"* — and must never imply the range is Irish-made. Per-product origin lives in `Product.origin` and is shown only when verified. Never guess an origin.
 
 The site exists primarily to **escape Etsy's fee burden** (Etsy takes ~15-20% effective on each sale) and capture margin on existing Etsy product sales. The actual current hero product per the founders is silk panties at volume, not the dress/robe products currently most visible on the site. Strategy work that assumed luxury slip-dress positioning needs a reality-check pass against Etsy sales data before being acted on.
 

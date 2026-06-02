@@ -9,7 +9,7 @@ const CONTENT = [
   { key: 'banner_message_2', type: 'text', section: 'banner', label: 'Banner Message 2', order: 2,
     value: 'New to Silkilinen? Use code <strong>SILK10</strong> for 10% off' },
   { key: 'banner_message_3', type: 'text', section: 'banner', label: 'Banner Message 3', order: 3,
-    value: 'Handmade in Ireland with love' },
+    value: 'An Irish silk & linen brand, based in Donegal' },
   { key: 'banner_message_4', type: 'text', section: 'banner', label: 'Banner Message 4', order: 4,
     value: 'All silk is <strong>OEKO-TEX certified</strong> — gentle on skin' },
 
@@ -18,16 +18,16 @@ const CONTENT = [
   { key: 'homepage_hero_title', type: 'text', section: 'homepage', label: 'Hero Title', order: 2,
     value: 'Pure silk, pure comfort.' },
   { key: 'homepage_hero_subtitle', type: 'text', section: 'homepage', label: 'Hero Subtitle', order: 3,
-    value: 'Handcrafted silk & linen intimates' },
+    value: 'Pure silk & linen intimates' },
   { key: 'homepage_hero_cta', type: 'text', section: 'homepage', label: 'Hero Button Text', order: 4,
     value: 'Shop the collection' },
 
   // ── Homepage Story Section ───────────────────────────
   { key: 'homepage_story_image', type: 'image', section: 'homepage', label: 'Story Section Image', order: 5, value: '' },
   { key: 'homepage_story_title', type: 'text', section: 'homepage', label: 'Story Section Title', order: 6,
-    value: 'Crafted in Donegal, worn across the world' },
+    value: 'Born in Donegal, worn across the world' },
   { key: 'homepage_story_text', type: 'richtext', section: 'homepage', label: 'Story Section Text', order: 7,
-    value: 'SILKILINEN began with a simple belief: that the garments closest to your skin should be made from the finest natural fibres. We source Mulberry silk and European linen — chosen for their breathability, longevity, and the quiet luxury they bring to everyday moments.\n\nEvery piece is designed in Donegal and crafted by skilled artisans who share our commitment to slow, considered making.' },
+    value: 'SILKILINEN began with a simple belief: that the garments closest to your skin should be made from the finest natural fibres. We source Mulberry silk and European linen — chosen for their breathability, longevity, and the quiet luxury they bring to everyday moments.\n\nWe\'re an Irish brand based in Donegal, and every piece is made by skilled artisans who share our commitment to slow, considered making.' },
 
   // ── Category Tiles ───────────────────────────────────
   { key: 'category_tile_robes_image', type: 'image', section: 'categories', label: 'Robes — Image', order: 1, value: '' },
@@ -46,7 +46,7 @@ const CONTENT = [
   { key: 'about_story_image_1', type: 'image', section: 'about', label: 'About — Story Image 1', order: 2, value: '' },
   { key: 'about_story_image_2', type: 'image', section: 'about', label: 'About — Story Image 2', order: 3, value: '' },
   { key: 'about_story_text', type: 'richtext', section: 'about', label: 'About — Story Text', order: 4,
-    value: 'SILKILINEN began with a simple belief: that the garments closest to your skin should be made from the finest natural fibres.\n\nWe source Mulberry silk and European linen — chosen for their breathability, longevity, and the quiet luxury they bring to everyday moments.\n\nEvery piece is designed in Donegal and crafted by skilled artisans who share our commitment to slow, considered making. We produce in small batches, never rushing the process, so that what reaches you is exactly what we intended — something you\'ll reach for again and again.' },
+    value: 'SILKILINEN began with a simple belief: that the garments closest to your skin should be made from the finest natural fibres.\n\nWe source Mulberry silk and European linen — chosen for their breathability, longevity, and the quiet luxury they bring to everyday moments.\n\nWe\'re an Irish brand based in Donegal, and every piece is made by skilled artisans who share our commitment to slow, considered making. We work in small batches, never rushing the process, so that what reaches you is exactly what we intended — something you\'ll reach for again and again.' },
 
   // ── Instagram Grid ───────────────────────────────────
   { key: 'instagram_image_1', type: 'image', section: 'instagram', label: 'Instagram Image 1', order: 1, value: '' },

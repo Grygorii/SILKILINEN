@@ -120,7 +120,12 @@ const productSchema = new mongoose.Schema({
 
   materialComposition: { type: String },
   careInstructions: { type: String },
-  origin: { type: String, default: 'Made in Donegal' },
+  // Per-product country of origin (e.g. "Made by hand in Donegal", "Made in
+  // India"). Origin is MIXED across the range, so there is NO blanket default
+  // — an empty string means "not yet verified" and must NOT be presented as a
+  // Donegal/Irish-made claim. Founders set the real value per product. See
+  // ADR 0008 in decisions.md.
+  origin: { type: String, default: '' },
   certifications: [String],
 
   // Google Shopping / Merchant Center apparel attributes. Required by
