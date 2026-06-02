@@ -562,4 +562,90 @@ ${itemRows}
   });
 }
 
-module.exports = { sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail, sendDropAHint, sendCartRecoveryEmail, sendWinbackReminder };
+// ── Post-purchase review request ─────────────────────────────────────────
+// One email per order, sent ~14 days after order creation. Lists each item
+// with a tokenised "Write a review" link that auto-fills productId on the
+// /write-review page and marks the resulting review as verifiedPurchase.
+async function sendReviewRequest({ order, links }) {
+  if (!process.env.RESEND_API_KEY || !order.customerEmail) return;
+  const id = shortId(order._id);
+  const firstName = (order.customerName || '').split(' ')[0] || '';
+
+  // Build one row per item with its review link. Items without a
+  // productId (legacy data or bundle children) are skipped silently.
+  const itemRows = (links || []).map(link => `
+<tr><td style="padding:14px 16px;border-bottom:1px solid #eae8e3;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td style="vertical-align:middle;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;color:#2a2218;">
+        ${link.name}
+      </td>
+      <td align="right" style="vertical-align:middle;">
+        <a href="${link.url}"
+           style="display:inline-block;padding:10px 22px;background:#2a2218;color:#faf8f4;
+                  text-decoration:none;font-family:'Jost',sans-serif;font-size:11px;
+                  letter-spacing:2px;text-transform:uppercase;border-radius:2px;">
+          Write a review
+        </a>
+      </td>
+    </tr>
+  </table>
+</td></tr>`).join('');
+
+  await getResend().emails.send({
+    from: FROM,
+    to: order.customerEmail,
+    subject: 'A moment for your thoughts — SILKILINEN',
+    html: `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#faf8f4;font-family:'Jost',sans-serif;color:#2a2218;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#faf8f4;padding:40px 16px;">
+<tr><td align="center">
+  <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#faf8f4;">
+
+    <tr><td style="text-align:center;padding-bottom:32px;">
+      <p style="font-family:'Jost',sans-serif;font-size:11px;letter-spacing:2.5px;
+                text-transform:uppercase;color:#8a8278;margin:0;">
+        SILKILINEN · Donegal
+      </p>
+    </td></tr>
+
+    <tr><td style="padding:0 8px 32px;">
+      <h1 style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:300;
+                 font-size:32px;line-height:1.2;color:#2a2218;margin:0 0 20px;">
+        ${firstName ? `${firstName}, how is the silk?` : 'How is the silk?'}
+      </h1>
+      <p style="font-family:'Jost',sans-serif;font-weight:300;font-size:15px;
+                line-height:1.7;color:#2a2218;margin:0 0 12px;">
+        Order #${id} has had a little time to settle. We'd love to hear how
+        the pieces feel — how they drape, how they wash, whether they fit
+        the way you hoped.
+      </p>
+      <p style="font-family:'Jost',sans-serif;font-weight:300;font-size:15px;
+                line-height:1.7;color:#2a2218;margin:0;">
+        A few honest words helps the next person decide. Each review is
+        reviewed by our team before it goes live.
+      </p>
+    </td></tr>
+
+    <tr><td style="border:1px solid #eae8e3;border-radius:2px;background:#fff;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        ${itemRows}
+      </table>
+    </td></tr>
+
+    <tr><td style="padding-top:32px;text-align:center;">
+      <p style="font-family:'Jost',sans-serif;font-size:11px;color:#8a8278;
+                margin:0;line-height:1.6;">
+        Links expire 90 days from this email. Replies to this address reach
+        a real person.
+      </p>
+    </td></tr>
+
+  </table>
+</td></tr>
+</table>
+</body></html>`,
+  });
+}
+
+module.exports = { sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail, sendDropAHint, sendCartRecoveryEmail, sendWinbackReminder, sendReviewRequest };

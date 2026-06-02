@@ -41,6 +41,64 @@ function Stars({ n }: { n: number }) {
   return <span aria-label={`${n} of 5 stars`}>{'★'.repeat(n)}{'☆'.repeat(5 - n)}</span>;
 }
 
+function ReviewRequestTrigger({ onSent }: { onSent: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ eligible: number; sent: number; skipped: number; errors: number } | null>(null);
+  const [err, setErr] = useState('');
+
+  async function run(dryRun: boolean) {
+    setBusy(true);
+    setErr('');
+    setResult(null);
+    try {
+      const res = await fetch(`${API}/api/admin/reviews/send-pending-requests`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dryRun, ageDays: 14 }),
+      });
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      const data = await res.json();
+      setResult({ eligible: data.eligible, sent: data.sent, skipped: data.skipped, errors: data.errors });
+      if (!dryRun && data.sent > 0) onSent();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Request failed');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 16, padding: 16, border: '1px solid var(--color-line, #E8E2D6)', borderRadius: 2, background: 'var(--color-surface, #F5F0E8)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+        <div>
+          <p style={{ margin: 0, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18 }}>Review requests</p>
+          <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-ink-muted, #8A8278)' }}>
+            Send a tokenised &ldquo;how was it?&rdquo; email to every order ≥14 days old that hasn&rsquo;t received one yet.
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => run(true)} disabled={busy}
+            style={{ padding: '8px 16px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', border: '1px solid var(--color-line, #E8E2D6)', background: 'transparent', cursor: 'pointer', borderRadius: 2 }}>
+            {busy ? 'Checking…' : 'Dry run'}
+          </button>
+          <button onClick={() => run(false)} disabled={busy}
+            style={{ padding: '8px 16px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', border: '1px solid var(--color-ink, #2A2218)', background: 'var(--color-ink, #2A2218)', color: 'var(--color-bg, #FAF8F4)', cursor: 'pointer', borderRadius: 2 }}>
+            {busy ? 'Sending…' : 'Send now'}
+          </button>
+        </div>
+      </div>
+      {result && (
+        <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--color-ink, #2A2218)' }}>
+          Eligible: <strong>{result.eligible}</strong> · Sent: <strong>{result.sent}</strong> · Skipped (no products): <strong>{result.skipped}</strong>
+          {result.errors > 0 && <> · Errors: <strong style={{ color: '#c9572a' }}>{result.errors}</strong></>}
+        </p>
+      )}
+      {err && <p style={{ margin: '12px 0 0', fontSize: 12, color: '#c9572a' }}>{err}</p>}
+    </div>
+  );
+}
+
 function formatDate(iso: string) {
   try { return new Date(iso).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' }); }
   catch { return iso; }
@@ -121,6 +179,7 @@ export default function ReviewsModeration() {
         <header className={styles.header}>
           <h1 className={styles.title}>Reviews</h1>
           <p className={styles.sub}>Approve, reject, or mark as spam. New customer submissions arrive in Pending.</p>
+          <ReviewRequestTrigger onSent={load} />
         </header>
 
         <div className={styles.tabs}>

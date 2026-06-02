@@ -7,7 +7,8 @@ const reviewSchema = new mongoose.Schema({
   title:        { type: String, default: '', trim: true, maxlength: 120 },
   starRating:   { type: Number, required: true, min: 1, max: 5 },
   dateReviewed: { type: Date, default: Date.now },
-  orderId:      { type: Number },
+  orderId:      { type: Number },     // legacy: numeric Etsy order id
+  orderRefId:   { type: String, index: true, default: null }, // Mongo Order._id as string, set by /from-token submissions for dedup
   source:       { type: String, default: 'etsy' },
   helpfulCount: { type: Number, default: 0 },
   photos:       [String],
