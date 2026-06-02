@@ -1,0 +1,22 @@
+/* Journal article body. Paragraphs/lists in EB Garamond (text serif, set on
+   the container); sub-headings switch to Cormorant (display serif) for
+   editorial hierarchy — big classical headings over readable body copy. */
+.articleBody {
+  font-family: var(--font-eb-garamond), 'EB Garamond', Georgia, serif;
+  font-size: 19px;
+  line-height: 1.85;
+  color: var(--color-ink, #2a2218);
+}
+
+.articleBody h2,
+.articleBody h3,
+.articleBody h4 {
+  font-family: var(--font-cormorant), 'Cormorant Garamond', Georgia, serif;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  line-height: 1.25;
+  color: var(--color-ink, #1a1510);
+}
+.articleBody h2 { font-size: 30px; margin: 44px 0 14px; }
+.articleBody h3 { font-size: 23px; margin: 32px 0 10px; }
+.articleBody h4 { font-size: 19px; margin: 24px 0 8px; }

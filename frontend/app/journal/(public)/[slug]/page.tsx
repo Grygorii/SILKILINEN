@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { sanitizeArticleHtml } from '@/lib/sanitize';
+import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -84,13 +85,8 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
 
         {/* Body */}
         <div
+          className={styles.articleBody}
           dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(article.body) }}
-          style={{
-            // EB Garamond (text serif) instead of Cormorant (display) — far
-            // more legible at body size; no more "out of ink" thinness.
-            fontFamily: "var(--font-eb-garamond), 'EB Garamond', Georgia, serif",
-            fontSize: 19, lineHeight: 1.85, color: 'var(--color-ink, #2a2218)',
-          }}
         />
 
         {/* Footer */}
