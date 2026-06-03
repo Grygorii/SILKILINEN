@@ -34,6 +34,8 @@ CRITICAL WRITING RULES:
 - Keywords: 3-7 specific terms. Lowercase. Real searches a customer would type. Do NOT use origin-based keywords (no "donegal silk", "irish silk", "handmade silk"). Examples that work: "silk nightshirt, copper silk pyjamas, mulberry silk sleepwear". Examples that DO NOT work: "best, luxury, premium, amazing, top"
 - Alt text template: a reusable template for product images. Use {position} as a placeholder where the shot name goes. Do NOT include a place of manufacture. Example: "Aoife Silk Robe in Terracotta — {position} view, silk by SILKILINEN"
 
+TARGET KEYWORDS: If the user message lists target keywords, they are researched search terms for THIS specific product. Weave the FIRST (primary) one into the meta title naturally — or a close variant, since the product name often already contains it — and let the meta description read naturally around the terms. NEVER list or stuff keywords, and never break brand voice to fit one in. Keep all provided keywords in your keywords output.
+
 NEVER use these words: "amazing", "incredible", "best", "must-have", "top-rated", "ultimate", "perfect"
 
 ALWAYS prefer specific over general: "mulberry silk" not "luxury fabric"; "slow mornings" not "everyday wear"
@@ -67,7 +69,12 @@ function buildSEOUserPrompt(input) {
   }
   if (input.price) parts.push(`Price: €${input.price}`);
   if (input.keywords && input.keywords.length) {
-    parts.push(``, `Existing keywords (use as hints): ${Array.isArray(input.keywords) ? input.keywords.join(', ') : input.keywords}`);
+    const kw = Array.isArray(input.keywords) ? input.keywords.join(', ') : input.keywords;
+    parts.push(
+      ``,
+      `TARGET KEYWORDS (researched, authoritative — prioritise the FIRST): ${kw}`,
+      `Work the primary keyword into the meta title naturally, and the others naturally into the description. Keep ALL of these in your keywords output; you may add up to 2 long-tail variants. Do not stuff or break voice.`,
+    );
   }
 
   parts.push(``, `Return the JSON response now.`);
@@ -108,11 +115,20 @@ async function generateProductSEO(input) {
 
     console.log(`[aiText] SEO generated — product: "${input.name}", model: ${SEO_MODEL}, duration: ${Date.now() - start}ms`);
 
+    // Preserve the operator's researched target keywords (research wins) and
+    // append any new long-tail variants the model proposed, deduped, cap 10.
+    // Done in code so a provided keyword can never be silently dropped,
+    // regardless of what the model returns.
+    const norm = k => String(k).trim().toLowerCase();
+    const targets = (Array.isArray(input.keywords) ? input.keywords : []).map(norm).filter(Boolean);
+    const generated = parsed.keywords.map(norm).filter(Boolean);
+    const keywords = [...new Set([...targets, ...generated])].slice(0, 10);
+
     return {
       metaTitle:       parsed.metaTitle,
       metaDescription: parsed.metaDescription,
       slug:            parsed.slug            || '',
-      keywords:        parsed.keywords,
+      keywords,
       altTextTemplate: parsed.altTextTemplate || '',
     };
   } catch (err) {
