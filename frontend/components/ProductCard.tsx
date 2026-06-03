@@ -31,17 +31,6 @@ type Props = {
   showHeart?: boolean;
 };
 
-function getMaterialSub(mat?: string): string {
-  if (!mat) return '';
-  const m = mat.toLowerCase();
-  if (m.includes('mulberry silk')) return 'in mulberry silk';
-  if (m.includes('silk satin')) return 'in silk satin';
-  if (m.includes('silk') && m.includes('linen')) return 'in silk & linen';
-  if (m.includes('silk')) return 'in pure silk';
-  if (m.includes('linen')) return 'in pure linen';
-  return '';
-}
-
 /**
  * Canonical product card used everywhere products are shown on the
  * storefront — shop grid, new arrivals, recently viewed, cross-sell,
@@ -58,7 +47,6 @@ export default function ProductCard({ product, showHeart = true }: Props) {
   const [animating, setAnimating] = useState(false);
 
   const wished = isWished(product._id);
-  const materialSub = getMaterialSub(product.materialComposition);
   // Manual "NEW" flag only — the badge shows when the admin ticks "Show NEW
   // badge on storefront" (isNewArrival), not on any time heuristic. Legacy
   // isNew accepted as a fallback for products saved before the rename.
@@ -120,9 +108,6 @@ export default function ProductCard({ product, showHeart = true }: Props) {
         <Link href={`/product/${product._id}`} className={styles.nameLink}>
           <h3 className={styles.cardName} title={product.name}>{product.name}</h3>
         </Link>
-        {/* Always-render so the reserved 1-line height keeps captions aligned
-            across the grid even when a product lacks materialComposition. */}
-        <p className={styles.materialSub}>{materialSub}</p>
         <div className={styles.priceRow}>
           <span className={styles.price}>€{Number(product.price).toFixed(2)}</span>
         </div>
