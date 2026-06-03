@@ -190,7 +190,7 @@
   font-family: var(--font-eb-garamond), 'EB Garamond', Georgia, serif;
   font-size: 16px;
   font-weight: 500;
-  margin-bottom: var(--s-1);
+  margin-bottom: var(--s-2);
   color: var(--color-ink);
   line-height: 1.35;
   /* Up to two lines, clamped — and reserve the full 2-line height even
@@ -202,20 +202,6 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   min-height: calc(16px * 1.35 * 2);
-}
-
-.materialSub {
-  font-family: var(--font-eb-garamond), 'EB Garamond', Georgia, serif;
-  font-size: 13px;
-  font-style: italic;
-  color: rgba(42, 34, 24, 0.72);
-  margin-bottom: var(--s-2);
-  /* Clamp to one line — and reserve the line even if empty so cells
-     without material composition still align with cells that have it. */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-height: 1.4em;
 }
 
 .priceRow {
