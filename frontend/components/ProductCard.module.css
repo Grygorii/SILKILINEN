@@ -20,10 +20,20 @@
   /* No background, no border — image is the product. */
 }
 
-.cardLink {
+.nameLink {
   display: block;
   text-decoration: none;
   color: inherit;
+}
+/* Stretched link — makes the whole card a single click target while
+   keeping a real, crawlable anchor (its accessible name is the product
+   name). The heart button (z-index 2) sits above this overlay so it stays
+   independently clickable. */
+.nameLink::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
 
 /* ── Image ────────────────────────────────────────────
@@ -177,12 +187,12 @@
 }
 
 .cardName {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 15px;
-  font-weight: 400;
+  font-family: var(--font-eb-garamond), 'EB Garamond', Georgia, serif;
+  font-size: 16px;
+  font-weight: 500;
   margin-bottom: var(--s-1);
   color: var(--color-ink);
-  line-height: 1.3;
+  line-height: 1.35;
   /* Up to two lines, clamped — and reserve the full 2-line height even
      for short names so every card's price row sits at the same Y across
      the grid (matches the Olivia von Halle reference). Full name still
@@ -191,13 +201,14 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: calc(15px * 1.3 * 2);
+  min-height: calc(16px * 1.35 * 2);
 }
 
 .materialSub {
-  font-size: 12px;
+  font-family: var(--font-eb-garamond), 'EB Garamond', Georgia, serif;
+  font-size: 13px;
   font-style: italic;
-  color: var(--color-ink-muted);
+  color: rgba(42, 34, 24, 0.72);
   margin-bottom: var(--s-2);
   /* Clamp to one line — and reserve the line even if empty so cells
      without material composition still align with cells that have it. */
@@ -210,43 +221,15 @@
 .priceRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--s-3);
 }
 
 .price {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--color-ink);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
-/* ── Bare "+" icon button ─────────────────────────────
-   44×44 hit area, ~18px visible icon (lucide-react Plus / Check)
-   centred. No border, no background.
-*/
-
-.plusIconBtn {
-  width: 44px;
-  height: 44px;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  color: var(--color-ink);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  -webkit-tap-highlight-color: transparent;
-  transition: opacity var(--t-fast) var(--ease),
-              transform var(--t-fast) var(--ease);
-}
-
-.plusIconBtn:hover:not(:disabled) { opacity: 0.65; }
-.plusIconBtn:active:not(:disabled) { opacity: 0.4; transform: scale(0.92); }
-
-@media (prefers-reduced-motion: reduce) {
-  .plusIconBtn { transition: none; }
-  .plusIconBtn:active:not(:disabled) { transform: none; }
-}
+/* The quick-add "+" button was removed — the whole card links to the PDP,
+   where sizing/colour is chosen. */

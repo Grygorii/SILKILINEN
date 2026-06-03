@@ -4,8 +4,10 @@ import styles from './NewArrivals.module.css';
 
 async function getNewArrivals(): Promise<ProductCardData[]> {
   try {
+    // Only products the admin has flagged with "Show NEW badge on storefront"
+    // (isNewArrival) appear here — not the newest-by-date heuristic.
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/products?sort=-createdAt&limit=4`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/products?isNew=true&sort=-createdAt&limit=4`,
       { next: { revalidate: 3600 } }
     );
     if (!res.ok) return [];

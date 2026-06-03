@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Heart, Plus, Check } from 'lucide-react';
-import { useCart } from '@/context/CartContext';
+import { Heart } from 'lucide-react';
 import { useWishlist } from '@/context/WishlistContext';
 import { isValidImageUrl } from '@/lib/imageUtils';
 import ProductImage from './products/ProductImage';
@@ -17,6 +16,9 @@ export type ProductCardData = {
   price: number;
   materialComposition?: string;
   createdAt?: string;
+  isNewArrival?: boolean;
+  /** Legacy flag name — accepted as a fallback for un-migrated products. */
+  isNew?: boolean;
   sizes?: string[];
   colours?: string[];
   images?: ProductImageData[];
@@ -27,11 +29,7 @@ type Props = {
   product: ProductCardData;
   /** Show the wishlist heart top-right. Default true. */
   showHeart?: boolean;
-  /** Show the "+" / Check add-to-bag button in the price row. Default true. */
-  showAddButton?: boolean;
 };
-
-const NEW_DAYS = 30;
 
 function getMaterialSub(mat?: string): string {
   if (!mat) return '';
@@ -44,72 +42,35 @@ function getMaterialSub(mat?: string): string {
   return '';
 }
 
-function isNew(createdAt?: string): boolean {
-  if (!createdAt) return false;
-  return Date.now() - new Date(createdAt).getTime() < NEW_DAYS * 86_400_000;
-}
-
 /**
  * Canonical product card used everywhere products are shown on the
  * storefront — shop grid, new arrivals, recently viewed, cross-sell,
- * wishlist, and bundle children. Each card is self-contained: it reads
- * from CartContext / WishlistContext directly and owns its own
- * ephemeral add/heart animation state.
+ * wishlist, and bundle children.
  *
- * Surfaces that want to suppress the heart or add button (e.g. for
- * read-only product references) pass `showHeart={false}` or
- * `showAddButton={false}`.
+ * The whole card is one click target: the product name is a real anchor
+ * whose `::after` is stretched over the entire card (see .nameLink in the
+ * CSS module), so a click anywhere navigates to the PDP — except the
+ * wishlist heart, which sits above the overlay. There is no quick-add
+ * button; sizing/colour selection happens on the product page.
  */
-export default function ProductCard({
-  product,
-  showHeart = true,
-  showAddButton = true,
-}: Props) {
-  const { addToCart } = useCart();
+export default function ProductCard({ product, showHeart = true }: Props) {
   const { toggle, isWished } = useWishlist();
-  const [added, setAdded] = useState(false);
   const [animating, setAnimating] = useState(false);
 
-  // `sizes` is the source of truth for "needs PDP variant selection". When
-  // the surface passed an explicit array we trust it (length 0 = one-size,
-  // direct add). When it's undefined (e.g. minimal wishlist payload), we
-  // can't be sure — redirect to PDP to avoid adding a size-less line for a
-  // product that actually has variants.
-  const sizesKnown = Array.isArray(product.sizes);
-  const hasSizes = sizesKnown && (product.sizes?.length ?? 0) > 0;
   const wished = isWished(product._id);
   const materialSub = getMaterialSub(product.materialComposition);
-  const showNew = isNew(product.createdAt);
+  // Manual "NEW" flag only — the badge shows when the admin ticks "Show NEW
+  // badge on storefront" (isNewArrival), not on any time heuristic. Legacy
+  // isNew accepted as a fallback for products saved before the rename.
+  const showNew = Boolean(product.isNewArrival ?? product.isNew);
 
   const validImages = product.images?.filter(i => isValidImageUrl(i.url)) ?? [];
   const primaryImg = validImages.find(i => i.isPrimary) ?? validImages[0] ?? null;
   const heroUrl = primaryImg?.url ?? (isValidImageUrl(product.image) ? product.image : null);
   const heroAlt = primaryImg?.alt ?? product.name;
-  // Second-image hover swap (OvH-style). Use the first non-primary valid
-  // image, falling back to validImages[1] if no isPrimary flag is set.
-  // CSS handles the actual fade — see .hoverImg in ProductCard.module.css.
+  // Second-image hover swap (OvH-style). CSS handles the fade — see .hoverImg.
   const hoverImg = validImages.find(i => i !== primaryImg) ?? null;
   const hoverUrl = hoverImg?.url ?? null;
-
-  function handleAdd(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!sizesKnown || hasSizes) {
-      // Either has variants OR we don't have variant data — PDP for selection.
-      window.location.href = `/product/${product._id}`;
-      return;
-    }
-    addToCart({
-      productId: product._id,
-      name: product.name,
-      price: product.price,
-      colour: product.colours?.[0] ?? '',
-      size: '',
-      quantity: 1,
-    });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
-  }
 
   function handleHeart(e: React.MouseEvent) {
     e.preventDefault();
@@ -137,42 +98,33 @@ export default function ProductCard({
         </button>
       )}
 
-      <Link href={`/product/${product._id}`} className={styles.cardLink}>
-        <div className={styles.cardImg}>
-          <ProductImage src={heroUrl} alt={heroAlt} variant="card" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          {hoverUrl && (
-            <img
-              src={hoverUrl}
-              alt=""
-              aria-hidden="true"
-              className={styles.hoverImg}
-              loading="lazy"
-            />
-          )}
-          {showNew && <span className={styles.newBadge}>new</span>}
-        </div>
-      </Link>
+      <div className={styles.cardImg}>
+        <ProductImage src={heroUrl} alt={heroAlt} variant="card" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {hoverUrl && (
+          <img
+            src={hoverUrl}
+            alt=""
+            aria-hidden="true"
+            className={styles.hoverImg}
+            loading="lazy"
+          />
+        )}
+        {showNew && <span className={styles.newBadge}>new</span>}
+      </div>
 
       <div className={styles.caption}>
-        <h3 className={styles.cardName} title={product.name}>{product.name}</h3>
-        {/* Always-render so the reserved 1-line height keeps every
-            caption the same total height — rows can't drift out of
-            alignment when some products lack materialComposition. */}
+        {/* Stretched link: this anchor's ::after covers the whole card, so a
+            click anywhere opens the PDP while keeping a real, crawlable link
+            whose accessible name is the product name. */}
+        <Link href={`/product/${product._id}`} className={styles.nameLink}>
+          <h3 className={styles.cardName} title={product.name}>{product.name}</h3>
+        </Link>
+        {/* Always-render so the reserved 1-line height keeps captions aligned
+            across the grid even when a product lacks materialComposition. */}
         <p className={styles.materialSub}>{materialSub}</p>
         <div className={styles.priceRow}>
           <span className={styles.price}>€{Number(product.price).toFixed(2)}</span>
-          {showAddButton && (
-            <button
-              className={styles.plusIconBtn}
-              onClick={handleAdd}
-              aria-label={added ? 'Added to bag' : hasSizes ? 'Select size' : 'Add to bag'}
-            >
-              {added
-                ? <Check size={18} strokeWidth={1.5} />
-                : <Plus size={18} strokeWidth={1.5} />}
-            </button>
-          )}
         </div>
       </div>
     </div>

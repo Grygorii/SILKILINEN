@@ -158,7 +158,7 @@ const PUBLIC_FILTER = {
 
 router.get('/', async function(req, res) {
   try {
-    const { sort, limit, category, q, ids } = req.query;
+    const { sort, limit, category, q, ids, isNew } = req.query;
     const filter = { ...PUBLIC_FILTER };
 
     // Batch lookup by IDs — used by wishlist to resolve stored product IDs
@@ -170,6 +170,8 @@ router.get('/', async function(req, res) {
     }
 
     if (category) filter.category = category;
+    // Storefront "New Arrivals" — admin-flagged products only.
+    if (isNew === 'true') filter.isNewArrival = true;
     if (q) filter.$or = [
       { name: { $regex: q, $options: 'i' } },
       { description: { $regex: q, $options: 'i' } },
