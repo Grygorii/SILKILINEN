@@ -49,7 +49,21 @@ async function generateTryOn({ modelImageUrl, garmentImageUrl, category = 'auto'
     'Content-Type': 'application/json',
     Authorization: `Bearer ${process.env.FASHN_API_KEY}`,
   };
-  const inputs = { model_image: modelImageUrl, garment_image: garmentImageUrl, category };
+  // Quality-tuned defaults:
+  //  - mode 'quality' = FASHN's best render (12-17s) vs the faster default
+  //  - output_format 'png' = highest quality (no jpeg compression)
+  //  - moderation_level 'permissive' = don't block our briefs/boxers/lingerie
+  //    (the default 'conservative' rejects underwear & swimwear)
+  //  - garment_photo_type 'auto' = let FASHN detect flat-lay vs on-model
+  const inputs = {
+    model_image: modelImageUrl,
+    garment_image: garmentImageUrl,
+    category,
+    mode: process.env.FASHN_MODE || 'quality',
+    garment_photo_type: 'auto',
+    output_format: 'png',
+    moderation_level: 'permissive',
+  };
   if (Number.isInteger(seed)) inputs.seed = seed;
 
   const t0 = Date.now();
@@ -68,8 +82,8 @@ async function generateTryOn({ modelImageUrl, garmentImageUrl, category = 'auto'
   const id = runJson.id;
   if (!id) throw new Error(`FASHN run returned no id: ${JSON.stringify(runJson).slice(0, 200)}`);
 
-  // FASHN try-on completes in ~5-8s; poll every 2s and cap at 90s.
-  const deadline = Date.now() + 90_000;
+  // Quality mode runs ~12-17s (plus any queue); poll every 2s, cap at 120s.
+  const deadline = Date.now() + 120_000;
   while (Date.now() < deadline) {
     await sleep(2000);
     const stRes = await fetch(`${FASHN_BASE}/status/${id}`, { headers });
@@ -87,7 +101,7 @@ async function generateTryOn({ modelImageUrl, garmentImageUrl, category = 'auto'
     }
     // starting | in_queue | processing → keep polling
   }
-  throw new Error('FASHN generation timed out after 90s');
+  throw new Error('FASHN generation timed out after 120s');
 }
 
 module.exports = { generateTryOn, fashnCategoryFor };
