@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
-const { GoogleGenAI } = require('@google/genai');
 const AiModel = require('../models/AiModel');
 const { cloudinary } = require('../utils/cloudinary');
 const { requireAuth } = require('../middleware/auth');
-const { getTier } = require('../utils/imageValidation');
+const fashnImage = require('../services/fashnImage');
 
 // Shared AI rate limiter — 20/hr per IP. Same shape as adminProducts.js.
 const aiRateLimit = rateLimit({
@@ -37,23 +36,6 @@ function pickAiModelFields(body) {
     if (k in body) out[k] = body[k];
   }
   return out;
-}
-
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash-preview-image-generation';
-
-function getGenAI() {
-  if (!process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is not set');
-  return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-}
-
-function uploadBuffer(buffer, options) {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(options, (err, result) => {
-      if (err) reject(err);
-      else resolve(result);
-    });
-    stream.end(buffer);
-  });
 }
 
 function withTimeout(promise, ms, label) {
@@ -111,64 +93,35 @@ router.post('/:id/generate-reference', requireAuth, aiRateLimit, async function(
     const aiModel = await AiModel.findById(req.params.id);
     if (!aiModel) return res.status(404).json({ error: 'Model not found' });
     if (aiModel.locked) return res.status(400).json({ error: 'Model is locked. Unlock before regenerating.' });
-    if (!process.env.GEMINI_API_KEY) return res.status(400).json({ error: 'GEMINI_API_KEY is not configured' });
 
-    const tierKey = req.body.tier && ['standard', 'hd', 'premium'].includes(req.body.tier)
-      ? req.body.tier
-      : 'premium';
-    const tier = getTier(tierKey);
-
+    // Build a model-create prompt from the model's locked character descriptor
+    // plus consistent studio framing. FASHN model-create returns a photoreal
+    // full-length model that the try-on then dresses.
     const prompt = [
       aiModel.prompt,
-      'Full-length portrait, model centred on a clean cream-white studio backdrop. Soft, even diffused daylight from the left.',
-      'Style: La Perla, Eberjey, Lunya editorial aesthetic. No jewellery, no shoes. Barefoot.',
-      'Professional luxury fashion photography. Sharp focus, no motion blur.',
-    ].join('\n\n');
+      'Full-length fashion model standing centred on a clean cream-white studio backdrop, soft even diffused daylight from the left, barefoot, no jewellery.',
+      'La Perla / Eberjey / Lunya editorial aesthetic. Professional luxury fashion photography, sharp focus, photorealistic.',
+    ].filter(Boolean).join('\n\n');
 
-    const genai = getGenAI();
-    console.log(`[AI Models] Calling Gemini for reference photo (${aiModel.name}, ${tierKey})…`);
-    const t0 = Date.now();
-    const response = await withTimeout(
-      genai.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: [{ parts: [{ text: prompt }] }],
-        config: {
-          responseModalities: ['IMAGE', 'TEXT'],
-          imageConfig: { aspectRatio: '4:5', width: tier.width, height: tier.height },
-        },
-      }),
-      90_000,
-      'Gemini generateContent (reference)'
+    console.log(`[AI Models] FASHN model-create for "${aiModel.name}"…`);
+    const out = await fashnImage.generateModel({ prompt });
+
+    const uploaded = await withTimeout(
+      cloudinary.uploader.upload(out.imageUrl, { folder: 'silkilinen/ai-models', resource_type: 'image' }),
+      30_000,
+      'Cloudinary upload (model-create)'
     );
-    console.log(`[AI Models] Gemini responded in ${Date.now() - t0}ms`);
-
-    let imageBuffer = null;
-    let mimeType = 'image/jpeg';
-    for (const part of (response.candidates?.[0]?.content?.parts || [])) {
-      if (part.inlineData) {
-        imageBuffer = Buffer.from(part.inlineData.data, 'base64');
-        mimeType = part.inlineData.mimeType || 'image/jpeg';
-        break;
-      }
-    }
-    if (!imageBuffer) throw new Error('Gemini returned no image');
-
-    const uploaded = await uploadBuffer(imageBuffer, {
-      folder: 'silkilinen/ai-models',
-      resource_type: 'image',
-    });
 
     await AiModel.findByIdAndUpdate(req.params.id, { referenceImageUrl: uploaded.secure_url });
 
     res.json({
       url: uploaded.secure_url,
-      cost: tier.estimatedCost,
-      qualityTier: tierKey,
+      provider: out.provider,
       resolution: { width: uploaded.width, height: uploaded.height },
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('[AI Models] generate-reference error:', err.message);
+    res.status(500).json({ error: err.message || 'Internal server error' });
   }
 });
 
