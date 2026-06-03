@@ -402,11 +402,35 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
             </div>
             {models.length > 0 && (
               <div className={styles.overrideWrap}>
-                <p className={styles.overrideLabel}>Override model</p>
-                <select className={styles.overrideSelect} value={selectedModelId} onChange={e => setSelectedModelId(e.target.value)} disabled={!!sessionId || isWorking}>
-                  <option value="">Auto-select</option>
-                  {models.map(m => <option key={m._id} value={m._id}>{m.name} — {m.heritage}</option>)}
-                </select>
+                <p className={styles.overrideLabel}>Choose model</p>
+                <div className={styles.modelGallery}>
+                  <button
+                    type="button"
+                    className={`${styles.modelOption} ${!selectedModelId ? styles.modelOptionActive : ''}`}
+                    onClick={() => setSelectedModelId('')}
+                    disabled={!!sessionId || isWorking}
+                    title="Auto-select by product category"
+                  >
+                    <div className={styles.modelOptThumbEmpty}>✨</div>
+                    <span className={styles.modelOptName}>Auto</span>
+                  </button>
+                  {models.map(m => (
+                    <button
+                      key={m._id}
+                      type="button"
+                      className={`${styles.modelOption} ${selectedModelId === m._id ? styles.modelOptionActive : ''}`}
+                      onClick={() => setSelectedModelId(m._id)}
+                      disabled={!!sessionId || isWorking}
+                      title={`${m.name}${m.heritage ? ' — ' + m.heritage : ''}`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {m.referenceImageUrl
+                        ? <img src={m.referenceImageUrl} alt={m.name} className={styles.modelOptThumb} />
+                        : <div className={styles.modelOptThumbEmpty}>👤</div>}
+                      <span className={styles.modelOptName}>{m.name}</span>
+                    </button>
+                  ))}
+                </div>
                 {sessionId && <p className={styles.overrideNote}>Model locked once session starts</p>}
               </div>
             )}
