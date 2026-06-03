@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
-const { GoogleGenAI } = require('@google/genai');
 const AiModel = require('../models/AiModel');
 const PhotoshootSession = require('../models/PhotoshootSession');
 const Product = require('../models/Product');
@@ -9,8 +8,7 @@ const { cloudinary } = require('../utils/cloudinary');
 const { requireAuth } = require('../middleware/auth');
 const { getTier, getDefaultTierKey } = require('../utils/imageValidation');
 const SystemState = require('../models/SystemState');
-const falImage = require('../services/falImage');
-const { shouldUseFal } = require('../services/aiImageRouter');
+const fashnImage = require('../services/fashnImage');
 
 // Shared AI rate limiter — 20/hr per IP. Same shape as adminProducts.js.
 // aiPhotos already has a per-day Gemini quota counter at the DB level,
@@ -255,12 +253,7 @@ function generateAltText(product, position) {
   return `${product.name}${colourPart}, ${desc} — silk by SILKILINEN`;
 }
 
-// ── Cloudinary / Gemini helpers ───────────────────────────────────────────────
-function getGenAI() {
-  if (!process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is not set');
-  return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-}
-
+// ── Cloudinary helpers ────────────────────────────────────────────────────────
 function withTimeout(promise, ms, label) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`Timed out after ${ms / 1000}s: ${label}`)), ms);
@@ -298,58 +291,23 @@ function toSlug(str) {
   return String(str).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-// Call Gemini and upload to Cloudinary.
-// opts: { publicId?, altText? }
-async function generate(aiModel, inputPhotos, position, iterationFeedback, tierKey, opts = {}) {
-  const tier = getTier(tierKey);
-  const tag = `[AI:${position}:${tierKey}]`;
+// Run one FASHN virtual try-on and upload the result to Cloudinary.
+//   model_image  = the AI model's reference photo (the person)
+//   garment_image = the uploaded product photo (the garment)
+// opts: { publicId?, altText?, seed? }. Returns { url, prompt, resolution }.
+async function runFashnJob(aiModel, garmentImageUrl, category, opts = {}) {
+  const tag = `[AI:FASHN]`;
+  if (!garmentImageUrl) throw new Error('No input photo on session — upload a product photo first');
 
-  console.log(`${tag} START — model="${aiModel.name}" inputs=${inputPhotos.length}`);
+  const fashnCategory = fashnImage.fashnCategoryFor(category);
+  console.log(`${tag} START — model="${aiModel.name}" category=${fashnCategory}`);
 
-  const imageParts = [];
-  if (aiModel.referenceImageUrl) {
-    console.log(`${tag} Fetching reference image…`);
-    const data = await imageUrlToBase64(aiModel.referenceImageUrl);
-    console.log(`${tag} Reference OK (${Math.round(data.length * 0.75 / 1024)}KB)`);
-    imageParts.push({ inlineData: { mimeType: guessMimeType(aiModel.referenceImageUrl), data } });
-  }
-  for (let i = 0; i < inputPhotos.length; i++) {
-    console.log(`${tag} Fetching input ${i + 1}/${inputPhotos.length}…`);
-    const data = await imageUrlToBase64(inputPhotos[i]);
-    console.log(`${tag} Input ${i + 1} OK (${Math.round(data.length * 0.75 / 1024)}KB)`);
-    imageParts.push({ inlineData: { mimeType: guessMimeType(inputPhotos[i]), data } });
-  }
-
-  const prompt = buildPrompt(aiModel, position, iterationFeedback, opts.product);
-  const genai = getGenAI();
-  console.log(`${tag} Calling Gemini (${GEMINI_MODEL}) with ${imageParts.length} image(s)…`);
-  const t0 = Date.now();
-
-  const response = await withTimeout(
-    genai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: [{ parts: [...imageParts, { text: prompt }] }],
-      config: {
-        responseModalities: ['IMAGE', 'TEXT'],
-        imageConfig: { aspectRatio: '4:5', width: tier.width, height: tier.height },
-      },
-    }),
-    90_000,
-    'Gemini generateContent'
-  );
-
-  console.log(`${tag} Gemini responded in ${Date.now() - t0}ms`);
-
-  let imageBuffer = null;
-  for (const part of (response.candidates?.[0]?.content?.parts || [])) {
-    if (part.inlineData) {
-      imageBuffer = Buffer.from(part.inlineData.data, 'base64');
-      break;
-    }
-  }
-  if (!imageBuffer) throw new Error('Gemini returned no image');
-
-  console.log(`${tag} Buffer: ${Math.round(imageBuffer.length / 1024)}KB — uploading…`);
+  const out = await fashnImage.generateTryOn({
+    modelImageUrl: aiModel.referenceImageUrl,
+    garmentImageUrl,
+    category: fashnCategory,
+    seed: Number.isInteger(opts.seed) ? opts.seed : undefined,
+  });
 
   const cloudinaryOpts = {
     folder: 'silkilinen/ai-generated',
@@ -365,16 +323,16 @@ async function generate(aiModel, inputPhotos, position, iterationFeedback, tierK
   }
 
   const uploaded = await withTimeout(
-    uploadBuffer(imageBuffer, cloudinaryOpts),
+    cloudinary.uploader.upload(out.imageUrl, cloudinaryOpts),
     30_000,
-    'Cloudinary upload'
+    'Cloudinary upload (FASHN)'
   );
 
   console.log(`${tag} DONE — ${uploaded.secure_url} (${uploaded.width}×${uploaded.height})`);
 
   return {
     url: uploaded.secure_url,
-    prompt,
+    prompt: `FASHN try-on (${fashnCategory})`,
     resolution: { width: uploaded.width, height: uploaded.height },
   };
 }
@@ -390,20 +348,23 @@ async function pickModel(category) {
 // ── Error classification ──────────────────────────────────────────────────────
 function classifyError(err) {
   const msg = (err?.message || '').toLowerCase();
-  if (msg.includes('timed out after 90s') || msg.includes('gemini generatecontent')) {
-    return { errorType: 'timeout', userMessage: 'Generation timed out — no charge applied.' };
+  if (msg.includes('fashn_api_key is not set')) {
+    return { errorType: 'not_configured', userMessage: 'FASHN_API_KEY is not set on the server.' };
+  }
+  if (msg.includes('upload a product photo')) {
+    return { errorType: 'no_product_image', userMessage: 'Upload a product photo first — FASHN needs the garment image.' };
   }
   if (msg.includes('timed out after')) {
-    return { errorType: 'timeout', userMessage: 'Request timed out — no charge applied.' };
+    return { errorType: 'timeout', userMessage: 'Generation timed out — no charge applied.' };
   }
-  if (msg.includes('503') || msg.includes('unavailable') || msg.includes('overloaded')) {
-    return { errorType: 'service_unavailable', userMessage: 'Gemini is temporarily busy — no charge applied.' };
+  if (msg.includes('502') || msg.includes('503') || msg.includes('unavailable') || msg.includes('overloaded')) {
+    return { errorType: 'service_unavailable', userMessage: 'The image service is temporarily busy — no charge applied.' };
   }
-  if (msg.includes('429') || msg.includes('resource_exhausted') || msg.includes('quota')) {
-    return { errorType: 'rate_limit', userMessage: 'Too many requests — wait a minute and try again. No charge applied.' };
+  if (msg.includes('429') || msg.includes('rate limit') || msg.includes('quota') || msg.includes('credit')) {
+    return { errorType: 'rate_limit', userMessage: 'Rate limited or out of credits — check your FASHN balance. No charge applied.' };
   }
-  if (msg.includes('gemini returned no image')) {
-    return { errorType: 'no_image', userMessage: 'Gemini returned no image — no charge applied.' };
+  if (msg.includes('no output') || msg.includes('no image')) {
+    return { errorType: 'no_image', userMessage: 'No image returned — no charge applied.' };
   }
   if (msg.includes('daily generation limit')) {
     return { errorType: 'daily_limit', userMessage: err.message };
@@ -505,6 +466,11 @@ router.post('/sessions/:id/generate', requireAuth, aiRateLimit, async function(r
       jobs = WORKFLOW_PRESETS.standard;
     }
 
+    // FASHN try-on produces one on-model shot per garment (the pose comes
+    // from the model image, not a prompt), so we generate a single photo
+    // regardless of preset. Use "Regenerate" for a fresh variation.
+    jobs = jobs.slice(0, 1);
+
     // Fetch product once for SEO data
     const product = await Product.findById(session.productId, 'name slug colours category colorName colorHex aiPhotoDescriptor').lean();
     const productSlug = toSlug(product?.slug || product?.name || String(session.productId));
@@ -519,32 +485,15 @@ router.post('/sessions/:id/generate', requireAuth, aiRateLimit, async function(r
       const publicId = `${productSlug}-${modelSlug}-${position}`;
       const altText = product ? generateAltText(product, position) : null;
 
+      const garmentImageUrl = session.inputPhotos?.[0];
+      if (!garmentImageUrl) {
+        results.push({ position, label, tier: tierKey, error: 'No input photo on session', errorType: 'no_product_image', userMessage: 'Upload a product photo first — FASHN needs the garment image.' });
+        continue;
+      }
+
       let result;
       try {
-        if (shouldUseFal(product?.category)) {
-          console.log(`[aiImageRouter] Category '${product?.category}' → fal.ai (Flux Kontext multi)`);
-          const productImageUrl = session.inputPhotos?.[0];
-          if (!productImageUrl) {
-            results.push({ position, label, tier: tierKey, error: 'No input photo on session', errorType: 'no_product_image', userMessage: 'Cannot generate AI photo via fal.ai: session has no uploaded input photo. Upload a product reference photo first.' });
-            continue;
-          }
-          const prompt = buildPrompt(aiModel, position, null, product);
-          const falResult = await falImage.generateImage({ modelImageUrl: aiModel.referenceImageUrl, productImageUrl, prompt });
-          const cloudinaryOpts = {
-            folder: 'silkilinen/ai-generated',
-            resource_type: 'image',
-            ...(publicId ? { public_id: publicId, overwrite: true, use_filename: false } : {}),
-            ...(altText ? { context: { alt: altText, caption: altText } } : {}),
-          };
-          const uploaded = await withTimeout(
-            cloudinary.uploader.upload(falResult.imageUrl, cloudinaryOpts),
-            30_000, 'Cloudinary upload (fal)'
-          );
-          result = { url: uploaded.secure_url, prompt, resolution: { width: uploaded.width, height: uploaded.height } };
-        } else {
-          console.log(`[aiImageRouter] Category '${product?.category}' → Gemini`);
-          result = await generate(aiModel, session.inputPhotos, position, null, tierKey, { publicId, altText, product });
-        }
+        result = await runFashnJob(aiModel, garmentImageUrl, product?.category, { publicId, altText });
       } catch (err) {
         console.error(`[AI Photo] Generation failed for ${position}: ${err.message}`);
         const { errorType, userMessage } = classifyError(err);
@@ -631,31 +580,15 @@ router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
     const publicId = `${productSlug}-${modelSlug}-${position}`;
     const altText = product ? generateAltText(product, position) : null;
 
+    const garmentImageUrl = session.inputPhotos?.[0];
+    if (!garmentImageUrl) {
+      return res.status(400).json({ error: 'Upload a product photo first — FASHN needs the garment image.', errorType: 'no_product_image', ...costResponse(session) });
+    }
+
     let result;
     try {
-      if (shouldUseFal(product?.category)) {
-        console.log(`[aiImageRouter] Category '${product?.category}' → fal.ai (Flux Kontext multi) [iterate]`);
-        const productImageUrl = session.inputPhotos?.[0];
-        if (!productImageUrl) {
-          return res.status(400).json({ error: 'Cannot generate AI photo via fal.ai: session has no uploaded input photo. Upload a product reference photo first.', errorType: 'no_product_image', ...costResponse(session) });
-        }
-        const prompt = buildPrompt(session.selectedModel, position, feedback || null, product);
-        const falResult = await falImage.generateImage({ modelImageUrl: session.selectedModel.referenceImageUrl, productImageUrl, prompt });
-        const cloudinaryOpts = {
-          folder: 'silkilinen/ai-generated',
-          resource_type: 'image',
-          ...(publicId ? { public_id: publicId, overwrite: true, use_filename: false } : {}),
-          ...(altText ? { context: { alt: altText, caption: altText } } : {}),
-        };
-        const uploaded = await withTimeout(
-          cloudinary.uploader.upload(falResult.imageUrl, cloudinaryOpts),
-          30_000, 'Cloudinary upload (fal)'
-        );
-        result = { url: uploaded.secure_url, prompt, resolution: { width: uploaded.width, height: uploaded.height } };
-      } else {
-        console.log(`[aiImageRouter] Category '${product?.category}' → Gemini [iterate]`);
-        result = await generate(session.selectedModel, session.inputPhotos, position, feedback || null, tierKey, { publicId, altText, product });
-      }
+      // New random seed each iterate → a fresh try-on variation.
+      result = await runFashnJob(session.selectedModel, garmentImageUrl, product?.category, { publicId, altText, seed: Math.floor(Math.random() * 1e9) });
     } catch (err) {
       const { errorType, userMessage } = classifyError(err);
       return res.status(422).json({ error: `Generation failed: ${err.message}`, errorType, userMessage, ...costResponse(session) });
