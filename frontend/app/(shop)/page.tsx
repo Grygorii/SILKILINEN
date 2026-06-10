@@ -4,6 +4,7 @@ import { cloudinaryAuto } from '@/lib/imageUtils';
 import PageTracker from '@/components/PageTracker';
 import ReviewsCarousel, { type ReviewData } from '@/components/ReviewsCarousel';
 import NewArrivals from '@/components/NewArrivals';
+import ReassuranceRow from '@/components/ReassuranceRow';
 import CategoryTiles from '@/components/CategoryTiles';
 import FeaturedCollections from '@/components/FeaturedCollections';
 import StorySection from '@/components/StorySection';
@@ -77,6 +78,8 @@ export default async function Home() {
       </section>
 
       <NewArrivals />
+
+      <ReassuranceRow />
 
       <FeaturedCollections />
 
