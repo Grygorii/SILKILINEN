@@ -6,6 +6,7 @@ import StatusPill from './_components/StatusPill';
 import Zone1ActionItems from './_components/dashboard/Zone1ActionItems';
 import Zone2Metrics from './_components/dashboard/Zone2Metrics';
 import Zone3Working from './_components/dashboard/Zone3Working';
+import SeoHealthPanel from './_components/dashboard/SeoHealthPanel';
 import FounderPulse from '@/components/dashboard/FounderPulse';
 import FinanceAnomalies from '@/components/dashboard/FinanceAnomalies';
 import styles from './page.module.css';
@@ -157,6 +158,9 @@ export default function AdminDashboard() {
           </div>
         </>
       )}
+
+      {/* ── SEO & Merchant health — honest search/feed signal (Slice 1) ── */}
+      <SeoHealthPanel />
 
       {/* ── Zone 4: System health — DO NOT MODIFY ── */}
       <div className={styles.section}>
