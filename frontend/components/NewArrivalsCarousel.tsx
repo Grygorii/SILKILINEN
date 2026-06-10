@@ -40,6 +40,45 @@ export default function NewArrivalsCarousel({ products }: { products: ProductCar
     el.scrollBy({ left: dir * el.clientWidth * 0.9, behavior: 'smooth' });
   };
 
+  // Click-and-drag to scroll with a mouse/pen. Touch is left to native
+  // momentum scrolling (already smooth on phones), so we ignore touch pointers
+  // here. `moved` suppresses the card-link click at the end of a drag.
+  const dragging = useRef(false);
+  const moved = useRef(false);
+  const startX = useRef(0);
+  const startScroll = useRef(0);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === 'touch') return;
+    const el = trackRef.current;
+    if (!el) return;
+    dragging.current = true;
+    moved.current = false;
+    startX.current = e.clientX;
+    startScroll.current = el.scrollLeft;
+    el.classList.add(styles.dragging);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    const el = trackRef.current;
+    if (!el) return;
+    const dx = e.clientX - startX.current;
+    if (Math.abs(dx) > 3) moved.current = true;
+    el.scrollLeft = startScroll.current - dx;
+  };
+  const endDrag = () => {
+    if (!dragging.current) return;
+    dragging.current = false;
+    trackRef.current?.classList.remove(styles.dragging);
+  };
+  const onClickCapture = (e: React.MouseEvent) => {
+    if (moved.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      moved.current = false;
+    }
+  };
+
   return (
     <section className={styles.section}>
       <div className={styles.header}>
@@ -58,7 +97,15 @@ export default function NewArrivalsCarousel({ products }: { products: ProductCar
           <ChevronLeft size={20} strokeWidth={1.5} />
         </button>
 
-        <div className={styles.track} ref={trackRef}>
+        <div
+          className={styles.track}
+          ref={trackRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerLeave={endDrag}
+          onClickCapture={onClickCapture}
+        >
           {products.map(product => (
             <div className={styles.item} key={product._id}>
               <ProductCard product={product} />

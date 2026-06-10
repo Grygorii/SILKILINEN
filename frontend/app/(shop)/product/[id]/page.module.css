@@ -83,6 +83,15 @@
   margin-bottom: 20px;
 }
 
+/* Fit guidance — visible (not hidden in an accordion) so it answers the
+   buyer's "will it fit?" question up front. */
+.fitNote {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted, #8a8680);
+  margin: -8px 0 20px;
+}
+
 /* ── Colour variant cubes ────────────────────────── */
 
 .colourCubes {

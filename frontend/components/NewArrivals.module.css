@@ -41,9 +41,23 @@
   scroll-snap-type: x mandatory;
   scrollbar-width: none;            /* Firefox */
   -ms-overflow-style: none;         /* old Edge */
+  touch-action: pan-x;              /* let finger swipe horizontally */
+  -webkit-overflow-scrolling: touch;/* iOS momentum scrolling */
+  cursor: grab;
 }
 .track::-webkit-scrollbar {
   display: none;                    /* WebKit */
+}
+
+/* While dragging with a mouse: change the cursor, disable snap so the drag
+   feels 1:1, and stop images/text being selected or ghost-dragged. */
+.dragging {
+  cursor: grabbing;
+  scroll-snap-type: none;
+  user-select: none;
+}
+.dragging img {
+  pointer-events: none;
 }
 
 .item {

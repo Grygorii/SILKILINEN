@@ -105,7 +105,8 @@ function autoGenerateSEO(product) {
 // If you add a new schema field that admins should be able to edit, add it here.
 const PRODUCT_ALLOWED_FIELDS = [
   'name', 'price', 'compareAtPrice', 'description', 'category',
-  'colours', 'materialComposition', 'variants', 'totalStock', 'inStock',
+  'colours', 'materialComposition', 'careInstructions', 'momme', 'fitNote',
+  'variants', 'totalStock', 'inStock',
   'status', 'keywords', 'metaTitle', 'metaDescription', 'slug',
   'altTextTemplate', 'origin', 'isNewArrival', 'aiPhotoDescriptor',
   'gender', 'ageGroup',
