@@ -73,9 +73,14 @@ router.put('/platforms/:key', requireAuth, async (req, res) => {
 router.patch('/platforms/:key/url', requireAuth, async (req, res) => {
   try {
     const { url } = req.body;
+    // The public footer lists platforms that are active AND have a URL.
+    // Connecting a URL implies it should be shown, so auto-activate — this is
+    // why a newly added link (e.g. Facebook) wasn't appearing in the footer.
+    const update = { url: url || '' };
+    if (url) update.isActive = true;
     const platform = await SocialPlatform.findOneAndUpdate(
       { key: req.params.key },
-      { url: url || '' },
+      update,
       { new: true }
     );
     if (!platform) return res.status(404).json({ error: 'Not found' });

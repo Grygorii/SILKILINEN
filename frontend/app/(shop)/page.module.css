@@ -161,3 +161,26 @@
     font-size: 26px;
   }
 }
+/* Social-proof strip directly under the hero. Quiet-luxury: small, centred,
+   ink stars, no card — reads as a line of the page, not a banner. */
+.proofStrip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 16px 6%;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+  text-align: center;
+}
+.proofStrip:hover {
+  opacity: 0.7;
+}
+.proofStars {
+  color: var(--color-ink);
+  letter-spacing: 2px;
+}

@@ -54,6 +54,8 @@ type Form = {
   altTextTemplate: string;
   materialComposition: string;
   careInstructions: string;
+  momme: string;
+  fitNote: string;
   origin: string;
   certifications: string;
   isNewArrival: boolean;
@@ -83,7 +85,7 @@ const EMPTY_FORM: Form = {
   name: '', status: 'draft', price: '', compareAtPrice: '', costPrice: '',
   category: 'robes', description: '', tags: '',
   metaTitle: '', metaDescription: '', slug: '', keywords: '', altTextTemplate: '',
-  materialComposition: '', careInstructions: '', origin: '', certifications: '',
+  materialComposition: '', careInstructions: '', momme: '', fitNote: '', origin: '', certifications: '',
   isNewArrival: false,
   aiPhotoDescriptor: '',
   gender: 'unisex',
@@ -219,6 +221,8 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           altTextTemplate: p.altTextTemplate ?? '',
           materialComposition: p.materialComposition ?? '',
           careInstructions: p.careInstructions ?? '',
+          momme: p.momme ?? '',
+          fitNote: p.fitNote ?? '',
           origin: p.origin ?? '',
           certifications: (p.certifications ?? []).join(', '),
           // Accept the new schema field and the legacy `isNew` value
@@ -1056,6 +1060,14 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             <div className={styles.fg}>
               <label className={styles.label}>Care instructions</label>
               <textarea className={`${styles.input} ${styles.textareaSm}`} rows={3} value={form.careInstructions} onChange={e => setField('careInstructions', e.target.value)} placeholder="Hand wash cold. Lay flat to dry. Do not bleach. Iron on low heat." />
+            </div>
+            <div className={styles.fg}>
+              <label className={styles.label}>Silk weight (momme)</label>
+              <input className={styles.input} value={form.momme} onChange={e => setField('momme', e.target.value)} placeholder="22" />
+            </div>
+            <div className={styles.fg}>
+              <label className={styles.label}>Fit note</label>
+              <textarea className={`${styles.input} ${styles.textareaSm}`} rows={2} value={form.fitNote} onChange={e => setField('fitNote', e.target.value)} placeholder={`Relaxed fit. Model is 5'9" and wears S. Size down if between sizes.`} />
             </div>
             <div className={styles.frow}>
               <div className={styles.fg}>

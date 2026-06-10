@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import styles from './page.module.css';
 import ProductOptions from '@/components/ProductOptions';
+import StickyBuyBar from '@/components/StickyBuyBar';
 import ProductGallery from '@/components/ProductGallery';
 import PageTracker from '@/components/PageTracker';
 import CrossSell from '@/components/CrossSell';
@@ -265,6 +266,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               {showNew && <span className={styles.newTag}>NEW</span>}
               <h1 className={styles.productName}>{product.name}</h1>
               {materialSub && <p className={styles.materialSub}>{materialSub}</p>}
+              {product.fitNote && <p className={styles.fitNote}>{product.fitNote}</p>}
 
               {/* Colour variant cubes — links to sibling colour products */}
               {(product.colorName || (product.colorVariants && product.colorVariants.length > 0)) && (
@@ -341,12 +343,18 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                       {product.description}
                     </AccordionItem>
                   )}
-                  {(product.materialComposition || product.careInstructions) && (
+                  {(product.materialComposition || product.careInstructions || product.momme) && (
                     <AccordionItem label="Material & care">
                       {product.materialComposition && (
                         <>
                           <AccordionSubLabel>Composition</AccordionSubLabel>
                           <p>{product.materialComposition}</p>
+                        </>
+                      )}
+                      {product.momme && (
+                        <>
+                          <AccordionSubLabel>Weight</AccordionSubLabel>
+                          <p>{product.momme} momme</p>
                         </>
                       )}
                       {product.careInstructions && (
@@ -367,6 +375,20 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               </div>
             </div>
           </div>
+
+          {/* Mobile sticky add-to-bag — same component the preview page uses,
+              now on the live PDP so the buy action is always reachable on a
+              phone. Hidden on desktop via its own CSS. */}
+          <StickyBuyBar
+            productId={product._id}
+            productName={product.name}
+            price={product.price}
+            outOfStock={outOfStock}
+            stock={total ?? undefined}
+            image={galleryImages[0]?.url}
+            colours={product.colours ?? []}
+            sizes={product.sizes ?? []}
+          />
         </ProductSelectionProvider>
       </main>
 

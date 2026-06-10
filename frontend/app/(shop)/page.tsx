@@ -4,6 +4,7 @@ import { cloudinaryAuto } from '@/lib/imageUtils';
 import PageTracker from '@/components/PageTracker';
 import ReviewsCarousel, { type ReviewData } from '@/components/ReviewsCarousel';
 import NewArrivals from '@/components/NewArrivals';
+import ReassuranceRow from '@/components/ReassuranceRow';
 import CategoryTiles from '@/components/CategoryTiles';
 import FeaturedCollections from '@/components/FeaturedCollections';
 import StorySection from '@/components/StorySection';
@@ -76,7 +77,18 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Social proof, high up — a considered buyer wants trust before she
+          scrolls. Only shown once there are real reviews. */}
+      {allReviews.length > 0 && (
+        <a href="/reviews" className={styles.proofStrip}>
+          <span className={styles.proofStars} aria-hidden="true">★★★★★</span>
+          <span>{avg.toFixed(1)} · Loved by {allReviews.length}+ customers · Handmade in Donegal</span>
+        </a>
+      )}
+
       <NewArrivals />
+
+      <ReassuranceRow />
 
       <FeaturedCollections />
 

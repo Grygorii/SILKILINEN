@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Heart } from 'lucide-react';
+import { Heart, Star } from 'lucide-react';
 import { useWishlist } from '@/context/WishlistContext';
 import { isValidImageUrl } from '@/lib/imageUtils';
 import ProductImage from './products/ProductImage';
@@ -23,6 +23,9 @@ export type ProductCardData = {
   colours?: string[];
   images?: ProductImageData[];
   image?: string;
+  /** Storefront rating summary (approved reviews), supplied by the list API. */
+  ratingAverage?: number;
+  ratingCount?: number;
 };
 
 type Props = {
@@ -108,6 +111,19 @@ export default function ProductCard({ product, showHeart = true }: Props) {
         <Link href={`/product/${product._id}`} className={styles.nameLink}>
           <h3 className={styles.cardName} title={product.name}>{product.name}</h3>
         </Link>
+        {product.ratingCount ? (
+          <div className={styles.rating} aria-label={`Rated ${product.ratingAverage} out of 5 from ${product.ratingCount} reviews`}>
+            {[1, 2, 3, 4, 5].map(n => (
+              <Star
+                key={n}
+                size={12}
+                strokeWidth={1.5}
+                fill={n <= Math.round(product.ratingAverage ?? 0) ? 'currentColor' : 'none'}
+              />
+            ))}
+            <span className={styles.ratingCount}>({product.ratingCount})</span>
+          </div>
+        ) : null}
         <div className={styles.priceRow}>
           <span className={styles.price}>€{Number(product.price).toFixed(2)}</span>
         </div>

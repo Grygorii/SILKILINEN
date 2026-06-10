@@ -120,6 +120,10 @@ const productSchema = new mongoose.Schema({
 
   materialComposition: { type: String },
   careInstructions: { type: String },
+  // Silk weight in momme (e.g. "22"). A quality signal premium buyers look for.
+  momme: { type: String },
+  // Fit guidance shown on the PDP, e.g. "Relaxed fit. Model is 5'9\" and wears S."
+  fitNote: { type: String },
   // Per-product country of origin (e.g. "Made by hand in Donegal", "Made in
   // India"). Origin is MIXED across the range, so there is NO blanket default
   // — an empty string means "not yet verified" and must NOT be presented as a

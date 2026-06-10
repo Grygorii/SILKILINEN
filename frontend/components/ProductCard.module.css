@@ -219,3 +219,19 @@
 
 /* The quick-add "+" button was removed — the whole card links to the PDP,
    where sizing/colour is chosen. */
+
+/* Storefront rating — compact star row on the card, shown only when the
+   product has approved reviews. Quiet-luxury: ink-coloured stars, not gold. */
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin: 4px 0 2px;
+  color: var(--color-ink, #2A2218);
+}
+.ratingCount {
+  margin-left: 5px;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  color: var(--color-ink-muted, #8A8278);
+}
