@@ -33,6 +33,9 @@ const adminCategoriesRoutes = require('./routes/adminCategories');
 const siteAuditRoutes = require('./routes/siteAudit');
 const insightsRoutes = require('./routes/insights');
 const adminHealthRoutes = require('./routes/adminHealth');
+const adminSeoHealthRoutes = require('./routes/adminSeoHealth');
+const adminAdvisorRoutes = require('./routes/adminAdvisor');
+const adminGoogleOAuthRoutes = require('./routes/adminGoogleOAuth');
 const trackRoutes = require('./routes/track');
 const adminDashboardRoutes = require('./routes/adminDashboard');
 const collectionsRoutes = require('./routes/collections');
@@ -53,6 +56,7 @@ const socialRouter = require('./routes/social');
 const adminSocialAssetsRouter = require('./routes/adminSocialAssets');
 const cartRecoveryRouter = require('./routes/cartRecovery');
 const { processCartRecovery } = require('./services/cartRecovery');
+const { runAdvisorDigest } = require('./services/advisorDigest');
 
 const app = express();
 
@@ -154,6 +158,9 @@ app.use('/api/admin/categories', adminCategoriesRoutes);
 app.use('/api/admin/site-audit', siteAuditRoutes);
 app.use('/api/admin/insights', insightsRoutes);
 app.use('/api/admin/health', adminHealthRoutes);
+app.use('/api/admin/seo-health', adminSeoHealthRoutes);
+app.use('/api/admin/advisor', adminAdvisorRoutes);
+app.use('/api/admin/google/search-console', adminGoogleOAuthRoutes);
 app.use('/api/admin/dashboard', adminDashboardRoutes);
 app.use('/api/track', trackRoutes);
 app.use('/api/collections', collectionsRoutes);
@@ -219,6 +226,8 @@ const PORT = process.env.PORT || 3000;
 
 let cartRecoveryStartTimeout = null;
 let cartRecoveryInterval = null;
+let advisorDigestStartTimeout = null;
+let advisorDigestInterval = null;
 
 const server = app.listen(PORT, function() {
   console.log('Server running on port ' + PORT);
@@ -228,6 +237,18 @@ const server = app.listen(PORT, function() {
     processCartRecovery();
     cartRecoveryInterval = setInterval(processCartRecovery, 60 * 60 * 1000);
   }, 5 * 60 * 1000);
+
+  // Advisor digest — checks daily, but runAdvisorDigest only actually emails
+  // once every 7 days (cadence enforced via SystemState, so restarts can't
+  // skip or double-send). First check 10 min after boot. No-op until
+  // RESEND_API_KEY + ADMIN_EMAIL are set.
+  advisorDigestStartTimeout = setTimeout(function() {
+    runAdvisorDigest().catch(err => console.error('[advisor-digest]', err));
+    advisorDigestInterval = setInterval(
+      () => runAdvisorDigest().catch(err => console.error('[advisor-digest]', err)),
+      24 * 60 * 60 * 1000
+    );
+  }, 10 * 60 * 1000);
 });
 
 let shuttingDown = false;
@@ -238,6 +259,8 @@ function shutdown(signal) {
 
   if (cartRecoveryStartTimeout) clearTimeout(cartRecoveryStartTimeout);
   if (cartRecoveryInterval) clearInterval(cartRecoveryInterval);
+  if (advisorDigestStartTimeout) clearTimeout(advisorDigestStartTimeout);
+  if (advisorDigestInterval) clearInterval(advisorDigestInterval);
 
   // Hard exit if graceful drain stalls (e.g. hung Mongo or stuck request).
   const hardExit = setTimeout(() => {

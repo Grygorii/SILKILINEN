@@ -5,7 +5,7 @@
       "has": [
         { "type": "host", "value": "silkilinen.vercel.app" }
       ],
-      "destination": "https://silkilinen.com/$1",
+      "destination": "https://www.silkilinen.com/$1",
       "permanent": true
     }
   ]
