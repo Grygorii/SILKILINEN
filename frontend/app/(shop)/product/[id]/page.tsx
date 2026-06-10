@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import styles from './page.module.css';
 import ProductOptions from '@/components/ProductOptions';
+import StickyBuyBar from '@/components/StickyBuyBar';
 import ProductGallery from '@/components/ProductGallery';
 import PageTracker from '@/components/PageTracker';
 import CrossSell from '@/components/CrossSell';
@@ -367,6 +368,20 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               </div>
             </div>
           </div>
+
+          {/* Mobile sticky add-to-bag — same component the preview page uses,
+              now on the live PDP so the buy action is always reachable on a
+              phone. Hidden on desktop via its own CSS. */}
+          <StickyBuyBar
+            productId={product._id}
+            productName={product.name}
+            price={product.price}
+            outOfStock={outOfStock}
+            stock={total ?? undefined}
+            image={galleryImages[0]?.url}
+            colours={product.colours ?? []}
+            sizes={product.sizes ?? []}
+          />
         </ProductSelectionProvider>
       </main>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useProductSelection } from './ProductSelectionContext';
 import DropAHint from './DropAHint';
@@ -31,19 +31,6 @@ export default function ProductOptions({ colours, colourHexMap, sizes, productNa
   const [addState, setAddState] = useState<'idle' | 'adding' | 'added'>('idle');
   const [hintOpen, setHintOpen] = useState(false);
   const { addToCart } = useCart();
-
-  // Mobile sticky add-to-bag: show a fixed bottom bar once the inline CTA has
-  // scrolled out of view, so the buy button is always reachable on a phone
-  // without duplicating it while the inline one is visible.
-  const ctaRef = useRef<HTMLDivElement>(null);
-  const [showSticky, setShowSticky] = useState(false);
-  useEffect(() => {
-    const el = ctaRef.current;
-    if (!el || typeof IntersectionObserver === 'undefined') return;
-    const io = new IntersectionObserver(([entry]) => setShowSticky(!entry.isIntersecting));
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
 
   const maxQty = Math.min(stock ?? 10, 10);
 
@@ -104,7 +91,6 @@ export default function ProductOptions({ colours, colourHexMap, sizes, productNa
   }));
 
   return (
-    <>
     <div className={styles.root} data-product-options>
       {/* Colour — design-system v1 labelled swatch */}
       {colours.length > 0 && (
@@ -170,7 +156,7 @@ export default function ProductOptions({ colours, colourHexMap, sizes, productNa
       )}
 
       {/* CTA */}
-      <div className={styles.ctaWrap} ref={ctaRef}>
+      <div className={styles.ctaWrap}>
         <Button
           variant={ctaVariant}
           onClick={handleAdd}
@@ -190,25 +176,5 @@ export default function ProductOptions({ colours, colourHexMap, sizes, productNa
         <DropAHint productId={productId} productName={productName} onClose={() => setHintOpen(false)} />
       )}
     </div>
-
-    {/* Mobile sticky add-to-bag (hidden on desktop via CSS) */}
-    {showSticky && (
-      <div className={styles.mobileBar}>
-        <div className={styles.mobileBarInfo}>
-          <span className={styles.mobileBarName}>{productName}</span>
-          <span className={styles.mobileBarPrice}>€{Number(price).toFixed(2)}</span>
-        </div>
-        <button
-          type="button"
-          className={styles.mobileBarBtn}
-          onClick={handleAdd}
-          aria-disabled={ctaVariant === 'disabled' || addState === 'adding'}
-          style={ctaVariant === 'disabled' ? { opacity: 0.45 } : undefined}
-        >
-          {ctaLabel}
-        </button>
-      </div>
-    )}
-    </>
   );
 }
