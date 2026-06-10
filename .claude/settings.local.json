@@ -177,7 +177,9 @@
       "Bash(curl -s -o /dev/null -w \"campaigns/by-product/x: %{http_code}\\\\n\" https://silkilinen-production.up.railway.app/api/admin/campaigns/by-product/000000000000000000000000)",
       "Bash(curl -s -o /dev/null -w \"customers/winback \\(POST\\): %{http_code}\\\\n\" -X POST https://silkilinen-production.up.railway.app/api/admin/customers/winback)",
       "Bash(curl -s -o /dev/null -w \"orders/:id/recovery-email \\(POST\\): %{http_code}\\\\n\" -X POST https://silkilinen-production.up.railway.app/api/orders/000000000000000000000000/recovery-email)",
-      "Bash(git -C /d/Programming/Course_!/Silkilinen add docs/vps-migration.md)"
+      "Bash(git -C /d/Programming/Course_!/Silkilinen add docs/vps-migration.md)",
+      "mcp__Google_Drive__list_recent_files",
+      "mcp__Google_Drive__search_files"
     ],
     "additionalDirectories": [
       "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\admin\\collections",
