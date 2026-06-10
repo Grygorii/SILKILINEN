@@ -21,7 +21,9 @@ const FOOTER_ICONS: Record<string, ReactElement> = {
 async function getSocialPlatforms(): Promise<SocialPlatform[]> {
   try {
     const res = await fetch(`${API}/api/social/platforms`, {
-      next: { revalidate: 3600 },
+      // Short cache so adding/activating a social link (e.g. Facebook) in admin
+      // shows in the footer within a minute instead of up to an hour.
+      next: { revalidate: 60 },
       signal: AbortSignal.timeout(3000),
     } as RequestInit);
     if (!res.ok) return [];

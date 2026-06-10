@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Button from './ui/Button';
 import styles from './NewsletterBand.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -59,14 +58,13 @@ export default function NewsletterBand() {
                 required
                 disabled={status === 'loading'}
               />
-              <div className={styles.btnWrap}>
-                <Button
-                  type="submit"
-                  variant={status === 'loading' ? 'disabled' : 'primary'}
-                >
-                  {status === 'loading' ? 'JOINING…' : 'JOIN NOW'}
-                </Button>
-              </div>
+              <button
+                type="submit"
+                className={styles.submit}
+                disabled={status === 'loading'}
+              >
+                {status === 'loading' ? 'Joining…' : 'Join'}
+              </button>
             </form>
             {status === 'error' && <p className={styles.error}>{message}</p>}
           </>

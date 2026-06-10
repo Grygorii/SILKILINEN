@@ -27,15 +27,17 @@
   margin-bottom: 36px;
 }
 
+/* One cohesive subscribe bar: input + attached Join button on a single line,
+   on every screen size. */
 .form {
   display: flex;
-  max-width: 480px;
+  max-width: 460px;
   margin: 0 auto;
 }
 
 .input {
   flex: 1;
-  padding: 14px 18px;
+  padding: 15px 18px;
   border: 1px solid var(--border);
   border-right: none;
   font-family: 'Jost', sans-serif;
@@ -49,11 +51,29 @@
 .input:focus {
   border-color: var(--dark);
 }
+.input:focus + .submit {
+  border-color: var(--dark);
+}
 
-/* Sized wrapper so the Button primitive doesn't stretch the form. */
-.btnWrap {
-  width: 160px;
+.submit {
   flex-shrink: 0;
+  padding: 0 28px;
+  border: 1px solid var(--dark);
+  background: var(--dark);
+  color: var(--warm-white);
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+.submit:hover {
+  opacity: 0.85;
+}
+.submit:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .error {
@@ -81,21 +101,10 @@
 }
 
 @media (max-width: 600px) {
-  .form {
-    flex-direction: column;
-  }
-
-  .input {
-    border-right: 1px solid var(--border);
-    border-bottom: none;
-  }
-
-  .input:focus {
-    border-color: var(--dark);
-    border-bottom-color: var(--dark);
-  }
-
   .section {
     padding: 60px 5%;
+  }
+  .submit {
+    padding: 0 20px;
   }
 }
