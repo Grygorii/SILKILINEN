@@ -37,6 +37,8 @@ function PriorityBadge({ priority }: { priority: string }) {
 export default function AdvisorPanel() {
   const [data, setData] = useState<AdvisorData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [emailing, setEmailing] = useState(false);
+  const [emailMsg, setEmailMsg] = useState('');
 
   const fetchAdvisor = useCallback(async (force = false) => {
     setLoading(true);
@@ -48,15 +50,35 @@ export default function AdvisorPanel() {
     }
   }, []);
 
+  const sendTest = useCallback(async () => {
+    setEmailing(true);
+    setEmailMsg('');
+    try {
+      const res = await fetch(`${API}/api/admin/advisor/send-test`, { method: 'POST', credentials: 'include' });
+      const body = await res.json().catch(() => ({}));
+      setEmailMsg(body.sent ? 'Sent — check your inbox.' : (body.reason || 'Could not send.'));
+    } catch {
+      setEmailMsg('Could not send.');
+    } finally {
+      setEmailing(false);
+    }
+  }, []);
+
   useEffect(() => { fetchAdvisor(); }, [fetchAdvisor]);
 
   return (
     <div className={styles.section}>
       <div className={styles.healthHeader}>
         <p className={styles.sectionTitle} style={{ margin: 0 }}>What to do next</p>
-        <button className={styles.healthRefreshBtn} onClick={() => fetchAdvisor(true)} disabled={loading}>
-          {loading ? 'Thinking…' : 'Refresh'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {emailMsg && <span style={{ fontSize: 11, color: 'var(--muted)' }}>{emailMsg}</span>}
+          <button className={styles.healthRefreshBtn} onClick={sendTest} disabled={emailing} title="Send this list to your admin email now">
+            {emailing ? 'Sending…' : 'Email me this'}
+          </button>
+          <button className={styles.healthRefreshBtn} onClick={() => fetchAdvisor(true)} disabled={loading}>
+            {loading ? 'Thinking…' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {loading && !data && <p className={styles.loading}>Working out your priorities…</p>}

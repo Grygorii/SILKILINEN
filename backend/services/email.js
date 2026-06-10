@@ -648,4 +648,58 @@ async function sendReviewRequest({ order, links }) {
   });
 }
 
-module.exports = { sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail, sendDropAHint, sendCartRecoveryEmail, sendWinbackReminder, sendReviewRequest };
+// Weekly "state of the store" digest to the founder — the top priorities from
+// the advisor, so the dashboard reaches out instead of waiting to be opened.
+const DIGEST_PRIORITY = {
+  high:        { bg: '#f8d7da', color: '#721c24', label: 'DO NOW' },
+  medium:      { bg: '#fff3cd', color: '#856404', label: 'SOON' },
+  low:         { bg: '#e2e3e5', color: '#383d41', label: 'LATER' },
+  opportunity: { bg: '#d4edda', color: '#155724', label: 'OPPORTUNITY' },
+};
+
+async function sendAdvisorDigest({ recommendations = [], generatedAt } = {}) {
+  if (!process.env.RESEND_API_KEY || !ADMIN_EMAIL) return;
+
+  const dateStr = new Date(generatedAt || Date.now()).toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' });
+  const top = recommendations.slice(0, 8);
+
+  const rows = top.length
+    ? top.map(r => {
+        const p = DIGEST_PRIORITY[r.priority] || DIGEST_PRIORITY.low;
+        return `
+      <tr><td style="padding:16px 0;border-bottom:1px solid #eae8e3;">
+        <span style="display:inline-block;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:0.5px;border-radius:3px;background:${p.bg};color:${p.color};">${p.label}</span>
+        <span style="font-size:11px;color:#8a8680;text-transform:uppercase;letter-spacing:0.5px;margin-left:8px;">${esc(r.category)}</span>
+        <p style="margin:8px 0 4px;font-family:Georgia,serif;font-size:16px;color:#1a1916;">${esc(r.title)}</p>
+        <p style="margin:0 0 6px;font-size:13px;color:#5a5650;line-height:1.6;">${esc(r.why)}</p>
+        <p style="margin:0;font-size:13px;color:#1a1916;line-height:1.6;"><em>→ ${esc(r.action)}</em></p>
+      </td></tr>`;
+      }).join('')
+    : `<tr><td style="padding:24px 0;text-align:center;font-size:14px;color:#5a5650;">Nothing pressing this week — catalogue, content and reviews are in good shape.</td></tr>`;
+
+  await getResend().emails.send({
+    from: FROM,
+    to: ADMIN_EMAIL,
+    subject: `SILKILINEN — your weekly priorities (${dateStr})`,
+    html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:40px 16px;">
+<tr><td align="center">
+<table cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+<tr><td style="background:#1a1916;padding:32px 40px;text-align:center;">
+<p style="margin:0;font-family:Georgia,serif;font-size:22px;letter-spacing:6px;color:#faf8f4;">SILKILINEN</p>
+<p style="margin:8px 0 0;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#7a7670;">Weekly priorities</p>
+</td></tr>
+<tr><td style="background:#faf8f4;padding:40px;">
+<p style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#1a1916;">What to do next</p>
+<p style="margin:0 0 24px;font-size:13px;color:#8a8680;">${dateStr} · top ${top.length} action${top.length === 1 ? '' : 's'}</p>
+<table width="100%" cellpadding="0" cellspacing="0">${rows}</table>
+</td></tr>
+<tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
+<p style="margin:0;font-size:11px;color:#aca8a2;">Generated from your live store data · silkilinen.com/admin</p>
+</td></tr>
+</table></td></tr></table></body></html>`,
+  });
+}
+
+module.exports = { sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail, sendDropAHint, sendCartRecoveryEmail, sendWinbackReminder, sendReviewRequest, sendAdvisorDigest };
