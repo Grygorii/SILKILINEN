@@ -14,7 +14,7 @@ export default function CookieConsentBanner() {
           <p className={styles.text}>
             We use cookies and similar technologies to personalise content, analyse traffic, and show
             relevant ads. See our{' '}
-            <a href="/privacy" target="_blank" rel="noopener noreferrer">
+            <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">
               Privacy Policy
             </a>{' '}
             for details.

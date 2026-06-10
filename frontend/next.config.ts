@@ -39,6 +39,21 @@ const nextConfig: NextConfig = {
       // the journal route.
       { source: '/blog', destination: '/journal', permanent: true },
       { source: '/blog/:slug', destination: '/journal/:slug', permanent: true },
+      // The Privacy Policy lives at /privacy-policy. GSC reported /privacy
+      // as a 404 (the cookie banner used to link there); 301 forwards the
+      // already-crawled URL and any external links to the real page.
+      { source: '/privacy', destination: '/privacy-policy', permanent: true },
+      // Canonicalise to the www host. All metadata, sitemap, robots and
+      // JSON-LD declare https://www.silkilinen.com, but the bare apex was
+      // serving requests directly (GSC reported a 5xx on
+      // silkilinen.com/product/…). 301 every apex request to its www
+      // equivalent so there is a single indexable host.
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'silkilinen.com' }],
+        destination: 'https://www.silkilinen.com/:path*',
+        permanent: true,
+      },
     ];
   },
 };

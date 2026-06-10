@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import styles from './page.module.css';
 import { cloudinaryAuto } from '@/lib/imageUtils';
 import PageTracker from '@/components/PageTracker';
@@ -10,6 +11,14 @@ import BlogTeaser from '@/components/BlogTeaser';
 import NewsletterBand from '@/components/NewsletterBand';
 import InstagramGrid from '@/components/InstagramGrid';
 import { getContent, val } from '@/lib/content';
+
+// Self-referencing canonical for the homepage. Without it GSC reported the
+// "/" URL as "Duplicate without user-selected canonical" — Google saw the
+// homepage but had no declared canonical to consolidate variants onto.
+// Title/description stay on the layout defaults; only the canonical is set.
+export const metadata: Metadata = {
+  alternates: { canonical: 'https://www.silkilinen.com' },
+};
 
 async function getReviews(): Promise<ReviewData[]> {
   try {
