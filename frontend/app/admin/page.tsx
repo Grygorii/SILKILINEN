@@ -7,6 +7,7 @@ import Zone1ActionItems from './_components/dashboard/Zone1ActionItems';
 import Zone2Metrics from './_components/dashboard/Zone2Metrics';
 import Zone3Working from './_components/dashboard/Zone3Working';
 import SeoHealthPanel from './_components/dashboard/SeoHealthPanel';
+import AdvisorPanel from './_components/dashboard/AdvisorPanel';
 import FounderPulse from '@/components/dashboard/FounderPulse';
 import FinanceAnomalies from '@/components/dashboard/FinanceAnomalies';
 import styles from './page.module.css';
@@ -125,6 +126,9 @@ export default function AdminDashboard() {
           </button>
         </div>
       )}
+
+      {/* ── Advisor: prioritised "what to do next" (Slice 3) ── */}
+      <AdvisorPanel />
 
       {/* ── Zones 1-3 ── */}
       {dashLoading && !dashData && <Skeleton />}
