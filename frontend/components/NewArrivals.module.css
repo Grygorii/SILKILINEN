@@ -26,17 +26,65 @@
   text-underline-offset: 4px;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 28px 20px;
+/* ── Carousel ─────────────────────────────────────────────────────────────
+   Replaces the old fixed 4-up grid. A horizontal scroll-snap track that shows
+   ~4 cards on desktop and scrolls for any extra the admin flags. Arrows for
+   pointer devices; native swipe on touch. */
+.viewport {
+  position: relative;
 }
 
-/* On mobile the grid collapses to the same tight 2-column rhythm as the
-   shop grid — hairline 2px column-gap + zero row-gap + pure-white fill
-   so the cards read as one cohesive surface (matches the Olivia von
-   Halle pattern). Outer section padding drops to zero so the photos go
-   edge-to-edge of the viewport. */
+.track {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;            /* Firefox */
+  -ms-overflow-style: none;         /* old Edge */
+}
+.track::-webkit-scrollbar {
+  display: none;                    /* WebKit */
+}
+
+.item {
+  flex: 0 0 calc((100% - 60px) / 4); /* 4 cards, 3 × 20px gaps */
+  scroll-snap-align: start;
+}
+
+.arrow {
+  position: absolute;
+  top: 38%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--dark);
+  cursor: pointer;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+.arrow:hover {
+  background: #fff;
+}
+.arrow:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+.arrowPrev { left: 8px; }
+.arrowNext { right: 8px; }
+
+/* 3-up on narrower laptops so cards never get awkwardly wide. */
+@media (max-width: 1200px) {
+  .item { flex-basis: calc((100% - 40px) / 3); }
+}
+
+/* On mobile: edge-to-edge swipeable row showing ~2 cards plus a peek so it's
+   obvious there's more. Arrows hidden (touch swipe is the affordance). */
 @media (max-width: 900px) {
   .header {
     flex-wrap: wrap;
@@ -46,10 +94,15 @@
   .section {
     padding: 60px 0;
   }
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-    column-gap: 2px;
-    row-gap: 0;
+  .track {
+    gap: 2px;
+    padding: 0 6%;
     background: #FFFFFF;
+  }
+  .item {
+    flex-basis: 44%;                /* ~2 cards + peek */
+  }
+  .arrow {
+    display: none;
   }
 }

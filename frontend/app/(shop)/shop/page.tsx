@@ -11,15 +11,22 @@ import styles from './page.module.css';
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; new?: string }>;
 }): Promise<Metadata> {
-  const { category } = await searchParams;
+  const { category, new: newParam } = await searchParams;
   if (category && CATEGORY_COPY[category]) {
     const c = CATEGORY_COPY[category];
     return {
       title: c.title,
       description: c.description,
       alternates: { canonical: `https://www.silkilinen.com/shop?category=${category}` },
+    };
+  }
+  if (newParam === 'true') {
+    return {
+      title: 'New Arrivals',
+      description: 'The latest silk and linen pieces from Silkilinen — fresh arrivals, shipped worldwide from Donegal.',
+      alternates: { canonical: 'https://www.silkilinen.com/shop?new=true' },
     };
   }
   return {
@@ -70,10 +77,14 @@ const CATEGORY_COPY: Record<string, { title: string; description: string }> = {
 
 const VALID_SLUGS = new Set(Object.keys(CATEGORY_COPY));
 
-async function getProducts(category?: string, q?: string) {
+async function getProducts(category?: string, q?: string, newOnly?: boolean) {
   const params = new URLSearchParams();
   if (category) params.set('category', category);
   if (q) params.set('q', q);
+  if (newOnly) {
+    params.set('isNew', 'true');
+    params.set('sort', '-createdAt');
+  }
   const qs = params.toString();
   const url = `${process.env.NEXT_PUBLIC_API_URL}/api/products${qs ? `?${qs}` : ''}`;
   try {
@@ -87,9 +98,10 @@ async function getProducts(category?: string, q?: string) {
 export default async function ShopPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; q?: string }>;
+  searchParams: Promise<{ category?: string; q?: string; new?: string }>;
 }) {
-  const { category, q } = await searchParams;
+  const { category, q, new: newParam } = await searchParams;
+  const newOnly = newParam === 'true' && !category;
 
   if (category && !VALID_SLUGS.has(category)) {
     return (
@@ -105,15 +117,17 @@ export default async function ShopPage({
     );
   }
 
-  const products = await getProducts(category, q);
+  const products = await getProducts(category, q, newOnly);
   const copy = category ? CATEGORY_COPY[category] : null;
+  const heading = copy?.title ?? (newOnly ? 'New Arrivals' : (q ? `Search: "${q}"` : 'The Collection'));
+  const description = copy?.description ?? (newOnly ? 'Our latest pieces — fresh off the atelier table.' : null);
 
   return (
     <main className={styles.page}>
       <div className={styles.pageHeader}>
-        <h1 className={styles.title}>{copy?.title ?? (q ? `Search: "${q}"` : 'The Collection')}</h1>
-        {copy?.description && (
-          <p className={styles.description}>{copy.description}</p>
+        <h1 className={styles.title}>{heading}</h1>
+        {description && (
+          <p className={styles.description}>{description}</p>
         )}
       </div>
       {category && <BundleStrip category={category} />}
