@@ -122,3 +122,60 @@
 }
 
 .hintBtn:hover { color: var(--color-ink); }
+
+/* ── Mobile sticky add-to-bag ──────────────────────────────────────────────
+   Fixed bottom bar shown on phones once the inline CTA scrolls out of view, so
+   the buy action is always one tap away. Hidden on desktop. */
+.mobileBar {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .mobileBar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--color-bg) 94%, transparent);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--color-line);
+  }
+  .mobileBarInfo {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+  .mobileBarName {
+    font-family: 'Jost', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--color-ink-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mobileBarPrice {
+    font-size: 15px;
+    color: var(--color-ink);
+  }
+  .mobileBarBtn {
+    flex: 0 0 auto;
+    background: var(--color-ink);
+    color: var(--color-bg);
+    border: none;
+    padding: 14px 22px;
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+}

@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
 const Product = require('../models/Product');
+const Review = require('../models/Review');
 const { upload } = require('../utils/cloudinary');
 const { requireAuth } = require('../middleware/auth');
 const { sendDropAHint } = require('../services/email');
@@ -156,6 +157,24 @@ const PUBLIC_FILTER = {
 
 // ── Routes ─────────────────────────────────────────────────────────────────────
 
+// Attach storefront rating summary (approved reviews only) to a product list
+// so cards can show stars without an extra request per card. One aggregation
+// for the whole page, using the (productId, status) index.
+async function attachRatings(products) {
+  if (!products.length) return products;
+  const ids = products.map(p => p._id);
+  const ratings = await Review.aggregate([
+    { $match: { productId: { $in: ids }, status: 'approved' } },
+    { $group: { _id: '$productId', avg: { $avg: '$starRating' }, count: { $sum: 1 } } },
+  ]);
+  const byId = new Map(ratings.map(r => [String(r._id), r]));
+  return products.map(p => {
+    const obj = typeof p.toObject === 'function' ? p.toObject() : p;
+    const r = byId.get(String(p._id));
+    return { ...obj, ratingAverage: r ? Math.round(r.avg * 10) / 10 : 0, ratingCount: r ? r.count : 0 };
+  });
+}
+
 router.get('/', async function(req, res) {
   try {
     const { sort, limit, category, q, ids, isNew } = req.query;
@@ -166,7 +185,7 @@ router.get('/', async function(req, res) {
       const idArray = ids.split(',').map(s => s.trim()).filter(Boolean);
       filter._id = { $in: idArray };
       const products = await Product.find(filter).lean();
-      return res.json(products);
+      return res.json(await attachRatings(products));
     }
 
     if (category) filter.category = category;
@@ -180,7 +199,7 @@ router.get('/', async function(req, res) {
     if (sort === '-createdAt') query = query.sort({ createdAt: -1 });
     if (limit) query = query.limit(parseInt(limit, 10));
     const products = await query;
-    res.json(products);
+    res.json(await attachRatings(products));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
