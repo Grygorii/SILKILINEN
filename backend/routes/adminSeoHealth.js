@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const Product = require('../models/Product');
+const { isConfigured: merchantConfigured, getProductIssues } = require('../services/merchantCenter');
 
 // Honest SEO / Merchant health. The existing /api/admin/health checks
 // infrastructure (DB, Stripe, Cloudinary…) — it is green whenever the
@@ -166,6 +167,49 @@ async function checkCatalogue() {
   }
 }
 
+// Live Merchant Center verdict — the exact reason products are disapproved,
+// straight from Google. Inert (info) until the service account + MERCHANT_ID
+// are configured in Railway, so it never breaks the panel during setup.
+async function checkMerchantLive() {
+  const base = { name: 'merchant_live', label: 'Merchant Center — live status' };
+  if (!merchantConfigured()) {
+    return {
+      ...base,
+      status: 'info',
+      detail: 'Not connected yet',
+      advice: 'Add GOOGLE_SERVICE_ACCOUNT_KEY + MERCHANT_ID in Railway (see docs/google-api-setup.md) to show live product approvals here.',
+    };
+  }
+  try {
+    const data = await getProductIssues();
+    if (!data.configured) {
+      return { ...base, status: 'warning', detail: 'Credentials present but Google auth failed', advice: 'Re-check the service-account key and that the robot is a user in Merchant Center.' };
+    }
+    const { total, approved, pending, disapproved, issues } = data;
+    if (disapproved > 0) {
+      const top = issues
+        .filter(i => i.servability === 'disapproved')
+        .slice(0, 3)
+        .map(i => `${i.description || i.code} (${i.count})`)
+        .join('; ');
+      return {
+        ...base,
+        status: 'critical',
+        detail: `${disapproved}/${total} products disapproved. ${top ? `Top: ${top}` : ''}`.trim(),
+        advice: issues[0]?.documentation
+          ? `Fix the top issue — Google's guide: ${issues[0].documentation}`
+          : 'Open Merchant Center → Products → Diagnostics for the full list.',
+      };
+    }
+    if (pending > 0) {
+      return { ...base, status: 'warning', detail: `${approved} approved · ${pending} pending review · ${total} total` };
+    }
+    return { ...base, status: 'healthy', detail: `${approved}/${total} products approved` };
+  } catch (err) {
+    return { ...base, status: 'warning', detail: `Merchant API error: ${err.message}` };
+  }
+}
+
 async function runChecks() {
   const results = await Promise.allSettled([
     checkApexRedirect(),
@@ -173,6 +217,7 @@ async function runChecks() {
     checkMerchantFeed(),
     checkHomepageCanonical(),
     checkCatalogue(),
+    checkMerchantLive(),
   ]);
 
   const checks = results.flatMap(r =>
