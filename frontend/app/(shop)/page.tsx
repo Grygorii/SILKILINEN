@@ -82,7 +82,7 @@ export default async function Home() {
       {allReviews.length > 0 && (
         <a href="/reviews" className={styles.proofStrip}>
           <span className={styles.proofStars} aria-hidden="true">★★★★★</span>
-          <span>{avg.toFixed(1)} · Loved by {allReviews.length}+ customers · Handmade in Donegal</span>
+          <span>Loved by our customers · Handmade in Donegal</span>
         </a>
       )}
 
