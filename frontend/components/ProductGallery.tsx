@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { Heart, Play, X } from 'lucide-react';
 import { useWishlist } from '@/context/WishlistContext';
 import { isValidImageUrl } from '@/lib/imageUtils';
+import cloudinaryLoader from '@/lib/cloudinaryLoader';
 import styles from './ProductGallery.module.css';
 
 type ProductImage = {
@@ -169,9 +171,13 @@ export default function ProductGallery({ images, name, productId, video }: Props
             onClick={() => setLightboxOpen(true)}
             onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLightboxOpen(true); } }}
           >
-            <img
-              src={cloudinaryThumb(item.url, 1200)}
+            <Image
+              loader={cloudinaryLoader}
+              src={item.url}
               alt={item.alt}
+              fill
+              priority
+              sizes="(max-width: 900px) 100vw, 50vw"
               className={styles.heroImg}
               onError={() => setFailedUrls(prev => new Set([...prev, item.url]))}
             />

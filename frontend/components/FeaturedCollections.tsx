@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { cloudinaryAuto, cloudinarySrcSet } from '@/lib/imageUtils';
+import Image from 'next/image';
+import cloudinaryLoader from '@/lib/cloudinaryLoader';
 import styles from './FeaturedCollections.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -37,13 +38,13 @@ export default async function FeaturedCollections() {
             {c.heroImage?.url ? (
               <div className={styles.imgWrap}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={cloudinaryAuto(c.heroImage.url, 800)}
-                  srcSet={cloudinarySrcSet(c.heroImage.url, [400, 600, 800])}
-                  sizes="(max-width: 768px) 100vw, 33vw"
+                <Image
+                  loader={cloudinaryLoader}
+                  src={c.heroImage.url}
                   alt={c.heroImage.alt || c.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
                   className={styles.img}
-                  loading="lazy"
                 />
               </div>
             ) : (

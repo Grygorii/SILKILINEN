@@ -72,6 +72,7 @@
 /* ── Image ────────────────────────────────────────── */
 
 .imageWrap {
+  position: relative; /* anchor for next/image fill */
   aspect-ratio: 4 / 5;
   width: 100%;
   background: var(--cream, #f5f2ec);

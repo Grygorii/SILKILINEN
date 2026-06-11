@@ -51,6 +51,7 @@
 }
 
 .imgWrap {
+  position: relative; /* anchor for next/image fill */
   height: 220px;
   background: #dedad4;
   transition: opacity 0.3s ease;

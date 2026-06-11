@@ -44,6 +44,7 @@
 .tile:hover .img { transform: scale(1.03); }
 
 .imgWrap {
+  position: relative; /* anchor for next/image fill */
   width: 100%;
   aspect-ratio: 3/2;
   overflow: hidden;
