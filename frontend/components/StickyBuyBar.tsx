@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useCart } from '@/context/CartContext';
 import { useProductSelection } from './ProductSelectionContext';
 import Button from '@/components/ui/Button';
+import QuickAddSheet from './QuickAddSheet';
 import styles from './StickyBuyBar.module.css';
 
 type Props = {
@@ -18,9 +18,8 @@ type Props = {
 };
 
 export default function StickyBuyBar({ productId, productName, price, outOfStock, stock, image, colours, sizes }: Props) {
-  const { selectedColour, selectedSize, qty } = useProductSelection();
-  const [addState, setAddState] = useState<'idle' | 'adding' | 'added'>('idle');
-  const { addToCart } = useCart();
+  const { selectedColour, selectedSize } = useProductSelection();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   // Tag the body while this bar is mounted so global mobile fixed-bottom
   // elements (e.g. ContactWidget chat bubble) can lift themselves clear
@@ -33,61 +32,61 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
   const needsColour = colours.length > 0 && !selectedColour;
   const needsSize = sizes.length > 0 && !selectedSize;
 
-  function handleAdd() {
+  // Tapping the bar opens the quick-add sheet (colour + size + quantity), so a
+  // size-required product is actionable and any product can have its quantity
+  // chosen. Out-of-stock still routes to the notify mailto.
+  function handleTap() {
     if (outOfStock) {
       window.location.href = `mailto:hello@silkilinen.com?subject=Notify me: ${encodeURIComponent(productName)}`;
       return;
     }
-    if (needsColour || needsSize) {
-      document.querySelector('[data-product-options]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-    if (addState !== 'idle') return;
-    setAddState('adding');
-    setTimeout(() => {
-      addToCart({ productId, name: productName, price, colour: selectedColour, size: selectedSize, quantity: qty, stock: stock ?? undefined, image });
-      setAddState('added');
-      setTimeout(() => setAddState('idle'), 3000);
-    }, 400);
+    setSheetOpen(true);
   }
 
-  // Design-system v1: skin the button via the shared primitive. Outline
-  // when out-of-stock so it reads as a secondary action; disabled when
-  // a selection is missing.
-  type CtaVariant = 'primary' | 'secondary' | 'disabled';
+  // The label hints what the sheet will ask for; the button is always active
+  // (it was previously greyed out and read as dead when a size was required).
+  type CtaVariant = 'primary' | 'secondary';
   let label: string;
   let variant: CtaVariant;
   if (outOfStock) {
     label = 'NOTIFY';
     variant = 'secondary';
-  } else if (addState === 'adding') {
-    label = 'ADDING…';
-    variant = 'primary';
-  } else if (addState === 'added') {
-    label = 'ADDED ✓';
-    variant = 'primary';
   } else if (needsColour) {
     label = 'CHOOSE COLOUR';
-    variant = 'disabled';
+    variant = 'primary';
   } else if (needsSize) {
     label = 'CHOOSE SIZE';
-    variant = 'disabled';
+    variant = 'primary';
   } else {
     label = 'ADD TO BAG';
     variant = 'primary';
   }
 
   return (
-    <div className={styles.bar}>
-      <div className={styles.info}>
-        <span className={styles.name}>{productName}</span>
-        <span className={styles.price}>€{Number(price).toFixed(2)}</span>
+    <>
+      <div className={styles.bar}>
+        <div className={styles.info}>
+          <span className={styles.name}>{productName}</span>
+          <span className={styles.price}>€{Number(price).toFixed(2)}</span>
+        </div>
+        <div className={styles.btnWrap}>
+          <Button variant={variant} onClick={handleTap}>
+            {label}
+          </Button>
+        </div>
       </div>
-      <div className={styles.btnWrap}>
-        <Button variant={variant} onClick={handleAdd}>
-          {label}
-        </Button>
-      </div>
-    </div>
+
+      <QuickAddSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        colours={colours}
+        sizes={sizes}
+        productName={productName}
+        productId={productId}
+        price={price}
+        stock={stock}
+        image={image}
+      />
+    </>
   );
 }
