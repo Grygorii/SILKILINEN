@@ -105,7 +105,7 @@ function RevenueChart({ data }: { data: { date: string; revenue: number }[] }) {
             axisLine={false}
           />
           <Tooltip
-            formatter={(v: number) => [`€${v.toFixed(2)}`, 'Revenue']}
+            formatter={(value) => [`€${Number(value).toFixed(2)}`, 'Revenue']}
             cursor={{ fill: 'rgba(0,0,0,0.04)' }}
             contentStyle={{ fontSize: 12, borderRadius: 4, border: '1px solid #E8E2D6' }}
             labelStyle={{ fontSize: 11, color: '#8A8278' }}
