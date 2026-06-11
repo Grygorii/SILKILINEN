@@ -31,8 +31,23 @@ async function getSocialPlatforms(): Promise<SocialPlatform[]> {
   } catch { return []; }
 }
 
+// Live categories for the footer Shop column, so it tracks the real categories
+// (with products) instead of a hardcoded list.
+async function getFooterCategories(): Promise<{ slug: string; label: string; count: number }[]> {
+  try {
+    const res = await fetch(`${API}/api/categories`, {
+      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(3000),
+    } as RequestInit);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch { return []; }
+}
+
 export default async function Footer() {
   const socialPlatforms = await getSocialPlatforms();
+  const shopCategories = (await getFooterCategories()).filter(c => c.count > 0).slice(0, 6);
   const socialRow = socialPlatforms.length > 0 ? (
     <div className={styles.socialRow}>
       {socialPlatforms.map(p => (
@@ -65,11 +80,11 @@ export default async function Footer() {
         </div>
         <div className={styles.col}>
           <h4>Shop</h4>
-          <a href="/shop">New arrivals</a>
+          <a href="/shop?new=true">New arrivals</a>
           <a href="/shop">All products</a>
-          <a href="/shop?category=robes">Robes</a>
-          <a href="/shop?category=pyjamas">Pyjamas</a>
-          <a href="/shop?category=sleep-dresses">Sleepwear</a>
+          {shopCategories.map(c => (
+            <a key={c.slug} href={`/shop?category=${c.slug}`}>{c.label}</a>
+          ))}
         </div>
         <div className={styles.col}>
           <h4>Info</h4>

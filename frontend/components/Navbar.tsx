@@ -11,14 +11,19 @@ import CartPanel from './CartPanel';
 import SideMenu from './SideMenu';
 import styles from './Navbar.module.css';
 
-const DESKTOP_NAV = [
-  { label: 'Shop', href: '/shop' },
-  { label: 'Robes', href: '/shop?category=robes' },
-  { label: 'Pyjamas', href: '/shop?category=pyjamas' },
-  { label: 'Sleepwear', href: '/shop?category=sleep-dresses' },
+const API = process.env.NEXT_PUBLIC_API_URL;
+
+// Structural links bracket the dynamic category links pulled from the backend,
+// so the header reflects the real categories (with products) instead of a
+// hardcoded list that drifts whenever categories are renamed/added.
+const NAV_BEFORE = [{ label: 'Shop', href: '/shop' }];
+const NAV_AFTER = [
   { label: 'Journal', href: '/journal' },
   { label: 'About', href: '/about' },
 ];
+// Cap how many categories show in the top bar so the header doesn't overflow;
+// the admin curates which appear via category display order.
+const MAX_NAV_CATEGORIES = 4;
 
 export default function Navbar() {
   const { cartCount } = useCart();
@@ -33,6 +38,28 @@ export default function Navbar() {
   const searchRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Live categories for the desktop nav (same source the side menu uses).
+  const [navCategories, setNavCategories] = useState<{ slug: string; label: string }[]>([]);
+  useEffect(() => {
+    fetch(`${API}/api/categories`)
+      .then(r => (r.ok ? r.json() : []))
+      .then((data: { slug: string; label: string; count: number }[]) => {
+        setNavCategories(
+          (Array.isArray(data) ? data : [])
+            .filter(c => c.count > 0)
+            .slice(0, MAX_NAV_CATEGORIES)
+            .map(c => ({ slug: c.slug, label: c.label })),
+        );
+      })
+      .catch(() => {});
+  }, []);
+
+  const desktopNav = [
+    ...NAV_BEFORE,
+    ...navCategories.map(c => ({ label: c.label, href: `/shop?category=${c.slug}` })),
+    ...NAV_AFTER,
+  ];
 
   useEffect(() => {
     const handler = () => setCartOpen(true);
@@ -106,7 +133,7 @@ export default function Navbar() {
                 <Menu size={20} strokeWidth={1.5} />
               </button>
               <nav className={styles.desktopNav} aria-label="Main navigation">
-                {DESKTOP_NAV.map(({ label, href }) => {
+                {desktopNav.map(({ label, href }) => {
                   const active = pathname === href || (href !== '/shop' && pathname.startsWith(href.split('?')[0]));
                   return (
                     <Link
