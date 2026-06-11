@@ -24,7 +24,11 @@ export default function GoogleReviewsBadge() {
     <Script
       id="merchantWidgetScript"
       src="https://www.gstatic.com/shopping/merchant/merchantwidget.js"
-      strategy="afterInteractive"
+      // lazyOnload (not afterInteractive) so Next doesn't emit a head preload
+      // that competes with the hero during first paint. The badge is a
+      // floating footer element invisible until Google has enough reviews —
+      // it has no reason to load until the page is idle.
+      strategy="lazyOnload"
       onLoad={() => {
         window.merchantwidget?.start({ merchant_id: MERCHANT_ID });
       }}
