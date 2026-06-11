@@ -103,32 +103,7 @@ function autoGenerateSEO(product) {
 // `images` and `productVideo` are managed by dedicated endpoints, not via body.
 // `lastUpdatedBy`, `_id`, timestamps, etc. are server-controlled.
 // If you add a new schema field that admins should be able to edit, add it here.
-const PRODUCT_ALLOWED_FIELDS = [
-  'name', 'price', 'compareAtPrice', 'description', 'category',
-  'colours', 'materialComposition', 'careInstructions', 'momme', 'fitNote',
-  'variants', 'totalStock', 'inStock',
-  'status', 'keywords', 'metaTitle', 'metaDescription', 'slug',
-  'altTextTemplate', 'origin', 'isNewArrival', 'aiPhotoDescriptor',
-  'gender', 'ageGroup',
-];
-
-function pickProductFields(body) {
-  const out = {};
-  const stripped = [];
-  for (const k of Object.keys(body || {})) {
-    if (PRODUCT_ALLOWED_FIELDS.includes(k)) {
-      out[k] = body[k];
-    } else if (k !== 'images' && k !== 'productVideo' && k !== 'createEmptyDraft') {
-      // Don't log "images" or "productVideo" — those are intentionally managed elsewhere.
-      // Don't log "createEmptyDraft" either — it's a control flag, not a field.
-      stripped.push(k);
-    }
-  }
-  if (stripped.length) {
-    console.warn('[adminProducts] stripped non-allowlisted fields from request body:', stripped);
-  }
-  return out;
-}
+const { PRODUCT_ALLOWED_FIELDS, pickProductFields } = require('../utils/productFields');
 
 // ── Validation helpers ─────────────────────────────────────────────────────────
 

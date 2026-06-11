@@ -10,7 +10,7 @@ function requireCustomer(req, res, next) {
   const token = req.cookies.customer_token;
   if (!token) return res.status(401).json({ error: 'Not authenticated' });
   try {
-    req.customer = jwt.verify(token, SECRET);
+    req.customer = jwt.verify(token, SECRET, { algorithms: ['HS256'] });
     next();
   } catch {
     res.status(401).json({ error: 'Invalid session' });
@@ -20,7 +20,7 @@ function requireCustomer(req, res, next) {
 function optionalCustomer(req, res, next) {
   const token = req.cookies.customer_token;
   if (token) {
-    try { req.customer = jwt.verify(token, SECRET); } catch { /* guest */ }
+    try { req.customer = jwt.verify(token, SECRET, { algorithms: ['HS256'] }); } catch { /* guest */ }
   }
   next();
 }

@@ -8,7 +8,7 @@ import styles from './ReassuranceRow.module.css';
 // needs before browsing further. Copy uses the spec's recommended defaults;
 // edit the ITEMS below to change services/copy.
 const ITEMS = [
-  { icon: Truck,     headline: 'Free EU Shipping', sub: 'On orders over €150',             href: '/shipping' },
+  { icon: Truck,     headline: 'Free Shipping',    sub: 'Worldwide on orders over €150',    href: '/shipping' },
   { icon: RotateCcw, headline: '14-day Returns',    sub: 'Easy exchanges from anywhere',    href: '/returns' },
   { icon: Gift,      headline: 'Gift-Ready',        sub: 'Hand-tied silk ribbon, included', href: '/gift-wrapping' },
 ];

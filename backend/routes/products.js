@@ -4,6 +4,7 @@ const multer = require('multer');
 const jwt = require('jsonwebtoken');
 const Product = require('../models/Product');
 const Review = require('../models/Review');
+const { pickProductFields } = require('../utils/productFields');
 const { upload } = require('../utils/cloudinary');
 const { requireAuth } = require('../middleware/auth');
 const { sendDropAHint } = require('../services/email');
@@ -266,7 +267,7 @@ router.post('/import', requireAuth, csvUpload.single('csv'), async function(req,
 
 router.post('/', requireAuth, async function(req, res) {
   try {
-    const product = await Product.create(req.body);
+    const product = await Product.create(pickProductFields(req.body));
     res.status(201).json(product);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -367,7 +368,7 @@ router.get('/:id', async function(req, res) {
 
 router.put('/:id', requireAuth, async function(req, res) {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const product = await Product.findByIdAndUpdate(req.params.id, pickProductFields(req.body), { new: true, runValidators: true });
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (err) {

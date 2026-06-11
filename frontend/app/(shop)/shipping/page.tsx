@@ -53,25 +53,25 @@ export default function ShippingPage() {
                 <tr>
                   <td>United Kingdom</td>
                   <td>€14.99</td>
-                  <td>€250</td>
+                  <td>€150</td>
                   <td>3–5 business days (from Derry, no customs)</td>
                 </tr>
                 <tr>
-                  <td>European Union</td>
+                  <td>Europe</td>
                   <td>€9.99</td>
-                  <td>€200</td>
+                  <td>€150</td>
                   <td>5–10 business days</td>
                 </tr>
                 <tr>
                   <td>US / Canada / Australia</td>
                   <td>€14.99</td>
-                  <td>€300</td>
+                  <td>€150</td>
                   <td>7–14 business days</td>
                 </tr>
                 <tr>
                   <td>Rest of world</td>
                   <td>€19.99</td>
-                  <td>€400</td>
+                  <td>€150</td>
                   <td>10–21 business days</td>
                 </tr>
               </tbody>

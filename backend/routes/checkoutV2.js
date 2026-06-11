@@ -356,7 +356,8 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
-    return res.status(400).json({ error: `Webhook signature failed: ${err.message}` });
+    console.error('[webhook] signature verification failed:', err.message);
+    return res.status(400).json({ error: 'Invalid signature' });
   }
 
   if (event.type === 'payment_intent.succeeded') {
