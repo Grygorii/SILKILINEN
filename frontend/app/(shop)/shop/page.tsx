@@ -26,9 +26,17 @@ async function getCategoryList(): Promise<Cat[]> {
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; new?: string }>;
+  searchParams: Promise<{ category?: string; new?: string; q?: string }>;
 }): Promise<Metadata> {
-  const { category, new: newParam } = await searchParams;
+  const { category, new: newParam, q } = await searchParams;
+  // Search-result permutations are thin/duplicate — keep them out of the index.
+  if (q) {
+    return {
+      title: `Search: "${q}"`,
+      robots: { index: false, follow: true },
+      alternates: { canonical: 'https://www.silkilinen.com/shop' },
+    };
+  }
   if (category) {
     // Rich hardcoded copy wins; otherwise fall back to the live category's
     // own label/description so newly added categories still get real metadata.

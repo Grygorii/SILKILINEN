@@ -63,7 +63,7 @@ export default async function Home() {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={cloudinaryAuto(heroImage, 1920)}
-            alt=""
+            alt={heroTitle}
             className={styles.heroImg}
             fetchPriority="high"
             decoding="async"
@@ -71,7 +71,7 @@ export default async function Home() {
           />
         )}
         <div className={styles.heroContent}>
-          <h2>{heroTitle}</h2>
+          <h1>{heroTitle}</h1>
           <p>{heroSubtitle}</p>
           <a href="/shop" className={styles.heroBtn}>{heroCta}</a>
         </div>

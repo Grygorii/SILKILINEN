@@ -2,6 +2,7 @@ import styles from '../legal.module.css';
 import tableStyles from './page.module.css';
 
 export const metadata = {
+  alternates: { canonical: 'https://www.silkilinen.com/size-guide' },
   title: 'Size Guide',
   description: 'Find your perfect fit with the SILKILINEN size guide. Measurements in cm and inches for all our silk and linen pieces.',
 };

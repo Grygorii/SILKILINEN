@@ -43,7 +43,7 @@
   z-index: 1;
 }
 
-.heroContent h2 {
+.heroContent h1 {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: clamp(42px, 7vw, 80px);
   font-weight: 300;
@@ -141,7 +141,7 @@
     background: linear-gradient(to top, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
   }
 
-  .heroContent h2 {
+  .heroContent h1 {
     font-size: clamp(32px, 9vw, 52px);
   }
 

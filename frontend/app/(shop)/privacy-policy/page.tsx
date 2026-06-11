@@ -1,6 +1,7 @@
 import styles from '../legal.module.css';
 
 export const metadata = {
+  alternates: { canonical: 'https://www.silkilinen.com/privacy-policy' },
   title: 'Privacy Policy',
   description: 'How SILKILINEN collects, uses, and protects your personal data under GDPR.',
 };

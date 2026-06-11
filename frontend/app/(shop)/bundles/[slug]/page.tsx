@@ -56,7 +56,7 @@ export async function generateMetadata(
       title,
       description,
       url: `https://www.silkilinen.com/bundles/${slug}`,
-      siteName: 'SILKILINEN',
+      siteName: 'Silkilinen',
     },
   };
 }

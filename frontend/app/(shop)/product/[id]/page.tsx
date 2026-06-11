@@ -74,7 +74,7 @@ export async function generateMetadata(
       description,
       url,
       images: [{ url: image, width: 1200, height: 630, alt: product.altText || product.name }],
-      siteName: 'SILKILINEN',
+      siteName: 'Silkilinen',
       type: 'website',
     },
     twitter: {
