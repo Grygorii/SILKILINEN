@@ -683,11 +683,12 @@ export default function AdminProductsPage() {
       {/* Table + mobile cards */}
       {loading ? (
         <p className={styles.loadingText}>Loading…</p>
+      ) : loadError ? (
+        <AdminErrorBanner error={loadError} onRetry={load} />
       ) : products.length === 0 ? (
         <p className={styles.emptyText}>No products found.</p>
       ) : (
         <>
-        <AdminErrorBanner error={loadError} onRetry={load} />
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <colgroup>
