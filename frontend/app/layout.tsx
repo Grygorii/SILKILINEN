@@ -41,6 +41,12 @@ const ebGaramond = EB_Garamond({
   weight: ["400", "500", "600"],
   style: ["normal", "italic"],
   display: "swap",
+  // Only used below the fold (journal body text, product-card names) — never
+  // in the hero. Preloading it competed with the LCP hero image for bandwidth
+  // on slow connections (2 of the 4 high-priority font preloads were this
+  // face). display:swap renders the Georgia fallback first, so dropping the
+  // preload costs only a brief late swap on below-fold text.
+  preload: false,
   variable: "--font-eb-garamond",
 });
 
