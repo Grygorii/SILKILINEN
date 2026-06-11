@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ProductGrid from '@/components/ProductGrid';
 import Image from 'next/image';
-import cloudinaryLoader from '@/lib/cloudinaryLoader';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -78,7 +77,6 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
         <div className={styles.hero}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <Image
-            loader={cloudinaryLoader}
             src={collection.heroImage.url}
             alt={collection.heroImage.alt || collection.name}
             fill

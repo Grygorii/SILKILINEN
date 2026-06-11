@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import styles from './page.module.css';
 import Image from 'next/image';
-import cloudinaryLoader from '@/lib/cloudinaryLoader';
 import PageTracker from '@/components/PageTracker';
 import ReviewsCarousel, { type ReviewData } from '@/components/ReviewsCarousel';
 import NewArrivals from '@/components/NewArrivals';
@@ -62,7 +61,6 @@ export default async function Home() {
           // it from a CSS background-image rule. This is the LCP element
           // and was responsible for the 18-second Lighthouse score.
           <Image
-            loader={cloudinaryLoader}
             src={heroImage}
             alt={heroTitle}
             fill

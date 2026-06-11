@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { type Content, val } from '@/lib/content';
-import cloudinaryLoader from '@/lib/cloudinaryLoader';
 import styles from './CategoryTiles.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -42,7 +41,6 @@ export default async function CategoryTiles({ content = {} }: { content?: Conten
           >
             {tile.image && (
               <Image
-                loader={cloudinaryLoader}
                 src={tile.image}
                 alt={tile.alt}
                 fill

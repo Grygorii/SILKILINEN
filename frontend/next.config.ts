@@ -16,6 +16,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   images: {
+    // Global custom loader so next/image routes through Cloudinary's transforms.
+    // Configured here (not as a per-<Image loader> prop) because a function prop
+    // can't be passed from a Server Component to the <Image> client component.
+    loader: 'custom',
+    loaderFile: './lib/cloudinaryLoader.ts',
     remotePatterns: [
       {
         protocol: 'https',
