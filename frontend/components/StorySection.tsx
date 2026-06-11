@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { type Content, val } from '@/lib/content';
 import styles from './StorySection.module.css';
 
-const DEFAULT_TEXT = 'SILKILINEN began with a simple belief: that the garments closest to your skin should be made from the finest natural fibres. We source Mulberry silk and European linen — chosen for their breathability, longevity, and the quiet luxury they bring to everyday moments.\n\nWe\'re an Irish brand based in Donegal, and every piece is made by skilled artisans who share our commitment to slow, considered making.';
+const DEFAULT_TEXT = 'SILKILINEN began with a simple belief: that the garments closest to your skin should be made from the finest natural fibres. We source Mulberry silk and European linen — chosen for their breathability, longevity, and the quiet luxury they bring to everyday moments.\n\nWe\'re an Irish brand based in Donegal, and we share a commitment to slow, considered work.';
 
 export default function StorySection({ content = {} }: { content?: Content }) {
   const image = val(content, 'homepage_story_image');

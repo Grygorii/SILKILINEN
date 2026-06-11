@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: 'What materials do you use?',
-    a: 'We use 100% mulberry silk and premium linen in all our pieces. Our silk is OEKO-TEX certified, free from harmful substances, and sourced from responsible suppliers. Each garment is handmade in small batches to maintain quality.',
+    a: 'We use 100% mulberry silk and premium linen in all our pieces. Our silk is OEKO-TEX certified, free from harmful substances, and sourced from responsible suppliers. Each piece is made in small batches to maintain quality.',
   },
   {
     q: 'How do I find my size?',
@@ -34,7 +34,7 @@ const FAQS = [
   },
   {
     q: 'How long does it take to process my order?',
-    a: 'All orders are hand-finished and dispatched within 1–2 business days of payment. During busy periods (sale events, gifting seasons) this may take a little longer. You will receive a shipping confirmation with tracking as soon as your order leaves us.',
+    a: 'All orders are carefully prepared and dispatched within 1–2 business days of payment. During busy periods (sale events, gifting seasons) this may take a little longer. You will receive a shipping confirmation with tracking as soon as your order leaves us.',
   },
   {
     q: 'Do you offer gift wrapping?',

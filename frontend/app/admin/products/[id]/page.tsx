@@ -785,7 +785,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               </div>
               <div className={styles.fg}>
                 <label className={styles.label}>Tags (comma separated)</label>
-                <input className={styles.input} value={form.tags} onChange={e => setField('tags', e.target.value)} placeholder="silk, lingerie, handmade" />
+                <input className={styles.input} value={form.tags} onChange={e => setField('tags', e.target.value)} placeholder="silk, lingerie, robe" />
               </div>
             </div>
           </section>
@@ -1072,7 +1072,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             <div className={styles.frow}>
               <div className={styles.fg}>
                 <label className={styles.label}>Country of origin</label>
-                <input className={styles.input} value={form.origin} onChange={e => setField('origin', e.target.value)} placeholder="Real origin only — e.g. Made by hand in Donegal / Made in India. Leave blank if unverified." />
+                <input className={styles.input} value={form.origin} onChange={e => setField('origin', e.target.value)} placeholder="Real origin only — e.g. Made in Portugal / Made in India. Leave blank if unverified." />
               </div>
               <div className={styles.fg}>
                 <label className={styles.label}>Certifications (comma separated)</label>
@@ -1304,7 +1304,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 className={`${styles.input} ${aiFilledFields.has('keywords') ? styles.aiFilledInput : ''}`}
                 value={form.keywords}
                 onChange={e => setField('keywords', e.target.value)}
-                placeholder="silk shorts, luxury lingerie, handmade Donegal"
+                placeholder="silk shorts, luxury lingerie, mulberry silk"
               />
             </div>
             {form.altTextTemplate && (
@@ -1314,7 +1314,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                   className={`${styles.input} ${aiFilledFields.has('altTextTemplate') ? styles.aiFilledInput : ''}`}
                   value={form.altTextTemplate}
                   onChange={e => setField('altTextTemplate', e.target.value)}
-                  placeholder="Product name — {position} view, handmade silk by SILKILINEN Donegal"
+                  placeholder="Product name — {position} view, silk by SILKILINEN"
                 />
               </div>
             )}

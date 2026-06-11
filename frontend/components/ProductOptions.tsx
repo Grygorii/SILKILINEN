@@ -178,7 +178,7 @@ export default function ProductOptions({ colours, colourHexMap, sizes, productNa
         <li>Free shipping over €150</li>
         <li>14-day returns</li>
         <li>Secure checkout</li>
-        <li>Handmade in Donegal</li>
+        <li>From Donegal with love</li>
       </ul>
 
       {/* Drop a Hint — quiet uppercase link with a hairline gift glyph,
