@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     default: 'Silkilinen — Pure Silk & Linen Intimates',
     template: '%s | Silkilinen',
   },
-  description: 'Handpicked silk and linen intimates, shipped worldwide from Donegal, Ireland.',
+  description: 'Pure silk and linen intimates, shipped worldwide from Donegal, Ireland.',
   applicationName: 'Silkilinen',
   authors: [{ name: 'Silkilinen' }],
   keywords: ['silk', 'linen', 'intimates', 'sleepwear', 'robes', 'mulberry silk', 'Donegal', 'Irish silk brand'],
@@ -149,7 +149,7 @@ export default async function RootLayout({
     alternateName: 'SILKILINEN',
     url: 'https://www.silkilinen.com',
     logo: 'https://www.silkilinen.com/og-default.jpg', // replace with a square-format logo when available
-    description: 'Handpicked silk and linen intimates, shipped worldwide from Donegal, Ireland.',
+    description: 'Pure silk and linen intimates, shipped worldwide from Donegal, Ireland.',
     foundingLocation: { '@type': 'Place', address: { '@type': 'PostalAddress', addressLocality: 'Donegal', addressCountry: 'IE' } },
     contactPoint: {
       '@type': 'ContactPoint',

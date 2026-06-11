@@ -26,9 +26,9 @@ const FIXES = {
   homepage_hero_subtitle: 'Pure silk & linen intimates',
   homepage_story_title: 'Born in Donegal, worn across the world',
   homepage_story_text:
-    'SILKILINEN began with a simple belief: that the garments closest to your skin should be made from the finest natural fibres. We source Mulberry silk and European linen — chosen for their breathability, longevity, and the quiet luxury they bring to everyday moments.\n\nWe\'re an Irish brand based in Donegal, and every piece is made by skilled artisans who share our commitment to slow, considered making.',
+    'SILKILINEN began with a simple belief: that the garments closest to your skin should be made from the finest natural fibres. We source Mulberry silk and European linen — chosen for their breathability, longevity, and the quiet luxury they bring to everyday moments.\n\nWe\'re an Irish brand based in Donegal, and we share a commitment to slow, considered work.',
   about_story_text:
-    'SILKILINEN began with a simple belief: that the garments closest to your skin should be made from the finest natural fibres.\n\nWe source Mulberry silk and European linen — chosen for their breathability, longevity, and the quiet luxury they bring to everyday moments.\n\nWe\'re an Irish brand based in Donegal, and every piece is made by skilled artisans who share our commitment to slow, considered making. We work in small batches, never rushing the process, so that what reaches you is exactly what we intended — something you\'ll reach for again and again.',
+    'SILKILINEN began with a simple belief: that the garments closest to your skin should be made from the finest natural fibres.\n\nWe source Mulberry silk and European linen — chosen for their breathability, longevity, and the quiet luxury they bring to everyday moments.\n\nWe\'re an Irish brand based in Donegal, and we share a commitment to slow, considered work. We work in small batches, never rushing the process, so that what reaches you is exactly what we intended — something you\'ll reach for again and again.',
 };
 
 async function run() {

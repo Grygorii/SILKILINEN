@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 60; /* above the sticky buy bar (z-40) */
+  z-index: 250; /* above the chat bubble (z-150) and sticky bar (z-40), below the cart drawer (z-300) so the sheet cleanly covers the floating chat launcher */
   background: rgba(26, 25, 22, 0.4);
   display: flex;
   align-items: flex-end;

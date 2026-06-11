@@ -2,7 +2,7 @@ import styles from '../legal.module.css';
 
 export const metadata = {
   title: 'Gift Wrapping',
-  description: 'Every SILKILINEN order arrives gift-ready — wrapped in a tissue-lined box with hand-tied silk ribbon, at no extra cost.',
+  description: 'Every SILKILINEN order arrives gift-ready — wrapped in a tissue-lined box with silk ribbon, at no extra cost.',
   alternates: { canonical: 'https://www.silkilinen.com/gift-wrapping' },
 };
 
@@ -24,7 +24,7 @@ export default function GiftWrappingPage() {
           <h2>How it arrives</h2>
           <p>
             Each piece is folded in tissue, placed in our signature box, and finished with a
-            hand-tied silk ribbon. The same care we put into the garment, we put into the way it
+            silk ribbon. The same care we put into the garment, we put into the way it
             reaches you — or whoever you are sending it to.
           </p>
         </section>

@@ -81,7 +81,7 @@ export default async function Home() {
       {allReviews.length > 0 && (
         <a href="/reviews" className={styles.proofStrip}>
           <span className={styles.proofStars} aria-hidden="true">★★★★★</span>
-          <span>Loved by our customers · Handmade in Donegal</span>
+          <span>Loved by our customers · From Donegal with love</span>
         </a>
       )}
 

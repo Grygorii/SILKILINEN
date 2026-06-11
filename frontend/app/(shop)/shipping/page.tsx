@@ -18,7 +18,7 @@ export default function ShippingPage() {
         <section className={styles.section}>
           <h2>How we ship</h2>
           <p>
-            All orders are hand-finished and dispatched within 1–2 business days of payment
+            All orders are carefully prepared and dispatched within 1–2 business days of payment
             confirmation.
           </p>
           <p style={{ marginTop: '16px' }}>
