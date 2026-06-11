@@ -29,7 +29,7 @@ export type BundleData = {
 
 async function getBundle(slug: string): Promise<BundleData | null> {
   try {
-    const res = await fetch(`${API}/api/bundles/${slug}`, { cache: 'no-store' });
+    const res = await fetch(`${API}/api/bundles/${slug}`, { next: { revalidate: 120 } });
     if (!res.ok) return null;
     return res.json();
   } catch {

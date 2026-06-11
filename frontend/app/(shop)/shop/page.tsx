@@ -121,7 +121,7 @@ async function getProducts(category?: string, q?: string, newOnly?: boolean) {
   const qs = params.toString();
   const url = `${process.env.NEXT_PUBLIC_API_URL}/api/products${qs ? `?${qs}` : ''}`;
   try {
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await fetch(url, { next: { revalidate: 60 } });
     return res.ok ? res.json() : [];
   } catch {
     return [];

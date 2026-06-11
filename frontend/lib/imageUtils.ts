@@ -27,3 +27,17 @@ export function cloudinaryAuto(url: string, maxWidth: number): string {
   }
   return url;
 }
+
+/**
+ * Responsive `srcSet` for a Cloudinary image — one candidate per width, each
+ * with format/quality auto. Returns '' for non-Cloudinary URLs so callers can
+ * conditionally omit the attribute. `crop` mirrors cloudinaryUrl ('fill') vs
+ * cloudinaryAuto ('limit').
+ */
+export function cloudinarySrcSet(url: string, widths: number[], crop: 'fill' | 'limit' = 'limit'): string {
+  if (!url || !url.includes('res.cloudinary.com') || !url.includes('/upload/')) return '';
+  const c = crop === 'fill' ? 'c_fill' : 'c_limit';
+  return widths
+    .map(w => `${url.replace('/upload/', `/upload/w_${w},${c},f_auto,q_auto/`)} ${w}w`)
+    .join(', ');
+}

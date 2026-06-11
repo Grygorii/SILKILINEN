@@ -16,7 +16,7 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 
 async function getProduct(id: string) {
   try {
-    const res = await fetch(`${API}/api/products/${id}`, { cache: 'no-store' });
+    const res = await fetch(`${API}/api/products/${id}`, { next: { revalidate: 120 } });
     if (!res.ok) return null;
     const data = await res.json();
     if (data.error) return null;

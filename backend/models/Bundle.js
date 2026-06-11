@@ -48,6 +48,7 @@ const bundleSchema = new mongoose.Schema({
 // `slug` already has a unique index from `unique: true` above — don't redeclare.
 bundleSchema.index({ status: 1, displayOrder: 1 });
 bundleSchema.index({ isFeatured: 1, featuredOrder: 1 });
+bundleSchema.index({ categories: 1 }); // bundle-by-category lookup on PDPs
 
 /**
  * Compute pricing from a populated product list + discount.

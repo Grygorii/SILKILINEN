@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import ProductCard from '@/components/ProductCard';
+import { cloudinaryAuto, cloudinarySrcSet } from '@/lib/imageUtils';
 import type { BundleData } from './page';
 import styles from './page.module.css';
 
@@ -38,7 +39,7 @@ export default function BundlePageClient({ bundle }: { bundle: BundleData }) {
       <section className={styles.hero}>
         {hero ? (
           /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={hero} alt={bundle.heroImage?.alt || bundle.name} className={styles.heroImg} />
+          <img src={cloudinaryAuto(hero, 1600)} srcSet={cloudinarySrcSet(hero, [768, 1080, 1600])} sizes="100vw" alt={bundle.heroImage?.alt || bundle.name} className={styles.heroImg} />
         ) : (
           <div className={styles.heroPlaceholder} />
         )}

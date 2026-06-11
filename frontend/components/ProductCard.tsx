@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Heart, Star } from 'lucide-react';
 import { useWishlist } from '@/context/WishlistContext';
-import { isValidImageUrl } from '@/lib/imageUtils';
+import { isValidImageUrl, cloudinaryUrl, cloudinarySrcSet } from '@/lib/imageUtils';
 import ProductImage from './products/ProductImage';
 import styles from './ProductCard.module.css';
 
@@ -94,7 +94,9 @@ export default function ProductCard({ product, showHeart = true }: Props) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {hoverUrl && (
           <img
-            src={hoverUrl}
+            src={cloudinaryUrl(hoverUrl, 400)}
+            srcSet={cloudinarySrcSet(hoverUrl, [200, 300, 400, 600], 'fill')}
+            sizes="(max-width: 600px) 50vw, (max-width: 1200px) 33vw, 25vw"
             alt=""
             aria-hidden="true"
             className={styles.hoverImg}

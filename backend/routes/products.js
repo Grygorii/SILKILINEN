@@ -196,7 +196,7 @@ router.get('/', async function(req, res) {
       { name: { $regex: q, $options: 'i' } },
       { description: { $regex: q, $options: 'i' } },
     ];
-    let query = Product.find(filter);
+    let query = Product.find(filter).lean();
     if (sort === '-createdAt') query = query.sort({ createdAt: -1 });
     if (limit) query = query.limit(parseInt(limit, 10));
     const products = await query;
