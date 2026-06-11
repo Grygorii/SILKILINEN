@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import styles from '../account.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -30,13 +30,18 @@ function shortId(id: string) { return id.slice(-8).toUpperCase(); }
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(false);
     fetch(`${API}/api/customers/me/orders`, { credentials: 'include' })
-      .then(r => r.ok ? r.json() : [])
-      .then(d => { setOrders(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(r => { if (!r.ok) throw new Error('failed'); return r.json(); })
+      .then(d => { setOrders(Array.isArray(d) ? d : []); setLoading(false); })
+      .catch(() => { setError(true); setLoading(false); });
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   return (
     <>
@@ -48,7 +53,14 @@ export default function OrdersPage() {
 
       {loading && <p className={styles.loading}>Loading…</p>}
 
-      {!loading && orders.length === 0 && (
+      {!loading && error && (
+        <div className={styles.emptyState}>
+          <p>We couldn&apos;t load your orders. Please try again.</p>
+          <button onClick={load} style={{ cursor: 'pointer', textDecoration: 'underline', background: 'none', border: 'none', font: 'inherit' }}>Retry</button>
+        </div>
+      )}
+
+      {!loading && !error && orders.length === 0 && (
         <div className={styles.emptyState}>
           <p>Nothing to show yet.</p>
           <a href="/shop">Explore the collection</a>

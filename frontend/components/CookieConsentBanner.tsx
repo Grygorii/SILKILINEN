@@ -10,7 +10,7 @@ export default function CookieConsentBanner() {
   return (
     <>
       {showBanner && (
-        <div className={styles.banner} role="dialog" aria-label="Cookie consent">
+        <div className={styles.banner} role="region" aria-label="Cookie consent">
           <p className={styles.text}>
             We use cookies and similar technologies to personalise content, analyse traffic, and show
             relevant ads. See our{' '}

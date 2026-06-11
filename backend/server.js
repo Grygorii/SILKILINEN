@@ -182,7 +182,11 @@ app.use('/api/cart-recovery', cartRecoveryRouter);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(function() { console.log('Connected to MongoDB'); })
-  .catch(function(err) { console.error('MongoDB connection error:', err); });
+  .catch(function(err) {
+    // Fail fast: don't accept traffic with no database (would just 500).
+    console.error('FATAL: MongoDB connection error:', err);
+    process.exit(1);
+  });
 
 app.get('/', function(req, res) {
   res.send('Silkilinen backend is running');
