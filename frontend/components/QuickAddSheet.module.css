@@ -1,0 +1,134 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60; /* above the sticky buy bar (z-40) */
+  background: rgba(26, 25, 22, 0.4);
+  display: flex;
+  align-items: flex-end;
+  animation: fade 0.18s ease;
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.sheet {
+  width: 100%;
+  background: var(--color-bg, #faf8f4);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  padding: 10px 20px calc(20px + env(safe-area-inset-bottom));
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: slideUp 0.22s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-line, #e8e2d6);
+  margin: 0 auto 12px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.titleWrap { min-width: 0; }
+
+.name {
+  margin: 0;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 19px;
+  color: var(--color-ink, #2a2218);
+  line-height: 1.2;
+}
+
+.price {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--color-ink-muted, #6b6358);
+}
+
+.close {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  margin: -10px -10px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--color-ink-muted, #6b6358);
+  cursor: pointer;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.rowLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.label {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-ink-muted, #6b6358);
+}
+
+.sizeGuide {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-ink, #2a2218);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-line, #e8e2d6);
+}
+
+.stepBtn {
+  width: 44px;
+  height: 40px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--color-ink, #2a2218);
+  cursor: pointer;
+}
+.stepBtn:disabled { opacity: 0.35; cursor: default; }
+
+.qtyVal {
+  min-width: 40px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--color-ink, #2a2218);
+}
+
+.cta {
+  margin-top: 4px;
+}

@@ -57,6 +57,34 @@ function priceTag(n: number): string {
   return `${n.toFixed(2)} EUR`;
 }
 
+// Google requires `color` for apparel. Brand colour names appear in product
+// titles ("Sunset copper silk robe", "Bare champagne silk nightshirt"), so when
+// no colour field is set we derive one from the title rather than ship an item
+// missing the required attribute (the "Missing color" disapproval). Longer
+// phrases first so "sunset copper" wins over "copper".
+const COLOUR_TERMS: [RegExp, string][] = [
+  [/sunset copper/i, 'Sunset Copper'],
+  [/sky blue/i, 'Sky Blue'],
+  [/champagne/i, 'Champagne'],
+  [/blush/i, 'Blush'],
+  [/garnet/i, 'Garnet'],
+  [/copper/i, 'Copper'],
+  [/silver/i, 'Silver'],
+  [/\bsage\b/i, 'Sage'],
+  [/onyx|\bblack\b/i, 'Black'],
+  [/ivory|\bcream\b/i, 'Ivory'],
+  [/\bwhite\b/i, 'White'],
+  [/\bblue\b/i, 'Blue'],
+  [/\bpink\b/i, 'Pink'],
+];
+function deriveColourFromName(name?: string): string {
+  if (!name) return '';
+  for (const [re, label] of COLOUR_TERMS) {
+    if (re.test(name)) return label;
+  }
+  return '';
+}
+
 // Prefer the image tagged with the variant's colour, else the primary image.
 function imageForColour(p: Product, colour?: string): string {
   const imgs = p.images || [];
@@ -106,7 +134,7 @@ function buildItem(
   const regularPrice = compare > regular ? compare : regular;
   const salePrice = compare > regular ? regular : null;
 
-  const colour = opts.colour || p.colorName || p.colours?.[0];
+  const colour = opts.colour || p.colorName || p.colours?.[0] || deriveColourFromName(p.name);
   const size = opts.size || p.sizes?.[0];
   const link = `${BASE}/product/${p._id}`;
 

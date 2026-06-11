@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import styles from './page.module.css';
-import { cloudinaryAuto, cloudinarySrcSet } from '@/lib/imageUtils';
+import Image from 'next/image';
+import cloudinaryLoader from '@/lib/cloudinaryLoader';
 import PageTracker from '@/components/PageTracker';
 import ReviewsCarousel, { type ReviewData } from '@/components/ReviewsCarousel';
 import NewArrivals from '@/components/NewArrivals';
@@ -60,15 +61,14 @@ export default async function Home() {
           // it immediately on first byte instead of waiting to discover
           // it from a CSS background-image rule. This is the LCP element
           // and was responsible for the 18-second Lighthouse score.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={cloudinaryAuto(heroImage, 1920)}
-            srcSet={cloudinarySrcSet(heroImage, [640, 960, 1280, 1600, 1920])}
+          <Image
+            loader={cloudinaryLoader}
+            src={heroImage}
             alt={heroTitle}
-            className={styles.heroImg}
-            fetchPriority="high"
-            decoding="async"
+            fill
+            priority
             sizes="100vw"
+            className={styles.heroImg}
           />
         )}
         <div className={styles.heroContent}>

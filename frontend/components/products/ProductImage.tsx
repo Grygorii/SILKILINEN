@@ -1,24 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { isValidImageUrl, cloudinaryUrl, cloudinarySrcSet } from '@/lib/imageUtils';
+import { useState } from 'react';
+import Image from 'next/image';
+import { isValidImageUrl } from '@/lib/imageUtils';
+import cloudinaryLoader from '@/lib/cloudinaryLoader';
 import styles from './ProductImage.module.css';
 
 type Variant = 'card' | 'thumbnail' | 'cart';
 
-const WIDTHS: Record<Variant, number> = {
-  card: 400,
-  thumbnail: 160,
-  cart: 200,
-};
-
-// Responsive candidates so retina/large screens get a sharp image and small/
-// low-DPR screens don't over-download.
-const SRCSET_WIDTHS: Record<Variant, number[]> = {
-  card: [200, 300, 400, 600, 800],
-  thumbnail: [120, 160, 240, 320],
-  cart: [160, 200, 300, 400],
-};
+// `sizes` tells next/image which width to request from the Cloudinary loader.
 const SIZES: Record<Variant, string> = {
   card: '(max-width: 600px) 50vw, (max-width: 1200px) 33vw, 25vw',
   thumbnail: '80px',
@@ -51,38 +41,20 @@ function resolveUrl(images: ProductImageData[]): string | null {
 }
 
 /**
- * Renders a product image with three states:
- *   loading  → shimmer skeleton
- *   failed   → cream "Image coming soon" placeholder (text hidden at cart/thumbnail sizes)
- *   loaded   → the actual image, faded in
+ * Product image via next/image (Cloudinary loader, `fill`):
+ *   loading → shimmer skeleton
+ *   failed  → cream "Image coming soon" placeholder (text hidden at small sizes)
+ *   loaded  → the actual image, faded in
  *
- * The caller's wrapClassName div must provide width + height (or aspect-ratio).
- * ProductImage fills that space with position:absolute children.
+ * next/image handles responsive srcset, lazy-loading, and the cached-image
+ * hydration race that the previous hand-rolled version had to work around.
+ * The wrapClassName div provides the positioned, sized box that `fill` needs.
  */
 export default function ProductImage({ images, src, alt, variant, wrapClassName, loading = 'lazy' }: Props) {
   const url = images?.length ? resolveUrl(images) : (isValidImageUrl(src) ? src! : null);
   const [state, setState] = useState<'loading' | 'loaded' | 'failed'>(url ? 'loading' : 'failed');
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  // Hydration race fix: when the browser fetches the image BEFORE React
-  // hydrates (cached images, fast networks, mobile Safari), the onLoad
-  // event fires while React isn't listening yet — state stays "loading"
-  // forever and opacity stays at 0, so the image is invisible until the
-  // user interacts. On mount, check whether the underlying <img> is
-  // already complete and skip the loading state if so.
-  useEffect(() => {
-    if (!url) return;
-    const img = imgRef.current;
-    if (!img) return;
-    if (img.complete) {
-      // naturalHeight === 0 on a complete-but-broken image (failed fetch).
-      if (img.naturalHeight > 0) setState('loaded');
-      else setState('failed');
-    }
-  }, [url]);
 
   const showText = variant === 'card';
-
   const variantClass = variant === 'card' ? styles.wrapCard : '';
 
   return (
@@ -93,15 +65,15 @@ export default function ProductImage({ images, src, alt, variant, wrapClassName,
           {showText && <span className={styles.missingText}>Image coming soon</span>}
         </div>
       )}
-      {url && (
-        <img
-          ref={imgRef}
-          src={cloudinaryUrl(url, WIDTHS[variant])}
-          srcSet={cloudinarySrcSet(url, SRCSET_WIDTHS[variant], 'fill')}
-          sizes={SIZES[variant]}
+      {url && state !== 'failed' && (
+        <Image
+          loader={cloudinaryLoader}
+          src={url}
           alt={alt}
+          fill
+          sizes={SIZES[variant]}
           className={styles.img}
-          loading={loading}
+          priority={loading === 'eager'}
           onLoad={() => setState('loaded')}
           onError={() => setState('failed')}
           style={{ opacity: state === 'loaded' ? 1 : 0 }}
