@@ -57,6 +57,7 @@ const adminSocialAssetsRouter = require('./routes/adminSocialAssets');
 const cartRecoveryRouter = require('./routes/cartRecovery');
 const { processCartRecovery } = require('./services/cartRecovery');
 const { runAdvisorDigest } = require('./services/advisorDigest');
+const { processReviewRequests } = require('./services/reviewRequests');
 
 const app = express();
 
@@ -232,6 +233,8 @@ let cartRecoveryStartTimeout = null;
 let cartRecoveryInterval = null;
 let advisorDigestStartTimeout = null;
 let advisorDigestInterval = null;
+let reviewRequestsStartTimeout = null;
+let reviewRequestsInterval = null;
 
 const server = app.listen(PORT, function() {
   console.log('Server running on port ' + PORT);
@@ -253,6 +256,18 @@ const server = app.listen(PORT, function() {
       24 * 60 * 60 * 1000
     );
   }, 10 * 60 * 1000);
+
+  // Review-request emails — runs daily, sending to buyers whose order is ≥14
+  // days old and hasn't had one yet. Idempotent (Order.reviewRequestSentAt),
+  // so daily is safe. First run 15 min after boot. No-op until RESEND_API_KEY
+  // is set. This is what fills the empty product reviews over time.
+  reviewRequestsStartTimeout = setTimeout(function() {
+    const run = () => processReviewRequests({ send: true })
+      .then(r => { if (r.sent) console.log(`[review-requests] sent ${r.sent} of ${r.eligible} eligible`); })
+      .catch(err => console.error('[review-requests]', err));
+    run();
+    reviewRequestsInterval = setInterval(run, 24 * 60 * 60 * 1000);
+  }, 15 * 60 * 1000);
 });
 
 let shuttingDown = false;
@@ -265,6 +280,8 @@ function shutdown(signal) {
   if (cartRecoveryInterval) clearInterval(cartRecoveryInterval);
   if (advisorDigestStartTimeout) clearTimeout(advisorDigestStartTimeout);
   if (advisorDigestInterval) clearInterval(advisorDigestInterval);
+  if (reviewRequestsStartTimeout) clearTimeout(reviewRequestsStartTimeout);
+  if (reviewRequestsInterval) clearInterval(reviewRequestsInterval);
 
   // Hard exit if graceful drain stalls (e.g. hung Mongo or stuck request).
   const hardExit = setTimeout(() => {
