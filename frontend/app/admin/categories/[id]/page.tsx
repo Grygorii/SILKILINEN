@@ -37,6 +37,9 @@ export default function AdminCategoryEditPage({ params }: { params: Promise<{ id
 
   const [form, setForm] = useState<Form>(EMPTY_FORM);
   const [productCount, setProductCount] = useState(0);
+  const [products, setProducts] = useState<{ _id: string; name: string; category?: string }[]>([]);
+  const [allCategories, setAllCategories] = useState<{ slug: string; label: string }[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
@@ -64,6 +67,45 @@ export default function AdminCategoryEditPage({ params }: { params: Promise<{ id
   }, [id, isNew]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Load the products tagged with this category (all statuses) plus the full
+  // category list, so each product can be reassigned inline.
+  const loadProducts = useCallback(async () => {
+    if (isNew || !form.slug) return;
+    setLoadingProducts(true);
+    try {
+      const [pRes, cRes] = await Promise.all([
+        fetch(`${API}/api/admin/products?category=${encodeURIComponent(form.slug)}&status=all`, { credentials: 'include' }),
+        fetch(`${API}/api/admin/categories`, { credentials: 'include' }),
+      ]);
+      if (pRes.ok) {
+        const pdata = await pRes.json();
+        setProducts(Array.isArray(pdata) ? pdata : (pdata.products || []));
+      }
+      if (cRes.ok) {
+        const cdata = await cRes.json();
+        setAllCategories((Array.isArray(cdata) ? cdata : []).map((c: { slug: string; label: string }) => ({ slug: c.slug, label: c.label })));
+      }
+    } finally {
+      setLoadingProducts(false);
+    }
+  }, [isNew, form.slug]);
+
+  useEffect(() => { loadProducts(); }, [loadProducts]);
+
+  async function reassign(productId: string, newSlug: string) {
+    if (newSlug === form.slug) return;
+    const res = await fetch(`${API}/api/admin/products/${productId}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' },
+      body: JSON.stringify({ category: newSlug }),
+    });
+    if (!res.ok) { alert('Failed to reassign product.'); return; }
+    // Product moved out of this category — drop it from the list.
+    setProducts(ps => ps.filter(p => p._id !== productId));
+    setProductCount(c => Math.max(0, c - 1));
+  }
 
   function set(field: keyof Form, value: string) {
     setForm(f => ({ ...f, [field]: value }));
@@ -219,10 +261,33 @@ export default function AdminCategoryEditPage({ params }: { params: Promise<{ id
 
           {!isNew && (
             <section className={styles.section}>
-              <h3 className={styles.sectionTitle}>Products</h3>
-              <p className={styles.hint}>
-                {productCount} product{productCount === 1 ? '' : 's'} currently tagged with this category.
-                Assign products to a category from the product edit page.
+              <h3 className={styles.sectionTitle}>Products ({productCount})</h3>
+              {loadingProducts ? (
+                <p className={styles.hint}>Loading products…</p>
+              ) : products.length === 0 ? (
+                <p className={styles.hint}>No products are tagged with this category.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {products.map(p => (
+                    <div key={p._id} style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between', borderBottom: '1px solid var(--border, #eee)', paddingBottom: 8 }}>
+                      <a href={`/admin/products/${p._id}`} style={{ flex: 1, color: 'var(--dark, #1a1916)', textDecoration: 'none', fontSize: 14 }}>{p.name}</a>
+                      <select
+                        className={styles.select}
+                        value={p.category || form.slug}
+                        onChange={(e) => reassign(p._id, e.target.value)}
+                        style={{ maxWidth: 180 }}
+                        aria-label={`Category for ${p.name}`}
+                      >
+                        {allCategories.map(c => (
+                          <option key={c.slug} value={c.slug}>{c.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className={styles.hint} style={{ marginTop: 10 }}>
+                Change a product&apos;s category from the dropdown, or click its name to edit it fully.
               </p>
             </section>
           )}
