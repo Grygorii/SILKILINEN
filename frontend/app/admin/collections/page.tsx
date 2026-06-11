@@ -58,6 +58,13 @@ export default function AdminCollectionsPage() {
     load();
   }
 
+  async function del(id: string) {
+    if (!confirm('Permanently delete this collection? This cannot be undone.')) return;
+    const res = await fetch(`${API}/api/admin/collections/${id}/permanent`, { method: 'DELETE', credentials: 'include' });
+    if (!res.ok) { alert('Failed to delete collection.'); return; }
+    load();
+  }
+
   return (
     <AdminLayout>
       <div className={styles.header}>
@@ -121,6 +128,7 @@ export default function AdminCollectionsPage() {
                     {c.status !== 'archived' && (
                       <button className={styles.archiveBtn} onClick={() => archive(c._id)}>Archive</button>
                     )}
+                    <button className={styles.deleteBtn} onClick={() => del(c._id)}>Delete</button>
                   </div>
                 </td>
               </tr>

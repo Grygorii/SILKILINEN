@@ -144,3 +144,16 @@
   transition: background 0.15s;
 }
 .archiveBtn:hover { background: #fdf0ed; }
+
+.deleteBtn {
+  padding: 6px 12px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  border: 1px solid #c0392b;
+  color: #fff;
+  background: #c0392b;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+.deleteBtn:hover { opacity: 0.85; }

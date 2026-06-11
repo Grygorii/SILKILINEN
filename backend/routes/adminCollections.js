@@ -93,6 +93,21 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// DELETE /api/admin/collections/:id/permanent — hard delete. Detaches the
+// collection from any products first so none are left pointing at a dead id.
+router.delete('/:id/permanent', async (req, res) => {
+  try {
+    const collection = await Collection.findById(req.params.id);
+    if (!collection) return res.status(404).json({ error: 'Not found' });
+    await Product.updateMany({ collections: collection._id }, { $pull: { collections: collection._id } });
+    await Collection.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /api/admin/collections/:id/products  — assign product to collection
 router.post('/:id/products', async (req, res) => {
   try {
