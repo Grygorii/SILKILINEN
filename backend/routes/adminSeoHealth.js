@@ -187,17 +187,21 @@ async function checkMerchantLive() {
     }
     const { total, approved, pending, disapproved, issues } = data;
     if (disapproved > 0) {
-      const top = issues
-        .filter(i => i.servability === 'disapproved')
-        .slice(0, 3)
-        .map(i => `${i.description || i.code} (${i.count})`)
-        .join('; ');
+      // Prefer issues Google flags as outright disapproving, but fall back to
+      // the highest-count issues if none carry that exact servability — Google
+      // sometimes reports the blocker under 'demoted'/unset, and showing the
+      // real reason matters more than the label. Without this fallback the card
+      // degrades to a bare doc link with no human-readable cause.
+      const disapprovingFirst = issues.filter(i => i.servability === 'disapproved');
+      const shown = (disapprovingFirst.length ? disapprovingFirst : issues).slice(0, 3);
+      const top = shown.map(i => `${i.description || i.code} (${i.count})`).join('; ');
+      const doc = shown[0]?.documentation || issues[0]?.documentation;
       return {
         ...base,
         status: 'critical',
-        detail: `${disapproved}/${total} products disapproved. ${top ? `Top: ${top}` : ''}`.trim(),
-        advice: issues[0]?.documentation
-          ? `Fix the top issue — Google's guide: ${issues[0].documentation}`
+        detail: `${disapproved}/${total} products disapproved.${top ? ` Top: ${top}` : ''}`,
+        advice: doc
+          ? `Fix the top issue — Google's guide: ${doc}`
           : 'Open Merchant Center → Products → Diagnostics for the full list.',
       };
     }
