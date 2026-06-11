@@ -128,7 +128,7 @@ export default function SearchPerformancePanel() {
 
           {data.sitemaps && (
             <p className={styles.healthCheckDetail} style={{ marginTop: 14 }}>
-              Sitemap indexing: {data.sitemaps.indexed.toLocaleString()} indexed of {data.sitemaps.submitted.toLocaleString()} submitted across {data.sitemaps.sitemaps} sitemap(s).
+              Sitemap: {data.sitemaps.submitted.toLocaleString()} URLs submitted across {data.sitemaps.sitemaps} sitemap(s). Google&rsquo;s API no longer reports an indexed count here — see Search Console → Page indexing for the live figure.
             </p>
           )}
         </div>

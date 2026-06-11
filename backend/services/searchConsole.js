@@ -8,7 +8,7 @@
 //
 // The Search Console API does NOT expose the bulk index-coverage report, but it
 // does give the two things worth surfacing:
-//   • sitemaps.list  → submitted vs indexed URL counts
+//   • sitemaps.list  → submitted URL count (Google deprecated the indexed count)
 //   • searchanalytics.query → clicks / impressions / CTR / position + top
 //     queries and pages (the live "is SEO working" data)
 //
@@ -138,7 +138,13 @@ async function apiPost(path, body, timeoutMs = 8000) {
   }
 }
 
-// Submitted vs indexed across all sitemaps (web content type).
+// Submitted-URL count across all sitemaps (web content type).
+//
+// NOTE: Google deprecated the per-sitemap `contents.indexed` field — it now
+// returns 0 for everyone, so it must NOT be surfaced as a real "indexed" count
+// (the true figure lives in the Page indexing report, which the API doesn't
+// expose). We still read `indexed` for backwards compatibility but the
+// dashboard no longer displays it.
 async function getSitemapsSummary() {
   const data = await apiGet(`sites/${siteSegment()}/sitemaps`);
   if (!data) return null;
@@ -146,7 +152,7 @@ async function getSitemapsSummary() {
   for (const sm of data.sitemap || []) {
     for (const c of sm.contents || []) {
       submitted += Number(c.submitted) || 0;
-      indexed += Number(c.indexed) || 0;
+      indexed += Number(c.indexed) || 0; // deprecated by Google — always 0
     }
   }
   return { sitemaps: (data.sitemap || []).length, submitted, indexed };
