@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import styles from './page.module.css';
-import { cloudinaryAuto } from '@/lib/imageUtils';
+import { cloudinaryAuto, cloudinarySrcSet } from '@/lib/imageUtils';
 import PageTracker from '@/components/PageTracker';
 import ReviewsCarousel, { type ReviewData } from '@/components/ReviewsCarousel';
 import NewArrivals from '@/components/NewArrivals';
@@ -63,7 +63,8 @@ export default async function Home() {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={cloudinaryAuto(heroImage, 1920)}
-            alt=""
+            srcSet={cloudinarySrcSet(heroImage, [640, 960, 1280, 1600, 1920])}
+            alt={heroTitle}
             className={styles.heroImg}
             fetchPriority="high"
             decoding="async"
@@ -71,7 +72,7 @@ export default async function Home() {
           />
         )}
         <div className={styles.heroContent}>
-          <h2>{heroTitle}</h2>
+          <h1>{heroTitle}</h1>
           <p>{heroSubtitle}</p>
           <a href="/shop" className={styles.heroBtn}>{heroCta}</a>
         </div>

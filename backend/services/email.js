@@ -29,9 +29,9 @@ function buildItemsRows(items) {
   return items.map(item => `
     <tr>
       <td style="padding:12px 0;border-bottom:1px solid #eae8e3;">
-        <span style="font-family:Georgia,serif;font-size:15px;color:#1a1916;">${item.name}</span>
+        <span style="font-family:Georgia,serif;font-size:15px;color:#1a1916;">${esc(item.name)}</span>
         ${item.colour || item.size
-    ? `<br><span style="font-size:12px;color:#8a8680;">${[item.colour, item.size].filter(Boolean).join(' / ')}</span>`
+    ? `<br><span style="font-size:12px;color:#8a8680;">${[item.colour, item.size].filter(Boolean).map(esc).join(' / ')}</span>`
     : ''}
       </td>
       <td style="padding:12px 0;border-bottom:1px solid #eae8e3;text-align:center;font-size:13px;color:#5a5650;white-space:nowrap;">× ${item.quantity}</td>
@@ -44,6 +44,7 @@ function formatAddress(addr) {
   if (!addr) return '—';
   return [addr.line1, addr.line2, addr.city, addr.state, addr.postalCode, addr.country]
     .filter(Boolean)
+    .map(esc)
     .join(', ');
 }
 
@@ -53,7 +54,7 @@ function buildHtml({ order, isAdmin }) {
   const shippingCost = order.shippingCost || 0;
   const discountAmount = order.discountAmount || 0;
   const grandTotal = order.total ?? (itemsSubtotal - discountAmount + shippingCost);
-  const firstName = order.customerName ? order.customerName.split(' ')[0] : 'there';
+  const firstName = order.customerName ? esc(order.customerName.split(' ')[0]) : 'there';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -83,7 +84,7 @@ function buildHtml({ order, isAdmin }) {
               </p>
               <p style="margin:0 0 32px;font-size:13px;color:#5a5650;line-height:1.8;">
                 ${isAdmin
-    ? `A new order has been placed by ${order.customerName || order.customerEmail || 'a customer'}.`
+    ? `A new order has been placed by ${esc(order.customerName || order.customerEmail || 'a customer')}.`
     : `Hi ${firstName}, your order is confirmed. We'll send a shipping update once your items are on their way.`
   }
               </p>
@@ -262,7 +263,7 @@ async function sendWinbackReminder({ email, firstName }) {
 
 function buildStatusHtml({ order, heading, body, trackingBlock }) {
   const id = shortId(order._id);
-  const firstName = order.customerName ? order.customerName.split(' ')[0] : 'there';
+  const firstName = order.customerName ? esc(order.customerName.split(' ')[0]) : 'there';
   const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.com';
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
@@ -393,7 +394,7 @@ async function sendNewsletterWelcome({ email, code, validUntil, unsubscribeToken
 <p style="margin:0 0 28px;font-size:13px;color:#5a5650;line-height:1.8;">Your first order has 10% off. Use this code at checkout:</p>
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
 <tr><td style="background:#f0ede8;border-left:3px solid #1a1916;padding:20px 24px;text-align:center;">
-<p style="margin:0;font-family:Georgia,serif;font-size:28px;letter-spacing:6px;font-weight:600;color:#1a1916;">${code}</p>
+<p style="margin:0;font-family:Georgia,serif;font-size:28px;letter-spacing:6px;font-weight:600;color:#1a1916;">${esc(code)}</p>
 <p style="margin:8px 0 0;font-size:12px;color:#8a8680;letter-spacing:1px;">10% off · 1 use · valid until ${expires}</p>
 </td></tr>
 </table>
@@ -494,7 +495,7 @@ async function sendCartRecoveryEmail(order, seq) {
   const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.com';
   const BACKEND  = process.env.BACKEND_URL  || 'https://silkilinen-production.up.railway.app';
 
-  const firstName = order.customerName ? order.customerName.split(' ')[0] : 'there';
+  const firstName = order.customerName ? esc(order.customerName.split(' ')[0]) : 'there';
   const subject   = SUBJECTS[seq] || SUBJECTS[1];
   const headline  = HEADLINES[seq] || HEADLINES[1];
   const intro     = (INTROS[seq] || INTROS[1])(esc(firstName));
@@ -569,7 +570,7 @@ ${itemRows}
 async function sendReviewRequest({ order, links }) {
   if (!process.env.RESEND_API_KEY || !order.customerEmail) return;
   const id = shortId(order._id);
-  const firstName = (order.customerName || '').split(' ')[0] || '';
+  const firstName = esc((order.customerName || '').split(' ')[0] || '');
 
   // Build one row per item with its review link. Items without a
   // productId (legacy data or bundle children) are skipped silently.

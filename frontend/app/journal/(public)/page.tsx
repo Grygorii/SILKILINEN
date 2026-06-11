@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Journal',
   description: 'Stories about silk, linen, and slow living from Donegal.',
+  alternates: { canonical: 'https://www.silkilinen.com/journal' },
 };
 
 const API = process.env.NEXT_PUBLIC_API_URL;

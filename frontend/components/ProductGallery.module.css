@@ -121,8 +121,8 @@
   border: none;
   cursor: pointer;
   color: var(--dark, #1a1916);
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -161,19 +161,30 @@
   pointer-events: none;
 }
 
+/* Larger tap area with a small visible dot drawn via ::before — keeps the dot
+   row visually tight while meeting a generous touch target vertically. */
 .dot {
+  width: 28px;
+  height: 44px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+.dot::before {
+  content: '';
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: rgba(26, 25, 22, 0.4);
-  border: none;
-  cursor: pointer;
-  padding: 0;
   transition: background 0.2s ease;
-  pointer-events: auto;
 }
 
-.dotActive { background: var(--dark, #1a1916); }
+.dotActive::before { background: var(--dark, #1a1916); }
 
 /* ── Lightbox ─────────────────────────────────────── */
 

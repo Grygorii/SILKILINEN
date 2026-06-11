@@ -57,7 +57,7 @@ img {
   --color-surface:      #F5F0E8;  /* hover, soft fills */
   --color-surface-warm: #ECE4D4;  /* disabled, NEW tag */
   --color-line:         #E8E2D6;  /* dividers only */
-  --color-ink-muted:    #8A8278;  /* meta, labels */
+  --color-ink-muted:    #6B6358;  /* meta, labels — darkened to meet WCAG AA (~5.6:1 on cream) */
   --color-ink:          #2A2218;  /* text, primary fill */
   --color-accent:       #C4A882;  /* rose-gold, used sparingly */
 

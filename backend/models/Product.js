@@ -155,6 +155,8 @@ const productSchema = new mongoose.Schema({
 
 productSchema.index({ status: 1, category: 1 });
 productSchema.index({ status: 1, createdAt: -1 });
+productSchema.index({ status: 1, isNewArrival: 1 }); // New Arrivals filter / ?new=true
+productSchema.index({ collections: 1 });             // collection pages
 productSchema.index({ slug: 1 }, { unique: true, sparse: true });
 
 productSchema.pre('save', async function() {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { isValidImageUrl, cloudinaryUrl } from '@/lib/imageUtils';
+import { isValidImageUrl, cloudinaryUrl, cloudinarySrcSet } from '@/lib/imageUtils';
 import styles from './ProductImage.module.css';
 
 type Variant = 'card' | 'thumbnail' | 'cart';
@@ -10,6 +10,19 @@ const WIDTHS: Record<Variant, number> = {
   card: 400,
   thumbnail: 160,
   cart: 200,
+};
+
+// Responsive candidates so retina/large screens get a sharp image and small/
+// low-DPR screens don't over-download.
+const SRCSET_WIDTHS: Record<Variant, number[]> = {
+  card: [200, 300, 400, 600, 800],
+  thumbnail: [120, 160, 240, 320],
+  cart: [160, 200, 300, 400],
+};
+const SIZES: Record<Variant, string> = {
+  card: '(max-width: 600px) 50vw, (max-width: 1200px) 33vw, 25vw',
+  thumbnail: '80px',
+  cart: '96px',
 };
 
 type ProductImageData = { url: string; alt?: string; isPrimary?: boolean; order?: number };
@@ -84,6 +97,8 @@ export default function ProductImage({ images, src, alt, variant, wrapClassName,
         <img
           ref={imgRef}
           src={cloudinaryUrl(url, WIDTHS[variant])}
+          srcSet={cloudinarySrcSet(url, SRCSET_WIDTHS[variant], 'fill')}
+          sizes={SIZES[variant]}
           alt={alt}
           className={styles.img}
           loading={loading}

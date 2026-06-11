@@ -1,6 +1,7 @@
 import styles from '../legal.module.css';
 
 export const metadata = {
+  alternates: { canonical: 'https://www.silkilinen.com/returns' },
   title: 'Returns & Refunds',
   description: '14-day returns policy for SILKILINEN. Free returns, full refunds, easy process.',
 };

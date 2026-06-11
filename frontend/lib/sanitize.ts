@@ -1,33 +1,44 @@
 /**
- * Server-safe HTML sanitizer for SSR-rendered article bodies.
+ * Parser-based HTML sanitizer for SSR-rendered article bodies (journal pages).
  *
- * Why this exists: `isomorphic-dompurify` brings a jsdom dependency that
- * blows up during Next.js 16 / Turbopack server rendering — both journal
- * article slug pages were returning HTTP 500 because of it. This is a
- * regex-based replacement that runs cleanly in any JS environment
- * (Node, edge, browser) without touching the DOM.
+ * Uses `sanitize-html` (htmlparser2 under the hood — NO jsdom), so it runs in
+ * the Next.js Node server runtime without the build/SSR failures that
+ * `isomorphic-dompurify` caused. Unlike the previous regex sanitizer, this is a
+ * real tokenizing allowlist: anything not explicitly permitted is dropped, so
+ * `<svg onload>`, split/newline event handlers, and nested `<scr<script>ipt>`
+ * payloads cannot survive.
  *
- * Scope of trust: the only input is admin-authored TipTap output (the
- * editor in /admin/journal). TipTap emits a predictable, structured tag
- * set; this sanitizer is sized to that threat model — strip script/iframe
- * /object/embed shells, drop inline event handlers, neuter
- * `javascript:` URLs. NOT a general-purpose XSS scrubber for arbitrary
- * untrusted HTML.
+ * IMPORTANT: import this only from server components. For the client-side
+ * announcement banner use `sanitizeBannerHtml` from `./sanitizeInline`, which
+ * keeps this dependency out of the browser bundle.
  */
+import sanitizeHtml from 'sanitize-html';
+
+const ARTICLE_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: [
+    'p', 'br', 'hr', 'blockquote', 'pre', 'code',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'strong', 'b', 'em', 'i', 'u', 's', 'sub', 'sup', 'mark',
+    'ul', 'ol', 'li',
+    'a', 'img', 'figure', 'figcaption', 'span', 'div',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td',
+  ],
+  allowedAttributes: {
+    a: ['href', 'title', 'target', 'rel'],
+    img: ['src', 'alt', 'title', 'width', 'height'],
+    '*': ['class'],
+  },
+  allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+  allowedSchemesByTag: { img: ['http', 'https'] },
+  // Strip the tag AND its text content for these (don't leak script source as text).
+  nonTextTags: ['script', 'style', 'textarea', 'noscript', 'iframe', 'object', 'embed'],
+  // Any link that opens in a new tab gets safe rel.
+  transformTags: {
+    a: sanitizeHtml.simpleTransform('a', { rel: 'noopener noreferrer' }, false),
+  },
+};
+
 export function sanitizeArticleHtml(html: string): string {
   if (!html) return '';
-  return html
-    // Drop <script>…</script> and any text content inside it
-    .replace(/<script\b[\s\S]*?<\/script>/gi, '')
-    // Drop <style>…</style> (TipTap doesn't emit it; if it ever appears it's hostile)
-    .replace(/<style\b[\s\S]*?<\/style>/gi, '')
-    // Strip framing tags that can host hostile content (open or close)
-    .replace(/<\/?(iframe|object|embed|frame|frameset|applet|base|link|meta)\b[^>]*>/gi, '')
-    // Strip inline event handlers from any tag (onclick, onload, onerror, …)
-    .replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, '')
-    .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, '')
-    .replace(/\son[a-z]+\s*=\s*[^\s>]+/gi, '')
-    // Neuter javascript:/vbscript:/data: URIs in href/src
-    .replace(/(href|src)\s*=\s*"\s*(?:javascript|vbscript|data)\s*:[^"]*"/gi, '$1=""')
-    .replace(/(href|src)\s*=\s*'\s*(?:javascript|vbscript|data)\s*:[^']*'/gi, '$1=""');
+  return sanitizeHtml(html, ARTICLE_OPTIONS);
 }

@@ -16,7 +16,7 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 
 async function getProduct(id: string) {
   try {
-    const res = await fetch(`${API}/api/products/${id}`, { cache: 'no-store' });
+    const res = await fetch(`${API}/api/products/${id}`, { next: { revalidate: 120 } });
     if (!res.ok) return null;
     const data = await res.json();
     if (data.error) return null;
@@ -74,7 +74,7 @@ export async function generateMetadata(
       description,
       url,
       images: [{ url: image, width: 1200, height: 630, alt: product.altText || product.name }],
-      siteName: 'SILKILINEN',
+      siteName: 'Silkilinen',
       type: 'website',
     },
     twitter: {

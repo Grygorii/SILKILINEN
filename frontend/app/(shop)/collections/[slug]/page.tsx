@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ProductGrid from '@/components/ProductGrid';
+import { cloudinaryAuto, cloudinarySrcSet } from '@/lib/imageUtils';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -32,7 +33,7 @@ type CollectionData = {
 
 async function getCollection(slug: string): Promise<CollectionData | null> {
   try {
-    const res = await fetch(`${API}/api/collections/${slug}`, { cache: 'no-store' });
+    const res = await fetch(`${API}/api/collections/${slug}`, { next: { revalidate: 120 } });
     if (!res.ok) return null;
     return res.json();
   } catch {
@@ -59,7 +60,7 @@ export async function generateMetadata(
       title,
       description,
       url: `https://www.silkilinen.com/collections/${slug}`,
-      siteName: 'SILKILINEN',
+      siteName: 'Silkilinen',
     },
   };
 }
@@ -76,7 +77,9 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
         <div className={styles.hero}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={collection.heroImage.url}
+            src={cloudinaryAuto(collection.heroImage.url, 1600)}
+            srcSet={cloudinarySrcSet(collection.heroImage.url, [768, 1080, 1600])}
+            sizes="100vw"
             alt={collection.heroImage.alt || collection.name}
             className={styles.heroImg}
           />

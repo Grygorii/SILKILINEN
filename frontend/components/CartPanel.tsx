@@ -257,11 +257,11 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                   <div className={styles.freeShippingFill} style={{ width: `${freeShippingPct}%` }} />
                 </div>
                 <p className={styles.freeShippingText}>
-                  €{toFreeShipping.toFixed(0)} more for free shipping to Ireland
+                  €{toFreeShipping.toFixed(0)} more for free shipping
                 </p>
               </div>
             ) : (
-              <p className={styles.freeShippingMet}>Free shipping to Ireland ✓</p>
+              <p className={styles.freeShippingMet}>Free shipping unlocked ✓</p>
             )}
 
             {/* Totals */}

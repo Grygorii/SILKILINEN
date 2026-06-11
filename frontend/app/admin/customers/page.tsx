@@ -49,6 +49,7 @@ export default function CustomersPage() {
   const [segmentFilter, setSegmentFilter] = useState('');
   const [consentFilter, setConsentFilter] = useState('');
   const [recomputing, setRecomputing] = useState(false);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -56,13 +57,15 @@ export default function CustomersPage() {
     if (search) params.set('search', search);
     if (segmentFilter) params.set('segment', segmentFilter);
     if (consentFilter) params.set('consent', consentFilter);
+    setError(false);
     try {
       const res = await fetch(`${API}/api/admin/customers?${params}`, { credentials: 'include' });
+      if (!res.ok) throw new Error('failed');
       const data = await res.json();
       setCustomers(Array.isArray(data.customers) ? data.customers : []);
       setSegments(Array.isArray(data.segments) ? data.segments : []);
       setTotal(data.total || 0);
-    } catch { /* ignore */ }
+    } catch { setError(true); }
     setLoading(false);
   }, [page, search, segmentFilter, consentFilter]);
 
@@ -192,6 +195,12 @@ export default function CustomersPage() {
             {/* Table */}
             {loading ? (
               <p style={{ fontSize: 13, color: 'var(--muted)' }}>Loading…</p>
+            ) : error ? (
+              <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', border: '1px solid var(--border)' }}>
+                <p style={{ fontSize: 14, color: 'var(--muted)' }}>Couldn&apos;t load customers.{' '}
+                  <button onClick={load} style={{ cursor: 'pointer', textDecoration: 'underline', background: 'none', border: 'none', font: 'inherit', color: 'inherit' }}>Retry</button>
+                </p>
+              </div>
             ) : customers.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', border: '1px solid var(--border)' }}>
                 <p style={{ fontSize: 14, color: 'var(--muted)' }}>No customers found</p>

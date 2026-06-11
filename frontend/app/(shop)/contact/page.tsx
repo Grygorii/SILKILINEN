@@ -1,6 +1,7 @@
 import styles from './page.module.css';
 
 export const metadata = {
+  alternates: { canonical: 'https://www.silkilinen.com/contact' },
   title: 'Contact',
   description: 'Get in touch with SILKILINEN. Email us at hello@silkilinen.com — we respond within one business day.',
 };

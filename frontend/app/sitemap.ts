@@ -31,6 +31,27 @@ async function getProductIds(): Promise<string[]> {
   }
 }
 
+// Generic slug fetcher for journal/collections/bundles so those indexable
+// routes appear in the sitemap instead of relying on internal links alone.
+async function getSlugs(path: string): Promise<string[]> {
+  if (!process.env.NEXT_PUBLIC_API_URL) return [];
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), PRODUCT_FETCH_TIMEOUT_MS);
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`, {
+      next: { revalidate: 3600 },
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) return [];
+    const data = await res.json();
+    const arr = Array.isArray(data) ? data : (data.articles || data.collections || data.bundles || data.items || []);
+    return (arr as { slug?: string }[]).map(x => x.slug).filter((s): s is string => Boolean(s));
+  } catch {
+    return [];
+  }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     { url: BASE,                        lastModified: new Date(), changeFrequency: 'weekly',  priority: 1 },
@@ -48,13 +69,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/faq`,               lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
   ];
 
-  const ids = await getProductIds();
+  const [ids, journalSlugs, collectionSlugs, bundleSlugs] = await Promise.all([
+    getProductIds(),
+    getSlugs('/api/journal'),
+    getSlugs('/api/collections'),
+    getSlugs('/api/bundles'),
+  ]);
+
   const productPages: MetadataRoute.Sitemap = ids.map(id => ({
     url: `${BASE}/product/${id}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.8,
   }));
+  const journalPages: MetadataRoute.Sitemap = journalSlugs.map(slug => ({
+    url: `${BASE}/journal/${slug}`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6,
+  }));
+  const collectionPages: MetadataRoute.Sitemap = collectionSlugs.map(slug => ({
+    url: `${BASE}/collections/${slug}`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7,
+  }));
+  const bundlePages: MetadataRoute.Sitemap = bundleSlugs.map(slug => ({
+    url: `${BASE}/bundles/${slug}`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7,
+  }));
 
-  return [...staticPages, ...productPages];
+  return [...staticPages, ...productPages, ...journalPages, ...collectionPages, ...bundlePages];
 }

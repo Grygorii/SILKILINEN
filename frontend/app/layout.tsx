@@ -107,12 +107,28 @@ async function getReviewSummary(): Promise<{ average: number; count: number } | 
   }
 }
 
+// Active social profile URLs for the Organization `sameAs` — data-driven from
+// the same admin source as the footer so the Knowledge-Graph signal doesn't
+// drift from what's actually live.
+async function getSocialUrls(): Promise<string[]> {
+  const API = process.env.NEXT_PUBLIC_API_URL;
+  if (!API) return [];
+  try {
+    const res = await fetch(`${API}/api/social/platforms`, { next: { revalidate: 3600 } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data.map((p: { url?: string }) => p.url).filter((u): u is string => Boolean(u)) : [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const reviewSummary = await getReviewSummary();
+  const [reviewSummary, socialUrls] = await Promise.all([getReviewSummary(), getSocialUrls()]);
   // ── JSON-LD structured data ──────────────────────────────────────────
   // Two schemas on the root layout, applied to every page:
   //
@@ -142,13 +158,9 @@ export default async function RootLayout({
       areaServed: ['IE', 'GB', 'EU', 'US', 'AU', 'CA'],
       availableLanguage: ['English'],
     },
-    sameAs: [
-      // Fill these in as the accounts go live; each verified profile
-      // strengthens Google's brand-identity confidence.
-      'https://www.instagram.com/silkilinen/',
-      'https://www.pinterest.com/silkilinen/',
-      // 'https://www.tiktok.com/@silkilinen',
-    ].filter(Boolean),
+    sameAs: socialUrls.length
+      ? socialUrls
+      : ['https://www.instagram.com/silkilinen/', 'https://www.pinterest.com/silkilinen/'],
     // Brand-level aggregateRating. Only emitted when we actually have
     // verified reviews — Google rejects schemas with zero-count or
     // missing values. Reviews aren't linked to products in the data

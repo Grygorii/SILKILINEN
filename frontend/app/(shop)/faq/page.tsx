@@ -30,11 +30,11 @@ const FAQS = [
   },
   {
     q: 'Can I exchange an item for a different size?',
-    a: 'Yes — exchanges are welcome within 14 days of delivery, subject to stock availability. Contact us before returning so we can reserve your preferred size.',
+    a: 'We don’t offer direct exchanges at this time. Return the item within 14 days of delivery for a full refund, then place a new order for the size or colour you’d like — contact us first and we’ll help reserve your preferred piece where we can.',
   },
   {
     q: 'How long does it take to process my order?',
-    a: 'Orders are processed within 1–3 business days. During busy periods (sale events, gifting seasons) processing may take up to 5 business days. You will receive a shipping confirmation with tracking as soon as your order leaves us.',
+    a: 'All orders are hand-finished and dispatched within 1–2 business days of payment. During busy periods (sale events, gifting seasons) this may take a little longer. You will receive a shipping confirmation with tracking as soon as your order leaves us.',
   },
   {
     q: 'Do you offer gift wrapping?',

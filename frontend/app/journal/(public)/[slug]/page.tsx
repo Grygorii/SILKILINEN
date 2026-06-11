@@ -30,7 +30,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     // version ourselves so we don't end up with "X | Silkilinen Journal | Silkilinen".
     title: { absolute: article.metaTitle || `${article.title} | Silkilinen Journal` },
     description: article.metaDescription || article.excerpt,
+    alternates: { canonical: `https://www.silkilinen.com/journal/${slug}` },
     openGraph: {
+      type: 'article',
+      url: `https://www.silkilinen.com/journal/${slug}`,
       title: article.metaTitle || article.title,
       description: article.metaDescription || article.excerpt,
       images: article.heroImage?.url ? [{ url: article.heroImage.url }] : [],
@@ -47,8 +50,30 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
   const article = await getArticle(slug);
   if (!article) notFound();
 
+  // Article JSON-LD so the journal can earn article rich results.
+  const articleJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: article.title,
+    description: article.metaDescription || article.excerpt,
+    ...(article.heroImage?.url ? { image: [article.heroImage.url] } : {}),
+    datePublished: article.publishedAt,
+    dateModified: article.publishedAt,
+    author: { '@type': 'Person', name: article.author || 'Silkilinen' },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Silkilinen',
+      logo: { '@type': 'ImageObject', url: 'https://www.silkilinen.com/og-default.jpg' },
+    },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `https://www.silkilinen.com/journal/${slug}` },
+  };
+
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
       {/* Hero image */}
       {article.heroImage?.url && (
         <div style={{ width: '100%', height: 'clamp(300px, 50vw, 560px)', overflow: 'hidden' }}>
