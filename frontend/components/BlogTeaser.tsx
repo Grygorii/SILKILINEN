@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import cloudinaryLoader from '@/lib/cloudinaryLoader';
 import styles from './BlogTeaser.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -39,7 +38,6 @@ export default async function BlogTeaser() {
             <div className={styles.imgWrap}>
               {post.heroImage?.url && (
                 <Image
-                  loader={cloudinaryLoader}
                   src={post.heroImage.url}
                   alt={post.heroImage.alt || post.title}
                   fill

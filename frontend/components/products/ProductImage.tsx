@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { isValidImageUrl } from '@/lib/imageUtils';
-import cloudinaryLoader from '@/lib/cloudinaryLoader';
 import styles from './ProductImage.module.css';
 
 type Variant = 'card' | 'thumbnail' | 'cart';
@@ -67,7 +66,6 @@ export default function ProductImage({ images, src, alt, variant, wrapClassName,
       )}
       {url && state !== 'failed' && (
         <Image
-          loader={cloudinaryLoader}
           src={url}
           alt={alt}
           fill
