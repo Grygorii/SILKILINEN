@@ -61,6 +61,13 @@ export default function AdminBundlesPage() {
     load();
   }
 
+  async function del(id: string) {
+    if (!confirm('Permanently delete this bundle? This cannot be undone.')) return;
+    const res = await fetch(`${API}/api/admin/bundles/${id}/permanent`, { method: 'DELETE', credentials: 'include' });
+    if (!res.ok) { alert('Failed to delete bundle.'); return; }
+    load();
+  }
+
   return (
     <AdminLayout>
       <div className={styles.header}>
@@ -133,6 +140,7 @@ export default function AdminBundlesPage() {
                     {b.status !== 'archived' && (
                       <button className={styles.archiveBtn} onClick={() => archive(b._id)}>Archive</button>
                     )}
+                    <button className={styles.deleteBtn} onClick={() => del(b._id)}>Delete</button>
                   </div>
                 </td>
               </tr>

@@ -75,6 +75,27 @@ export default function AdminCategoriesPage() {
     load();
   }
 
+  async function del(id: string) {
+    if (!confirm('Permanently delete this category? This cannot be undone.')) return;
+    const res = await fetch(`${API}/api/admin/categories/${id}/permanent`, { method: 'DELETE', credentials: 'include', headers: { 'X-CSRF-Token': '1' } });
+    if (res.status === 409) {
+      const data = await res.json();
+      const active = categories.filter(c => c._id !== id && c.status === 'active');
+      const options = active.map(c => c.slug).join(', ');
+      const target = prompt(`${data.message}\n\nType the slug of the category to move them to (or Cancel):\n${options}`);
+      if (!target) return;
+      if (!active.some(c => c.slug === target.trim())) { alert(`"${target}" is not an active category.`); return; }
+      const retry = await fetch(`${API}/api/admin/categories/${id}/permanent?reassignTo=${encodeURIComponent(target.trim())}`, {
+        method: 'DELETE', credentials: 'include', headers: { 'X-CSRF-Token': '1' },
+      });
+      if (!retry.ok) { const d = await retry.json(); alert(d.error || 'Failed'); return; }
+    } else if (!res.ok) {
+      alert('Failed to delete category.');
+      return;
+    }
+    load();
+  }
+
   return (
     <AdminLayout>
       <div className={styles.header}>
@@ -135,6 +156,7 @@ export default function AdminCategoriesPage() {
                     {c.status !== 'archived' && (
                       <button className={styles.archiveBtn} onClick={() => archive(c._id)}>Archive</button>
                     )}
+                    <button className={styles.deleteBtn} onClick={() => del(c._id)}>Delete</button>
                   </div>
                 </td>
               </tr>

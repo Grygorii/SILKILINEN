@@ -108,6 +108,19 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// DELETE /api/admin/bundles/:id/permanent — hard delete (removes the record).
+// Bundle products are embedded, so nothing else needs detaching.
+router.delete('/:id/permanent', async (req, res) => {
+  try {
+    const bundle = await Bundle.findByIdAndDelete(req.params.id);
+    if (!bundle) return res.status(404).json({ error: 'Not found' });
+    res.json({ message: 'Deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /api/admin/bundles/:id/products — assign product to bundle
 router.post('/:id/products', async (req, res) => {
   try {

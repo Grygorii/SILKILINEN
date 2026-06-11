@@ -122,4 +122,36 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// DELETE /api/admin/categories/:id/permanent — hard delete (removes the record).
+// Same product guard as archive: refuse (409) if products are still tagged,
+// unless ?reassignTo=<slug> is given to move them first.
+router.delete('/:id/permanent', async (req, res) => {
+  try {
+    const category = await Category.findById(req.params.id);
+    if (!category) return res.status(404).json({ error: 'Not found' });
+
+    const productCount = await Product.countDocuments({ category: category.slug });
+    const reassignTo = req.query.reassignTo;
+
+    if (productCount > 0 && !reassignTo) {
+      return res.status(409).json({
+        error: 'category_has_products',
+        productCount,
+        message: `${productCount} product${productCount > 1 ? 's are' : ' is'} still tagged "${category.slug}". Reassign them to another category before deleting.`,
+      });
+    }
+    if (productCount > 0 && reassignTo) {
+      const target = await Category.findOne({ slug: reassignTo });
+      if (!target) return res.status(400).json({ error: 'reassignTo category not found' });
+      await Product.updateMany({ category: category.slug }, { $set: { category: reassignTo } });
+    }
+
+    await Category.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
