@@ -58,6 +58,19 @@ export default function ProductGallery({ images, name, productId, video }: Props
   const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
   const touchStartX = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const lightboxCloseRef = useRef<HTMLButtonElement>(null);
+
+  // Lightbox a11y: Escape closes it, and focus moves to the close button on
+  // open (and is restored to the page afterwards by the browser).
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    lightboxCloseRef.current?.focus();
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setLightboxOpen(false);
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [lightboxOpen]);
   const { toggle, isWished } = useWishlist();
   const wished = isWished(productId);
 
@@ -148,7 +161,14 @@ export default function ProductGallery({ images, name, productId, video }: Props
         onTouchEnd={handleTouchEnd}
       >
         {item?.kind === 'image' && (
-          <div className={styles.imageWrap} onClick={() => setLightboxOpen(true)}>
+          <div
+            className={styles.imageWrap}
+            role="button"
+            tabIndex={0}
+            aria-label="Zoom image"
+            onClick={() => setLightboxOpen(true)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLightboxOpen(true); } }}
+          >
             <img
               src={cloudinaryThumb(item.url, 1200)}
               alt={item.alt}
@@ -203,8 +223,15 @@ export default function ProductGallery({ images, name, productId, video }: Props
 
       {/* Lightbox — desktop, images only */}
       {lightboxOpen && item?.kind === 'image' && (
-        <div className={styles.lightbox} onClick={() => setLightboxOpen(false)}>
+        <div
+          className={styles.lightbox}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image viewer"
+          onClick={() => setLightboxOpen(false)}
+        >
           <button
+            ref={lightboxCloseRef}
             className={styles.lightboxClose}
             onClick={() => setLightboxOpen(false)}
             aria-label="Close"

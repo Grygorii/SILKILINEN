@@ -166,6 +166,21 @@ export default function ProductOptions({ colours, colourHexMap, sizes, productNa
         </Button>
       </div>
 
+      {/* Trust row — the reassurance a considered buyer wants right at the
+          add-to-bag moment (was only on the homepage / hidden in accordions). */}
+      <ul
+        style={{
+          listStyle: 'none', margin: '14px 0 0', padding: 0,
+          display: 'flex', flexWrap: 'wrap', gap: '6px 18px',
+          fontSize: 12, lineHeight: 1.6, color: 'var(--color-ink-muted)',
+        }}
+      >
+        <li>Free shipping over €150</li>
+        <li>14-day returns</li>
+        <li>Secure checkout</li>
+        <li>Handmade in Donegal</li>
+      </ul>
+
       {/* Drop a Hint — quiet uppercase link with a hairline gift glyph,
           sits at the foot of the panel by design proposal. */}
       <button className={styles.hintBtn} onClick={() => setHintOpen(true)}>

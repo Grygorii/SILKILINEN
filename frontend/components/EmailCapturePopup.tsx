@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Button from './ui/Button';
 import styles from './EmailCapturePopup.module.css';
@@ -14,7 +14,9 @@ export default function EmailCapturePopup() {
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const modalRef = useRef<HTMLDivElement>(null);
+  const prevFocusRef = useRef<HTMLElement | null>(null);
 
   const isBlocked = BLOCKED_PATHS.some(p => pathname.startsWith(p));
 
@@ -27,6 +29,11 @@ export default function EmailCapturePopup() {
     return age > SUPPRESS_DAYS * 24 * 60 * 60 * 1000;
   }, [isBlocked]);
 
+  const dismiss = useCallback(() => {
+    localStorage.setItem(STORAGE_KEY, String(Date.now()));
+    setVisible(false);
+  }, []);
+
   useEffect(() => {
     if (!shouldShow()) return;
 
@@ -37,23 +44,16 @@ export default function EmailCapturePopup() {
       setVisible(true);
     }
 
-    // Trigger 1: 30s timer
     const timer = setTimeout(show, 30_000);
-
-    // Trigger 2: 50% scroll
     function onScroll() {
       const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight);
       if (pct >= 0.5) show();
     }
-
-    // Trigger 3: exit intent (mouse leaves top of viewport)
     function onMouseOut(e: MouseEvent) {
       if (e.clientY <= 0) show();
     }
-
     window.addEventListener('scroll', onScroll, { passive: true });
     document.addEventListener('mouseleave', onMouseOut);
-
     return () => {
       clearTimeout(timer);
       window.removeEventListener('scroll', onScroll);
@@ -61,29 +61,46 @@ export default function EmailCapturePopup() {
     };
   }, [shouldShow]);
 
-  function dismiss() {
-    localStorage.setItem(STORAGE_KEY, String(Date.now()));
-    setVisible(false);
-  }
+  // While open: Escape to close, trap Tab within the modal, restore focus on close.
+  useEffect(() => {
+    if (!visible) return;
+    prevFocusRef.current = document.activeElement as HTMLElement;
+    const modal = modalRef.current;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') { dismiss(); return; }
+      if (e.key === 'Tab' && modal) {
+        const f = modal.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])');
+        if (f.length === 0) return;
+        const first = f[0];
+        const last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      prevFocusRef.current?.focus?.();
+    };
+  }, [visible, dismiss]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email) return;
     setStatus('loading');
     try {
-      await fetch(`${API}/api/newsletter/subscribe`, {
+      const res = await fetch(`${API}/api/newsletter/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, source: 'popup' }),
       });
+      if (!res.ok) throw new Error('subscribe failed');
+      // Only claim success on a real 2xx.
       setStatus('success');
       localStorage.setItem(STORAGE_KEY, String(Date.now()));
       setTimeout(() => setVisible(false), 3000);
     } catch {
-      // Still mark as dismissed to avoid annoying the customer
-      setStatus('success');
-      localStorage.setItem(STORAGE_KEY, String(Date.now()));
-      setTimeout(() => setVisible(false), 3000);
+      setStatus('error');
     }
   }
 
@@ -91,7 +108,7 @@ export default function EmailCapturePopup() {
 
   return (
     <div className={styles.overlay} onClick={e => { if (e.target === e.currentTarget) dismiss(); }}>
-      <div className={styles.modal} role="dialog" aria-modal="true" aria-label="Newsletter signup">
+      <div ref={modalRef} className={styles.modal} role="dialog" aria-modal="true" aria-label="Newsletter signup">
         <button className={styles.close} onClick={dismiss} aria-label="Close">✕</button>
 
         {status === 'success' ? (
@@ -114,7 +131,7 @@ export default function EmailCapturePopup() {
                 className={styles.input}
                 placeholder="your@email.com"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={e => { setEmail(e.target.value); if (status === 'error') setStatus('idle'); }}
                 required
                 disabled={status === 'loading'}
                 autoFocus
@@ -126,6 +143,11 @@ export default function EmailCapturePopup() {
                 {status === 'loading' ? 'JOINING…' : 'GET 10% OFF'}
               </Button>
             </form>
+            {status === 'error' && (
+              <p className={styles.small} style={{ color: '#c0392b' }}>
+                Something went wrong — please try again.
+              </p>
+            )}
             <p className={styles.small}>No spam. Unsubscribe anytime.</p>
           </>
         )}

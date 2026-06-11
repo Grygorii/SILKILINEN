@@ -113,11 +113,17 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({ ids: localIds }),
-        }).catch(() => {}).finally(() => {
-          lsSet([]);
-          setMergedCount(syncedCount);
-          fetchFromApi();
-        });
+        })
+          .then(res => {
+            // Only clear the guest's saved items once the server confirms the
+            // merge — otherwise a failed sync would silently wipe them.
+            if (res.ok) {
+              lsSet([]);
+              setMergedCount(syncedCount);
+            }
+          })
+          .catch(() => { /* keep local items on failure */ })
+          .finally(() => { fetchFromApi(); });
       } else {
         fetchFromApi();
       }
