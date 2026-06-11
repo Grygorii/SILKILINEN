@@ -3,6 +3,21 @@ import ProductGrid from '@/components/ProductGrid';
 import BundleStrip from '@/components/BundleStrip';
 import styles from './page.module.css';
 
+type Cat = { slug: string; label: string; description?: string; count: number };
+
+// The storefront's source of truth for which categories exist is the DB, not a
+// hardcoded list — so renaming or adding a category in admin "just works" on
+// the shop page. CATEGORY_COPY (below) is only an optional rich-copy override
+// for SEO; a category is valid as long as it exists here.
+async function getCategoryList(): Promise<Cat[]> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, { next: { revalidate: 300 } });
+    return res.ok ? res.json() : [];
+  } catch {
+    return [];
+  }
+}
+
 // Per-category metadata so /shop?category=robes gets a different
 // title + description from /shop?category=pyjamas. The base /shop URL
 // keeps the collection-wide description. Without this, every category
@@ -14,13 +29,25 @@ export async function generateMetadata({
   searchParams: Promise<{ category?: string; new?: string }>;
 }): Promise<Metadata> {
   const { category, new: newParam } = await searchParams;
-  if (category && CATEGORY_COPY[category]) {
+  if (category) {
+    // Rich hardcoded copy wins; otherwise fall back to the live category's
+    // own label/description so newly added categories still get real metadata.
     const c = CATEGORY_COPY[category];
-    return {
-      title: c.title,
-      description: c.description,
-      alternates: { canonical: `https://www.silkilinen.com/shop?category=${category}` },
-    };
+    if (c) {
+      return {
+        title: c.title,
+        description: c.description,
+        alternates: { canonical: `https://www.silkilinen.com/shop?category=${category}` },
+      };
+    }
+    const dbCat = (await getCategoryList()).find(x => x.slug === category);
+    if (dbCat) {
+      return {
+        title: dbCat.label,
+        description: dbCat.description || `Shop ${dbCat.label} at Silkilinen — pure silk and linen, shipped worldwide from Donegal.`,
+        alternates: { canonical: `https://www.silkilinen.com/shop?category=${category}` },
+      };
+    }
   }
   if (newParam === 'true') {
     return {
@@ -75,8 +102,6 @@ const CATEGORY_COPY: Record<string, { title: string; description: string }> = {
   },
 };
 
-const VALID_SLUGS = new Set(Object.keys(CATEGORY_COPY));
-
 async function getProducts(category?: string, q?: string, newOnly?: boolean) {
   const params = new URLSearchParams();
   if (category) params.set('category', category);
@@ -103,7 +128,10 @@ export default async function ShopPage({
   const { category, q, new: newParam } = await searchParams;
   const newOnly = newParam === 'true' && !category;
 
-  if (category && !VALID_SLUGS.has(category)) {
+  // Validate against the live categories, not a hardcoded list.
+  const dbCat = category ? (await getCategoryList()).find(c => c.slug === category) : null;
+
+  if (category && !dbCat) {
     return (
       <main className={styles.page}>
         <div className={styles.pageHeader}>
@@ -119,8 +147,8 @@ export default async function ShopPage({
 
   const products = await getProducts(category, q, newOnly);
   const copy = category ? CATEGORY_COPY[category] : null;
-  const heading = copy?.title ?? (newOnly ? 'New Arrivals' : (q ? `Search: "${q}"` : 'The Collection'));
-  const description = copy?.description ?? (newOnly ? 'Our latest pieces — fresh off the atelier table.' : null);
+  const heading = copy?.title ?? dbCat?.label ?? (newOnly ? 'New Arrivals' : (q ? `Search: "${q}"` : 'The Collection'));
+  const description = copy?.description ?? (dbCat?.description || null) ?? (newOnly ? 'Our latest pieces — fresh off the atelier table.' : null);
 
   return (
     <main className={styles.page}>
