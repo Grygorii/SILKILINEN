@@ -10,6 +10,15 @@ import styles from './SideMenu.module.css';
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 type Category = { slug: string; label: string; count: number };
+type SocialPlatform = { key: string; displayName: string; icon: string; url: string };
+
+// Social icons keyed by the platform's `icon` field, so the side menu renders
+// whatever social links are active in admin — same source as the footer.
+const SOCIAL_ICONS: Record<string, React.ReactNode> = {
+  instagram: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>,
+  pinterest: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.24 2.65 7.86 6.39 9.29-.09-.78-.17-1.98.04-2.83.19-.77 1.26-5.34 1.26-5.34s-.32-.64-.32-1.59c0-1.49.86-2.6 1.93-2.6.91 0 1.35.68 1.35 1.5 0 .91-.58 2.28-.88 3.55-.25 1.06.53 1.93 1.57 1.93 1.89 0 3.16-2.42 3.16-5.28 0-2.18-1.47-3.81-4.12-3.81-3.01 0-4.9 2.25-4.9 4.77 0 .87.26 1.48.67 1.96.19.22.21.31.14.57-.05.18-.16.63-.21.8-.07.26-.28.35-.52.26-1.44-.59-2.11-2.18-2.11-3.97 0-2.95 2.49-6.51 7.44-6.51 3.99 0 6.62 2.9 6.62 6.01 0 4.12-2.28 7.21-5.63 7.21-1.13 0-2.19-.61-2.56-1.3l-.72 2.77c-.26.99-.96 2.23-1.43 2.99.87.27 1.79.41 2.74.41 5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>,
+  facebook: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>,
+};
 
 type Props = {
   isOpen: boolean;
@@ -24,6 +33,7 @@ export default function SideMenu({ isOpen, onClose }: Props) {
   const prevFocusRef = useRef<HTMLElement | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [catsLoading, setCatsLoading] = useState(true);
+  const [socials, setSocials] = useState<SocialPlatform[]>([]);
 
   useEffect(() => {
     fetch(`${API}/api/categories`)
@@ -33,6 +43,10 @@ export default function SideMenu({ isOpen, onClose }: Props) {
         setCatsLoading(false);
       })
       .catch(() => setCatsLoading(false));
+    fetch(`${API}/api/social/platforms`)
+      .then(r => r.ok ? r.json() : [])
+      .then((data: SocialPlatform[]) => setSocials(Array.isArray(data) ? data : []))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -275,17 +289,15 @@ export default function SideMenu({ isOpen, onClose }: Props) {
 
         {/* Footer */}
         <div className={styles.footer}>
-          <div className={styles.social}>
-            <a href="https://instagram.com/silkilinen" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={styles.socialLink}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
-            </a>
-            <a href="https://pinterest.com/silkilinen" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" className={styles.socialLink}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.24 2.65 7.86 6.39 9.29-.09-.78-.17-1.98.04-2.83.19-.77 1.26-5.34 1.26-5.34s-.32-.64-.32-1.59c0-1.49.86-2.6 1.93-2.6.91 0 1.35.68 1.35 1.5 0 .91-.58 2.28-.88 3.55-.25 1.06.53 1.93 1.57 1.93 1.89 0 3.16-2.42 3.16-5.28 0-2.18-1.47-3.81-4.12-3.81-3.01 0-4.9 2.25-4.9 4.77 0 .87.26 1.48.67 1.96.19.22.21.31.14.57-.05.18-.16.63-.21.8-.07.26-.28.35-.52.26-1.44-.59-2.11-2.18-2.11-3.97 0-2.95 2.49-6.51 7.44-6.51 3.99 0 6.62 2.9 6.62 6.01 0 4.12-2.28 7.21-5.63 7.21-1.13 0-2.19-.61-2.56-1.3l-.72 2.77c-.26.99-.96 2.23-1.43 2.99.87.27 1.79.41 2.74.41 5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
-            </a>
-            <a href="https://facebook.com/silkilinen" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className={styles.socialLink}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-            </a>
-          </div>
+          {socials.length > 0 && (
+            <div className={styles.social}>
+              {socials.map(p => (
+                <a key={p.key} href={p.url} target="_blank" rel="noopener noreferrer" aria-label={p.displayName} className={styles.socialLink}>
+                  {SOCIAL_ICONS[p.icon] ?? <span style={{ fontSize: 11 }}>{p.displayName}</span>}
+                </a>
+              ))}
+            </div>
+          )}
           <div className={styles.country}>
             <span>Shipping: Ireland (EUR)</span>
             <span>→</span>
