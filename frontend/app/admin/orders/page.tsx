@@ -44,6 +44,7 @@ type Order = {
 };
 
 const STATUS_OPTIONS = ['all', 'pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'refunded', 'failed'];
+const VALID_STATUSES_SET = new Set(STATUS_OPTIONS.filter(s => s !== 'all'));
 
 const STATUS_BADGE: Record<string, string> = {
   pending: styles.badgePending,
@@ -90,6 +91,14 @@ export default function AdminOrdersPage() {
   const [searchInput, setSearchInput] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
+
+  // Honour ?status= links from the dashboard / Growth Engine / Today strip —
+  // without this they landed on an unfiltered list.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const s = new URLSearchParams(window.location.search).get('status');
+    if (s && VALID_STATUSES_SET.has(s)) setStatusFilter(s);
+  }, []);
 
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [countsTotal, setCountsTotal] = useState(0);

@@ -1,0 +1,366 @@
+.page {
+  padding: 32px;
+  max-width: 1100px;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 36px;
+  flex-wrap: wrap;
+}
+
+.headerLeft h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--dark);
+  margin-bottom: 6px;
+}
+
+.headerLeft p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 640px;
+}
+
+.pulseBtn {
+  padding: 11px 26px;
+  font-size: 13px;
+  font-family: inherit;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  border: 1px solid var(--dark);
+  background: var(--dark);
+  color: white;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pulseBtn:hover { opacity: 0.82; }
+.pulseBtn:disabled { opacity: 0.55; cursor: default; }
+
+/* ── Section labels ─────────────────────────────────────── */
+
+.sectionLabel {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+/* ── Agents ─────────────────────────────────────────────── */
+
+.agentsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.agentCard {
+  background: white;
+  border: 1px solid var(--border);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.15s, opacity 0.2s;
+}
+
+.agentCard:hover { border-color: #d4ccba; }
+
+.agentCardOff { opacity: 0.55; }
+
+.agentTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.agentName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dark);
+  letter-spacing: 0.02em;
+}
+
+.agentDesc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.55;
+  flex: 1;
+}
+
+.agentFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.agentMeta {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.runBtn {
+  padding: 2px 0;
+  font-size: 11px;
+  font-family: inherit;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--muted);
+  transition: color 0.15s;
+}
+
+.runBtn:hover { color: var(--dark); text-decoration: underline; text-underline-offset: 3px; }
+.runBtn:disabled { opacity: 0.5; cursor: default; text-decoration: none; }
+
+/* Toggle pill */
+
+.toggle {
+  position: relative;
+  width: 34px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--cream);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.toggle .knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.toggleOn {
+  background: var(--dark);
+  border-color: var(--dark);
+}
+
+.toggleOn .knob {
+  transform: translateX(16px);
+  background: white;
+}
+
+/* ── Feed header / live indicator ───────────────────────── */
+
+.feedHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.liveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8a6d18;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+/* ── The Pulse feed ─────────────────────────────────────── */
+
+.feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: white;
+  border: 1px solid var(--border);
+}
+
+.feedRow {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px 16px 46px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.feedRow:last-child { border-bottom: none; }
+.feedRow:hover { background: #fbfaf7; }
+
+/* timeline spine */
+.feedRow::before {
+  content: '';
+  position: absolute;
+  left: 23px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border);
+}
+
+.feedRow:first-child::before { top: 22px; }
+.feedRow:last-child::before { bottom: calc(100% - 22px); }
+.feedRow:first-child:last-child::before { display: none; }
+
+.dot {
+  position: absolute;
+  left: 19px;
+  top: 19px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-sizing: content-box;
+  margin-left: -2px;
+  z-index: 1;
+}
+
+.dotGold  { background: #8a6d18; }
+.dotError { background: #b03a2e; }
+.dotMuted { background: var(--muted); }
+
+.feedRowApproval { background: #fdf6e9; }
+.feedRowApproval:hover { background: #fbf1de; }
+.feedRowApproval .dot { border-color: #fdf6e9; }
+
+.feedBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.feedTop {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.agentChip {
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--cream);
+  border: 1px solid var(--border);
+  padding: 1px 7px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.feedTitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dark);
+  line-height: 1.5;
+}
+
+.feedDetail {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.55;
+  margin-top: 4px;
+}
+
+.feedTime {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+  letter-spacing: 0.02em;
+}
+
+.reviewLink {
+  font-size: 12px;
+  color: var(--dark);
+  text-decoration: none;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  align-self: center;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+
+.reviewLink:hover { border-bottom-color: var(--dark); }
+
+.empty {
+  background: white;
+  border: 1px solid var(--border);
+  padding: 48px 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ── Loading skeleton ───────────────────────────────────── */
+
+.skelCard {
+  background: white;
+  border: 1px solid var(--border);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skelFeed {
+  background: white;
+  border: 1px solid var(--border);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skelLine {
+  height: 11px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #efece4 25%, #f7f4ee 50%, #efece4 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+
+@media (max-width: 700px) {
+  .page { padding: 20px 16px; }
+  .header { margin-bottom: 28px; }
+  .feedRow { padding: 14px 16px 14px 42px; }
+}
