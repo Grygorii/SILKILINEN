@@ -1,0 +1,129 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0 0 4px;
+  color: var(--dark, #2a2218);
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--muted, #6b6358);
+  margin: 0;
+  max-width: 60ch;
+}
+
+.headerBtns {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.saveBtn {
+  padding: 9px 18px;
+  font-size: 13px;
+  border: 1px solid var(--dark, #2a2218);
+  background: var(--dark, #2a2218);
+  color: #fff;
+  cursor: pointer;
+}
+.saveBtn:disabled { opacity: 0.5; cursor: default; }
+
+.resetBtn {
+  padding: 9px 14px;
+  font-size: 13px;
+  border: 1px solid var(--border, #e8e2d6);
+  background: #fff;
+  color: var(--muted, #6b6358);
+  cursor: pointer;
+}
+.resetBtn:disabled { opacity: 0.5; cursor: default; }
+
+.muted { font-size: 13px; color: var(--muted, #6b6358); }
+
+.card {
+  background: #fff;
+  border: 1px solid var(--border, #e8e2d6);
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tierName {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0;
+  color: var(--dark, #2a2218);
+}
+
+.customPill {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #f3e4bd;
+  color: #8a6d18;
+}
+
+.countries {
+  font-size: 11px;
+  color: var(--muted, #6b6358);
+  margin: 4px 0 14px;
+  letter-spacing: 0.3px;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fieldLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted, #6b6358);
+}
+
+.inputWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.affix {
+  font-size: 13px;
+  color: var(--muted, #6b6358);
+}
+
+.numInput {
+  width: 100%;
+  max-width: 110px;
+  padding: 8px 10px;
+  font-size: 13px;
+  border: 1px solid var(--border, #e8e2d6);
+}
+
+.defaultNote {
+  font-size: 11px;
+  color: var(--muted, #6b6358);
+}

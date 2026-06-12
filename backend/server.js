@@ -54,6 +54,8 @@ const adminFinanceRouter = require('./routes/adminFinance');
 const adminSocialRouter = require('./routes/adminSocial');
 const socialRouter = require('./routes/social');
 const adminSocialAssetsRouter = require('./routes/adminSocialAssets');
+const adminShippingRouter = require('./routes/adminShipping');
+const { loadShippingOverrides } = require('./services/shipping');
 const cartRecoveryRouter = require('./routes/cartRecovery');
 const { processCartRecovery } = require('./services/cartRecovery');
 const { runAdvisorDigest } = require('./services/advisorDigest');
@@ -179,10 +181,16 @@ app.use('/api/admin/finance', adminFinanceRouter);
 app.use('/api/admin/social', adminSocialRouter);
 app.use('/api/social', socialRouter);
 app.use('/api/admin/social-assets', adminSocialAssetsRouter);
+app.use('/api/admin/shipping-rates', adminShippingRouter);
 app.use('/api/cart-recovery', cartRecoveryRouter);
 
 mongoose.connect(process.env.MONGODB_URI)
-  .then(function() { console.log('Connected to MongoDB'); })
+  .then(function() {
+    console.log('Connected to MongoDB');
+    // Pull admin-edited shipping-rate overrides into the in-memory cache so
+    // checkout reads stay synchronous. Non-fatal — defaults apply if it fails.
+    loadShippingOverrides();
+  })
   .catch(function(err) {
     // Fail fast: don't accept traffic with no database (would just 500).
     console.error('FATAL: MongoDB connection error:', err);
