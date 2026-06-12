@@ -56,6 +56,14 @@ export async function generateMetadata({
         alternates: { canonical: `https://www.silkilinen.com/shop?category=${category}` },
       };
     }
+    // Unknown/stale category slug (e.g. a renamed or removed category like
+    // ?category=home) renders an empty grid that Google flags as a soft 404.
+    // Keep it out of the index and point the canonical at the real shop.
+    return {
+      title: 'Shop',
+      robots: { index: false, follow: true },
+      alternates: { canonical: 'https://www.silkilinen.com/shop' },
+    };
   }
   if (newParam === 'true') {
     return {

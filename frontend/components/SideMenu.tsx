@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { X, Heart, Package, LogOut } from 'lucide-react';
 import { useCustomer } from '@/context/CustomerContext';
 import { useWishlist } from '@/context/WishlistContext';
+import { isValidSocialUrl } from '@/lib/socialUrl';
 import styles from './SideMenu.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -289,9 +290,9 @@ export default function SideMenu({ isOpen, onClose }: Props) {
 
         {/* Footer */}
         <div className={styles.footer}>
-          {socials.length > 0 && (
+          {socials.filter(p => isValidSocialUrl(p.url)).length > 0 && (
             <div className={styles.social}>
-              {socials.map(p => (
+              {socials.filter(p => isValidSocialUrl(p.url)).map(p => (
                 <a key={p.key} href={p.url} target="_blank" rel="noopener noreferrer" aria-label={p.displayName} className={styles.socialLink}>
                   {SOCIAL_ICONS[p.icon] ?? <span style={{ fontSize: 11 }}>{p.displayName}</span>}
                 </a>
