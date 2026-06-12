@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isBot } from '@/lib/isBot';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -26,6 +27,15 @@ export const runtime = 'nodejs';
  */
 export async function POST(req: NextRequest) {
   if (!API) {
+    return NextResponse.json({ ok: true });
+  }
+
+  // Drop crawler/scraper/headless traffic before it ever reaches the backend.
+  // This proxy is the one hop that sees the visitor's real User-Agent, so it's
+  // the right chokepoint — keeps Googlebot et al. out of the visit analytics
+  // (otherwise their JS-rendered page loads log as "direct" visits from
+  // Google's data centres and skew traffic + conversion).
+  if (isBot(req.headers.get('user-agent'))) {
     return NextResponse.json({ ok: true });
   }
 
