@@ -308,7 +308,17 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
           <h2>Order #{shortId}</h2>
           <span className={`${styles.badge} ${badgeClass}`}>{order.status}</span>
         </div>
-        <span className={styles.orderDate}>{formatDate(order.createdAt)}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginLeft: 'auto' }}>
+          <a
+            href={`/admin/orders/${id}/packing-slip`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.backBtn}
+          >
+            🖨 Packing slip
+          </a>
+          <span className={styles.orderDate}>{formatDate(order.createdAt)}</span>
+        </div>
       </div>
 
       <div className={styles.grid}>
