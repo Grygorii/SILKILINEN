@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import AdminModal from '@/components/AdminModal';
+import { toast } from '@/lib/adminToast';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -173,6 +175,9 @@ export default function ReviewsModeration() {
   const [flaggedOnly, setFlaggedOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  // Reject flow: modal with an optional reason instead of a prompt().
+  const [rejectId, setRejectId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
@@ -208,7 +213,7 @@ export default function ReviewsModeration() {
       if (!res.ok) throw new Error(`Action failed (${res.status})`);
       await load();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Action failed');
+      toast(err instanceof Error ? err.message : 'Action failed', 'error');
     } finally {
       setBusyId(null);
     }
@@ -222,7 +227,7 @@ export default function ReviewsModeration() {
       if (!res.ok) throw new Error(`Delete failed (${res.status})`);
       await load();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Delete failed');
+      toast(err instanceof Error ? err.message : 'Delete failed', 'error');
     } finally {
       setBusyId(null);
     }
@@ -331,10 +336,7 @@ export default function ReviewsModeration() {
                       <button className={styles.approve} onClick={() => moderate(r._id, 'approve')} disabled={busyId === r._id}>Approve</button>
                     )}
                     {r.status !== 'rejected' && (
-                      <button className={styles.reject} onClick={() => {
-                        const reason = prompt('Reason for rejection (optional):') ?? undefined;
-                        moderate(r._id, 'reject', reason);
-                      }} disabled={busyId === r._id}>Reject</button>
+                      <button className={styles.reject} onClick={() => { setRejectReason(''); setRejectId(r._id); }} disabled={busyId === r._id}>Reject</button>
                     )}
                     {r.status !== 'spam' && (
                       <button className={styles.spam} onClick={() => moderate(r._id, 'spam')} disabled={busyId === r._id}>Spam</button>
@@ -351,6 +353,35 @@ export default function ReviewsModeration() {
           })}
         </ul>
       </div>
+
+      {rejectId && (
+        <AdminModal title="Reject review" onClose={() => setRejectId(null)}>
+          <label style={{ display: 'block', fontSize: 12, marginBottom: 6, color: 'var(--dark, #2a2218)' }}>
+            Reason (optional — kept for your audit trail):
+          </label>
+          <textarea
+            autoFocus
+            value={rejectReason}
+            onChange={e => setRejectReason(e.target.value)}
+            rows={3}
+            style={{ width: '100%', padding: '8px 10px', fontSize: 13, border: '1px solid #e0d9cc', resize: 'vertical', boxSizing: 'border-box', marginBottom: 16 }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+            <button
+              onClick={() => setRejectId(null)}
+              style={{ padding: '8px 14px', fontSize: 13, border: '1px solid #e0d9cc', background: '#fff', cursor: 'pointer' }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => { const id = rejectId; setRejectId(null); moderate(id, 'reject', rejectReason.trim() || undefined); }}
+              style={{ padding: '8px 14px', fontSize: 13, border: '1px solid #b03a2e', background: '#b03a2e', color: '#fff', cursor: 'pointer' }}
+            >
+              Reject review
+            </button>
+          </div>
+        </AdminModal>
+      )}
     </AdminLayout>
   );
 }

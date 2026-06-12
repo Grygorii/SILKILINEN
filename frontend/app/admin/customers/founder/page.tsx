@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
+import { toast } from '@/lib/adminToast';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -133,7 +134,7 @@ export default function CustomersFounderPage() {
             onClick={async () => {
               const { downloadBlob } = await import('@/lib/api');
               try { await downloadBlob('/api/admin/customers/export/csv', 'customers.csv'); }
-              catch (err) { alert(err instanceof Error ? err.message : 'Export failed'); }
+              catch (err) { toast(err instanceof Error ? err.message : 'Export failed', 'error'); }
             }}
             style={{ padding: '10px 18px', border: '1px solid var(--border)', color: 'var(--dark)', background: 'transparent', textDecoration: 'none', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
           >

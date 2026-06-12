@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import { toast } from '@/lib/adminToast';
 import styles from '../../../models/page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -74,7 +75,7 @@ export default function ModelsPage() {
       await load();
       closeModal();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Save failed');
+      toast(err instanceof Error ? err.message : 'Save failed', 'error');
     } finally {
       setSaving(false);
     }
@@ -109,7 +110,7 @@ export default function ModelsPage() {
   const TIER_COSTS = { standard: 0.05, hd: 0.13, premium: 0.24 };
 
   async function handleGenerateReference(model: AiModel) {
-    if (model.locked) return alert('Unlock the model before regenerating.');
+    if (model.locked) return toast('Unlock the model before regenerating.', 'info');
     const est = TIER_COSTS[refTier].toFixed(2);
     if (!confirm(`Generate a new reference photo for "${model.name}" at ${refTier.toUpperCase()} quality? Estimated cost: €${est}.`)) return;
     setGeneratingId(model._id);
@@ -125,7 +126,7 @@ export default function ModelsPage() {
       setGenCost(c => c + (data.totalCost || TIER_COSTS[refTier]));
       await load();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Generation failed');
+      toast(err instanceof Error ? err.message : 'Generation failed', 'error');
     } finally {
       setGeneratingId(null);
     }

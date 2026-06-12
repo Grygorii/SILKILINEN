@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
+import { toast } from '@/lib/adminToast';
 import AdminErrorBanner from '@/components/AdminErrorBanner';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -144,7 +145,7 @@ export default function CustomerDetailPage() {
     try {
       await downloadBlob(`/api/admin/customers/${id}/gdpr-export`, `gdpr-export-${id}.json`);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Export failed');
+      toast(err instanceof Error ? err.message : 'Export failed', 'error');
     }
   }
 
@@ -167,8 +168,8 @@ export default function CustomerDetailPage() {
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' },
       });
       if (res.ok) setRecoverySent(true);
-      else { const d = await res.json(); alert(d.error || 'Failed'); }
-    } catch { alert('Network error'); }
+      else { const d = await res.json(); toast(d.error || 'Failed', 'error'); }
+    } catch { toast('Network error', 'error'); }
   }
 
   const card: React.CSSProperties = { background: 'white', border: '1px solid var(--border)', padding: '20px 24px', marginBottom: 16 };

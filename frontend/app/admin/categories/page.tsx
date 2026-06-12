@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import AdminModal from '@/components/AdminModal';
+import { toast } from '@/lib/adminToast';
 import Link from 'next/link';
 import styles from './page.module.css';
 
@@ -51,50 +53,63 @@ export default function AdminCategoriesPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  async function archive(id: string) {
-    if (!confirm('Archive this category?')) return;
-    const res = await fetch(`${API}/api/admin/categories/${id}`, { method: 'DELETE', credentials: 'include', headers: { 'X-CSRF-Token': '1' } });
+  // When archive/delete hits 409 (category still has products), the modal
+  // asks where to move them — a select of active categories instead of the
+  // old prompt() that made the founder type a slug from memory.
+  const [reassign, setReassign] = useState<{ id: string; mode: 'archive' | 'delete'; message: string } | null>(null);
+  const [reassignTarget, setReassignTarget] = useState('');
+  const [reassignBusy, setReassignBusy] = useState(false);
+
+  function deleteUrl(id: string, mode: 'archive' | 'delete', target?: string) {
+    const base = `${API}/api/admin/categories/${id}${mode === 'delete' ? '/permanent' : ''}`;
+    return target ? `${base}?reassignTo=${encodeURIComponent(target)}` : base;
+  }
+
+  async function removeCategory(id: string, mode: 'archive' | 'delete') {
+    const confirmMsg = mode === 'archive'
+      ? 'Archive this category?'
+      : 'Permanently delete this category? This cannot be undone.';
+    if (!confirm(confirmMsg)) return;
+    const res = await fetch(deleteUrl(id, mode), { method: 'DELETE', credentials: 'include', headers: { 'X-CSRF-Token': '1' } });
     if (res.status === 409) {
-      // Category still has products — offer to reassign them first.
+      // Category still has products — open the reassignment modal.
       const data = await res.json();
-      const active = categories.filter(c => c._id !== id && c.status === 'active');
-      const options = active.map(c => c.slug).join(', ');
-      const target = prompt(
-        `${data.message}\n\nType the slug of the category to move them to (or Cancel):\n${options}`
-      );
-      if (!target) return;
-      if (!active.some(c => c.slug === target.trim())) { alert(`"${target}" is not an active category.`); return; }
-      const retry = await fetch(`${API}/api/admin/categories/${id}?reassignTo=${encodeURIComponent(target.trim())}`, {
-        method: 'DELETE', credentials: 'include', headers: { 'X-CSRF-Token': '1' },
-      });
-      if (!retry.ok) { const d = await retry.json(); alert(d.error || 'Failed'); return; }
-    } else if (!res.ok) {
-      alert('Failed to archive category.');
+      setReassignTarget('');
+      setReassign({ id, mode, message: data.message || 'This category still has products.' });
       return;
     }
+    if (!res.ok) {
+      toast(`Failed to ${mode} category.`, 'error');
+      return;
+    }
+    toast(mode === 'archive' ? 'Category archived.' : 'Category deleted.');
     load();
   }
 
-  async function del(id: string) {
-    if (!confirm('Permanently delete this category? This cannot be undone.')) return;
-    const res = await fetch(`${API}/api/admin/categories/${id}/permanent`, { method: 'DELETE', credentials: 'include', headers: { 'X-CSRF-Token': '1' } });
-    if (res.status === 409) {
-      const data = await res.json();
-      const active = categories.filter(c => c._id !== id && c.status === 'active');
-      const options = active.map(c => c.slug).join(', ');
-      const target = prompt(`${data.message}\n\nType the slug of the category to move them to (or Cancel):\n${options}`);
-      if (!target) return;
-      if (!active.some(c => c.slug === target.trim())) { alert(`"${target}" is not an active category.`); return; }
-      const retry = await fetch(`${API}/api/admin/categories/${id}/permanent?reassignTo=${encodeURIComponent(target.trim())}`, {
+  async function confirmReassign() {
+    if (!reassign || !reassignTarget) return;
+    setReassignBusy(true);
+    try {
+      const res = await fetch(deleteUrl(reassign.id, reassign.mode, reassignTarget), {
         method: 'DELETE', credentials: 'include', headers: { 'X-CSRF-Token': '1' },
       });
-      if (!retry.ok) { const d = await retry.json(); alert(d.error || 'Failed'); return; }
-    } else if (!res.ok) {
-      alert('Failed to delete category.');
-      return;
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        toast(d.error || 'Failed to reassign products.', 'error');
+        return;
+      }
+      toast(`Products moved to "${reassignTarget}" and category ${reassign.mode === 'archive' ? 'archived' : 'deleted'}.`);
+      setReassign(null);
+      load();
+    } catch {
+      toast('Network error.', 'error');
+    } finally {
+      setReassignBusy(false);
     }
-    load();
   }
+
+  const archive = (id: string) => removeCategory(id, 'archive');
+  const del = (id: string) => removeCategory(id, 'delete');
 
   return (
     <AdminLayout>
@@ -163,6 +178,49 @@ export default function AdminCategoriesPage() {
             ))}
           </tbody>
         </table>
+      )}
+
+      {reassign && (
+        <AdminModal title="Move products first" onClose={() => setReassign(null)}>
+          <p style={{ fontSize: 13, color: 'var(--muted, #6b6358)', margin: '0 0 14px', lineHeight: 1.6 }}>
+            {reassign.message}
+          </p>
+          <label style={{ display: 'block', fontSize: 12, marginBottom: 6, color: 'var(--dark, #2a2218)' }}>
+            Move its products to:
+          </label>
+          <select
+            value={reassignTarget}
+            onChange={e => setReassignTarget(e.target.value)}
+            style={{ width: '100%', padding: '8px 10px', fontSize: 13, border: '1px solid #e0d9cc', marginBottom: 18 }}
+          >
+            <option value="">Choose a category…</option>
+            {categories
+              .filter(c => c._id !== reassign.id && c.status === 'active')
+              .map(c => (
+                <option key={c._id} value={c.slug}>{c.label}</option>
+              ))}
+          </select>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+            <button
+              onClick={() => setReassign(null)}
+              style={{ padding: '8px 14px', fontSize: 13, border: '1px solid #e0d9cc', background: '#fff', cursor: 'pointer' }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmReassign}
+              disabled={!reassignTarget || reassignBusy}
+              style={{
+                padding: '8px 14px', fontSize: 13, border: '1px solid #2a2218',
+                background: '#2a2218', color: '#fff',
+                cursor: !reassignTarget || reassignBusy ? 'default' : 'pointer',
+                opacity: !reassignTarget || reassignBusy ? 0.5 : 1,
+              }}
+            >
+              {reassignBusy ? 'Moving…' : `Move & ${reassign.mode === 'archive' ? 'archive' : 'delete'}`}
+            </button>
+          </div>
+        </AdminModal>
       )}
     </AdminLayout>
   );

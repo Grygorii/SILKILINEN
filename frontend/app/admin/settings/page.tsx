@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import { toast } from '@/lib/adminToast';
 import Link from 'next/link';
 import styles from './page.module.css';
 
@@ -104,12 +105,12 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        alert(data.error || 'Failed to delete user');
+        toast(data.error || 'Failed to delete user', 'error');
         return;
       }
       setUsers(prev => prev.filter(u => u._id !== user._id));
     } catch {
-      alert('Something went wrong');
+      toast('Something went wrong', 'error');
     }
   }
 

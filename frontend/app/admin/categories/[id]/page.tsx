@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, use } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import { toast } from '@/lib/adminToast';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
@@ -101,7 +102,7 @@ export default function AdminCategoryEditPage({ params }: { params: Promise<{ id
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' },
       body: JSON.stringify({ category: newSlug }),
     });
-    if (!res.ok) { alert('Failed to reassign product.'); return; }
+    if (!res.ok) { toast('Failed to reassign product.', 'error'); return; }
     // Product moved out of this category — drop it from the list.
     setProducts(ps => ps.filter(p => p._id !== productId));
     setProductCount(c => Math.max(0, c - 1));
