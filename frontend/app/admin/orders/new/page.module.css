@@ -1,0 +1,190 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+
+.backBtn {
+  font-size: 12px;
+  padding: 6px 12px;
+  border: 1px solid var(--border, #e8e2d6);
+  background: #fff;
+  cursor: pointer;
+  color: var(--dark, #2a2218);
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0;
+  color: var(--dark, #2a2218);
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--muted, #6b6358);
+  margin: 0 0 20px;
+  max-width: 70ch;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--border, #e8e2d6);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.cardTitle {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 500;
+  color: var(--muted, #6b6358);
+  margin: 0 0 14px;
+}
+
+.input {
+  width: 100%;
+  padding: 9px 11px;
+  font-size: 13px;
+  border: 1px solid var(--border, #e8e2d6);
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.matches {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.matchBtn {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 13px;
+  border: 1px solid var(--border, #e8e2d6);
+  background: var(--cream, #f5f2ec);
+  cursor: pointer;
+}
+.matchBtn:hover { background: #efe9de; }
+
+.matchPrice { color: var(--muted, #6b6358); }
+
+.muted { font-size: 13px; color: var(--muted, #6b6358); }
+
+.line {
+  padding: 12px 0;
+  border-top: 1px solid var(--border, #e8e2d6);
+}
+
+.lineName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--dark, #2a2218);
+  margin-bottom: 8px;
+}
+
+.lineControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.select {
+  padding: 7px 9px;
+  font-size: 13px;
+  border: 1px solid var(--border, #e8e2d6);
+  background: #fff;
+}
+
+.miniLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted, #6b6358);
+}
+
+.numInput {
+  width: 84px;
+  padding: 7px 9px;
+  font-size: 13px;
+  border: 1px solid var(--border, #e8e2d6);
+}
+
+.removeBtn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #b03a2e;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.sumRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  padding: 6px 0;
+  color: var(--dark, #2a2218);
+}
+
+.sumTotal {
+  border-top: 1px solid var(--border, #e8e2d6);
+  margin-top: 6px;
+  padding-top: 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted, #6b6358);
+  margin: 14px 0 6px;
+}
+
+.textarea {
+  width: 100%;
+  padding: 9px 11px;
+  font-size: 13px;
+  border: 1px solid var(--border, #e8e2d6);
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.saveBtn {
+  width: 100%;
+  margin-top: 18px;
+  padding: 12px;
+  font-size: 14px;
+  border: 1px solid var(--dark, #2a2218);
+  background: var(--dark, #2a2218);
+  color: #fff;
+  cursor: pointer;
+}
+.saveBtn:disabled { opacity: 0.5; cursor: default; }
