@@ -333,15 +333,15 @@ export default function ReviewsModeration() {
 
                   <div className={styles.actions}>
                     {r.status !== 'approved' && (
-                      <button className={styles.approve} onClick={() => moderate(r._id, 'approve')} disabled={busyId === r._id}>Approve</button>
+                      <button className={styles.approve} onClick={() => moderate(r._id, 'approve')} disabled={busyId === r._id}>{busyId === r._id ? '…' : 'Approve'}</button>
                     )}
                     {r.status !== 'rejected' && (
                       <button className={styles.reject} onClick={() => { setRejectReason(''); setRejectId(r._id); }} disabled={busyId === r._id}>Reject</button>
                     )}
                     {r.status !== 'spam' && (
-                      <button className={styles.spam} onClick={() => moderate(r._id, 'spam')} disabled={busyId === r._id}>Spam</button>
+                      <button className={styles.spam} onClick={() => moderate(r._id, 'spam')} disabled={busyId === r._id}>{busyId === r._id ? '…' : 'Spam'}</button>
                     )}
-                    <button className={styles.del} onClick={() => remove(r._id)} disabled={busyId === r._id}>Delete</button>
+                    <button className={styles.del} onClick={() => remove(r._id)} disabled={busyId === r._id}>{busyId === r._id ? '…' : 'Delete'}</button>
                   </div>
                 </div>
 

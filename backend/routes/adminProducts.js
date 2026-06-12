@@ -350,10 +350,11 @@ router.put('/:id', async function(req, res) {
   }
 });
 
-// PATCH /api/admin/products/:id/quick-update — inline edit price / status / stock
+// PATCH /api/admin/products/:id/quick-update — inline edit price / status /
+// stock / category / per-variant stock, from the products list.
 router.patch('/:id/quick-update', async function(req, res) {
   try {
-    const { price, totalStock, status } = req.body;
+    const { price, totalStock, status, category, variantStock } = req.body;
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Not found' });
 
@@ -368,6 +369,24 @@ router.patch('/:id/quick-update', async function(req, res) {
       }
       product.totalStock = Math.max(0, Math.floor(totalStock));
       product.inStock = product.totalStock > 0;
+    }
+
+    // Per-variant restock from the list popover: [{ _id, stockLevel }].
+    // The pre-save hook recomputes totalStock and flips active<->sold_out.
+    if (Array.isArray(variantStock)) {
+      for (const v of variantStock) {
+        const target = product.variants.id(v._id);
+        if (!target) return res.status(400).json({ error: 'Unknown variant' });
+        const n = Number(v.stockLevel);
+        if (!Number.isFinite(n) || n < 0) return res.status(400).json({ error: 'Stock must be a non-negative number' });
+        target.stockLevel = Math.floor(n);
+      }
+    }
+
+    if (category !== undefined) {
+      const cat = await Category.findOne({ slug: category, status: 'active' }).lean();
+      if (!cat) return res.status(400).json({ error: `"${category}" is not an active category` });
+      product.category = category;
     }
 
     if (status) {

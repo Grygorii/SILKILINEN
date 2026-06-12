@@ -55,6 +55,7 @@ const adminSocialRouter = require('./routes/adminSocial');
 const socialRouter = require('./routes/social');
 const adminSocialAssetsRouter = require('./routes/adminSocialAssets');
 const adminShippingRouter = require('./routes/adminShipping');
+const adminMaintenanceRouter = require('./routes/adminMaintenance');
 const { loadShippingOverrides } = require('./services/shipping');
 const cartRecoveryRouter = require('./routes/cartRecovery');
 const { processCartRecovery } = require('./services/cartRecovery');
@@ -182,6 +183,7 @@ app.use('/api/admin/social', adminSocialRouter);
 app.use('/api/social', socialRouter);
 app.use('/api/admin/social-assets', adminSocialAssetsRouter);
 app.use('/api/admin/shipping-rates', adminShippingRouter);
+app.use('/api/admin/maintenance', adminMaintenanceRouter);
 app.use('/api/cart-recovery', cartRecoveryRouter);
 
 mongoose.connect(process.env.MONGODB_URI)
