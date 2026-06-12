@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
+import { toast } from '@/lib/adminToast';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -85,7 +86,7 @@ export default function CustomersPage() {
     try {
       await downloadBlob(`/api/admin/customers/export/csv?${params}`, 'customers.csv');
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Export failed');
+      toast(err instanceof Error ? err.message : 'Export failed', 'error');
     }
   }
 
@@ -98,10 +99,10 @@ export default function CustomersPage() {
         method: 'POST', credentials: 'include', headers: { 'X-CSRF-Token': '1' },
       });
       const data = await res.json();
-      if (res.ok) alert(`Win-back sent to ${data.sent} customer(s). ${data.skipped} skipped (already used SILK10 or no consent).`);
-      else alert(data.error || 'Failed to send');
+      if (res.ok) toast(`Win-back sent to ${data.sent} customer(s). ${data.skipped} skipped (already used SILK10 or no consent).`);
+      else toast(data.error || 'Failed to send', 'error');
     } catch {
-      alert('Network error');
+      toast('Network error', 'error');
     } finally {
       setWinbackSending(false);
     }

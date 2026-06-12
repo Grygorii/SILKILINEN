@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import { toast } from '@/lib/adminToast';
 import Link from 'next/link';
 import styles from './page.module.css';
 
@@ -54,10 +55,10 @@ export default function AbandonedCartsPage() {
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' },
       });
       const data = await res.json();
-      if (!res.ok) { alert(data.error || 'Failed to send'); return; }
+      if (!res.ok) { toast(data.error || 'Failed to send', 'error'); return; }
       setOrders(prev => prev.map(o => o._id === orderId ? { ...o, recoveryEmails: data.recoveryEmails } : o));
     } catch {
-      alert('Network error');
+      toast('Network error', 'error');
     } finally {
       setResending(null);
     }

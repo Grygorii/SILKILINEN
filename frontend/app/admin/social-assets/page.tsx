@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import AdminModal from '@/components/AdminModal';
+import { toast } from '@/lib/adminToast';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -99,31 +101,52 @@ function SurfaceCard({ surface }: { surface: Surface }) {
 
   // Assign this asset directly as a product image (#14) — reuses the
   // Cloudinary URL via the product images/url route, no download/reupload.
-  const handleAssignToProduct = useCallback(async (asset: Asset) => {
-    const term = window.prompt('Assign to which product? Type part of the product name:');
-    if (!term || !term.trim()) return;
+  // The modal replaces the old prompt(): live search, click the product.
+  const [assignAsset, setAssignAsset] = useState<Asset | null>(null);
+  const [assignSearch, setAssignSearch] = useState('');
+  const [assignMatches, setAssignMatches] = useState<{ _id: string; name: string }[]>([]);
+  const [assignBusy, setAssignBusy] = useState(false);
+
+  useEffect(() => {
+    if (!assignAsset || assignSearch.trim().length < 2) { setAssignMatches([]); return; }
+    const t = setTimeout(async () => {
+      try {
+        const sr = await fetch(`${API}/api/admin/products?search=${encodeURIComponent(assignSearch.trim())}&limit=6`, { credentials: 'include' });
+        const data = await sr.json();
+        setAssignMatches(Array.isArray(data) ? data : (data.products || []));
+      } catch { setAssignMatches([]); }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [assignAsset, assignSearch]);
+
+  const handleAssignToProduct = useCallback((asset: Asset) => {
+    setAssignSearch('');
+    setAssignMatches([]);
+    setAssignAsset(asset);
+  }, []);
+
+  async function assignTo(product: { _id: string; name: string }) {
+    if (!assignAsset) return;
+    setAssignBusy(true);
     try {
-      const sr = await fetch(`${API}/api/admin/products?search=${encodeURIComponent(term.trim())}&limit=6`, { credentials: 'include' });
-      const data = await sr.json();
-      const matches: { _id: string; name: string }[] = Array.isArray(data) ? data : (data.products || []);
-      if (matches.length === 0) { alert('No products matched that search.'); return; }
-      const chosen = matches.length === 1
-        ? matches[0]
-        : matches.find(m => m.name.toLowerCase() === term.trim().toLowerCase())
-          || (() => { alert(`Multiple matches — be more specific:\n${matches.map(m => m.name).join('\n')}`); return null; })();
-      if (!chosen) return;
-      if (!confirm(`Add this image to "${chosen.name}"?`)) return;
-      const res = await fetch(`${API}/api/admin/products/${chosen._id}/images/url`, {
+      const res = await fetch(`${API}/api/admin/products/${product._id}/images/url`, {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' },
-        body: JSON.stringify({ url: asset.url }),
+        body: JSON.stringify({ url: assignAsset.url }),
       });
-      if (res.ok) alert(`Added to "${chosen.name}".`);
-      else { const d = await res.json(); alert(d.error || 'Failed to assign'); }
+      if (res.ok) {
+        toast(`Image added to "${product.name}".`);
+        setAssignAsset(null);
+      } else {
+        const d = await res.json().catch(() => ({}));
+        toast(d.error || 'Failed to assign image.', 'error');
+      }
     } catch {
-      alert('Network error');
+      toast('Network error.', 'error');
+    } finally {
+      setAssignBusy(false);
     }
-  }, []);
+  }
 
   const handleResetPrompt = useCallback(() => {
     if (promptDirty && !confirm('Reset prompt to seed? Your edits will be lost.')) return;
@@ -216,6 +239,37 @@ function SurfaceCard({ surface }: { surface: Surface }) {
       </div>
 
       {surface.notes && <p className={styles.cardNotes}>{surface.notes}</p>}
+
+      {assignAsset && (
+        <AdminModal title="Add image to a product" onClose={() => setAssignAsset(null)}>
+          <input
+            autoFocus
+            value={assignSearch}
+            onChange={e => setAssignSearch(e.target.value)}
+            placeholder="Search products by name…"
+            style={{ width: '100%', padding: '8px 10px', fontSize: 13, border: '1px solid #e0d9cc', marginBottom: 12, boxSizing: 'border-box' }}
+          />
+          {assignSearch.trim().length >= 2 && assignMatches.length === 0 && (
+            <p style={{ fontSize: 13, color: '#6b6358', margin: '0 0 8px' }}>No products matched.</p>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 240, overflowY: 'auto' }}>
+            {assignMatches.map(m => (
+              <button
+                key={m._id}
+                onClick={() => assignTo(m)}
+                disabled={assignBusy}
+                style={{
+                  textAlign: 'left', padding: '10px 12px', fontSize: 13,
+                  border: '1px solid #e0d9cc', background: '#fff',
+                  cursor: assignBusy ? 'default' : 'pointer',
+                }}
+              >
+                {m.name}
+              </button>
+            ))}
+          </div>
+        </AdminModal>
+      )}
     </div>
   );
 }

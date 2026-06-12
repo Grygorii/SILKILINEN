@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import { toast } from '@/lib/adminToast';
 import Link from 'next/link';
 import styles from './page.module.css';
 
@@ -57,14 +58,17 @@ export default function AdminBundlesPage() {
 
   async function archive(id: string) {
     if (!confirm('Archive this bundle?')) return;
-    await fetch(`${API}/api/admin/bundles/${id}`, { method: 'DELETE', credentials: 'include' });
+    const res = await fetch(`${API}/api/admin/bundles/${id}`, { method: 'DELETE', credentials: 'include' });
+    if (!res.ok) { toast('Failed to archive bundle.', 'error'); return; }
+    toast('Bundle archived.');
     load();
   }
 
   async function del(id: string) {
     if (!confirm('Permanently delete this bundle? This cannot be undone.')) return;
     const res = await fetch(`${API}/api/admin/bundles/${id}/permanent`, { method: 'DELETE', credentials: 'include' });
-    if (!res.ok) { alert('Failed to delete bundle.'); return; }
+    if (!res.ok) { toast('Failed to delete bundle.', 'error'); return; }
+    toast('Bundle deleted.');
     load();
   }
 

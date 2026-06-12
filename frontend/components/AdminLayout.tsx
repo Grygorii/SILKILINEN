@@ -11,6 +11,7 @@ import {
 import styles from './AdminLayout.module.css';
 import LogoutButton from './LogoutButton';
 import AdminNotifications from './AdminNotifications';
+import AdminToastHost from './AdminToastHost';
 
 type NavEntry =
   | { section: string }
@@ -163,6 +164,7 @@ export default function AdminLayout({
       </nav>
 
       <AdminNotifications />
+      <AdminToastHost />
     </div>
   );
 }

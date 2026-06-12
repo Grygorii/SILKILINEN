@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import { toast } from '@/lib/adminToast';
 import Link from 'next/link';
 import styles from './page.module.css';
 
@@ -54,14 +55,17 @@ export default function AdminCollectionsPage() {
 
   async function archive(id: string) {
     if (!confirm('Archive this collection?')) return;
-    await fetch(`${API}/api/admin/collections/${id}`, { method: 'DELETE', credentials: 'include' });
+    const res = await fetch(`${API}/api/admin/collections/${id}`, { method: 'DELETE', credentials: 'include' });
+    if (!res.ok) { toast('Failed to archive collection.', 'error'); return; }
+    toast('Collection archived.');
     load();
   }
 
   async function del(id: string) {
     if (!confirm('Permanently delete this collection? This cannot be undone.')) return;
     const res = await fetch(`${API}/api/admin/collections/${id}/permanent`, { method: 'DELETE', credentials: 'include' });
-    if (!res.ok) { alert('Failed to delete collection.'); return; }
+    if (!res.ok) { toast('Failed to delete collection.', 'error'); return; }
+    toast('Collection deleted.');
     load();
   }
 
