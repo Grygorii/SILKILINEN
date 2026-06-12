@@ -203,6 +203,53 @@ router.get('/', async function(req, res) {
   }
 });
 
+// GET /api/admin/products/low-stock — variant-level inventory report.
+// The product list only filters by total stock, which hides WHICH size/colour
+// is short. This returns one row per variant at/below its low-stock threshold
+// (or out of stock), so the founder can reorder the exact SKU. Sorted most
+// urgent first (out of stock, then closest to threshold). Defined before the
+// /:id routes so "low-stock" isn't captured as an id.
+router.get('/low-stock', async function(req, res) {
+  try {
+    // Only sellable products matter for restocking — drafts/archived don't.
+    const products = await Product.find({ status: { $in: ['active', 'sold_out'] } })
+      .select('name status variants totalStock')
+      .lean();
+
+    const rows = [];
+    for (const p of products) {
+      for (const v of p.variants || []) {
+        const threshold = typeof v.lowStockThreshold === 'number' ? v.lowStockThreshold : 3;
+        const level = v.stockLevel || 0;
+        if (level <= threshold) {
+          rows.push({
+            productId: String(p._id),
+            productName: p.name,
+            productStatus: p.status,
+            colour: v.colour || null,
+            size: v.size || null,
+            sku: v.sku || null,
+            stockLevel: level,
+            lowStockThreshold: threshold,
+            outOfStock: level === 0,
+          });
+        }
+      }
+    }
+
+    rows.sort((a, b) => a.stockLevel - b.stockLevel || a.productName.localeCompare(b.productName));
+
+    res.json({
+      rows,
+      outOfStockCount: rows.filter(r => r.outOfStock).length,
+      lowStockCount: rows.filter(r => !r.outOfStock).length,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET /api/admin/products/:id/preview-token — generate a 1-hour signed preview URL
 router.get('/:id/preview-token', async function(req, res) {
   try {

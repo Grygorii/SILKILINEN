@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   LayoutDashboard, Package, FileText, Users,
   Megaphone, Settings, Menu, Bell, X, Layers, Tag, BookOpen, BookMarked, Share2,
-  Folder, Gift, Activity, Image as ImageIcon,
+  Folder, Gift, Activity, Image as ImageIcon, ShoppingBag, Star, Upload, Boxes,
 } from 'lucide-react';
 import styles from './AdminLayout.module.css';
 import LogoutButton from './LogoutButton';
@@ -16,25 +16,31 @@ type NavEntry =
   | { section: string }
   | { label: string; href: string; icon: React.ElementType; exact?: boolean };
 
+// Grouped by what the task actually is, not by an abstract "publish" bucket —
+// so the catalogue, the things that sell, marketing, and content each have a
+// home you can scan in one glance.
 const NAV: NavEntry[] = [
   { section: 'Core' },
   { label: 'Dashboard',  href: '/admin',            icon: LayoutDashboard, exact: true },
-  { label: 'Products',   href: '/admin/products',   icon: Package },
-  { label: 'Import',     href: '/admin/import',     icon: FileText },
-  { label: 'Orders',     href: '/admin/orders',     icon: FileText },
+  { label: 'Orders',     href: '/admin/orders',     icon: ShoppingBag },
   { label: 'Customers',  href: '/admin/customers',  icon: Users },
-  { label: 'Reviews',    href: '/admin/reviews',    icon: FileText },
-  { section: 'Publish' },
-  { label: 'Collections', href: '/admin/collections', icon: Layers },
+  { label: 'Reviews',    href: '/admin/reviews',    icon: Star },
+  { section: 'Catalogue' },
+  { label: 'Products',    href: '/admin/products',    icon: Package },
+  { label: 'Inventory',   href: '/admin/inventory',   icon: Boxes },
   { label: 'Categories',  href: '/admin/categories',  icon: Folder },
+  { label: 'Collections', href: '/admin/collections', icon: Layers },
   { label: 'Bundles',     href: '/admin/bundles',     icon: Gift },
-  { label: 'Content',     href: '/admin/content',     icon: FileText },
-  { label: 'Marketing',    href: '/admin/marketing',    icon: Megaphone },
-  { label: 'Promo codes', href: '/admin/promo-codes', icon: Tag },
-  { label: 'Journal',     href: '/admin/journal',     icon: BookOpen },
-  { label: 'Social',        href: '/admin/social',        icon: Share2 },
-  { label: 'Image Studio',  href: '/admin/social-assets', icon: ImageIcon },
-  { label: 'Pages',         href: '/admin/pages',         icon: FileText },
+  { label: 'Import',      href: '/admin/import',      icon: Upload },
+  { section: 'Marketing' },
+  { label: 'Marketing',   href: '/admin/marketing',    icon: Megaphone },
+  { label: 'Promo codes', href: '/admin/promo-codes',  icon: Tag },
+  { label: 'Social',      href: '/admin/social',       icon: Share2 },
+  { label: 'Image Studio', href: '/admin/social-assets', icon: ImageIcon },
+  { section: 'Content' },
+  { label: 'Site Content', href: '/admin/content',     icon: FileText },
+  { label: 'Journal',      href: '/admin/journal',     icon: BookOpen },
+  { label: 'Pages',        href: '/admin/pages',       icon: FileText },
   { section: 'Finance' },
   { label: 'Overview',   href: '/admin/finance',           icon: BookMarked, exact: true },
   { label: 'Expenses',   href: '/admin/finance/expenses',  icon: BookMarked },
