@@ -11,6 +11,7 @@ import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { CustomerProvider } from "@/context/CustomerContext";
 import { CookieConsentProvider } from "@/context/CookieConsentContext";
+import { isValidSocialUrl } from "@/lib/socialUrl";
 import "./globals.css";
 
 // next/font self-hosts the WOFF2 files and inlines a CSS preload, killing
@@ -123,7 +124,7 @@ async function getSocialUrls(): Promise<string[]> {
     const res = await fetch(`${API}/api/social/platforms`, { next: { revalidate: 3600 } });
     if (!res.ok) return [];
     const data = await res.json();
-    return Array.isArray(data) ? data.map((p: { url?: string }) => p.url).filter((u): u is string => Boolean(u)) : [];
+    return Array.isArray(data) ? data.map((p: { url?: string }) => p.url).filter(isValidSocialUrl) : [];
   } catch {
     return [];
   }

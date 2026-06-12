@@ -3,6 +3,7 @@ import styles from './Footer.module.css';
 import CookiePreferencesLink from './CookiePreferencesLink';
 import FooterMobileNav from './FooterMobileNav';
 import GoogleReviewsBadge from './GoogleReviewsBadge';
+import { isValidSocialUrl } from '@/lib/socialUrl';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -46,7 +47,7 @@ async function getFooterCategories(): Promise<{ slug: string; label: string; cou
 }
 
 export default async function Footer() {
-  const socialPlatforms = await getSocialPlatforms();
+  const socialPlatforms = (await getSocialPlatforms()).filter(p => isValidSocialUrl(p.url));
   const shopCategories = (await getFooterCategories()).filter(c => c.count > 0).slice(0, 6);
   const socialRow = socialPlatforms.length > 0 ? (
     <div className={styles.socialRow}>
