@@ -7,6 +7,7 @@ import Zone1ActionItems from './_components/dashboard/Zone1ActionItems';
 import Zone2Metrics from './_components/dashboard/Zone2Metrics';
 import Zone3Working from './_components/dashboard/Zone3Working';
 import SeoHealthPanel from './_components/dashboard/SeoHealthPanel';
+import TodayStrip from './_components/dashboard/TodayStrip';
 import AdvisorPanel from './_components/dashboard/AdvisorPanel';
 import SearchPerformancePanel from './_components/dashboard/SearchPerformancePanel';
 import FounderPulse from '@/components/dashboard/FounderPulse';
@@ -117,6 +118,9 @@ export default function AdminDashboard() {
           </button>
         </div>
       </div>
+
+      {/* ── Today: live pulse strip ── */}
+      <TodayStrip />
 
       {/* ── Error banner ── */}
       {dashError && (

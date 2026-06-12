@@ -40,7 +40,7 @@ function fmtDate(d: string | null) {
   return new Date(d).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 function fmtMoney(n: number | null | undefined) {
-  if (!n) return '€0';
+  if (!n) return '€0.00';
   return `€${n.toFixed(2)}`;
 }
 
@@ -179,7 +179,7 @@ export default function CustomerDetailPage() {
   const tdStyle: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--border)', fontSize: 13, color: 'var(--dark)', verticalAlign: 'middle' };
 
   if (loading) {
-    return <AdminLayout><div style={{ padding: 28, color: 'var(--muted)', fontSize: 13 }}>Loading…</div></AdminLayout>;
+    return <AdminLayout><div style={{ padding: 28, color: 'var(--muted)', fontSize: 13 }}>Loading customer…</div></AdminLayout>;
   }
   if (!customer) {
     return (
@@ -206,6 +206,8 @@ export default function CustomerDetailPage() {
             <p style={{ fontSize: 13, color: 'var(--muted)', margin: '4px 0 0' }}>{customer.email}</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
+            <a href={`mailto:${customer.email}`} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--border)', background: 'white', color: 'var(--dark)', textDecoration: 'none' }}>Email customer</a>
+            <button onClick={() => { navigator.clipboard.writeText(customer.email); toast('Email copied.'); }} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>Copy email</button>
             <button onClick={gdprExport} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>Export data</button>
             <button onClick={gdprDelete} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid #c0392b', color: '#c0392b', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>GDPR delete</button>
           </div>
@@ -223,14 +225,14 @@ export default function CustomerDetailPage() {
         )}
 
         {/* At-a-glance stat band */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--border)', marginBottom: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
           {[
+            { label: 'Total spent', value: fmtMoney(totalSpend) },
             { label: 'Orders', value: String(orders.length) },
-            { label: 'Lifetime spend', value: fmtMoney(totalSpend) },
-            { label: 'First order', value: fmtDate(customer.firstOrderAt) },
-            { label: 'Last order', value: fmtDate(customer.lastOrderAt) },
+            { label: 'Avg order value', value: orders.length > 0 ? fmtMoney(totalSpend / orders.length) : '—' },
+            { label: 'Customer since', value: fmtDate(customer.createdAt) },
           ].map(({ label: l, value }) => (
-            <div key={l} style={{ background: 'white', padding: '14px 18px' }}>
+            <div key={l} style={{ background: 'white', border: '1px solid var(--border)', padding: '14px 18px' }}>
               <p style={label}>{l}</p>
               <p style={{ ...val, fontWeight: 600 }}>{value}</p>
             </div>

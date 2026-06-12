@@ -12,6 +12,8 @@ import styles from './AdminLayout.module.css';
 import LogoutButton from './LogoutButton';
 import AdminNotifications from './AdminNotifications';
 import AdminToastHost from './AdminToastHost';
+import CommandPalette from './CommandPalette';
+import paletteStyles from './CommandPalette.module.css';
 
 type NavEntry =
   | { section: string }
@@ -101,6 +103,14 @@ export default function AdminLayout({
             <p className={styles.logoSub}>Admin Panel</p>
           </Link>
 
+          <button
+            className={paletteStyles.trigger}
+            onClick={() => window.dispatchEvent(new Event('open-command-palette'))}
+          >
+            <span>Search</span>
+            <span className={paletteStyles.triggerKey}>⌘K</span>
+          </button>
+
           <nav className={styles.nav}>
             {NAV.map((entry, i) => {
               if ('section' in entry) {
@@ -167,6 +177,7 @@ export default function AdminLayout({
 
       <AdminNotifications />
       <AdminToastHost />
+      <CommandPalette />
     </div>
   );
 }
