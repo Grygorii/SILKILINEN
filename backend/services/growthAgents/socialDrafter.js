@@ -8,6 +8,7 @@
 // to review, edit and mark ready. Nothing is ever published automatically.
 
 const OpenAI = require('openai');
+const { playbookPromptBlock } = require('../playbook');
 const Product = require('../../models/Product');
 const JournalArticle = require('../../models/JournalArticle');
 const SocialPost = require('../../models/SocialPost');
@@ -152,10 +153,11 @@ async function run() {
     }];
   }
 
+  const learned = await playbookPromptBlock();
   const response = await deepseek.chat.completions.create({
     model: MODEL,
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: SYSTEM_PROMPT + learned },
       { role: 'user', content: buildUserPrompt(products, article) },
     ],
     temperature: 0.7,

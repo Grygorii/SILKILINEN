@@ -10,6 +10,7 @@
 const OpenAI = require('openai');
 const JournalArticle = require('../../models/JournalArticle');
 const Product = require('../../models/Product');
+const { playbookPromptBlock } = require('../playbook');
 
 const deepseekClient = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
@@ -121,10 +122,11 @@ async function writeArticle(topic, products) {
     .map(p => `- ${p.name} (${p.category || 'silk'}, €${p.price}) — ${SITE_URL}/product/${p._id}`)
     .join('\n');
 
+  const learned = await playbookPromptBlock();
   const parsed = await chat([
     {
       role: 'system',
-      content: `You write journal articles for SILKILINEN, a small luxury silk and linen brand. ${BRAND_RULES}
+      content: `You write journal articles for SILKILINEN, a small luxury silk and linen brand. ${BRAND_RULES}${learned}
 
 ARTICLE REQUIREMENTS:
 - 700-1000 words.

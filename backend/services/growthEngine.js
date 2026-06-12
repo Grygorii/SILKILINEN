@@ -20,6 +20,7 @@ const LASTRUN_KEY = 'growthEngineLastRun';
 // run() returns an array of action objects:
 //   { type, title, detail?, href?, status?, meta? }
 const AGENTS = [
+  require('./growthAgents/demandScout'),
   require('./growthAgents/competitorScout'),
   require('./growthAgents/storefrontScout'),
   require('./growthAgents/contentWriter'),
