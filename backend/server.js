@@ -59,6 +59,8 @@ const adminMaintenanceRouter = require('./routes/adminMaintenance');
 const adminAnalystRouter = require('./routes/adminAnalyst');
 const adminTodayRouter = require('./routes/adminToday');
 const adminSearchRouter = require('./routes/adminSearch');
+const adminGrowthRouter = require('./routes/adminGrowth');
+const { runGrowthEngine } = require('./services/growthEngine');
 const { loadShippingOverrides } = require('./services/shipping');
 const cartRecoveryRouter = require('./routes/cartRecovery');
 const { processCartRecovery } = require('./services/cartRecovery');
@@ -190,6 +192,7 @@ app.use('/api/admin/maintenance', adminMaintenanceRouter);
 app.use('/api/admin/analyst', adminAnalystRouter);
 app.use('/api/admin/today', adminTodayRouter);
 app.use('/api/admin/search', adminSearchRouter);
+app.use('/api/admin/growth', adminGrowthRouter);
 app.use('/api/cart-recovery', cartRecoveryRouter);
 
 mongoose.connect(process.env.MONGODB_URI)
@@ -251,6 +254,8 @@ let advisorDigestStartTimeout = null;
 let advisorDigestInterval = null;
 let reviewRequestsStartTimeout = null;
 let reviewRequestsInterval = null;
+let growthEngineStartTimeout = null;
+let growthEngineInterval = null;
 
 const server = app.listen(PORT, function() {
   console.log('Server running on port ' + PORT);
@@ -284,6 +289,18 @@ const server = app.listen(PORT, function() {
     run();
     reviewRequestsInterval = setInterval(run, 24 * 60 * 60 * 1000);
   }, 15 * 60 * 1000);
+
+  // Growth Engine — the autonomous marketing pulse. Checks every 6h which
+  // specialist agents (content writer, social drafter, newsletter, watchdog)
+  // are due per their own cadence and runs only those; everything public is
+  // created as a draft for founder approval. First pulse 20 min after boot.
+  growthEngineStartTimeout = setTimeout(function() {
+    const pulse = () => runGrowthEngine()
+      .then(r => { if (r.ran.length) console.log(`[growth] pulsed: ${r.ran.join(', ')} (${r.actionCount} actions)`); })
+      .catch(err => console.error('[growth]', err));
+    pulse();
+    growthEngineInterval = setInterval(pulse, 6 * 60 * 60 * 1000);
+  }, 20 * 60 * 1000);
 });
 
 let shuttingDown = false;
@@ -298,6 +315,8 @@ function shutdown(signal) {
   if (advisorDigestInterval) clearInterval(advisorDigestInterval);
   if (reviewRequestsStartTimeout) clearTimeout(reviewRequestsStartTimeout);
   if (reviewRequestsInterval) clearInterval(reviewRequestsInterval);
+  if (growthEngineStartTimeout) clearTimeout(growthEngineStartTimeout);
+  if (growthEngineInterval) clearInterval(growthEngineInterval);
 
   // Hard exit if graceful drain stalls (e.g. hung Mongo or stuck request).
   const hardExit = setTimeout(() => {
