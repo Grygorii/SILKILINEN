@@ -98,6 +98,28 @@ function imageForColour(p: Product, colour?: string): string {
   return primary?.url || p.image || '';
 }
 
+// Merchant rejected some additional_image_link entries as "Unsupported image
+// type" — originals uploaded as HEIC/AVIF keep that format at the raw
+// Cloudinary URL. Route every feed image through a Cloudinary transform that
+// forces JPEG (universally accepted by Google) at a sane size. Non-Cloudinary
+// URLs pass through unless their extension is one Google can't read.
+const UNSUPPORTED_IMG = /\.(heic|heif|avif|svg|mp4|mov|webm)(\?|$)/i;
+function feedImage(url: string): string {
+  if (!url) return '';
+  if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+    return url.replace('/upload/', '/upload/f_jpg,q_auto:good,w_1600,c_limit/');
+  }
+  return UNSUPPORTED_IMG.test(url) ? '' : url;
+}
+
+// Google's adult-content policy disapproves lingerie-adjacent items unless
+// they're declared with g:adult. Declaring them serves the listings in the
+// contexts Google allows instead of blocking them outright.
+const ADULT_TERMS = /linger|bikini|brief|knicker|thong|bralette|\bbra\b|underwear|intimate/i;
+function isAdultItem(p: Product): boolean {
+  return ADULT_TERMS.test(p.category || '') || ADULT_TERMS.test(p.name || '');
+}
+
 async function getProducts(): Promise<Product[]> {
   if (!API) return [];
   try {
@@ -138,10 +160,12 @@ function buildItem(
   const size = opts.size || p.sizes?.[0];
   const link = `${BASE}/product/${p._id}`;
 
-  // Up to 10 extra images (Google's cap), skipping the main one.
+  // Up to 10 extra images (Google's cap), skipping the main one and anything
+  // in a format Merchant can't ingest.
+  const mainImage = feedImage(opts.imageLink);
   const extras = (p.images || [])
-    .map(i => i.url)
-    .filter((u): u is string => Boolean(u) && u !== opts.imageLink)
+    .map(i => feedImage(i.url || ''))
+    .filter((u): u is string => Boolean(u) && u !== mainImage)
     .slice(0, 10);
 
   const lines = [
@@ -150,7 +174,7 @@ function buildItem(
     `      <g:title>${xml(cleanText(p.name, 150))}</g:title>`,
     `      <g:description>${xml(cleanText(p.description || p.name, 4900))}</g:description>`,
     `      <g:link>${xml(link)}</g:link>`,
-    opts.imageLink ? `      <g:image_link>${xml(opts.imageLink)}</g:image_link>` : '',
+    mainImage ? `      <g:image_link>${xml(mainImage)}</g:image_link>` : '',
     ...extras.map(u => `      <g:additional_image_link>${xml(u)}</g:additional_image_link>`),
     `      <g:availability>${opts.availability}</g:availability>`,
     `      <g:price>${priceTag(regularPrice)}</g:price>`,
@@ -158,6 +182,7 @@ function buildItem(
     `      <g:brand>SILKILINEN</g:brand>`,
     `      <g:condition>new</g:condition>`,
     `      <g:identifier_exists>no</g:identifier_exists>`,
+    isAdultItem(p) ? `      <g:adult>yes</g:adult>` : '',
     `      <g:gender>${xml(p.gender || 'unisex')}</g:gender>`,
     `      <g:age_group>${xml(p.ageGroup || 'adult')}</g:age_group>`,
     colour ? `      <g:color>${xml(colour)}</g:color>` : '',

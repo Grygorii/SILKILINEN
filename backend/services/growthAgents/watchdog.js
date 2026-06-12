@@ -36,7 +36,7 @@ async function checkBestsellerStock() {
   return {
     type: 'alert',
     title: `${outOfStock.length} selling product${outOfStock.length === 1 ? ' is' : 's are'} out of stock`,
-    detail: `Sold in the last 30 days but no stock left: ${names.join(', ')}${more > 0 ? ` and ${more} more` : ''}. Restock to avoid losing proven sellers.`,
+    detail: `Sold in the last 30 days but no stock left: ${names.join(', ')}${more > 0 ? ` and ${more} more` : ''}. Do this: open Inventory, click the stock number on each flagged variant, type the new quantity — it saves instantly and the product flips back to Active by itself.`,
     href: '/admin/inventory',
     status: 'info',
   };
@@ -56,7 +56,7 @@ async function checkListingGaps() {
   return {
     type: 'alert',
     title: `${count} active product${count === 1 ? '' : 's'} missing meta title or images`,
-    detail: 'These listings underperform in search and Google Shopping until the gaps are filled.',
+    detail: 'Do this: open the filtered list, tick the affected products and run Bulk actions → Generate SEO — the AI writes the missing meta titles in one pass. Products with no images need a photo uploaded in their editor (or assign one from Image Studio).',
     href: '/admin/products?issues=no-seo',
     status: 'info',
   };
@@ -73,9 +73,11 @@ async function checkMerchantCenter() {
     return {
       type: 'alert',
       title: `${result.disapproved} product${result.disapproved === 1 ? '' : 's'} disapproved in Google Merchant Center`,
-      detail: top
-        ? `Top issue: ${top.description || top.code}${top.count ? ` (${top.count} affected)` : ''}. See the Merchant Center panel on the dashboard.`
-        : 'See the Merchant Center panel on the dashboard for details.',
+      detail: [
+        top ? `Top issue: ${top.description || top.code}${top.count ? ` (${top.count} affected)` : ''}.` : '',
+        'Already fixed in code: the feed sends age_group on every item, declares lingerie with Google’s adult flag, and converts every image to JPEG.',
+        'Do this (2 min): Merchant Center → Products → Feeds — make sure the scheduled fetch of https://www.silkilinen.com/feed/google.xml is the ONLY product source (delete/disable any older feed or “add products from website” source — a stale second source is why attributes the feed already sends still show as “missing”). Then press Fetch now and re-check Diagnostics after ~15 minutes.',
+      ].filter(Boolean).join(' '),
       href: '/admin',
       status: 'info',
     };
@@ -96,7 +98,7 @@ async function checkStaleFulfilment() {
   return {
     type: 'alert',
     title: `${count} order${count === 1 ? '' : 's'} waiting to ship for over 3 days`,
-    detail: 'Paid or processing orders older than 3 days. Late shipping is the fastest route to bad reviews.',
+    detail: 'Do this: open each order, print the packing slip, ship it, and use the Ship action to add tracking — the customer is emailed automatically. Late shipping is the fastest route to bad reviews.',
     href: '/admin/orders?status=paid',
     status: 'info',
   };

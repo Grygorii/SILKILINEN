@@ -35,8 +35,8 @@ HARD RULES:
 - NEVER use: "amazing", "incredible", "best", "must-have", "ultimate", "perfect".
 
 TASK: write two caption drafts about the products (and journal article, if given).
-1. "instagram" — warm and sensory. 2–3 short paragraphs separated by blank lines, then nothing else (hashtags go in their own field). Plus 5–8 tasteful, specific hashtags.
-2. "pinterest" — searchable and descriptive, written for Pinterest's visual search: lead with what the item is and its material, one or two calm sentences on texture and use. Plus 3–5 keyword-style hashtags.
+1. "instagram" — this must read like writing, not a product sheet. NEVER open with the product name, material or specs. Open inside a small sensory moment or feeling the piece belongs to (the cool side of the bed, the hour before guests arrive, the first bare-legged morning of spring). Let the product enter the scene naturally in the second or third sentence. ONE material detail maximum, placed late and worn lightly ("19-momme mulberry silk" as an aside, not a headline). No feature lists, no "Also:" cross-sells, no colon-led constructions. 2–3 short paragraphs, blank lines between. Plus 5–8 tasteful, specific hashtags.
+2. "pinterest" — Pinterest is a search engine, so here be descriptive: lead with what the item is and its material, one or two calm sentences on texture and use. Still prose, never a spec list. Plus 3–5 keyword-style hashtags.
 
 Hashtags: lowercase, no spaces, WITHOUT the leading # symbol. Specific over broad ("mulberrysilk", "silkpillowcase", "slowliving") and never origin-based ("irishlinen", "madeinireland", "handmade" are all forbidden).
 
@@ -81,11 +81,28 @@ async function run() {
     return [{ type: 'info', title: 'Skipped — AI not configured', status: 'info' }];
   }
 
-  const [products, article] = await Promise.all([
+  // Data-driven subject choice: rank active products by what shoppers are
+  // actually doing — product-page views (last 14 days, own analytics) and
+  // units sold (last 30 days). The winner gets the post; the reasoning is
+  // shown in the pulse feed so the decision is auditable, not vibes.
+  const Visit = require('../../models/Visit');
+  const Order = require('../../models/Order');
+  const since14 = new Date(Date.now() - 14 * 86400000);
+  const since30 = new Date(Date.now() - 30 * 86400000);
+
+  const [viewRows, saleRows, activeProducts, article] = await Promise.all([
+    Visit.aggregate([
+      { $match: { createdAt: { $gte: since14 }, productId: { $ne: null } } },
+      { $group: { _id: '$productId', views: { $sum: 1 } } },
+    ]).catch(() => []),
+    Order.aggregate([
+      { $match: { status: { $in: ['paid', 'shipped', 'delivered'] }, createdAt: { $gte: since30 } } },
+      { $unwind: '$items' },
+      { $match: { 'items.productId': { $ne: null } } },
+      { $group: { _id: '$items.productId', units: { $sum: '$items.quantity' } } },
+    ]).catch(() => []),
     Product.find({ status: 'active' })
-      .sort({ updatedAt: -1 })
-      .limit(2)
-      .select('name price description materialComposition momme colours images image altText')
+      .select('name price description materialComposition momme colours images image altText updatedAt')
       .lean(),
     JournalArticle.findOne({ status: 'published' })
       .sort({ publishedAt: -1, createdAt: -1 })
@@ -93,9 +110,26 @@ async function run() {
       .lean(),
   ]);
 
-  if (!products.length && !article) {
+  if (!activeProducts.length && !article) {
     return [{ type: 'info', title: 'Nothing to draft — no active products or published articles', status: 'info' }];
   }
+
+  const views = new Map(viewRows.map(r => [String(r._id), r.views]));
+  const sales = new Map(saleRows.map(r => [String(r._id), r.units]));
+  const scored = activeProducts
+    .map(p => {
+      const v = views.get(String(p._id)) || 0;
+      const u = sales.get(String(p._id)) || 0;
+      // A sale is worth far more signal than a view; recency breaks ties.
+      return { p, v, u, score: v + u * 25 };
+    })
+    .sort((a, b) => b.score - a.score || new Date(b.p.updatedAt) - new Date(a.p.updatedAt));
+
+  const products = scored.slice(0, 2).map(s => s.p);
+  const top = scored[0];
+  const reasoning = top && top.score > 0
+    ? `Chosen by data: "${top.p.name}" — ${top.v} product view(s) in 14d, ${top.u} sold in 30d`
+    : 'No view/sales signal yet — chose the newest active product';
 
   const subjectName = products[0] ? products[0].name : article.title;
 
@@ -156,7 +190,7 @@ async function run() {
     actions.push({
       type: 'social_draft',
       title: `${p.key === 'instagram' ? 'Instagram' : 'Pinterest'} caption drafted — ${subjectName}`,
-      detail: draft.caption.slice(0, 200),
+      detail: `${reasoning}. "${draft.caption.slice(0, 180)}…"`,
       href: `/admin/social/${post._id}`,
       status: 'needs_approval',
       meta: { postId: String(post._id), platform: p.key, products: products.map(x => String(x._id)) },

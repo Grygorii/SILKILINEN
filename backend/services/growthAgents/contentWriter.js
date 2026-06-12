@@ -48,13 +48,35 @@ async function chat(messages, maxTokens) {
   return JSON.parse(content);
 }
 
-async function pickTopic(existingArticles, categories) {
+// Real search queries from the founder's Search Console, when connected.
+// These are searches Google ALREADY shows the site for — content targeting
+// one of them starts from proof of demand instead of a guess. Failures
+// (not connected, API hiccup, no data yet) degrade to null: the topic pick
+// then falls back to editorial judgment and the action says so honestly.
+async function getRealQueries() {
+  try {
+    const gsc = require('../searchConsole');
+    if (!(await gsc.isConnected())) return null;
+    const rows = await gsc.getQueryOpportunities(28);
+    const usable = rows.filter(r => r.impressions >= 3);
+    return usable.length ? usable.slice(0, 15) : null;
+  } catch (err) {
+    console.warn('[growth:content] Search Console unavailable:', err.message);
+    return null;
+  }
+}
+
+async function pickTopic(existingArticles, categories, realQueries) {
+  const grounded = Boolean(realQueries && realQueries.length);
   const parsed = await chat([
     {
       role: 'system',
       content: `You plan editorial content for SILKILINEN's journal (blog). ${BRAND_RULES}
 
-Choose ONE new long-tail informational topic a silk or linen shopper would actually search for: care guides, sleep/skin/hair benefits, fabric comparisons, styling, gifting. It must NOT overlap with the existing article titles you are given.
+${grounded
+  ? `You are given REAL search queries this site already appears for in Google (with impressions and average position). You MUST pick your targetQuery from that list — prefer informational intent, high impressions, and a weak position (above ~8) where an article can move the needle. Copy the query text exactly.`
+  : `Choose ONE new long-tail informational topic a silk or linen shopper would actually search for: care guides, sleep/skin/hair benefits, fabric comparisons, styling, gifting.`}
+It must NOT overlap with the existing article titles you are given.
 
 RESPOND ONLY WITH VALID JSON: {"topic": "working title of the article", "targetQuery": "the long-tail search phrase it targets", "angle": "one sentence on the take"}`,
     },
@@ -62,6 +84,12 @@ RESPOND ONLY WITH VALID JSON: {"topic": "working title of the article", "targetQ
       role: 'user',
       content: [
         `Product categories we sell: ${categories.join(', ') || '(none listed)'}`,
+        ``,
+        grounded
+          ? `REAL Google queries for this site (last 28 days):\n${realQueries
+              .map(q => `- "${q.query}" — ${q.impressions} impressions, avg position ${q.position}`)
+              .join('\n')}`
+          : `(No Search Console query data available — choose editorially.)`,
         ``,
         `Existing journal articles (do NOT repeat these topics):`,
         existingArticles.length
@@ -76,6 +104,15 @@ RESPOND ONLY WITH VALID JSON: {"topic": "working title of the article", "targetQ
   if (!parsed.topic || !parsed.targetQuery) {
     throw new Error(`Topic pick returned invalid shape: ${JSON.stringify(parsed).slice(0, 200)}`);
   }
+  // Attach provenance so the pulse feed shows the process, not just the output.
+  const match = grounded
+    ? realQueries.find(q => q.query.toLowerCase() === String(parsed.targetQuery).toLowerCase())
+    : null;
+  parsed.provenance = match
+    ? `Grounded in Search Console: "${match.query}" — ${match.impressions} impressions, avg position ${match.position}`
+    : grounded
+      ? 'Search Console data was provided but the model proposed its own phrasing — treat as editorial'
+      : 'No Search Console query data yet — topic chosen editorially';
   return parsed;
 }
 
@@ -144,7 +181,8 @@ async function run() {
   }
 
   const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
-  const topic = await pickTopic(existingArticles, categories);
+  const realQueries = await getRealQueries();
+  const topic = await pickTopic(existingArticles, categories, realQueries);
   const article = await writeArticle(topic, products);
 
   // Unique slug: slugified title, deduped against existing journal slugs.
@@ -171,10 +209,10 @@ async function run() {
   return [{
     type: 'article_draft',
     title: `Wrote draft: "${article.title}"`,
-    detail: `Targets "${topic.targetQuery}" · ${words} words · links to ${linked.join(', ') || 'no products'}`,
+    detail: `${topic.provenance}. Targets "${topic.targetQuery}" · ${words} words · links to ${linked.join(', ') || 'no products'}`,
     href: `/admin/journal/${doc._id}`,
     status: 'needs_approval',
-    meta: { articleId: String(doc._id), slug, targetQuery: topic.targetQuery, angle: topic.angle || '' },
+    meta: { articleId: String(doc._id), slug, targetQuery: topic.targetQuery, angle: topic.angle || '', provenance: topic.provenance },
   }];
 }
 
