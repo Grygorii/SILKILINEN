@@ -131,6 +131,16 @@ export default function AdminOrdersPage() {
       <div className={styles.header}>
         <h2>Orders</h2>
         <span className={styles.count}>{total} total</span>
+        <Link
+          href="/admin/orders/new"
+          style={{
+            marginLeft: 'auto', fontSize: 12, padding: '8px 14px',
+            border: '1px solid var(--dark, #2a2218)', background: 'var(--dark, #2a2218)',
+            color: '#fff', textDecoration: 'none',
+          }}
+        >
+          + New order
+        </Link>
       </div>
 
       {/* Filter bar */}

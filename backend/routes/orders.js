@@ -116,6 +116,87 @@ router.get('/recent-activity', async function(req, res) {
 });
 
 // GET /api/orders — list with optional filters
+// POST /api/orders/manual — create an order by hand (phone / Instagram-DM /
+// in-person sales that never touch Stripe checkout). Totals are computed
+// server-side from the submitted line items so a stale client can't write a
+// wrong total. Mirrors checkout conventions: same orderNumber format, no
+// automatic stock decrement (stock is managed manually everywhere in this
+// system), attribution.source = 'manual' so these orders don't pollute the
+// channel/ROAS analytics as fake "direct" conversions.
+router.post('/manual', requireAuth, async function(req, res) {
+  try {
+    const {
+      customerName, customerEmail, customerPhone,
+      shippingAddress, items, shippingCost, status, internalNote,
+    } = req.body;
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'At least one item is required' });
+    }
+    const cleanItems = [];
+    for (const it of items) {
+      const price = Number(it.price);
+      const quantity = Math.floor(Number(it.quantity));
+      if (!it.name || !Number.isFinite(price) || price < 0 || !Number.isFinite(quantity) || quantity < 1) {
+        return res.status(400).json({ error: 'Each item needs a name, a non-negative price and a quantity of at least 1' });
+      }
+      cleanItems.push({
+        productId: it.productId || null,
+        name: String(it.name),
+        price,
+        colour: it.colour ? String(it.colour) : undefined,
+        size: it.size ? String(it.size) : undefined,
+        quantity,
+      });
+    }
+
+    const ship = Number(shippingCost) || 0;
+    if (ship < 0) return res.status(400).json({ error: 'Shipping cost cannot be negative' });
+    const subtotal = cleanItems.reduce((s, i) => s + i.price * i.quantity, 0);
+
+    const orderStatus = ['pending', 'paid', 'processing'].includes(status) ? status : 'paid';
+
+    const now = new Date();
+    const prefix = `SL-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
+
+    const addr = shippingAddress && typeof shippingAddress === 'object' ? shippingAddress : {};
+    const order = await Order.create({
+      orderNumber: `${prefix}-${rand}`,
+      customerName: customerName || null,
+      customerEmail: customerEmail || null,
+      customerPhone: customerPhone || null,
+      shippingAddress: {
+        name: customerName || undefined,
+        line1: addr.line1 || undefined,
+        line2: addr.line2 || undefined,
+        city: addr.city || undefined,
+        state: addr.state || undefined,
+        postalCode: addr.postalCode || undefined,
+        country: addr.country || undefined,
+      },
+      items: cleanItems,
+      subtotal,
+      shippingCost: ship,
+      total: subtotal + ship,
+      status: orderStatus,
+      statusHistory: [{
+        status: orderStatus,
+        note: 'Order created manually in admin',
+        changedBy: req.user?.id || null,
+        timestamp: now,
+      }],
+      internalNote: internalNote || undefined,
+      attribution: { source: 'manual', medium: 'admin', campaign: 'none' },
+    });
+
+    res.status(201).json(order);
+  } catch (err) {
+    console.error('[orders] manual create error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 router.get('/', requireAuth, async function(req, res) {
   try {
     const { status, search, from, to, page = 1, limit = 50 } = req.query;
