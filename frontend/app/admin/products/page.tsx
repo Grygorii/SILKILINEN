@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import AdminErrorBanner from '@/components/AdminErrorBanner';
+import { toast } from '@/lib/adminToast';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -21,7 +22,7 @@ type Product = {
   inStock: boolean;
   image?: string;
   images: { url: string; isPrimary?: boolean; alt?: string }[];
-  variants: unknown[];
+  variants: { _id: string; colour?: string; size?: string; sku?: string; stockLevel?: number }[];
   metaTitle?: string;
   costing?: { totalUnitCost?: number };
   updatedAt: string;
@@ -180,6 +181,174 @@ function InlineStatusEdit({ product, onUpdate }: { product: Product; onUpdate: (
         </div>
       )}
       {error && <span className={styles.statusError}>{error}</span>}
+    </div>
+  );
+}
+
+// Category as an inline dropdown — shows the LABEL (not the raw slug), and
+// when a product still carries a stale slug from a renamed/deleted category
+// (e.g. "home") it's flagged so the founder can fix it in one click without
+// opening the product.
+function InlineCategoryEdit({ product, categories, onUpdate }: {
+  product: Product;
+  categories: Category[];
+  onUpdate: (p: Product) => void;
+}) {
+  const [saving, setSaving] = useState(false);
+  const known = categories.find(c => c.slug === product.category);
+  const stale = Boolean(product.category) && !known;
+
+  async function pick(slug: string) {
+    if (!slug || slug === product.category) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`${API}/api/admin/products/${product._id}/quick-update`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ category: slug }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      onUpdate(data);
+    } catch (err) {
+      toast(err instanceof Error && err.message ? err.message : 'Could not change category', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <select
+      className={`${styles.categorySelect} ${stale ? styles.categoryStale : ''}`}
+      value={known ? product.category : ''}
+      onChange={e => pick(e.target.value)}
+      disabled={saving}
+      title={stale ? `"${product.category}" no longer exists — pick a category` : 'Change category'}
+    >
+      {stale && <option value="">⚠ {product.category} (missing)</option>}
+      {!product.category && !stale && <option value="">No category</option>}
+      {categories.map(c => (
+        <option key={c.slug} value={c.slug}>{c.label}</option>
+      ))}
+    </select>
+  );
+}
+
+// Stock, editable in place. Variantless products get a plain number input;
+// products with variants get a popover listing each colour/size so the exact
+// SKU can be restocked from the list (the model flips sold_out back to active
+// automatically when stock returns).
+function InlineStockEdit({ product, onUpdate }: { product: Product; onUpdate: (p: Product) => void }) {
+  const [open, setOpen] = useState(false);
+  const [levels, setLevels] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [editingSimple, setEditingSimple] = useState(false);
+  const [simpleValue, setSimpleValue] = useState('');
+
+  const hasVariants = (product.variants?.length || 0) > 0;
+
+  async function patch(body: Record<string, unknown>) {
+    const res = await fetch(`${API}/api/admin/products/${product._id}/quick-update`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    onUpdate(data);
+  }
+
+  async function saveVariants() {
+    const variantStock = product.variants
+      .filter(v => levels[v._id] !== undefined && levels[v._id] !== '')
+      .map(v => ({ _id: v._id, stockLevel: Number(levels[v._id]) }));
+    if (variantStock.some(v => !Number.isFinite(v.stockLevel) || v.stockLevel < 0)) {
+      toast('Stock must be a non-negative number.', 'error');
+      return;
+    }
+    if (variantStock.length === 0) { setOpen(false); return; }
+    setSaving(true);
+    try {
+      await patch({ variantStock });
+      setOpen(false);
+    } catch (err) {
+      toast(err instanceof Error && err.message ? err.message : 'Could not update stock', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveSimple() {
+    const n = Number(simpleValue);
+    if (!Number.isFinite(n) || n < 0) { setEditingSimple(false); return; }
+    if (n === product.totalStock) { setEditingSimple(false); return; }
+    setSaving(true);
+    try {
+      await patch({ totalStock: n });
+      setEditingSimple(false);
+    } catch (err) {
+      toast(err instanceof Error && err.message ? err.message : 'Could not update stock', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!hasVariants) {
+    if (editingSimple) {
+      return (
+        <input
+          type="number" min="0" autoFocus
+          value={simpleValue}
+          onChange={e => setSimpleValue(e.target.value)}
+          onBlur={saveSimple}
+          onKeyDown={e => { if (e.key === 'Enter') saveSimple(); if (e.key === 'Escape') setEditingSimple(false); }}
+          className={styles.inlineInput}
+          disabled={saving}
+        />
+      );
+    }
+    return (
+      <button
+        className={styles.inlineDisplay}
+        onClick={() => { setSimpleValue(String(product.totalStock ?? 0)); setEditingSimple(true); }}
+        title="Edit stock"
+      >
+        <StockBadge product={product} />
+      </button>
+    );
+  }
+
+  return (
+    <div className={styles.statusWrap}>
+      <button
+        className={styles.inlineDisplay}
+        onClick={() => {
+          setLevels(Object.fromEntries(product.variants.map(v => [v._id, String(v.stockLevel ?? 0)])));
+          setOpen(o => !o);
+        }}
+        title="Restock variants"
+      >
+        <StockBadge product={product} />
+      </button>
+      {open && (
+        <div className={styles.stockPopover}>
+          {product.variants.map(v => (
+            <label key={v._id} className={styles.stockPopRow}>
+              <span className={styles.stockPopLabel}>{[v.colour, v.size].filter(Boolean).join(' · ') || v.sku || 'Variant'}</span>
+              <input
+                type="number" min="0"
+                value={levels[v._id] ?? ''}
+                onChange={e => setLevels(prev => ({ ...prev, [v._id]: e.target.value }))}
+                className={styles.stockPopInput}
+              />
+            </label>
+          ))}
+          <div className={styles.stockPopActions}>
+            <button className={styles.stockPopCancel} onClick={() => setOpen(false)}>Cancel</button>
+            <button className={styles.stockPopSave} onClick={saveVariants} disabled={saving}>
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -771,7 +940,7 @@ export default function AdminProductsPage() {
                           <span title="No costing data — Finance tab will show unknown COGS" style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: '#555', marginLeft: 6, verticalAlign: 'middle' }} />
                         )}
                       </a>
-                      {product.category && <span className={styles.productCategory}>{product.category}</span>}
+                      <InlineCategoryEdit product={product} categories={categories} onUpdate={updateProduct} />
                       <IssuePills product={product} />
                     </td>
                     <td>
@@ -781,7 +950,7 @@ export default function AdminProductsPage() {
                       <InlinePriceEdit product={product} onUpdate={updateProduct} />
                     </td>
                     <td>
-                      <StockBadge product={product} />
+                      <InlineStockEdit product={product} onUpdate={updateProduct} />
                     </td>
                     <td className={styles.updatedAt}>{fmtDate(product.updatedAt)}</td>
                     <td>
@@ -822,7 +991,11 @@ export default function AdminProductsPage() {
                       {STATUS_LABEL[product.status] ?? product.status}
                     </span>
                   </div>
-                  {product.category && <div className={styles.productCardCat}>{product.category}</div>}
+                  {product.category && (
+                    <div className={styles.productCardCat}>
+                      {categories.find(c => c.slug === product.category)?.label || `⚠ ${product.category} (missing)`}
+                    </div>
+                  )}
                   <div className={styles.productCardMeta}>
                     €{product.price.toFixed(2)} · <StockBadge product={product} />
                   </div>

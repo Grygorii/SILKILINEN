@@ -163,11 +163,21 @@ productSchema.pre('save', async function() {
   this.colours = [...new Set(this.variants.map(v => v.colour).filter(Boolean))];
   this.sizes = [...new Set(this.variants.map(v => v.size).filter(Boolean))];
 
-  this.totalStock = this.variants.reduce((sum, v) => sum + (v.stockLevel || 0), 0);
+  // Variants are the stock source of truth when they exist. For variantless
+  // products, totalStock is set directly (quick-update) — recomputing from an
+  // empty array here would silently zero it on every save.
+  if (this.variants.length > 0) {
+    this.totalStock = this.variants.reduce((sum, v) => sum + (v.stockLevel || 0), 0);
+  }
   this.inStock = this.totalStock > 0;
 
   if (this.status === 'active' && this.totalStock === 0 && this.variants.length > 0) {
     this.status = 'sold_out';
+  }
+  // Restocked sold-out products come back automatically — they already passed
+  // publish validation to have been active before selling out.
+  if (this.status === 'sold_out' && this.totalStock > 0) {
+    this.status = 'active';
   }
 
   if (!this.slug && this.name) {

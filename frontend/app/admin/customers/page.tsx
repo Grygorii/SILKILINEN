@@ -74,8 +74,15 @@ export default function CustomersPage() {
 
   async function recompute() {
     setRecomputing(true);
-    await fetch(`${API}/api/admin/customers/segments/recompute`, { method: 'POST', credentials: 'include' });
-    setRecomputing(false);
+    try {
+      const res = await fetch(`${API}/api/admin/customers/segments/recompute`, { method: 'POST', credentials: 'include' });
+      if (res.ok) toast('Segments recomputed.');
+      else toast('Recompute failed.', 'error');
+    } catch {
+      toast('Network error.', 'error');
+    } finally {
+      setRecomputing(false);
+    }
     load();
   }
 

@@ -232,6 +232,75 @@ export default function SettingsPage() {
           ))}
         </div>
       </section>
+
+      {/* ── Data hygiene ── */}
+      <DataHygieneCard />
     </AdminLayout>
+  );
+}
+
+// Removes crawler visits recorded before the tracking proxy's User-Agent
+// filter existed. Those sessions (Google data-centre cities, never bought
+// anything) inflate "Direct" traffic and drag the conversion rate to ~0%
+// until they age out of the 30-day window — this clears them immediately.
+function DataHygieneCard() {
+  const [preview, setPreview] = useState<{ count: number; total: number } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    fetch(`${API}/api/admin/maintenance/bot-visits`, { credentials: 'include' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(setPreview)
+      .catch(() => {});
+  }, []);
+
+  async function purge() {
+    if (!confirm('Remove the recorded crawler visits? Real customer sessions (anything that placed an order) are never touched.')) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`${API}/api/admin/maintenance/purge-bot-visits`, {
+        method: 'POST', credentials: 'include', headers: { 'X-CSRF-Token': '1' },
+      });
+      const data = await res.json();
+      if (!res.ok) { toast(data.error || 'Purge failed.', 'error'); return; }
+      toast(`Removed ${data.deleted} crawler visit(s). Dashboard traffic is now honest.`);
+      setDone(true);
+      setPreview(p => (p ? { ...p, count: 0 } : p));
+    } catch {
+      toast('Network error.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className={styles.section}>
+      <h3 className={styles.sectionTitle}>Data hygiene</h3>
+      <div style={{ border: '1px solid var(--border)', background: '#fff', padding: '18px 20px', maxWidth: 560 }}>
+        <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark)', marginBottom: 4 }}>Crawler traffic clean-up</p>
+        <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 12 }}>
+          Googlebot visits recorded before the bot filter (data-centre cities like San Jose and Mountain View)
+          inflate &ldquo;Direct&rdquo; traffic and hold conversion at 0%. Removing them makes the dashboard reflect
+          real shoppers immediately. Sessions that placed an order are never removed.
+        </p>
+        {preview && !done && (
+          <p style={{ fontSize: 12, color: 'var(--dark)', marginBottom: 12 }}>
+            Found <strong>{preview.count}</strong> crawler visit(s) out of {preview.total} recorded.
+          </p>
+        )}
+        <button
+          onClick={purge}
+          disabled={busy || done || !preview || preview.count === 0}
+          style={{
+            fontSize: 13, padding: '9px 16px', cursor: busy || done ? 'default' : 'pointer',
+            border: '1px solid var(--dark)', background: 'var(--dark)', color: '#fff',
+            opacity: busy || done || (preview && preview.count === 0) ? 0.5 : 1,
+          }}
+        >
+          {done ? 'Cleaned ✓' : busy ? 'Removing…' : preview && preview.count === 0 ? 'Nothing to clean' : 'Remove crawler visits'}
+        </button>
+      </div>
+    </section>
   );
 }

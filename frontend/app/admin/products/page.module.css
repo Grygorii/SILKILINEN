@@ -794,3 +794,91 @@
 @media (min-width: 769px) {
   .productCardList { display: none; }
 }
+
+/* ── Inline category + variant-stock editing (quick-edit from the list) ── */
+
+.categorySelect {
+  display: block;
+  margin-top: 4px;
+  max-width: 220px;
+  padding: 3px 6px;
+  font-size: 11px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.categorySelect:hover:not(:disabled) { border-color: var(--border); background: #fff; }
+.categorySelect:disabled { opacity: 0.6; }
+
+.categoryStale {
+  color: #b03a2e;
+  border-color: #f0c8c2;
+  background: #fdf0ef;
+}
+
+.stockPopover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 30;
+  min-width: 220px;
+  background: #fff;
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(26, 25, 22, 0.14);
+  padding: 10px;
+}
+
+.stockPopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 12px;
+  color: var(--dark);
+}
+
+.stockPopLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stockPopInput {
+  width: 64px;
+  padding: 4px 6px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  text-align: right;
+}
+
+.stockPopActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.stockPopCancel {
+  font-size: 12px;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+}
+
+.stockPopSave {
+  font-size: 12px;
+  padding: 5px 12px;
+  border: 1px solid var(--dark);
+  background: var(--dark);
+  color: #fff;
+  cursor: pointer;
+}
+.stockPopSave:disabled { opacity: 0.5; }
