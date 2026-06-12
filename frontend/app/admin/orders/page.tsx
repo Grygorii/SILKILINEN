@@ -2,8 +2,10 @@
 
 import { useState, useEffect, Fragment, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
 import AdminErrorBanner from '@/components/AdminErrorBanner';
+import { toast } from '@/lib/adminToast';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -74,6 +76,7 @@ function formatFullAddress(addr: ShippingAddress | null) {
 }
 
 export default function AdminOrdersPage() {
+  const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -87,6 +90,24 @@ export default function AdminOrdersPage() {
   const [searchInput, setSearchInput] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
+
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
+  const [countsTotal, setCountsTotal] = useState(0);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${API}/api/orders/status-counts`, { credentials: 'include' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setStatusCounts(data.counts ?? {});
+        setCountsTotal(data.total ?? 0);
+      } catch (err) {
+        console.error('[orders] status counts failed:', err);
+        toast('Could not load status counts', 'error');
+      }
+    })();
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -126,6 +147,13 @@ export default function AdminOrdersPage() {
     setExpandedId(prev => (prev === id ? null : id));
   }
 
+  function clearFilters() {
+    setStatusFilter('all'); setSearch(''); setSearchInput('');
+    setFrom(''); setTo(''); setPage(1);
+  }
+
+  const hasActiveFilters = statusFilter !== 'all' || !!search || !!from || !!to;
+
   return (
     <AdminLayout active="orders">
       <div className={styles.header}>
@@ -143,18 +171,27 @@ export default function AdminOrdersPage() {
         </Link>
       </div>
 
+      {/* Status chips */}
+      <div className={styles.chipRow}>
+        <button
+          className={`${styles.chip} ${statusFilter === 'all' ? styles.chipActive : ''}`}
+          onClick={() => { setStatusFilter('all'); setPage(1); }}
+        >
+          All ({countsTotal})
+        </button>
+        {STATUS_OPTIONS.filter(s => s !== 'all' && (statusCounts[s] ?? 0) > 0).map(s => (
+          <button
+            key={s}
+            className={`${styles.chip} ${statusFilter === s ? styles.chipActive : ''}`}
+            onClick={() => { setStatusFilter(s); setPage(1); }}
+          >
+            {s.charAt(0).toUpperCase() + s.slice(1)} ({statusCounts[s]})
+          </button>
+        ))}
+      </div>
+
       {/* Filter bar */}
       <div className={styles.filterBar}>
-        <select
-          className={styles.filterSelect}
-          value={statusFilter}
-          onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-        >
-          {STATUS_OPTIONS.map(s => (
-            <option key={s} value={s}>{s === 'all' ? 'All statuses' : s.charAt(0).toUpperCase() + s.slice(1)}</option>
-          ))}
-        </select>
-
         <div className={styles.searchWrap}>
           <input
             className={styles.filterInput}
@@ -183,11 +220,8 @@ export default function AdminOrdersPage() {
           />
         </div>
 
-        {(statusFilter !== 'all' || search || from || to) && (
-          <button className={styles.clearBtn} onClick={() => {
-            setStatusFilter('all'); setSearch(''); setSearchInput('');
-            setFrom(''); setTo(''); setPage(1);
-          }}>Clear</button>
+        {hasActiveFilters && (
+          <button className={styles.clearBtn} onClick={clearFilters}>Clear</button>
         )}
       </div>
 
@@ -196,9 +230,22 @@ export default function AdminOrdersPage() {
       {loading ? (
         <p className={styles.loading}>Loading…</p>
       ) : orders.length === 0 ? (
-        <p className={styles.empty}>No orders found.</p>
+        <div className={styles.emptyState}>
+          <p className={styles.empty}>
+            {hasActiveFilters ? 'No orders match your filters.' : 'No orders yet.'}
+          </p>
+          {hasActiveFilters && (
+            <button className={styles.clearBtn} onClick={clearFilters}>Clear filters</button>
+          )}
+        </div>
       ) : (
         <>
+          {(statusFilter === 'paid' || statusFilter === 'processing') && total > 0 && (
+            <div className={styles.fulfilBanner}>
+              {total} {total === 1 ? 'order' : 'orders'} waiting to ship
+            </div>
+          )}
+
           <div className={styles.tableWrap}>
             <table className={styles.table}>
               <colgroup>
@@ -230,7 +277,7 @@ export default function AdminOrdersPage() {
                     <Fragment key={order._id}>
                       <tr
                         className={`${styles.summaryRow} ${expanded ? styles.summaryRowOpen : ''}`}
-                        onClick={() => toggle(order._id)}
+                        onClick={() => router.push(`/admin/orders/${order._id}`)}
                       >
                         <td className={styles.dateCell}>{formatDate(order.createdAt)}</td>
                         <td>
@@ -243,7 +290,10 @@ export default function AdminOrdersPage() {
                         <td>
                           <span className={`${styles.badge} ${badgeClass}`}>{order.status}</span>
                         </td>
-                        <td className={styles.chevronCell}>
+                        <td
+                          className={styles.chevronCell}
+                          onClick={e => { e.stopPropagation(); toggle(order._id); }}
+                        >
                           <svg
                             className={`${styles.chevron} ${expanded ? styles.chevronOpen : ''}`}
                             width="14" height="14" viewBox="0 0 24 24"
@@ -327,14 +377,17 @@ export default function AdminOrdersPage() {
                 <div
                   key={order._id}
                   className={`${styles.orderCard} ${expanded ? styles.orderCardOpen : ''}`}
-                  onClick={() => toggle(order._id)}
+                  onClick={() => router.push(`/admin/orders/${order._id}`)}
                 >
                   <div className={styles.cardRow1}>
                     <div className={styles.cardBadgeDate}>
                       <span className={`${styles.badge} ${badgeClass}`}>{order.status}</span>
                       <span className={styles.cardDate}>{formatDate(order.createdAt)}</span>
                     </div>
-                    <div className={styles.cardTotalChevron}>
+                    <div
+                      className={styles.cardTotalChevron}
+                      onClick={e => { e.stopPropagation(); toggle(order._id); }}
+                    >
                       <span className={styles.cardTotal}>€{(order.total ?? 0).toFixed(2)}</span>
                       <svg
                         className={`${styles.cardChevron} ${expanded ? styles.cardChevronOpen : ''}`}
@@ -353,7 +406,7 @@ export default function AdminOrdersPage() {
                   </div>
 
                   {expanded && (
-                    <div className={styles.cardDetailInner}>
+                    <div className={styles.cardDetailInner} onClick={e => e.stopPropagation()}>
                       <div className={styles.detailMeta}>
                         <div className={styles.metaBlock}>
                           <h4>Customer</h4>
@@ -414,7 +467,7 @@ export default function AdminOrdersPage() {
                 disabled={page === 1}
                 onClick={() => setPage(p => p - 1)}
               >← Prev</button>
-              <span className={styles.pageInfo}>Page {page} of {pages}</span>
+              <span className={styles.pageInfo}>Page {page} of {pages} · {total} orders</span>
               <button
                 className={styles.pageBtn}
                 disabled={page === pages}

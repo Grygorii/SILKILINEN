@@ -236,6 +236,25 @@ router.get('/', requireAuth, async function(req, res) {
   }
 });
 
+// GET /api/orders/status-counts — order counts per status (for filter chips)
+router.get('/status-counts', requireAuth, async function(req, res) {
+  try {
+    const results = await Order.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+    ]);
+    const counts = {};
+    let total = 0;
+    for (const r of results) {
+      counts[r._id] = r.count;
+      total += r.count;
+    }
+    res.json({ counts, total });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET /api/orders/:id — single order full detail
 router.get('/:id', requireAuth, async function(req, res) {
   try {

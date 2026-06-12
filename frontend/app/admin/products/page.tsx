@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import AdminErrorBanner from '@/components/AdminErrorBanner';
 import { toast } from '@/lib/adminToast';
+import { useClickOutside } from '@/lib/useClickOutside';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -132,6 +133,7 @@ function InlineStatusEdit({ product, onUpdate }: { product: Product; onUpdate: (
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const wrapRef = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
 
   async function pick(status: string) {
     setOpen(false);
@@ -162,7 +164,7 @@ function InlineStatusEdit({ product, onUpdate }: { product: Product; onUpdate: (
   }
 
   return (
-    <div className={styles.statusWrap}>
+    <div className={styles.statusWrap} ref={wrapRef}>
       <button
         className={`${styles.statusBadge} ${STATUS_CLASS[product.status] ?? ''} ${styles.statusClickable}`}
         onClick={() => setOpen(o => !o)}
@@ -243,6 +245,7 @@ function InlineStockEdit({ product, onUpdate }: { product: Product; onUpdate: (p
   const [saving, setSaving] = useState(false);
   const [editingSimple, setEditingSimple] = useState(false);
   const [simpleValue, setSimpleValue] = useState('');
+  const wrapRef = useClickOutside<HTMLDivElement>(open, () => setOpen(false));
 
   const hasVariants = (product.variants?.length || 0) > 0;
 
@@ -317,7 +320,7 @@ function InlineStockEdit({ product, onUpdate }: { product: Product; onUpdate: (p
   }
 
   return (
-    <div className={styles.statusWrap}>
+    <div className={styles.statusWrap} ref={wrapRef}>
       <button
         className={styles.inlineDisplay}
         onClick={() => {
@@ -404,11 +407,15 @@ function BulkBar({ count, onAction, onClear, loading, message, categories }: {
   const [catOpen, setCatOpen] = useState(false);
   const [discountOpen, setDiscountOpen] = useState(false);
   const [discountPct, setDiscountPct] = useState('10');
+  const anyOpen = menuOpen || catOpen || discountOpen;
+  const barRef = useClickOutside<HTMLDivElement>(anyOpen, () => {
+    setMenuOpen(false); setCatOpen(false); setDiscountOpen(false);
+  });
 
   if (count === 0) return null;
 
   return (
-    <div className={styles.bulkBar}>
+    <div className={styles.bulkBar} ref={barRef}>
       <span className={styles.bulkCount}>{count} {count === 1 ? 'product' : 'products'} selected</span>
       <button className={styles.bulkClear} onClick={onClear}>Cancel</button>
       <div className={styles.bulkDivider} />

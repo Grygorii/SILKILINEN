@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
 import { toast } from '@/lib/adminToast';
 
@@ -36,11 +37,12 @@ function fmtDate(d: string | null) {
 }
 
 function fmtMoney(n: number | null | undefined) {
-  if (!n) return '€0';
+  if (!n) return '€0.00';
   return `€${n.toFixed(2)}`;
 }
 
 export default function CustomersPage() {
+  const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [segments, setSegments] = useState<Segment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,6 +115,18 @@ export default function CustomersPage() {
     } finally {
       setWinbackSending(false);
     }
+  }
+
+  // Map slug → colour from the segments returned by the API (same colours as the sidebar buttons)
+  const segColor = (slug: string) =>
+    segments.find(s => s.slug === slug)?.color || SEGMENT_COLORS[slug] || '#999';
+
+  const hasFilters = Boolean(search || segmentFilter || consentFilter);
+  function clearFilters() {
+    setSearch('');
+    setSegmentFilter('');
+    setConsentFilter('');
+    setPage(1);
   }
 
   const thStyle: React.CSSProperties = {
@@ -202,7 +216,7 @@ export default function CustomersPage() {
 
             {/* Table */}
             {loading ? (
-              <p style={{ fontSize: 13, color: 'var(--muted)' }}>Loading…</p>
+              <p style={{ fontSize: 13, color: 'var(--muted)' }}>Loading customers…</p>
             ) : error ? (
               <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', border: '1px solid var(--border)' }}>
                 <p style={{ fontSize: 14, color: 'var(--muted)' }}>Couldn&apos;t load customers.{' '}
@@ -211,7 +225,14 @@ export default function CustomersPage() {
               </div>
             ) : customers.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', border: '1px solid var(--border)' }}>
-                <p style={{ fontSize: 14, color: 'var(--muted)' }}>No customers found</p>
+                <p style={{ fontSize: 14, color: 'var(--muted)', margin: 0 }}>
+                  {hasFilters ? 'No customers match' : 'No customers yet'}
+                </p>
+                {hasFilters && (
+                  <button onClick={clearFilters} style={{ marginTop: 12, padding: '7px 14px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', color: 'var(--dark)', fontFamily: 'inherit' }}>
+                    Clear filters
+                  </button>
+                )}
               </div>
             ) : (
               <>
@@ -226,9 +247,15 @@ export default function CustomersPage() {
                     </thead>
                     <tbody>
                       {customers.map(c => (
-                        <tr key={c._id}>
+                        <tr
+                          key={c._id}
+                          onClick={() => router.push(`/admin/customers/${c._id}`)}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'var(--cream)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = ''; }}
+                          style={{ cursor: 'pointer' }}
+                        >
                           <td style={tdStyle}>
-                            <Link href={`/admin/customers/${c._id}`} style={{ color: 'var(--dark)', textDecoration: 'none', fontWeight: 500 }}>
+                            <Link href={`/admin/customers/${c._id}`} onClick={e => e.stopPropagation()} style={{ color: 'var(--dark)', textDecoration: 'none', fontWeight: 500 }}>
                               {c.firstName || c.lastName ? `${c.firstName} ${c.lastName}`.trim() : c.email}
                             </Link>
                             <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>{c.email}</div>
@@ -237,8 +264,8 @@ export default function CustomersPage() {
                             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                               {(c.segments || []).map(s => (
                                 <span key={s} style={{
-                                  fontSize: 9, padding: '1px 5px', borderRadius: 2, letterSpacing: '0.6px',
-                                  textTransform: 'uppercase', background: SEGMENT_COLORS[s] || '#eee', color: 'white',
+                                  fontSize: 10, padding: '2px 8px', borderRadius: 9, letterSpacing: '0.6px',
+                                  textTransform: 'uppercase', background: segColor(s), color: 'white',
                                 }}>
                                   {s}
                                 </span>
@@ -254,7 +281,7 @@ export default function CustomersPage() {
                             </span>
                           </td>
                           <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
-                            <Link href={`/admin/customers/${c._id}`} style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'none' }}>
+                            <Link href={`/admin/customers/${c._id}`} onClick={e => e.stopPropagation()} style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'none' }}>
                               View
                             </Link>
                           </td>
