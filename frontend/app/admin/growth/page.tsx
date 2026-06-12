@@ -212,6 +212,9 @@ export default function GrowthEnginePage() {
               ))}
             </div>
 
+            {/* Competitors the Scout studies */}
+            <CompetitorEditor />
+
             {/* The Pulse feed */}
             <div className={styles.feedHeader}>
               <p className={styles.sectionLabel}>The Pulse</p>
@@ -257,5 +260,93 @@ export default function GrowthEnginePage() {
         )}
       </div>
     </AdminLayout>
+  );
+}
+
+type Competitor = { name: string; domain: string };
+
+// Editor for the list of brands the Competitor Scout studies. Seeded with
+// real defaults on the backend; the founder adds or removes their own.
+function CompetitorEditor() {
+  const [list, setList] = useState<Competitor[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [name, setName] = useState('');
+  const [domain, setDomain] = useState('');
+
+  useEffect(() => {
+    fetch(`${API}/api/admin/growth/competitors`, { credentials: 'include' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d?.competitors) setList(d.competitors); })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, []);
+
+  async function save(next: Competitor[]) {
+    setSaving(true);
+    try {
+      const res = await fetch(`${API}/api/admin/growth/competitors`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' },
+        body: JSON.stringify({ competitors: next }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast(data.error || 'Could not save.', 'error'); return; }
+      setList(data.competitors);
+      toast('Competitor list saved.');
+    } catch {
+      toast('Network error.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function add() {
+    if (!name.trim()) return;
+    const next = [...list, { name: name.trim(), domain: domain.trim() }];
+    setName(''); setDomain('');
+    save(next);
+  }
+
+  if (!loaded) return null;
+
+  return (
+    <div className={styles.competitorBox}>
+      <p className={styles.sectionLabel}>The enemies — who the Scout studies</p>
+      <div className={styles.competitorList}>
+        {list.map((c, i) => (
+          <span key={`${c.name}-${i}`} className={styles.competitorChip}>
+            {c.name}
+            {c.domain ? <span className={styles.competitorDomain}> · {c.domain}</span> : null}
+            <button
+              type="button"
+              aria-label={`Remove ${c.name}`}
+              className={styles.competitorRemove}
+              onClick={() => save(list.filter((_, idx) => idx !== i))}
+              disabled={saving}
+            >×</button>
+          </span>
+        ))}
+        {list.length === 0 && <span className={styles.competitorEmpty}>No competitors yet — add one.</span>}
+      </div>
+      <div className={styles.competitorAdd}>
+        <input
+          className={styles.competitorInput}
+          placeholder="Brand name (e.g. Olivia von Halle)"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') add(); }}
+        />
+        <input
+          className={styles.competitorInput}
+          placeholder="website (optional, e.g. oliviavonhalle.com)"
+          value={domain}
+          onChange={e => setDomain(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') add(); }}
+        />
+        <button type="button" className={styles.runBtn} onClick={add} disabled={saving || !name.trim()}>Add</button>
+      </div>
+    </div>
   );
 }

@@ -364,3 +364,25 @@
   .header { margin-bottom: 28px; }
   .feedRow { padding: 14px 16px 14px 42px; }
 }
+
+/* ── Competitor editor ── */
+.competitorBox { margin: 28px 0 8px; }
+.competitorList { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.competitorChip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; padding: 5px 6px 5px 12px;
+  border: 1px solid var(--border, #e8e2d6); background: #fff; border-radius: 16px;
+  color: var(--dark, #2a2218);
+}
+.competitorDomain { color: var(--muted, #6b6358); }
+.competitorRemove {
+  border: none; background: none; cursor: pointer; font-size: 14px;
+  color: var(--muted, #6b6358); line-height: 1; padding: 2px 4px;
+}
+.competitorRemove:hover { color: #b03a2e; }
+.competitorEmpty { font-size: 12px; color: var(--muted, #6b6358); }
+.competitorAdd { display: flex; flex-wrap: wrap; gap: 8px; }
+.competitorInput {
+  flex: 1; min-width: 180px; padding: 8px 11px; font-size: 13px;
+  border: 1px solid var(--border, #e8e2d6);
+}
