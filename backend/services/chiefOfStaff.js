@@ -1,0 +1,290 @@
+'use strict';
+
+// The Chief of Staff — the brain of the Growth Engine. Where the specialist
+// agents DO things, this one THINKS: once a week it runs the operator's loop
+//
+//   measure (where are we vs the North Star?)
+//   → attribute (what changed, and likely why?)
+//   → learn (what's actually working, from the outcomes of past moves?)
+//   → decide (the few highest-leverage moves) → delegate to the agents
+//   → and the 1-3 things only the founder can do.
+//
+// It is the organ that makes the system LEARN: it reads the outcomes of what
+// the agents did weeks ago (did that article gain Search Console impressions?
+// did orders move?) and biases next week toward what worked. Everything is
+// computed from real data; the AI only synthesises the brief from numbers it
+// is handed — it never invents figures.
+
+const OpenAI = require('openai');
+const SystemState = require('../models/SystemState');
+const CEOBrief = require('../models/CEOBrief');
+const GrowthAction = require('../models/GrowthAction');
+const Order = require('../models/Order');
+const Visit = require('../models/Visit');
+const JournalArticle = require('../models/JournalArticle');
+
+const client = new OpenAI({
+  apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
+  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
+});
+const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
+
+const NORTH_STAR_KEY = 'growthNorthStar';
+const PAID = ['paid', 'shipped', 'delivered'];
+const DAY = 86400000;
+
+// ── North Star (the goal) ──────────────────────────────────────────────────────
+
+const METRICS = {
+  orders_per_month:   { label: 'Orders per month',   unit: '' },
+  revenue_per_month:  { label: 'Revenue per month',  unit: '€' },
+  search_clicks:      { label: 'Google clicks / month', unit: '' },
+  visitors_per_month: { label: 'Visitors per month', unit: '' },
+};
+
+async function getNorthStar() {
+  const doc = await SystemState.findOne({ key: NORTH_STAR_KEY }).lean();
+  return (doc && doc.value) || null;
+}
+
+async function setNorthStar({ metric, target, deadline, note }) {
+  if (!METRICS[metric]) throw new Error('Unknown metric');
+  const t = Number(target);
+  if (!Number.isFinite(t) || t <= 0) throw new Error('Target must be a positive number');
+  const value = { metric, target: t, deadline: deadline || null, note: note || '', setAt: new Date().toISOString() };
+  await SystemState.findOneAndUpdate({ key: NORTH_STAR_KEY }, { value }, { upsert: true });
+  return value;
+}
+
+// ── Measure: where are we, and how did we move? ────────────────────────────────
+
+async function currentValue(metric) {
+  const since30 = new Date(Date.now() - 30 * DAY);
+  if (metric === 'orders_per_month') {
+    return Order.countDocuments({ status: { $in: PAID }, createdAt: { $gte: since30 } });
+  }
+  if (metric === 'revenue_per_month') {
+    const r = await Order.aggregate([
+      { $match: { status: { $in: PAID }, createdAt: { $gte: since30 } } },
+      { $group: { _id: null, v: { $sum: '$total' } } },
+    ]);
+    return Math.round((r[0]?.v || 0) * 100) / 100;
+  }
+  if (metric === 'visitors_per_month') {
+    const r = await Visit.aggregate([
+      { $match: { createdAt: { $gte: since30 } } },
+      { $group: { _id: '$sessionId' } }, { $count: 'n' },
+    ]);
+    return r[0]?.n || 0;
+  }
+  if (metric === 'search_clicks') {
+    try {
+      const gsc = require('./searchConsole');
+      if (await gsc.isConnected()) return (await gsc.getSearchPerformance(28)).totals.clicks;
+    } catch { /* fall through */ }
+    return null;
+  }
+  return null;
+}
+
+async function measure() {
+  const since7 = new Date(Date.now() - 7 * DAY);
+  const since14 = new Date(Date.now() - 14 * DAY);
+  const since30 = new Date(Date.now() - 30 * DAY);
+
+  const [ordersThis, ordersPrev, revThis, revPrev, visThis, visPrev] = await Promise.all([
+    Order.countDocuments({ status: { $in: PAID }, createdAt: { $gte: since7 } }),
+    Order.countDocuments({ status: { $in: PAID }, createdAt: { $gte: since14, $lt: since7 } }),
+    Order.aggregate([{ $match: { status: { $in: PAID }, createdAt: { $gte: since7 } } }, { $group: { _id: null, v: { $sum: '$total' } } }]),
+    Order.aggregate([{ $match: { status: { $in: PAID }, createdAt: { $gte: since14, $lt: since7 } } }, { $group: { _id: null, v: { $sum: '$total' } } }]),
+    Visit.aggregate([{ $match: { createdAt: { $gte: since7 } } }, { $group: { _id: '$sessionId' } }, { $count: 'n' }]),
+    Visit.aggregate([{ $match: { createdAt: { $gte: since14, $lt: since7 } } }, { $group: { _id: '$sessionId' } }, { $count: 'n' }]),
+  ]);
+
+  // Traffic sources & top products (30d) — context for attribution.
+  const [sources, topProducts] = await Promise.all([
+    Visit.aggregate([
+      { $match: { createdAt: { $gte: since30 } } },
+      { $group: { _id: { s: '$sessionId', src: '$source' } } },
+      { $group: { _id: '$_id.src', n: { $sum: 1 } } }, { $sort: { n: -1 } }, { $limit: 5 },
+    ]),
+    Order.aggregate([
+      { $match: { status: { $in: PAID }, createdAt: { $gte: since30 } } },
+      { $unwind: '$items' },
+      { $group: { _id: '$items.name', units: { $sum: '$items.quantity' } } },
+      { $sort: { units: -1 } }, { $limit: 5 },
+    ]),
+  ]);
+
+  // Search Console signal (real demand from the internet, not just the site).
+  let search = null;
+  try {
+    const gsc = require('./searchConsole');
+    if (await gsc.isConnected()) {
+      const perf = await gsc.getSearchPerformance(28);
+      const opps = await gsc.getQueryOpportunities(28);
+      search = { totals: perf.totals, topQueries: perf.topQueries, opportunities: opps.slice(0, 10) };
+    }
+  } catch { /* GSC optional */ }
+
+  return {
+    orders: { last7: ordersThis, prev7: ordersPrev },
+    revenue: { last7: Math.round((revThis[0]?.v || 0) * 100) / 100, prev7: Math.round((revPrev[0]?.v || 0) * 100) / 100 },
+    visitors: { last7: visThis[0]?.n || 0, prev7: visPrev[0]?.n || 0 },
+    sources: sources.map(s => ({ source: s._id || 'direct', sessions: s.n })),
+    topProducts: topProducts.map(p => ({ name: p._id, units: p.units })),
+    search,
+  };
+}
+
+// ── Learn: did past moves actually work? ───────────────────────────────────────
+// Match published articles (born as Growth Engine drafts) to their real Search
+// Console performance. This is the feedback loop — the system seeing the fruit
+// of what it did, so it can do more of what works.
+async function contentOutcomes() {
+  const published = await JournalArticle.find({ status: 'published' })
+    .select('title slug publishedAt keywords').sort({ publishedAt: -1 }).limit(15).lean();
+  if (!published.length) return [];
+
+  let pageData = {};
+  try {
+    const gsc = require('./searchConsole');
+    if (await gsc.isConnected()) {
+      const perf = await gsc.getSearchPerformance(28);
+      for (const row of perf.topPages || []) pageData[row.key] = row;
+    }
+  } catch { /* optional */ }
+
+  return published.map(a => {
+    const urlMatch = Object.keys(pageData).find(u => u.includes(`/journal/${a.slug}`));
+    const stats = urlMatch ? pageData[urlMatch] : null;
+    const ageDays = a.publishedAt ? Math.round((Date.now() - new Date(a.publishedAt).getTime()) / DAY) : null;
+    return {
+      title: a.title,
+      target: a.keywords?.[0] || '',
+      ageDays,
+      clicks: stats?.clicks ?? 0,
+      impressions: stats?.impressions ?? 0,
+      verdict: stats && stats.impressions > 20 ? 'gaining traction' : (ageDays && ageDays > 30 ? 'not ranking yet' : 'too early'),
+    };
+  });
+}
+
+// Competitor-feature ideas the scouts surfaced — the "features €500k agencies
+// build" the founder asked to harvest. Pulled from recent scout actions so the
+// brief can recommend which to build.
+async function buildIdeaCandidates() {
+  const actions = await GrowthAction.find({ agent: { $in: ['competitor', 'storefront'] } })
+    .sort({ createdAt: -1 }).limit(8).lean();
+  return actions.map(a => ({ title: a.title, detail: (a.detail || '').slice(0, 300), agent: a.agent }));
+}
+
+// ── Decide: synthesise the weekly brief ────────────────────────────────────────
+
+const BRIEF_SYSTEM = `You are the Chief of Staff / co-CEO for SILKILINEN, a small luxury silk & linen e-commerce brand run by one founder (currency EUR). Once a week you write a tight operating brief. You are handed REAL numbers — never invent any. You think like a sharp operator who has read every great DTC growth playbook: ruthless prioritisation, bias to what's already working, honest about what isn't.
+
+Write in plain, warm, direct English (British/Irish spelling). No fluff, no hype, no emojis. Respond ONLY with valid JSON:
+{
+  "headline": "one sentence: the honest state of the business this week",
+  "progress": "2-3 sentences: where we are vs the North Star goal and the realistic read",
+  "whatChanged": "2-3 sentences: the notable deltas this week and the most likely cause (name it)",
+  "whatsWorking": "2-3 sentences: what the data says is working (channels, products, content) and what is not",
+  "moves": [ { "title": "the move", "agent": "content|social|newsletter|competitor|storefront|watchdog|founder", "why": "one line tied to the data" } ],
+  "founderActions": [ "the 1-3 things only the founder can do this week, concrete" ],
+  "buildIdeas": [ { "title": "a feature/capability worth building (from competitor intel)", "source": "competitor name or 'storefront'", "why": "the sales reason" } ]
+}
+Rules: 3-4 moves max, each tied to a real number. buildIdeas only from the competitor/storefront material provided (0-3). If data is thin (new store), say so honestly and focus moves on building demand and content, not optimisation.`;
+
+async function generateBrief() {
+  if (!process.env.DEEPSEEK_API_KEY) {
+    return { skipped: 'AI not configured' };
+  }
+  const [northStar, metrics, outcomes, ideas, recentActions] = await Promise.all([
+    getNorthStar(), measure(), contentOutcomes(), buildIdeaCandidates(),
+    GrowthAction.find().sort({ createdAt: -1 }).limit(20).select('agent type title status').lean(),
+  ]);
+
+  let nsBlock = 'No North Star goal set yet.';
+  let nsForStore = null;
+  if (northStar) {
+    const current = await currentValue(northStar.metric);
+    const pct = current != null ? Math.round((current / northStar.target) * 100) : null;
+    nsForStore = { ...northStar, current, pct, label: METRICS[northStar.metric].label };
+    nsBlock = `North Star: ${METRICS[northStar.metric].label} — target ${northStar.target}${northStar.deadline ? ` by ${northStar.deadline}` : ''}. Current (last 30d): ${current ?? 'unknown'}${pct != null ? ` (${pct}% of target)` : ''}.${northStar.note ? ` Note: ${northStar.note}` : ''}`;
+  }
+
+  const userPayload = [
+    nsBlock, '',
+    `THIS WEEK vs LAST WEEK:`,
+    `- Orders: ${metrics.orders.last7} (prev ${metrics.orders.prev7})`,
+    `- Revenue: €${metrics.revenue.last7} (prev €${metrics.revenue.prev7})`,
+    `- Visitors: ${metrics.visitors.last7} (prev ${metrics.visitors.prev7})`,
+    `- Traffic sources (30d): ${metrics.sources.map(s => `${s.source} ${s.sessions}`).join(', ') || 'none'}`,
+    `- Top products (30d): ${metrics.topProducts.map(p => `${p.name} ×${p.units}`).join(', ') || 'no sales yet'}`,
+    '',
+    metrics.search
+      ? `GOOGLE SEARCH (real internet demand, 28d): ${metrics.search.totals.clicks} clicks, ${metrics.search.totals.impressions} impressions, avg position ${Math.round(metrics.search.totals.position)}. Queries you appear for: ${metrics.search.topQueries.map(q => `"${q.key}"(${q.impressions}imp)`).join(', ') || 'none yet'}. Opportunities (impressions but weak position): ${metrics.search.opportunities.filter(o => o.position > 8).map(o => `"${o.query}" pos ${o.position}`).slice(0, 6).join(', ') || 'none'}.`
+      : 'GOOGLE SEARCH: not connected / no data yet.',
+    '',
+    `CONTENT OUTCOMES (did past articles work?): ${outcomes.length ? outcomes.map(o => `"${o.title}" — ${o.ageDays ?? '?'}d old, ${o.impressions} impressions, ${o.verdict}`).join(' | ') : 'no published articles yet'}`,
+    '',
+    `RECENT ENGINE ACTIVITY: ${recentActions.map(a => `${a.agent}:${a.type}`).join(', ')}`,
+    '',
+    `COMPETITOR / STOREFRONT INTEL (for buildIdeas): ${ideas.length ? ideas.map(i => `[${i.agent}] ${i.title} — ${i.detail}`).join(' || ') : 'none gathered yet'}`,
+    '',
+    `Write the brief JSON now.`,
+  ].join('\n');
+
+  const res = await client.chat.completions.create({
+    model: MODEL,
+    messages: [{ role: 'system', content: BRIEF_SYSTEM }, { role: 'user', content: userPayload }],
+    temperature: 0.4,
+    max_tokens: 1200,
+    response_format: { type: 'json_object' },
+  });
+
+  let parsed;
+  try { parsed = JSON.parse(res.choices[0]?.message?.content || '{}'); }
+  catch { throw new Error('Brief synthesis returned invalid JSON'); }
+
+  const brief = await CEOBrief.create({
+    headline: parsed.headline || 'Weekly brief',
+    northStar: nsForStore,
+    progress: parsed.progress || '',
+    whatChanged: parsed.whatChanged || '',
+    whatsWorking: parsed.whatsWorking || '',
+    moves: Array.isArray(parsed.moves) ? parsed.moves.slice(0, 4) : [],
+    founderActions: Array.isArray(parsed.founderActions) ? parsed.founderActions.slice(0, 3) : [],
+    buildIdeas: Array.isArray(parsed.buildIdeas) ? parsed.buildIdeas.slice(0, 3) : [],
+    metrics: { ...metrics, outcomes },
+  });
+
+  // Drop a pinned action in the pulse feed so the brief is impossible to miss.
+  await GrowthAction.create({
+    agent: 'chief',
+    type: 'briefing',
+    title: `Weekly brief: ${brief.headline}`,
+    detail: brief.progress,
+    href: '/admin/growth',
+    status: 'info',
+    meta: { briefId: String(brief._id) },
+  }).catch(() => {});
+
+  return { brief };
+}
+
+// Weekly cadence guard for the in-process cron.
+async function runChiefIfDue({ force = false } = {}) {
+  const key = 'chiefOfStaffLastRun';
+  const doc = await SystemState.findOne({ key }).lean();
+  const last = doc?.value ? new Date(doc.value).getTime() : 0;
+  if (!force && Date.now() - last < 7 * DAY) return { ran: false };
+  const result = await generateBrief();
+  await SystemState.findOneAndUpdate({ key }, { value: new Date().toISOString() }, { upsert: true });
+  return { ran: true, ...result };
+}
+
+module.exports = {
+  METRICS, getNorthStar, setNorthStar,
+  measure, contentOutcomes, generateBrief, runChiefIfDue,
+};

@@ -5,6 +5,8 @@ const { requireAuth } = require('../middleware/auth');
 const GrowthAction = require('../models/GrowthAction');
 const { runGrowthEngine, setAgentEnabled, describeAgents } = require('../services/growthEngine');
 const { getCompetitors, setCompetitors } = require('../services/competitorIntel');
+const CEOBrief = require('../models/CEOBrief');
+const { getNorthStar, setNorthStar, generateBrief, runChiefIfDue, METRICS } = require('../services/chiefOfStaff');
 
 // Manual runs invoke AI; keep a sane lid on a stuck refresh-spammer.
 const runLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 12, standardHeaders: true, legacyHeaders: false });
@@ -67,4 +69,45 @@ router.put('/competitors', async function(req, res) {
   }
 });
 
+// GET /api/admin/growth/brain — North Star, metric options, latest Co-CEO brief.
+router.get('/brain', async function(req, res) {
+  try {
+    const [northStar, brief] = await Promise.all([
+      getNorthStar(),
+      CEOBrief.findOne().sort({ createdAt: -1 }).lean(),
+    ]);
+    res.json({
+      northStar,
+      metrics: Object.entries(METRICS).map(([k, v]) => ({ key: k, ...v })),
+      brief: brief || null,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /api/admin/growth/north-star  { metric, target, deadline?, note? }
+router.put('/north-star', async function(req, res) {
+  try {
+    const ns = await setNorthStar(req.body || {});
+    res.json({ ok: true, northStar: ns });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/growth/brief — generate a fresh Co-CEO brief now.
+router.post('/brief', runLimit, async function(req, res) {
+  try {
+    const result = await generateBrief();
+    if (result.skipped) return res.status(400).json({ error: result.skipped });
+    res.json({ ok: true, brief: result.brief });
+  } catch (err) {
+    console.error('[growth] brief error:', err.message);
+    res.status(500).json({ error: 'Could not generate the brief — try again.' });
+  }
+});
+
 module.exports = router;
+module.exports.runChiefIfDue = runChiefIfDue;

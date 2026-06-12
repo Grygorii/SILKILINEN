@@ -61,6 +61,7 @@ const adminTodayRouter = require('./routes/adminToday');
 const adminSearchRouter = require('./routes/adminSearch');
 const adminGrowthRouter = require('./routes/adminGrowth');
 const { runGrowthEngine } = require('./services/growthEngine');
+const { runChiefIfDue } = require('./services/chiefOfStaff');
 const { loadShippingOverrides } = require('./services/shipping');
 const cartRecoveryRouter = require('./routes/cartRecovery');
 const { processCartRecovery } = require('./services/cartRecovery');
@@ -256,6 +257,8 @@ let reviewRequestsStartTimeout = null;
 let reviewRequestsInterval = null;
 let growthEngineStartTimeout = null;
 let growthEngineInterval = null;
+let chiefStartTimeout = null;
+let chiefInterval = null;
 
 const server = app.listen(PORT, function() {
   console.log('Server running on port ' + PORT);
@@ -301,6 +304,18 @@ const server = app.listen(PORT, function() {
     pulse();
     growthEngineInterval = setInterval(pulse, 6 * 60 * 60 * 1000);
   }, 20 * 60 * 1000);
+
+  // Chief of Staff — the brain. Checks every 6h but only writes a new weekly
+  // co-CEO brief when 7 days have passed (runChiefIfDue guards the cadence).
+  // First check 25 min after boot, just after the engine's first pulse so the
+  // brief can reflect fresh agent activity.
+  chiefStartTimeout = setTimeout(function() {
+    const think = () => runChiefIfDue()
+      .then(r => { if (r.ran) console.log('[chief] weekly brief written'); })
+      .catch(err => console.error('[chief]', err));
+    think();
+    chiefInterval = setInterval(think, 6 * 60 * 60 * 1000);
+  }, 25 * 60 * 1000);
 });
 
 let shuttingDown = false;
@@ -317,6 +332,8 @@ function shutdown(signal) {
   if (reviewRequestsInterval) clearInterval(reviewRequestsInterval);
   if (growthEngineStartTimeout) clearTimeout(growthEngineStartTimeout);
   if (growthEngineInterval) clearInterval(growthEngineInterval);
+  if (chiefStartTimeout) clearTimeout(chiefStartTimeout);
+  if (chiefInterval) clearInterval(chiefInterval);
 
   // Hard exit if graceful drain stalls (e.g. hung Mongo or stuck request).
   const hardExit = setTimeout(() => {
