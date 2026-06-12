@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   LayoutDashboard, Package, FileText, Users,
   Megaphone, Settings, Menu, Bell, X, Layers, Tag, BookOpen, BookMarked, Share2,
-  Folder, Gift, Activity, Image as ImageIcon, ShoppingBag, Star, Upload, Boxes, Truck,
+  Folder, Gift, Activity, Image as ImageIcon, ShoppingBag, Star, Upload, Boxes, Truck, Sparkles,
 } from 'lucide-react';
 import styles from './AdminLayout.module.css';
 import LogoutButton from './LogoutButton';
@@ -23,6 +23,7 @@ type NavEntry =
 const NAV: NavEntry[] = [
   { section: 'Core' },
   { label: 'Dashboard',  href: '/admin',            icon: LayoutDashboard, exact: true },
+  { label: 'Ask AI',     href: '/admin/analyst',    icon: Sparkles },
   { label: 'Orders',     href: '/admin/orders',     icon: ShoppingBag },
   { label: 'Customers',  href: '/admin/customers',  icon: Users },
   { label: 'Reviews',    href: '/admin/reviews',    icon: Star },
