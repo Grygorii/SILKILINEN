@@ -188,6 +188,27 @@ async function getSearchPerformance(days = 28) {
   };
 }
 
+// Real queries the site already appears for, with position — the raw material
+// for data-grounded content decisions (Growth Engine content writer). A query
+// with impressions but a weak position is a topic Google already half-trusts
+// the site on; content targeting it has a head start over topics invented
+// from nothing.
+async function getQueryOpportunities(days = 28) {
+  const body = {
+    startDate: dateStr(days + 3),
+    endDate: dateStr(3),
+    dimensions: ['query'],
+    rowLimit: 25,
+  };
+  const data = await apiPost(`sites/${siteSegment()}/searchAnalytics/query`, body);
+  return (data?.rows || []).map(r => ({
+    query: r.keys[0],
+    clicks: Math.round(r.clicks || 0),
+    impressions: Math.round(r.impressions || 0),
+    position: Math.round((r.position || 0) * 10) / 10,
+  })).sort((a, b) => b.impressions - a.impressions);
+}
+
 module.exports = {
   oauthConfigured,
   isConnected,
@@ -196,4 +217,5 @@ module.exports = {
   disconnect,
   getSitemapsSummary,
   getSearchPerformance,
+  getQueryOpportunities,
 };
