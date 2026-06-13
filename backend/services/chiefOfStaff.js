@@ -66,6 +66,51 @@ async function setNorthStar({ metric, target, deadline, note }) {
   return value;
 }
 
+// The AI Star is a LIVING guide, not a number on a wall. It watches the pace
+// against the deadline and speaks: on track, drifting, or achieved — with the
+// concrete gap and where to look. This is what makes it a star that can reach
+// down and steer, not just hang there.
+async function northStarStatus() {
+  const ns = await getNorthStar();
+  if (!ns) return null;
+  const current = await currentValue(ns.metric);
+  const target = ns.target;
+  const pct = current != null && target > 0 ? Math.round((current / target) * 100) : null;
+  const label = METRICS[ns.metric].label;
+  const now = Date.now();
+  const setAt = ns.setAt ? new Date(ns.setAt).getTime() : now;
+  // Month input ("2026-11") or full date — normalise to a timestamp.
+  const deadline = ns.deadline
+    ? new Date(ns.deadline.length === 7 ? `${ns.deadline}-01` : ns.deadline).getTime()
+    : null;
+
+  let pace = 'measuring';
+  let guidance = '';
+  if (current == null) {
+    guidance = `Connect the data for ${label.toLowerCase()} and I'll track your pace.`;
+  } else if (pct >= 100) {
+    pace = 'achieved';
+    guidance = `You've reached it — ${current} vs ${target}. Time to raise the star higher.`;
+  } else if (deadline && deadline > setAt) {
+    const elapsed = Math.min(1, Math.max(0, (now - setAt) / (deadline - setAt)));
+    const expectedPct = Math.round(elapsed * 100);
+    const monthsLeft = Math.max(0, (deadline - now) / (30 * DAY));
+    const gap = Math.max(0, Math.round((target - current) * 100) / 100);
+    if (pct + 8 >= expectedPct) {
+      pace = 'on track';
+      guidance = `On pace — ${current} of ${target} ${label.toLowerCase()} (${pct}%). Hold the course: keep approving the engine's moves.`;
+    } else {
+      pace = 'drifting';
+      const perMonth = monthsLeft >= 1 ? `~${(gap / monthsLeft).toFixed(1)}/month` : 'this month';
+      guidance = `Drifting — ${pct}% of target but ${expectedPct}% of the time to ${ns.deadline} is gone. You need +${gap} more (${perMonth}). Open this week's brief — that's your correction.`;
+    }
+  } else {
+    pace = 'no deadline';
+    guidance = `${pct ?? 0}% there (${current}/${target}). Add a "by when" date and I'll watch your pace and warn you the moment you drift.`;
+  }
+  return { current, target, pct, label, pace, guidance, deadline: ns.deadline || null };
+}
+
 // ── Measure: where are we, and how did we move? ────────────────────────────────
 
 async function currentValue(metric) {
@@ -339,6 +384,6 @@ async function runChiefIfDue({ force = false } = {}) {
 }
 
 module.exports = {
-  METRICS, getNorthStar, setNorthStar,
+  METRICS, getNorthStar, setNorthStar, northStarStatus,
   measure, contentOutcomes, generateBrief, runChiefIfDue,
 };

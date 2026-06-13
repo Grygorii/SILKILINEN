@@ -87,6 +87,15 @@ export default async function Home() {
 
       <NewArrivals />
 
+      {/* Style Finder — a quiet guide for the hesitant first-time visitor.
+          Turns "just browsing" into a curated edit (the Warby Parker / Cuyana
+          quiz pattern), in the brand's calm voice. */}
+      <a href="/style-finder" className={styles.finderBand}>
+        <span className={styles.finderEyebrow}>Not sure where to begin?</span>
+        <span className={styles.finderTitle}>Take the Silk Style Finder</span>
+        <span className={styles.finderCue}>Five quiet questions — and we&rsquo;ll gather the pieces made for you →</span>
+      </a>
+
       <ReassuranceRow />
 
       <FeaturedCollections />
