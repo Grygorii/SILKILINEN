@@ -77,6 +77,7 @@ async function unleashDaVinci() {
     `INVENTIONS ON THE DESK (Eureka): ${byType('eureka').map(a => `${a.title} — ${(a.detail || '').slice(0, 140)}`).join(' | ') || 'none yet'}`,
     `DEMAND WAVES: ${byType('demand_signal').map(a => a.title).join(', ') || 'none captured yet'}`,
     `COMPETITOR / STOREFRONT INTEL: ${recentActions.filter(a => a.agent === 'competitor' || a.agent === 'storefront').map(a => a.title).slice(0, 6).join(' | ') || 'none yet'}`,
+    `THE VISITOR EXPERIENCE (Prometheus = clarity, Maui = delight): ${byType('experience').map(a => `${a.title} — ${(a.detail || '').slice(0, 120)}`).slice(0, 6).join(' | ') || 'not assessed yet'}`,
     `DRAFTS WAITING (content/social/newsletter): ${recentActions.filter(a => ['content', 'social', 'newsletter'].includes(a.agent)).map(a => a.title).slice(0, 8).join(' | ') || 'none yet'}`,
     `THE FIELD: ${competitors.length} competitor brands mapped.`,
     `WHAT WE'VE LEARNED WORKS: ${(playbook.learnings || []).join(' · ') || 'still learning — too early'}`,
