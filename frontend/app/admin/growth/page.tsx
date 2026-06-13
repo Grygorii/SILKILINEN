@@ -38,6 +38,17 @@ type NorthStar = {
 
 type MetricDef = { key: string; label: string; unit: string };
 
+// The AI Star's live read on pace — it notices drift and speaks.
+type StarStatus = {
+  current: number | null;
+  target: number;
+  pct: number | null;
+  label: string;
+  pace: 'measuring' | 'on track' | 'drifting' | 'achieved' | 'no deadline';
+  guidance: string;
+  deadline?: string | null;
+} | null;
+
 type Brief = {
   _id: string;
   headline: string;
@@ -102,8 +113,9 @@ export default function GrowthEnginePage() {
   const [pulsing, setPulsing] = useState(false);
   const [runningAgent, setRunningAgent] = useState<string | null>(null);
 
-  // Brain — North Star + Co-CEO brief
+  // Brain — AI Star + Co-CEO brief
   const [northStar, setNorthStar] = useState<NorthStar>(null);
+  const [starStatus, setStarStatus] = useState<StarStatus>(null);
   const [metrics, setMetrics] = useState<MetricDef[]>([]);
   const [brief, setBrief] = useState<Brief>(null);
   const [brainLoading, setBrainLoading] = useState(true);
@@ -118,6 +130,7 @@ export default function GrowthEnginePage() {
       if (!res.ok) throw new Error(String(res.status));
       const data = await res.json();
       setNorthStar(data.northStar ?? null);
+      setStarStatus(data.status ?? null);
       setMetrics(data.metrics ?? []);
       setBrief(data.brief ?? null);
     } catch {
@@ -144,7 +157,7 @@ export default function GrowthEnginePage() {
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
     setNorthStar(data.northStar ?? null);
-    toast('North Star set.');
+    toast('AI Star set \u2014 I\u2019m watching your pace now.');
   }
 
   async function newBrief() {
@@ -261,12 +274,13 @@ export default function GrowthEnginePage() {
           </button>
         </div>
 
-        {/* North Star + Co-CEO brief */}
+        {/* AI Star + Co-CEO brief */}
         <NorthStarSection
           loading={brainLoading}
           error={brainError}
           onRetry={loadBrain}
           northStar={northStar}
+          starStatus={starStatus}
           metrics={metrics}
           brief={brief}
           onSave={saveNorthStar}
@@ -519,12 +533,13 @@ type NorthStarSectionProps = {
   error: boolean;
   onRetry: () => void;
   northStar: NorthStar;
+  starStatus: StarStatus;
   metrics: MetricDef[];
   brief: Brief;
   onSave: (body: { metric: string; target: number; deadline?: string; note?: string }) => Promise<void>;
 };
 
-function NorthStarSection({ loading, error, onRetry, northStar, metrics, brief, onSave }: NorthStarSectionProps) {
+function NorthStarSection({ loading, error, onRetry, northStar, starStatus, metrics, brief, onSave }: NorthStarSectionProps) {
   const [editing, setEditing] = useState(false);
 
   if (loading) {
@@ -539,7 +554,7 @@ function NorthStarSection({ loading, error, onRetry, northStar, metrics, brief, 
   if (error) {
     return (
       <div className={styles.northStar}>
-        <span className={styles.brainRetryText}>Couldn&rsquo;t load your North Star.</span>
+        <span className={styles.brainRetryText}>Couldn&rsquo;t load your AI Star.</span>
         <button type="button" className={styles.runBtn} onClick={onRetry}>Retry</button>
       </div>
     );
@@ -551,10 +566,10 @@ function NorthStarSection({ loading, error, onRetry, northStar, metrics, brief, 
       <div className={styles.northStar}>
         {!northStar && (
           <>
-            <p className={styles.northStarEyebrow}>Your North Star</p>
-            <h2 className={styles.northStarPrompt}>Set your North Star</h2>
+            <p className={styles.northStarEyebrow}>Your AI Star</p>
+            <h2 className={styles.northStarPrompt}>Set your AI Star</h2>
             <p className={styles.northStarHint}>
-              One number that matters most. Everything the engine does points here.
+              One number that matters most. Your AI Star points the whole engine at it — and tells you the moment you drift.
             </p>
           </>
         )}
@@ -580,7 +595,7 @@ function NorthStarSection({ loading, error, onRetry, northStar, metrics, brief, 
   return (
     <div className={styles.northStar}>
       <div className={styles.northStarHead}>
-        <p className={styles.northStarEyebrow}>North Star</p>
+        <p className={styles.northStarEyebrow}>AI Star</p>
         <button type="button" className={styles.runBtn} onClick={() => setEditing(true)}>Edit</button>
       </div>
       <h2 className={styles.northStarGoal}>
@@ -596,6 +611,25 @@ function NorthStarSection({ loading, error, onRetry, northStar, metrics, brief, 
             : `${ns?.current ?? 0} / ${northStar.target} (${Math.round(pct)}%)`}
         </span>
       </div>
+      {starStatus?.guidance ? (
+        <div
+          style={{
+            display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 12,
+            padding: '10px 12px', fontSize: 13, lineHeight: 1.55,
+            background: starStatus.pace === 'drifting' ? '#fdf6e9' : 'var(--cream, #f5f2ec)',
+            border: `1px solid ${starStatus.pace === 'drifting' ? '#ecdcb6' : 'var(--border, #e8e2d6)'}`,
+            color: 'var(--dark, #2a2218)',
+          }}
+        >
+          <span aria-hidden style={{ flexShrink: 0 }}>
+            {starStatus.pace === 'drifting' ? '⚠' : starStatus.pace === 'achieved' ? '★' : '✦'}
+          </span>
+          <span>
+            <strong style={{ textTransform: 'capitalize' }}>{starStatus.pace}</strong>
+            {' — '}{starStatus.guidance}
+          </span>
+        </div>
+      ) : null}
       {northStar.note ? <p className={styles.northStarNote}>{northStar.note}</p> : null}
     </div>
   );

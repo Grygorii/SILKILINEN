@@ -7,7 +7,7 @@ const { runGrowthEngine, setAgentEnabled, describeAgents } = require('../service
 const { getCompetitors, setCompetitors } = require('../services/competitorIntel');
 const { discoverCompetitors } = require('../services/competitorDiscovery');
 const CEOBrief = require('../models/CEOBrief');
-const { getNorthStar, setNorthStar, generateBrief, runChiefIfDue, METRICS } = require('../services/chiefOfStaff');
+const { getNorthStar, setNorthStar, northStarStatus, generateBrief, runChiefIfDue, METRICS } = require('../services/chiefOfStaff');
 
 // Manual runs invoke AI; keep a sane lid on a stuck refresh-spammer.
 const runLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 12, standardHeaders: true, legacyHeaders: false });
@@ -86,12 +86,14 @@ router.post('/competitors/discover', runLimit, async function(req, res) {
 // GET /api/admin/growth/brain — North Star, metric options, latest Co-CEO brief.
 router.get('/brain', async function(req, res) {
   try {
-    const [northStar, brief] = await Promise.all([
+    const [northStar, status, brief] = await Promise.all([
       getNorthStar(),
+      northStarStatus(),
       CEOBrief.findOne().sort({ createdAt: -1 }).lean(),
     ]);
     res.json({
       northStar,
+      status,
       metrics: Object.entries(METRICS).map(([k, v]) => ({ key: k, ...v })),
       brief: brief || null,
     });
