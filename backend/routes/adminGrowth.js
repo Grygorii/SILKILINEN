@@ -123,6 +123,47 @@ router.put('/north-star', async function(req, res) {
   }
 });
 
+// GET /api/admin/growth/action/:id — the full action for the Review room.
+router.get('/action/:id', async function(req, res) {
+  try {
+    const action = await GrowthAction.findById(req.params.id).lean();
+    if (!action) return res.status(404).json({ error: 'Not found' });
+    res.json({ action });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/admin/growth/action/:id/decide { outcome, reason }
+// Records the founder's verdict (kept forever) and turns their reason into a
+// Playbook learning the agents read next time — +1 to our shared intellect.
+router.post('/action/:id/decide', async function(req, res) {
+  try {
+    const { outcome, reason } = req.body || {};
+    if (!['completed', 'rejected'].includes(outcome)) {
+      return res.status(400).json({ error: 'outcome must be completed or rejected' });
+    }
+    const action = await GrowthAction.findById(req.params.id);
+    if (!action) return res.status(404).json({ error: 'Not found' });
+
+    action.status = outcome;
+    action.decision = { outcome, reason: String(reason || '').slice(0, 600), decidedAt: new Date() };
+    await action.save();
+
+    // The reason becomes memory. Phrase it as a durable rule for the agents.
+    if (reason && String(reason).trim()) {
+      const { addLearning } = require('../services/playbook');
+      const verb = outcome === 'completed' ? 'Founder approved' : 'Founder rejected';
+      await addLearning(`${verb} "${action.title}" — ${String(reason).trim()}`).catch(() => {});
+    }
+    res.json({ ok: true, action });
+  } catch (err) {
+    console.error('[growth] decide error:', err.message);
+    res.status(500).json({ error: 'Could not save your decision.' });
+  }
+});
+
 // GET /api/admin/growth/self-test — ping every dependency + report agents.
 router.get('/self-test', async function(req, res) {
   try {

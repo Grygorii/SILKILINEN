@@ -27,6 +27,16 @@ async function setLearnings(learnings) {
   return value;
 }
 
+// Prepend one freshly-learned rule (e.g. distilled from the founder's verdict
+// on a draft) to the front of the Playbook — newest first, deduped, capped.
+async function addLearning(text) {
+  const t = String(text || '').trim();
+  if (!t) return;
+  const { learnings } = await getPlaybook();
+  const next = [t, ...learnings.filter(l => l !== t)].slice(0, 12);
+  return setLearnings(next);
+}
+
 // Ready-to-inject prompt block. Empty string when nothing learned yet, so a
 // fresh store's agents simply behave as before.
 async function playbookPromptBlock() {
@@ -35,4 +45,4 @@ async function playbookPromptBlock() {
   return `\n\nWHAT WE'VE LEARNED WORKS (apply these — they come from real outcomes):\n${learnings.map(l => `- ${l}`).join('\n')}`;
 }
 
-module.exports = { getPlaybook, setLearnings, playbookPromptBlock };
+module.exports = { getPlaybook, setLearnings, addLearning, playbookPromptBlock };

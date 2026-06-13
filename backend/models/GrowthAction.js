@@ -8,8 +8,15 @@ const growthActionSchema = new mongoose.Schema({
   title:  { type: String, required: true },
   detail: { type: String, default: '' },
   href:   { type: String, default: '' },     // admin link to review the output
-  status: { type: String, enum: ['done', 'needs_approval', 'info', 'error'], default: 'info' },
+  status: { type: String, enum: ['done', 'needs_approval', 'info', 'error', 'completed', 'rejected'], default: 'info' },
   meta:   { type: mongoose.Schema.Types.Mixed },
+  // The founder's verdict — kept forever, never disappears. Their reason
+  // becomes memory the agents learn from (+1 to our shared intellect).
+  decision: {
+    outcome:   { type: String, enum: ['completed', 'rejected'], default: null },
+    reason:    { type: String, default: '' },
+    decidedAt: { type: Date, default: null },
+  },
 }, { timestamps: true });
 
 growthActionSchema.index({ createdAt: -1 });
