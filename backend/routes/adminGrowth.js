@@ -11,6 +11,9 @@ const { getNorthStar, setNorthStar, northStarStatus, generateBrief, runChiefIfDu
 
 // Manual runs invoke AI; keep a sane lid on a stuck refresh-spammer.
 const runLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 12, standardHeaders: true, legacyHeaders: false });
+// The brief is the founder's main interaction — give it its own roomier limit
+// so trying a few times in a row never trips a shared "run" cap.
+const briefLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false });
 
 router.use(requireAuth);
 
@@ -114,7 +117,7 @@ router.put('/north-star', async function(req, res) {
 });
 
 // POST /api/admin/growth/brief — generate a fresh Co-CEO brief now.
-router.post('/brief', runLimit, async function(req, res) {
+router.post('/brief', briefLimit, async function(req, res) {
   try {
     const result = await generateBrief();
     if (result.skipped) return res.status(400).json({ error: result.skipped });
