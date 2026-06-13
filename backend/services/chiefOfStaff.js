@@ -22,6 +22,7 @@ const GrowthAction = require('../models/GrowthAction');
 const Order = require('../models/Order');
 const Visit = require('../models/Visit');
 const JournalArticle = require('../models/JournalArticle');
+const { setLearnings } = require('./playbook');
 
 const client = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
@@ -191,7 +192,8 @@ Write in plain, warm, direct English (British/Irish spelling). No fluff, no hype
   "whatsWorking": "2-3 sentences: what the data says is working (channels, products, content) and what is not",
   "moves": [ { "title": "the move", "agent": "content|social|newsletter|competitor|storefront|watchdog|founder", "why": "one line tied to the data" } ],
   "founderActions": [ "the 1-3 things only the founder can do this week, concrete" ],
-  "buildIdeas": [ { "title": "a feature/capability worth building (from competitor intel)", "source": "competitor name or 'storefront'", "why": "the sales reason" } ]
+  "buildIdeas": [ { "title": "a feature/capability worth building (from competitor intel)", "source": "competitor name or 'storefront'", "why": "the sales reason" } ],
+  "learnings": [ "3-6 short, concrete, reusable rules distilled from the outcomes — these are fed back into every agent next week, so make them durable and specific (e.g. 'Hair-benefit article angles gain Search Console impressions fastest', 'Pinterest drives more pillowcase views than Instagram'). If data is too thin to learn anything real yet, return an empty array." ]
 }
 Rules: 3-4 moves max, each tied to a real number. buildIdeas only from the competitor/storefront material provided (0-3). If data is thin (new store), say so honestly and focus moves on building demand and content, not optimisation.`;
 
@@ -258,6 +260,13 @@ async function generateBrief() {
     buildIdeas: Array.isArray(parsed.buildIdeas) ? parsed.buildIdeas.slice(0, 3) : [],
     metrics: { ...metrics, outcomes },
   });
+
+  // Update the shared Playbook — the distilled learnings every agent will read
+  // and apply next cycle. This is the loop that makes the team adaptive: the
+  // brain teaches the workers what's working, automatically, every week.
+  if (Array.isArray(parsed.learnings) && parsed.learnings.length) {
+    await setLearnings(parsed.learnings).catch(() => {});
+  }
 
   // Drop a pinned action in the pulse feed so the brief is impossible to miss.
   await GrowthAction.create({
