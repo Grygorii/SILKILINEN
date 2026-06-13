@@ -10,6 +10,81 @@
   padding: 96px 6% 120px;
 }
 
+/* ── Intro ────────────────────────────────────────────── */
+.intro {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+  padding: 64px 8%;
+  /* Soft full-bleed cream wash — calm, never flashy. */
+  background:
+    radial-gradient(120% 90% at 50% 0%, #fbf9f4 0%, var(--cream, #f5f2ec) 55%, #efeae0 100%);
+  border: 1px solid var(--border, #e8e2d6);
+}
+
+.introTitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 400;
+  font-size: 52px;
+  line-height: 1.12;
+  letter-spacing: 0.5px;
+  color: var(--dark, #2a2218);
+  margin: 8px 0 24px;
+}
+
+.introSub {
+  font-family: 'Jost', sans-serif;
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--muted, #6b6358);
+  max-width: 380px;
+  margin: 0 auto 44px;
+}
+
+.beginBtn {
+  display: inline-block;
+  border: 1px solid var(--dark, #2a2218);
+  background: var(--dark, #2a2218);
+  color: var(--cream, #f5f2ec);
+  padding: 16px 56px;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 300ms cubic-bezier(.2, .6, .2, 1),
+    color 300ms cubic-bezier(.2, .6, .2, 1);
+}
+
+.beginBtn:hover {
+  background: transparent;
+  color: var(--dark, #2a2218);
+}
+
+/* ── Calm entrance + per-question slide ───────────────── */
+@keyframes sfFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sfSlideIn {
+  from { opacity: 0; transform: translateX(14px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.fadeIn {
+  animation: sfFadeIn 320ms cubic-bezier(.2, .6, .2, 1) both;
+}
+
+.slide {
+  animation: sfSlideIn 300ms cubic-bezier(.2, .6, .2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fadeIn, .slide { animation: none; }
+}
+
 /* ── Quiz / loading stage ─────────────────────────────── */
 .stage {
   width: 100%;
@@ -26,30 +101,36 @@
   margin-bottom: 36px;
 }
 
-.dots {
+/* ── Slim editorial progress ──────────────────────────── */
+.progress {
   display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin-bottom: 44px;
+  align-items: center;
+  gap: 16px;
+  max-width: 420px;
+  margin: 0 auto 48px;
 }
 
-.dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  border: 1px solid var(--border, #e8e2d6);
-  background: transparent;
-  transition: background 300ms cubic-bezier(.2, .6, .2, 1), border-color 300ms cubic-bezier(.2, .6, .2, 1);
+.progressNum {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--muted, #6b6358);
+  white-space: nowrap;
 }
 
-.dotDone {
-  background: var(--muted, #6b6358);
-  border-color: var(--muted, #6b6358);
+.progressTrack {
+  flex: 1;
+  height: 1px;
+  background: var(--border, #e8e2d6);
+  overflow: hidden;
 }
 
-.dotActive {
+.progressFill {
+  display: block;
+  height: 100%;
   background: var(--dark, #2a2218);
-  border-color: var(--dark, #2a2218);
+  transform-origin: left center;
+  transition: transform 400ms cubic-bezier(.2, .6, .2, 1);
 }
 
 .question {
@@ -72,9 +153,16 @@
   max-width: 420px;
 }
 
+.optionsSwatch {
+  max-width: 420px;
+}
+
 .option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
   width: 100%;
-  background: transparent;
+  background: #fdfcfa;
   border: 1px solid var(--border, #e8e2d6);
   padding: 18px 22px;
   font-family: 'Jost', sans-serif;
@@ -82,35 +170,74 @@
   letter-spacing: 0.5px;
   color: var(--dark, #2a2218);
   cursor: pointer;
-  min-height: 52px;
-  transition: background 220ms cubic-bezier(.2, .6, .2, 1),
-    border-color 220ms cubic-bezier(.2, .6, .2, 1),
-    color 220ms cubic-bezier(.2, .6, .2, 1);
+  min-height: 58px;
+  text-align: left;
+  box-shadow: 0 1px 0 rgba(42, 34, 24, 0.02);
+  transition: border-color 240ms cubic-bezier(.2, .6, .2, 1),
+    transform 240ms cubic-bezier(.2, .6, .2, 1),
+    box-shadow 240ms cubic-bezier(.2, .6, .2, 1),
+    background 240ms cubic-bezier(.2, .6, .2, 1);
 }
 
-.option:hover,
-.optionChosen {
-  background: var(--dark, #2a2218);
+.optionLabel {
+  flex: 1;
+}
+
+/* Quiet, tactile hover — a small lift, no colour shout. */
+.option:hover {
+  border-color: var(--muted, #6b6358);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(42, 34, 24, 0.06);
+}
+
+/* Selected = quiet dark border + subtle lift + faint cream wash. */
+.optionChosen,
+.optionChosen:hover {
   border-color: var(--dark, #2a2218);
-  color: var(--cream, #f5f2ec);
+  background: var(--cream, #f5f2ec);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(42, 34, 24, 0.08);
+}
+
+/* ── Colour swatches (mood question) ──────────────────── */
+.swatch {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(42, 34, 24, 0.12);
+  box-shadow: inset 0 0 0 2px #fff;
 }
 
 .controls {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-top: 44px;
+  justify-content: flex-start;
+  margin-top: 40px;
   max-width: 420px;
   margin-left: auto;
   margin-right: auto;
+  min-height: 24px;
 }
 
-.counter {
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 6px 0;
   font-family: 'Jost', sans-serif;
-  font-size: 11px;
-  letter-spacing: 2px;
+  font-size: 12px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--muted, #6b6358);
+  cursor: pointer;
+  transition: color 200ms cubic-bezier(.2, .6, .2, 1);
+}
+
+.backBtn:hover {
+  color: var(--dark, #2a2218);
 }
 
 .subtle {
@@ -145,6 +272,66 @@
   text-align: center;
 }
 
+/* ── Shareable persona ────────────────────────────────── */
+.persona {
+  max-width: 620px;
+  margin: 0 auto 56px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid var(--border, #e8e2d6);
+}
+
+.personaName {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 400;
+  font-size: 50px;
+  line-height: 1.1;
+  letter-spacing: 0.5px;
+  color: var(--dark, #2a2218);
+  margin: 8px 0 18px;
+}
+
+.personaLine {
+  font-family: 'Jost', sans-serif;
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--muted, #6b6358);
+  max-width: 420px;
+  margin: 0 auto 32px;
+}
+
+.shareRow {
+  display: flex;
+  justify-content: center;
+}
+
+.shareBtn {
+  background: none;
+  border: 1px solid var(--border, #e8e2d6);
+  padding: 11px 30px;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--dark, #2a2218);
+  cursor: pointer;
+  min-width: 148px;
+  transition: border-color 220ms cubic-bezier(.2, .6, .2, 1),
+    color 220ms cubic-bezier(.2, .6, .2, 1);
+}
+
+.shareBtn:hover {
+  border-color: var(--dark, #2a2218);
+}
+
+.editKicker {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted, #6b6358);
+  margin-bottom: 14px;
+}
+
 .resultTitle {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 400;
@@ -153,7 +340,7 @@
   letter-spacing: 0.5px;
   color: var(--dark, #2a2218);
   max-width: 640px;
-  margin: 14px auto 56px;
+  margin: 0 auto 56px;
 }
 
 .grid {
@@ -323,12 +510,19 @@
   .page { padding: 72px 6% 90px; }
   .question { font-size: 30px; }
   .resultTitle { font-size: 26px; }
+  .introTitle { font-size: 42px; }
+  .personaName { font-size: 40px; }
 }
 
 @media (max-width: 480px) {
   .page { padding: 56px 5% 72px; }
+  .intro { padding: 48px 26px; }
+  .introTitle { font-size: 36px; }
+  .introSub { margin-bottom: 36px; }
+  .beginBtn { padding: 15px 48px; }
   .question { font-size: 26px; }
   .option { padding: 16px 18px; }
+  .personaName { font-size: 34px; }
   .grid { grid-template-columns: 1fr 1fr; gap: 16px; }
   .saveRow { flex-direction: column; }
   .saveBtn { padding: 14px 26px; }
