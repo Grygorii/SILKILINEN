@@ -81,8 +81,93 @@
   animation: sfSlideIn 300ms cubic-bezier(.2, .6, .2, 1) both;
 }
 
+/* ── Staged, cinematic reveal ─────────────────────────── */
+@keyframes sfReveal {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Each .reveal element starts hidden and eases up, offset by its
+   inline animation-delay so the moment unfolds in sequence. */
+.reveal {
+  opacity: 0;
+  animation: sfReveal 720ms cubic-bezier(.2, .6, .2, 1) both;
+}
+
+/* ── Gathering beat (loading) ─────────────────────────── */
+.gather {
+  padding: 24px 0 8px;
+}
+
+/* A slow drawing line — calm, never busy. */
+.gatherLine {
+  display: block;
+  width: 0;
+  height: 1px;
+  margin: 8px auto 40px;
+  max-width: 320px;
+  background: linear-gradient(90deg, transparent, var(--muted, #6b6358), transparent);
+  animation: sfDraw 1200ms cubic-bezier(.4, 0, .2, 1) infinite;
+}
+
+@keyframes sfDraw {
+  0% { width: 0; opacity: 0; }
+  40% { opacity: 1; }
+  100% { width: 320px; opacity: 0; }
+}
+
+/* Fading words that cross-dissolve through the beat. */
+.gatherWords {
+  position: relative;
+  height: 1.9em;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 26px;
+  letter-spacing: 0.5px;
+  color: var(--dark, #2a2218);
+}
+
+.gatherWord {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  animation: sfWord 3600ms cubic-bezier(.4, 0, .2, 1) infinite;
+}
+
+.gatherWord:nth-child(1) { animation-delay: 0ms; }
+.gatherWord:nth-child(2) { animation-delay: 1200ms; }
+.gatherWord:nth-child(3) { animation-delay: 2400ms; }
+
+@keyframes sfWord {
+  0% { opacity: 0; transform: translateY(6px); }
+  8% { opacity: 1; transform: translateY(0); }
+  25% { opacity: 1; transform: translateY(0); }
+  33% { opacity: 0; transform: translateY(-6px); }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fadeIn, .slide { animation: none; }
+  /* Reveal everything immediately, no motion, no stagger. */
+  .reveal { opacity: 1; animation: none; }
+  .gatherLine { animation: none; opacity: 0.4; width: 320px; }
+  .gatherWord { animation: none; }
+  /* Show only the first phrase, statically. */
+  .gatherWord:nth-child(1) { opacity: 1; }
 }
 
 /* ── Quiz / loading stage ─────────────────────────────── */
@@ -274,34 +359,65 @@
 
 /* ── Shareable persona ────────────────────────────────── */
 .persona {
+  position: relative;
   max-width: 620px;
   margin: 0 auto 56px;
-  padding-bottom: 48px;
+  padding: 32px 0 48px;
   border-bottom: 1px solid var(--border, #e8e2d6);
 }
 
+/* A faint warm wash behind the persona name — alive, never flashy. */
+.personaGlow {
+  position: absolute;
+  top: -8%;
+  left: 50%;
+  width: 460px;
+  max-width: 90%;
+  height: 240px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: radial-gradient(60% 60% at 50% 40%,
+    rgba(227, 198, 194, 0.22) 0%,
+    rgba(245, 242, 236, 0.18) 45%,
+    transparent 75%);
+  opacity: 0;
+  animation: sfGlow 1400ms cubic-bezier(.2, .6, .2, 1) 150ms both;
+}
+
+@keyframes sfGlow {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .personaGlow { animation: none; opacity: 1; }
+}
+
 .personaName {
+  position: relative;
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 400;
-  font-size: 50px;
-  line-height: 1.1;
+  font-size: 56px;
+  line-height: 1.08;
   letter-spacing: 0.5px;
   color: var(--dark, #2a2218);
   margin: 8px 0 18px;
 }
 
 .personaLine {
+  position: relative;
   font-family: 'Jost', sans-serif;
   font-size: 15px;
   line-height: 1.8;
   color: var(--muted, #6b6358);
   max-width: 420px;
-  margin: 0 auto 32px;
+  margin: 0 auto;
 }
 
 .shareRow {
   display: flex;
   justify-content: center;
+  margin-bottom: 8px;
 }
 
 .shareBtn {
@@ -343,11 +459,20 @@
   margin: 0 auto 56px;
 }
 
+/* The single decisive line that removes doubt. */
+.resultDecisive {
+  display: block;
+  margin-top: 10px;
+  font-style: italic;
+  color: var(--dark, #2a2218);
+}
+
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 32px;
-  margin-bottom: 64px;
+  margin-bottom: 8px;
+  text-align: left;
 }
 
 .card {
@@ -355,15 +480,53 @@
   flex-direction: column;
   text-decoration: none;
   text-align: left;
+  transition: transform 420ms cubic-bezier(.2, .6, .2, 1);
+}
+
+/* Quiet hover lift — the whole card rises a touch. */
+.card:hover {
+  transform: translateY(-6px);
+}
+
+/* The top recommendation, made visually primary: a large hero block at the
+   head of the edit (two columns wide), so the eye lands decisively. */
+.cardPrimary {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+/* The hero image runs taller and squarer than the stacked picks beside it. */
+.cardPrimary .cardImg {
+  aspect-ratio: 4 / 5;
+}
+
+.cardPrimary .cardName {
+  font-size: 26px;
 }
 
 .cardImg {
+  position: relative;
   display: block;
   width: 100%;
   aspect-ratio: 3 / 4;
   overflow: hidden;
   background: var(--cream, #f5f2ec);
   margin-bottom: 16px;
+}
+
+/* A subtle "Your match" marker on the primary pick. */
+.matchMark {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 1;
+  background: rgba(42, 34, 24, 0.86);
+  color: var(--cream, #f5f2ec);
+  padding: 7px 14px;
+  font-family: 'Jost', sans-serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
 
 .cardImg img {
@@ -397,6 +560,44 @@
   font-size: 13px;
   letter-spacing: 1px;
   color: var(--muted, #6b6358);
+}
+
+/* Quiet "View piece →" affordance — revealed gently on hover/focus. */
+.cardView {
+  display: inline-block;
+  margin-top: 12px;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--dark, #2a2218);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 280ms cubic-bezier(.2, .6, .2, 1),
+    transform 280ms cubic-bezier(.2, .6, .2, 1);
+}
+
+.card:hover .cardView,
+.card:focus-visible .cardView {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* On touch / no-hover devices, keep the affordance always visible. */
+@media (hover: none) {
+  .cardView { opacity: 1; transform: none; }
+}
+
+/* Controls placed calmly below the reveal, gently set apart so they never
+   compete with the moment. Eases in last, after the cards. */
+.afterReveal {
+  margin-top: 72px;
+  padding-top: 8px;
+  animation: sfFadeIn 600ms cubic-bezier(.2, .6, .2, 1) 1100ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .afterReveal { animation: none; }
 }
 
 .emptyEdit {
@@ -504,6 +705,9 @@
 /* ── Responsive ───────────────────────────────────────── */
 @media (max-width: 900px) {
   .grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  /* Primary becomes a full-width hero; the rest pair up below it. */
+  .cardPrimary { grid-column: 1 / -1; grid-row: auto; }
+  .cardPrimary .cardImg { aspect-ratio: 16 / 10; }
 }
 
 @media (max-width: 768px) {
@@ -511,7 +715,8 @@
   .question { font-size: 30px; }
   .resultTitle { font-size: 26px; }
   .introTitle { font-size: 42px; }
-  .personaName { font-size: 40px; }
+  .personaName { font-size: 44px; }
+  .gatherWords { font-size: 22px; }
 }
 
 @media (max-width: 480px) {
@@ -522,9 +727,11 @@
   .beginBtn { padding: 15px 48px; }
   .question { font-size: 26px; }
   .option { padding: 16px 18px; }
-  .personaName { font-size: 34px; }
+  .personaName { font-size: 36px; }
   .grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+  .cardPrimary .cardName { font-size: 22px; }
   .saveRow { flex-direction: column; }
   .saveBtn { padding: 14px 26px; }
   .finalControls { flex-direction: column; gap: 18px; }
+  .afterReveal { margin-top: 56px; }
 }

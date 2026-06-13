@@ -24,6 +24,8 @@ const AGENTS = [
   require('./growthAgents/competitorScout'),
   require('./growthAgents/storefrontScout'),
   require('./growthAgents/eureka'),
+  require('./growthAgents/prometheus'),
+  require('./growthAgents/maui'),
   require('./growthAgents/contentWriter'),
   require('./growthAgents/socialDrafter'),
   require('./growthAgents/newsletterDrafter'),

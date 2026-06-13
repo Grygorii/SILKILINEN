@@ -239,6 +239,12 @@ function choosePersona(colourHints: string[]): Persona {
   return bestScore > 0 ? PERSONAS[bestKey] : PERSONAS.classicist;
 }
 
+/* Stagger helper for the staged reveal: each element eases in ~150ms after the
+   one before it. Returns a style object carrying the per-element delay. */
+function revealDelay(index: number): React.CSSProperties {
+  return { animationDelay: `${index * 150}ms` };
+}
+
 export default function StyleFinder() {
   const [phase, setPhase] = useState<Phase>('intro');
   const [step, setStep] = useState(0);
@@ -258,6 +264,9 @@ export default function StyleFinder() {
     setPhase('loading');
     const { weights, colourHints } = buildProfile(allAnswers);
     setPersona(choosePersona(colourHints));
+    // A calm minimum "gathering" beat so the reveal feels earned, not instant.
+    // The real fetch wait is folded into this beat (whichever is longer wins).
+    const beat = new Promise<void>(resolve => setTimeout(resolve, 1200));
     try {
       const res = await fetch(`${API}/api/products`, { cache: 'no-store' });
       if (!res.ok) throw new Error('fetch failed');
@@ -265,10 +274,12 @@ export default function StyleFinder() {
       const ranked = scoreProducts(Array.isArray(data) ? data : [], weights, colourHints);
       // Fall back to top categories if scoring is empty (e.g. sparse stock).
       const picks = ranked.slice(0, 4);
+      await beat;
       setResults(picks);
       setLine(resultLine(allAnswers));
       setPhase('results');
     } catch {
+      await beat;
       setLine(resultLine(allAnswers));
       setPhase('error');
     }
@@ -404,41 +415,55 @@ export default function StyleFinder() {
         </section>
       )}
 
-      {/* ── Loading ──────────────────────────────────────── */}
+      {/* ── Loading — a calm "gathering" beat ────────────── */}
       {phase === 'loading' && (
-        <section className={styles.stage} aria-live="polite">
+        <section className={`${styles.stage} ${styles.gather}`} aria-live="polite" aria-busy="true">
           <p className={styles.kicker}>Silk Style Finder</p>
-          <h1 className={styles.question}>Gathering your edit…</h1>
-          <p className={styles.subtle}>A moment, while we choose the pieces made for you.</p>
+          <span className={styles.gatherLine} aria-hidden="true" />
+          <p className={styles.gatherWords}>
+            <span className={styles.gatherWord}>Reading your answers…</span>
+            <span className={styles.gatherWord}>Gathering your silk…</span>
+            <span className={styles.gatherWord}>Choosing the pieces made for you…</span>
+          </p>
+          <span className={styles.srOnly}>Gathering your edit.</span>
         </section>
       )}
 
-      {/* ── Results ──────────────────────────────────────── */}
+      {/* ── Results — staged, cinematic reveal ───────────── */}
       {phase === 'results' && (
-        <section className={`${styles.results} ${styles.fadeIn}`} aria-live="polite">
+        <section className={styles.results} aria-live="polite">
           {persona && (
             <div className={styles.persona}>
-              <p className={styles.kicker}>You are</p>
-              <h1 className={styles.personaName}>{persona.name}</h1>
-              <p className={styles.personaLine}>{persona.line}</p>
-              <div className={styles.shareRow}>
-                <button type="button" className={styles.shareBtn} onClick={copyLink}>
-                  {copied ? 'Link copied' : 'Share'}
-                </button>
-              </div>
+              <span className={styles.personaGlow} aria-hidden="true" />
+              <p className={`${styles.kicker} ${styles.reveal}`} style={revealDelay(0)}>You are</p>
+              <h1 className={`${styles.personaName} ${styles.reveal}`} style={revealDelay(1)}>
+                {persona.name}
+              </h1>
+              <p className={`${styles.personaLine} ${styles.reveal}`} style={revealDelay(2)}>
+                {persona.line}
+              </p>
             </div>
           )}
 
-          <p className={styles.editKicker}>Your edit</p>
-          <h2 className={styles.resultTitle}>{line}</h2>
+          <p className={`${styles.editKicker} ${styles.reveal}`} style={revealDelay(3)}>Your edit</p>
+          <h2 className={`${styles.resultTitle} ${styles.reveal}`} style={revealDelay(4)}>
+            {line} <span className={styles.resultDecisive}>This is your edit.</span>
+          </h2>
 
           {results.length > 0 ? (
             <div className={styles.grid}>
-              {results.map(p => {
+              {results.map((p, i) => {
                 const img = primaryImage(p);
+                const isPrimaryPick = i === 0;
                 return (
-                  <Link key={p._id} href={`/product/${p._id}`} className={styles.card}>
+                  <Link
+                    key={p._id}
+                    href={`/product/${p._id}`}
+                    className={`${styles.card} ${isPrimaryPick ? styles.cardPrimary : ''} ${styles.reveal}`}
+                    style={revealDelay(5 + i)}
+                  >
                     <span className={styles.cardImg}>
+                      {isPrimaryPick && <span className={styles.matchMark}>Your match</span>}
                       {img ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={img} alt={p.name} loading="lazy" />
@@ -448,86 +473,105 @@ export default function StyleFinder() {
                     </span>
                     <span className={styles.cardName}>{p.name}</span>
                     <span className={styles.cardPrice}>€{Number(p.price).toFixed(2)}</span>
+                    <span className={styles.cardView} aria-hidden="true">View piece →</span>
                   </Link>
                 );
               })}
             </div>
           ) : (
-            <div className={styles.emptyEdit}>
+            <div className={`${styles.emptyEdit} ${styles.reveal}`} style={revealDelay(5)}>
               <p className={styles.subtle}>
                 Your edit is ready to be explored in full.
               </p>
               <Link href="/shop" className={styles.ctaOutline}>
-                Shop the collection
+                Shop the collection →
               </Link>
             </div>
           )}
 
-          {/* Optional, never-blocking email capture (real /api/newsletter). */}
-          {saveState === 'saved' ? (
-            <p className={styles.savedNote}>Saved.</p>
-          ) : (
-            <form className={styles.save} onSubmit={saveEdit}>
-              <label className={styles.saveLabel} htmlFor="sf-email">
-                Save your edit — first access to new pieces
-              </label>
-              <div className={styles.saveRow}>
-                <input
-                  id="sf-email"
-                  type="email"
-                  className={styles.saveInput}
-                  placeholder="Your email address"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  disabled={saveState === 'saving'}
-                  required
-                />
-                <button type="submit" className={styles.saveBtn} disabled={saveState === 'saving'}>
-                  {saveState === 'saving' ? 'Saving…' : 'Save'}
-                </button>
-              </div>
-              {saveState === 'error' && <p className={styles.subtle}>That didn’t save — do try again.</p>}
-            </form>
-          )}
+          {/* ── Calm controls, placed below the reveal ─────── */}
+          <div className={styles.afterReveal}>
+            <div className={styles.shareRow}>
+              <button type="button" className={styles.shareBtn} onClick={copyLink}>
+                {copied ? 'Link copied' : 'Share'}
+              </button>
+            </div>
 
-          <div className={styles.finalControls}>
-            <button type="button" className={styles.textBtn} onClick={restart}>
-              Start again
-            </button>
-            <Link href="/shop" className={styles.textBtn}>
-              Shop everything →
-            </Link>
+            {/* Optional, never-blocking email capture (real /api/newsletter). */}
+            {saveState === 'saved' ? (
+              <p className={styles.savedNote}>Saved.</p>
+            ) : (
+              <form className={styles.save} onSubmit={saveEdit}>
+                <label className={styles.saveLabel} htmlFor="sf-email">
+                  Save your edit — first access to new pieces
+                </label>
+                <div className={styles.saveRow}>
+                  <input
+                    id="sf-email"
+                    type="email"
+                    className={styles.saveInput}
+                    placeholder="Your email address"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    disabled={saveState === 'saving'}
+                    required
+                  />
+                  <button type="submit" className={styles.saveBtn} disabled={saveState === 'saving'}>
+                    {saveState === 'saving' ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+                {saveState === 'error' && <p className={styles.subtle}>That didn’t save — do try again.</p>}
+              </form>
+            )}
+
+            <div className={styles.finalControls}>
+              <button type="button" className={styles.textBtn} onClick={restart}>
+                Start again
+              </button>
+              <Link href="/shop" className={styles.textBtn}>
+                Shop everything →
+              </Link>
+            </div>
           </div>
         </section>
       )}
 
-      {/* ── Error (products failed to load) ──────────────── */}
+      {/* ── Error (products failed to load) — persona still reveals ─ */}
       {phase === 'error' && (
-        <section className={`${styles.results} ${styles.fadeIn}`} aria-live="polite">
+        <section className={styles.results} aria-live="polite">
           {persona && (
             <div className={styles.persona}>
-              <p className={styles.kicker}>You are</p>
-              <h1 className={styles.personaName}>{persona.name}</h1>
-              <p className={styles.personaLine}>{persona.line}</p>
+              <span className={styles.personaGlow} aria-hidden="true" />
+              <p className={`${styles.kicker} ${styles.reveal}`} style={revealDelay(0)}>You are</p>
+              <h1 className={`${styles.personaName} ${styles.reveal}`} style={revealDelay(1)}>
+                {persona.name}
+              </h1>
+              <p className={`${styles.personaLine} ${styles.reveal}`} style={revealDelay(2)}>
+                {persona.line}
+              </p>
             </div>
           )}
-          <p className={styles.editKicker}>Your edit</p>
-          <h2 className={styles.resultTitle}>{line}</h2>
-          <div className={styles.emptyEdit}>
+          <p className={`${styles.editKicker} ${styles.reveal}`} style={revealDelay(3)}>Your edit</p>
+          <h2 className={`${styles.resultTitle} ${styles.reveal}`} style={revealDelay(4)}>
+            {line} <span className={styles.resultDecisive}>This is your edit.</span>
+          </h2>
+          <div className={`${styles.emptyEdit} ${styles.reveal}`} style={revealDelay(5)}>
             <p className={styles.subtle}>
               We couldn’t gather your pieces just now — but the collection is waiting.
             </p>
             <Link href="/shop" className={styles.ctaOutline}>
-              Shop the collection
+              Shop the collection →
             </Link>
           </div>
-          <div className={styles.finalControls}>
-            <button type="button" className={styles.textBtn} onClick={restart}>
-              Start again
-            </button>
-            <Link href="/shop" className={styles.textBtn}>
-              Shop everything →
-            </Link>
+          <div className={styles.afterReveal}>
+            <div className={styles.finalControls}>
+              <button type="button" className={styles.textBtn} onClick={restart}>
+                Start again
+              </button>
+              <Link href="/shop" className={styles.textBtn}>
+                Shop everything →
+              </Link>
+            </div>
           </div>
         </section>
       )}
