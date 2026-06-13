@@ -327,21 +327,72 @@ function fallbackBriefFields(m, ns, competitors) {
   };
 }
 
+// Safe metrics shape so the brief can always render even if a query fails.
+const SAFE_METRICS = {
+  orders: { last7: 0, prev7: 0 }, revenue: { last7: 0, prev7: 0 },
+  humanVisitors: { last7: 0, prev7: 0 }, priceFloorEUR: 0, priceCeilingEUR: 0, avgPriceEUR: 0,
+  anomalousOrders30d: 0, sources: [], topProducts: [], search: null,
+};
+
+// The model can return fields in slightly wrong shapes (moves as strings,
+// founderActions as objects…). Coerce everything to the CEOBrief schema so
+// Mongoose never cast-errors — the #1 cause of "Could not write a brief".
+const asStr = (x) => (typeof x === 'string' ? x : x == null ? '' : (x.title || x.move || x.action || String(x)));
+function coerceMoves(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr.slice(0, 4).map(m => (typeof m === 'string'
+    ? { title: m, agent: '', why: '' }
+    : { title: asStr(m?.title), agent: asStr(m?.agent), why: asStr(m?.why) })).filter(m => m.title);
+}
+function coerceIdeas(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr.slice(0, 3).map(i => (typeof i === 'string'
+    ? { title: i, source: '', why: '' }
+    : { title: asStr(i?.title), source: asStr(i?.source), why: asStr(i?.why) })).filter(i => i.title);
+}
+const coerceStrings = (arr) => (Array.isArray(arr) ? arr.slice(0, 3).map(asStr).filter(Boolean) : []);
+
+// Public entry — guarantees a brief is written or a clean skip, NEVER a throw,
+// so "New brief" can't 500. Layers: fail-soft gather → AI-or-fallback → coerced
+// save with retry → and this outer net for anything unforeseen.
 async function generateBrief() {
-  if (!process.env.DEEPSEEK_API_KEY) {
-    return { skipped: 'AI not configured' };
+  if (!process.env.DEEPSEEK_API_KEY) return { skipped: 'AI not configured' };
+  try {
+    return await generateBriefCore();
+  } catch (err) {
+    console.error('[chief] generateBrief failed entirely, writing minimal brief:', err.message);
+    try {
+      const m = await measure().catch(() => SAFE_METRICS);
+      const fb = fallbackBriefFields(m, null, []);
+      const brief = await CEOBrief.create({
+        headline: fb.headline, progress: fb.progress, whatChanged: fb.whatChanged,
+        whatsWorking: fb.whatsWorking, marketRead: fb.marketRead,
+        moves: coerceMoves(fb.moves), founderActions: coerceStrings(fb.founderActions),
+        buildIdeas: [], metrics: { usedFallback: true },
+      });
+      return { brief };
+    } catch (e2) {
+      return { error: e2.message };
+    }
   }
+}
+
+async function generateBriefCore() {
   const { getCompetitors } = require('./competitorIntel');
+  // Every gather is fail-soft — one slow/broken query can never sink the brief.
   const [northStar, metrics, outcomes, ideas, recentActions, competitors] = await Promise.all([
-    getNorthStar(), measure(), contentOutcomes(), buildIdeaCandidates(),
-    GrowthAction.find().sort({ createdAt: -1 }).limit(20).select('agent type title status').lean(),
-    getCompetitors(),
+    getNorthStar().catch(() => null),
+    measure().catch(e => { console.warn('[chief] measure failed:', e.message); return SAFE_METRICS; }),
+    contentOutcomes().catch(() => []),
+    buildIdeaCandidates().catch(() => []),
+    GrowthAction.find().sort({ createdAt: -1 }).limit(20).select('agent type title status').lean().catch(() => []),
+    getCompetitors().catch(() => []),
   ]);
 
   let nsBlock = 'No North Star goal set yet.';
   let nsForStore = null;
-  if (northStar) {
-    const current = await currentValue(northStar.metric);
+  if (northStar && METRICS[northStar.metric]) {
+    const current = await currentValue(northStar.metric).catch(() => null);
     const pct = current != null ? Math.round((current / northStar.target) * 100) : null;
     nsForStore = { ...northStar, current, pct, label: METRICS[northStar.metric].label };
     nsBlock = `North Star: ${METRICS[northStar.metric].label} — target ${northStar.target}${northStar.deadline ? ` by ${northStar.deadline}` : ''}. Current (last 30d): ${current ?? 'unknown'}${pct != null ? ` (${pct}% of target)` : ''}.${northStar.note ? ` Note: ${northStar.note}` : ''}`;
@@ -400,18 +451,34 @@ async function generateBrief() {
   const usedFallback = !parsed;
   if (!parsed) parsed = fallbackBriefFields(metrics, nsForStore, competitors);
 
-  const brief = await CEOBrief.create({
-    headline: parsed.headline || 'Weekly brief',
+  // Coerce to the exact schema shape so a mis-shaped AI response can't
+  // cast-error on save. If save still somehow fails, fall back to the
+  // deterministic fields and try once more — the brief MUST be written.
+  const doc = {
+    headline: asStr(parsed.headline) || 'Weekly brief',
     northStar: nsForStore,
-    progress: parsed.progress || '',
-    whatChanged: parsed.whatChanged || '',
-    whatsWorking: parsed.whatsWorking || '',
-    marketRead: parsed.marketRead || '',
-    moves: Array.isArray(parsed.moves) ? parsed.moves.slice(0, 4) : [],
-    founderActions: Array.isArray(parsed.founderActions) ? parsed.founderActions.slice(0, 3) : [],
-    buildIdeas: Array.isArray(parsed.buildIdeas) ? parsed.buildIdeas.slice(0, 3) : [],
+    progress: asStr(parsed.progress),
+    whatChanged: asStr(parsed.whatChanged),
+    whatsWorking: asStr(parsed.whatsWorking),
+    marketRead: asStr(parsed.marketRead),
+    moves: coerceMoves(parsed.moves),
+    founderActions: coerceStrings(parsed.founderActions),
+    buildIdeas: coerceIdeas(parsed.buildIdeas),
     metrics: { ...metrics, outcomes, usedFallback },
-  });
+  };
+  let brief;
+  try {
+    brief = await CEOBrief.create(doc);
+  } catch (saveErr) {
+    console.warn('[chief] brief save failed, retrying with safe fields:', saveErr.message);
+    const fb = fallbackBriefFields(metrics, nsForStore, competitors);
+    brief = await CEOBrief.create({
+      headline: fb.headline, northStar: nsForStore, progress: fb.progress,
+      whatChanged: fb.whatChanged, whatsWorking: fb.whatsWorking, marketRead: fb.marketRead,
+      moves: coerceMoves(fb.moves), founderActions: coerceStrings(fb.founderActions), buildIdeas: [],
+      metrics: { ...metrics, usedFallback: true },
+    });
+  }
 
   // Update the shared Playbook — the distilled learnings every agent will read
   // and apply next cycle. This is the loop that makes the team adaptive: the
