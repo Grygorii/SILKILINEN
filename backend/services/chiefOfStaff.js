@@ -34,6 +34,15 @@ const NORTH_STAR_KEY = 'growthNorthStar';
 const PAID = ['paid', 'shipped', 'delivered'];
 const DAY = 86400000;
 
+// Cities that are search-engine / cloud data centres, not shoppers. The brain
+// must remember what we proved: a chunk of "visits" are bots. Reasoning on
+// human visits keeps it from mistaking crawler traffic for demand.
+const DATA_CENTRE_CITIES = [
+  'San Jose', 'Mountain View', 'The Dalles', 'Council Bluffs',
+  'Ashburn', 'Boardman', 'Columbus', 'Santa Clara',
+];
+const humanVisitMatch = (range) => ({ ...range, city: { $nin: DATA_CENTRE_CITIES } });
+
 // ── North Star (the goal) ──────────────────────────────────────────────────────
 
 const METRICS = {
@@ -93,14 +102,27 @@ async function measure() {
   const since14 = new Date(Date.now() - 14 * DAY);
   const since30 = new Date(Date.now() - 30 * DAY);
 
-  const [ordersThis, ordersPrev, revThis, revPrev, visThis, visPrev] = await Promise.all([
+  const [ordersThis, ordersPrev, revThis, revPrev, visThis, visPrev, priceStats, anomalies] = await Promise.all([
     Order.countDocuments({ status: { $in: PAID }, createdAt: { $gte: since7 } }),
     Order.countDocuments({ status: { $in: PAID }, createdAt: { $gte: since14, $lt: since7 } }),
     Order.aggregate([{ $match: { status: { $in: PAID }, createdAt: { $gte: since7 } } }, { $group: { _id: null, v: { $sum: '$total' } } }]),
     Order.aggregate([{ $match: { status: { $in: PAID }, createdAt: { $gte: since14, $lt: since7 } } }, { $group: { _id: null, v: { $sum: '$total' } } }]),
-    Visit.aggregate([{ $match: { createdAt: { $gte: since7 } } }, { $group: { _id: '$sessionId' } }, { $count: 'n' }]),
-    Visit.aggregate([{ $match: { createdAt: { $gte: since14, $lt: since7 } } }, { $group: { _id: '$sessionId' } }, { $count: 'n' }]),
+    // Visitors, bot-aware: exclude data-centre cities so crawlers aren't counted as shoppers.
+    Visit.aggregate([{ $match: humanVisitMatch({ createdAt: { $gte: since7 } }) }, { $group: { _id: '$sessionId' } }, { $count: 'n' }]),
+    Visit.aggregate([{ $match: humanVisitMatch({ createdAt: { $gte: since14, $lt: since7 } }) }, { $group: { _id: '$sessionId' } }, { $count: 'n' }]),
+    // Catalogue price floor — so the brain can sanity-check revenue against reality.
+    Product.aggregate([{ $match: { status: { $in: ['active', 'sold_out'] } } }, { $group: { _id: null, min: { $min: '$price' }, max: { $max: '$price' }, avg: { $avg: '$price' } } }]),
+    // Orders whose total is below the cheapest product = test / refund / data anomaly, NOT real sales.
+    Order.aggregate([
+      { $match: { status: { $in: PAID }, createdAt: { $gte: since30 } } },
+      { $group: { _id: null, total: { $sum: 1 }, revenue: { $sum: '$total' }, minOrder: { $min: '$total' } } },
+    ]),
   ]);
+
+  const floor = priceStats[0]?.min || 0;
+  const anomalyCount = floor > 0
+    ? await Order.countDocuments({ status: { $in: PAID }, createdAt: { $gte: since30 }, total: { $lt: floor } })
+    : 0;
 
   // Traffic sources & top products (30d) — context for attribution.
   const [sources, topProducts] = await Promise.all([
@@ -131,7 +153,11 @@ async function measure() {
   return {
     orders: { last7: ordersThis, prev7: ordersPrev },
     revenue: { last7: Math.round((revThis[0]?.v || 0) * 100) / 100, prev7: Math.round((revPrev[0]?.v || 0) * 100) / 100 },
-    visitors: { last7: visThis[0]?.n || 0, prev7: visPrev[0]?.n || 0 },
+    humanVisitors: { last7: visThis[0]?.n || 0, prev7: visPrev[0]?.n || 0 },
+    priceFloorEUR: Math.round(floor * 100) / 100,
+    priceCeilingEUR: Math.round((priceStats[0]?.max || 0) * 100) / 100,
+    avgPriceEUR: Math.round((priceStats[0]?.avg || 0) * 100) / 100,
+    anomalousOrders30d: anomalyCount, // orders below the cheapest product → test/refund/data, not sales
     sources: sources.map(s => ({ source: s._id || 'direct', sessions: s.n })),
     topProducts: topProducts.map(p => ({ name: p._id, units: p.units })),
     search,
@@ -182,17 +208,26 @@ async function buildIdeaCandidates() {
 
 // ── Decide: synthesise the weekly brief ────────────────────────────────────────
 
-const BRIEF_SYSTEM = `You are the Chief of Staff / co-CEO for SILKILINEN, a small luxury silk & linen e-commerce brand run by one founder (currency EUR). Once a week you write a tight operating brief. You are handed REAL numbers — never invent any. You think like a sharp operator who has read every great DTC growth playbook: ruthless prioritisation, bias to what's already working, honest about what isn't.
+const BRIEF_SYSTEM = `You are the Chief of Staff / co-CEO for SILKILINEN, a QUIET-LUXURY silk & linen brand run by one founder (currency EUR). Once a week you write a tight operating brief. Think like a seasoned luxury-brand operator AND a skeptical analyst — not a generic growth hacker.
 
-Write in plain, warm, direct English (British/Irish spelling). No fluff, no hype, no emojis. Respond ONLY with valid JSON:
+THREE NON-NEGOTIABLE WAYS OF THINKING:
+
+1. INTERROGATE THE DATA — never parrot it. You are told the catalogue price floor. If revenue or average-order-value is below the cheapest product, those are TEST orders, refunds, or a data glitch — say so plainly and exclude them; do NOT call €5 of revenue a "first revenue week". You are told how many visits are likely search-engine/data-centre BOTS — discount them; never call bot traffic "demand" or "a channel working". If a number looks impossible for this business, flag it as suspect rather than building a story on it.
+
+2. PROTECT THE LUXURY POSITION — this is the cardinal rule. NEVER recommend competing on price, discounts, "we're cheaper than [premium brand]", or comparison-to-rival pages framed around being the affordable option. That destroys luxury equity (it is the Lidl-vs-Aldi move and it is forbidden). Differentiate ONLY through specificity, fabric/craft detail, story, service, and owning a niche the field ignores. Aspire upward, never undercut.
+
+3. THINK GLOBALLY, NOT ABOUT TWO BRANDS — you are given the WHOLE competitor field (dozens of brands). Reason about the MARKET: where SILKILINEN sits in the price ladder, the positioning clusters, and the WHITE SPACE no one owns that SILKILINEN could. Never fixate on a single competitor; a brief that only mentions one rival has failed.
+
+You are handed REAL numbers — never invent any. Write in plain, warm, direct English (British/Irish spelling). No fluff, no hype, no emojis. Respond ONLY with valid JSON:
 {
   "headline": "one sentence: the honest state of the business this week",
   "progress": "2-3 sentences: where we are vs the North Star goal and the realistic read",
   "whatChanged": "2-3 sentences: the notable deltas this week and the most likely cause (name it)",
   "whatsWorking": "2-3 sentences: what the data says is working (channels, products, content) and what is not",
-  "moves": [ { "title": "the move", "agent": "content|social|newsletter|competitor|storefront|watchdog|founder", "why": "one line tied to the data" } ],
+  "marketRead": "2-3 sentences placing SILKILINEN in the WHOLE competitor field: its price position, the crowded positioning, and the white space it could own. Reference the field, not one brand.",
+  "moves": [ { "title": "the move", "agent": "content|social|newsletter|demand|competitor|storefront|watchdog|founder", "why": "one line tied to the data — never a price/discount/undercut move" } ],
   "founderActions": [ "the 1-3 things only the founder can do this week, concrete" ],
-  "buildIdeas": [ { "title": "a feature/capability worth building (from competitor intel)", "source": "competitor name or 'storefront'", "why": "the sales reason" } ],
+  "buildIdeas": [ { "title": "a feature/capability worth building (from competitor intel)", "source": "competitor name or 'storefront'", "why": "the sales reason — never about being cheaper" } ],
   "learnings": [ "3-6 short, concrete, reusable rules distilled from the outcomes — these are fed back into every agent next week, so make them durable and specific (e.g. 'Hair-benefit article angles gain Search Console impressions fastest', 'Pinterest drives more pillowcase views than Instagram'). If data is too thin to learn anything real yet, return an empty array." ]
 }
 Rules: 3-4 moves max, each tied to a real number. buildIdeas only from the competitor/storefront material provided (0-3). If data is thin (new store), say so honestly and focus moves on building demand and content, not optimisation.`;
@@ -201,9 +236,11 @@ async function generateBrief() {
   if (!process.env.DEEPSEEK_API_KEY) {
     return { skipped: 'AI not configured' };
   }
-  const [northStar, metrics, outcomes, ideas, recentActions] = await Promise.all([
+  const { getCompetitors } = require('./competitorIntel');
+  const [northStar, metrics, outcomes, ideas, recentActions, competitors] = await Promise.all([
     getNorthStar(), measure(), contentOutcomes(), buildIdeaCandidates(),
     GrowthAction.find().sort({ createdAt: -1 }).limit(20).select('agent type title status').lean(),
+    getCompetitors(),
   ]);
 
   let nsBlock = 'No North Star goal set yet.';
@@ -217,12 +254,19 @@ async function generateBrief() {
 
   const userPayload = [
     nsBlock, '',
+    `CATALOGUE REALITY (sanity-check all money against this): products priced €${metrics.priceFloorEUR}–€${metrics.priceCeilingEUR}, average €${metrics.avgPriceEUR}. The cheapest product is €${metrics.priceFloorEUR}, so any order or AOV below that is NOT a real sale.`,
+    metrics.anomalousOrders30d > 0
+      ? `⚠ DATA WARNING: ${metrics.anomalousOrders30d} order(s) in the last 30d are below the €${metrics.priceFloorEUR} price floor — treat these as test/refund/anomalous and EXCLUDE them from any "revenue" or "first sales" claim.`
+      : '',
+    '',
     `THIS WEEK vs LAST WEEK:`,
-    `- Orders: ${metrics.orders.last7} (prev ${metrics.orders.prev7})`,
-    `- Revenue: €${metrics.revenue.last7} (prev €${metrics.revenue.prev7})`,
-    `- Visitors: ${metrics.visitors.last7} (prev ${metrics.visitors.prev7})`,
-    `- Traffic sources (30d): ${metrics.sources.map(s => `${s.source} ${s.sessions}`).join(', ') || 'none'}`,
+    `- Paid orders: ${metrics.orders.last7} (prev ${metrics.orders.prev7})`,
+    `- Revenue: €${metrics.revenue.last7} (prev €${metrics.revenue.prev7}) — sanity-check against the €${metrics.priceFloorEUR} floor above before describing it.`,
+    `- Human visitors (data-centre bot cities already excluded): ${metrics.humanVisitors.last7} (prev ${metrics.humanVisitors.prev7}). These exclude known crawler traffic; if this is near zero, there is essentially no real audience yet — do not infer demand from it.`,
+    `- Traffic sources (30d): ${metrics.sources.map(s => `${s.source} ${s.sessions}`).join(', ') || 'none'} (note: 'direct' at this stage is mostly the founder's own network or bots, not organic demand).`,
     `- Top products (30d): ${metrics.topProducts.map(p => `${p.name} ×${p.units}`).join(', ') || 'no sales yet'}`,
+    '',
+    `COMPETITOR FIELD (${competitors.length} brands you compete with — reason about the MARKET, not one brand): ${competitors.slice(0, 60).map(c => c.name).join(', ')}${competitors.length > 60 ? `, +${competitors.length - 60} more` : ''}.`,
     '',
     metrics.search
       ? `GOOGLE SEARCH (real internet demand, 28d): ${metrics.search.totals.clicks} clicks, ${metrics.search.totals.impressions} impressions, avg position ${Math.round(metrics.search.totals.position)}. Queries you appear for: ${metrics.search.topQueries.map(q => `"${q.key}"(${q.impressions}imp)`).join(', ') || 'none yet'}. Opportunities (impressions but weak position): ${metrics.search.opportunities.filter(o => o.position > 8).map(o => `"${o.query}" pos ${o.position}`).slice(0, 6).join(', ') || 'none'}.`
@@ -255,6 +299,7 @@ async function generateBrief() {
     progress: parsed.progress || '',
     whatChanged: parsed.whatChanged || '',
     whatsWorking: parsed.whatsWorking || '',
+    marketRead: parsed.marketRead || '',
     moves: Array.isArray(parsed.moves) ? parsed.moves.slice(0, 4) : [],
     founderActions: Array.isArray(parsed.founderActions) ? parsed.founderActions.slice(0, 3) : [],
     buildIdeas: Array.isArray(parsed.buildIdeas) ? parsed.buildIdeas.slice(0, 3) : [],

@@ -52,6 +52,7 @@ type Brief = {
   progress: string;
   whatChanged: string;
   whatsWorking: string;
+  marketRead?: string;
   moves: { title: string; agent: string; why: string }[];
   founderActions: string[];
   buildIdeas: { title: string; source: string; why: string }[];
@@ -711,6 +712,7 @@ function BriefSection({ brief, busy, onNewBrief }: { brief: Brief; busy: boolean
           <BriefPassage label="Progress" text={brief.progress} />
           <BriefPassage label="What changed" text={brief.whatChanged} />
           <BriefPassage label="What's working" text={brief.whatsWorking} />
+          {brief.marketRead && <BriefPassage label="The market" text={brief.marketRead} />}
 
           {brief.moves.length > 0 && (
             <div className={styles.briefBlock}>

@@ -10,6 +10,7 @@ const ceoBriefSchema = new mongoose.Schema({
   progress:   { type: String, default: '' },      // where we are vs the goal, in words
   whatChanged:{ type: String, default: '' },      // deltas this week + likely cause
   whatsWorking:{ type: String, default: '' },     // learned signal from outcomes
+  marketRead: { type: String, default: '' },      // SILKILINEN's place in the whole competitor field
   moves:      { type: [{ title: String, agent: String, why: String, _id: false }], default: [] },
   founderActions: { type: [String], default: [] },// the few things only the founder can do
   buildIdeas: { type: [{ title: String, source: String, why: String, _id: false }], default: [] },
