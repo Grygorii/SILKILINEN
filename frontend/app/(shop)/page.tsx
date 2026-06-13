@@ -91,9 +91,10 @@ export default async function Home() {
           Turns "just browsing" into a curated edit (the Warby Parker / Cuyana
           quiz pattern), in the brand's calm voice. */}
       <a href="/style-finder" className={styles.finderBand}>
-        <span className={styles.finderEyebrow}>Not sure where to begin?</span>
-        <span className={styles.finderTitle}>Take the Silk Style Finder</span>
-        <span className={styles.finderCue}>Five quiet questions — and we&rsquo;ll gather the pieces made for you →</span>
+        <span className={styles.finderEyebrow}>The 60-second quiz</span>
+        <span className={styles.finderTitle}>Which silk are you?</span>
+        <span className={styles.finderCue}>Answer four quiet questions and we&rsquo;ll gather the pieces made for you.</span>
+        <span className={styles.finderBtn}>Take the Style Finder →</span>
       </a>
 
       <ReassuranceRow />
