@@ -126,7 +126,7 @@ async function getProducts(): Promise<Product[]> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     const res = await fetch(`${API}/api/products`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 600 },
       signal: controller.signal,
     });
     clearTimeout(timer);
@@ -252,7 +252,7 @@ export async function GET() {
     status: 200,
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400',
+      'Cache-Control': 'public, max-age=0, s-maxage=600, stale-while-revalidate=86400',
     },
   });
 }
