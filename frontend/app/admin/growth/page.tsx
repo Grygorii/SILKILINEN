@@ -48,6 +48,14 @@ type Composition = {
   createdAt: string;
 } | null;
 
+// The machine proving itself.
+type SelfTest = {
+  ranAt: string;
+  checks: { name: string; ok: boolean | null; detail: string; ms: number }[];
+  agents: { label: string; enabled: boolean; lastRun: string | null }[];
+  summary: { passed: number; failed: number; optional: number };
+} | null;
+
 // The AI Star's live read on pace — it notices drift and speaks.
 type StarStatus = {
   current: number | null;
@@ -133,6 +141,24 @@ export default function GrowthEnginePage() {
   const [briefBusy, setBriefBusy] = useState(false);
   const [composition, setComposition] = useState<Composition>(null);
   const [davinciBusy, setDavinciBusy] = useState(false);
+  const [selfTest, setSelfTest] = useState<SelfTest>(null);
+  const [selfTestBusy, setSelfTestBusy] = useState(false);
+
+  async function runSelfTest() {
+    setSelfTestBusy(true);
+    try {
+      const res = await fetch(`${API}/api/admin/growth/self-test`, { credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) { toast(data.error || 'Self-test failed.', 'error'); return; }
+      setSelfTest(data);
+      const { passed, failed, optional } = data.summary;
+      toast(failed === 0 ? `All systems live — ${passed} passed${optional ? `, ${optional} optional` : ''}.` : `${failed} check(s) failed — see the panel.`, failed === 0 ? 'success' : 'error');
+    } catch {
+      toast('Network error running self-test.', 'error');
+    } finally {
+      setSelfTestBusy(false);
+    }
+  }
 
   const loadBrain = useCallback(async () => {
     setBrainLoading(true);
@@ -306,6 +332,19 @@ export default function GrowthEnginePage() {
           <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
             <button
               type="button"
+              onClick={runSelfTest}
+              disabled={selfTestBusy}
+              style={{
+                fontSize: 13, padding: '10px 16px', cursor: selfTestBusy ? 'default' : 'pointer',
+                border: '1px solid var(--border, #e8e2d6)', background: '#fff', color: 'var(--dark, #2a2218)',
+                opacity: selfTestBusy ? 0.6 : 1, whiteSpace: 'nowrap',
+              }}
+              title="Ping every dependency and check every agent — proves the machine is alive"
+            >
+              {selfTestBusy ? 'Testing…' : '⚙ Self-test'}
+            </button>
+            <button
+              type="button"
               className={styles.davinciBtn}
               onClick={unleashDaVinci}
               disabled={davinciBusy}
@@ -323,6 +362,40 @@ export default function GrowthEnginePage() {
             </button>
           </div>
         </div>
+
+        {selfTest && (
+          <div style={{ border: '1px solid var(--border, #e8e2d6)', background: '#fff', padding: '18px 20px', marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+              <p style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 600, margin: 0 }}>
+                Self-test — the machine, checked
+              </p>
+              <span style={{ fontSize: 12, color: selfTest.summary.failed ? '#b03a2e' : '#1a6b3c' }}>
+                {selfTest.summary.failed ? `${selfTest.summary.failed} failed` : 'all systems live'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+              {selfTest.checks.map(c => (
+                <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
+                  <span style={{ width: 9, height: 9, borderRadius: '50%', flexShrink: 0,
+                    background: c.ok === true ? '#1a6b3c' : c.ok === false ? '#b03a2e' : '#c8a24a' }} />
+                  <span style={{ width: 190, color: 'var(--dark)' }}>{c.name}</span>
+                  <span style={{ color: 'var(--muted)', flex: 1 }}>{c.detail}</span>
+                  <span style={{ color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{c.ms}ms</span>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--muted)', margin: '0 0 8px' }}>The 10 agents</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {selfTest.agents.map(a => (
+                <span key={a.label} title={`last run: ${a.lastRun ? new Date(a.lastRun).toLocaleString('en-IE') : 'never'}`}
+                  style={{ fontSize: 11, padding: '3px 9px', borderRadius: 10, border: '1px solid var(--border)',
+                    background: a.enabled ? 'var(--cream)' : '#fff', color: a.enabled ? 'var(--dark)' : 'var(--muted)' }}>
+                  {a.enabled ? '●' : '○'} {a.label} · {a.lastRun ? timeAgo(a.lastRun) : 'never'}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         <DaVinciSection composition={composition} busy={davinciBusy} />
 

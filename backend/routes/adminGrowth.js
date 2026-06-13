@@ -9,6 +9,7 @@ const { discoverCompetitors } = require('../services/competitorDiscovery');
 const CEOBrief = require('../models/CEOBrief');
 const { getNorthStar, setNorthStar, northStarStatus, generateBrief, runChiefIfDue, METRICS } = require('../services/chiefOfStaff');
 const { unleashDaVinci, latestComposition } = require('../services/davinci');
+const { runSelfTest } = require('../services/selfTest');
 
 // Da Vinci runs the orchestra — its own tight limit so it can't be hammered.
 const davinciLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false });
@@ -119,6 +120,16 @@ router.put('/north-star', async function(req, res) {
     res.json({ ok: true, northStar: ns });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// GET /api/admin/growth/self-test — ping every dependency + report agents.
+router.get('/self-test', async function(req, res) {
+  try {
+    res.json(await runSelfTest());
+  } catch (err) {
+    console.error('[growth] self-test error:', err.message);
+    res.status(500).json({ error: 'Self-test could not run.' });
   }
 });
 
