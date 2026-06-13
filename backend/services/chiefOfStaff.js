@@ -43,6 +43,21 @@ const DATA_CENTRE_CITIES = [
 ];
 const humanVisitMatch = (range) => ({ ...range, city: { $nin: DATA_CENTRE_CITIES } });
 
+// One brief used to make Search Console's getSearchPerformance() three times.
+// Memoise for 60s so a single generation hits the network once, not thrice —
+// faster, and fewer chances for a slow external call to stall the request.
+let _perfCache = null;
+async function cachedSearchPerf() {
+  if (_perfCache && Date.now() - _perfCache.at < 60000) return _perfCache.val;
+  let val = null;
+  try {
+    const gsc = require('./searchConsole');
+    if (await gsc.isConnected()) val = await gsc.getSearchPerformance(28);
+  } catch { val = null; }
+  _perfCache = { at: Date.now(), val };
+  return val;
+}
+
 // ── North Star (the goal) ──────────────────────────────────────────────────────
 
 const METRICS = {
@@ -187,11 +202,11 @@ async function measure() {
   // Search Console signal (real demand from the internet, not just the site).
   let search = null;
   try {
-    const gsc = require('./searchConsole');
-    if (await gsc.isConnected()) {
-      const perf = await gsc.getSearchPerformance(28);
-      const opps = await gsc.getQueryOpportunities(28);
-      search = { totals: perf.totals, topQueries: perf.topQueries, opportunities: opps.slice(0, 10) };
+    const perf = await cachedSearchPerf();
+    if (perf) {
+      const gsc = require('./searchConsole');
+      const opps = await gsc.getQueryOpportunities(28).catch(() => []);
+      search = { totals: perf.totals, topQueries: perf.topQueries, opportunities: (opps || []).slice(0, 10) };
     }
   } catch { /* GSC optional */ }
 
@@ -220,11 +235,8 @@ async function contentOutcomes() {
 
   let pageData = {};
   try {
-    const gsc = require('./searchConsole');
-    if (await gsc.isConnected()) {
-      const perf = await gsc.getSearchPerformance(28);
-      for (const row of perf.topPages || []) pageData[row.key] = row;
-    }
+    const perf = await cachedSearchPerf();
+    if (perf) for (const row of perf.topPages || []) pageData[row.key] = row;
   } catch { /* optional */ }
 
   return published.map(a => {
@@ -277,6 +289,44 @@ You are handed REAL numbers — never invent any. Write in plain, warm, direct E
 }
 Rules: 3-4 moves max, each tied to a real number. buildIdeas only from the competitor/storefront material provided (0-3). If data is thin (new store), say so honestly and focus moves on building demand and content, not optimisation.`;
 
+// Deterministic, data-honest brief — used when the AI is unavailable so the
+// founder is never left with a stale brief. Applies the same skepticism the
+// prompt demands: discount sub-floor "revenue", treat near-zero human traffic
+// as no audience, never suggest undercutting.
+function fallbackBriefFields(m, ns, competitors) {
+  const realRevenue = m.anomalousOrders30d > 0
+    ? `€${m.revenue.last7} of reported revenue this week is at or below your €${m.priceFloorEUR} price floor, so it is test/refund/anomalous — not real sales.`
+    : `€${m.revenue.last7} revenue this week from ${m.orders.last7} paid order(s).`;
+  const audience = (m.humanVisitors.last7 || 0) < 5
+    ? `Real human visitors are essentially zero this week (${m.humanVisitors.last7}, bots excluded) — there is no audience to convert yet, so the job is attracting people, not optimising.`
+    : `${m.humanVisitors.last7} human visitors this week (bots excluded).`;
+  const progressLine = ns
+    ? `You're at ${ns.current ?? 0} of ${ns.target} ${ns.label?.toLowerCase() || 'on your goal'} (${ns.pct ?? 0}%).`
+    : 'No goal set yet — set your AI Star so the engine has a target.';
+  return {
+    headline: m.orders.last7 > 0 && m.anomalousOrders30d === 0
+      ? `${m.orders.last7} real order(s) this week — early but real.`
+      : `Pre-traction: the work right now is attracting your first real visitors.`,
+    progress: `${progressLine} ${realRevenue}`,
+    whatChanged: `${audience} Direct/own-network and bots dominate; no organic channel is firing yet.`,
+    whatsWorking: m.search && m.search.totals.impressions > 0
+      ? `Google shows ${m.search.totals.impressions} impressions but ${m.search.totals.clicks} clicks — you're being seen for a few queries; nothing is converting to traffic yet.`
+      : `Nothing is driving real traffic yet — content and demand-building are the levers, not conversion tweaks.`,
+    marketRead: `You sit in a crowded field of ${competitors.length} silk/sleepwear brands. Don't fight on price — own a specific niche (fabric story, considered service, a tightly-defined aesthetic) the big names ignore.`,
+    moves: [
+      { title: 'Publish the strongest drafted SEO article', agent: 'content', why: 'Each ranked article is a permanent door for new visitors — your only free traffic engine right now.' },
+      { title: 'Run the Demand Scout and act on one rising search', agent: 'demand', why: 'Build content/products around real demand instead of guessing.' },
+      { title: 'Approve the queued social drafts', agent: 'social', why: 'Keep the owned channels alive while organic builds.' },
+    ],
+    founderActions: [
+      'Share the shop (and the new Style Finder) with your own network — the only warm audience you have today.',
+      m.anomalousOrders30d > 0 ? 'Check the sub-floor orders in admin — confirm they are tests/refunds and not a pricing bug.' : 'Take the Style Finder yourself and sanity-check the recommendations.',
+    ],
+    buildIdeas: [],
+    learnings: [],
+  };
+}
+
 async function generateBrief() {
   if (!process.env.DEEPSEEK_API_KEY) {
     return { skipped: 'AI not configured' };
@@ -326,17 +376,29 @@ async function generateBrief() {
     `Write the brief JSON now.`,
   ].join('\n');
 
-  const res = await client.chat.completions.create({
-    model: MODEL,
-    messages: [{ role: 'system', content: BRIEF_SYSTEM }, { role: 'user', content: userPayload }],
-    temperature: 0.4,
-    max_tokens: 1200,
-    response_format: { type: 'json_object' },
-  });
-
-  let parsed;
-  try { parsed = JSON.parse(res.choices[0]?.message?.content || '{}'); }
-  catch { throw new Error('Brief synthesis returned invalid JSON'); }
+  // The AI call, hardened: a single bounded attempt (40s) so it can't hang or
+  // stack into an infrastructure timeout. On ANY failure — slow model, flaky
+  // network, bad JSON — we write a deterministic, data-honest brief instead, so
+  // the founder ALWAYS gets a fresh brief that supersedes the stale one.
+  let parsed = null;
+  try {
+    const res = await client.chat.completions.create(
+      {
+        model: MODEL,
+        messages: [{ role: 'system', content: BRIEF_SYSTEM }, { role: 'user', content: userPayload }],
+        temperature: 0.4,
+        max_tokens: 1200,
+        response_format: { type: 'json_object' },
+      },
+      { timeout: 40000, maxRetries: 1 },
+    );
+    parsed = JSON.parse(res.choices[0]?.message?.content || '{}');
+    if (!parsed || !parsed.headline) parsed = null; // empty/garbage → fallback
+  } catch (err) {
+    console.warn(`[chief] brief AI failed, using deterministic fallback: ${err.message}`);
+  }
+  const usedFallback = !parsed;
+  if (!parsed) parsed = fallbackBriefFields(metrics, nsForStore, competitors);
 
   const brief = await CEOBrief.create({
     headline: parsed.headline || 'Weekly brief',
@@ -348,7 +410,7 @@ async function generateBrief() {
     moves: Array.isArray(parsed.moves) ? parsed.moves.slice(0, 4) : [],
     founderActions: Array.isArray(parsed.founderActions) ? parsed.founderActions.slice(0, 3) : [],
     buildIdeas: Array.isArray(parsed.buildIdeas) ? parsed.buildIdeas.slice(0, 3) : [],
-    metrics: { ...metrics, outcomes },
+    metrics: { ...metrics, outcomes, usedFallback },
   });
 
   // Update the shared Playbook — the distilled learnings every agent will read
