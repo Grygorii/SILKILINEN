@@ -297,6 +297,11 @@ export default function GrowthEnginePage() {
               drafting social posts and newsletters, and watching the shop. Anything public is a
               draft until you approve it.
             </p>
+            <p style={{ fontSize: 12, color: 'var(--muted, #6b6358)', marginTop: 8 }}>
+              <strong style={{ color: 'var(--dark, #2a2218)' }}>New here?</strong>{' '}
+              ① <strong>Pulse now</strong> wakes the agents → ② <strong>New brief</strong> has your co-CEO read the results →
+              ③ <strong>✺ Unleash Da Vinci</strong> composes the masterwork from everything. Start with Pulse.
+            </p>
           </div>
           <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
             <button
@@ -459,6 +464,7 @@ function CompetitorEditor() {
   const [name, setName] = useState('');
   const [domain, setDomain] = useState('');
   const [discovering, setDiscovering] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   async function discover() {
     setDiscovering(true);
@@ -538,22 +544,38 @@ function CompetitorEditor() {
           {discovering ? 'Searching the market…' : '✨ Auto-discover competitors'}
         </button>
       </div>
-      <div className={styles.competitorList} style={{ marginTop: 12 }}>
-        {list.map((c, i) => (
+      <div
+        className={styles.competitorList}
+        style={{
+          marginTop: 12,
+          maxHeight: showAll ? 280 : 116,
+          overflowY: 'auto',
+          maskImage: !showAll && list.length > 18 ? 'linear-gradient(to bottom, #000 70%, transparent)' : undefined,
+        }}
+      >
+        {(showAll ? list : list.slice(0, 18)).map((c, i) => (
           <span key={`${c.name}-${i}`} className={styles.competitorChip}>
             {c.name}
-            {c.domain ? <span className={styles.competitorDomain}> · {c.domain}</span> : null}
             <button
               type="button"
               aria-label={`Remove ${c.name}`}
               className={styles.competitorRemove}
-              onClick={() => save(list.filter((_, idx) => idx !== i))}
+              onClick={() => save(list.filter(x => x.name !== c.name))}
               disabled={saving}
             >×</button>
           </span>
         ))}
-        {list.length === 0 && <span className={styles.competitorEmpty}>No competitors yet — add one.</span>}
+        {list.length === 0 && <span className={styles.competitorEmpty}>No competitors yet — auto-discover or add one.</span>}
       </div>
+      {list.length > 18 && (
+        <button
+          type="button"
+          onClick={() => setShowAll(s => !s)}
+          style={{ marginTop: 8, fontSize: 12, color: 'var(--muted, #6b6358)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3 }}
+        >
+          {showAll ? 'Show fewer' : `Show all ${list.length} brands`}
+        </button>
+      )}
       <div className={styles.competitorAdd}>
         <input
           className={styles.competitorInput}
