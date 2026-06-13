@@ -1,0 +1,8 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "node scripts/backupToR2.js"
+# Cron job: don't restart after the script exits. Failures send an email
+# via sendFailureAlert(); a restart loop would spam alerts and waste runs.
+restartPolicyType = "NEVER"
