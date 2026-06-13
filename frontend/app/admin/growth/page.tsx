@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import AdminErrorBanner from '@/components/AdminErrorBanner';
+import AdminModal from '@/components/AdminModal';
 import { toast } from '@/lib/adminToast';
 import styles from './page.module.css';
 
@@ -24,7 +25,8 @@ type GrowthAction = {
   title: string;
   detail: string;
   href?: string | null;
-  status: 'done' | 'needs_approval' | 'info' | 'error';
+  status: 'done' | 'needs_approval' | 'info' | 'error' | 'completed' | 'rejected';
+  meta?: Record<string, unknown> | null;
   createdAt: string;
 };
 
@@ -143,6 +145,24 @@ export default function GrowthEnginePage() {
   const [davinciBusy, setDavinciBusy] = useState(false);
   const [selfTest, setSelfTest] = useState<SelfTest>(null);
   const [selfTestBusy, setSelfTestBusy] = useState(false);
+  const [reviewAction, setReviewAction] = useState<GrowthAction | null>(null);
+
+  async function decideAction(id: string, outcome: 'completed' | 'rejected', reason: string) {
+    try {
+      const res = await fetch(`${API}/api/admin/growth/action/${id}/decide`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' },
+        body: JSON.stringify({ outcome, reason }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast(data.error || 'Could not save.', 'error'); return; }
+      setActions(prev => prev.map(a => (a._id === id ? { ...a, status: outcome } : a)));
+      setReviewAction(null);
+      toast(outcome === 'completed' ? 'Marked done — and I’ll remember why.' : 'Rejected — your reason is now memory.');
+    } catch {
+      toast('Network error.', 'error');
+    }
+  }
 
   async function runSelfTest() {
     setSelfTestBusy(true);
@@ -508,13 +528,15 @@ export default function GrowthEnginePage() {
                         <span className={styles.feedTitle}>{action.title}</span>
                       </div>
                       {action.detail && <p className={styles.feedDetail}>{action.detail}</p>}
-                      <span className={styles.feedTime}>{timeAgo(action.createdAt)}</span>
+                      <span className={styles.feedTime}>
+                        {timeAgo(action.createdAt)}
+                        {action.status === 'completed' && <span style={{ color: '#1a6b3c', marginLeft: 8 }}>✓ done</span>}
+                        {action.status === 'rejected' && <span style={{ color: '#b03a2e', marginLeft: 8 }}>✕ rejected</span>}
+                      </span>
                     </div>
-                    {action.href && (
-                      <a href={action.href} className={styles.reviewLink}>
-                        Review →
-                      </a>
-                    )}
+                    <button type="button" className={styles.reviewLink} style={{ background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => setReviewAction(action)}>
+                      Review →
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -522,6 +544,10 @@ export default function GrowthEnginePage() {
           </>
         )}
       </div>
+
+      {reviewAction && (
+        <ReviewRoom action={reviewAction} onClose={() => setReviewAction(null)} onDecide={decideAction} />
+      )}
     </AdminLayout>
   );
 }
@@ -671,6 +697,86 @@ function CompetitorEditor() {
 }
 
 /* ── Da Vinci — the conductor's masterwork ───────────────── */
+
+/* ── The Review room — where you deliver the purpose, then decide ───────── */
+
+function ReviewRoom({ action, onClose, onDecide }: {
+  action: GrowthAction;
+  onClose: () => void;
+  onDecide: (id: string, outcome: 'completed' | 'rejected', reason: string) => Promise<void>;
+}) {
+  const [reason, setReason] = useState('');
+  const [busy, setBusy] = useState(false);
+  const meta = (action.meta || {}) as Record<string, unknown>;
+  const moves = Array.isArray(meta.moves) ? (meta.moves as string[]) : null;
+  const decided = action.status === 'completed' || action.status === 'rejected';
+  // Show the meaty meta fields the agents put here, in a readable way.
+  const metaLines = Object.entries(meta).filter(
+    ([k, v]) => !['moves'].includes(k) && (typeof v === 'string' || typeof v === 'number') && String(v).trim(),
+  ) as [string, string][];
+
+  async function decide(outcome: 'completed' | 'rejected') {
+    setBusy(true);
+    await onDecide(action._id, outcome, reason);
+    setBusy(false);
+  }
+
+  return (
+    <AdminModal title={action.title} onClose={onClose}>
+      {action.detail && <p style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--dark)', margin: '0 0 14px' }}>{action.detail}</p>}
+
+      {metaLines.length > 0 && (
+        <div style={{ fontSize: 12.5, lineHeight: 1.7, color: 'var(--muted)', margin: '0 0 14px' }}>
+          {metaLines.map(([k, v]) => (
+            <div key={k}><span style={{ textTransform: 'capitalize', color: 'var(--dark)' }}>{k}:</span> {v}</div>
+          ))}
+        </div>
+      )}
+
+      {moves && (
+        <div style={{ margin: '0 0 16px' }}>
+          <p style={{ fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--muted)', margin: '0 0 6px' }}>The work</p>
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.7, color: 'var(--dark)' }}>
+            {moves.map((m, i) => <li key={i}>{m}</li>)}
+          </ul>
+        </div>
+      )}
+
+      {action.href && (
+        <a href={action.href} target="_blank" rel="noopener noreferrer"
+          style={{ display: 'inline-block', marginBottom: 18, fontSize: 13, padding: '9px 16px',
+            border: '1px solid var(--dark, #2a2218)', background: 'var(--dark, #2a2218)', color: '#fff', textDecoration: 'none' }}>
+          Open to deliver →
+        </a>
+      )}
+
+      {decided ? (
+        <p style={{ fontSize: 13, padding: '10px 14px', background: 'var(--cream)', border: '1px solid var(--border)', color: 'var(--dark)' }}>
+          {action.status === 'completed' ? '✓ You marked this done.' : '✕ You rejected this.'} It stays in the feed as memory.
+        </p>
+      ) : (
+        <>
+          <label style={{ display: 'block', fontSize: 12, color: 'var(--dark)', marginBottom: 6 }}>
+            Your reason / feedback <span style={{ color: 'var(--muted)' }}>— becomes memory the agents learn from</span>
+          </label>
+          <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3}
+            placeholder="e.g. Love the hair angle — do more like this. / Too salesy, rejected."
+            style={{ width: '100%', padding: '9px 11px', fontSize: 13, border: '1px solid var(--border)', resize: 'vertical', boxSizing: 'border-box', marginBottom: 14 }} />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+            <button onClick={() => decide('rejected')} disabled={busy}
+              style={{ padding: '9px 14px', fontSize: 13, border: '1px solid #b03a2e', background: '#fff', color: '#b03a2e', cursor: busy ? 'default' : 'pointer' }}>
+              Reject
+            </button>
+            <button onClick={() => decide('completed')} disabled={busy}
+              style={{ padding: '9px 16px', fontSize: 13, border: '1px solid #1a6b3c', background: '#1a6b3c', color: '#fff', cursor: busy ? 'default' : 'pointer' }}>
+              {busy ? 'Saving…' : 'Mark done'}
+            </button>
+          </div>
+        </>
+      )}
+    </AdminModal>
+  );
+}
 
 function DaVinciSection({ composition, busy }: { composition: Composition; busy: boolean }) {
   if (busy && !composition) {
