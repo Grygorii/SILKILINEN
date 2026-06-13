@@ -8,6 +8,10 @@ const { getCompetitors, setCompetitors } = require('../services/competitorIntel'
 const { discoverCompetitors } = require('../services/competitorDiscovery');
 const CEOBrief = require('../models/CEOBrief');
 const { getNorthStar, setNorthStar, northStarStatus, generateBrief, runChiefIfDue, METRICS } = require('../services/chiefOfStaff');
+const { unleashDaVinci, latestComposition } = require('../services/davinci');
+
+// Da Vinci runs the orchestra — its own tight limit so it can't be hammered.
+const davinciLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false });
 
 // Manual runs invoke AI; keep a sane lid on a stuck refresh-spammer.
 const runLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 12, standardHeaders: true, legacyHeaders: false });
@@ -89,16 +93,18 @@ router.post('/competitors/discover', runLimit, async function(req, res) {
 // GET /api/admin/growth/brain — North Star, metric options, latest Co-CEO brief.
 router.get('/brain', async function(req, res) {
   try {
-    const [northStar, status, brief] = await Promise.all([
+    const [northStar, status, brief, composition] = await Promise.all([
       getNorthStar(),
       northStarStatus(),
       CEOBrief.findOne().sort({ createdAt: -1 }).lean(),
+      latestComposition(),
     ]);
     res.json({
       northStar,
       status,
       metrics: Object.entries(METRICS).map(([k, v]) => ({ key: k, ...v })),
       brief: brief || null,
+      composition: composition || null,
     });
   } catch (err) {
     console.error(err);
@@ -113,6 +119,19 @@ router.put('/north-star', async function(req, res) {
     res.json({ ok: true, northStar: ns });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/growth/davinci — unleash the conductor. Fires the full
+// orchestra in the background and composes the masterwork from the desk.
+router.post('/davinci', davinciLimit, async function(req, res) {
+  try {
+    const result = await unleashDaVinci();
+    if (result.error) return res.status(400).json({ error: result.error });
+    res.json({ ok: true, composition: result.composition });
+  } catch (err) {
+    console.error('[growth] davinci error:', err.message);
+    res.status(500).json({ error: 'Da Vinci stumbled — try unleashing again.' });
   }
 });
 

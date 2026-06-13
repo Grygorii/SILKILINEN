@@ -38,6 +38,16 @@ type NorthStar = {
 
 type MetricDef = { key: string; label: string; unit: string };
 
+// Da Vinci's masterwork — the conductor's 90-day symphony.
+type Composition = {
+  _id: string;
+  vision: string;
+  grandIdea?: { title?: string; what?: string; why?: string } | null;
+  movements: { title: string; theme: string; moves: string[] }[];
+  closing?: string;
+  createdAt: string;
+} | null;
+
 // The AI Star's live read on pace — it notices drift and speaks.
 type StarStatus = {
   current: number | null;
@@ -121,6 +131,8 @@ export default function GrowthEnginePage() {
   const [brainLoading, setBrainLoading] = useState(true);
   const [brainError, setBrainError] = useState(false);
   const [briefBusy, setBriefBusy] = useState(false);
+  const [composition, setComposition] = useState<Composition>(null);
+  const [davinciBusy, setDavinciBusy] = useState(false);
 
   const loadBrain = useCallback(async () => {
     setBrainLoading(true);
@@ -133,6 +145,7 @@ export default function GrowthEnginePage() {
       setStarStatus(data.status ?? null);
       setMetrics(data.metrics ?? []);
       setBrief(data.brief ?? null);
+      setComposition(data.composition ?? null);
     } catch {
       setBrainError(true);
     } finally {
@@ -158,6 +171,27 @@ export default function GrowthEnginePage() {
     const data = await res.json();
     setNorthStar(data.northStar ?? null);
     toast('AI Star set \u2014 I\u2019m watching your pace now.');
+  }
+
+  async function unleashDaVinci() {
+    setDavinciBusy(true);
+    try {
+      const res = await fetch(`${API}/api/admin/growth/davinci`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast(data.error || 'Da Vinci stumbled — unleash again.', 'error'); return; }
+      setComposition(data.composition ?? null);
+      toast('Da Vinci has composed the masterwork.');
+      load(true); // the background pulse will be dropping fresh notes into the feed
+    } catch {
+      toast('Network error — unleash again.', 'error');
+    } finally {
+      setDavinciBusy(false);
+    }
   }
 
   async function newBrief() {
@@ -264,15 +298,28 @@ export default function GrowthEnginePage() {
               draft until you approve it.
             </p>
           </div>
-          <button
-            type="button"
-            className={styles.pulseBtn}
-            onClick={() => run()}
-            disabled={pulsing || loading}
-          >
-            {pulsing ? 'Pulsing…' : 'Pulse now'}
-          </button>
+          <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+            <button
+              type="button"
+              className={styles.davinciBtn}
+              onClick={unleashDaVinci}
+              disabled={davinciBusy}
+              title="Make every agent play as one and compose the 90-day masterwork"
+            >
+              {davinciBusy ? 'The studio is composing…' : '✺ Unleash Da Vinci'}
+            </button>
+            <button
+              type="button"
+              className={styles.pulseBtn}
+              onClick={() => run()}
+              disabled={pulsing || loading}
+            >
+              {pulsing ? 'Pulsing…' : 'Pulse now'}
+            </button>
+          </div>
         </div>
+
+        <DaVinciSection composition={composition} busy={davinciBusy} />
 
         {/* AI Star + Co-CEO brief */}
         <NorthStarSection
@@ -524,6 +571,62 @@ function CompetitorEditor() {
         />
         <button type="button" className={styles.runBtn} onClick={add} disabled={saving || !name.trim()}>Add</button>
       </div>
+    </div>
+  );
+}
+
+/* ── Da Vinci — the conductor's masterwork ───────────────── */
+
+function DaVinciSection({ composition, busy }: { composition: Composition; busy: boolean }) {
+  if (busy && !composition) {
+    return (
+      <div className={styles.davinci}>
+        <p className={styles.davinciEyebrow}>✺ Da Vinci is composing</p>
+        <p className={styles.davinciComposing}>
+          Every voice at once — the demand scout, the inventor, the scouts, the brief — gathered into one score.
+          This takes a minute.
+        </p>
+      </div>
+    );
+  }
+  if (!composition) return null;
+  return (
+    <div className={styles.davinci}>
+      <div className={styles.davinciHead}>
+        <p className={styles.davinciEyebrow}>✺ Da Vinci — the masterwork</p>
+        <span className={styles.davinciDate}>{briefDate(composition.createdAt)}</span>
+      </div>
+      <p className={styles.davinciVision}>{composition.vision}</p>
+
+      {composition.grandIdea?.title && (
+        <div className={styles.grandIdea}>
+          <span className={styles.grandIdeaLabel}>The Grand Idea</span>
+          <h3 className={styles.grandIdeaTitle}>{composition.grandIdea.title}</h3>
+          {composition.grandIdea.what && <p className={styles.grandIdeaText}>{composition.grandIdea.what}</p>}
+          {composition.grandIdea.why && <p className={styles.grandIdeaWhy}>{composition.grandIdea.why}</p>}
+        </div>
+      )}
+
+      {composition.movements?.length > 0 && (
+        <div className={styles.movements}>
+          {composition.movements.map((m, i) => (
+            <div key={i} className={styles.movement}>
+              <div className={styles.movementHead}>
+                <span className={styles.movementNo}>{String(i + 1).padStart(2, '0')}</span>
+                <div>
+                  <h4 className={styles.movementTitle}>{m.title}</h4>
+                  {m.theme && <p className={styles.movementTheme}>{m.theme}</p>}
+                </div>
+              </div>
+              <ul className={styles.movementMoves}>
+                {(m.moves || []).map((mv, j) => <li key={j}>{mv}</li>)}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {composition.closing && <p className={styles.davinciClosing}>{composition.closing}</p>}
     </div>
   );
 }
