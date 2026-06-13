@@ -9,7 +9,7 @@ type Category = { slug: string; label: string; count: number };
 
 async function getCategories(): Promise<Category[]> {
   try {
-    const res = await fetch(`${API}/api/categories`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API}/api/categories`, { next: { revalidate: 300 } });
     return res.ok ? res.json() : [];
   } catch {
     return [];

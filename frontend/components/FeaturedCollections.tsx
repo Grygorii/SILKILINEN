@@ -15,7 +15,7 @@ type Collection = {
 async function getFeaturedCollections(): Promise<Collection[]> {
   try {
     const res = await fetch(`${API}/api/collections/featured`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 300 },
     });
     if (!res.ok) return [];
     return res.json();

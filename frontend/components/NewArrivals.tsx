@@ -8,7 +8,7 @@ async function getNewArrivals(): Promise<ProductCardData[]> {
     // capped at 4: the carousel shows however many have been flagged.
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/products?isNew=true&sort=-createdAt&limit=24`,
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: 120 } }
     );
     if (!res.ok) return [];
     return res.json();
