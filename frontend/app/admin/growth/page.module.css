@@ -756,3 +756,22 @@
   flex: 1; min-width: 180px; padding: 8px 11px; font-size: 13px;
   border: 1px solid var(--border, #e8e2d6);
 }
+
+/* ── Eureka — the Inventor's ideas, made to glow ──────────────────────── */
+.feedRowEureka {
+  background: linear-gradient(100deg, #fdf6e3 0%, #faf3e6 100%);
+  border-left: 2px solid #c8a24a;
+}
+.eurekaChip {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #8a6d18;
+  background: #f3e3b8;
+  border: 1px solid #e3cf94;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}

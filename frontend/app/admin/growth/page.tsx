@@ -369,14 +369,16 @@ export default function GrowthEnginePage() {
                   <li
                     key={action._id}
                     className={`${styles.feedRow} ${
-                      action.status === 'needs_approval' ? styles.feedRowApproval : ''
+                      action.type === 'eureka'
+                        ? styles.feedRowEureka
+                        : action.status === 'needs_approval' ? styles.feedRowApproval : ''
                     }`}
                   >
                     <span className={`${styles.dot} ${dotClass(action.status)}`} aria-hidden />
                     <div className={styles.feedBody}>
                       <div className={styles.feedTop}>
-                        <span className={styles.agentChip}>
-                          {labelByName.get(action.agent) || action.agent}
+                        <span className={action.type === 'eureka' ? styles.eurekaChip : styles.agentChip}>
+                          {action.type === 'eureka' ? '💡 Eureka' : (labelByName.get(action.agent) || action.agent)}
                         </span>
                         <span className={styles.feedTitle}>{action.title}</span>
                       </div>
