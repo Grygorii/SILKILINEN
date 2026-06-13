@@ -5,6 +5,7 @@ const { requireAuth } = require('../middleware/auth');
 const GrowthAction = require('../models/GrowthAction');
 const { runGrowthEngine, setAgentEnabled, describeAgents } = require('../services/growthEngine');
 const { getCompetitors, setCompetitors } = require('../services/competitorIntel');
+const { discoverCompetitors } = require('../services/competitorDiscovery');
 const CEOBrief = require('../models/CEOBrief');
 const { getNorthStar, setNorthStar, generateBrief, runChiefIfDue, METRICS } = require('../services/chiefOfStaff');
 
@@ -66,6 +67,19 @@ router.put('/competitors', async function(req, res) {
     res.json({ ok: true, competitors });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/growth/competitors/discover — let the AI find rival brands
+// across every shipping market, verify they're live, and merge them in.
+router.post('/competitors/discover', runLimit, async function(req, res) {
+  try {
+    const result = await discoverCompetitors();
+    if (result.error) return res.status(400).json({ error: result.error });
+    res.json({ ok: true, ...result, competitors: await getCompetitors() });
+  } catch (err) {
+    console.error('[growth] discover error:', err.message);
+    res.status(500).json({ error: 'Discovery failed — try again.' });
   }
 });
 

@@ -394,6 +394,30 @@ function CompetitorEditor() {
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState('');
   const [domain, setDomain] = useState('');
+  const [discovering, setDiscovering] = useState(false);
+
+  async function discover() {
+    setDiscovering(true);
+    try {
+      const res = await fetch(`${API}/api/admin/growth/competitors/discover`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'X-CSRF-Token': '1' },
+      });
+      const data = await res.json();
+      if (!res.ok) { toast(data.error || 'Discovery failed.', 'error'); return; }
+      if (data.competitors) setList(data.competitors);
+      toast(
+        data.added > 0
+          ? `Found ${data.added} new brand${data.added === 1 ? '' : 's'} — now studying ${data.total} across your markets.`
+          : `No new brands this run — already studying ${data.total}.`,
+      );
+    } catch {
+      toast('Network error.', 'error');
+    } finally {
+      setDiscovering(false);
+    }
+  }
 
   useEffect(() => {
     fetch(`${API}/api/admin/growth/competitors`, { credentials: 'include' })
@@ -434,8 +458,23 @@ function CompetitorEditor() {
 
   return (
     <div className={styles.competitorBox}>
-      <p className={styles.sectionLabel}>The enemies — who the Scout studies</p>
-      <div className={styles.competitorList}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <p className={styles.sectionLabel} style={{ margin: 0 }}>The enemies — who the Scout studies ({list.length})</p>
+        <button
+          type="button"
+          onClick={discover}
+          disabled={discovering || saving}
+          style={{
+            fontSize: 12, padding: '7px 14px', cursor: discovering ? 'default' : 'pointer',
+            border: '1px solid var(--dark, #2a2218)', background: 'var(--dark, #2a2218)', color: '#fff',
+            opacity: discovering ? 0.6 : 1, whiteSpace: 'nowrap',
+          }}
+          title="Let the AI find silk & sleepwear brands across every market you ship to, verify they're live, and add them"
+        >
+          {discovering ? 'Searching the market…' : '✨ Auto-discover competitors'}
+        </button>
+      </div>
+      <div className={styles.competitorList} style={{ marginTop: 12 }}>
         {list.map((c, i) => (
           <span key={`${c.name}-${i}`} className={styles.competitorChip}>
             {c.name}

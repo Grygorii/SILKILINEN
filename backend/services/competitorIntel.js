@@ -30,15 +30,46 @@ async function getCompetitors() {
 }
 
 async function setCompetitors(list) {
-  const clean = (Array.isArray(list) ? list : [])
-    .map(c => ({
-      name: String(c.name || '').trim().slice(0, 60),
-      domain: String(c.domain || '').trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '').slice(0, 100),
-    }))
-    .filter(c => c.name)
-    .slice(0, 12);
+  const clean = dedupe((Array.isArray(list) ? list : []).map(normaliseCompetitor).filter(c => c.name)).slice(0, 300);
   await SystemState.findOneAndUpdate({ key: COMPETITORS_KEY }, { value: clean }, { upsert: true });
   return clean;
+}
+
+function normaliseCompetitor(c) {
+  return {
+    name: String(c.name || '').trim().slice(0, 80),
+    domain: String(c.domain || '').trim().toLowerCase()
+      .replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').slice(0, 100),
+    market: c.market ? String(c.market).trim().slice(0, 40) : undefined,
+  };
+}
+
+// Dedupe by domain first (the strong key), then by lowercased name.
+function dedupe(list) {
+  const byDomain = new Set();
+  const byName = new Set();
+  const out = [];
+  for (const c of list) {
+    const d = c.domain || '';
+    const n = c.name.toLowerCase();
+    if (d && byDomain.has(d)) continue;
+    if (!d && byName.has(n)) continue;
+    if (byName.has(n)) continue;
+    if (d) byDomain.add(d);
+    byName.add(n);
+    out.push(c);
+  }
+  return out;
+}
+
+// Merge freshly-discovered competitors into the stored list, keeping existing
+// entries and adding only genuinely new ones. Returns { list, added }.
+async function mergeCompetitors(discovered) {
+  const existing = await getCompetitors();
+  const before = existing.length;
+  const merged = dedupe([...existing, ...(discovered || []).map(normaliseCompetitor)]).slice(0, 300);
+  await SystemState.findOneAndUpdate({ key: COMPETITORS_KEY }, { value: merged }, { upsert: true });
+  return { list: merged, added: merged.length - before };
 }
 
 // Best-effort: a sample of current product names from the competitor's
@@ -78,4 +109,4 @@ async function liveProductSample(domain) {
   return null;
 }
 
-module.exports = { getCompetitors, setCompetitors, liveProductSample, DEFAULT_COMPETITORS };
+module.exports = { getCompetitors, setCompetitors, mergeCompetitors, normaliseCompetitor, dedupe, liveProductSample, DEFAULT_COMPETITORS };
