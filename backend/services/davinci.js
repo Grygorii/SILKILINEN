@@ -97,11 +97,19 @@ async function unleashDaVinci() {
   }
   if (!parsed.vision) return { error: 'The composition came back empty — unleash again.' };
 
+  // Coerce movements to the exact schema (moves must be a string array) so a
+  // mis-shaped AI response can't cast-error on save.
+  const movements = (Array.isArray(parsed.movements) ? parsed.movements : []).slice(0, 3).map(m => ({
+    title: String(m?.title || ''),
+    theme: String(m?.theme || ''),
+    moves: Array.isArray(m?.moves) ? m.moves.map(String) : (m?.moves ? [String(m.moves)] : []),
+  })).filter(m => m.title);
+
   const composition = await DaVinciComposition.create({
-    vision: parsed.vision,
+    vision: String(parsed.vision),
     grandIdea: parsed.grandIdea || null,
-    movements: Array.isArray(parsed.movements) ? parsed.movements.slice(0, 3) : [],
-    closing: parsed.closing || '',
+    movements,
+    closing: String(parsed.closing || ''),
     conducted: {
       eureka: byType('eureka').length,
       demand: byType('demand_signal').length,
