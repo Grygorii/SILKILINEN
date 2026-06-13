@@ -5,7 +5,7 @@ async function getRelated(id: string): Promise<ProductCardData[]> {
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/products/related/${id}`,
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: 120 } }
     );
     if (!res.ok) return [];
     return res.json();
