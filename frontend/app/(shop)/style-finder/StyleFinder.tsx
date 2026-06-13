@@ -84,15 +84,6 @@ const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 'material',
-    prompt: 'Silk, linen, or surprise me?',
-    options: [
-      { label: 'Silk', weights: { 'sleep-dresses': 1, lingerie: 1, robes: 1 }, colourHints: ['silk'] },
-      { label: 'Linen', weights: { shirts: 1, shorts: 1, robes: 1 }, colourHints: ['linen'] },
-      { label: 'Surprise me', weights: {} },
-    ],
-  },
-  {
     id: 'recipient',
     prompt: "Who's it for?",
     options: [
