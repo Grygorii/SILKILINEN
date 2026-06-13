@@ -46,6 +46,10 @@ type Question = {
   options: Option[];
 };
 
+/* Tasteful swatch hexes for the colour/mood question, keyed by option index.
+   Used only for presentation — scoring still flows through colourHints. */
+const MOOD_SWATCHES = ['#e8dcc4', '#2a2620', '#e3c6c2', '#c2cabb'];
+
 /* The whole quiz config in one place. Weights point at the real category
    slugs above; the scorer falls back gracefully if a slug isn't stocked. */
 const QUESTIONS: Question[] = [
@@ -102,7 +106,7 @@ const TOTAL = QUESTIONS.length;
 
 type Answer = { questionId: string; optionIndex: number };
 
-type Phase = 'quiz' | 'loading' | 'results' | 'error';
+type Phase = 'intro' | 'quiz' | 'loading' | 'results' | 'error';
 
 function primaryImage(p: Product): string | null {
   const imgs = (p.images ?? []).filter(i => i && typeof i.url === 'string' && i.url);
@@ -162,20 +166,98 @@ function resultLine(answers: Answer[]): string {
   return `${feel.charAt(0).toUpperCase()}${feel.slice(1)}, ${tone} — ${close}.`;
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+   Shareable persona. Five named silk "characters". The persona is chosen from
+   the SAME answer weights the scorer already uses — no new scoring path. We
+   read the accumulated colourHints (champagne / ink / blush / sage) plus the
+   linen lean, tally them into the five clusters, and take the highest. Ties
+   and "no strong colour" fall to the Considered Classicist. */
+type Persona = {
+  key: string;
+  name: string;
+  line: string;
+};
+
+const PERSONAS: Record<string, Persona> = {
+  minimalist: {
+    key: 'minimalist',
+    name: 'The Quiet Minimalist',
+    line: 'Clean lines, champagne and ivory — nothing that shouts.',
+  },
+  romantic: {
+    key: 'romantic',
+    name: 'The Romantic',
+    line: 'Blush, soft drape, slow mornings that stretch.',
+  },
+  sophisticate: {
+    key: 'sophisticate',
+    name: 'The Midnight Sophisticate',
+    line: 'Ink and inky silk, dressed for candlelight.',
+  },
+  naturalist: {
+    key: 'naturalist',
+    name: 'The Sun-washed Naturalist',
+    line: 'Sage, linen and bare-legged ease.',
+  },
+  classicist: {
+    key: 'classicist',
+    name: 'The Considered Classicist',
+    line: 'Timeless robes and slips — investment pieces, kept for years.',
+  },
+};
+
+/* Which colour hints belong to which cluster. Mirrors the mood-question hints. */
+const PERSONA_HINTS: Record<string, string[]> = {
+  minimalist: ['champagne', 'ivory', 'cream', 'pearl', 'oyster', 'gold'],
+  romantic: ['blush', 'rose', 'pink', 'petal', 'nude', 'dusty'],
+  sophisticate: ['black', 'ink', 'midnight', 'noir', 'charcoal', 'navy'],
+  naturalist: ['sage', 'green', 'eucalyptus', 'olive', 'moss', 'mist', 'linen'],
+};
+
+function choosePersona(colourHints: string[]): Persona {
+  const tally: Record<string, number> = {
+    minimalist: 0,
+    romantic: 0,
+    sophisticate: 0,
+    naturalist: 0,
+  };
+  for (const hint of colourHints) {
+    for (const [key, hints] of Object.entries(PERSONA_HINTS)) {
+      if (hints.includes(hint)) tally[key] += 1;
+    }
+  }
+  let bestKey = '';
+  let bestScore = 0;
+  // Stable order so ties resolve deterministically (first-defined wins).
+  for (const key of ['minimalist', 'romantic', 'sophisticate', 'naturalist']) {
+    if (tally[key] > bestScore) {
+      bestScore = tally[key];
+      bestKey = key;
+    }
+  }
+  // No strong colour cluster → the timeless default.
+  return bestScore > 0 ? PERSONAS[bestKey] : PERSONAS.classicist;
+}
+
 export default function StyleFinder() {
-  const [phase, setPhase] = useState<Phase>('quiz');
+  const [phase, setPhase] = useState<Phase>('intro');
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [results, setResults] = useState<Product[]>([]);
   const [line, setLine] = useState('');
+  const [persona, setPersona] = useState<Persona | null>(null);
 
   // Optional, fully non-blocking email capture on the results screen.
   const [email, setEmail] = useState('');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
+  // Calm "Copy link" affordance on the results.
+  const [copied, setCopied] = useState(false);
+
   const finish = useCallback(async (allAnswers: Answer[]) => {
     setPhase('loading');
     const { weights, colourHints } = buildProfile(allAnswers);
+    setPersona(choosePersona(colourHints));
     try {
       const res = await fetch(`${API}/api/products`, { cache: 'no-store' });
       if (!res.ok) throw new Error('fetch failed');
@@ -215,9 +297,21 @@ export default function StyleFinder() {
     setStep(0);
     setResults([]);
     setLine('');
+    setPersona(null);
     setEmail('');
     setSaveState('idle');
-    setPhase('quiz');
+    setCopied(false);
+    setPhase('intro');
+  }, []);
+
+  const copyLink = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2400);
+    } catch {
+      // Clipboard unavailable — stay quiet, no error surfaced.
+    }
   }, []);
 
   async function saveEdit(e: React.FormEvent) {
@@ -241,44 +335,71 @@ export default function StyleFinder() {
 
   return (
     <main className={styles.page}>
+      {/* ── Intro ────────────────────────────────────────── */}
+      {phase === 'intro' && (
+        <section className={`${styles.intro} ${styles.fadeIn}`} aria-live="polite">
+          <p className={styles.kicker}>Silk Style Finder</p>
+          <h1 className={styles.introTitle}>Which silk are you?</h1>
+          <p className={styles.introSub}>
+            Five quiet questions. One edit, chosen for the way you like to live in silk.
+          </p>
+          <button type="button" className={styles.beginBtn} onClick={() => setPhase('quiz')}>
+            Begin
+          </button>
+        </section>
+      )}
+
       {/* ── Quiz ─────────────────────────────────────────── */}
       {phase === 'quiz' && (
         <section className={styles.stage} aria-live="polite">
           <p className={styles.kicker}>Silk Style Finder</p>
 
-          <div className={styles.dots} aria-hidden="true">
-            {QUESTIONS.map((q, i) => (
-              <span key={q.id} className={`${styles.dot} ${i === step ? styles.dotActive : ''} ${i < step ? styles.dotDone : ''}`} />
-            ))}
+          <div className={styles.progress} aria-hidden="true">
+            <span className={styles.progressNum}>
+              {String(step + 1).padStart(2, '0')} / {String(TOTAL).padStart(2, '0')}
+            </span>
+            <span className={styles.progressTrack}>
+              <span
+                className={styles.progressFill}
+                style={{ transform: `scaleX(${(step + 1) / TOTAL})` }}
+              />
+            </span>
           </div>
 
-          <h1 className={styles.question}>{QUESTIONS[step].prompt}</h1>
+          {/* Keyed on step so each question fades/slides in afresh. */}
+          <div key={QUESTIONS[step].id} className={styles.slide}>
+            <h1 className={styles.question}>{QUESTIONS[step].prompt}</h1>
 
-          <ul className={styles.options}>
-            {QUESTIONS[step].options.map((opt, i) => (
-              <li key={opt.label}>
-                <button
-                  type="button"
-                  className={`${styles.option} ${currentAnswer?.optionIndex === i ? styles.optionChosen : ''}`}
-                  onClick={() => choose(i)}
-                >
-                  {opt.label}
-                </button>
-              </li>
-            ))}
-          </ul>
+            <ul className={`${styles.options} ${QUESTIONS[step].id === 'mood' ? styles.optionsSwatch : ''}`}>
+              {QUESTIONS[step].options.map((opt, i) => (
+                <li key={opt.label}>
+                  <button
+                    type="button"
+                    className={`${styles.option} ${currentAnswer?.optionIndex === i ? styles.optionChosen : ''}`}
+                    onClick={() => choose(i)}
+                  >
+                    {QUESTIONS[step].id === 'mood' && (
+                      <span
+                        className={styles.swatch}
+                        style={{ background: MOOD_SWATCHES[i] }}
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span className={styles.optionLabel}>{opt.label}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           <div className={styles.controls}>
             {step > 0 ? (
-              <button type="button" className={styles.textBtn} onClick={back}>
-                ← Back
+              <button type="button" className={styles.backBtn} onClick={back} aria-label="Previous question">
+                <span aria-hidden="true">←</span> Back
               </button>
             ) : (
               <span />
             )}
-            <span className={styles.counter}>
-              {step + 1} of {TOTAL}
-            </span>
           </div>
         </section>
       )}
@@ -294,9 +415,22 @@ export default function StyleFinder() {
 
       {/* ── Results ──────────────────────────────────────── */}
       {phase === 'results' && (
-        <section className={styles.results} aria-live="polite">
-          <p className={styles.kicker}>Your silk edit</p>
-          <h1 className={styles.resultTitle}>{line}</h1>
+        <section className={`${styles.results} ${styles.fadeIn}`} aria-live="polite">
+          {persona && (
+            <div className={styles.persona}>
+              <p className={styles.kicker}>You are</p>
+              <h1 className={styles.personaName}>{persona.name}</h1>
+              <p className={styles.personaLine}>{persona.line}</p>
+              <div className={styles.shareRow}>
+                <button type="button" className={styles.shareBtn} onClick={copyLink}>
+                  {copied ? 'Link copied' : 'Share'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <p className={styles.editKicker}>Your edit</p>
+          <h2 className={styles.resultTitle}>{line}</h2>
 
           {results.length > 0 ? (
             <div className={styles.grid}>
@@ -369,9 +503,16 @@ export default function StyleFinder() {
 
       {/* ── Error (products failed to load) ──────────────── */}
       {phase === 'error' && (
-        <section className={styles.results} aria-live="polite">
-          <p className={styles.kicker}>Your silk edit</p>
-          <h1 className={styles.resultTitle}>{line}</h1>
+        <section className={`${styles.results} ${styles.fadeIn}`} aria-live="polite">
+          {persona && (
+            <div className={styles.persona}>
+              <p className={styles.kicker}>You are</p>
+              <h1 className={styles.personaName}>{persona.name}</h1>
+              <p className={styles.personaLine}>{persona.line}</p>
+            </div>
+          )}
+          <p className={styles.editKicker}>Your edit</p>
+          <h2 className={styles.resultTitle}>{line}</h2>
           <div className={styles.emptyEdit}>
             <p className={styles.subtle}>
               We couldn’t gather your pieces just now — but the collection is waiting.
