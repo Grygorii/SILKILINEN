@@ -30,6 +30,12 @@ const AGENTS = [
   require('./growthAgents/socialDrafter'),
   require('./growthAgents/newsletterDrafter'),
   require('./growthAgents/watchdog'),
+  // The clerks run LAST — they audit and fact-check everything the agents
+  // above just produced. Order matters: within one pulse the engine writes
+  // each agent's actions before the next runs, so the clerks see this run's
+  // fresh output.
+  require('./growthAgents/logicClerk'),
+  require('./growthAgents/reasoningClerk'),
 ];
 
 async function getState(key) {
