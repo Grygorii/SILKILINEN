@@ -18,6 +18,7 @@ const Category = require('../../models/Category');
 const CEOBrief = require('../../models/CEOBrief');
 const GrowthAction = require('../../models/GrowthAction');
 const { northStarStatus } = require('../chiefOfStaff');
+const { addLearning } = require('../playbook');
 
 const client = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
@@ -73,7 +74,7 @@ Be exact and be fair: flag a block ONLY when you can name the specific conflict 
 
 Respond ONLY with valid JSON:
 { "chainOk": true|false,
-  "findings": [ { "blocks": ["ref","ref"], "issue": "the exact contradiction or logic break, naming what fights what", "fix": "the concrete thing to change so the link holds", "severity": "high"|"low" } ] }
+  "findings": [ { "blocks": ["ref","ref"], "issue": "the exact contradiction or logic break, naming what fights what", "fix": "the concrete thing to change so the link holds", "severity": "high"|"low", "lesson": "OPTIONAL: only for a real, repeatable mistake — a short durable rule, phrased for the other agents, that would PREVENT this whole class of error next time (e.g. 'Never call a product a bestseller without checking it has current stock and recent sales'). Omit for one-off slips with no general lesson." } ] }
 Order findings worst first. If the chain holds, return chainOk true and an empty findings array.`;
 
 async function run() {
@@ -132,6 +133,15 @@ async function run() {
       meta: { chainLength: chain.length, head },
     }];
   }
+
+  // Feed the lessons from the serious findings back into the shared Playbook,
+  // so the other agents read them next cycle and stop repeating the mistake —
+  // the verification layer teaching the studio, not just policing it. addLearning
+  // dedupes and caps, so this can't flood the memory; at most two per run.
+  const lessons = findings
+    .filter(f => String(f.severity).toLowerCase() === 'high' && f.lesson)
+    .slice(0, 2);
+  for (const f of lessons) await addLearning(String(f.lesson)).catch(() => {});
 
   return findings.map(f => {
     const refs = Array.isArray(f.blocks) ? f.blocks.filter(Boolean) : [];

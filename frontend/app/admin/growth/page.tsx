@@ -80,6 +80,7 @@ type Brief = {
     label: string;
     deadline?: string | null;
   } | null;
+  clerksVerdict?: string;
   progress: string;
   whatChanged: string;
   whatsWorking: string;
@@ -1049,6 +1050,7 @@ function BriefSection({ brief, busy, onNewBrief }: { brief: Brief; busy: boolean
         <article className={styles.briefDoc}>
           <h2 className={styles.briefHeadline}>{brief.headline}</h2>
 
+          {brief.clerksVerdict && <BriefPassage label="Clerks’ verdict" text={brief.clerksVerdict} />}
           <BriefPassage label="Progress" text={brief.progress} />
           <BriefPassage label="What changed" text={brief.whatChanged} />
           <BriefPassage label="What's working" text={brief.whatsWorking} />
