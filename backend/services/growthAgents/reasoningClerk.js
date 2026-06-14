@@ -16,6 +16,7 @@
 const OpenAI = require('openai');
 const GrowthAction = require('../../models/GrowthAction');
 const { googleAutocomplete, googleTrendsInterest } = require('../externalData');
+const { addLearning } = require('../playbook');
 
 const client = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
@@ -57,7 +58,7 @@ Verdict each one:
 Rules: doubt numbers hardest — a precise figure with no source is a classic firework. Never invent evidence; if the signal is thin, say the claim is unverified rather than passing it. Be fair — a well-reasoned claim with real signal behind it is grounded, and saying so plainly is part of the job. For every shaky/firework verdict, give the SPECIFIC check that would settle it (the search to run, the source to find, the data to pull).
 
 Respond ONLY with valid JSON:
-{ "verdicts": [ { "claim": "the claim in a few words", "agent": "which agent (if clear)", "verdict": "grounded"|"shaky"|"firework", "why": "the evidence-based reason for the verdict", "checkIt": "the concrete check to settle it (only for shaky/firework)" } ] }
+{ "verdicts": [ { "claim": "the claim in a few words", "agent": "which agent (if clear)", "verdict": "grounded"|"shaky"|"firework", "why": "the evidence-based reason for the verdict", "checkIt": "the concrete check to settle it (only for shaky/firework)", "lesson": "OPTIONAL, only for fireworks: a short durable rule, phrased for the other agents, to stop this class of unsupported claim (e.g. 'Never state a demand figure without citing the live search or trend signal behind it'). Omit otherwise." } ] }
 Cover the 4-6 most consequential claims, fireworks first.`;
 
 async function run() {
@@ -112,6 +113,14 @@ async function run() {
       meta: { checked, evidenceLines: evidence.length },
     }];
   }
+
+  // The lessons from the fireworks become shared memory — durable rules the
+  // other agents read next cycle so they stop making unsupported claims.
+  // Deduped and capped by addLearning; at most two per run.
+  const lessons = doubtful
+    .filter(v => String(v.verdict).toLowerCase() === 'firework' && v.lesson)
+    .slice(0, 2);
+  for (const v of lessons) await addLearning(String(v.lesson)).catch(() => {});
 
   return doubtful.map(v => {
     const firework = String(v.verdict).toLowerCase() === 'firework';

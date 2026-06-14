@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const ceoBriefSchema = new mongoose.Schema({
   headline:   { type: String, required: true },   // one-line state of the business
   northStar:  { type: mongoose.Schema.Types.Mixed }, // { metric, target, current, deadline, pct }
+  clerksVerdict:{ type: String, default: '' },    // the Logic + Reasoning Clerks' one-line verdict on last week
   progress:   { type: String, default: '' },      // where we are vs the goal, in words
   whatChanged:{ type: String, default: '' },      // deltas this week + likely cause
   whatsWorking:{ type: String, default: '' },     // learned signal from outcomes

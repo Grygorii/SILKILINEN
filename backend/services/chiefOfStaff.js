@@ -263,6 +263,45 @@ async function buildIdeaCandidates() {
   return actions.map(a => ({ title: a.title, detail: (a.detail || '').slice(0, 300), agent: a.agent }));
 }
 
+// The Clerks' verdict — the one line the brief opens with. Reads the last
+// week of the Logic Clerk (chain audit) and Reasoning Clerk (fact-check) and
+// tells the founder, plainly, whether last week's work held together and how
+// many claims didn't stand up. Keyed off the clerks' meta contract (flags carry
+// meta.severity / meta.verdict; the all-clear runs don't), not fragile titles.
+async function clerksVerdict() {
+  const since7 = new Date(Date.now() - 7 * DAY);
+  const actions = await GrowthAction.find({
+    agent: { $in: ['logicClerk', 'reasoningClerk'] },
+    createdAt: { $gte: since7 },
+  }).sort({ createdAt: -1 }).select('agent type meta').lean().catch(() => []);
+  if (!actions.length) return null;
+
+  const logic = actions.filter(a => a.agent === 'logicClerk');
+  const reasoning = actions.filter(a => a.agent === 'reasoningClerk');
+  const chainAudited = logic.some(a => a.type === 'audit');
+  const fireworkChecked = reasoning.some(a => a.type === 'reasoning');
+  const logicFlags = logic.filter(a => a.meta && (a.meta.severity === 'high' || a.meta.severity === 'low')).length;
+  const fireworks = reasoning.filter(a => a.meta && (a.meta.verdict === 'firework' || a.meta.verdict === 'shaky')).length;
+
+  const parts = [];
+  if (chainAudited) {
+    parts.push(logicFlags
+      ? `the logic chain has ${logicFlags} broken link${logicFlags === 1 ? '' : 's'} to fix`
+      : 'the logic chain held — no contradictions across the agents');
+  }
+  if (fireworkChecked) {
+    parts.push(fireworks
+      ? `${fireworks} claim${fireworks === 1 ? '' : 's'} flagged as unproven (“fireworks”) — verify before acting`
+      : 'every claim stood up to the live evidence');
+  }
+  if (!parts.length) return null;
+  return {
+    line: `Clerks’ verdict: ${parts.join('; ')}.`,
+    logicFlags, fireworks,
+    chainHeld: chainAudited && logicFlags === 0,
+  };
+}
+
 // ── Decide: synthesise the weekly brief ────────────────────────────────────────
 
 const BRIEF_SYSTEM = `You are the Chief of Staff / co-CEO for SILKILINEN, a QUIET-LUXURY silk & linen brand run by one founder (currency EUR). Once a week you write a tight operating brief. Think like a seasoned luxury-brand operator AND a skeptical analyst — not a generic growth hacker.
@@ -380,13 +419,14 @@ async function generateBrief() {
 async function generateBriefCore() {
   const { getCompetitors } = require('./competitorIntel');
   // Every gather is fail-soft — one slow/broken query can never sink the brief.
-  const [northStar, metrics, outcomes, ideas, recentActions, competitors] = await Promise.all([
+  const [northStar, metrics, outcomes, ideas, recentActions, competitors, clerks] = await Promise.all([
     getNorthStar().catch(() => null),
     measure().catch(e => { console.warn('[chief] measure failed:', e.message); return SAFE_METRICS; }),
     contentOutcomes().catch(() => []),
     buildIdeaCandidates().catch(() => []),
     GrowthAction.find().sort({ createdAt: -1 }).limit(20).select('agent type title status').lean().catch(() => []),
     getCompetitors().catch(() => []),
+    clerksVerdict().catch(() => null),
   ]);
 
   let nsBlock = 'No North Star goal set yet.';
@@ -421,6 +461,8 @@ async function generateBriefCore() {
     `CONTENT OUTCOMES (did past articles work?): ${outcomes.length ? outcomes.map(o => `"${o.title}" — ${o.ageDays ?? '?'}d old, ${o.impressions} impressions, ${o.verdict}`).join(' | ') : 'no published articles yet'}`,
     '',
     `RECENT ENGINE ACTIVITY: ${recentActions.map(a => `${a.agent}:${a.type}`).join(', ')}`,
+    '',
+    clerks ? `CLERKS' VERDICT (the Logic Clerk audited the agents' output as a chain; the Reasoning Clerk fact-checked it against live web evidence): ${clerks.line} Take this seriously — if the chain has broken links or claims were flagged as unproven, do NOT build a confident story on the flagged material; treat it as suspect.` : '',
     '',
     `COMPETITOR / STOREFRONT INTEL (for buildIdeas): ${ideas.length ? ideas.map(i => `[${i.agent}] ${i.title} — ${i.detail}`).join(' || ') : 'none gathered yet'}`,
     '',
@@ -457,6 +499,7 @@ async function generateBriefCore() {
   const doc = {
     headline: asStr(parsed.headline) || 'Weekly brief',
     northStar: nsForStore,
+    clerksVerdict: clerks?.line || '',
     progress: asStr(parsed.progress),
     whatChanged: asStr(parsed.whatChanged),
     whatsWorking: asStr(parsed.whatsWorking),
@@ -473,7 +516,7 @@ async function generateBriefCore() {
     console.warn('[chief] brief save failed, retrying with safe fields:', saveErr.message);
     const fb = fallbackBriefFields(metrics, nsForStore, competitors);
     brief = await CEOBrief.create({
-      headline: fb.headline, northStar: nsForStore, progress: fb.progress,
+      headline: fb.headline, northStar: nsForStore, clerksVerdict: clerks?.line || '', progress: fb.progress,
       whatChanged: fb.whatChanged, whatsWorking: fb.whatsWorking, marketRead: fb.marketRead,
       moves: coerceMoves(fb.moves), founderActions: coerceStrings(fb.founderActions), buildIdeas: [],
       metrics: { ...metrics, usedFallback: true },
