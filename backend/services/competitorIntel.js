@@ -10,6 +10,7 @@
 // returns null so a blocked fetch can never break a run.
 
 const SystemState = require('../models/SystemState');
+const { assertPublicUrl } = require('./safeUrl');
 
 const COMPETITORS_KEY = 'growthCompetitors';
 
@@ -83,6 +84,7 @@ async function liveProductSample(domain) {
   ];
   for (const url of candidates) {
     try {
+      await assertPublicUrl(url); // SSRF guard
       const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SilkilinenBot/1.0)' }, signal: AbortSignal.timeout(6000) });
       if (!res.ok) continue;
       const text = await res.text();
@@ -96,6 +98,7 @@ async function liveProductSample(domain) {
       const sub = text.match(/<loc>\s*([^<]*product[^<]*\.xml)\s*<\/loc>/i);
       if (sub) {
         try {
+          await assertPublicUrl(sub[1]); // SSRF guard — the URL came from fetched content
           const r2 = await fetch(sub[1], { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SilkilinenBot/1.0)' }, signal: AbortSignal.timeout(6000) });
           if (r2.ok) {
             const t2 = await r2.text();

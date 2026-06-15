@@ -9,6 +9,7 @@
 
 const OpenAI = require('openai');
 const { mergeCompetitors, getCompetitors } = require('./competitorIntel');
+const { assertPublicUrl } = require('./safeUrl');
 
 const client = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
@@ -61,6 +62,7 @@ async function domainLive(domain) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 4000);
   try {
+    await assertPublicUrl(`https://${domain}`); // SSRF guard — refuse private/internal targets
     const res = await fetch(`https://${domain}`, {
       method: 'GET',
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SilkilinenBot/1.0)' },

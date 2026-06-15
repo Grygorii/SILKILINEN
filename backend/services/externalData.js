@@ -9,8 +9,10 @@
 
 const DEFAULT_TIMEOUT = 8000;
 const UA = 'Mozilla/5.0 (compatible; SilkilinenGrowth/1.0; +https://www.silkilinen.com)';
+const { assertPublicUrl } = require('./safeUrl');
 
 async function getJson(url, { timeout = DEFAULT_TIMEOUT, headers = {} } = {}) {
+  await assertPublicUrl(url); // SSRF guard — refuse private/internal targets
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeout);
   try {
@@ -23,6 +25,7 @@ async function getJson(url, { timeout = DEFAULT_TIMEOUT, headers = {} } = {}) {
 }
 
 async function getText(url, { timeout = DEFAULT_TIMEOUT, headers = {} } = {}) {
+  await assertPublicUrl(url); // SSRF guard — refuse private/internal targets
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeout);
   try {
