@@ -29,13 +29,16 @@ async function handleSubscribe(req, res) {
 
   const code = generateUniqueCode();
   const validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+  // The welcome-offer % is an editable site setting — change it once in admin
+  // and both the issued discount and the storefront copy follow.
+  const offerPercent = require('../services/siteSettings').getSiteSettings().welcomeOfferPercent || 10;
 
   try {
     // Create promo code in DB
     await PromoCode.create({
       code,
       type: 'percentage',
-      value: 10,
+      value: offerPercent,
       maxUses: 1,
       maxUsesPerCustomer: 1,
       validUntil,

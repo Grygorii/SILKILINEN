@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Button from './ui/Button';
 import styles from './EmailCapturePopup.module.css';
+import { useSiteSettings } from '@/lib/settings';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 const STORAGE_KEY = 'slk_nl_dismissed';
@@ -11,6 +12,7 @@ const SUPPRESS_DAYS = 30;
 const BLOCKED_PATHS = ['/admin', '/account', '/checkout', '/success'];
 
 export default function EmailCapturePopup() {
+  const { welcomeOfferPercent } = useSiteSettings();
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState('');
@@ -115,12 +117,12 @@ export default function EmailCapturePopup() {
           <div className={styles.success}>
             <p className={styles.successIcon}>✓</p>
             <p className={styles.successTitle}>Check your inbox</p>
-            <p className={styles.successSub}>Your 10% off code is on its way.</p>
+            <p className={styles.successSub}>Your {welcomeOfferPercent}% off code is on its way.</p>
           </div>
         ) : (
           <>
             <p className={styles.eyebrow}>Pure silk &amp; linen · an Irish brand</p>
-            <h2 className={styles.title}>10% off your first order</h2>
+            <h2 className={styles.title}>{welcomeOfferPercent}% off your first order</h2>
             <p className={styles.body}>
               Sign up for slow style notes, new collections,<br />
               and a code for your first piece.
@@ -140,7 +142,7 @@ export default function EmailCapturePopup() {
                 type="submit"
                 variant={status === 'loading' ? 'disabled' : 'primary'}
               >
-                {status === 'loading' ? 'JOINING…' : 'GET 10% OFF'}
+                {status === 'loading' ? 'JOINING…' : `GET ${welcomeOfferPercent}% OFF`}
               </Button>
             </form>
             {status === 'error' && (
