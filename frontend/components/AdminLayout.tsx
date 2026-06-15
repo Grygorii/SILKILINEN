@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   LayoutDashboard, Package, FileText, Users,
   Megaphone, Settings, Menu, Bell, X, Layers, Tag, BookOpen, BookMarked, Share2,
-  Folder, Gift, Activity, Image as ImageIcon, ShoppingBag, Star, Upload, Boxes, Truck, Sparkles, Zap, Search,
+  Folder, Gift, Activity, Image as ImageIcon, ShoppingBag, Star, Upload, Boxes, Truck, Sparkles, Zap, Search, Percent,
 } from 'lucide-react';
 import styles from './AdminLayout.module.css';
 import LogoutButton from './LogoutButton';
@@ -52,6 +52,7 @@ const NAV: NavEntry[] = [
   { label: 'Expenses',   href: '/admin/finance/expenses',  icon: BookMarked },
   { label: 'Reports',    href: '/admin/finance/reports',   icon: BookMarked },
   { section: 'Config' },
+  { label: 'Business & offers', href: '/admin/settings/business', icon: Percent },
   { label: 'Shipping',   href: '/admin/settings/shipping', icon: Truck },
   { label: 'Site Audit', href: '/admin/settings/advanced/site-audit', icon: Activity },
   { label: 'Settings',   href: '/admin/settings',   icon: Settings, exact: true },
