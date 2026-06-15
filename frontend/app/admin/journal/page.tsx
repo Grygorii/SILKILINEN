@@ -43,6 +43,10 @@ export default function JournalAdminPage() {
   const [filter, setFilter] = useState<typeof FILTERS[number]>('all');
   const [creating, setCreating] = useState(false);
   const [newTitle, setNewTitle] = useState('');
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiTopic, setAiTopic] = useState('');
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -66,6 +70,25 @@ export default function JournalAdminPage() {
     if (data._id) window.location.href = `/admin/journal/${data._id}`;
   }
 
+  async function generateArticle(e: React.FormEvent) {
+    e.preventDefault();
+    setAiBusy(true);
+    setAiError('');
+    try {
+      const res = await fetch(`${API}/api/admin/journal/generate`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic: aiTopic.trim() || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Generation failed');
+      if (data.id) window.location.href = `/admin/journal/${data.id}`;
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'Could not generate.');
+      setAiBusy(false);
+    }
+  }
+
   const visible = articles.filter(a => filter === 'all' || a.status === filter);
 
   return (
@@ -81,13 +104,45 @@ export default function JournalAdminPage() {
               Sabreen&apos;s writing space
             </p>
           </div>
-          <button onClick={() => setCreating(c => !c)} style={{
-            padding: '10px 20px', background: 'var(--dark)', color: 'white', border: 'none',
-            cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, letterSpacing: '0.5px',
-          }}>
-            {creating ? 'Cancel' : '+ New article'}
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => { setAiOpen(o => !o); setAiError(''); }} style={{
+              padding: '10px 18px', background: 'white', color: 'var(--dark)', border: '1px solid #b8863b',
+              cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, letterSpacing: '0.5px',
+            }}>
+              {aiOpen ? 'Cancel' : '✦ Write with AI'}
+            </button>
+            <button onClick={() => setCreating(c => !c)} style={{
+              padding: '10px 20px', background: 'var(--dark)', color: 'white', border: 'none',
+              cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, letterSpacing: '0.5px',
+            }}>
+              {creating ? 'Cancel' : '+ New article'}
+            </button>
+          </div>
         </div>
+
+        {/* AI masterpiece generator */}
+        {aiOpen && (
+          <form onSubmit={generateArticle} style={{ marginBottom: 28, padding: '20px 24px', background: 'white', border: '1px solid #e6d9bf' }}>
+            <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
+              Writes a draft grounded in everything the agents know — Hermes&rsquo; SEO plan, rising demand, the Playbook
+              and your catalogue — with a hook, real product links and correct meta. Give a topic, or leave it blank and
+              the editor picks the highest‑value one.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <input
+                value={aiTopic}
+                onChange={e => setAiTopic(e.target.value)}
+                placeholder="Optional topic — e.g. how to care for a silk pillowcase"
+                disabled={aiBusy}
+                style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--border)', fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, color: 'var(--dark)' }}
+              />
+              <button type="submit" disabled={aiBusy} style={{ padding: '10px 20px', background: '#b8863b', color: 'white', border: 'none', cursor: aiBusy ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 13, whiteSpace: 'nowrap' }}>
+                {aiBusy ? 'Writing… (~30s)' : 'Write masterpiece'}
+              </button>
+            </div>
+            {aiError && <p style={{ margin: '10px 0 0', fontSize: 12, color: '#b03a2e' }}>{aiError}</p>}
+          </form>
+        )}
 
         {/* Quick-create form */}
         {creating && (
