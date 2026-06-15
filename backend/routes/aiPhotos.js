@@ -542,7 +542,7 @@ router.post('/sessions/:id/generate', requireAuth, aiRateLimit, async function(r
   }
 });
 
-router.post('/sessions/:id/iterate', requireAuth, async function(req, res) {
+router.post('/sessions/:id/iterate', requireAuth, aiRateLimit, async function(req, res) {
   try {
     const { position, feedback, forceOverride, tier: reqTier } = req.body;
     if (!position) return res.status(400).json({ error: 'position is required' });

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
+const { aiLimit } = require('../middleware/rateLimiters');
 const { buildRecommendations } = require('../services/advisor');
 const { runAdvisorDigest } = require('../services/advisorDigest');
 
@@ -34,7 +35,7 @@ router.get('/', requireAuth, async (req, res) => {
 // Send the weekly digest right now, ignoring the cadence — lets the founder
 // confirm the email works without waiting a week. Reports why it didn't send
 // (e.g. email not configured) so it's not a silent no-op.
-router.post('/send-test', requireAuth, async (req, res) => {
+router.post('/send-test', requireAuth, aiLimit, async (req, res) => {
   try {
     const result = await runAdvisorDigest({ force: true });
     res.json(result);

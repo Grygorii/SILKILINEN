@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const { requireAuth } = require('../middleware/auth');
+const { emailBlastLimit } = require('../middleware/rateLimiters');
 const Customer = require('../models/Customer');
 const Order = require('../models/Order');
 const PromoCode = require('../models/PromoCode');
@@ -58,7 +59,7 @@ router.post('/segments/recompute', async (req, res) => {
 // choice: NO new codes minted — just a reminder. We skip anyone who has
 // already redeemed SILK10 (so the offer in the email is actually usable).
 // Mounted before /:id so the static path isn't shadowed.
-router.post('/winback', async (req, res) => {
+router.post('/winback', emailBlastLimit, async (req, res) => {
   try {
     const { sendWinbackReminder } = require('../services/email');
     if (!process.env.RESEND_API_KEY) return res.status(503).json({ error: 'Email not configured' });

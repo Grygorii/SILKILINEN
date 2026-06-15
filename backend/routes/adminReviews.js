@@ -4,6 +4,7 @@ const Review = require('../models/Review');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
+const { emailBlastLimit } = require('../middleware/rateLimiters');
 const { flagLabel } = require('../services/reviewModeration');
 const { signReviewToken } = require('../utils/reviewToken');
 const { sendReviewRequest } = require('../services/email');
@@ -145,7 +146,7 @@ router.delete('/:id', async function(req, res) {
 // Returns a `diagnostics` block that breaks down WHY each order didn't
 // qualify — without it "Eligible: 0" is impossible to debug from the
 // admin UI alone. Each non-eligible order falls into exactly one bucket.
-router.post('/send-pending-requests', async function(req, res) {
+router.post('/send-pending-requests', emailBlastLimit, async function(req, res) {
   try {
     const ageDays = Number.isInteger(req.body?.ageDays) ? req.body.ageDays : 14;
     const dryRun = Boolean(req.body?.dryRun);
