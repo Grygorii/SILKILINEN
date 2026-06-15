@@ -17,8 +17,19 @@ class AIServiceError extends Error {
   }
 }
 
-function buildSEOSystemPrompt() {
-  return `You are an SEO copywriter for SILKILINEN, a small luxury silk and linen brand. SILKILINEN is an Irish brand based in Donegal, but products are made in mixed locations. NEVER state or imply where a product is manufactured (e.g. "made/hand-finished/crafted in Donegal/Ireland") — country of origin is not provided here and varies per product. Your job is to write meta titles, meta descriptions, URL slugs, image alt-text templates, and keywords for product pages.
+// The subject of the SEO copy, by entity kind. The brand rules below are
+// identical for every kind — only what the page IS changes. Keeping the product
+// wording byte-for-byte means the long-standing product generator is unchanged.
+const SUBJECTS = {
+  product: 'product pages',
+  category: 'category pages (a shop page that lists many silk pieces of one kind, e.g. all robes, all pillowcases)',
+  collection: 'collection pages (a curated edit that groups several silk pieces around a theme)',
+  page: 'static pages (e.g. an about, FAQ, gifting or contact page)',
+};
+
+function buildSEOSystemPrompt(kind = 'product') {
+  const subject = SUBJECTS[kind] || SUBJECTS.product;
+  return `You are an SEO copywriter for SILKILINEN, a small luxury silk and linen brand. SILKILINEN is an Irish brand based in Donegal, but products are made in mixed locations. NEVER state or imply where a product is manufactured (e.g. "made/hand-finished/crafted in Donegal/Ireland") — country of origin is not provided here and varies per product. Your job is to write meta titles, meta descriptions, URL slugs, image alt-text templates, and keywords for ${subject}.
 
 BRAND VOICE — read carefully:
 - Considered, slow, with quiet warmth
@@ -55,6 +66,37 @@ No commentary, no markdown, no code fences. Just the JSON object.`;
 }
 
 function buildSEOUserPrompt(input) {
+  // Non-product entities (category / collection / page) describe a page that
+  // lists or frames many pieces, not a single item — so the prompt leads with
+  // what the page IS and the pieces it gathers, not a material/price.
+  if (input.kind && input.kind !== 'product') {
+    const label = SUBJECTS[input.kind] ? input.kind : 'page';
+    const parts = [
+      `Generate SEO meta-data for this SILKILINEN ${label}:`,
+      ``,
+      `Name: ${input.name}`,
+      `Description: ${input.description || '(no description provided)'}`,
+    ];
+    if (input.items && input.items.length) {
+      parts.push(`Pieces on this page (for context — do NOT list them): ${(Array.isArray(input.items) ? input.items : [input.items]).slice(0, 12).join(', ')}`);
+    }
+    if (input.keywords && input.keywords.length) {
+      const kw = Array.isArray(input.keywords) ? input.keywords.join(', ') : input.keywords;
+      parts.push(
+        ``,
+        `TARGET KEYWORDS (real searches this page should answer — prioritise the FIRST): ${kw}`,
+        `Work the primary keyword into the meta title naturally, the others into the description. Keep ALL of these in your keywords output. Do not stuff or break voice.`,
+      );
+    }
+    parts.push(
+      ``,
+      `Note: this page's URL slug is fixed — return the existing slug unchanged if given, else an empty string. Focus on the meta title, meta description and keywords.`,
+      ``,
+      `Return the JSON response now.`,
+    );
+    return parts.join('\n');
+  }
+
   const parts = [
     `Generate SEO meta-data for this SILKILINEN product:`,
     ``,
@@ -82,21 +124,23 @@ function buildSEOUserPrompt(input) {
 }
 
 /**
- * Generate SEO meta-data for a product via DeepSeek.
+ * Generate SEO meta-data for any storefront entity via DeepSeek.
+ * input.kind ∈ 'product' | 'category' | 'collection' | 'page' (default 'product').
  * Returns { metaTitle, metaDescription, slug, keywords, altTextTemplate }.
  * Throws AIServiceError on failure.
  */
-async function generateProductSEO(input) {
+async function generateSEO(input) {
   if (!process.env.DEEPSEEK_API_KEY) {
     throw new AIServiceError('DEEPSEEK_API_KEY is not set', 'MISSING_KEY');
   }
 
+  const kind = input.kind || 'product';
   const start = Date.now();
   try {
     const response = await deepseekClient.chat.completions.create({
       model: SEO_MODEL,
       messages: [
-        { role: 'system', content: buildSEOSystemPrompt() },
+        { role: 'system', content: buildSEOSystemPrompt(kind) },
         { role: 'user',   content: buildSEOUserPrompt(input) },
       ],
       temperature: 0.7,
@@ -113,7 +157,7 @@ async function generateProductSEO(input) {
       throw new AIServiceError('Invalid response shape from AI provider', 'INVALID_SHAPE');
     }
 
-    console.log(`[aiText] SEO generated — product: "${input.name}", model: ${SEO_MODEL}, duration: ${Date.now() - start}ms`);
+    console.log(`[aiText] SEO generated — ${kind}: "${input.name}", model: ${SEO_MODEL}, duration: ${Date.now() - start}ms`);
 
     // Preserve the operator's researched target keywords (research wins) and
     // append any new long-tail variants the model proposed, deduped, cap 10.
@@ -132,10 +176,15 @@ async function generateProductSEO(input) {
       altTextTemplate: parsed.altTextTemplate || '',
     };
   } catch (err) {
-    console.error(`[aiText] SEO generation failed — product: "${input.name}", error: ${err.message}`);
+    console.error(`[aiText] SEO generation failed — ${kind}: "${input.name}", error: ${err.message}`);
     if (err instanceof AIServiceError) throw err;
     throw new AIServiceError(`AI text service error: ${err.message}`, 'PROVIDER_ERROR', err);
   }
 }
 
-module.exports = { generateProductSEO, AIServiceError };
+// Back-compat wrapper — the product editor and bulk SEO have always called this.
+function generateProductSEO(input) {
+  return generateSEO({ ...input, kind: 'product' });
+}
+
+module.exports = { generateSEO, generateProductSEO, AIServiceError };

@@ -3,7 +3,7 @@ import ProductGrid from '@/components/ProductGrid';
 import BundleStrip from '@/components/BundleStrip';
 import styles from './page.module.css';
 
-type Cat = { slug: string; label: string; description?: string; count: number };
+type Cat = { slug: string; label: string; description?: string; metaTitle?: string; metaDescription?: string; count: number };
 
 // The storefront's source of truth for which categories exist is the DB, not a
 // hardcoded list — so renaming or adding a category in admin "just works" on
@@ -38,21 +38,20 @@ export async function generateMetadata({
     };
   }
   if (category) {
-    // Rich hardcoded copy wins; otherwise fall back to the live category's
-    // own label/description so newly added categories still get real metadata.
-    const c = CATEGORY_COPY[category];
-    if (c) {
-      return {
-        title: c.title,
-        description: c.description,
-        alternates: { canonical: `https://www.silkilinen.com/shop?category=${category}` },
-      };
-    }
+    // Precedence: the founder's approved meta (generated in admin) wins, then
+    // the curated hardcoded copy, then the category's own label/description.
+    // metaTitle is empty until the founder generates+approves, so existing
+    // hardcoded categories (robes, pyjamas…) are unchanged until then.
     const dbCat = (await getCategoryList()).find(x => x.slug === category);
-    if (dbCat) {
+    const c = CATEGORY_COPY[category];
+    if (dbCat || c) {
       return {
-        title: dbCat.label,
-        description: dbCat.description || `Shop ${dbCat.label} at Silkilinen — pure silk and linen, shipped worldwide from Donegal.`,
+        title: dbCat?.metaTitle || c?.title || dbCat?.label || 'Shop',
+        description:
+          dbCat?.metaDescription ||
+          c?.description ||
+          dbCat?.description ||
+          `Shop ${dbCat?.label || 'silk'} at Silkilinen — pure silk and linen, shipped worldwide from Donegal.`,
         alternates: { canonical: `https://www.silkilinen.com/shop?category=${category}` },
       };
     }

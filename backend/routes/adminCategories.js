@@ -1,11 +1,22 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const Category = require('../models/Category');
 const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
+const { generateSEO, AIServiceError } = require('../services/aiText');
 
 // All routes require admin auth
 router.use(requireAuth);
+
+// Same budget as the product SEO endpoint — bounded AI calls per hour.
+const aiRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many AI generation calls in the last hour. Wait a few minutes and try again.' },
+});
 
 // GET /api/admin/categories
 // Lists every category (active + archived) with product count attached.
@@ -38,11 +49,11 @@ router.get('/', async (req, res) => {
 // POST /api/admin/categories
 router.post('/', async (req, res) => {
   try {
-    const { slug, label, description, heroImage, displayOrder, status } = req.body;
+    const { slug, label, description, heroImage, displayOrder, status, metaTitle, metaDescription } = req.body;
     if (!slug || !label) {
       return res.status(400).json({ error: 'slug and label are required' });
     }
-    const category = new Category({ slug, label, description, heroImage, displayOrder, status });
+    const category = new Category({ slug, label, description, heroImage, displayOrder, status, metaTitle, metaDescription });
     await category.save();
     res.status(201).json(category);
   } catch (err) {
@@ -73,7 +84,7 @@ router.get('/:id', async (req, res) => {
 // and create a new one.
 router.patch('/:id', async (req, res) => {
   try {
-    const allowed = ['label', 'description', 'heroImage', 'displayOrder', 'status'];
+    const allowed = ['label', 'description', 'heroImage', 'displayOrder', 'status', 'metaTitle', 'metaDescription'];
     const updates = {};
     for (const key of allowed) {
       if (key in req.body) updates[key] = req.body[key];
@@ -151,6 +162,39 @@ router.delete('/:id/permanent', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/admin/categories/:id/generate-seo — generate a meta title +
+// description for this category page (approve-first: returns a suggestion, does
+// NOT save). Accepts current form state so the founder needn't save first.
+router.post('/:id/generate-seo', aiRateLimit, async (req, res) => {
+  try {
+    const category = await Category.findById(req.params.id).lean();
+    if (!category) return res.status(404).json({ error: 'Not found' });
+
+    // A sample of the pieces this category lists — real context so the copy is
+    // about what's actually on the page, not invented.
+    const items = await Product.find({ category: category.slug, status: 'active' })
+      .select('name').limit(12).lean();
+
+    const seo = await generateSEO({
+      kind: 'category',
+      name: req.body.label || category.label,
+      description: req.body.description || category.description || '',
+      items: items.map(p => p.name),
+    });
+
+    res.json({
+      seo: { metaTitle: seo.metaTitle, metaDescription: seo.metaDescription, keywords: seo.keywords },
+      message: 'SEO generated. Review and save to apply.',
+    });
+  } catch (err) {
+    console.error('[category generate-seo] error:', err.message);
+    if (err instanceof AIServiceError) {
+      return res.status(503).json({ error: 'AI SEO generation is temporarily unavailable. Fill the fields manually, or try again in a moment.' });
+    }
+    res.status(500).json({ error: 'Could not generate SEO. Please try again or fill in manually.' });
   }
 });
 

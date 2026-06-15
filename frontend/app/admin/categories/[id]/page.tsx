@@ -15,6 +15,8 @@ type Form = {
   slug: string;
   label: string;
   description: string;
+  metaTitle: string;
+  metaDescription: string;
   status: CategoryStatus;
   displayOrder: string;
   heroImageUrl: string;
@@ -23,6 +25,7 @@ type Form = {
 
 const EMPTY_FORM: Form = {
   slug: '', label: '', description: '',
+  metaTitle: '', metaDescription: '',
   status: 'active', displayOrder: '0',
   heroImageUrl: '', heroImageAlt: '',
 };
@@ -45,6 +48,7 @@ export default function AdminCategoryEditPage({ params }: { params: Promise<{ id
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [loadError, setLoadError] = useState('');
+  const [generatingSeo, setGeneratingSeo] = useState(false);
 
   const load = useCallback(async () => {
     if (isNew) return;
@@ -56,6 +60,8 @@ export default function AdminCategoryEditPage({ params }: { params: Promise<{ id
         slug: data.slug || '',
         label: data.label || '',
         description: data.description || '',
+        metaTitle: data.metaTitle || '',
+        metaDescription: data.metaDescription || '',
         status: data.status || 'active',
         displayOrder: data.displayOrder != null ? String(data.displayOrder) : '0',
         heroImageUrl: data.heroImage?.url || '',
@@ -113,6 +119,33 @@ export default function AdminCategoryEditPage({ params }: { params: Promise<{ id
     setSaved(false);
   }
 
+  // Approve-first: the AI fills the meta fields; nothing is saved until the
+  // founder presses Save. Mirrors the product SEO button.
+  async function generateSeo() {
+    if (isNew) { toast('Save the category first, then generate its SEO.', 'error'); return; }
+    setGeneratingSeo(true);
+    try {
+      const res = await fetch(`${API}/api/admin/categories/${id}/generate-seo`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: form.label, description: form.description }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Generation failed');
+      }
+      const { seo } = await res.json();
+      setForm(f => ({ ...f, metaTitle: seo.metaTitle || f.metaTitle, metaDescription: seo.metaDescription || f.metaDescription }));
+      setSaved(false);
+      toast('SEO generated — review, then Save to apply.', 'success');
+    } catch (e: unknown) {
+      toast(e instanceof Error ? e.message : 'Could not generate SEO.', 'error');
+    } finally {
+      setGeneratingSeo(false);
+    }
+  }
+
   function handleLabelChange(label: string) {
     setForm(f => ({
       ...f,
@@ -133,6 +166,8 @@ export default function AdminCategoryEditPage({ params }: { params: Promise<{ id
       const body = {
         label: form.label,
         description: form.description,
+        metaTitle: form.metaTitle,
+        metaDescription: form.metaDescription,
         status: form.status,
         displayOrder: form.displayOrder !== '' ? Number(form.displayOrder) : 0,
         heroImage,
@@ -231,6 +266,47 @@ export default function AdminCategoryEditPage({ params }: { params: Promise<{ id
               rows={3}
               placeholder="Optional. Surfaced on the storefront where supported."
             />
+          </section>
+
+          <section className={styles.section}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <h3 className={styles.sectionTitle} style={{ margin: 0 }}>Search engine (SEO)</h3>
+              <button
+                type="button"
+                className={styles.select}
+                onClick={generateSeo}
+                disabled={generatingSeo || isNew}
+                style={{ cursor: generatingSeo || isNew ? 'default' : 'pointer', width: 'auto', whiteSpace: 'nowrap' }}
+              >
+                {generatingSeo ? 'Generating…' : '✦ Generate SEO'}
+              </button>
+            </div>
+            <p className={styles.hint}>
+              {isNew
+                ? 'Save the category first, then generate its meta title and description.'
+                : 'AI writes a meta title + description for this category’s /shop view, in the brand voice. Review, then Save to apply.'}
+            </p>
+
+            <label className={styles.label}>Meta title</label>
+            <input
+              className={styles.input}
+              value={form.metaTitle}
+              onChange={(e) => set('metaTitle', e.target.value)}
+              maxLength={70}
+              placeholder="e.g. Silk Pillowcases in Mulberry Silk — SILKILINEN"
+            />
+            <p className={styles.hint}>{form.metaTitle.length}/70 — falls back to the label if empty.</p>
+
+            <label className={styles.label}>Meta description</label>
+            <textarea
+              className={styles.textarea}
+              value={form.metaDescription}
+              onChange={(e) => set('metaDescription', e.target.value)}
+              rows={3}
+              maxLength={165}
+              placeholder="One or two calm sentences describing this category for search results."
+            />
+            <p className={styles.hint}>{form.metaDescription.length}/165 — falls back to the description if empty.</p>
           </section>
 
           <section className={styles.section}>

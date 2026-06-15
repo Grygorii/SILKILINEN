@@ -29,6 +29,8 @@ router.get('/', async function(req, res) {
       label: cat.label,
       count: countMap[cat.slug] || 0,
       description: cat.description || '',
+      metaTitle: cat.metaTitle || '',
+      metaDescription: cat.metaDescription || '',
       heroImage: cat.heroImage || null,
     }));
 
