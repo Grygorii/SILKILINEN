@@ -19,6 +19,8 @@
 
 const OpenAI = require('openai');
 const Product = require('../../models/Product');
+const Category = require('../../models/Category');
+const Collection = require('../../models/Collection');
 const { isConnected, getSearchPerformance, getQueryOpportunities } = require('../searchConsole');
 const { addLearning, playbookPromptBlock } = require('../playbook');
 
@@ -29,15 +31,17 @@ const client = new OpenAI({
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
 async function gatherContext() {
-  const [perf, opps, products] = await Promise.all([
+  const [perf, opps, products, categories, collections] = await Promise.all([
     getSearchPerformance(28).catch(() => null),
     getQueryOpportunities(28).catch(() => []),
     Product.find({ status: 'active' }).select('name category metaTitle metaDescription').lean().catch(() => []),
+    Category.find({ status: 'active' }).select('slug label metaTitle metaDescription').lean().catch(() => []),
+    Collection.find({ status: 'active' }).select('slug name metaTitle metaDescription').lean().catch(() => []),
   ]);
   const missingMeta = products
     .filter(p => !p.metaTitle || !p.metaDescription)
     .map(p => p.name);
-  return { perf, opps: (opps || []).slice(0, 15), products, missingMeta };
+  return { perf, opps: (opps || []).slice(0, 15), products, categories, collections, missingMeta };
 }
 
 const SYSTEM = `You are Hermes, the search-performance strategist for SILKILINEN — a quiet-luxury silk & linen house. You read the shop's REAL Google Search Console data and turn it into a short, ranked plan to win more clicks from the search footholds Google already grants. You never invent numbers; you reason only over the figures handed to you.
@@ -54,14 +58,19 @@ Hard rules:
 - British/Irish English.
 - BE HONEST ABOUT SCALE: you will be told the impression total. If it is small (an early-stage site), say so plainly, give the one or two REAL footholds worth acting on, and do not manufacture a big plan from thin data. A truthful "too early, here are the 1-2 real footholds, keep publishing" is the right answer when the data is thin.
 
+Your plan is EXECUTED by a one-button "Rebuild SEO" pipeline, so each play must be machine-actionable:
+- "kind" is "meta" when the fix is rewriting the page's meta title/description (the pipeline can generate + apply it). It is "content" when the fix needs new on-page words a field can't hold — a paragraph, an internal link, alt-text (the pipeline flags it for the founder/Content Writer).
+- "entityType" + "entityRef" name the EXACT thing to act on: for a product use entityType "product" and entityRef the exact product NAME from the catalogue list; for a category/collection use its SLUG from the lists; use "page" with a path ("/", "/journal") only for the homepage or journal.
+- Give AT MOST ONE play per entity — never repeat the same product/category/collection twice. Dedupe ruthlessly.
+
 Respond ONLY with valid JSON:
 {
   "state": "thin" | "actionable",
   "read": "one honest sentence on the search picture right now",
-  "plays": [ { "target": "the query or page", "page": "the exact page to improve (product/category/path)", "position": number|null, "impressions": number|null, "issue": "what's holding the clicks back", "action": "the one concrete thing to do, phrased as an instruction", "leverage": "high" | "low" } ],
+  "plays": [ { "target": "the query or intent", "kind": "meta" | "content", "entityType": "product" | "category" | "collection" | "page", "entityRef": "exact product name, or category/collection slug, or page path", "position": number|null, "impressions": number|null, "issue": "what's holding the clicks back", "action": "the one concrete instruction", "leverage": "high" | "low" } ],
   "lesson": "OPTIONAL: one short, durable rule for the other agents about what is ranking and what to lean into (e.g. 'Pillowcase colour-name queries are our fastest-ranking foothold — keep colour in titles'). Omit if nothing durable yet."
 }
-Give at most 5 plays, highest leverage first.`;
+Give at most 6 plays, highest leverage first, one per entity.`;
 
 async function run() {
   if (!process.env.DEEPSEEK_API_KEY) {
@@ -77,7 +86,7 @@ async function run() {
     }];
   }
 
-  const { perf, opps, products, missingMeta } = await gatherContext();
+  const { perf, opps, products, categories, collections, missingMeta } = await gatherContext();
   const impressions = perf?.totals?.impressions || 0;
   if (!perf || impressions === 0) {
     return [{
@@ -99,8 +108,10 @@ async function run() {
     `TOP PAGES (where impressions/clicks land — read these for "seen but not clicked"):`,
     (perf.topPages || []).length ? perf.topPages.map(p => `- ${p.key.replace(/^https?:\/\/[^/]+/, '') || '/'} — ${p.impressions} imp, ${p.clicks} clk`).join('\n') : '- none yet',
     ``,
-    `CATALOGUE (active products you can map queries onto): ${products.map(p => p.name).slice(0, 30).join(', ') || 'none'}.`,
-    missingMeta.length ? `PRODUCTS MISSING META (a query that maps to one of these is competing with one hand tied — flag to generate SEO): ${missingMeta.slice(0, 12).join(', ')}.` : 'All active products have meta titles/descriptions.',
+    `PRODUCTS (entityType "product" — use the exact name as entityRef): ${products.map(p => p.name).slice(0, 30).join(', ') || 'none'}.`,
+    `CATEGORIES (entityType "category" — use the slug as entityRef): ${categories.map(c => `${c.slug} (${c.label})`).join(', ') || 'none'}.`,
+    `COLLECTIONS (entityType "collection" — use the slug as entityRef): ${collections.map(c => `${c.slug} (${c.name})`).join(', ') || 'none'}.`,
+    missingMeta.length ? `PRODUCTS MISSING META (competing one-handed — prioritise a "meta" play): ${missingMeta.slice(0, 12).join(', ')}.` : 'All active products have meta.',
     learned,
     ``,
     `Read the picture and return the ranked plan as JSON.`,
@@ -118,7 +129,17 @@ async function run() {
     return [{ type: 'info', title: 'Hermes couldn\'t reach the AI this run — will map again next cycle', status: 'info' }];
   }
 
-  const plays = (Array.isArray(parsed.plays) ? parsed.plays : []).filter(p => p && (p.target || p.page)).slice(0, 5);
+  // Keep one play per entity (Hermes is told to dedupe, but enforce it too).
+  const seen = new Set();
+  const plays = (Array.isArray(parsed.plays) ? parsed.plays : [])
+    .filter(p => p && (p.target || p.entityRef))
+    .filter(p => {
+      const key = `${String(p.entityType || '').toLowerCase()}:${String(p.entityRef || p.target || '').toLowerCase().trim()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 6);
 
   // Teach the Playbook what's ranking, so the Content Writer leans into it.
   if (parsed.lesson) await addLearning(String(parsed.lesson)).catch(() => {});
@@ -136,14 +157,24 @@ async function run() {
 
   return plays.map(p => {
     const high = String(p.leverage).toLowerCase() === 'high';
+    const kind = String(p.kind || '').toLowerCase() === 'content' ? 'content' : 'meta';
+    const entityType = ['product', 'category', 'collection', 'page'].includes(String(p.entityType || '').toLowerCase())
+      ? String(p.entityType).toLowerCase() : 'page';
+    const entityRef = String(p.entityRef || '').trim();
     const pos = p.position != null ? ` (pos ${p.position}${p.impressions != null ? `, ${p.impressions} imp` : ''})` : '';
     return {
       type: 'seo',
-      title: `Hermes: ${String(p.target || p.page).slice(0, 80)}`,
-      detail: `${p.issue || ''}${pos}${p.page ? ` · Page: ${p.page}` : ''} · Do this: ${p.action || 'improve this page for the query'}`,
-      href: '/admin/products',
+      title: `Hermes: ${String(p.target || entityRef).slice(0, 80)}`,
+      detail: `${p.issue || ''}${pos}${entityRef ? ` · ${entityType}: ${entityRef}` : ''} · Do this: ${p.action || 'improve this page for the query'}`,
+      href: '/admin/seo',
       status: high ? 'needs_approval' : 'info',
-      meta: { target: p.target || '', page: p.page || '', position: p.position ?? null, impressions: p.impressions ?? null, leverage: high ? 'high' : 'low' },
+      // Structured so the Rebuild SEO pipeline can execute the plan.
+      meta: {
+        kind, entityType, entityRef,
+        target: p.target || '', action: p.action || '',
+        position: p.position ?? null, impressions: p.impressions ?? null,
+        leverage: high ? 'high' : 'low',
+      },
     };
   });
 }

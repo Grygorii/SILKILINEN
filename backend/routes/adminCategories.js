@@ -183,6 +183,7 @@ router.post('/:id/generate-seo', aiRateLimit, async (req, res) => {
       name: req.body.label || category.label,
       description: req.body.description || category.description || '',
       items: items.map(p => p.name),
+      guidance: req.body.guidance || '',
     });
 
     res.json({

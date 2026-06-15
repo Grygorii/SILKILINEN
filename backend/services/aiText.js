@@ -88,6 +88,9 @@ function buildSEOUserPrompt(input) {
         `Work the primary keyword into the meta title naturally, the others into the description. Keep ALL of these in your keywords output. Do not stuff or break voice.`,
       );
     }
+    if (input.guidance) {
+      parts.push(``, `SPECIFIC GOAL (from the search-performance analysis — make the meta serve exactly this): ${input.guidance}`);
+    }
     parts.push(
       ``,
       `Note: this page's URL slug is fixed — return the existing slug unchanged if given, else an empty string. Focus on the meta title, meta description and keywords.`,
@@ -119,6 +122,9 @@ function buildSEOUserPrompt(input) {
     );
   }
 
+  if (input.guidance) {
+    parts.push(``, `SPECIFIC GOAL (from the search-performance analysis — make the meta serve exactly this): ${input.guidance}`);
+  }
   parts.push(``, `Return the JSON response now.`);
   return parts.join('\n');
 }
