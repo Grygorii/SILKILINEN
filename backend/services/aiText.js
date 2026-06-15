@@ -175,8 +175,11 @@ async function generateSEO(input) {
     const keywords = [...new Set([...targets, ...generated])].slice(0, 10);
 
     return {
-      metaTitle:       parsed.metaTitle,
-      metaDescription: parsed.metaDescription,
+      // Clamp at the source to the schema limits (Product/Category/Collection
+      // all cap metaTitle 70 / metaDescription 165). The AI sometimes overruns;
+      // without this the save throws a ValidationError ("Apply failed").
+      metaTitle:       String(parsed.metaTitle).slice(0, 70),
+      metaDescription: String(parsed.metaDescription).slice(0, 165),
       slug:            parsed.slug            || '',
       keywords,
       altTextTemplate: parsed.altTextTemplate || '',

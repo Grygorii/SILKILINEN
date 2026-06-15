@@ -91,7 +91,10 @@ export default function RebuildSeoModal({ onClose }: { onClose: () => void }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ metaTitle: draft.metaTitle, metaDescription: draft.metaDescription }),
       });
-      if (!res.ok) throw new Error('Apply failed');
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || `Apply failed (HTTP ${res.status})`);
+      }
     }
 
     async function draftCopy(entityType: string, id: string, guidance: string): Promise<string> {
