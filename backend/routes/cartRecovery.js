@@ -1,15 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
+const { verify: verifyUnsub } = require('../utils/unsubscribeSign');
 
-// GET /api/cart-recovery/unsubscribe?oid=<base64url-orderId>
-// One-click unsubscribe from cart recovery emails for this order.
+// GET /api/cart-recovery/unsubscribe?oid=<base64url-orderId>&sig=<hmac>
+// One-click unsubscribe from cart recovery emails for this order. The HMAC sig
+// makes the link unforgeable so nobody can unsubscribe another customer's order.
 router.get('/unsubscribe', async function(req, res) {
   try {
-    const { oid } = req.query;
-    if (!oid) return res.status(400).send('Missing order reference.');
+    const { oid, sig } = req.query;
+    if (typeof oid !== 'string' || !oid) return res.status(400).send('Missing order reference.');
 
     const orderId = Buffer.from(oid, 'base64url').toString('utf8');
+    if (!verifyUnsub(orderId, sig)) return res.status(403).send('This link is invalid.');
     const order = await Order.findById(orderId).select('_id recoveryUnsubscribed');
     if (!order) return res.status(404).send('Order not found.');
 
