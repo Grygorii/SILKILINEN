@@ -168,6 +168,7 @@ app.use('/api/ai-photos', aiPhotosRoutes);
 app.use('/api/customers', customersRoutes);
 app.use('/api/promo-codes', promoCodesRoutes);
 app.use('/api/content', contentRoutes);
+app.use('/api/shipping', require('./routes/shipping'));
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/admin/categories', adminCategoriesRoutes);
 app.use('/api/admin/site-audit', siteAuditRoutes);

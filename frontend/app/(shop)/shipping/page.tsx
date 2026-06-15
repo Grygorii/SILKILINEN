@@ -6,7 +6,35 @@ export const metadata = {
   description: 'Shipping rates, delivery times, and free shipping thresholds for SILKILINEN. Ships worldwide from Donegal, Ireland.',
 };
 
-export default function ShippingPage() {
+type Tier = { label: string; cost: number; freeThreshold: number; deliveryMin: number; deliveryMax: number };
+
+// Fallback mirrors the current live defaults, so the page renders correctly
+// even if the rates API is briefly unreachable.
+const FALLBACK: Tier[] = [
+  { label: 'Ireland', cost: 4.99, freeThreshold: 150, deliveryMin: 3, deliveryMax: 5 },
+  { label: 'United Kingdom', cost: 14.99, freeThreshold: 150, deliveryMin: 3, deliveryMax: 5 },
+  { label: 'Europe', cost: 9.99, freeThreshold: 150, deliveryMin: 5, deliveryMax: 10 },
+  { label: 'US / Canada / Australia', cost: 14.99, freeThreshold: 150, deliveryMin: 7, deliveryMax: 14 },
+  { label: 'Worldwide', cost: 19.99, freeThreshold: 150, deliveryMin: 10, deliveryMax: 21 },
+];
+
+// Region display name + any editorial suffix the page has always shown.
+const DISPLAY: Record<string, string> = { Worldwide: 'Rest of world' };
+const DELIVERY_NOTE: Record<string, string> = { 'United Kingdom': ' (from Derry, no customs)' };
+
+async function getRates(): Promise<Tier[]> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/shipping`, { next: { revalidate: 300 } });
+    if (!res.ok) return FALLBACK;
+    const data = await res.json();
+    return Array.isArray(data.tiers) && data.tiers.length ? data.tiers : FALLBACK;
+  } catch {
+    return FALLBACK;
+  }
+}
+
+export default async function ShippingPage() {
+  const tiers = await getRates();
   return (
     <main className={styles.page}>
       <div className={styles.inner}>
@@ -45,36 +73,14 @@ export default function ShippingPage() {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>Ireland</td>
-                  <td>€4.99</td>
-                  <td>€150</td>
-                  <td>3–5 business days</td>
-                </tr>
-                <tr>
-                  <td>United Kingdom</td>
-                  <td>€14.99</td>
-                  <td>€150</td>
-                  <td>3–5 business days (from Derry, no customs)</td>
-                </tr>
-                <tr>
-                  <td>Europe</td>
-                  <td>€9.99</td>
-                  <td>€150</td>
-                  <td>5–10 business days</td>
-                </tr>
-                <tr>
-                  <td>US / Canada / Australia</td>
-                  <td>€14.99</td>
-                  <td>€150</td>
-                  <td>7–14 business days</td>
-                </tr>
-                <tr>
-                  <td>Rest of world</td>
-                  <td>€19.99</td>
-                  <td>€150</td>
-                  <td>10–21 business days</td>
-                </tr>
+                {tiers.map(t => (
+                  <tr key={t.label}>
+                    <td>{DISPLAY[t.label] || t.label}</td>
+                    <td>€{t.cost.toFixed(2)}</td>
+                    <td>€{t.freeThreshold}</td>
+                    <td>{t.deliveryMin}–{t.deliveryMax} business days{DELIVERY_NOTE[t.label] || ''}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
