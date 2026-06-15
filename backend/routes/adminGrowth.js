@@ -13,6 +13,7 @@ const CEOBrief = require('../models/CEOBrief');
 const { getNorthStar, setNorthStar, northStarStatus, generateBrief, runChiefIfDue, METRICS } = require('../services/chiefOfStaff');
 const { unleashDaVinci, latestComposition } = require('../services/davinci');
 const { runSelfTest } = require('../services/selfTest');
+const { getQueryOpportunities } = require('../services/searchConsole');
 
 // Da Vinci runs the orchestra — its own tight limit so it can't be hammered.
 const davinciLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false });
@@ -50,6 +51,12 @@ router.get('/hermes-plan', async function(req, res) {
       agent: 'hermes', type: 'seo', 'meta.entityType': { $exists: true },
     }).sort({ createdAt: -1 }).limit(20).lean();
 
+    // The Clerks' check, applied to Hermes' plan before you execute it:
+    // Reasoning — is the cited query actually in current Search Console?
+    // (live GSC queries, lowercased). Fails soft: thin signal → skip the check.
+    const liveOpps = await getQueryOpportunities(28).catch(() => []);
+    const liveQueries = (liveOpps || []).map(o => String(o.query || '').toLowerCase());
+
     const seen = new Set();
     const plan = [];
     for (const a of actions) {
@@ -59,16 +66,32 @@ router.get('/hermes-plan', async function(req, res) {
       if (seen.has(key)) continue;
       seen.add(key);
 
+      const warnings = [];
       let entityId = null, slug = null, label = m.entityRef;
       if (m.entityType === 'product') {
-        const p = await Product.findOne({ name: new RegExp(`^${escapeRx(m.entityRef)}$`, 'i') }).select('name').lean();
-        if (p) { entityId = String(p._id); label = p.name; }
+        const p = await Product.findOne({ name: new RegExp(`^${escapeRx(m.entityRef)}$`, 'i') })
+          .select('name status totalStock inStock').lean();
+        if (p) {
+          entityId = String(p._id); label = p.name;
+          // Logic check: don't optimise a sold-out or inactive product.
+          const stocked = p.inStock ?? ((p.totalStock || 0) > 0);
+          if (p.status && p.status !== 'active') warnings.push('product is not active');
+          else if (!stocked) warnings.push('product is out of stock');
+        }
       } else if (m.entityType === 'category') {
         const c = await Category.findOne({ $or: [{ slug: m.entityRef }, { label: m.entityRef }] }).select('slug label').lean();
         if (c) { entityId = String(c._id); slug = c.slug; label = c.label; }
       } else if (m.entityType === 'collection') {
         const c = await Collection.findOne({ $or: [{ slug: m.entityRef }, { name: m.entityRef }] }).select('slug name').lean();
         if (c) { entityId = String(c._id); slug = c.slug; label = c.name; }
+      }
+
+      // Logic check: did the entity actually resolve?
+      if (m.entityType !== 'page' && entityId == null) warnings.push(`couldn't match a ${m.entityType} named "${m.entityRef}"`);
+      // Reasoning check: is the cited query really in current Search Console?
+      const t = String(m.target || '').toLowerCase().trim();
+      if (t && liveQueries.length && !liveQueries.some(q => q === t || q.includes(t) || t.includes(q))) {
+        warnings.push('this query isn’t in current Search Console — verify before acting');
       }
 
       plan.push({
@@ -81,6 +104,9 @@ router.get('/hermes-plan', async function(req, res) {
         leverage: m.leverage || 'low',
         // The pipeline can auto-generate+apply only meta on a resolved entity.
         applicable: m.kind === 'meta' && entityId != null,
+        // The Clerks' verdict on THIS recommendation, before you act on it.
+        verified: warnings.length === 0,
+        warnings,
       });
       if (plan.length >= 12) break;
     }
