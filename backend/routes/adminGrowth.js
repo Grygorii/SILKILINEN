@@ -3,6 +3,9 @@ const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const { requireAuth } = require('../middleware/auth');
 const GrowthAction = require('../models/GrowthAction');
+const Product = require('../models/Product');
+const Category = require('../models/Category');
+const Collection = require('../models/Collection');
 const { runGrowthEngine, setAgentEnabled, describeAgents } = require('../services/growthEngine');
 const { getCompetitors, setCompetitors } = require('../services/competitorIntel');
 const { discoverCompetitors } = require('../services/competitorDiscovery');
@@ -33,6 +36,59 @@ router.get('/', async function(req, res) {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+function escapeRx(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+// GET /api/admin/growth/hermes-plan — Hermes' latest plays resolved into an
+// executable chain for the Rebuild SEO pipeline. Dedupes by entity and resolves
+// each ref to a real product/category/collection id so the pipeline can act.
+router.get('/hermes-plan', async function(req, res) {
+  try {
+    const actions = await GrowthAction.find({
+      agent: 'hermes', type: 'seo', 'meta.entityType': { $exists: true },
+    }).sort({ createdAt: -1 }).limit(20).lean();
+
+    const seen = new Set();
+    const plan = [];
+    for (const a of actions) {
+      const m = a.meta || {};
+      if (!m.entityRef) continue;
+      const key = `${m.entityType}:${String(m.entityRef).toLowerCase().trim()}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      let entityId = null, slug = null, label = m.entityRef;
+      if (m.entityType === 'product') {
+        const p = await Product.findOne({ name: new RegExp(`^${escapeRx(m.entityRef)}$`, 'i') }).select('name').lean();
+        if (p) { entityId = String(p._id); label = p.name; }
+      } else if (m.entityType === 'category') {
+        const c = await Category.findOne({ $or: [{ slug: m.entityRef }, { label: m.entityRef }] }).select('slug label').lean();
+        if (c) { entityId = String(c._id); slug = c.slug; label = c.label; }
+      } else if (m.entityType === 'collection') {
+        const c = await Collection.findOne({ $or: [{ slug: m.entityRef }, { name: m.entityRef }] }).select('slug name').lean();
+        if (c) { entityId = String(c._id); slug = c.slug; label = c.name; }
+      }
+
+      plan.push({
+        ref: String(a._id).slice(-8),
+        kind: m.kind === 'content' ? 'content' : 'meta',
+        entityType: m.entityType,
+        entityId, slug, label,
+        target: m.target || '',
+        action: m.action || a.detail || '',
+        leverage: m.leverage || 'low',
+        // The pipeline can auto-generate+apply only meta on a resolved entity.
+        applicable: m.kind === 'meta' && entityId != null,
+      });
+      if (plan.length >= 12) break;
+    }
+
+    res.json({ plan });
+  } catch (err) {
+    console.error('[growth] hermes-plan error:', err.message);
+    res.status(500).json({ error: 'Could not build the plan.' });
   }
 });
 

@@ -617,6 +617,7 @@ router.post('/:id/generate-seo', aiRateLimit, async function(req, res) {
       colours:             req.body.colours             || product.colours,
       price:               req.body.price               || product.price,
       keywords:            product.keywords             || [],
+      guidance:            req.body.guidance            || '',
     });
 
     res.json({ seo, cost: 0.0005, message: 'SEO generated. Review and save to apply.' });
