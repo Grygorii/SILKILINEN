@@ -14,6 +14,7 @@ const { getNorthStar, setNorthStar, northStarStatus, generateBrief, runChiefIfDu
 const { unleashDaVinci, latestComposition } = require('../services/davinci');
 const { runSelfTest } = require('../services/selfTest');
 const { getQueryOpportunities } = require('../services/searchConsole');
+const { generatePageCopy, AIServiceError } = require('../services/aiText');
 
 // Da Vinci runs the orchestra — its own tight limit so it can't be hammered.
 const davinciLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false });
@@ -115,6 +116,39 @@ router.get('/hermes-plan', async function(req, res) {
   } catch (err) {
     console.error('[growth] hermes-plan error:', err.message);
     res.status(500).json({ error: 'Could not build the plan.' });
+  }
+});
+
+// POST /api/admin/growth/draft-copy — turn a Hermes "content" finding into a
+// real brand-voice paragraph the founder can place (no overwrite). { entityType,
+// entityId, guidance }
+router.post('/draft-copy', runLimit, async function(req, res) {
+  try {
+    const { entityType, entityId, guidance } = req.body || {};
+    let name = '', current = '', items = [];
+    if (entityType === 'product') {
+      const p = await Product.findById(entityId).select('name description').lean();
+      if (!p) return res.status(404).json({ error: 'Not found' });
+      name = p.name; current = p.description || '';
+    } else if (entityType === 'category') {
+      const c = await Category.findById(entityId).select('label slug description').lean();
+      if (!c) return res.status(404).json({ error: 'Not found' });
+      name = c.label; current = c.description || '';
+      items = (await Product.find({ category: c.slug, status: 'active' }).select('name').limit(10).lean()).map(p => p.name);
+    } else if (entityType === 'collection') {
+      const c = await Collection.findById(entityId).select('name description').lean();
+      if (!c) return res.status(404).json({ error: 'Not found' });
+      name = c.name; current = c.description || '';
+      items = (await Product.find({ collections: entityId, status: 'active' }).select('name').limit(10).lean()).map(p => p.name);
+    } else {
+      return res.status(400).json({ error: 'Unsupported entity for copy drafting' });
+    }
+    const { copy } = await generatePageCopy({ kind: entityType, name, current, guidance: guidance || '', items });
+    res.json({ copy });
+  } catch (err) {
+    console.error('[growth] draft-copy error:', err.message);
+    if (err instanceof AIServiceError) return res.status(503).json({ error: 'AI copy drafting is temporarily unavailable.' });
+    res.status(500).json({ error: 'Could not draft copy.' });
   }
 });
 

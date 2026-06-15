@@ -17,7 +17,7 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 //     surfaced as "flagged for you" (a field can't hold them; the Content
 //     Writer / founder actions them).
 
-type Status = 'pending' | 'generating' | 'review' | 'applied' | 'skipped' | 'flagged' | 'error';
+type Status = 'pending' | 'generating' | 'review' | 'applied' | 'skipped' | 'flagged' | 'drafted' | 'error';
 type Draft = { metaTitle: string; metaDescription: string };
 type PlanItem = {
   ref: string;
@@ -33,7 +33,9 @@ type PlanItem = {
   verified: boolean;
   warnings: string[];
 };
-type Block = PlanItem & { status: Status; draft?: Draft; result?: string; error?: string };
+type Block = PlanItem & { status: Status; draft?: Draft; copy?: string; result?: string; error?: string };
+
+const EDITOR: Record<string, string> = { product: 'products', category: 'categories', collection: 'collections' };
 type Decision = 'approve' | 'reject';
 
 const BASE: Record<string, string> = { product: 'products', category: 'categories', collection: 'collections' };
@@ -92,6 +94,17 @@ export default function RebuildSeoModal({ onClose }: { onClose: () => void }) {
       if (!res.ok) throw new Error('Apply failed');
     }
 
+    async function draftCopy(entityType: string, id: string, guidance: string): Promise<string> {
+      const res = await fetch(`${API}/api/admin/growth/draft-copy`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entityType, entityId: id, guidance }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Draft failed');
+      return data.copy || '';
+    }
+
     const plan = await fetchPlan();
     if (cancelled.current) return;
     if (!plan.length) { setPhase('no-plan'); return; }
@@ -100,15 +113,30 @@ export default function RebuildSeoModal({ onClose }: { onClose: () => void }) {
     setBlocks(chain);
     setPhase('running');
 
-    let applied = 0, skipped = 0, flagged = 0, failed = 0;
+    let applied = 0, skipped = 0, flagged = 0, drafted = 0, failed = 0;
     for (let i = 0; i < chain.length; i++) {
       if (cancelled.current) return;
       setActiveIndex(i);
       const b = chain[i];
       try {
         if (!b.applicable || b.kind === 'content' || !b.entityId) {
-          flagged++;
-          patch(i, { status: 'flagged', result: `Flagged for you: ${b.action}` });
+          // Content fix on a resolved entity → write the paragraph Hermes asked
+          // for (a draft you place). Otherwise just flag it.
+          if (b.kind === 'content' && b.entityId && EDITOR[b.entityType]) {
+            patch(i, { status: 'generating', result: 'Writing the copy Hermes asked for…' });
+            try {
+              const copy = await draftCopy(b.entityType, b.entityId, `${b.target ? `Rank for "${b.target}". ` : ''}${b.action}`);
+              if (cancelled.current) return;
+              drafted++;
+              patch(i, { status: 'drafted', copy, result: 'Draft ready — review and place it on the page.' });
+            } catch {
+              flagged++;
+              patch(i, { status: 'flagged', result: `Flagged for you: ${b.action}` });
+            }
+          } else {
+            flagged++;
+            patch(i, { status: 'flagged', result: `Flagged for you: ${b.action}` });
+          }
           continue;
         }
         patch(i, { status: 'generating', result: 'Writing the meta Hermes asked for…' });
@@ -136,6 +164,7 @@ export default function RebuildSeoModal({ onClose }: { onClose: () => void }) {
     setActiveIndex(-1);
     setPhase('done');
     const parts = [`${applied} applied`];
+    if (drafted) parts.push(`${drafted} copy drafts`);
     if (flagged) parts.push(`${flagged} flagged for you`);
     if (skipped) parts.push(`${skipped} skipped`);
     if (failed) parts.push(`${failed} failed`);
@@ -170,7 +199,7 @@ export default function RebuildSeoModal({ onClose }: { onClose: () => void }) {
     if (b.status === 'applied') return styles.nodeDone;
     if (b.status === 'skipped' || b.status === 'error') return styles.nodeSkip;
     if (b.status === 'generating') return styles.nodeRun;
-    if (b.status === 'review' || b.status === 'flagged') return styles.nodeActive;
+    if (b.status === 'review' || b.status === 'flagged' || b.status === 'drafted') return styles.nodeActive;
     return '';
   }
 
@@ -226,6 +255,18 @@ export default function RebuildSeoModal({ onClose }: { onClose: () => void }) {
                       <p className={styles.blockState} style={b.status === 'error' ? { color: '#b03a2e' } : undefined}>
                         {b.error ? `Error: ${b.error}` : b.result}
                       </p>
+                    )}
+                    {b.status === 'drafted' && b.copy && (
+                      <div className={styles.reviewBox}>
+                        <p className={styles.reviewK}>Drafted paragraph (place it on the page)</p>
+                        <p className={styles.reviewV}>{b.copy}</p>
+                        <div className={styles.reviewActions}>
+                          <button className={styles.btn} onClick={() => navigator.clipboard?.writeText(b.copy || '')}>Copy</button>
+                          {EDITOR[b.entityType] && b.entityId && (
+                            <a className={styles.btn} href={`/admin/${EDITOR[b.entityType]}/${b.entityId}`} target="_blank" rel="noopener noreferrer">Open editor →</a>
+                          )}
+                        </div>
+                      </div>
                     )}
                     {b.status === 'review' && b.draft && i === activeIndex && (
                       <div className={styles.reviewBox}>

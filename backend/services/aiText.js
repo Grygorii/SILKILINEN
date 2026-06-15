@@ -188,9 +188,37 @@ async function generateSEO(input) {
   }
 }
 
+// Draft a short on-page paragraph in the brand voice, serving an SEO goal. Used
+// by Rebuild SEO to turn Hermes' "content" findings (add a paragraph) into real
+// words the founder can place — not a field overwrite.
+async function generatePageCopy({ kind = 'page', name, current = '', guidance = '', items = [] }) {
+  if (!process.env.DEEPSEEK_API_KEY) throw new AIServiceError('DEEPSEEK_API_KEY is not set', 'MISSING_KEY');
+  const system = `You are a copywriter for SILKILINEN, a quiet-luxury silk & linen brand. Write ONE short on-page paragraph (40-70 words) for a ${kind} page, in the brand voice: considered, warm, specific about fabric/craft, British English. NEVER claim or imply where a product is made. Never salesy, never clickbait, never a discount mention. Weave the SEO goal in naturally — do NOT stuff keywords. Respond ONLY with valid JSON: { "copy": "the paragraph" }`;
+  const user = [
+    `Page: ${name}`,
+    current ? `Existing copy (improve/extend its spirit, don't contradict it): ${current.slice(0, 500)}` : 'No existing copy yet.',
+    items.length ? `Pieces on this page: ${items.slice(0, 10).join(', ')}` : '',
+    guidance ? `SEO GOAL (make the paragraph serve exactly this): ${guidance}` : '',
+    'Return the JSON.',
+  ].filter(Boolean).join('\n');
+  try {
+    const res = await deepseekClient.chat.completions.create({
+      model: SEO_MODEL,
+      messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+      temperature: 0.7, max_tokens: 300, response_format: { type: 'json_object' },
+    });
+    const parsed = JSON.parse(res.choices[0]?.message?.content || '{}');
+    if (!parsed.copy) throw new AIServiceError('Empty copy from AI provider', 'EMPTY_RESPONSE');
+    return { copy: String(parsed.copy).trim() };
+  } catch (err) {
+    if (err instanceof AIServiceError) throw err;
+    throw new AIServiceError(`AI copy service error: ${err.message}`, 'PROVIDER_ERROR', err);
+  }
+}
+
 // Back-compat wrapper — the product editor and bulk SEO have always called this.
 function generateProductSEO(input) {
   return generateSEO({ ...input, kind: 'product' });
 }
 
-module.exports = { generateSEO, generateProductSEO, AIServiceError };
+module.exports = { generateSEO, generateProductSEO, generatePageCopy, AIServiceError };

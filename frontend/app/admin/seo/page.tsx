@@ -198,9 +198,10 @@ export default function SeoHubPage() {
               <p className={styles.cardTitle}>✦ Rebuild SEO — deliver Hermes&rsquo; plan</p>
               <p className={styles.cardText}>
                 Hermes is the brain; this is the hands. It loads Hermes&rsquo; latest plan and delivers it block by
-                block (the Clerks&rsquo; blockchain line): it writes the exact meta Hermes asked for on each
-                product/category/collection — pausing for your approval before anything goes live — and flags the
-                content fixes (a paragraph, a link) for you. Run Hermes first if there&rsquo;s no plan yet.
+                block (the Clerks&rsquo; blockchain line, each step verified against live data): it writes the exact
+                meta Hermes asked for on each product/category/collection — pausing for your approval before anything
+                goes live — and drafts the paragraph for his content fixes so you just place it. Run Hermes first if
+                there&rsquo;s no plan yet.
               </p>
               <div className={styles.cardActions}>
                 <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => setRebuilding(true)}>
