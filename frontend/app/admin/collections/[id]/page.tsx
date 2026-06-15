@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, use } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import { toast } from '@/lib/adminToast';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
@@ -52,6 +53,7 @@ export default function AdminCollectionEditPage({ params }: { params: Promise<{ 
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [loadError, setLoadError] = useState('');
+  const [generatingSeo, setGeneratingSeo] = useState(false);
 
   // Product assignment state
   const [productSearch, setProductSearch] = useState('');
@@ -86,6 +88,33 @@ export default function AdminCollectionEditPage({ params }: { params: Promise<{ 
   function set(field: keyof Form, value: string | boolean) {
     setForm(f => ({ ...f, [field]: value }));
     setSaved(false);
+  }
+
+  // Approve-first: the AI fills the meta fields; nothing saves until the founder
+  // presses Save. Mirrors the product and category SEO buttons.
+  async function generateSeo() {
+    if (isNew) { toast('Save the collection first, then generate its SEO.', 'error'); return; }
+    setGeneratingSeo(true);
+    try {
+      const res = await fetch(`${API}/api/admin/collections/${id}/generate-seo`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: form.name, description: form.description }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Generation failed');
+      }
+      const { seo } = await res.json();
+      setForm(f => ({ ...f, metaTitle: seo.metaTitle || f.metaTitle, metaDescription: seo.metaDescription || f.metaDescription }));
+      setSaved(false);
+      toast('SEO generated — review, then Save to apply.', 'success');
+    } catch (e: unknown) {
+      toast(e instanceof Error ? e.message : 'Could not generate SEO.', 'error');
+    } finally {
+      setGeneratingSeo(false);
+    }
   }
 
   function handleNameChange(name: string) {
@@ -238,7 +267,19 @@ export default function AdminCollectionEditPage({ params }: { params: Promise<{ 
           </section>
 
           <section className={styles.section}>
-            <h3 className={styles.sectionTitle}>SEO</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <h3 className={styles.sectionTitle} style={{ margin: 0 }}>SEO</h3>
+              <button
+                type="button"
+                className={styles.input}
+                onClick={generateSeo}
+                disabled={generatingSeo || isNew}
+                style={{ cursor: generatingSeo || isNew ? 'default' : 'pointer', width: 'auto', whiteSpace: 'nowrap' }}
+                title={isNew ? 'Save the collection first' : 'Generate a meta title + description in the brand voice'}
+              >
+                {generatingSeo ? 'Generating…' : '✦ Generate SEO'}
+              </button>
+            </div>
             <label className={styles.label}>Meta title <span className={styles.charCount}>{form.metaTitle.length}/70</span></label>
             <input
               className={styles.input}
