@@ -1,4 +1,5 @@
 const { Resend } = require('resend');
+const { sign: signUnsub } = require('../utils/unsubscribeSign');
 
 // Lazily initialised so the module loads without crashing when RESEND_API_KEY is not yet set.
 let _resend = null;
@@ -506,9 +507,10 @@ async function sendCartRecoveryEmail(order, seq) {
     ? `${FRONTEND}/product/${firstProductId}`
     : `${FRONTEND}/shop`;
 
-  // One-click unsubscribe — encode order ID in base64url so it's URL-safe
+  // One-click unsubscribe — encode order ID in base64url and HMAC-sign it so the
+  // link can't be forged or guessed for another customer's order.
   const oidToken = Buffer.from(String(order._id)).toString('base64url');
-  const unsubLink = `${BACKEND}/api/cart-recovery/unsubscribe?oid=${oidToken}`;
+  const unsubLink = `${BACKEND}/api/cart-recovery/unsubscribe?oid=${oidToken}&sig=${signUnsub(order._id)}`;
 
   const itemRows = (order.items || []).map(item => `
     <tr>
