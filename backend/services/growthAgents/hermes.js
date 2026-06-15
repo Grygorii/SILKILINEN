@@ -21,6 +21,7 @@ const OpenAI = require('openai');
 const Product = require('../../models/Product');
 const Category = require('../../models/Category');
 const Collection = require('../../models/Collection');
+const GrowthAction = require('../../models/GrowthAction');
 const { isConnected, getSearchPerformance, getQueryOpportunities } = require('../searchConsole');
 const { addLearning, playbookPromptBlock } = require('../playbook');
 
@@ -31,17 +32,22 @@ const client = new OpenAI({
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
 async function gatherContext() {
-  const [perf, opps, products, categories, collections] = await Promise.all([
+  const [perf, opps, products, categories, collections, demand, competitor] = await Promise.all([
     getSearchPerformance(28).catch(() => null),
     getQueryOpportunities(28).catch(() => []),
     Product.find({ status: 'active' }).select('name category metaTitle metaDescription').lean().catch(() => []),
     Category.find({ status: 'active' }).select('slug label metaTitle metaDescription').lean().catch(() => []),
     Collection.find({ status: 'active' }).select('slug name metaTitle metaDescription').lean().catch(() => []),
+    // OUTWARD intel from the other agents — read through the chain, not invented.
+    GrowthAction.find({ agent: 'demand', type: 'demand_signal' }).sort({ createdAt: -1 }).limit(12).select('title meta').lean().catch(() => []),
+    GrowthAction.find({ agent: 'competitor' }).sort({ createdAt: -1 }).limit(6).select('title').lean().catch(() => []),
   ]);
   const missingMeta = products
     .filter(p => !p.metaTitle || !p.metaDescription)
     .map(p => p.name);
-  return { perf, opps: (opps || []).slice(0, 15), products, categories, collections, missingMeta };
+  const demandPhrases = demand.map(a => a.meta?.phrase || a.title?.replace(/^Demand wave:\s*/, '').replace(/"/g, '')).filter(Boolean);
+  const competitorNotes = competitor.map(a => a.title).filter(Boolean);
+  return { perf, opps: (opps || []).slice(0, 15), products, categories, collections, missingMeta, demandPhrases, competitorNotes };
 }
 
 const SYSTEM = `You are Hermes, the search-performance strategist for SILKILINEN — a quiet-luxury silk & linen house. You read the shop's REAL Google Search Console data and turn it into a short, ranked plan to win more clicks from the search footholds Google already grants. You never invent numbers; you reason only over the figures handed to you.
@@ -51,6 +57,7 @@ How you think, in priority order:
 2. SEEN BUT NOT CLICKED: a page with impressions but no clicks usually has a weak meta title/description for that intent. Recommend rewriting it to earn the click (quiet-luxury voice, never salesy).
 3. NEAR-MISS: position 4-10 — a nudge to reach the top three.
 4. META GAPS: if a query maps to a product with no meta title/description, that page is competing with one hand tied — flag it to generate SEO.
+5. CROSS-REFERENCE THE OTHER AGENTS: you are given OUTWARD intel from the Demand Scout (phrases the world is searching) and the Competitor Scout. Your edge is fusing inward (what you already rank for) with outward (what's rising). A query that is BOTH striking-distance AND matches a rising demand phrase is your single highest-priority move — treat it as high leverage and say why.
 
 Hard rules:
 - QUIET LUXURY: never recommend price/discount/"cheaper than" moves, never clickbait. Aspire upward through specificity and fabric/craft detail.
@@ -86,7 +93,7 @@ async function run() {
     }];
   }
 
-  const { perf, opps, products, categories, collections, missingMeta } = await gatherContext();
+  const { perf, opps, products, categories, collections, missingMeta, demandPhrases, competitorNotes } = await gatherContext();
   const impressions = perf?.totals?.impressions || 0;
   if (!perf || impressions === 0) {
     return [{
@@ -112,6 +119,11 @@ async function run() {
     `CATEGORIES (entityType "category" — use the slug as entityRef): ${categories.map(c => `${c.slug} (${c.label})`).join(', ') || 'none'}.`,
     `COLLECTIONS (entityType "collection" — use the slug as entityRef): ${collections.map(c => `${c.slug} (${c.name})`).join(', ') || 'none'}.`,
     missingMeta.length ? `PRODUCTS MISSING META (competing one-handed — prioritise a "meta" play): ${missingMeta.slice(0, 12).join(', ')}.` : 'All active products have meta.',
+    ``,
+    `OUTWARD INTEL FROM THE OTHER AGENTS (read through the chain — use it, don't ignore it):`,
+    demandPhrases.length ? `- Demand Scout — rising/searched phrases the world wants: ${demandPhrases.slice(0, 12).join('; ')}.` : '- Demand Scout: nothing fresh.',
+    competitorNotes.length ? `- Competitor Scout: ${competitorNotes.slice(0, 4).join(' | ')}.` : '',
+    `CROSS-REFERENCE RULE: if one of your striking-distance queries also appears in (or closely matches) the Demand Scout's rising phrases, RAISE its leverage to "high" and say so in the issue — inward foothold + outward demand is the strongest signal there is.`,
     learned,
     ``,
     `Read the picture and return the ranked plan as JSON.`,
@@ -182,7 +194,7 @@ async function run() {
 module.exports = {
   name: 'hermes',
   label: 'Hermes · Pathfinder',
-  description: 'Reads your real Search Console data and turns it into a ranked plan to win more clicks — striking-distance queries to push onto page one, pages seen but not clicked, and meta gaps. Looks inward (what you already rank for) where the Demand Scout looks outward.',
+  description: 'Reads your real Search Console data and FUSES it with the Demand & Competitor scouts\' intel to rank what to fix — striking-distance queries (extra weight when they also match a rising demand phrase), pages seen but not clicked, and meta gaps. The brain behind the one-button Rebuild SEO.',
   cadenceHours: 72,
   defaultEnabled: true,
   run,
