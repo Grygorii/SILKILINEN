@@ -99,6 +99,10 @@ export default function SearchPerformancePanel() {
                 <Stat label="Avg position" value={data.performance.totals.position.toFixed(1)} />
               </div>
 
+              <p className={styles.healthCheckDetail} style={{ marginTop: -6, marginBottom: 16, fontSize: 12 }}>
+                Finalised figures — these trail Google’s live Search Console view by ~2 days (Google keeps revising the most recent days), so for the same dates the totals here can read slightly lower than the GSC dashboard. The total can also exceed the queries listed: Google hides rare/anonymised queries from the per-query list but still counts them in the total.
+              </p>
+
               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: 220 }}>
                   <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Top queries</p>

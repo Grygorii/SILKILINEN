@@ -158,14 +158,16 @@ async function getSitemapsSummary() {
   return { sitemaps: (data.sitemap || []).length, submitted, indexed };
 }
 
-// GSC data lags ~2-3 days; end the window a few days back so it isn't empty.
+// GSC finalises data ~2 days back (its live UI shows fresher, still-revising
+// figures up to "today"). End the window 2 days back: fresh enough to track the
+// GSC dashboard closely, late enough that the numbers are stable, not wobbling.
 function dateStr(daysAgo) {
   return new Date(Date.now() - daysAgo * 86400000).toISOString().slice(0, 10);
 }
 
 async function getSearchPerformance(days = 28) {
-  const startDate = dateStr(days + 3);
-  const endDate = dateStr(3);
+  const startDate = dateStr(days + 2);
+  const endDate = dateStr(2);
   const base = { startDate, endDate };
 
   const [totals, byQuery, byPage] = await Promise.all([
@@ -195,8 +197,8 @@ async function getSearchPerformance(days = 28) {
 // from nothing.
 async function getQueryOpportunities(days = 28) {
   const body = {
-    startDate: dateStr(days + 3),
-    endDate: dateStr(3),
+    startDate: dateStr(days + 2),
+    endDate: dateStr(2),
     dimensions: ['query'],
     rowLimit: 25,
   };
