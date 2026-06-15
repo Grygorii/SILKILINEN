@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
+const { aiLimit } = require('../middleware/rateLimiters');
 const Campaign = require('../models/Campaign');
 const Order = require('../models/Order');
 const Visit = require('../models/Visit');
@@ -177,7 +178,7 @@ router.get('/dashboard', requireAuth, async (req, res) => {
 
 // ── POST /api/admin/marketing/analysis/regenerate ────────────────────────────
 
-router.post('/analysis/regenerate', requireAuth, async (req, res) => {
+router.post('/analysis/regenerate', requireAuth, aiLimit, async (req, res) => {
   try {
     const doc = await generateAnalysis();
     res.json({ bullets: doc.bullets, founderBullets: doc.founderBullets, generatedAt: doc.generatedAt });

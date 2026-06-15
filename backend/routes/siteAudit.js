@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
+const { aiLimit } = require('../middleware/rateLimiters');
 const SiteAudit = require('../models/SiteAudit');
 const { runAudit } = require('../services/auditAgents');
 
-router.post('/', requireAuth, async function(req, res) {
+router.post('/', requireAuth, aiLimit, async function(req, res) {
   try {
     const audit = await SiteAudit.create({ triggeredBy: req.user?.email || 'admin' });
     // Fire-and-forget — don't await
