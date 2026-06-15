@@ -146,6 +146,11 @@ app.use('/api/webhook', webhookRouter);
 
 app.use(express.json());
 
+// Strip Mongo operator/dotted keys from every JSON body — neutralises the
+// NoSQL operator-injection class (e.g. {"token":{"$gt":""}}) before it reaches
+// any query. Runs right after the body is parsed, before any route.
+app.use(require('./middleware/sanitize').sanitizeBody);
+
 // CSRF defence: require a custom header on every write. See middleware/csrf.js.
 const { csrf } = require('./middleware/csrf');
 app.use(csrf);

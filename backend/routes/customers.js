@@ -76,7 +76,7 @@ router.post('/request-magic-link', authRateLimit, async function(req, res) {
 router.post('/verify-magic-link', authRateLimit, async function(req, res) {
   try {
     const { token } = req.body;
-    if (!token) return res.status(400).json({ error: 'Token required' });
+    if (typeof token !== 'string' || !token) return res.status(400).json({ error: 'Token required' });
 
     const customer = await Customer.findOne({
       emailVerificationToken: token,

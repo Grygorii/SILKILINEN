@@ -189,13 +189,19 @@ router.get('/', async function(req, res) {
       return res.json(await attachRatings(products));
     }
 
-    if (category) filter.category = category;
+    if (category) filter.category = String(category);
     // Storefront "New Arrivals" — admin-flagged products only.
     if (isNew === 'true') filter.isNewArrival = true;
-    if (q) filter.$or = [
-      { name: { $regex: q, $options: 'i' } },
-      { description: { $regex: q, $options: 'i' } },
-    ];
+    if (q) {
+      // Coerce + escape: a query value can arrive as an object ({$ne:…}) or a
+      // regex-special string; escaping prevents both operator injection and a
+      // ReDoS via a crafted pattern against the unindexed description field.
+      const safe = String(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      filter.$or = [
+        { name: { $regex: safe, $options: 'i' } },
+        { description: { $regex: safe, $options: 'i' } },
+      ];
+    }
     let query = Product.find(filter).lean();
     if (sort === '-createdAt') query = query.sort({ createdAt: -1 });
     if (limit) query = query.limit(parseInt(limit, 10));
