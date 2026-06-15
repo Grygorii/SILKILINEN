@@ -1,5 +1,14 @@
 const { Resend } = require('resend');
 const { sign: signUnsub } = require('../utils/unsubscribeSign');
+const { getSiteSettings } = require('./siteSettings');
+
+// Editable business details / welcome offer, read at send time so a change in
+// admin (Business & offers) flows into the emails too — and the welcome email's
+// "% off" always matches the discount the signup actually issues.
+const supportEmail = () => getSiteSettings().supportEmail;
+const brandLocation = () => getSiteSettings().brandLocation;
+const offerPct = () => getSiteSettings().welcomeOfferPercent;
+const offerCode = () => getSiteSettings().welcomeOfferCode;
 
 // Lazily initialised so the module loads without crashing when RESEND_API_KEY is not yet set.
 let _resend = null;
@@ -137,8 +146,8 @@ function buildHtml({ order, isAdmin }) {
           <!-- Footer -->
           <tr>
             <td style="background:#f0ede8;padding:24px 40px;text-align:center;">
-              <p style="margin:0 0 6px;font-size:12px;color:#8a8680;">Questions? Email us at <a href="mailto:hello@silkilinen.com" style="color:#1a1916;text-decoration:underline;">hello@silkilinen.com</a></p>
-              <p style="margin:0;font-size:11px;color:#aca8a2;">Donegal, Ireland &nbsp;·&nbsp; Worldwide shipping</p>
+              <p style="margin:0 0 6px;font-size:12px;color:#8a8680;">Questions? Email us at <a href="mailto:${supportEmail()}" style="color:#1a1916;text-decoration:underline;">${supportEmail()}</a></p>
+              <p style="margin:0;font-size:11px;color:#aca8a2;">${brandLocation()} &nbsp;·&nbsp; Worldwide shipping</p>
             </td>
           </tr>
 
@@ -194,7 +203,7 @@ async function sendMagicLink({ email, link }) {
 <p style="margin:36px 0 0;font-size:11px;color:#8a8680;">If you didn't request this, you can safely ignore this email.</p>
 </td></tr>
 <tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
-<p style="margin:0;font-size:11px;color:#aca8a2;">Donegal, Ireland &nbsp;·&nbsp; hello@silkilinen.com</p>
+<p style="margin:0;font-size:11px;color:#aca8a2;">${brandLocation()} &nbsp;·&nbsp; ${supportEmail()}</p>
 </td></tr>
 </table></td></tr></table></body></html>`,
   });
@@ -219,11 +228,11 @@ async function sendWelcome({ email, firstName }) {
 <tr><td style="background:#faf8f4;padding:48px 40px;">
 <p style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1916;">Welcome, ${name}</p>
 <p style="margin:0 0 24px;font-size:13px;color:#5a5650;line-height:1.8;">Thank you for joining SILKILINEN. We're an Irish silk and linen brand based in Donegal, choosing pure natural fibres for the pieces closest to your skin — made to be worn, felt, and loved.</p>
-<p style="margin:0 0 36px;font-size:13px;color:#5a5650;line-height:1.8;">As a welcome gift, use code <strong style="color:#1a1916;letter-spacing:1px;">SILK10</strong> at checkout for 10% off your first order.</p>
+<p style="margin:0 0 36px;font-size:13px;color:#5a5650;line-height:1.8;">As a welcome gift, use code <strong style="color:#1a1916;letter-spacing:1px;">${offerCode()}</strong> at checkout for ${offerPct()}% off your first order.</p>
 <a href="https://silkilinen.com/shop" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Shop the collection</a>
 </td></tr>
 <tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
-<p style="margin:0;font-size:11px;color:#aca8a2;">Donegal, Ireland &nbsp;·&nbsp; hello@silkilinen.com</p>
+<p style="margin:0;font-size:11px;color:#aca8a2;">${brandLocation()} &nbsp;·&nbsp; ${supportEmail()}</p>
 </td></tr>
 </table></td></tr></table></body></html>`,
   });
@@ -239,7 +248,7 @@ async function sendWinbackReminder({ email, firstName }) {
   await getResend().emails.send({
     from: FROM,
     to: email,
-    subject: 'We saved your spot — 10% off when you’re ready',
+    subject: `We saved your spot — ${offerPct()}% off when you’re ready`,
     html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:40px 16px;">
@@ -252,11 +261,11 @@ async function sendWinbackReminder({ email, firstName }) {
 <tr><td style="background:#faf8f4;padding:48px 40px;">
 <p style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1916;">We’ve missed you, ${esc(name)}</p>
 <p style="margin:0 0 24px;font-size:13px;color:#5a5650;line-height:1.8;">It’s been a little while. We're still here in Donegal with the same considered silk and linen pieces you know — and a few quiet new ones have arrived since you last visited.</p>
-<p style="margin:0 0 36px;font-size:13px;color:#5a5650;line-height:1.8;">If you’d like to treat yourself, your <strong style="color:#1a1916;letter-spacing:1px;">SILK10</strong> code is still good for 10% off whenever you’re ready.</p>
+<p style="margin:0 0 36px;font-size:13px;color:#5a5650;line-height:1.8;">If you’d like to treat yourself, your <strong style="color:#1a1916;letter-spacing:1px;">${offerCode()}</strong> code is still good for ${offerPct()}% off whenever you’re ready.</p>
 <a href="https://silkilinen.com/shop" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">See what's new</a>
 </td></tr>
 <tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
-<p style="margin:0;font-size:11px;color:#aca8a2;">Donegal, Ireland &nbsp;·&nbsp; hello@silkilinen.com</p>
+<p style="margin:0;font-size:11px;color:#aca8a2;">${brandLocation()} &nbsp;·&nbsp; ${supportEmail()}</p>
 </td></tr>
 </table></td></tr></table></body></html>`,
   });
@@ -288,8 +297,8 @@ ${trackingBlock || ''}
 <a href="${FRONTEND}/account/orders" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">View your order</a>
 </td></tr>
 <tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
-<p style="margin:0 0 6px;font-size:12px;color:#8a8680;">Questions? <a href="mailto:hello@silkilinen.com" style="color:#1a1916;text-decoration:underline;">hello@silkilinen.com</a></p>
-<p style="margin:0;font-size:11px;color:#aca8a2;">Donegal, Ireland &nbsp;·&nbsp; Worldwide shipping</p>
+<p style="margin:0 0 6px;font-size:12px;color:#8a8680;">Questions? <a href="mailto:${supportEmail()}" style="color:#1a1916;text-decoration:underline;">${supportEmail()}</a></p>
+<p style="margin:0;font-size:11px;color:#aca8a2;">${brandLocation()} &nbsp;·&nbsp; Worldwide shipping</p>
 </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -379,7 +388,7 @@ async function sendNewsletterWelcome({ email, code, validUntil, unsubscribeToken
   await getResend().emails.send({
     from: FROM,
     to: email,
-    subject: 'Welcome to SILKILINEN — your 10% off is inside',
+    subject: `Welcome to SILKILINEN — your ${offerPct()}% off is inside`,
     html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:40px 16px;">
@@ -392,18 +401,18 @@ async function sendNewsletterWelcome({ email, code, validUntil, unsubscribeToken
 <tr><td style="background:#faf8f4;padding:48px 40px;">
 <p style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1916;">Welcome.</p>
 <p style="margin:0 0 24px;font-size:13px;color:#5a5650;line-height:1.8;">Thank you for joining us. We're a small Irish brand based in Donegal, working in silk and linen, in considered batches.</p>
-<p style="margin:0 0 28px;font-size:13px;color:#5a5650;line-height:1.8;">Your first order has 10% off. Use this code at checkout:</p>
+<p style="margin:0 0 28px;font-size:13px;color:#5a5650;line-height:1.8;">Your first order has ${offerPct()}% off. Use this code at checkout:</p>
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
 <tr><td style="background:#f0ede8;border-left:3px solid #1a1916;padding:20px 24px;text-align:center;">
 <p style="margin:0;font-family:Georgia,serif;font-size:28px;letter-spacing:6px;font-weight:600;color:#1a1916;">${esc(code)}</p>
-<p style="margin:8px 0 0;font-size:12px;color:#8a8680;letter-spacing:1px;">10% off · 1 use · valid until ${expires}</p>
+<p style="margin:8px 0 0;font-size:12px;color:#8a8680;letter-spacing:1px;">${offerPct()}% off · 1 use · valid until ${expires}</p>
 </td></tr>
 </table>
 <a href="${FRONTEND}/shop" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Shop the collection</a>
-<p style="margin:40px 0 0;font-size:13px;color:#5a5650;line-height:1.8;">Slowly,<br>SILKILINEN<br><a href="mailto:hello@silkilinen.com" style="color:#1a1916;">hello@silkilinen.com</a></p>
+<p style="margin:40px 0 0;font-size:13px;color:#5a5650;line-height:1.8;">Slowly,<br>SILKILINEN<br><a href="mailto:${supportEmail()}" style="color:#1a1916;">${supportEmail()}</a></p>
 </td></tr>
 <tr><td style="background:#f0ede8;padding:20px 40px;text-align:center;">
-<p style="margin:0;font-size:11px;color:#aca8a2;">Donegal, Ireland &nbsp;·&nbsp; Worldwide shipping &nbsp;·&nbsp; <a href="${unsubLink}" style="color:#aca8a2;">Unsubscribe</a></p>
+<p style="margin:0;font-size:11px;color:#aca8a2;">${brandLocation()} &nbsp;·&nbsp; Worldwide shipping &nbsp;·&nbsp; <a href="${unsubLink}" style="color:#aca8a2;">Unsubscribe</a></p>
 </td></tr>
 </table></td></tr></table></body></html>`,
   });
@@ -464,7 +473,7 @@ ${messageBlock}
 </table>
 </td></tr>
 <tr><td style="background:#f0ede8;padding:20px 40px;text-align:center;">
-<p style="margin:0;font-size:11px;color:#aca8a2;">Donegal, Ireland &nbsp;·&nbsp; Worldwide shipping</p>
+<p style="margin:0;font-size:11px;color:#aca8a2;">${brandLocation()} &nbsp;·&nbsp; Worldwide shipping</p>
 </td></tr>
 </table>
 </td></tr></table>
@@ -556,8 +565,8 @@ ${itemRows}
 <p style="margin:0;font-size:13px;color:#8a8680;line-height:1.8;">Slowly,<br>SILKILINEN</p>
 </td></tr>
 <tr><td style="background:#f0ede8;padding:20px 40px;text-align:center;">
-<p style="margin:0 0 6px;font-size:12px;color:#8a8680;">Questions? <a href="mailto:hello@silkilinen.com" style="color:#1a1916;text-decoration:underline;">hello@silkilinen.com</a></p>
-<p style="margin:0;font-size:11px;color:#aca8a2;">Donegal, Ireland &nbsp;·&nbsp; <a href="${unsubLink}" style="color:#aca8a2;text-decoration:underline;">Unsubscribe</a></p>
+<p style="margin:0 0 6px;font-size:12px;color:#8a8680;">Questions? <a href="mailto:${supportEmail()}" style="color:#1a1916;text-decoration:underline;">${supportEmail()}</a></p>
+<p style="margin:0;font-size:11px;color:#aca8a2;">${brandLocation()} &nbsp;·&nbsp; <a href="${unsubLink}" style="color:#aca8a2;text-decoration:underline;">Unsubscribe</a></p>
 </td></tr>
 </table>
 </td></tr></table>
