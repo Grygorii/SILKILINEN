@@ -34,6 +34,19 @@ function uploadBuffer(buffer, options) {
 
 router.use(requireAuth);
 
+// ── POST /generate — write a masterpiece draft from the agents' intelligence ──
+const { aiLimit } = require('../middleware/rateLimiters');
+const { generateMasterpiece } = require('../services/journalWriter');
+router.post('/generate', aiLimit, async (req, res) => {
+  try {
+    const result = await generateMasterpiece({ topic: req.body?.topic });
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    console.error('[journal generate] error:', err.message);
+    res.status(503).json({ error: err.message || 'Could not generate an article — try again in a moment.' });
+  }
+});
+
 // ── GET / — list all articles ──────────────────────────────────────────────────
 router.get('/', async (req, res) => {
   try {
