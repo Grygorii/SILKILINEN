@@ -462,6 +462,8 @@ async function generateBriefCore() {
     '',
     `RECENT ENGINE ACTIVITY: ${recentActions.map(a => `${a.agent}:${a.type}`).join(', ')}`,
     '',
+    `HERMES' SEO READ (the search-performance strategist's latest plays — what we already rank for and how to win more clicks): ${recentActions.filter(a => a.agent === 'hermes').map(a => a.title).slice(0, 4).join(' | ') || 'nothing mapped yet'}`,
+    '',
     clerks ? `CLERKS' VERDICT (the Logic Clerk audited the agents' output as a chain; the Reasoning Clerk fact-checked it against live web evidence): ${clerks.line} Take this seriously — if the chain has broken links or claims were flagged as unproven, do NOT build a confident story on the flagged material; treat it as suspect.` : '',
     '',
     `COMPETITOR / STOREFRONT INTEL (for buildIdeas): ${ideas.length ? ideas.map(i => `[${i.agent}] ${i.title} — ${i.detail}`).join(' || ') : 'none gathered yet'}`,

@@ -29,6 +29,7 @@ const AGENTS = [
   require('./growthAgents/contentWriter'),
   require('./growthAgents/socialDrafter'),
   require('./growthAgents/newsletterDrafter'),
+  require('./growthAgents/hermes'),
   require('./growthAgents/watchdog'),
   // The clerks run LAST — they audit and fact-check everything the agents
   // above just produced. Order matters: within one pulse the engine writes
