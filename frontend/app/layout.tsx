@@ -8,6 +8,7 @@ import UTMCapture from "@/components/UTMCapture";
 import GoogleAuthProvider from "@/components/GoogleAuthProvider";
 import CsrfFetchPatch from "@/components/CsrfFetchPatch";
 import { CartProvider } from "@/context/CartContext";
+import { safeJsonLd } from "@/lib/safeJsonLd";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { CustomerProvider } from "@/context/CustomerContext";
 import { CookieConsentProvider } from "@/context/CookieConsentContext";
@@ -203,11 +204,11 @@ export default async function RootLayout({
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(orgJsonLd) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteJsonLd) }}
         />
       </head>
       <body>

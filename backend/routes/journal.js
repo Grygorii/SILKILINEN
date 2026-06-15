@@ -38,7 +38,7 @@ router.get('/preview', async (req, res) => {
   try {
     const { token } = req.query;
     if (!token) return res.status(400).json({ error: 'Token required' });
-    const payload = jwt.verify(String(token), process.env.JWT_SECRET);
+    const payload = jwt.verify(String(token), process.env.JWT_SECRET, { algorithms: ['HS256'] });
     if (payload.type !== 'journal_preview') return res.status(401).json({ error: 'Invalid token' });
     const article = await JournalArticle.findById(payload.articleId).lean();
     if (!article) return res.status(404).json({ error: 'Not found' });
