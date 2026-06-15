@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Button from './ui/Button';
 import styles from './EmailCapturePopup.module.css';
-import { useSiteSettings } from '@/lib/settings';
+import { useSiteSettings } from '@/lib/useSiteSettings';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 const STORAGE_KEY = 'slk_nl_dismissed';

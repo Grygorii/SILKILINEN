@@ -4,6 +4,7 @@ import CookiePreferencesLink from './CookiePreferencesLink';
 import FooterMobileNav from './FooterMobileNav';
 import GoogleReviewsBadge from './GoogleReviewsBadge';
 import { isValidSocialUrl } from '@/lib/socialUrl';
+import { getSiteSettings } from '@/lib/settings';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -49,6 +50,7 @@ async function getFooterCategories(): Promise<{ slug: string; label: string; cou
 export default async function Footer() {
   const socialPlatforms = (await getSocialPlatforms()).filter(p => isValidSocialUrl(p.url));
   const shopCategories = (await getFooterCategories()).filter(c => c.count > 0).slice(0, 6);
+  const { supportEmail, brandTagline, brandLocation } = await getSiteSettings();
   const socialRow = socialPlatforms.length > 0 ? (
     <div className={styles.socialRow}>
       {socialPlatforms.map(p => (
@@ -72,10 +74,10 @@ export default async function Footer() {
       <div className={styles.inner}>
         <div className={styles.brand}>
           <h3>SILKILINEN</h3>
-          <p>Pure silk &amp; linen intimates,<br />shipped worldwide from Donegal.</p>
+          <p>{brandTagline},<br />shipped worldwide from Donegal.</p>
           <p className={styles.address}>
-            Donegal, Ireland<br />
-            <a href="mailto:hello@silkilinen.com">hello@silkilinen.com</a>
+            {brandLocation}<br />
+            <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
           </p>
           {socialRow}
         </div>
@@ -107,10 +109,10 @@ export default async function Footer() {
       {/* Mobile brand — hidden on desktop */}
       <div className={styles.mobileBrand}>
         <h3>SILKILINEN</h3>
-        <p>Pure silk &amp; linen intimates,<br />shipped worldwide from Donegal.</p>
+        <p>{brandTagline},<br />shipped worldwide from Donegal.</p>
         <p className={styles.address}>
-          Donegal, Ireland<br />
-          <a href="mailto:hello@silkilinen.com">hello@silkilinen.com</a>
+          {brandLocation}<br />
+          <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
         </p>
         {socialRow}
       </div>
