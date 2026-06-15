@@ -53,6 +53,7 @@ const NAV: NavEntry[] = [
   { label: 'Reports',    href: '/admin/finance/reports',   icon: BookMarked },
   { section: 'Config' },
   { label: 'Business & offers', href: '/admin/settings/business', icon: Percent },
+  { label: 'FAQ',        href: '/admin/settings/faq',      icon: BookOpen },
   { label: 'Shipping',   href: '/admin/settings/shipping', icon: Truck },
   { label: 'Site Audit', href: '/admin/settings/advanced/site-audit', icon: Activity },
   { label: 'Settings',   href: '/admin/settings',   icon: Settings, exact: true },

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import styles from './page.module.css';
+import { getSiteSettings } from '@/lib/settings';
 
 export const metadata: Metadata = {
   title: 'FAQ',
@@ -7,7 +8,22 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://www.silkilinen.com/faq' },
 };
 
-const FAQS = [
+type Faq = { q: string; a: string };
+
+async function getFaqs(): Promise<Faq[]> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/faq`, { next: { revalidate: 300 } });
+    if (!res.ok) return FALLBACK_FAQS;
+    const data = await res.json();
+    return Array.isArray(data.items) && data.items.length ? data.items : FALLBACK_FAQS;
+  } catch {
+    return FALLBACK_FAQS;
+  }
+}
+
+// Resilience fallback if the API is unreachable; the editable source of truth is
+// the DB (admin → FAQ), which seeds from the same defaults on the backend.
+const FALLBACK_FAQS = [
   {
     q: 'What materials do you use?',
     a: 'We use 100% mulberry silk and premium linen in all our pieces. Our silk is OEKO-TEX certified, free from harmful substances, and sourced from responsible suppliers. Each piece is made in small batches to maintain quality.',
@@ -54,14 +70,15 @@ const FAQS = [
   },
 ];
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const [faqs, { supportEmail }] = await Promise.all([getFaqs(), getSiteSettings()]);
   return (
     <main className={styles.page}>
       <div className={styles.inner}>
         <p className={styles.eyebrow}>Support</p>
         <h1 className={styles.title}>Frequently asked questions</h1>
         <div className={styles.list}>
-          {FAQS.map(({ q, a }) => (
+          {faqs.map(({ q, a }) => (
             <details key={q} className={styles.item}>
               <summary className={styles.question}>{q}</summary>
               <p className={styles.answer}>{a}</p>
@@ -70,7 +87,7 @@ export default function FaqPage() {
         </div>
         <div className={styles.cta}>
           <p>Still have questions?</p>
-          <a href="mailto:hello@silkilinen.com" className={styles.ctaLink}>Email us →</a>
+          <a href={`mailto:${supportEmail}`} className={styles.ctaLink}>Email us →</a>
         </div>
       </div>
     </main>
