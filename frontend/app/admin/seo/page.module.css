@@ -129,3 +129,73 @@
   color: var(--muted);
   font-size: 14px;
 }
+
+/* ── Rebuild SEO pipeline modal ─────────────────────────────────────────── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 25, 22, 0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.modal {
+  background: #fbf8f2;
+  border: 1px solid var(--border, #e6e1d8);
+  width: 100%;
+  max-width: 620px;
+  padding: 24px 26px 26px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+}
+
+.modalHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.modalTitle { margin: 0; font-family: Georgia, serif; font-size: 20px; color: var(--dark, #1a1916); }
+.modalSub { margin: 6px 0 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+.modalClose { appearance: none; background: none; border: none; font-size: 22px; line-height: 1; color: var(--muted); cursor: pointer; }
+
+.progressLine { font-size: 12px; color: var(--muted); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.chain { display: flex; flex-direction: column; margin: 6px 0 4px; }
+
+.block {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0 10px 2px;
+  border-left: 2px solid var(--border, #e0d9cc);
+  margin-left: 8px;
+  padding-left: 16px;
+  position: relative;
+}
+.blockActive { border-left-color: #b8863b; }
+.blockNode {
+  position: absolute;
+  left: -7px;
+  top: 14px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--border, #cfc7b8);
+}
+.nodeDone { background: #1a6b3c; border-color: #1a6b3c; }
+.nodeActive { background: #b8863b; border-color: #b8863b; }
+.nodeSkip { background: #b03a2e; border-color: #b03a2e; }
+.nodeRun { background: #b8863b; border-color: #b8863b; animation: pulseNode 1s infinite; }
+@keyframes pulseNode { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.blockMain { flex: 1; min-width: 0; }
+.blockLabel { margin: 0; font-size: 14px; color: var(--dark, #1a1916); }
+.blockRef { font-size: 10px; color: var(--muted); font-family: ui-monospace, monospace; letter-spacing: 0.5px; }
+.blockState { font-size: 12px; color: var(--muted); margin: 3px 0 0; }
+
+.reviewBox { margin-top: 10px; border: 1px solid var(--border, #e0d9cc); background: #fff; padding: 12px; }
+.reviewField { margin: 0 0 8px; }
+.reviewK { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+.reviewV { margin: 2px 0 0; font-size: 13px; color: var(--dark, #1a1916); line-height: 1.45; }
+.reviewActions { display: flex; gap: 8px; margin-top: 10px; }
+
+.summaryBox { margin-top: 16px; border-top: 1px solid var(--border, #e0d9cc); padding-top: 14px; font-size: 14px; color: var(--dark, #1a1916); }

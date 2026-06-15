@@ -5,6 +5,7 @@ import AdminLayout from '@/components/AdminLayout';
 import { toast } from '@/lib/adminToast';
 import SeoHealthPanel from '../_components/dashboard/SeoHealthPanel';
 import SearchPerformancePanel from '../_components/dashboard/SearchPerformancePanel';
+import RebuildSeoModal from './RebuildSeoModal';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -43,6 +44,7 @@ export default function SeoHubPage() {
   const [hermesAgent, setHermesAgent] = useState<Agent | null>(null);
   const [running, setRunning] = useState(false);
   const [fixing, setFixing] = useState(false);
+  const [rebuilding, setRebuilding] = useState(false);
 
   const loadHermes = useCallback(async () => {
     try {
@@ -191,6 +193,22 @@ export default function SeoHubPage() {
               Polish the words Google reads. Everything here is approve-first — generated drafts you review before
               they go live. (URLs are left untouched; changing them safely needs redirects.)
             </p>
+
+            <div className={styles.card} style={{ marginTop: 14, borderLeft: '3px solid #b8863b' }}>
+              <p className={styles.cardTitle}>✦ Rebuild SEO — one chain, start to finish</p>
+              <p className={styles.cardText}>
+                Walks every SEO finding as one chain (the Clerks&rsquo; blockchain way): fills missing product meta
+                automatically, then writes each category &amp; collection page&rsquo;s meta — pausing in a window to ask
+                your approval (or reject) before anything page-level goes live.
+              </p>
+              <div className={styles.cardActions}>
+                <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => setRebuilding(true)}>
+                  Rebuild SEO
+                </button>
+              </div>
+            </div>
+
+            <p className={styles.intro} style={{ marginTop: 22 }}>Or fix individually:</p>
             <div className={styles.cards}>
               <div className={styles.card}>
                 <p className={styles.cardTitle}>Products missing SEO</p>
@@ -241,6 +259,8 @@ export default function SeoHubPage() {
           </div>
         </div>
       )}
+
+      {rebuilding && <RebuildSeoModal onClose={() => setRebuilding(false)} />}
     </AdminLayout>
   );
 }
