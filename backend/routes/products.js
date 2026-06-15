@@ -156,6 +156,10 @@ const PUBLIC_FILTER = {
   price: { $gt: 0 },
 };
 
+// Fields the storefront must never receive — internal margin/cost data and the
+// admin who last edited. Applied to every public product read.
+const PUBLIC_PROJECTION = '-costPrice -costing -lastUpdatedBy';
+
 // ── Routes ─────────────────────────────────────────────────────────────────────
 
 // Attach storefront rating summary (approved reviews only) to a product list
@@ -185,7 +189,7 @@ router.get('/', async function(req, res) {
     if (ids) {
       const idArray = ids.split(',').map(s => s.trim()).filter(Boolean);
       filter._id = { $in: idArray };
-      const products = await Product.find(filter).lean();
+      const products = await Product.find(filter).select(PUBLIC_PROJECTION).lean();
       return res.json(await attachRatings(products));
     }
 
@@ -202,7 +206,7 @@ router.get('/', async function(req, res) {
         { description: { $regex: safe, $options: 'i' } },
       ];
     }
-    let query = Product.find(filter).lean();
+    let query = Product.find(filter).select(PUBLIC_PROJECTION).lean();
     if (sort === '-createdAt') query = query.sort({ createdAt: -1 });
     if (limit) query = query.limit(parseInt(limit, 10));
     const products = await query;
@@ -312,18 +316,18 @@ router.post('/:id/drop-hint', lightRateLimit, async function(req, res) {
 
 router.get('/related/:id', async function(req, res) {
   try {
-    const product = await Product.findOne({ ...PUBLIC_FILTER, _id: req.params.id });
+    const product = await Product.findOne({ ...PUBLIC_FILTER, _id: req.params.id }).select(PUBLIC_PROJECTION);
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
     let related = await Product.find({
       ...PUBLIC_FILTER,
       _id: { $ne: product._id },
       category: product.category,
-    }).limit(4);
+    }).select(PUBLIC_PROJECTION).limit(4);
 
     if (related.length < 4) {
       const ids = [product._id, ...related.map(p => p._id)];
-      const extras = await Product.find({ ...PUBLIC_FILTER, _id: { $nin: ids } }).limit(4 - related.length);
+      const extras = await Product.find({ ...PUBLIC_FILTER, _id: { $nin: ids } }).select(PUBLIC_PROJECTION).limit(4 - related.length);
       related = [...related, ...extras];
     }
 
@@ -352,7 +356,7 @@ router.get('/:id/preview', async function(req, res) {
       return res.status(403).json({ error: 'Token does not match product' });
     }
 
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).select(PUBLIC_PROJECTION);
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (err) {
@@ -363,7 +367,7 @@ router.get('/:id/preview', async function(req, res) {
 
 router.get('/:id', async function(req, res) {
   try {
-    const product = await Product.findOne({ ...PUBLIC_FILTER, _id: req.params.id });
+    const product = await Product.findOne({ ...PUBLIC_FILTER, _id: req.params.id }).select(PUBLIC_PROJECTION);
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (err) {
