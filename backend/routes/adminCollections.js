@@ -1,11 +1,22 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const Collection = require('../models/Collection');
 const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
+const { generateSEO, AIServiceError } = require('../services/aiText');
 
 // All routes require admin auth
 router.use(requireAuth);
+
+// Same budget as the product/category SEO endpoints — bounded AI calls/hour.
+const aiRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many AI generation calls in the last hour. Wait a few minutes and try again.' },
+});
 
 // GET /api/admin/collections
 router.get('/', async (req, res) => {
@@ -142,6 +153,37 @@ router.put('/reorder', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/admin/collections/:id/generate-seo — approve-first meta for this
+// collection page (returns a suggestion, does NOT save). Grounded in the real
+// pieces the collection gathers.
+router.post('/:id/generate-seo', aiRateLimit, async (req, res) => {
+  try {
+    const collection = await Collection.findById(req.params.id).lean();
+    if (!collection) return res.status(404).json({ error: 'Not found' });
+
+    const items = await Product.find({ collections: collection._id, status: 'active' })
+      .select('name').limit(12).lean();
+
+    const seo = await generateSEO({
+      kind: 'collection',
+      name: req.body.name || collection.name,
+      description: req.body.description || collection.description || '',
+      items: items.map(p => p.name),
+    });
+
+    res.json({
+      seo: { metaTitle: seo.metaTitle, metaDescription: seo.metaDescription, keywords: seo.keywords },
+      message: 'SEO generated. Review and save to apply.',
+    });
+  } catch (err) {
+    console.error('[collection generate-seo] error:', err.message);
+    if (err instanceof AIServiceError) {
+      return res.status(503).json({ error: 'AI SEO generation is temporarily unavailable. Fill the fields manually, or try again in a moment.' });
+    }
+    res.status(500).json({ error: 'Could not generate SEO. Please try again or fill in manually.' });
   }
 });
 

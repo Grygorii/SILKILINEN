@@ -219,7 +219,8 @@ export default function SeoHubPage() {
               <div className={styles.card}>
                 <p className={styles.cardTitle}>Collections</p>
                 <p className={styles.cardText}>
-                  Curated edits with their own pages. Add a meta title + description in each collection&rsquo;s editor.
+                  Curated edits with their own pages. Each collection can generate its own meta title + description
+                  in the editor.
                 </p>
                 <div className={styles.cardActions}>
                   <a className={styles.btn} href="/admin/collections">Open collections →</a>
