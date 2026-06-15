@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { MessageCircle } from 'lucide-react';
 import styles from './ContactWidget.module.css';
-import { useSiteSettings } from '@/lib/settings';
+import { useSiteSettings } from '@/lib/useSiteSettings';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 const BLOCKED_PATHS = ['/admin', '/checkout'];

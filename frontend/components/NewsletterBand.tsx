@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import styles from './NewsletterBand.module.css';
-import { useSiteSettings } from '@/lib/settings';
+import { useSiteSettings } from '@/lib/useSiteSettings';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
