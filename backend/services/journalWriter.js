@@ -11,8 +11,10 @@
 const OpenAI = require('openai');
 const JournalArticle = require('../models/JournalArticle');
 const Product = require('../models/Product');
+const Category = require('../models/Category');
 const GrowthAction = require('../models/GrowthAction');
 const { playbookPromptBlock } = require('./playbook');
+const { contentOutcomes } = require('./chiefOfStaff');
 
 const client = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
@@ -43,13 +45,16 @@ async function chat(messages, maxTokens, temperature = 0.7) {
 
 // Gather everything the agents know — the whole studio's intelligence on one desk.
 async function gatherIntel() {
-  const [products, existing, hermes, demand, competitor, learned] = await Promise.all([
-    Product.find({ status: 'active' }).select('name category price').sort({ createdAt: -1 }).limit(40).lean().catch(() => []),
+  const [products, existing, published, categories, hermes, demand, competitor, learned, outcomes] = await Promise.all([
+    Product.find({ status: 'active' }).select('name category price images image').sort({ createdAt: -1 }).limit(40).lean().catch(() => []),
     JournalArticle.find().select('title slug').lean().catch(() => []),
+    JournalArticle.find({ status: 'published' }).select('title slug').sort({ publishedAt: -1 }).limit(20).lean().catch(() => []),
+    Category.find({ status: 'active' }).select('slug label').lean().catch(() => []),
     GrowthAction.find({ agent: 'hermes', type: 'seo', 'meta.entityType': { $exists: true } }).sort({ createdAt: -1 }).limit(10).select('meta detail').lean().catch(() => []),
     GrowthAction.find({ agent: 'demand', type: 'demand_signal' }).sort({ createdAt: -1 }).limit(10).select('title meta').lean().catch(() => []),
     GrowthAction.find({ agent: 'competitor' }).sort({ createdAt: -1 }).limit(5).select('title').lean().catch(() => []),
     playbookPromptBlock().catch(() => ''),
+    contentOutcomes().catch(() => []),
   ]);
 
   let gsc = [];
@@ -61,8 +66,12 @@ async function gatherIntel() {
   return {
     products,
     existing,
+    published,
+    categories,
     learned,
     gsc,
+    // #4 — which past articles actually gained traction, so the writer leans into proven angles.
+    winningAngles: (outcomes || []).filter(o => o.impressions > 20).map(o => `"${o.title}" (${o.impressions} impressions)`),
     hermesTargets: hermes.map(a => a.meta?.target).filter(Boolean),
     demandPhrases: demand.map(a => a.meta?.phrase || a.title?.replace(/^Demand wave:\s*/, '').replace(/"/g, '')).filter(Boolean),
     competitorNotes: competitor.map(a => a.title).filter(Boolean),
@@ -82,6 +91,7 @@ RESPOND ONLY WITH VALID JSON: {"topic": "working title", "targetQuery": "the exa
       `Search Console opportunities: ${intel.gsc.map(q => `"${q.query}" (${q.impressions} imp, pos ${q.position})`).join('; ') || '(none)'}`,
       `Demand Scout — rising phrases: ${intel.demandPhrases.join('; ') || '(none)'}`,
       `Competitor notes: ${intel.competitorNotes.join(' | ') || '(none)'}`,
+      intel.winningAngles.length ? `PROVEN — past articles that actually gained Search Console impressions (lean into these angles): ${intel.winningAngles.join('; ')}` : '',
       `Categories we sell: ${[...new Set(intel.products.map(p => p.category).filter(Boolean))].join(', ') || 'silk pieces'}`,
       `Existing articles (do NOT repeat): ${intel.existing.map(a => a.title).join('; ') || '(none)'}`,
       ``, `Return the JSON now.`,
@@ -95,6 +105,8 @@ async function writeArticle(topic, intel) {
   const productList = intel.products
     .map(p => `- ${p.name} (${p.category || 'silk'}, €${p.price}) — ${SITE_URL}/product/${p._id}`)
     .join('\n');
+  const categoryList = intel.categories.map(c => `- ${c.label} — ${SITE_URL}/shop?category=${c.slug}`).join('\n');
+  const articleList = intel.published.map(a => `- ${a.title} — ${SITE_URL}/journal/${a.slug}`).join('\n');
 
   const parsed = await chat([
     { role: 'system', content: `You write masterpiece journal articles for SILKILINEN, a quiet-luxury silk & linen brand. ${BRAND_RULES}${intel.learned}
@@ -103,6 +115,7 @@ ARTICLE REQUIREMENTS:
 - A magnetic HOOK in the first two sentences — a felt image or a real question, never "In today's world…".
 - 800-1200 words, clean HTML (the journal stores HTML bodies): <h2>/<h3> headings (NO <h1> — the page renders the title), <p>, <ul>/<ol> where natural, <strong>/<em> sparingly, <blockquote> only if it earns it. No <html>/<head>/<body>, no inline styles, no scripts, no markdown.
 - Weave in and LINK 2-4 of the provided products with <a href="EXACT_URL">natural anchor text</a>, only where genuinely relevant — never a hard sell.
+- Build the internal-link web: also link ONE relevant category page and, if a genuinely related one exists, ONE existing journal article — using their exact URLs, woven naturally. This strengthens the whole site's SEO. Never force a link that doesn't fit.
 - Target the search query: use it (or a close natural variant) in the opening paragraph AND at least one heading, without stuffing.
 - End with a quiet, resonant closing — not a salesy CTA.
 - metaTitle: 50-60 chars, leads with the target query, ends " — SILKILINEN".
@@ -119,6 +132,8 @@ RESPOND ONLY WITH VALID JSON: {"title": "...", "metaTitle": "...", "metaDescript
       ``,
       `Products you may link (use the exact URLs, pick the 2-4 most relevant):`,
       productList,
+      categoryList ? `\nCategory pages you may link (pick ONE most relevant):\n${categoryList}` : '',
+      articleList ? `\nExisting journal articles you may link if genuinely related (pick at most ONE):\n${articleList}` : '',
       ``, `Return the JSON now.`,
     ].filter(Boolean).join('\n') },
   ], 3000);
@@ -147,7 +162,17 @@ async function generateMasterpiece({ topic } = {}) {
   let slug = base;
   for (let i = 2; existingSlugs.has(slug); i++) slug = `${base}-${i}`;
 
-  const linkedIds = intel.products.filter(p => article.content.includes(`/product/${p._id}`)).map(p => p.name);
+  const linked = intel.products.filter(p => article.content.includes(`/product/${p._id}`));
+  const linkedIds = linked.map(p => p.name);
+
+  // #1 — picture-complete draft: hero from the first linked product's primary
+  // photo (real brand imagery), so the draft isn't text-only. The founder can swap it.
+  let heroImage;
+  for (const p of linked) {
+    const img = (p.images || []).find(i => i.isPrimary && i.url) || (p.images || []).find(i => i.url);
+    const url = img?.url || p.image;
+    if (url) { heroImage = { url, alt: `${p.name} — SILKILINEN` }; break; }
+  }
 
   const doc = await JournalArticle.create({
     title: article.title,
@@ -155,6 +180,7 @@ async function generateMasterpiece({ topic } = {}) {
     excerpt: article.excerpt || '',
     body: article.content,
     status: 'draft',
+    ...(heroImage ? { heroImage } : {}),
     metaTitle: (article.metaTitle || '').slice(0, 70),
     metaDescription: (article.metaDescription || '').slice(0, 165),
     keywords: [chosen.targetQuery],
