@@ -5,6 +5,12 @@ const categorySchema = new mongoose.Schema({
   label: { type: String, required: true, trim: true },
   description: { type: String, trim: true },
 
+  // Search-engine snippet for this category's /shop?category=<slug> view.
+  // Generated (approve-first) by the shared SEO writer; falls back to label/
+  // description on the storefront when unset.
+  metaTitle: { type: String, maxlength: 70, trim: true },
+  metaDescription: { type: String, maxlength: 165, trim: true },
+
   heroImage: {
     url: { type: String },
     cloudinaryPublicId: { type: String },
