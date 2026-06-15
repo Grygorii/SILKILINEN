@@ -22,6 +22,7 @@ type Article = {
   publishedAt: string | null; scheduledFor: string | null;
   metaTitle: string; metaDescription: string; keywords: string[];
   readingTimeMinutes: number | null; viewCount: number; updatedAt: string;
+  aiProvenance?: string;
 };
 
 const STATUS_COLORS = {
@@ -223,6 +224,13 @@ export default function JournalEditorPage() {
   return (
     <AdminLayout>
       <div style={{ minHeight: '100vh', background: '#faf9f7' }}>
+
+        {/* Why this article — AI provenance, so the founder trusts it's grounded. */}
+        {article.aiProvenance && (
+          <div style={{ background: '#fbf4e6', borderBottom: '1px solid #e6d9bf', padding: '8px 24px', fontSize: 12, color: '#7a5f2b' }}>
+            ✦ {article.aiProvenance}
+          </div>
+        )}
 
         {/* Sticky top bar */}
         <div style={{

@@ -25,6 +25,9 @@ const journalArticleSchema = new mongoose.Schema({
   readingTimeMinutes: { type: Number, default: null },
   viewCount:          { type: Number, default: 0 },
   lastEditedBy:       { type: String, default: '' },
+  // When written by the AI: the one-line "why this article" — the data/agents
+  // that drove it, so the founder trusts it's grounded, not invented.
+  aiProvenance:       { type: String, default: '' },
 }, { timestamps: true });
 
 // Auto-generate slug from title (called before save when slug is missing)

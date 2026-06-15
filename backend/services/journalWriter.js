@@ -165,6 +165,14 @@ async function generateMasterpiece({ topic } = {}) {
   const linked = intel.products.filter(p => article.content.includes(`/product/${p._id}`));
   const linkedIds = linked.map(p => p.name);
 
+  // #5 — the "why this article" line: which data/agents drove it.
+  const sources = [];
+  if (intel.hermesTargets.length) sources.push('Hermes SEO plan');
+  if (intel.demandPhrases.length) sources.push('Demand Scout');
+  if (intel.gsc.length) sources.push('Search Console');
+  if (intel.winningAngles.length) sources.push('proven article angles');
+  const provenance = `Targets “${chosen.targetQuery}”.${chosen.why ? ` ${chosen.why}.` : ''} Grounded in: ${sources.join(', ') || 'the catalogue'}. Links: ${linkedIds.join(', ') || 'none'}.`;
+
   // #1 — picture-complete draft: hero from the first linked product's primary
   // photo (real brand imagery), so the draft isn't text-only. The founder can swap it.
   let heroImage;
@@ -185,6 +193,7 @@ async function generateMasterpiece({ topic } = {}) {
     metaDescription: (article.metaDescription || '').slice(0, 165),
     keywords: [chosen.targetQuery],
     lastEditedBy: 'AI · masterpiece',
+    aiProvenance: provenance,
   });
 
   return {
