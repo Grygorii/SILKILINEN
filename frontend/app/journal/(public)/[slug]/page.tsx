@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { sanitizeArticleHtml } from '@/lib/sanitize';
+import { safeJsonLd } from '@/lib/safeJsonLd';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -72,7 +73,7 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
     <main>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(articleJsonLd) }}
       />
       {/* Hero image */}
       {article.heroImage?.url && (

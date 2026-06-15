@@ -4,6 +4,7 @@ import styles from './page.module.css';
 import ProductOptions from '@/components/ProductOptions';
 import StickyBuyBar from '@/components/StickyBuyBar';
 import ProductGallery from '@/components/ProductGallery';
+import { safeJsonLd } from '@/lib/safeJsonLd';
 import PageTracker from '@/components/PageTracker';
 import CrossSell from '@/components/CrossSell';
 import RecentlyViewed from '@/components/RecentlyViewed';
@@ -233,11 +234,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       <main className={styles.page}>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }}
         />
         <ProductViewTracker id={product._id} name={product.name} price={product.price} image={galleryImages[0]?.url} />
         <PageTracker page="product" productId={product._id} />

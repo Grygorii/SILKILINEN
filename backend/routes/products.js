@@ -347,7 +347,7 @@ router.get('/:id/preview', async function(req, res) {
     const secret = process.env.PREVIEW_TOKEN_SECRET || process.env.JWT_SECRET;
     let decoded;
     try {
-      decoded = jwt.verify(token, secret);
+      decoded = jwt.verify(String(token), secret, { algorithms: ['HS256'] });
     } catch {
       return res.status(401).json({ error: 'Invalid or expired preview token' });
     }
