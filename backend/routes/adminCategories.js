@@ -186,7 +186,13 @@ router.post('/:id/generate-seo', aiRateLimit, async (req, res) => {
     });
 
     res.json({
-      seo: { metaTitle: seo.metaTitle, metaDescription: seo.metaDescription, keywords: seo.keywords },
+      // Clamp to the model's maxlength (70/165) so applying the draft can't
+      // trip schema validation ("Apply failed").
+      seo: {
+        metaTitle: String(seo.metaTitle || '').slice(0, 70),
+        metaDescription: String(seo.metaDescription || '').slice(0, 165),
+        keywords: seo.keywords,
+      },
       message: 'SEO generated. Review and save to apply.',
     });
   } catch (err) {
