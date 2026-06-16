@@ -26,7 +26,17 @@ async function serpAnalysis(query, geo = 'ie') {
   try {
     const url = `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(CSE_KEY())}&cx=${encodeURIComponent(CSE_ID())}&num=5&gl=${encodeURIComponent(geo)}&q=${encodeURIComponent(query)}`;
     const res = await fetch(url, { signal: ctrl.signal });
-    if (!res.ok) return { configured: true, results: [], error: `HTTP ${res.status}` };
+    if (!res.ok) {
+      // Surface Google's exact reason (e.g. "Requests from referer <empty> are
+      // blocked", "API key not valid", "accessNotConfigured") so the health
+      // check pinpoints the fix instead of a bare HTTP code.
+      let reason = '';
+      try {
+        const e = await res.json();
+        reason = e?.error?.message || e?.error?.errors?.[0]?.message || e?.error?.errors?.[0]?.reason || '';
+      } catch { /* body not JSON */ }
+      return { configured: true, results: [], error: `HTTP ${res.status}${reason ? ` — ${reason}` : ''}` };
+    }
     const data = await res.json();
     const results = (data.items || []).slice(0, 5).map(i => ({
       title: i.title || '',
