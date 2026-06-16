@@ -39,7 +39,6 @@ const EDITOR: Record<string, string> = { product: 'products', category: 'categor
 type Decision = 'approve' | 'reject';
 
 const BASE: Record<string, string> = { product: 'products', category: 'categories', collection: 'collections' };
-const APPLY_METHOD: Record<string, string> = { product: 'PUT', category: 'PATCH', collection: 'PATCH' };
 
 export default function RebuildSeoModal({ onClose }: { onClose: () => void }) {
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -86,8 +85,13 @@ export default function RebuildSeoModal({ onClose }: { onClose: () => void }) {
     }
 
     async function apply(entityType: string, id: string, draft: Draft) {
-      const res = await fetch(`${API}/api/admin/${BASE[entityType]}/${id}`, {
-        method: APPLY_METHOD[entityType], credentials: 'include',
+      // Products use a partial meta endpoint (the full PUT requires name+price);
+      // categories/collections PATCH the record directly.
+      const url = entityType === 'product'
+        ? `${API}/api/admin/products/${id}/meta`
+        : `${API}/api/admin/${BASE[entityType]}/${id}`;
+      const res = await fetch(url, {
+        method: 'PATCH', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ metaTitle: draft.metaTitle, metaDescription: draft.metaDescription }),
       });

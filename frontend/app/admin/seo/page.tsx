@@ -52,7 +52,22 @@ export default function SeoHubPage() {
       if (!res.ok) return;
       const data = await res.json();
       const actions: Action[] = Array.isArray(data.actions) ? data.actions : [];
-      setHermes(actions.filter(a => a.agent === 'hermes'));
+      // Show only the LATEST run's recommendations, deduped — not the whole
+      // accumulated history (which piles up and repeats across runs). A run
+      // writes its actions in one burst, so keep those within ~5 min of the
+      // newest, deduped by title.
+      const mine = actions
+        .filter(a => a.agent === 'hermes')
+        .sort((x, y) => new Date(y.createdAt).getTime() - new Date(x.createdAt).getTime());
+      let latest: Action[] = [];
+      if (mine.length) {
+        const newest = new Date(mine[0].createdAt).getTime();
+        const seen = new Set<string>();
+        latest = mine
+          .filter(a => newest - new Date(a.createdAt).getTime() < 5 * 60 * 1000)
+          .filter(a => { if (seen.has(a.title)) return false; seen.add(a.title); return true; });
+      }
+      setHermes(latest);
       const ag = (Array.isArray(data.agents) ? data.agents : []).find((a: Agent) => a.name === 'hermes');
       setHermesAgent(ag || null);
     } catch { /* leave as-is */ }

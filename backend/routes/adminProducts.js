@@ -350,6 +350,24 @@ router.put('/:id', async function(req, res) {
   }
 });
 
+// PATCH /api/admin/products/:id/meta — partial update of just the SEO meta.
+// The full PUT /:id runs validateForSave (name + price required), which rejects
+// a meta-only update; this is the partial path the Rebuild SEO pipeline uses
+// (mirrors the category/collection PATCH). Clamped to the schema limits.
+router.patch('/:id/meta', async function(req, res) {
+  try {
+    const update = {};
+    if (typeof req.body.metaTitle === 'string') update.metaTitle = req.body.metaTitle.slice(0, 70);
+    if (typeof req.body.metaDescription === 'string') update.metaDescription = req.body.metaDescription.slice(0, 165);
+    const product = await Product.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true })
+      .select('_id metaTitle metaDescription');
+    if (!product) return res.status(404).json({ error: 'Not found' });
+    res.json(product);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // PATCH /api/admin/products/:id/quick-update — inline edit price / status /
 // stock / category / per-variant stock, from the products list.
 router.patch('/:id/quick-update', async function(req, res) {
