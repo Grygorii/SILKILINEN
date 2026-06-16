@@ -24,6 +24,7 @@ const Collection = require('../../models/Collection');
 const GrowthAction = require('../../models/GrowthAction');
 const { isConnected, getSearchPerformance, getQueryOpportunities } = require('../searchConsole');
 const { addLearning, playbookPromptBlock } = require('../playbook');
+const { EDITABLE_PATHS } = require('../pageSeo');
 
 const client = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
@@ -118,6 +119,7 @@ async function run() {
     `PRODUCTS (entityType "product" — use the exact name as entityRef): ${products.map(p => p.name).slice(0, 30).join(', ') || 'none'}.`,
     `CATEGORIES (entityType "category" — use the slug as entityRef): ${categories.map(c => `${c.slug} (${c.label})`).join(', ') || 'none'}.`,
     `COLLECTIONS (entityType "collection" — use the slug as entityRef): ${collections.map(c => `${c.slug} (${c.name})`).join(', ') || 'none'}.`,
+    `EDITABLE PAGES (entityType "page" — use one of these EXACT paths as entityRef; a "meta" play here can now be auto-applied): ${EDITABLE_PATHS.join(', ')}.`,
     missingMeta.length ? `PRODUCTS MISSING META (competing one-handed — prioritise a "meta" play): ${missingMeta.slice(0, 12).join(', ')}.` : 'All active products have meta.',
     ``,
     `OUTWARD INTEL FROM THE OTHER AGENTS (read through the chain — use it, don't ignore it):`,

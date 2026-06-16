@@ -1,11 +1,15 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { getPageMeta } from '@/lib/pageSeo';
 
-export const metadata: Metadata = {
-  title: 'Journal',
-  description: 'Stories about silk, linen, and slow living from Donegal.',
-  alternates: { canonical: 'https://www.silkilinen.com/journal' },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const o = await getPageMeta('/journal');
+  return {
+    title: o?.metaTitle ? { absolute: o.metaTitle } : 'Journal',
+    description: o?.metaDescription || 'Stories about silk, linen, and slow living from Donegal.',
+    alternates: { canonical: 'https://www.silkilinen.com/journal' },
+  };
+}
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 

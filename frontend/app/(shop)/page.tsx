@@ -12,14 +12,19 @@ import BlogTeaser from '@/components/BlogTeaser';
 import NewsletterBand from '@/components/NewsletterBand';
 import InstagramGrid from '@/components/InstagramGrid';
 import { getContent, val } from '@/lib/content';
+import { getPageMeta } from '@/lib/pageSeo';
 
-// Self-referencing canonical for the homepage. Without it GSC reported the
-// "/" URL as "Duplicate without user-selected canonical" — Google saw the
-// homepage but had no declared canonical to consolidate variants onto.
-// Title/description stay on the layout defaults; only the canonical is set.
-export const metadata: Metadata = {
-  alternates: { canonical: 'https://www.silkilinen.com' },
-};
+// Self-referencing canonical for the homepage (kept — without it GSC flagged
+// "/" as duplicate). Title/description fall back to the layout defaults unless
+// an editable page-SEO override is set in admin / by the Rebuild SEO pipeline.
+export async function generateMetadata(): Promise<Metadata> {
+  const o = await getPageMeta('/');
+  return {
+    alternates: { canonical: 'https://www.silkilinen.com' },
+    ...(o?.metaTitle ? { title: { absolute: o.metaTitle } } : {}),
+    ...(o?.metaDescription ? { description: o.metaDescription } : {}),
+  };
+}
 
 async function getReviews(): Promise<ReviewData[]> {
   try {

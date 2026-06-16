@@ -15,6 +15,7 @@ const { unleashDaVinci, latestComposition } = require('../services/davinci');
 const { runSelfTest } = require('../services/selfTest');
 const { getQueryOpportunities } = require('../services/searchConsole');
 const { generatePageCopy, AIServiceError } = require('../services/aiText');
+const { EDITABLE_PATHS } = require('../services/pageSeo');
 
 // Da Vinci runs the orchestra — its own tight limit so it can't be hammered.
 const davinciLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false });
@@ -85,10 +86,15 @@ router.get('/hermes-plan', async function(req, res) {
       } else if (m.entityType === 'collection') {
         const c = await Collection.findOne({ $or: [{ slug: m.entityRef }, { name: m.entityRef }] }).select('slug name').lean();
         if (c) { entityId = String(c._id); slug = c.slug; label = c.name; }
+      } else if (m.entityType === 'page') {
+        // Static pages can now be fixed too — meta lives in the editable
+        // pageSeo store, keyed by path. entityId carries the path.
+        if (EDITABLE_PATHS.includes(m.entityRef)) { entityId = m.entityRef; label = m.entityRef; }
       }
 
       // Logic check: did the entity actually resolve?
       if (m.entityType !== 'page' && entityId == null) warnings.push(`couldn't match a ${m.entityType} named "${m.entityRef}"`);
+      else if (m.entityType === 'page' && entityId == null) warnings.push(`"${m.entityRef}" is not an editable page`);
       // Reasoning check: is the cited query really in current Search Console?
       const t = String(m.target || '').toLowerCase().trim();
       if (t && liveQueries.length && !liveQueries.some(q => q === t || q.includes(t) || t.includes(q))) {

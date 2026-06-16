@@ -1,11 +1,16 @@
+import type { Metadata } from 'next';
 import { getContent, val } from '@/lib/content';
 import styles from './page.module.css';
+import { getPageMeta } from '@/lib/pageSeo';
 
-export const metadata = {
-  alternates: { canonical: 'https://www.silkilinen.com/about' },
-  title: 'About Us',
-  description: 'The story behind SILKILINEN — pure silk and linen intimates made for everyday luxury, shipped worldwide from Donegal, Ireland.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const o = await getPageMeta('/about');
+  return {
+    alternates: { canonical: 'https://www.silkilinen.com/about' },
+    title: o?.metaTitle ? { absolute: o.metaTitle } : 'About Us',
+    description: o?.metaDescription || 'The story behind SILKILINEN — pure silk and linen intimates made for everyday luxury, shipped worldwide from Donegal, Ireland.',
+  };
+}
 
 export default async function AboutPage() {
   const content = await getContent('about');
