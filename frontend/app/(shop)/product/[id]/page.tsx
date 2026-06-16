@@ -356,6 +356,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                         <>
                           <AccordionSubLabel>Weight</AccordionSubLabel>
                           <p>{product.momme} momme</p>
+                          <p className={styles.mommeNote}>Momme (mm) measures silk weight — the higher the momme, the more substantial, durable and opaque the silk.</p>
                         </>
                       )}
                       {product.careInstructions && (

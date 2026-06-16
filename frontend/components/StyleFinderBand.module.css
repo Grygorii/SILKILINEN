@@ -1,0 +1,104 @@
+/* ── Style Finder entry band ───────────────────────────────────────────
+   Moved here from the homepage page.module.css so the band can own its
+   scroll-reveal ribbon and animated CTA as a self-contained client unit.
+*/
+.finderBand {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 44px 24px;
+  margin: 0;
+  text-decoration: none;
+  background: linear-gradient(160deg, #f3ede2 0%, #ece4d4 100%);
+  border-top: 1px solid var(--color-line, #e8e2d6);
+  border-bottom: 1px solid var(--color-line, #e8e2d6);
+  transition: background 0.3s ease;
+}
+.finderBand:hover { background: linear-gradient(160deg, #f0e9dc 0%, #e6dccb 100%); }
+
+/* Content sits above the ribbon. */
+.finderBand > span { position: relative; z-index: 1; }
+
+/* ── Silk ribbon ──────────────────────────────────────
+   Faint copper→blush spine behind the text. The path draws itself
+   (stroke-dashoffset 1 → 0, pathLength normalised to 1) the first time the
+   band enters the viewport, finishing at the CTA. Reduced-motion users see
+   it already drawn, no animation.
+*/
+.ribbon {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  height: calc(100% - 32px);
+  width: 60px;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
+.ribbonPath {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.inView .ribbonPath {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1.8s ease;
+}
+
+.finderEyebrow {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--color-ink-muted, #6b6358);
+}
+.finderTitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(26px, 4vw, 36px);
+  font-weight: 400;
+  color: var(--color-ink, #2a2218);
+  line-height: 1.15;
+}
+.finderCue {
+  font-size: 13px;
+  color: var(--color-ink-muted, #6b6358);
+  letter-spacing: 0.3px;
+}
+
+/* ── CTA — copper→blush, with a soft breathing pulse ───
+   Ink text on a pale metallic gradient keeps the luxe contrast. On hover the
+   gradient slides toward blush and the button lifts slightly; at rest a gentle
+   pulse breathes through it. */
+.finderBtn {
+  margin-top: 14px;
+  padding: 11px 26px;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-ink, #2a2218);
+  background: linear-gradient(120deg, #c4a882 0%, #d9a6a0 100%);
+  background-size: 200% 100%;
+  background-position: 0% 0;
+  border: 1px solid rgba(42, 34, 24, 0.25);
+  animation: finderPulse 3.4s ease-in-out infinite;
+  transition: background-position 0.6s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+.finderBand:hover .finderBtn {
+  background-position: 100% 0;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(196, 168, 130, 0.4);
+}
+
+@keyframes finderPulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(196, 168, 130, 0); }
+  50%      { box-shadow: 0 4px 16px rgba(196, 168, 130, 0.35); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ribbonPath { stroke-dashoffset: 0; transition: none; }
+  .finderBtn { animation: none; transition: none; }
+  .finderBand:hover .finderBtn { transform: none; }
+}

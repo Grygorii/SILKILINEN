@@ -63,6 +63,12 @@ export default function ProductCard({ product, showHeart = true }: Props) {
   const hoverImg = validImages.find(i => i !== primaryImg) ?? null;
   const hoverUrl = hoverImg?.url ?? null;
 
+  // Size-at-a-glance: a first-time visitor shouldn't have to click through to
+  // learn whether a piece is sized or one-size. Multiple variants list as
+  // "S · M · L"; a single (or no) variant reads as "One size".
+  const sizeList = (product.sizes ?? []).map(s => String(s).trim()).filter(Boolean);
+  const sizeHint = sizeList.length > 1 ? sizeList.join(' · ') : 'One size';
+
   function handleHeart(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
@@ -103,6 +109,10 @@ export default function ProductCard({ product, showHeart = true }: Props) {
             loading="lazy"
           />
         )}
+        {/* Silk sheen — a soft diagonal light ripple sweeps across the image on
+            hover, evoking the way silk catches the light. pointer-events:none so
+            the stretched card link still receives the click. */}
+        <span className={styles.sheen} aria-hidden="true" />
         {showNew && <span className={styles.newBadge}>new</span>}
       </div>
 
@@ -113,6 +123,7 @@ export default function ProductCard({ product, showHeart = true }: Props) {
         <Link href={`/product/${product._id}`} className={styles.nameLink}>
           <h3 className={styles.cardName} title={product.name}>{product.name}</h3>
         </Link>
+        <p className={styles.sizeHint}>{sizeHint}</p>
         {product.ratingCount ? (
           <div className={styles.rating} aria-label={`Rated ${product.ratingAverage} out of 5 from ${product.ratingCount} reviews`}>
             {[1, 2, 3, 4, 5].map(n => (

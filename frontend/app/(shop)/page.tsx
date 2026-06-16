@@ -4,6 +4,7 @@ import Image from 'next/image';
 import PageTracker from '@/components/PageTracker';
 import ReviewsCarousel, { type ReviewData } from '@/components/ReviewsCarousel';
 import NewArrivals from '@/components/NewArrivals';
+import StyleFinderBand from '@/components/StyleFinderBand';
 import ReassuranceRow from '@/components/ReassuranceRow';
 import CategoryTiles from '@/components/CategoryTiles';
 import FeaturedCollections from '@/components/FeaturedCollections';
@@ -94,13 +95,9 @@ export default async function Home() {
 
       {/* Style Finder — a quiet guide for the hesitant first-time visitor.
           Turns "just browsing" into a curated edit (the Warby Parker / Cuyana
-          quiz pattern), in the brand's calm voice. */}
-      <a href="/style-finder" className={styles.finderBand}>
-        <span className={styles.finderEyebrow}>The 60-second quiz</span>
-        <span className={styles.finderTitle}>Which silk are you?</span>
-        <span className={styles.finderCue}>Answer four quiet questions and we&rsquo;ll gather the pieces made for you.</span>
-        <span className={styles.finderBtn}>Take the Style Finder →</span>
-      </a>
+          quiz pattern), in the brand's calm voice. The band owns its own
+          scroll-reveal ribbon + animated CTA (client component). */}
+      <StyleFinderBand />
 
       <ReassuranceRow />
 
