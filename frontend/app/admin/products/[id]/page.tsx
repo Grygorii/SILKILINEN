@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, use, useCallback } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import AiPhotoshoot from '@/components/AiPhotoshoot';
 import ProductCampaigns from '@/components/admin/ProductCampaigns';
+import ImageCropModal from '@/components/ImageCropModal';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -158,6 +159,8 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
 
   const [form, setForm] = useState<Form>(EMPTY_FORM);
   const [images, setImages] = useState<ProductImage[]>([]);
+  const [cropFiles, setCropFiles] = useState<File[] | null>(null);
+  const [cropSlot, setCropSlot] = useState<string | undefined>(undefined);
   const [variants, setVariants] = useState<Variant[]>([]);
   const [saveState, setSaveState] = useState<SaveState>('saved');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -432,7 +435,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   }
 
   // Image handlers
-  async function handleImageUpload(files: FileList | null, slot?: string) {
+  async function handleImageUpload(files: FileList | File[] | null, slot?: string) {
     if (!files || files.length === 0) return;
     setUploading(true);
     setUploadError('');
@@ -803,7 +806,11 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               accept="image/*"
               multiple
               className={styles.fileInputHidden}
-              onChange={e => { handleImageUpload(e.target.files, pendingSlotRef.current); e.target.value = ''; }}
+              onChange={e => {
+                const picked = Array.from(e.target.files || []);
+                e.target.value = '';
+                if (picked.length) { setCropSlot(pendingSlotRef.current); setCropFiles(picked); }
+              }}
               disabled={uploading}
             />
 
@@ -1410,6 +1417,14 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             <button className={styles.modalBtn} onClick={closeValidationModal}>Got it</button>
           </div>
         </div>
+      )}
+
+      {cropFiles && cropFiles.length > 0 && (
+        <ImageCropModal
+          files={cropFiles}
+          onClose={() => setCropFiles(null)}
+          onComplete={(out) => { setCropFiles(null); handleImageUpload(out, cropSlot); }}
+        />
       )}
     </AdminLayout>
   );
