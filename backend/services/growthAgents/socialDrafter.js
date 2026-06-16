@@ -7,7 +7,6 @@
 // Admin → Social exactly like a hand-started post, ready for the founder
 // to review, edit and mark ready. Nothing is ever published automatically.
 
-const OpenAI = require('openai');
 const { playbookPromptBlock } = require('../playbook');
 const Product = require('../../models/Product');
 const JournalArticle = require('../../models/JournalArticle');
@@ -16,10 +15,7 @@ const SocialPost = require('../../models/SocialPost');
 const MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
 
 // DeepSeek is OpenAI-compatible — same pattern as services/aiText.js.
-const deepseek = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
+const deepseek = require('../aiClient'); // shared DeepSeek client
 
 const SYSTEM_PROMPT = `You are the social media copywriter for SILKILINEN, a small luxury silk and linen brand. SILKILINEN is an Irish brand based in Donegal, but products are made in mixed locations.
 

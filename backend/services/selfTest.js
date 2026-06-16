@@ -7,14 +7,10 @@
 // delivering. Cheap by design: it PINGS dependencies rather than re-running
 // all ten agents — a few seconds, a handful of tokens.
 
-const OpenAI = require('openai');
 const SystemState = require('../models/SystemState');
 const { describeAgents } = require('./growthEngine');
 
-const client = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
+const client = require('./aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
 // ok: true (green), false (red), null (amber — optional/not-connected).

@@ -6,13 +6,9 @@
 // names where a reveal, a story, a touch of motion or delight would make the
 // visitor lean in and follow, without ever breaking quiet-luxury restraint.
 
-const OpenAI = require('openai');
 const { gatherExperience } = require('../storefrontExperience');
 
-const client = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
+const client = require('../aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
 const SYSTEM = `You are Maui — the showman who makes a journey alive and makes people follow. You guard SILKILINEN's storefront DELIGHT. Walk it and find the flat, generic or boring moments: long copy with no hook, a transactional moment that could be a small joy, a beautiful product shown like a search result, a reveal that lands without drama, a page that doesn't make the visitor lean in.

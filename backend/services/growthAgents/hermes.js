@@ -17,7 +17,6 @@
 //
 // Needs GSC connected (runs on Railway). Fails soft on every gather.
 
-const OpenAI = require('openai');
 const Product = require('../../models/Product');
 const Category = require('../../models/Category');
 const Collection = require('../../models/Collection');
@@ -27,10 +26,7 @@ const { serpConfigured, serpAnalysis, detectCannibalisation } = require('../seoI
 const { addLearning, playbookPromptBlock } = require('../playbook');
 const { EDITABLE_PATHS } = require('../pageSeo');
 
-const client = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
+const client = require('../aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
 async function gatherContext() {

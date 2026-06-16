@@ -6,15 +6,11 @@
 // trust, copy, navigation, urgency-without-sleaze), distinct from the
 // Competitor Scout's strategy/positioning work.
 
-const OpenAI = require('openai');
 const { getCompetitors } = require('../competitorIntel');
 const { assertPublicUrl } = require('../safeUrl');
 const SystemState = require('../../models/SystemState');
 
-const client = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
+const client = require('../aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 const ROTATE_KEY = 'growthStorefrontRotation';
 const OWN_SITE = 'https://www.silkilinen.com';

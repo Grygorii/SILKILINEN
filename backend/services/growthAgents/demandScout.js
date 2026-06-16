@@ -10,17 +10,13 @@
 // Runs on Railway (open internet). In the build sandbox the external calls are
 // blocked; the parsing is unit-tested separately. Every source fails soft.
 
-const OpenAI = require('openai');
 const Product = require('../../models/Product');
 const Category = require('../../models/Category');
 const SystemState = require('../../models/SystemState');
 const { expandDemand, googleTrendsInterest } = require('../externalData');
 const { playbookPromptBlock } = require('../playbook');
 
-const client = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
+const client = require('../aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 const CURSOR_KEY = 'demandScoutCursor';
 

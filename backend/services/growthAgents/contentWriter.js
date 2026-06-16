@@ -7,15 +7,11 @@
 // brand voice, linking 2-3 real products. The article is saved as a
 // DRAFT JournalArticle — never published automatically.
 
-const OpenAI = require('openai');
 const JournalArticle = require('../../models/JournalArticle');
 const Product = require('../../models/Product');
 const { playbookPromptBlock } = require('../playbook');
 
-const deepseekClient = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
+const deepseekClient = require('../aiClient'); // shared DeepSeek client
 
 const MODEL = process.env.DEEPSEEK_MODEL_SEO || 'deepseek-chat';
 const SITE_URL = 'https://www.silkilinen.com';

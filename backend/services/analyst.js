@@ -10,16 +10,12 @@
 // Numbers are computed with the same conventions as the dashboard
 // (PAID_STATUSES) so the analyst never disagrees with the panels.
 
-const OpenAI = require('openai');
 const Order = require('../models/Order');
 const Visit = require('../models/Visit');
 const Product = require('../models/Product');
 const Customer = require('../models/Customer');
 
-const client = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
+const client = require('./aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
 const PAID_STATUSES = ['paid', 'shipped', 'delivered'];
