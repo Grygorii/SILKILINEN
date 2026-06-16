@@ -36,7 +36,7 @@ router.use(requireAuth);
 
 // ── POST /generate — write a masterpiece draft from the agents' intelligence ──
 const { aiLimit } = require('../middleware/rateLimiters');
-const { generateMasterpiece } = require('../services/journalWriter');
+const { generateMasterpiece, refreshArticle } = require('../services/journalWriter');
 router.post('/generate', aiLimit, async (req, res) => {
   try {
     const result = await generateMasterpiece({ topic: req.body?.topic });
@@ -44,6 +44,17 @@ router.post('/generate', aiLimit, async (req, res) => {
   } catch (err) {
     console.error('[journal generate] error:', err.message);
     res.status(503).json({ error: err.message || 'Could not generate an article — try again in a moment.' });
+  }
+});
+
+// POST /:id/refresh — improve/expand an existing article toward its query.
+// Returns the new content for review; does NOT save (no silent live overwrite).
+router.post('/:id/refresh', aiLimit, async (req, res) => {
+  try {
+    res.json({ ok: true, ...(await refreshArticle({ articleId: req.params.id })) });
+  } catch (err) {
+    console.error('[journal refresh] error:', err.message);
+    res.status(503).json({ error: err.message || 'Could not refresh the article — try again.' });
   }
 });
 

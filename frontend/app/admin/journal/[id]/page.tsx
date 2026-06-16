@@ -48,6 +48,7 @@ export default function JournalEditorPage() {
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [saving, setSaving] = useState(false);
   const [justPublished, setJustPublished] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [seoOpen, setSeoOpen] = useState(false);
   const [seoForm, setSeoForm] = useState({ slug: '', metaTitle: '', metaDescription: '', keywords: '', author: 'Sabreen' });
@@ -191,6 +192,30 @@ export default function JournalEditorPage() {
     setSaving(false);
   }
 
+  // Load an AI rewrite of this article into the editor for review. Does NOT save —
+  // the founder reviews and presses Save (or leaves to discard). No live overwrite.
+  async function refreshWithAI() {
+    if (!editor) return;
+    if (!window.confirm('Rewrite this article with AI? It loads an improved version into the editor for you to review — nothing is saved until you press Save.')) return;
+    setRefreshing(true);
+    try {
+      const res = await fetch(`${API}/api/admin/journal/${id}/refresh`, { method: 'POST', credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Refresh failed');
+      editor.commands.setContent(data.body || '');
+      setTitle(data.title || title);
+      if (titleRef.current) titleRef.current.textContent = data.title || title;
+      setExcerpt(data.excerpt || excerpt);
+      if (excerptRef.current) excerptRef.current.textContent = data.excerpt || excerpt;
+      setSeoForm(f => ({ ...f, metaTitle: data.metaTitle || f.metaTitle, metaDescription: data.metaDescription || f.metaDescription }));
+      setArticle(a => a ? { ...a, aiProvenance: data.provenance || a.aiProvenance } : a);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Could not refresh.');
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
   async function openPreview() {
     await save('preview');
     const res = await fetch(`${API}/api/admin/journal/${id}/preview-token`, { credentials: 'include' });
@@ -252,6 +277,10 @@ export default function JournalEditorPage() {
           </div>
 
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            <button onClick={refreshWithAI} disabled={refreshing} title="Improve & expand this article toward its search query — loads a rewrite for you to review (does not save until you do)"
+              style={{ padding: '7px 14px', fontSize: 12, border: '1px solid #b8863b', background: 'white', color: '#7a5f2b', cursor: refreshing ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+              {refreshing ? 'Refreshing…' : '✦ Refresh with AI'}
+            </button>
             <button onClick={() => save('draft')} style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>
               Save draft
             </button>
