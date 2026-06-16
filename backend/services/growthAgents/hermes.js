@@ -22,7 +22,8 @@ const Product = require('../../models/Product');
 const Category = require('../../models/Category');
 const Collection = require('../../models/Collection');
 const GrowthAction = require('../../models/GrowthAction');
-const { isConnected, getSearchPerformance, getQueryOpportunities } = require('../searchConsole');
+const { isConnected, getSearchPerformance, getQueryOpportunities, getQueryPagePairs, inspectUrl } = require('../searchConsole');
+const { serpConfigured, serpAnalysis, detectCannibalisation } = require('../seoIntel');
 const { addLearning, playbookPromptBlock } = require('../playbook');
 const { EDITABLE_PATHS } = require('../pageSeo');
 
@@ -51,32 +52,67 @@ async function gatherContext() {
   return { perf, opps: (opps || []).slice(0, 15), products, categories, collections, missingMeta, demandPhrases, competitorNotes };
 }
 
-const SYSTEM = `You are Hermes, the search-performance strategist for SILKILINEN — a quiet-luxury silk & linen house. You read the shop's REAL Google Search Console data and turn it into a short, ranked plan to win more clicks from the search footholds Google already grants. You never invent numbers; you reason only over the figures handed to you.
+// Outcome tracking — did the queries Hermes flagged ~4 weeks ago actually move?
+// Observational (we can't prove the founder applied each fix), so worded as
+// "flagged then moved", not "our fix caused". Closes the learning loop: proven
+// wins become a Playbook rule. Compares each past recommendation's baseline
+// position to the query's CURRENT position.
+async function assessOutcomes(currentPositions) {
+  const since = new Date(Date.now() - 60 * 86400000);
+  const until = new Date(Date.now() - 21 * 86400000);
+  const past = await GrowthAction.find({
+    agent: 'hermes', type: 'seo',
+    'meta.target': { $nin: [null, ''] }, 'meta.position': { $ne: null },
+    createdAt: { $gte: since, $lte: until },
+  }).sort({ createdAt: -1 }).limit(40).select('meta createdAt').lean().catch(() => []);
+
+  const cur = currentPositions instanceof Map ? currentPositions : new Map();
+  const seen = new Set();
+  let wins = 0, losses = 0;
+  const winLines = [];
+  for (const a of past) {
+    const q = String(a.meta?.target || '').toLowerCase();
+    const base = Number(a.meta?.position);
+    if (!q || !base || seen.has(q)) continue;
+    seen.add(q);
+    const now = cur.get(q);
+    if (now == null) continue; // not in current data — can't measure
+    const delta = base - now; // positive = position improved (lower number)
+    if (delta >= 1.5) { wins++; winLines.push(`"${a.meta.target}" ${base}→${now}`); }
+    else if (delta <= -1.5) losses++;
+  }
+  return { wins, losses, measured: wins + losses, winLines: winLines.slice(0, 4) };
+}
+
+const SYSTEM = `You are Hermes, a senior search-performance strategist for SILKILINEN — a quiet-luxury silk & linen house, with 20 years' on-page and content-SEO judgement. You read the shop's REAL Google Search Console data (and, when given, the live SERP) and turn it into a short, ranked plan. You never invent numbers; you reason only over the figures handed to you.
 
 How you think, in priority order:
-1. STRIKING DISTANCE (highest leverage): queries the shop ranks for at roughly position 8-20 with real impressions. A small, honest improvement to the matching page — a sharper title/H1, one more paragraph of genuine detail, an internal link, alt-text — can push it onto page one, where the clicks are. Name the query, its position, and the exact page (usually a specific product or category) to improve.
-2. SEEN BUT NOT CLICKED: a page with impressions but no clicks usually has a weak meta title/description for that intent. Recommend rewriting it to earn the click (quiet-luxury voice, never salesy).
-3. NEAR-MISS: position 4-10 — a nudge to reach the top three.
-4. META GAPS: if a query maps to a product with no meta title/description, that page is competing with one hand tied — flag it to generate SEO.
-5. CROSS-REFERENCE THE OTHER AGENTS: you are given OUTWARD intel from the Demand Scout (phrases the world is searching) and the Competitor Scout. Your edge is fusing inward (what you already rank for) with outward (what's rising). A query that is BOTH striking-distance AND matches a rising demand phrase is your single highest-priority move — treat it as high leverage and say why.
+1. SEARCH INTENT FIRST. Classify each target query as "informational" (how/why/care/guide), "commercial" (compare/best/vs), or "transactional" (buy/shop/specific product). The right PAGE TYPE must match the intent: transactional → a product/category page; informational → a JOURNAL guide. This decides everything below.
+2. CONTENT-GAP. If a query has real impressions but its intent has NO matching page type (e.g. an informational query like "how to wash silk" that only a product page half-answers), the fix is NOT meta — it is to CREATE the right page. Emit a "content" play targeting entityType "page" /journal (a guide the Content Writer should write). Be honest: meta cannot make the wrong page type rank.
+3. SERP REALITY. When you are given the live top results for a query, judge whether a meta tweak can realistically win, or whether the page is out-gunned (the top results are deep guides / comparison tables / different format). If out-gunned, say so and recommend content depth, not a title tweak.
+4. STRIKING DISTANCE: queries ranking at roughly position 8-20 with real impressions, where the page type is already RIGHT. A sharper TITLE (weighted far above the meta description — Google often rewrites descriptions, so the title is the real CTR/relevance lever), an H1, one more paragraph, or an internal link can push it onto page one.
+5. CANNIBALISATION: you may be given queries where TWO+ of the site's own pages compete. Splitting signals suppresses both — recommend consolidating to ONE canonical page (strengthen it, point the weaker one's internal links to it). This is a "content" play.
+6. SEEN BUT NOT CLICKED: impressions, no clicks → a weak TITLE for that intent. Rewrite it to earn the click (quiet-luxury voice, never salesy).
+7. META GAPS: a query mapping to a product with no meta → generate it.
+8. SCHEMA: if a high-intent product/article page would benefit from structured data (Product/Article schema) for rich results, note it as a "content" play.
+9. CROSS-REFERENCE THE OTHER AGENTS: fuse inward (what you rank for) with outward (Demand Scout's rising phrases, Competitor notes). A query that is BOTH striking-distance AND rising is your single highest-priority move.
 
 Hard rules:
-- QUIET LUXURY: never recommend price/discount/"cheaper than" moves, never clickbait. Aspire upward through specificity and fabric/craft detail.
-- NEVER claim or imply where a product is made (no "made in Ireland/Donegal"); origin varies and isn't given.
-- British/Irish English.
-- BE HONEST ABOUT SCALE: you will be told the impression total. If it is small (an early-stage site), say so plainly, give the one or two REAL footholds worth acting on, and do not manufacture a big plan from thin data. A truthful "too early, here are the 1-2 real footholds, keep publishing" is the right answer when the data is thin.
+- QUIET LUXURY: never price/discount/"cheaper than", never clickbait. Aspire upward through specificity and fabric/craft detail.
+- NEVER claim where a product is made; British/Irish English.
+- BE HONEST ABOUT SCALE: if the impression total is tiny (early-stage), say so plainly. At that scale the truthful priority is PUBLISHING useful content + getting indexed + earning links — NOT meta tweaks. Give the 1-2 real footholds and say the rest is premature. Do not manufacture a grand plan from thin data.
 
 Your plan is EXECUTED by a one-button "Rebuild SEO" pipeline, so each play must be machine-actionable:
-- "kind" is "meta" when the fix is rewriting the page's meta title/description (the pipeline can generate + apply it). It is "content" when the fix needs new on-page words a field can't hold — a paragraph, an internal link, alt-text (the pipeline flags it for the founder/Content Writer).
-- "entityType" + "entityRef" name the EXACT thing to act on: for a product use entityType "product" and entityRef the exact product NAME from the catalogue list; for a category/collection use its SLUG from the lists; use "page" with a path ("/", "/journal") only for the homepage or journal.
-- Give AT MOST ONE play per entity — never repeat the same product/category/collection twice. Dedupe ruthlessly.
+- "kind" is "meta" only when rewriting an EXISTING page's meta title/description fixes it (pipeline generates+applies). Use "content" for anything else — a new guide, more on-page words, an internal link, consolidating cannibalised pages, schema (pipeline drafts/flags it).
+- "entityType" + "entityRef": product → exact product NAME; category/collection → SLUG; page → an exact editable path. For a content-gap guide, use entityType "page", entityRef "/journal".
+- AT MOST ONE play per entity. Dedupe ruthlessly.
 
 Respond ONLY with valid JSON:
 {
   "state": "thin" | "actionable",
-  "read": "one honest sentence on the search picture right now",
-  "plays": [ { "target": "the query or intent", "kind": "meta" | "content", "entityType": "product" | "category" | "collection" | "page", "entityRef": "exact product name, or category/collection slug, or page path", "position": number|null, "impressions": number|null, "issue": "what's holding the clicks back", "action": "the one concrete instruction", "leverage": "high" | "low" } ],
-  "lesson": "OPTIONAL: one short, durable rule for the other agents about what is ranking and what to lean into (e.g. 'Pillowcase colour-name queries are our fastest-ranking foothold — keep colour in titles'). Omit if nothing durable yet."
+  "read": "one honest sentence on the search picture, including the single biggest strategic lever right now (not necessarily meta)",
+  "plays": [ { "target": "the query/intent", "intent": "informational" | "commercial" | "transactional", "kind": "meta" | "content", "entityType": "product" | "category" | "collection" | "page", "entityRef": "name/slug/path", "position": number|null, "impressions": number|null, "issue": "what's really holding it back (intent mismatch? out-gunned on the SERP? cannibalisation? weak title?)", "action": "the one concrete instruction", "leverage": "high" | "low" } ],
+  "lesson": "OPTIONAL: one durable, reusable rule for the other agents. Omit if nothing durable yet."
 }
 Give at most 6 plays, highest leverage first, one per entity.`;
 
@@ -106,6 +142,26 @@ async function run() {
     }];
   }
 
+  // Senior analyses the on-page-only Hermes was missing — all fail soft.
+  const pairs = await getQueryPagePairs(28).catch(() => []);
+  const cannibal = detectCannibalisation(pairs);
+  // Current best position per query — from the full query×page set (far wider
+  // than the top-15 opportunities), so outcome tracking can actually measure.
+  const currentPositions = new Map();
+  for (const r of pairs) {
+    const q = String(r.query || '').toLowerCase();
+    if (!q) continue;
+    if (!currentPositions.has(q) || r.position < currentPositions.get(q)) currentPositions.set(q, r.position);
+  }
+  const strikers = (opps || []).filter(o => o.position >= 6 && o.position <= 20)
+    .sort((a, b) => b.impressions - a.impressions).slice(0, 2);
+  let serp = [];
+  if (serpConfigured()) serp = await Promise.all(strikers.map(async o => ({ query: o.query, ...(await serpAnalysis(o.query)) }))).catch(() => []);
+  const host = (perf.topPages || []).map(p => p.key).find(u => /^https?:/.test(u))?.match(/^https?:\/\/[^/]+/)?.[0] || 'https://www.silkilinen.com';
+  const keyUrls = [`${host}/`, products[0] && `${host}/product/${products[0]._id}`, categories[0] && `${host}/shop?category=${categories[0].slug}`].filter(Boolean).slice(0, 4);
+  const indexation = await Promise.all(keyUrls.map(async u => ({ url: u.replace(host, '') || '/', ...(await inspectUrl(u) || { indexed: null }) }))).catch(() => []);
+  const notIndexed = indexation.filter(i => i.indexed === false);
+
   const learned = await playbookPromptBlock().catch(() => '');
   const user = [
     `SEARCH PICTURE (last 28 days, finalised): ${perf.totals.clicks} clicks, ${impressions} impressions, avg position ${Math.round(perf.totals.position)}. This is an early-stage site — calibrate honestly to this scale.`,
@@ -126,6 +182,17 @@ async function run() {
     demandPhrases.length ? `- Demand Scout — rising/searched phrases the world wants: ${demandPhrases.slice(0, 12).join('; ')}.` : '- Demand Scout: nothing fresh.',
     competitorNotes.length ? `- Competitor Scout: ${competitorNotes.slice(0, 4).join(' | ')}.` : '',
     `CROSS-REFERENCE RULE: if one of your striking-distance queries also appears in (or closely matches) the Demand Scout's rising phrases, RAISE its leverage to "high" and say so in the issue — inward foothold + outward demand is the strongest signal there is.`,
+    ``,
+    `── SENIOR SIGNALS ──`,
+    cannibal.length
+      ? `CANNIBALISATION (your OWN pages competing for one query — splitting signals; recommend consolidating to one):\n${cannibal.map(c => `- "${c.query}": ${c.pages.map(p => `${p.page.replace(/^https?:\/\/[^/]+/, '')} (pos ${p.position})`).join(', ')}`).join('\n')}`
+      : 'CANNIBALISATION: none detected.',
+    serp.length
+      ? `LIVE SERP for your striking-distance queries (judge realistically — can a meta tweak win, or are you out-gunned by deeper content?):\n${serp.map(s => `- "${s.query}": ${s.configured ? (s.results.map(r => `[${r.displayLink}] ${r.title}`).join(' | ') || 'no results returned') : 'SERP API not configured'}`).join('\n')}`
+      : (serpConfigured() ? '' : 'LIVE SERP: not configured — reason about likely intent/format from your own knowledge (founder can set GOOGLE_CSE_KEY + GOOGLE_CSE_ID to feed real SERPs).'),
+    notIndexed.length
+      ? `NOT INDEXED — these key pages are NOT confirmed in Google's index, so meta/content tweaks cannot rank them until fixed: ${notIndexed.map(i => i.url).join(', ')}.`
+      : '',
     learned,
     ``,
     `Read the picture and return the ranked plan as JSON.`,
@@ -169,34 +236,78 @@ async function run() {
     }];
   }
 
-  return plays.map(p => {
+  const mapped = plays.map(p => {
     const high = String(p.leverage).toLowerCase() === 'high';
     const kind = String(p.kind || '').toLowerCase() === 'content' ? 'content' : 'meta';
     const entityType = ['product', 'category', 'collection', 'page'].includes(String(p.entityType || '').toLowerCase())
       ? String(p.entityType).toLowerCase() : 'page';
     const entityRef = String(p.entityRef || '').trim();
+    const intent = ['informational', 'commercial', 'transactional'].includes(String(p.intent || '').toLowerCase())
+      ? String(p.intent).toLowerCase() : '';
     const pos = p.position != null ? ` (pos ${p.position}${p.impressions != null ? `, ${p.impressions} imp` : ''})` : '';
     return {
       type: 'seo',
       title: `Hermes: ${String(p.target || entityRef).slice(0, 80)}`,
-      detail: `${p.issue || ''}${pos}${entityRef ? ` · ${entityType}: ${entityRef}` : ''} · Do this: ${p.action || 'improve this page for the query'}`,
+      detail: `${intent ? `[${intent}] ` : ''}${p.issue || ''}${pos}${entityRef ? ` · ${entityType}: ${entityRef}` : ''} · Do this: ${p.action || 'improve this page for the query'}`,
       href: '/admin/seo',
       status: high ? 'needs_approval' : 'info',
       // Structured so the Rebuild SEO pipeline can execute the plan.
       meta: {
-        kind, entityType, entityRef,
+        kind, entityType, entityRef, intent,
         target: p.target || '', action: p.action || '',
         position: p.position ?? null, impressions: p.impressions ?? null,
         leverage: high ? 'high' : 'low',
       },
     };
   });
+
+  // Strategic flags the pipeline can't auto-apply but the founder must see —
+  // surfaced as their own blocks (kind 'content', so Rebuild flags them).
+  const extra = [];
+  for (const c of cannibal.slice(0, 3)) {
+    extra.push({
+      type: 'seo',
+      title: `Cannibalisation: "${String(c.query).slice(0, 70)}"`,
+      detail: `${c.pages.length} of your own pages compete for this query (${c.pages.map(p => `${p.page.replace(/^https?:\/\/[^/]+/, '')} pos ${p.position}`).join(', ')}). Consolidate to one strong page and point the weaker ones' internal links to it.`,
+      href: '/admin/seo',
+      status: 'needs_approval',
+      meta: { kind: 'content', entityType: 'page', entityRef: '', target: c.query, action: 'consolidate competing pages to one canonical page', leverage: 'high', strategic: 'cannibalisation' },
+    });
+  }
+  if (notIndexed.length) {
+    extra.push({
+      type: 'seo',
+      title: `Not indexed: ${notIndexed.length} key page${notIndexed.length === 1 ? '' : 's'} missing from Google`,
+      detail: `${notIndexed.map(i => i.url).join(', ')} — not confirmed in Google's index. Request indexing in Search Console (URL Inspection → Request indexing); no meta/content tweak can rank an unindexed page.`,
+      href: '/admin',
+      status: 'needs_approval',
+      meta: { kind: 'content', entityType: 'page', entityRef: '', strategic: 'indexation' },
+    });
+  }
+
+  // Outcome loop — measure queries flagged ~4 weeks ago, learn from the wins.
+  const outcome = await assessOutcomes(currentPositions);
+  if (outcome.measured > 0) {
+    extra.unshift({
+      type: 'seo',
+      title: `Outcome check: ${outcome.wins} of ${outcome.measured} flagged queries improved`,
+      detail: `Of the queries Hermes flagged ~4 weeks ago that are still measurable, ${outcome.wins} moved up and ${outcome.losses} slipped.${outcome.winLines.length ? ` Movers: ${outcome.winLines.join(', ')}.` : ''} (Observational — confirms the direction, not strict cause.)`,
+      href: '/admin/seo',
+      status: 'info',
+      meta: { strategic: 'outcomes', wins: outcome.wins, losses: outcome.losses },
+    });
+    if (outcome.winLines.length) {
+      await addLearning(`Search Console shows these flagged queries improved after action: ${outcome.winLines.join('; ')} — keep prioritising this kind of fix.`).catch(() => {});
+    }
+  }
+
+  return [...mapped, ...extra];
 }
 
 module.exports = {
   name: 'hermes',
   label: 'Hermes · Pathfinder',
-  description: 'Reads your real Search Console data and FUSES it with the Demand & Competitor scouts\' intel to rank what to fix — striking-distance queries (extra weight when they also match a rising demand phrase), pages seen but not clicked, and meta gaps. The brain behind the one-button Rebuild SEO.',
+  description: 'Senior search strategist: reads real Search Console data, classifies intent, checks the live SERP (when configured), catches cannibalisation, flags un-indexed pages, and measures whether past fixes actually moved — then ranks what to do (content gaps, titles, meta, consolidation), fused with the Demand & Competitor scouts. The brain behind Rebuild SEO.',
   cadenceHours: 72,
   defaultEnabled: true,
   run,
