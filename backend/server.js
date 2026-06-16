@@ -169,6 +169,8 @@ app.use('/api/customers', customersRoutes);
 app.use('/api/promo-codes', promoCodesRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/settings', require('./routes/settings'));
+app.use('/api/page-seo', require('./routes/pageSeo'));
+app.use('/api/admin/page-seo', require('./routes/adminPageSeo'));
 app.use('/api/faq', require('./routes/faq'));
 app.use('/api/size-chart', require('./routes/sizeChart'));
 app.use('/api/shipping', require('./routes/shipping'));
@@ -214,6 +216,7 @@ mongoose.connect(process.env.MONGODB_URI)
     require('./services/siteSettings').loadSiteSettings();
     require('./services/faq').loadFaq();
     require('./services/sizeChart').loadSizeChart();
+    require('./services/pageSeo').loadPageSeo();
   })
   .catch(function(err) {
     // Fail fast: don't accept traffic with no database (would just 500).

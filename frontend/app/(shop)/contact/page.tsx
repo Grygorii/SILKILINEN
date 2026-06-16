@@ -1,10 +1,15 @@
+import type { Metadata } from 'next';
 import styles from './page.module.css';
+import { getPageMeta } from '@/lib/pageSeo';
 
-export const metadata = {
-  alternates: { canonical: 'https://www.silkilinen.com/contact' },
-  title: 'Contact',
-  description: 'Get in touch with SILKILINEN. Email us at hello@silkilinen.com — we respond within one business day.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const o = await getPageMeta('/contact');
+  return {
+    alternates: { canonical: 'https://www.silkilinen.com/contact' },
+    title: o?.metaTitle ? { absolute: o.metaTitle } : 'Contact',
+    description: o?.metaDescription || 'Get in touch with SILKILINEN. Email us at hello@silkilinen.com — we respond within one business day.',
+  };
+}
 
 export default function ContactPage() {
   return (

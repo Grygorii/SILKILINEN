@@ -74,10 +74,16 @@ export default function RebuildSeoModal({ onClose }: { onClose: () => void }) {
     }
 
     async function generate(entityType: string, id: string, guidance: string): Promise<Draft> {
-      const res = await fetch(`${API}/api/admin/${BASE[entityType]}/${id}/generate-seo`, {
+      // Pages generate via the page-SEO store (id is the path); the rest via
+      // their entity generate-seo endpoint (id is the entity id).
+      const url = entityType === 'page'
+        ? `${API}/api/admin/page-seo/generate`
+        : `${API}/api/admin/${BASE[entityType]}/${id}/generate-seo`;
+      const body = entityType === 'page' ? { path: id, label: id, guidance } : { guidance };
+      const res = await fetch(url, {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ guidance }),
+        body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Generation failed');
@@ -85,15 +91,20 @@ export default function RebuildSeoModal({ onClose }: { onClose: () => void }) {
     }
 
     async function apply(entityType: string, id: string, draft: Draft) {
-      // Products use a partial meta endpoint (the full PUT requires name+price);
-      // categories/collections PATCH the record directly.
+      // product → partial meta endpoint (full PUT requires name+price);
+      // page → page-SEO store (id is the path); category/collection → PATCH record.
       const url = entityType === 'product'
         ? `${API}/api/admin/products/${id}/meta`
-        : `${API}/api/admin/${BASE[entityType]}/${id}`;
+        : entityType === 'page'
+          ? `${API}/api/admin/page-seo`
+          : `${API}/api/admin/${BASE[entityType]}/${id}`;
+      const body = entityType === 'page'
+        ? { path: id, metaTitle: draft.metaTitle, metaDescription: draft.metaDescription }
+        : { metaTitle: draft.metaTitle, metaDescription: draft.metaDescription };
       const res = await fetch(url, {
         method: 'PATCH', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ metaTitle: draft.metaTitle, metaDescription: draft.metaDescription }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
