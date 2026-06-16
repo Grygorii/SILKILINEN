@@ -14,6 +14,7 @@ const Expense = require('../models/Expense');
 const Customer = require('../models/Customer');
 const { calculateShipping, getTierForCountry } = require('../services/shipping');
 const { validateDiscount, redeemDiscount } = require('../services/discounts');
+const { availabilityError, decrementStockForOrder } = require('../services/inventory');
 const { calculateTax } = require('../services/tax');
 const { sendOrderConfirmation, sendAdminOrderNotification } = require('../services/email');
 
@@ -105,6 +106,13 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
     // tampered cart can't underpay.
     const validatedItems = [];
     for (const item of sourceItems) {
+      // Quantity is the one client value we act on — guard it before it reaches
+      // any price arithmetic. A negative/fractional/huge qty would otherwise
+      // skew the charged total (negative qty lowers it).
+      const quantity = parseInt(item.quantity, 10);
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
+        return res.status(400).json({ error: `Invalid quantity for "${item.name || 'item'}"` });
+      }
       if (item.bundleId) {
         const bundle = await Bundle.findOne({
           _id: item.bundleId,
@@ -126,7 +134,7 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
           price: pricing.bundlePrice, // authoritative bundle price from DB
           colour: '',
           size: '',
-          quantity: item.quantity,
+          quantity,
         });
       } else {
         const productId = item.productId || item._id;
@@ -137,6 +145,11 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
         if (!product) {
           return res.status(400).json({ error: `"${item.name}" is no longer available` });
         }
+        // Don't sell sold-out items, and don't sell more than a variant has.
+        const availErr = availabilityError(product, { colour: item.colour, size: item.size, quantity });
+        if (availErr) {
+          return res.status(409).json({ error: availErr });
+        }
         validatedItems.push({
           productId: product._id,
           bundleId: null,
@@ -144,7 +157,7 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
           price: product.price, // authoritative price from DB
           colour: item.colour || '',
           size: item.size || '',
-          quantity: item.quantity,
+          quantity,
         });
       }
     }
@@ -158,7 +171,9 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
     let discountError = null;
     const codeToTry = incomingCode || cart?.discountCode;
     if (codeToTry) {
-      const dr = await validateDiscount(codeToTry, subtotal);
+      // Pass the email so a single-use-per-customer code can't be reused — the
+      // per-customer check is skipped when the email is unknown.
+      const dr = await validateDiscount(codeToTry, subtotal, email || cart?.email);
       if (dr.valid) {
         discountCode = dr.code;
         discountAmount = dr.discountAmount;
@@ -522,6 +537,14 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
       } finally {
         await session.endSession();
       }
+
+      // Decrement stock AFTER the order is committed. Kept out of the
+      // transaction on purpose: withTransaction may re-run its callback on a
+      // transient error, which would double-decrement. The duplicate-order
+      // guard above makes this webhook run once per order, so a single
+      // post-commit pass is correct. Fail-soft — never lose a paid order to a
+      // stock write.
+      await decrementStockForOrder(items).catch(err => console.error('[inventory] post-order decrement:', err.message));
 
       // Fire Meta Conversions API server-side Purchase event.
       // fireMetaCapi has its own try/catch, but an unawaited async call
