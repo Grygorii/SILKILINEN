@@ -89,6 +89,16 @@ export default function JournalAdminPage() {
     }
   }
 
+  async function deleteArticle(id: string, title: string) {
+    if (!window.confirm(`Delete “${title || 'this article'}”? This can’t be undone.`)) return;
+    const res = await fetch(`${API}/api/admin/journal/${id}`, { method: 'DELETE', credentials: 'include' });
+    if (res.ok) {
+      setArticles(prev => prev.filter(a => a._id !== id));
+    } else {
+      alert('Could not delete the article — please try again.');
+    }
+  }
+
   const visible = articles.filter(a => filter === 'all' || a.status === filter);
 
   return (
@@ -195,7 +205,26 @@ export default function JournalAdminPage() {
             {visible.map(article => {
               const st = STATUS_LABELS[article.status];
               return (
-                <Link key={article._id} href={`/admin/journal/${article._id}`} style={{ textDecoration: 'none' }}>
+                <div key={article._id} style={{ position: 'relative' }}>
+                  {/* Delete — sits above the card link (not nested inside the
+                      anchor) so it never navigates. Confirms before removing. */}
+                  <button
+                    type="button"
+                    onClick={() => deleteArticle(article._id, article.title)}
+                    title="Delete article"
+                    aria-label={`Delete ${article.title}`}
+                    style={{
+                      position: 'absolute', top: 8, right: 8, zIndex: 2,
+                      width: 28, height: 28, borderRadius: '50%', border: 'none',
+                      background: 'rgba(0,0,0,0.55)', color: 'white', cursor: 'pointer',
+                      fontSize: 16, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#b03a2e')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.55)')}
+                  >
+                    ×
+                  </button>
+                  <Link href={`/admin/journal/${article._id}`} style={{ textDecoration: 'none' }}>
                   <div style={{
                     background: 'white', border: '1px solid var(--border)', overflow: 'hidden',
                     transition: 'box-shadow 0.2s ease',
@@ -230,7 +259,8 @@ export default function JournalAdminPage() {
                       )}
                     </div>
                   </div>
-                </Link>
+                  </Link>
+                </div>
               );
             })}
           </div>
