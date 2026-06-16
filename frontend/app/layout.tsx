@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import AnalyticsLoader from "@/components/AnalyticsLoader";
+import EventTracker from "@/components/EventTracker";
 import UTMCapture from "@/components/UTMCapture";
 import GoogleAuthProvider from "@/components/GoogleAuthProvider";
 import CsrfFetchPatch from "@/components/CsrfFetchPatch";
@@ -54,6 +55,12 @@ const ebGaramond = EB_Garamond({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.silkilinen.com'),
+  // Bing Webmaster Tools site verification — only rendered when the env var is
+  // set. (Or skip this and just "Import from Google Search Console" in Bing,
+  // which needs no code.) Bing also powers Copilot / ChatGPT search.
+  ...(process.env.BING_SITE_VERIFICATION
+    ? { verification: { other: { 'msvalidate.01': process.env.BING_SITE_VERIFICATION } } }
+    : {}),
   // Title template — every page that sets a `title` becomes
   // "Page Name | Silkilinen". Pages can opt out by setting
   // title: { absolute: '...' }. Brand casing is title-case in
@@ -220,6 +227,7 @@ export default async function RootLayout({
                 <CartProvider>
                   {children}
                   <AnalyticsLoader />
+                  <EventTracker />
                   <UTMCapture />
                 </CartProvider>
               </WishlistProvider>

@@ -7,6 +7,12 @@ export function getSessionId(): string {
     id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     localStorage.setItem(SESSION_KEY, id);
   }
+  // Mirror to a first-party cookie so the same thread id is readable
+  // server-side (SSR, future session→customer→order stitching) and survives
+  // some localStorage clears. 180-day, lax, client-set (not HttpOnly).
+  try {
+    document.cookie = `${SESSION_KEY}=${id}; path=/; max-age=${60 * 60 * 24 * 180}; SameSite=Lax`;
+  } catch { /* cookies disabled — the localStorage id still works */ }
   return id;
 }
 
@@ -76,5 +82,34 @@ export function trackVisit({ page, productId }: { page: string; productId?: stri
     // Not awaited — fire and forget. Tracking never blocks the customer experience.
   } catch {
     // Silent. Tracking failure is invisible to the customer.
+  }
+}
+
+// First-party clickstream event. Same-origin POST to /api/track/event (the
+// Vercel proxy → backend), so ad-blockers can't drop it and the data is ours.
+// Uses sendBeacon when available so events survive page-unload (outbound
+// clicks, navigations) without blocking the UX; falls back to keepalive fetch.
+export function trackClientEvent(type: string, props: Record<string, unknown> = {}) {
+  try {
+    if (typeof window === 'undefined') return;
+    if (window.location.pathname.startsWith('/admin')) return; // never track the admin
+
+    const body = JSON.stringify({
+      sessionId: getSessionId(),
+      type,
+      page: window.location.pathname,
+      props,
+      source: getSource(window.location.search, document.referrer || null),
+      device: detectDevice(),
+    });
+
+    const url = '/api/track/event';
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
+    } else {
+      fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true });
+    }
+  } catch {
+    // Silent — tracking never affects the customer.
   }
 }

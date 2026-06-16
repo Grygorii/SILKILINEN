@@ -5,8 +5,13 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { useCookieConsent } from '@/context/CookieConsentContext';
 
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-XZG6XTZ3S8';
-const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || 'wkxxtbufn3';
+// No hardcoded fallback IDs. A baked-in default means that if the env var is
+// ever blank, visitor data silently flows into whatever account owns that ID —
+// which may not be the founder's. Empty string → the guards below don't mount
+// the script. Set NEXT_PUBLIC_GA_ID / NEXT_PUBLIC_CLARITY_ID in Vercel to your
+// OWN GA4 / Clarity properties to enable them.
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID || '';
+const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || '';
 // Vercel Web Analytics + Speed Insights require the project-level toggle
 // in the Vercel dashboard. When the toggle is OFF, `/_vercel/insights/script.js`
 // 404s and the browser logs MIME-type errors. Gate the components behind an

@@ -78,13 +78,15 @@ export default function ProductCard({ product, showHeart = true }: Props) {
   }
 
   return (
-    <div className={styles.card}>
+    <div className={styles.card} data-track="card_click" data-track-product={product._id} data-track-name={product.name}>
       {showHeart && (
         <button
           className={`${styles.heartBtn} ${animating ? styles.heartAnimating : ''}`}
           onClick={handleHeart}
           aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
           aria-pressed={wished}
+          data-track="wishlist_toggle"
+          data-track-product={product._id}
         >
           <Heart
             size={18}
