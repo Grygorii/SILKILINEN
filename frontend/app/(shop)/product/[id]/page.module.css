@@ -243,3 +243,13 @@
   .infoCol { padding: 32px 5% 80px; }
   .productName { font-size: 26px; }
 }
+
+/* "momme" glossary — the silk-weight unit is jargon to a first-time visitor.
+   A brief inline note explains it (visible on touch too, unlike a hover-only
+   tooltip). */
+.mommeNote {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted, #8a8680);
+  line-height: 1.5;
+}
