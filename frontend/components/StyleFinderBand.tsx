@@ -38,23 +38,35 @@ export default function StyleFinderBand() {
     >
       <svg
         className={styles.ribbon}
-        viewBox="0 0 60 240"
+        viewBox="0 0 80 260"
         fill="none"
         aria-hidden="true"
         preserveAspectRatio="xMidYMin meet"
       >
         <defs>
-          <linearGradient id="silkRibbon" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#C4A882" />
-            <stop offset="100%" stopColor="#D9A6A0" />
+          <linearGradient id="silkRibbon" x1="0" y1="0" x2="0.7" y2="1">
+            <stop offset="0%" stopColor="#C9A06F" />
+            <stop offset="55%" stopColor="#D9A6A0" />
+            <stop offset="100%" stopColor="#C4A882" />
           </linearGradient>
         </defs>
+        {/* The ribbon itself — draws (unfurls) on scroll into view. */}
         <path
           className={styles.ribbonPath}
           pathLength={1}
-          d="M30 2 C 12 36, 48 72, 30 108 C 12 144, 48 180, 30 238"
+          d="M40 4 C 12 44, 68 88, 40 130 C 12 172, 68 216, 40 256"
           stroke="url(#silkRibbon)"
-          strokeWidth="2"
+          strokeWidth="6"
+          strokeLinecap="round"
+        />
+        {/* A short bright glint that travels down the ribbon, like light
+            moving across silk. */}
+        <path
+          className={styles.ribbonShine}
+          pathLength={1}
+          d="M40 4 C 12 44, 68 88, 40 130 C 12 172, 68 216, 40 256"
+          stroke="#FFFFFF"
+          strokeWidth="2.5"
           strokeLinecap="round"
         />
       </svg>

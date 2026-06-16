@@ -31,14 +31,15 @@
 */
 .ribbon {
   position: absolute;
-  top: 16px;
+  top: 14px;
   left: 50%;
   transform: translateX(-50%);
-  height: calc(100% - 32px);
-  width: 60px;
-  opacity: 0.5;
+  height: calc(100% - 28px);
+  width: 80px;
+  opacity: 0.92;
   pointer-events: none;
   z-index: 0;
+  filter: drop-shadow(0 2px 6px rgba(180, 140, 110, 0.35));
 }
 .ribbonPath {
   stroke-dasharray: 1;
@@ -47,6 +48,23 @@
 .inView .ribbonPath {
   stroke-dashoffset: 0;
   transition: stroke-dashoffset 1.8s ease;
+}
+
+/* Travelling glint — a short visible segment (8% of the path) slides down the
+   ribbon and pauses, on a gentle loop, once the ribbon has drawn. */
+.ribbonShine {
+  stroke-dasharray: 0.08 0.92;
+  stroke-dashoffset: 1;
+  opacity: 0;
+}
+.inView .ribbonShine {
+  opacity: 0.85;
+  animation: ribbonShine 4s ease-in-out 1.7s infinite;
+}
+@keyframes ribbonShine {
+  0%   { stroke-dashoffset: 1; }
+  45%  { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 0; }
 }
 
 .finderEyebrow {
@@ -73,32 +91,50 @@
    gradient slides toward blush and the button lifts slightly; at rest a gentle
    pulse breathes through it. */
 .finderBtn {
-  margin-top: 14px;
-  padding: 11px 26px;
+  position: relative;
+  overflow: hidden;
+  margin-top: 16px;
+  padding: 13px 30px;
   font-size: 12px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--color-ink, #2a2218);
-  background: linear-gradient(120deg, #c4a882 0%, #d9a6a0 100%);
-  background-size: 200% 100%;
+  /* Three-stop copper→blush→copper gradient that drifts continuously, so the
+     button reads like silk slowly catching the light even at rest. */
+  background: linear-gradient(115deg, #c9a06f 0%, #d9a6a0 45%, #e6c9a8 70%, #c9a06f 100%);
+  background-size: 220% 100%;
   background-position: 0% 0;
-  border: 1px solid rgba(42, 34, 24, 0.25);
-  animation: finderPulse 3.4s ease-in-out infinite;
-  transition: background-position 0.6s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(42, 34, 24, 0.22);
+  box-shadow: 0 2px 10px rgba(196, 168, 130, 0.35);
+  animation: finderShift 6s ease-in-out infinite;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+/* A clear shine streak sweeps across on hover. */
+.finderBtn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
+  transform: translateX(-130%);
+  transition: transform 0.7s ease;
 }
 .finderBand:hover .finderBtn {
-  background-position: 100% 0;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 22px rgba(196, 168, 130, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(196, 168, 130, 0.5);
+}
+.finderBand:hover .finderBtn::after {
+  transform: translateX(130%);
 }
 
-@keyframes finderPulse {
-  0%, 100% { box-shadow: 0 0 0 rgba(196, 168, 130, 0); }
-  50%      { box-shadow: 0 4px 16px rgba(196, 168, 130, 0.35); }
+@keyframes finderShift {
+  0%, 100% { background-position: 0% 0; }
+  50%      { background-position: 100% 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ribbonPath { stroke-dashoffset: 0; transition: none; }
+  .ribbonShine { display: none; }
   .finderBtn { animation: none; transition: none; }
+  .finderBtn::after { display: none; }
   .finderBand:hover .finderBtn { transform: none; }
 }

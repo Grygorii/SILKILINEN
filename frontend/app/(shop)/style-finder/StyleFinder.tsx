@@ -30,6 +30,9 @@ type Product = {
   images?: ProductImg[];
 };
 
+/** Exported for the server page, which loads the catalogue and passes it in. */
+export type SFProduct = Product;
+
 type Weights = Record<string, number>;
 
 type Option = {
@@ -236,7 +239,7 @@ function revealDelay(index: number): React.CSSProperties {
   return { animationDelay: `${index * 150}ms` };
 }
 
-export default function StyleFinder() {
+export default function StyleFinder({ initialProducts = [] }: { initialProducts?: Product[] }) {
   const [phase, setPhase] = useState<Phase>('intro');
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answer[]>([]);
@@ -256,25 +259,39 @@ export default function StyleFinder() {
     const { weights, colourHints } = buildProfile(allAnswers);
     setPersona(choosePersona(colourHints));
     // A calm minimum "gathering" beat so the reveal feels earned, not instant.
-    // The real fetch wait is folded into this beat (whichever is longer wins).
-    const beat = new Promise<void>(resolve => setTimeout(resolve, 1200));
-    try {
-      const res = await fetch(`${API}/api/products`, { cache: 'no-store' });
-      if (!res.ok) throw new Error('fetch failed');
-      const data: Product[] = await res.json();
-      const ranked = scoreProducts(Array.isArray(data) ? data : [], weights, colourHints);
-      // Fall back to top categories if scoring is empty (e.g. sparse stock).
-      const picks = ranked.slice(0, 4);
-      await beat;
-      setResults(picks);
-      setLine(resultLine(allAnswers));
-      setPhase('results');
-    } catch {
-      await beat;
-      setLine(resultLine(allAnswers));
-      setPhase('error');
+    const beat = new Promise<void>(resolve => setTimeout(resolve, 1100));
+
+    // Products are loaded by the server page and passed in — reliable. Only if
+    // that came back empty do we try a client fetch as a last resort.
+    let catalogue = initialProducts;
+    if (!catalogue.length) {
+      try {
+        const res = await fetch(`${API}/api/products`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) catalogue = data;
+        }
+      } catch {
+        /* stay graceful — handled by the empty-catalogue branch below */
+      }
     }
-  }, []);
+
+    const ranked = scoreProducts(catalogue, weights, colourHints);
+    let picks = ranked.slice(0, 4);
+    // Guarantee a non-empty edit: if the match set is thin, top up with other
+    // pieces so the quiz never dead-ends on "we couldn't gather your pieces".
+    if (picks.length < 4) {
+      const have = new Set(picks.map(p => p._id));
+      picks = [...picks, ...catalogue.filter(p => !have.has(p._id)).slice(0, 4 - picks.length)];
+    }
+
+    await beat;
+    setResults(picks);
+    setLine(resultLine(allAnswers));
+    // Only fall to the graceful "shop the collection" screen if there is truly
+    // no catalogue to show at all.
+    setPhase(picks.length ? 'results' : 'error');
+  }, [initialProducts]);
 
   const choose = useCallback(
     (optionIndex: number) => {
