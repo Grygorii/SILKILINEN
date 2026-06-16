@@ -5,13 +5,10 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { useCookieConsent } from '@/context/CookieConsentContext';
 
-// GA4 stays env-only: G-XZG6XTZ3S8 ownership is unconfirmed, so a blank env var
-// means the script doesn't mount and visitor data never flows to a stranger's
-// account. Set NEXT_PUBLIC_GA_ID in Vercel to your own GA4 property to enable it.
-// Clarity defaults to wkxxtbufn3 — the founder confirmed this is THEIR Clarity
-// project (verified from the install snippet), so it's safe as a zero-config
-// default; NEXT_PUBLIC_CLARITY_ID still overrides it.
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID || '';
+// Both default to the founder's OWN, confirmed properties (GA4 G-XZG6XTZ3S8 and
+// Clarity wkxxtbufn3), so analytics works zero-config. The NEXT_PUBLIC_* env vars
+// still override either. Both load only after cookie consent (see below).
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-XZG6XTZ3S8';
 const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || 'wkxxtbufn3';
 // Vercel Web Analytics + Speed Insights require the project-level toggle
 // in the Vercel dashboard. When the toggle is OFF, `/_vercel/insights/script.js`
