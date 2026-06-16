@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
+const Visit = require('../models/Visit');
+const Event = require('../models/Event');
 const { requireAuth } = require('../middleware/auth');
 
 let cache = { data: null, at: 0 };
@@ -128,5 +130,107 @@ function generateInsights({ todayRevenue, todayOrderCount, abandonedCount, attri
 
   return insights;
 }
+
+// ── The brain: read the first-party event spine ───────────────────────────────
+// Turns the raw clickstream (Event) + visits (Visit) + orders (Order) into the
+// funnel, the top signals, and a few real session journeys — all joined on the
+// sessionId thread. Revenue-bearing order statuses (not failed/cancelled/refunded).
+const REVENUE_STATUSES = ['paid', 'processing', 'shipped', 'delivered'];
+
+router.get('/journeys', requireAuth, async function(req, res) {
+  try {
+    const days = Math.min(Math.max(parseInt(req.query.days, 10) || 30, 1), 90);
+    const since = new Date(Date.now() - days * 86400000);
+
+    // Funnel = distinct SESSIONS that reached each stage (not raw event counts,
+    // so a refresh-happy visitor doesn't inflate a step).
+    const STAGES = ['view_item', 'add_to_cart', 'begin_checkout', 'purchase'];
+
+    const [
+      sessionAgg, funnelAgg, searches, clicks, sources, revenue, recentPurchases,
+    ] = await Promise.all([
+      // Total sessions in the window (distinct sessionId across visits).
+      Visit.aggregate([
+        { $match: { createdAt: { $gte: since } } },
+        { $group: { _id: '$sessionId' } },
+        { $count: 'sessions' },
+      ]),
+      // Distinct sessions per funnel stage.
+      Event.aggregate([
+        { $match: { createdAt: { $gte: since }, type: { $in: STAGES } } },
+        { $group: { _id: { type: '$type', s: '$sessionId' } } },
+        { $group: { _id: '$_id.type', sessions: { $sum: 1 } } },
+      ]),
+      // Top search terms (trackSearch fires { search_term }).
+      Event.aggregate([
+        { $match: { createdAt: { $gte: since }, type: 'search' } },
+        { $group: { _id: '$props.search_term', count: { $sum: 1 } } },
+        { $match: { _id: { $nin: [null, ''] } } },
+        { $sort: { count: -1 } }, { $limit: 15 },
+      ]),
+      // Most-clicked products from the card_click events.
+      Event.aggregate([
+        { $match: { createdAt: { $gte: since }, type: 'card_click' } },
+        { $group: { _id: '$props.name', count: { $sum: 1 } } },
+        { $match: { _id: { $nin: [null, ''] } } },
+        { $sort: { count: -1 } }, { $limit: 15 },
+      ]),
+      // Sessions by traffic source.
+      Visit.aggregate([
+        { $match: { createdAt: { $gte: since } } },
+        { $group: { _id: '$source', sessions: { $addToSet: '$sessionId' } } },
+        { $project: { source: '$_id', _id: 0, sessions: { $size: '$sessions' } } },
+        { $sort: { sessions: -1 } }, { $limit: 10 },
+      ]),
+      // Revenue by acquisition source (the money view).
+      Order.aggregate([
+        { $match: { createdAt: { $gte: since }, status: { $in: REVENUE_STATUSES } } },
+        { $group: { _id: '$attribution.source', orders: { $sum: 1 }, revenue: { $sum: '$total' } } },
+        { $project: { source: '$_id', _id: 0, orders: 1, revenue: 1 } },
+        { $sort: { revenue: -1 } }, { $limit: 10 },
+      ]),
+      // A handful of real converting sessions to "follow the thread".
+      Event.find({ type: 'purchase', createdAt: { $gte: since } })
+        .sort({ createdAt: -1 }).limit(5).select('sessionId createdAt').lean(),
+    ]);
+
+    const totalSessions = sessionAgg[0]?.sessions || 0;
+    const stageMap = Object.fromEntries(funnelAgg.map(s => [s._id, s.sessions]));
+    const funnel = [
+      { stage: 'Sessions', sessions: totalSessions },
+      { stage: 'Viewed a product', sessions: stageMap.view_item || 0 },
+      { stage: 'Added to cart', sessions: stageMap.add_to_cart || 0 },
+      { stage: 'Began checkout', sessions: stageMap.begin_checkout || 0 },
+      { stage: 'Purchased', sessions: stageMap.purchase || 0 },
+    ].map((s, i, arr) => ({
+      ...s,
+      // Conversion vs the top of funnel, and step-over-step retention.
+      ofSessions: totalSessions ? Math.round((s.sessions / totalSessions) * 1000) / 10 : 0,
+      ofPrev: i === 0 || !arr[i - 1].sessions ? 100 : Math.round((s.sessions / arr[i - 1].sessions) * 1000) / 10,
+    }));
+
+    // Reconstruct each sample session's ordered path (bounded).
+    const journeys = [];
+    for (const p of recentPurchases) {
+      const path = await Event.find({ sessionId: p.sessionId })
+        .sort({ createdAt: 1 }).limit(40).select('type page props createdAt -_id').lean();
+      journeys.push({ sessionId: p.sessionId, at: p.createdAt, steps: path });
+    }
+
+    res.json({
+      range: { days, since },
+      totalSessions,
+      funnel,
+      topSearches: searches.map(s => ({ term: s._id, count: s.count })),
+      topProducts: clicks.map(c => ({ name: c._id, count: c.count })),
+      sources,
+      revenueBySource: revenue,
+      journeys,
+    });
+  } catch (err) {
+    console.error('[insights/journeys]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 module.exports = router;
