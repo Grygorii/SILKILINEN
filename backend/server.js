@@ -9,6 +9,14 @@ if (!process.env.DEEPSEEK_API_KEY) {
   console.warn('[warning] DEEPSEEK_API_KEY not set — AI SEO generation will fail until it is configured.');
 }
 
+// Without the webhook secret, every Stripe webhook fails signature verification
+// and orders are NEVER created — a silent, total checkout outage. Surface it at
+// boot rather than discovering it via missing orders.
+if (process.env.NODE_ENV === 'production' && !process.env.STRIPE_WEBHOOK_SECRET) {
+  console.error('FATAL: STRIPE_WEBHOOK_SECRET must be set in production — orders cannot be created without it.');
+  process.exit(1);
+}
+
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');

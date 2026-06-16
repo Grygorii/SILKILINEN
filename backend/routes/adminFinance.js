@@ -225,7 +225,10 @@ router.get('/expenses', requireAuth, async (req, res) => {
     if (hasReceipt === 'true')  filter.receiptId = { $exists: true };
     if (linkedToOrder === 'true') filter.orderIds = { $not: { $size: 0 } };
     if (search) {
-      const re = new RegExp(search, 'i');
+      // Escape regex metacharacters (ReDoS / injection) like the sibling search
+      // routes (products.js, adminCustomers.js, orders.js).
+      const safe = String(search).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(safe, 'i');
       filter.$or = [{ description: re }, { notes: re }];
     }
 

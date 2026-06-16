@@ -8,12 +8,16 @@ const BASE = 'https://www.silkilinen.com';
 // product URLs reappear on the next ISR revalidation.
 const PRODUCT_FETCH_TIMEOUT_MS = 8000;
 
-async function getProductIds(): Promise<string[]> {
+type SlimProduct = { _id: string; status?: string; updatedAt?: string };
+
+async function getProducts(): Promise<SlimProduct[]> {
   if (!process.env.NEXT_PUBLIC_API_URL) return [];
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), PRODUCT_FETCH_TIMEOUT_MS);
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products`, {
+    // ?slim=true returns only id/status/updatedAt — a fraction of the payload,
+    // which keeps this fetch well under the timeout as the catalogue grows.
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products?slim=true`, {
       next: { revalidate: 3600 },
       signal: controller.signal,
     });
@@ -21,11 +25,8 @@ async function getProductIds(): Promise<string[]> {
     if (!res.ok) return [];
     const products = await res.json();
     if (!Array.isArray(products)) return [];
-    // Filter to active products only — drafts shouldn't be in the
-    // public sitemap, and archived ones should drop off too.
-    return products
-      .filter((p: { _id: string; status?: string }) => !p.status || p.status === 'active' || p.status === 'sold_out')
-      .map((p: { _id: string }) => p._id);
+    // Active (incl. sold_out) only — drafts/archived stay out of the sitemap.
+    return products.filter((p: SlimProduct) => !p.status || p.status === 'active' || p.status === 'sold_out');
   } catch {
     return [];
   }
@@ -69,16 +70,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/faq`,               lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
   ];
 
-  const [ids, journalSlugs, collectionSlugs, bundleSlugs] = await Promise.all([
-    getProductIds(),
+  const [products, journalSlugs, collectionSlugs, bundleSlugs] = await Promise.all([
+    getProducts(),
     getSlugs('/api/journal'),
     getSlugs('/api/collections'),
     getSlugs('/api/bundles'),
   ]);
 
-  const productPages: MetadataRoute.Sitemap = ids.map(id => ({
-    url: `${BASE}/product/${id}`,
-    lastModified: new Date(),
+  const productPages: MetadataRoute.Sitemap = products.map(p => ({
+    url: `${BASE}/product/${p._id}`,
+    // Real per-product lastModified instead of "now" on every entry, so the
+    // signal means something to crawlers.
+    lastModified: p.updatedAt ? new Date(p.updatedAt) : new Date(),
     changeFrequency: 'weekly',
     priority: 0.8,
   }));
