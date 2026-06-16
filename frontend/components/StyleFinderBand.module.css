@@ -1,10 +1,9 @@
 /* ── Style Finder entry band ───────────────────────────────────────────
-   Moved here from the homepage page.module.css so the band can own its
-   scroll-reveal ribbon and animated CTA as a self-contained client unit.
+   Self-contained client unit: a copper→blush silk bow ties itself at the
+   corner of the CTA when the band scrolls into view, nodding to the brand's
+   gift-wrapping (every piece arrives tied with silk ribbon).
 */
 .finderBand {
-  position: relative;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -20,52 +19,7 @@
 }
 .finderBand:hover { background: linear-gradient(160deg, #f0e9dc 0%, #e6dccb 100%); }
 
-/* Content sits above the ribbon. */
 .finderBand > span { position: relative; z-index: 1; }
-
-/* ── Silk ribbon ──────────────────────────────────────
-   Faint copper→blush spine behind the text. The path draws itself
-   (stroke-dashoffset 1 → 0, pathLength normalised to 1) the first time the
-   band enters the viewport, finishing at the CTA. Reduced-motion users see
-   it already drawn, no animation.
-*/
-.ribbon {
-  position: absolute;
-  top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  height: calc(100% - 28px);
-  width: 80px;
-  opacity: 0.92;
-  pointer-events: none;
-  z-index: 0;
-  filter: drop-shadow(0 2px 6px rgba(180, 140, 110, 0.35));
-}
-.ribbonPath {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-}
-.inView .ribbonPath {
-  stroke-dashoffset: 0;
-  transition: stroke-dashoffset 1.8s ease;
-}
-
-/* Travelling glint — a short visible segment (8% of the path) slides down the
-   ribbon and pauses, on a gentle loop, once the ribbon has drawn. */
-.ribbonShine {
-  stroke-dasharray: 0.08 0.92;
-  stroke-dashoffset: 1;
-  opacity: 0;
-}
-.inView .ribbonShine {
-  opacity: 0.85;
-  animation: ribbonShine 4s ease-in-out 1.7s infinite;
-}
-@keyframes ribbonShine {
-  0%   { stroke-dashoffset: 1; }
-  45%  { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: 0; }
-}
 
 .finderEyebrow {
   font-size: 11px;
@@ -86,14 +40,51 @@
   letter-spacing: 0.3px;
 }
 
-/* ── CTA — copper→blush, with a soft breathing pulse ───
-   Ink text on a pale metallic gradient keeps the luxe contrast. On hover the
-   gradient slides toward blush and the button lifts slightly; at rest a gentle
-   pulse breathes through it. */
+/* ── CTA wrapper — holds the button and the silk bow tied at its corner ── */
+.ctaWrap {
+  display: inline-block;
+  margin-top: 16px;
+}
+
+/* ── Silk bow — tied at the top-right corner of the button ──────────────
+   The bow draws itself ("ties") the first time the band scrolls into view
+   (stroke-dashoffset 1 → 0, pathLength normalised to 1); the knot fades in
+   just after. A gentle sway on hover. Reduced-motion users see it already
+   tied, no animation. */
+.bow {
+  position: absolute;
+  top: -30px;
+  right: -26px;
+  width: 64px;
+  height: 48px;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(180, 140, 110, 0.35));
+  transform-origin: 60% 80%;
+  transition: transform 0.4s ease;
+}
+.finderBand:hover .bow { transform: scale(1.07) rotate(-3deg); }
+
+.bowPath {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.bowKnot { opacity: 0; }
+.inView .bowPath {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1.2s ease 0.2s;
+}
+.inView .bowKnot {
+  opacity: 1;
+  transition: opacity 0.5s ease 1s;
+}
+
+/* ── CTA button — copper→blush silk that drifts in the light ────────────
+   Ink text on a pale metallic gradient keeps the luxe contrast. The gradient
+   drifts continuously; on hover the button lifts and a shine streak sweeps
+   across. */
 .finderBtn {
   position: relative;
   overflow: hidden;
-  margin-top: 16px;
   padding: 13px 30px;
   font-size: 12px;
   letter-spacing: 1.5px;
@@ -132,8 +123,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ribbonPath { stroke-dashoffset: 0; transition: none; }
-  .ribbonShine { display: none; }
+  .bowPath { stroke-dashoffset: 0; transition: none; }
+  .bowKnot { opacity: 1; transition: none; }
+  .bow, .finderBand:hover .bow { transition: none; transform: none; }
   .finderBtn { animation: none; transition: none; }
   .finderBtn::after { display: none; }
   .finderBand:hover .finderBtn { transform: none; }
