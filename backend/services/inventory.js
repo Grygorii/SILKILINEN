@@ -77,8 +77,11 @@ async function decrementStockForOrder(items) {
         continue; // untracked — nothing to decrement
       }
       // save() runs the pre-save hook → recomputes totalStock/inStock and flips
-      // status to sold_out when the last unit goes.
-      await product.save();
+      // status to sold_out when the last unit goes. validateBeforeSave:false so a
+      // legacy doc that violates a later-added validator (e.g. an over-length
+      // metaTitle) can't throw and silently skip the decrement — pre-save hooks
+      // still run with validation off.
+      await product.save({ validateBeforeSave: false });
     } catch (err) {
       console.error('[inventory] decrement failed for', String(line.productId), err.message);
     }
