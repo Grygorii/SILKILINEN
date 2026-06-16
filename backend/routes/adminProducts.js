@@ -337,6 +337,11 @@ router.put('/:id', async function(req, res) {
     const isDraft = product.status === 'draft';
     await product.save({ validateBeforeSave: !isDraft });
     autoGenerateSEO(product);
+    // Instant-index live products (fire-and-forget, fail-soft) so a new or
+    // edited product reaches Bing/Yandex in minutes.
+    if (product.status === 'active') {
+      require('../services/indexNow').pingIndexNow(`/product/${product._id}`);
+    }
     res.json(product);
   } catch (err) {
     if (err.name === 'ValidationError') {
@@ -445,6 +450,8 @@ router.post('/bulk-publish', async function(req, res) {
     }
 
     const result = await Product.updateMany({ _id: { $in: productIds } }, { $set: { status: 'active' } });
+    // Instant-index the whole batch (fire-and-forget, fail-soft).
+    require('../services/indexNow').pingIndexNow(productIds.map(id => `/product/${id}`));
     res.json({ updated: result.modifiedCount });
   } catch (err) {
     console.error(err);

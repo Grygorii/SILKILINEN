@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
+const mongoose = require('mongoose');
 const Visit = require('../models/Visit');
+const Event = require('../models/Event');
 
 const trackLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -127,6 +129,47 @@ router.post('/visit', trackLimiter, async function(req, res) {
     }
   } catch (err) {
     console.error('[track] visit error:', err.message);
+  }
+  res.json({ ok: true });
+});
+
+// First-party event ingest — the owned clickstream. Same fire-and-forget,
+// always-200 posture as /visit. Bot filtering happens at the Vercel proxy
+// (the one hop that sees the real User-Agent), same as visits. Props are
+// clamped so a malformed or hostile client can't write unbounded documents.
+const MAX_PROPS_BYTES = 4000;
+
+// Drop oversized payloads so a malformed or hostile client can't write huge
+// documents; anything not JSON-serialisable is discarded.
+function safeProps(props) {
+  if (!props || typeof props !== 'object') return undefined;
+  try {
+    return JSON.stringify(props).length > MAX_PROPS_BYTES ? { _truncated: true } : props;
+  } catch {
+    return undefined;
+  }
+}
+
+router.post('/event', trackLimiter, async function(req, res) {
+  try {
+    const { sessionId, type, page, productId, props, source, device } = req.body;
+    // type + sessionId are the minimum that makes an event joinable; drop the
+    // rest silently (never error — tracking must not surface to the customer).
+    if (sessionId && type && String(type).length <= 64) {
+      await Event.create({
+        sessionId: String(sessionId).slice(0, 128),
+        type: String(type).slice(0, 64),
+        page: page ? String(page).slice(0, 512) : undefined,
+        // Only pass a valid ObjectId; a bad value would otherwise throw a
+        // CastError and lose the whole event.
+        productId: (productId && mongoose.Types.ObjectId.isValid(productId)) ? productId : undefined,
+        props: safeProps(props),
+        source: source ? String(source).slice(0, 64) : undefined,
+        device: device || 'unknown',
+      });
+    }
+  } catch (err) {
+    console.error('[track] event error:', err.message);
   }
   res.json({ ok: true });
 });

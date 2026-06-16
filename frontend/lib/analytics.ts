@@ -1,3 +1,5 @@
+import { trackClientEvent } from './track';
+
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
@@ -23,6 +25,12 @@ function clarityFire(event: string) {
 }
 
 export function trackEvent(name: string, properties: Record<string, unknown> = {}) {
+  // First-party store ALWAYS records the event (same posture as Visit tracking)
+  // — it's same-origin, owned, and the one signal that can't be ad-blocked or
+  // silently flow to someone else's account. Third-party tools below stay gated
+  // behind cookie consent.
+  trackClientEvent(name, properties);
+
   if (!hasConsent()) return;
   gtagFire(name, properties);
   clarityFire(name);

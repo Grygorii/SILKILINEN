@@ -36,6 +36,7 @@ export default function StyleFinderBand() {
       ref={ref}
       href="/style-finder"
       className={`${styles.finderBand} ${inView ? styles.inView : ''}`}
+      data-track="quiz_cta"
     >
       <span className={styles.finderEyebrow}>The 60-second quiz</span>
       <span className={styles.finderTitle}>Which silk are you?</span>

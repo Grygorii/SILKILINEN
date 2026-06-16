@@ -134,6 +134,10 @@ router.put('/:id', async (req, res) => {
     update.updatedAt = new Date();
     const article = await JournalArticle.findByIdAndUpdate(req.params.id, { $set: update }, { new: true, runValidators: true });
     if (!article) return res.status(404).json({ error: 'Not found' });
+    // Instant-index a freshly published article (fire-and-forget, fail-soft).
+    if (article.status === 'published' && article.slug) {
+      require('../services/indexNow').pingIndexNow(`/journal/${article.slug}`);
+    }
     res.json(article);
   } catch (err) {
     console.error(err);
