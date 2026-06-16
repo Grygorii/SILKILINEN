@@ -211,6 +211,58 @@ async function getQueryOpportunities(days = 28) {
   })).sort((a, b) => b.impressions - a.impressions);
 }
 
+// Query × PAGE pairs — which queries each page of the site ranks for. Powers
+// cannibalisation detection (two pages competing for one query) and per-page
+// outcome tracking. Returns [] on any failure.
+async function getQueryPagePairs(days = 28) {
+  try {
+    const body = {
+      startDate: dateStr(days + 2),
+      endDate: dateStr(2),
+      dimensions: ['query', 'page'],
+      rowLimit: 250,
+    };
+    const data = await apiPost(`sites/${siteSegment()}/searchAnalytics/query`, body);
+    return (data?.rows || []).map(r => ({
+      query: r.keys[0],
+      page: r.keys[1],
+      clicks: Math.round(r.clicks || 0),
+      impressions: Math.round(r.impressions || 0),
+      position: Math.round((r.position || 0) * 10) / 10,
+    }));
+  } catch (err) {
+    console.warn('[gsc] query-page pairs failed:', err.message);
+    return [];
+  }
+}
+
+// URL Inspection — is this URL actually indexed by Google? Uses the separate
+// Search Console v1 endpoint (same OAuth scope). Returns null on any failure so
+// callers degrade gracefully. { indexed, coverageState, verdict }.
+async function inspectUrl(url) {
+  const token = await accessToken();
+  if (!token) return null;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const res = await fetch('https://searchconsole.googleapis.com/v1/urlInspection/index:inspect', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ inspectionUrl: url, siteUrl: process.env.GSC_SITE_URL }),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const idx = data?.inspectionResult?.indexStatusResult || {};
+    return { indexed: idx.verdict === 'PASS', coverageState: idx.coverageState || 'unknown', verdict: idx.verdict || 'unknown' };
+  } catch (err) {
+    console.warn('[gsc] url inspection failed:', err.message);
+    return null;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 module.exports = {
   oauthConfigured,
   isConnected,
@@ -220,4 +272,6 @@ module.exports = {
   getSitemapsSummary,
   getSearchPerformance,
   getQueryOpportunities,
+  getQueryPagePairs,
+  inspectUrl,
 };
