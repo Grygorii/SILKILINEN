@@ -101,7 +101,7 @@ RESPOND ONLY WITH VALID JSON: {"topic": "working title", "targetQuery": "the exa
   return parsed;
 }
 
-async function writeArticle(topic, intel) {
+async function writeArticle(topic, intel, existingBody = '') {
   const productList = intel.products
     .map(p => `- ${p.name} (${p.category || 'silk'}, €${p.price}) — ${SITE_URL}/product/${p._id}`)
     .join('\n');
@@ -124,7 +124,9 @@ ARTICLE REQUIREMENTS:
 
 RESPOND ONLY WITH VALID JSON: {"title": "...", "metaTitle": "...", "metaDescription": "...", "content": "<h2>...</h2><p>...</p>", "excerpt": "..."}` },
     { role: 'user', content: [
-      `Write the article now.`,
+      existingBody
+        ? `REFRESH an existing article. Keep what works, but IMPROVE and EXPAND it — add genuine depth, freshen dated lines, strengthen the target query and the internal links. Do not merely reword. Existing body:\n${existingBody.slice(0, 6000)}\n`
+        : `Write the article now.`,
       `Topic: ${topic.topic}`,
       `Target search query: ${topic.targetQuery}`,
       `Angle: ${topic.angle || '(your call)'}`,
@@ -205,4 +207,33 @@ async function generateMasterpiece({ topic } = {}) {
   };
 }
 
-module.exports = { generateMasterpiece };
+// Refresh an existing article — improve and expand it toward its target query.
+// Returns the new fields for the founder to REVIEW and save; never writes to the
+// DB itself (so a refresh can't silently overwrite a live article).
+async function refreshArticle({ articleId } = {}) {
+  if (!process.env.DEEPSEEK_API_KEY) throw new Error('AI is not configured');
+  const art = await JournalArticle.findById(articleId).lean();
+  if (!art) throw new Error('Article not found');
+
+  const intel = await gatherIntel();
+  const targetQuery = (Array.isArray(art.keywords) && art.keywords[0]) || art.title;
+  const chosen = { topic: art.title, targetQuery, angle: 'refresh and deepen the existing piece so it ranks better', why: 'refreshing an existing article toward its target query' };
+  const article = await writeArticle(chosen, intel, art.body || '');
+
+  const sources = [];
+  if (intel.hermesTargets.length) sources.push('Hermes SEO plan');
+  if (intel.gsc.length) sources.push('Search Console');
+  if (intel.winningAngles.length) sources.push('proven article angles');
+  const provenance = `Refreshed toward “${targetQuery}”. Grounded in: ${sources.join(', ') || 'the catalogue'}.`;
+
+  return {
+    title: article.title || art.title,
+    body: article.content,
+    excerpt: article.excerpt || art.excerpt || '',
+    metaTitle: (article.metaTitle || '').slice(0, 70),
+    metaDescription: (article.metaDescription || '').slice(0, 165),
+    provenance,
+  };
+}
+
+module.exports = { generateMasterpiece, refreshArticle };
