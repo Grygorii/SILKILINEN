@@ -214,6 +214,25 @@ async function checkMerchantLive() {
   }
 }
 
+// Live SERP (Google Custom Search) — verifies the key actually works AND that
+// the engine searches the whole web (no results usually means "Search the
+// entire web" is still off). Powers Hermes' SERP analysis.
+async function checkSerp() {
+  const base = { name: 'serp', label: 'Live SERP (Custom Search)' };
+  const { serpConfigured, serpAnalysis } = require('../services/seoIntel');
+  if (!serpConfigured()) {
+    return { ...base, status: 'info', detail: 'Not connected', advice: 'Set GOOGLE_CSE_KEY + GOOGLE_CSE_ID in Railway so Hermes can read the live Google SERP.' };
+  }
+  try {
+    const r = await serpAnalysis('silk robe');
+    if (r.error) return { ...base, status: 'warning', detail: `Configured but the API errored: ${r.error}`, advice: 'Check the API key and that the Custom Search API is enabled in Google Cloud.' };
+    if (!r.results.length) return { ...base, status: 'warning', detail: 'Configured but returned no results', advice: 'In your Programmable Search Engine settings, turn ON "Search the entire web".' };
+    return { ...base, status: 'healthy', detail: `Connected — ${r.results.length} live results for a test query. Hermes can analyse the SERP.` };
+  } catch (err) {
+    return { ...base, status: 'warning', detail: `Check failed: ${err.message}` };
+  }
+}
+
 async function runChecks() {
   const results = await Promise.allSettled([
     checkApexRedirect(),
@@ -222,6 +241,7 @@ async function runChecks() {
     checkHomepageCanonical(),
     checkCatalogue(),
     checkMerchantLive(),
+    checkSerp(),
   ]);
 
   const checks = results.flatMap(r =>
