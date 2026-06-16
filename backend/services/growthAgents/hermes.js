@@ -57,7 +57,7 @@ async function gatherContext() {
 // "flagged then moved", not "our fix caused". Closes the learning loop: proven
 // wins become a Playbook rule. Compares each past recommendation's baseline
 // position to the query's CURRENT position.
-async function assessOutcomes(currentOpps) {
+async function assessOutcomes(currentPositions) {
   const since = new Date(Date.now() - 60 * 86400000);
   const until = new Date(Date.now() - 21 * 86400000);
   const past = await GrowthAction.find({
@@ -66,7 +66,7 @@ async function assessOutcomes(currentOpps) {
     createdAt: { $gte: since, $lte: until },
   }).sort({ createdAt: -1 }).limit(40).select('meta createdAt').lean().catch(() => []);
 
-  const cur = new Map((currentOpps || []).map(o => [String(o.query).toLowerCase(), o.position]));
+  const cur = currentPositions instanceof Map ? currentPositions : new Map();
   const seen = new Set();
   let wins = 0, losses = 0;
   const winLines = [];
@@ -145,6 +145,14 @@ async function run() {
   // Senior analyses the on-page-only Hermes was missing — all fail soft.
   const pairs = await getQueryPagePairs(28).catch(() => []);
   const cannibal = detectCannibalisation(pairs);
+  // Current best position per query — from the full query×page set (far wider
+  // than the top-15 opportunities), so outcome tracking can actually measure.
+  const currentPositions = new Map();
+  for (const r of pairs) {
+    const q = String(r.query || '').toLowerCase();
+    if (!q) continue;
+    if (!currentPositions.has(q) || r.position < currentPositions.get(q)) currentPositions.set(q, r.position);
+  }
   const strikers = (opps || []).filter(o => o.position >= 6 && o.position <= 20)
     .sort((a, b) => b.impressions - a.impressions).slice(0, 2);
   let serp = [];
@@ -278,7 +286,7 @@ async function run() {
   }
 
   // Outcome loop — measure queries flagged ~4 weeks ago, learn from the wins.
-  const outcome = await assessOutcomes(opps);
+  const outcome = await assessOutcomes(currentPositions);
   if (outcome.measured > 0) {
     extra.unshift({
       type: 'seo',
