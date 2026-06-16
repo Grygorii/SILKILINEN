@@ -12,7 +12,6 @@
 // weakest link; his job is to find the weak link before the founder does.
 
 const crypto = require('crypto');
-const OpenAI = require('openai');
 const Product = require('../../models/Product');
 const Category = require('../../models/Category');
 const CEOBrief = require('../../models/CEOBrief');
@@ -20,10 +19,7 @@ const GrowthAction = require('../../models/GrowthAction');
 const { northStarStatus } = require('../chiefOfStaff');
 const { addLearning } = require('../playbook');
 
-const client = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
+const client = require('../aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
 // The ground truth the chain is checked against — what is ACTUALLY true of the

@@ -75,6 +75,7 @@ const cartRecoveryRouter = require('./routes/cartRecovery');
 const { processCartRecovery } = require('./services/cartRecovery');
 const { runAdvisorDigest } = require('./services/advisorDigest');
 const { processReviewRequests } = require('./services/reviewRequests');
+const { withCronLock } = require('./services/cronLock');
 
 const app = express();
 
@@ -282,14 +283,44 @@ let growthEngineStartTimeout = null;
 let growthEngineInterval = null;
 let chiefStartTimeout = null;
 let chiefInterval = null;
+let cacheRefreshInterval = null;
+
+// These crons run as in-process timers. If Railway runs more than one web
+// instance, every instance would fire every cron — doubling AI spend and racing
+// the lastRun guards. withCronLock(name, ttl, fn) ensures only one instance runs
+// a given job per window. TTL (15 min) is comfortably shorter than every job's
+// interval (≥1h) yet long enough to cover a run; jobs' own cadence guards /
+// idempotency handle the next window. Returns undefined when the lock was held
+// elsewhere (run skipped), so result handlers guard for that.
+const LOCK_TTL = 15 * 60 * 1000;
 
 const server = app.listen(PORT, function() {
   console.log('Server running on port ' + PORT);
 
+  // Cross-instance cache freshness — admin edits refresh only the editing
+  // instance's in-memory cache (+ DB). Re-pull the DB-backed caches every minute
+  // so other instances converge within a bounded window instead of serving stale
+  // settings/shipping/faq/size-chart/page-SEO until a redeploy.
+  const refreshCaches = () => {
+    const tasks = [
+      loadShippingOverrides,
+      require('./services/siteSettings').loadSiteSettings,
+      require('./services/faq').loadFaq,
+      require('./services/sizeChart').loadSizeChart,
+      require('./services/pageSeo').loadPageSeo,
+    ];
+    for (const task of tasks) {
+      Promise.resolve().then(task).catch(err => console.error('[cache-refresh]', err.message));
+    }
+  };
+  cacheRefreshInterval = setInterval(refreshCaches, 60 * 1000);
+
   // Cart recovery cron — runs every hour. First run after 5 min to allow DB to settle.
   cartRecoveryStartTimeout = setTimeout(function() {
-    processCartRecovery();
-    cartRecoveryInterval = setInterval(processCartRecovery, 60 * 60 * 1000);
+    const run = () => withCronLock('cartRecovery', LOCK_TTL, processCartRecovery)
+      .catch(err => console.error('[cart-recovery]', err));
+    run();
+    cartRecoveryInterval = setInterval(run, 60 * 60 * 1000);
   }, 5 * 60 * 1000);
 
   // Advisor digest — checks daily, but runAdvisorDigest only actually emails
@@ -297,11 +328,10 @@ const server = app.listen(PORT, function() {
   // skip or double-send). First check 10 min after boot. No-op until
   // RESEND_API_KEY + ADMIN_EMAIL are set.
   advisorDigestStartTimeout = setTimeout(function() {
-    runAdvisorDigest().catch(err => console.error('[advisor-digest]', err));
-    advisorDigestInterval = setInterval(
-      () => runAdvisorDigest().catch(err => console.error('[advisor-digest]', err)),
-      24 * 60 * 60 * 1000
-    );
+    const run = () => withCronLock('advisorDigest', LOCK_TTL, runAdvisorDigest)
+      .catch(err => console.error('[advisor-digest]', err));
+    run();
+    advisorDigestInterval = setInterval(run, 24 * 60 * 60 * 1000);
   }, 10 * 60 * 1000);
 
   // Review-request emails — runs daily, sending to buyers whose order is ≥14
@@ -309,8 +339,8 @@ const server = app.listen(PORT, function() {
   // so daily is safe. First run 15 min after boot. No-op until RESEND_API_KEY
   // is set. This is what fills the empty product reviews over time.
   reviewRequestsStartTimeout = setTimeout(function() {
-    const run = () => processReviewRequests({ send: true })
-      .then(r => { if (r.sent) console.log(`[review-requests] sent ${r.sent} of ${r.eligible} eligible`); })
+    const run = () => withCronLock('reviewRequests', LOCK_TTL, () => processReviewRequests({ send: true }))
+      .then(r => { if (r && r.sent) console.log(`[review-requests] sent ${r.sent} of ${r.eligible} eligible`); })
       .catch(err => console.error('[review-requests]', err));
     run();
     reviewRequestsInterval = setInterval(run, 24 * 60 * 60 * 1000);
@@ -321,8 +351,8 @@ const server = app.listen(PORT, function() {
   // are due per their own cadence and runs only those; everything public is
   // created as a draft for founder approval. First pulse 20 min after boot.
   growthEngineStartTimeout = setTimeout(function() {
-    const pulse = () => runGrowthEngine()
-      .then(r => { if (r.ran.length) console.log(`[growth] pulsed: ${r.ran.join(', ')} (${r.actionCount} actions)`); })
+    const pulse = () => withCronLock('growthEngine', LOCK_TTL, runGrowthEngine)
+      .then(r => { if (r && r.ran.length) console.log(`[growth] pulsed: ${r.ran.join(', ')} (${r.actionCount} actions)`); })
       .catch(err => console.error('[growth]', err));
     pulse();
     growthEngineInterval = setInterval(pulse, 6 * 60 * 60 * 1000);
@@ -333,8 +363,8 @@ const server = app.listen(PORT, function() {
   // First check 25 min after boot, just after the engine's first pulse so the
   // brief can reflect fresh agent activity.
   chiefStartTimeout = setTimeout(function() {
-    const think = () => runChiefIfDue()
-      .then(r => { if (r.ran) console.log('[chief] weekly brief written'); })
+    const think = () => withCronLock('chief', LOCK_TTL, runChiefIfDue)
+      .then(r => { if (r && r.ran) console.log('[chief] weekly brief written'); })
       .catch(err => console.error('[chief]', err));
     think();
     chiefInterval = setInterval(think, 6 * 60 * 60 * 1000);
@@ -347,6 +377,7 @@ function shutdown(signal) {
   shuttingDown = true;
   console.log(`[shutdown] received ${signal}, draining...`);
 
+  if (cacheRefreshInterval) clearInterval(cacheRefreshInterval);
   if (cartRecoveryStartTimeout) clearTimeout(cartRecoveryStartTimeout);
   if (cartRecoveryInterval) clearInterval(cartRecoveryInterval);
   if (advisorDigestStartTimeout) clearTimeout(advisorDigestStartTimeout);

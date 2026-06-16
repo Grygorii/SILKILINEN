@@ -6,13 +6,9 @@
 // confusing, jargon-y, missing an answer, or a dead-end — then asks for it to
 // be made clear. Knowledge, accessible to everyone.
 
-const OpenAI = require('openai');
 const { gatherExperience } = require('../storefrontExperience');
 
-const client = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
+const client = require('../aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
 const SYSTEM = `You are Prometheus, who brings the fire of clear knowledge to people. You guard the SILKILINEN storefront's CLARITY. Walk it as a first-time visitor who knows nothing about silk or the brand. Find where the experience is confusing, where jargon goes unexplained, where an obvious question is left unanswered (sizing, fit, fabric care, shipping times, returns, what "momme" means), where a visitor wouldn't know what to do next, or where navigation is a dead-end.

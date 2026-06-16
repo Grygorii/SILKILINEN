@@ -9,7 +9,6 @@
 // the full drafted subject, preview text and body HTML in meta, for the
 // founder to paste into their email tool.
 
-const OpenAI = require('openai');
 const Product = require('../../models/Product');
 const JournalArticle = require('../../models/JournalArticle');
 
@@ -18,10 +17,7 @@ const SITE = 'https://www.silkilinen.com';
 const FRESH_DAYS = 14;
 
 // DeepSeek is OpenAI-compatible — same pattern as services/aiText.js.
-const deepseek = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
+const deepseek = require('../aiClient'); // shared DeepSeek client
 
 const SYSTEM_PROMPT = `You write the weekly email for SILKILINEN, a small luxury silk and linen brand. SILKILINEN is an Irish brand based in Donegal, but products are made in mixed locations.
 

@@ -1,10 +1,6 @@
-const OpenAI = require('openai');
 
 // DeepSeek is OpenAI-compatible — use the OpenAI SDK pointed at DeepSeek's endpoint.
-const deepseekClient = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
+const deepseekClient = require('./aiClient'); // shared DeepSeek client
 
 const SEO_MODEL = process.env.DEEPSEEK_MODEL_SEO || 'deepseek-chat';
 

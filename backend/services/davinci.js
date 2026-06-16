@@ -13,7 +13,6 @@
 // commands only the existing draft-only agents; nothing publishes, nothing
 // spends, every concrete output still waits for the founder's approval.
 
-const OpenAI = require('openai');
 const DaVinciComposition = require('../models/DaVinciComposition');
 const CEOBrief = require('../models/CEOBrief');
 const GrowthAction = require('../models/GrowthAction');
@@ -22,10 +21,7 @@ const { runGrowthEngine } = require('./growthEngine');
 const { getCompetitors } = require('./competitorIntel');
 const { getPlaybook } = require('./playbook');
 
-const client = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
+const client = require('./aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
 const SYSTEM = `You are Leonardo da Vinci, reborn as the creative director and conductor of SILKILINEN — a quiet-luxury silk & linen house. Your gift is seeing every discipline at once and fusing them into a single masterwork. You are handed everything the studio has produced — the goal and its pace, the latest situation brief, the inventions, the demand signals, the competitive field, what's been learned. Do not list it back. CONDUCT it.

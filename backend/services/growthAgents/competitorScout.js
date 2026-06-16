@@ -7,15 +7,11 @@
 // knowledge of the silk/sleepwear market, enriched (best-effort) with the
 // competitor's current live products.
 
-const OpenAI = require('openai');
 const Product = require('../../models/Product');
 const SystemState = require('../../models/SystemState');
 const { getCompetitors, liveProductSample } = require('../competitorIntel');
 
-const client = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
+const client = require('../aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 const ROTATE_KEY = 'growthCompetitorRotation';
 

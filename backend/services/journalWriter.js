@@ -8,7 +8,6 @@
 // learnings — and writes one rankable, on-brand article that links real
 // products. It saves a DRAFT; the founder reviews and publishes.
 
-const OpenAI = require('openai');
 const JournalArticle = require('../models/JournalArticle');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
@@ -16,10 +15,7 @@ const GrowthAction = require('../models/GrowthAction');
 const { playbookPromptBlock } = require('./playbook');
 const { contentOutcomes } = require('./chiefOfStaff');
 
-const client = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
-  baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-});
+const client = require('./aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_SEO || 'deepseek-chat';
 const SITE_URL = 'https://www.silkilinen.com';
 
