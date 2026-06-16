@@ -180,9 +180,18 @@ async function attachRatings(products) {
   });
 }
 
+// Hard ceiling on a single public product response. The list was previously
+// unbounded — at thousands of products one call would ship the entire catalogue
+// (full docs incl. image arrays) plus an aggregate over every id. This caps the
+// worst case while staying invisible at the current catalogue size; callers that
+// need more should page. `?slim=true` returns just the fields the sitemap needs.
+const MAX_LIMIT = 1000;
+const SLIM_PROJECTION = 'name price slug status updatedAt isNewArrival';
+
 router.get('/', async function(req, res) {
   try {
-    const { sort, limit, category, q, ids, isNew } = req.query;
+    const { sort, limit, category, q, ids, isNew, slim } = req.query;
+    const isSlim = slim === 'true';
     const filter = { ...PUBLIC_FILTER };
 
     // Batch lookup by IDs — used by wishlist to resolve stored product IDs
@@ -206,11 +215,15 @@ router.get('/', async function(req, res) {
         { description: { $regex: safe, $options: 'i' } },
       ];
     }
-    let query = Product.find(filter).select(PUBLIC_PROJECTION).lean();
+    let query = Product.find(filter).select(isSlim ? SLIM_PROJECTION : PUBLIC_PROJECTION).lean();
     if (sort === '-createdAt') query = query.sort({ createdAt: -1 });
-    if (limit) query = query.limit(parseInt(limit, 10));
+    // Always bound the result: honour an explicit ?limit (capped), else apply
+    // the safety ceiling so the response can never grow with the whole catalogue.
+    const lim = limit ? Math.min(Math.max(1, parseInt(limit, 10) || 0), MAX_LIMIT) : MAX_LIMIT;
+    query = query.limit(lim);
     const products = await query;
-    res.json(await attachRatings(products));
+    // The slim list (sitemap/feed-style consumers) doesn't need rating rollups.
+    res.json(isSlim ? products : await attachRatings(products));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });

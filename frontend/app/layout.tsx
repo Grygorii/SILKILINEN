@@ -66,7 +66,7 @@ export const metadata: Metadata = {
   description: 'Pure silk and linen intimates, shipped worldwide from Donegal, Ireland.',
   applicationName: 'Silkilinen',
   authors: [{ name: 'Silkilinen' }],
-  keywords: ['silk', 'linen', 'intimates', 'sleepwear', 'robes', 'mulberry silk', 'Donegal', 'Irish silk brand'],
+  keywords: ['silk', 'linen', 'intimates', 'sleepwear', 'robes', 'mulberry silk', 'Donegal', 'Irish silk & linen brand'],
   // Help disambiguate from "silkolene" (motorcycle oil) — when the brand
   // is mentioned alongside these terms, Google's confidence in the
   // intended sense improves over time.

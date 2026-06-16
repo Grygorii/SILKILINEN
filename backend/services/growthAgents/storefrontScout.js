@@ -8,6 +8,7 @@
 
 const OpenAI = require('openai');
 const { getCompetitors } = require('../competitorIntel');
+const { assertPublicUrl } = require('../safeUrl');
 const SystemState = require('../../models/SystemState');
 
 const client = new OpenAI({
@@ -24,6 +25,9 @@ const OWN_SITE = 'https://www.silkilinen.com';
 // strategy. Returns a compact digest the model can read, or null on failure.
 async function pageDigest(url) {
   try {
+    // SSRF guard — competitor.domain is admin-entered free text; never let it
+    // resolve to a private/internal/metadata address. Throws → caught → null.
+    await assertPublicUrl(url);
     const res = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SilkilinenBot/1.0)' },
       signal: AbortSignal.timeout(8000),
