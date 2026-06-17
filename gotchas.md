@@ -2,6 +2,22 @@
 
 Things that have bitten us before. Read before debugging anything that looks like one of these.
 
+## The Agent Garden — who does what (read before adding an agent or orchestrator)
+
+**Specialist agents** live in `services/growthAgents/` and are registered in `services/growthEngine.js`. Their registry `name` is SHORT and often differs from the file/label — the real names are: `demand, competitor, storefront, eureka, prometheus, maui, content, social, newsletter, hermes, watchdog, logicClerk, reasoningClerk`. **Always key maps/links on the registry `name`, not the filename** (this bit the Marketing Coordinator's `AGENT_HOME`).
+
+**Four orchestrators — keep their mandates separate:**
+- `growthEngine.js` — the **scheduler**. Runs due agents on cadence, logs each as a GrowthAction. Doesn't think.
+- `chiefOfStaff.js` — the **weekly state of the business** (measure → attribute → learn → decide brief). Owns the AI Star (North Star). Writes the Playbook via `mergeLearnings` (merge, NOT overwrite — see below).
+- `marketingCoordinator.js` — **goal-driven delegation**. Takes a brief, picks specialists, composes one `MarketingPlan`, verifies it.
+- `davinci.js` — **on-demand 90-day symphony** (force-runs the engine + a brief + a quarter plan). Overlaps the above by design; use it for the big-picture quarter, not weekly ops.
+
+**The learning loop must MERGE, not overwrite.** Chief distils weekly learnings; Hermes and the clerks `addLearning()` incrementally. Chief writes via `playbook.mergeLearnings` so it prepends without wiping the agents' running entries. Never switch Chief back to `setLearnings` (that silently erased Hermes/clerk learnings every week — fixed 17 Jun 2026).
+
+**The clickstream feeds the brain.** The first-party Event stream (funnel, on-site searches, clicks) is read via `services/clickstream.js` `getClickstreamSignals()` and surfaced in `chiefOfStaff.measure()` (so both Chief and Coordinator see it). If you add a new brain that should reason over on-site behaviour, read it from there — don't leave it an island.
+
+**Two SEO planes, intentionally separate:** `auditAgents.runSeoHygieneAgent` (on-page HTML hygiene → Site Audit UI / advisor digest) vs `hermes` (search strategy → SEO Recommendations). They don't share findings on purpose; don't "unify" them without a reason.
+
 ## Regression guard — how we remember fixes
 
 **Every bug we fix should become an automated check, so it can't silently come back.** Don't rely on memory or a one-off manual test. The pattern:
