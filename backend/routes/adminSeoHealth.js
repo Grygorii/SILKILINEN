@@ -290,4 +290,48 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
+// POST /resubmit-indexnow — manually re-submit the entire public surface to
+// IndexNow (Bing/Yandex). Handy after a bulk import, a domain change, or to
+// nudge a re-crawl. Gathers every live URL, de-dupes, and pings in chunks.
+router.post('/resubmit-indexnow', requireAuth, async (req, res) => {
+  try {
+    const Collection = require('../models/Collection');
+    const Category = require('../models/Category');
+    const JournalArticle = require('../models/JournalArticle');
+    const Bundle = require('../models/Bundle');
+    const { EDITABLE_PATHS } = require('../services/pageSeo');
+    const { pingIndexNow } = require('../services/indexNow');
+
+    const STATIC_PATHS = ['/', '/shop', '/about', '/contact', '/faq', '/reviews',
+      '/shipping', '/returns', '/size-guide', '/terms', '/privacy-policy',
+      '/gift-wrapping', '/journal', '/style-finder'];
+
+    const [products, collections, categories, articles, bundles] = await Promise.all([
+      Product.find({ status: { $in: ['active', 'sold_out'] } }).select('_id').lean(),
+      Collection.find({ status: 'active' }).select('slug').lean(),
+      Category.find({ status: 'active' }).select('slug').lean(),
+      JournalArticle.find({ status: 'published' }).select('slug').lean(),
+      Bundle.find({ status: 'active' }).select('slug').lean(),
+    ]);
+
+    const urls = [...new Set([
+      ...STATIC_PATHS,
+      ...(EDITABLE_PATHS || []),
+      ...products.map(p => `/product/${p._id}`),
+      ...collections.filter(c => c.slug).map(c => `/collections/${c.slug}`),
+      ...categories.filter(c => c.slug).map(c => `/shop?category=${c.slug}`),
+      ...articles.filter(a => a.slug).map(a => `/journal/${a.slug}`),
+      ...bundles.filter(b => b.slug).map(b => `/bundles/${b.slug}`),
+    ])];
+
+    // pingIndexNow caps a single submission; chunk so a large catalogue all goes.
+    for (let i = 0; i < urls.length; i += 100) pingIndexNow(urls.slice(i, i + 100));
+
+    res.json({ submitted: urls.length });
+  } catch (err) {
+    console.error('[indexnow resubmit]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
