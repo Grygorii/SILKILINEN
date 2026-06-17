@@ -1,7 +1,7 @@
 /* ── Style Finder entry band ───────────────────────────────────────────
-   Self-contained client unit: a copper→blush silk bow ties itself at the
-   corner of the CTA when the band scrolls into view, nodding to the brand's
-   gift-wrapping (every piece arrives tied with silk ribbon).
+   A calm copper→blush CTA that catches the light: the button's gradient
+   drifts continuously and lifts with a shine sweep on hover. Quiet-luxury
+   restraint — no decorative chrome.
 */
 .finderBand {
   display: flex;
@@ -18,8 +18,6 @@
   transition: background 0.3s ease;
 }
 .finderBand:hover { background: linear-gradient(160deg, #f0e9dc 0%, #e6dccb 100%); }
-
-.finderBand > span { position: relative; z-index: 1; }
 
 .finderEyebrow {
   font-size: 11px;
@@ -40,44 +38,6 @@
   letter-spacing: 0.3px;
 }
 
-/* ── CTA wrapper — holds the button and the silk bow tied at its corner ── */
-.ctaWrap {
-  display: inline-block;
-  margin-top: 16px;
-}
-
-/* ── Silk bow — tied at the top-right corner of the button ──────────────
-   The bow draws itself ("ties") the first time the band scrolls into view
-   (stroke-dashoffset 1 → 0, pathLength normalised to 1); the knot fades in
-   just after. A gentle sway on hover. Reduced-motion users see it already
-   tied, no animation. */
-.bow {
-  position: absolute;
-  top: -30px;
-  right: -26px;
-  width: 64px;
-  height: 48px;
-  pointer-events: none;
-  filter: drop-shadow(0 2px 4px rgba(180, 140, 110, 0.35));
-  transform-origin: 60% 80%;
-  transition: transform 0.4s ease;
-}
-.finderBand:hover .bow { transform: scale(1.07) rotate(-3deg); }
-
-.bowPath {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-}
-.bowKnot { opacity: 0; }
-.inView .bowPath {
-  stroke-dashoffset: 0;
-  transition: stroke-dashoffset 1.2s ease 0.2s;
-}
-.inView .bowKnot {
-  opacity: 1;
-  transition: opacity 0.5s ease 1s;
-}
-
 /* ── CTA button — copper→blush silk that drifts in the light ────────────
    Ink text on a pale metallic gradient keeps the luxe contrast. The gradient
    drifts continuously; on hover the button lifts and a shine streak sweeps
@@ -85,13 +45,12 @@
 .finderBtn {
   position: relative;
   overflow: hidden;
+  margin-top: 16px;
   padding: 13px 30px;
   font-size: 12px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--color-ink, #2a2218);
-  /* Three-stop copper→blush→copper gradient that drifts continuously, so the
-     button reads like silk slowly catching the light even at rest. */
   background: linear-gradient(115deg, #c9a06f 0%, #d9a6a0 45%, #e6c9a8 70%, #c9a06f 100%);
   background-size: 220% 100%;
   background-position: 0% 0;
@@ -123,9 +82,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bowPath { stroke-dashoffset: 0; transition: none; }
-  .bowKnot { opacity: 1; transition: none; }
-  .bow, .finderBand:hover .bow { transition: none; transform: none; }
   .finderBtn { animation: none; transition: none; }
   .finderBtn::after { display: none; }
   .finderBand:hover .finderBtn { transform: none; }
