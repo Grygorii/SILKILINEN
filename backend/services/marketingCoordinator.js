@@ -29,13 +29,16 @@ const DAY = 86400000;
 
 // Where each specialist's work actually happens — used to make every task a
 // real, clickable link instead of a dead instruction.
+// Keyed on the EXACT registry agent names (growthEngine AGENTS): content,
+// social, newsletter, storefront, demand, competitor, hermes, watchdog, eureka,
+// prometheus, maui — NOT the file/class names.
 const AGENT_HOME = {
   hermes: '/admin/seo', watchdog: '/admin/seo',
-  contentWriter: '/admin/journal',
-  socialDrafter: '/admin/social',
-  newsletterDrafter: '/admin/marketing/campaigns',
-  storefrontScout: '/admin/content',
-  demandScout: '/admin/growth', competitorScout: '/admin/growth',
+  content: '/admin/journal',
+  social: '/admin/social',
+  newsletter: '/admin/marketing/campaigns',
+  storefront: '/admin/content',
+  demand: '/admin/growth', competitor: '/admin/growth',
   eureka: '/admin/products', prometheus: '/admin/products', maui: '/admin/products',
 };
 const CHANNEL_HOME = {
@@ -108,6 +111,7 @@ function buildUserPayload(ctx, goal) {
     `Traffic sources (30d): ${(m.sources || []).map(s => `${s.source} ${s.sessions}`).join(', ') || 'none'}.`,
     `Top products (30d): ${(m.topProducts || []).map(p => `${p.name}×${p.units}`).join(', ') || 'no sales yet'}.`,
     m.search ? `Google (28d): ${m.search.totals.clicks} clicks, ${m.search.totals.impressions} impressions; opportunities: ${(m.search.opportunities || []).filter(o => o.position > 8).map(o => `"${o.query}"`).slice(0, 6).join(', ') || 'none'}.` : 'Google Search: not connected.',
+    require('./clickstream').clickstreamPromptLine(m.clickstream) || 'First-party clickstream: no on-site behaviour captured yet.',
   ].join('\n') : 'Business data unavailable.';
 
   return [
@@ -198,11 +202,11 @@ async function buildPlan({ goal, focus, mode, triggeredBy }) {
       objective: `Advance: ${goal}`,
       insight: 'Not enough live data to synthesise automatically — start with demand-building and content, the levers that work pre-traction.',
       audience: 'Considered buyers who value fabric and craft over price.',
-      engagedAgents: ['contentWriter', 'demandScout', 'socialDrafter', 'hermes'],
+      engagedAgents: ['content', 'demand', 'social', 'hermes'],
       plays: [
-        { channel: 'Content', agent: 'contentWriter', title: 'Publish the strongest drafted article', rationale: 'Ranked content is the only free, compounding traffic engine pre-traction.', tasks: ['Open the journal, pick the best draft, refine and publish'] },
+        { channel: 'Content', agent: 'content', title: 'Publish the strongest drafted article', rationale: 'Ranked content is the only free, compounding traffic engine pre-traction.', tasks: ['Open the journal, pick the best draft, refine and publish'] },
         { channel: 'SEO', agent: 'hermes', title: 'Act on the top search opportunity', rationale: 'Win clicks for a query we already appear for.', tasks: ['Open SEO → Recommendations and apply the top Hermes play'] },
-        { channel: 'Social', agent: 'socialDrafter', title: 'Approve the queued social drafts', rationale: 'Keep owned channels alive while organic builds.', tasks: ['Review and approve the social queue'] },
+        { channel: 'Social', agent: 'social', title: 'Approve the queued social drafts', rationale: 'Keep owned channels alive while organic builds.', tasks: ['Review and approve the social queue'] },
       ],
       timeline: 'This week → next 2 weeks.',
       successMetric: 'Human visitors per week.',

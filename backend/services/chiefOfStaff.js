@@ -21,7 +21,7 @@ const GrowthAction = require('../models/GrowthAction');
 const Order = require('../models/Order');
 const Visit = require('../models/Visit');
 const JournalArticle = require('../models/JournalArticle');
-const { setLearnings } = require('./playbook');
+const { mergeLearnings } = require('./playbook');
 
 const client = require('./aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
@@ -206,6 +206,10 @@ async function measure() {
     }
   } catch { /* GSC optional */ }
 
+  // First-party clickstream — the on-site funnel, searches and clicks. Until now
+  // no agent read this; the brain reasons over it alongside orders and GSC.
+  const clickstream = await require('./clickstream').getClickstreamSignals(14).catch(() => null);
+
   return {
     orders: { last7: ordersThis, prev7: ordersPrev },
     revenue: { last7: Math.round((revThis[0]?.v || 0) * 100) / 100, prev7: Math.round((revPrev[0]?.v || 0) * 100) / 100 },
@@ -217,6 +221,7 @@ async function measure() {
     sources: sources.map(s => ({ source: s._id || 'direct', sessions: s.n })),
     topProducts: topProducts.map(p => ({ name: p._id, units: p.units })),
     search,
+    clickstream,
   };
 }
 
@@ -454,6 +459,8 @@ async function generateBriefCore() {
       ? `GOOGLE SEARCH (real internet demand, 28d): ${metrics.search.totals.clicks} clicks, ${metrics.search.totals.impressions} impressions, avg position ${Math.round(metrics.search.totals.position)}. Queries you appear for: ${metrics.search.topQueries.map(q => `"${q.key}"(${q.impressions}imp)`).join(', ') || 'none yet'}. Opportunities (impressions but weak position): ${metrics.search.opportunities.filter(o => o.position > 8).map(o => `"${o.query}" pos ${o.position}`).slice(0, 6).join(', ') || 'none'}.`
       : 'GOOGLE SEARCH: not connected / no data yet.',
     '',
+    require('./clickstream').clickstreamPromptLine(metrics.clickstream) || 'FIRST-PARTY CLICKSTREAM: no on-site behaviour captured yet.',
+    '',
     `CONTENT OUTCOMES (did past articles work?): ${outcomes.length ? outcomes.map(o => `"${o.title}" — ${o.ageDays ?? '?'}d old, ${o.impressions} impressions, ${o.verdict}`).join(' | ') : 'no published articles yet'}`,
     '',
     `RECENT ENGINE ACTIVITY: ${recentActions.map(a => `${a.agent}:${a.type}`).join(', ')}`,
@@ -525,7 +532,8 @@ async function generateBriefCore() {
   // and apply next cycle. This is the loop that makes the team adaptive: the
   // brain teaches the workers what's working, automatically, every week.
   if (Array.isArray(parsed.learnings) && parsed.learnings.length) {
-    await setLearnings(parsed.learnings).catch(() => {});
+    // Merge (not overwrite) so Hermes' and the clerks' running learnings survive.
+    await mergeLearnings(parsed.learnings).catch(() => {});
   }
 
   // Drop a pinned action in the pulse feed so the brief is impossible to miss.
