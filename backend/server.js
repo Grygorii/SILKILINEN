@@ -217,6 +217,7 @@ app.use('/api/admin/today', adminTodayRouter);
 app.use('/api/admin/search', adminSearchRouter);
 app.use('/api/admin/growth', adminGrowthRouter);
 app.use('/api/admin/marketing-coordinator', adminMarketingCoordinatorRouter);
+app.use('/api/admin/atelier', require('./routes/adminAtelier'));
 app.use('/api/cart-recovery', cartRecoveryRouter);
 
 mongoose.connect(process.env.MONGODB_URI)
