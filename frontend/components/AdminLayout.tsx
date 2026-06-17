@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   LayoutDashboard, Package, FileText, Users,
   Megaphone, Settings, Menu, Bell, X, Layers, Tag, BookOpen, BookMarked, Share2,
-  Folder, Gift, Activity, Image as ImageIcon, ShoppingBag, Star, Upload, Boxes, Truck, Sparkles, Zap, Search, Percent, Eye, Workflow, Gem,
+  Folder, Gift, Activity, Image as ImageIcon, ShoppingBag, Star, Upload, Boxes, Truck, Sparkles, Zap, Search, Percent, Eye, Workflow, Gem, Library,
 } from 'lucide-react';
 import styles from './AdminLayout.module.css';
 import LogoutButton from './LogoutButton';
@@ -29,6 +29,7 @@ const NAV: NavEntry[] = [
   { label: 'Growth Engine', href: '/admin/growth',  icon: Zap },
   { label: 'Marketing Coordinator', href: '/admin/marketing-coordinator', icon: Workflow },
   { label: 'The Atelier', href: '/admin/atelier', icon: Gem },
+  { label: 'Archivarius', href: '/admin/memory', icon: Library },
   { label: 'Journeys',   href: '/admin/journeys',   icon: Eye },
   { label: 'Orders',     href: '/admin/orders',     icon: ShoppingBag },
   { label: 'Customers',  href: '/admin/customers',  icon: Users },

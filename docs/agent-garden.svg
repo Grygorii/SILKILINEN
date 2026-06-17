@@ -91,8 +91,8 @@
 <text x="500" y="1309" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Competitor field</text>
 <rect x="643.6" y="1290" width="138.0" height="28" rx="14" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
 <text x="655.6" y="1309" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Orders &amp; Visits</text>
-<rect x="488" y="1324" width="84.8" height="28" rx="14" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
-<text x="500" y="1343" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Playbook</text>
+<rect x="488" y="1324" width="176.0" height="28" rx="14" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="500" y="1343" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Archivarius · memory</text>
 <text x="48" y="1378" font-family="Helvetica,Arial,sans-serif" font-size="15" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0.5">OUTPUTS (drafts)</text>
 <rect x="48" y="1396" width="91.6" height="38" rx="19" fill="#FFFFFF" stroke="#C4A882" stroke-width="1.6"/>
 <text x="61" y="1421" font-family="Helvetica,Arial,sans-serif" font-size="14" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Articles</text>
@@ -111,7 +111,7 @@
 <rect x="883.6" y="1393" width="128" height="44" rx="22" fill="#8FA68C" stroke="#8FA68C" stroke-width="0"/>
 <text x="947.6" y="1422" font-family="Helvetica,Arial,sans-serif" font-size="16" fill="#FFFFFF" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="0">LIVE</text>
 <line x1="40" y1="1468" x2="860" y2="1468" stroke="#E8E2D6" stroke-width="1.6"/>
-<text x="450.0" y="1500" font-family="Helvetica,Arial,sans-serif" font-size="13.5" fill="#6B6358" text-anchor="middle" font-weight="normal" font-style="normal" letter-spacing="0">↻  THE PLAYBOOK — the team’s shared memory: the Chief distils what works each week; every agent reads it next cycle.</text>
+<text x="450.0" y="1500" font-family="Helvetica,Arial,sans-serif" font-size="12.5" fill="#6B6358" text-anchor="middle" font-weight="normal" font-style="normal" letter-spacing="0">↻  ARCHIVARIUS — the living memory: every agent + the clerks feed it; it reinforces what recurs and feeds back wins, mistakes-to-avoid &amp; verified facts, so the team stops repeating errors.</text>
 <text x="450.0" y="1530" font-family="Georgia,'Times New Roman',serif" font-size="15" fill="#2A2218" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="0">AI Star  →  Da Vinci (quarter)  →  Chief (week)  →  Coordinator (campaign)  →  Growth Engine (execute)</text>
 <text x="450.0" y="1558" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#6B6358" text-anchor="middle" font-weight="normal" font-style="italic" letter-spacing="0">Guardrails, always on:   quiet luxury  ·  never discount or price-compete  ·  first-party data only  ·  you approve everything</text>
 </svg>

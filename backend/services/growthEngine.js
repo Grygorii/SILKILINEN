@@ -123,6 +123,10 @@ async function runGrowthEngine({ force = false, only = null } = {}) {
     await setState(LASTRUN_KEY, lastRuns);
   }
 
+  // Archivarius learns from this pulse — the clerks/watchdog flags become
+  // pitfalls the agents will see (and avoid) next cycle — then stays sharp.
+  await require('./archivarius').tick().catch(() => {});
+
   return { ran, actionCount };
 }
 
