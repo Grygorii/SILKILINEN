@@ -54,10 +54,27 @@ async function getProductIssues({ maxPages = 4, timeoutMs = 8000 } = {}) {
 
     for (const p of data.resources || []) {
       total++;
-      const statuses = (p.destinationStatuses || []).map(d => d.status);
-      if (statuses.includes('disapproved')) disapproved++;
-      else if (statuses.includes('pending')) pending++;
-      else approved++;
+      // A product has a status PER destination (Free listings, Shopping ads, …),
+      // and the API returns it either as `status` or as approved/pending/
+      // disapprovedCountries arrays depending on the destination shape. Collect
+      // every state across all destinations.
+      const states = new Set();
+      for (const d of p.destinationStatuses || []) {
+        if (d.status) states.add(d.status);
+        if ((d.approvedCountries || []).length) states.add('approved');
+        if ((d.pendingCountries || []).length) states.add('pending');
+        if ((d.disapprovedCountries || []).length) states.add('disapproved');
+      }
+      // Mirror Merchant Center's headline status: a product counts as APPROVED if
+      // it's live for ANY destination (typically Free listings), even when a
+      // stricter destination (Shopping ads) disapproved it over an item-level
+      // issue. Only count it disapproved when it isn't approved anywhere — that's
+      // the difference between "shows in Merchant as Approved" and our old code
+      // flagging the whole catalogue as disapproved.
+      if (states.has('approved')) approved++;
+      else if (states.has('disapproved')) disapproved++;
+      else if (states.has('pending')) pending++;
+      else approved++; // no destination info — assume servable rather than alarm
 
       for (const issue of p.itemLevelIssues || []) {
         const key = issue.code || issue.description || 'unknown';

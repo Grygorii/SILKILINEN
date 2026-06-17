@@ -208,6 +208,23 @@ async function checkMerchantLive() {
     if (pending > 0) {
       return { ...base, status: 'warning', detail: `${approved} approved · ${pending} pending review · ${total} total` };
     }
+    // Approved everywhere, but item-level issues (missing colour, image type,
+    // adult-content flags…) can still hold a product back from Shopping ads /
+    // full distribution. Surface those as a WARNING, not a false "all good" —
+    // and never as critical, since the products are live.
+    const limiting = issues.filter(i => i.servability === 'disapproved' || i.servability === 'demoted');
+    if (limiting.length) {
+      const affected = limiting.reduce((s, i) => s + (i.count || 0), 0);
+      const top = limiting.slice(0, 3).map(i => `${i.description || i.code} (${i.count})`).join('; ');
+      return {
+        ...base,
+        status: 'warning',
+        detail: `${approved}/${total} approved · ${affected} item issue(s) limiting ad reach. Top: ${top}`,
+        advice: limiting[0]?.documentation
+          ? `Approved for free listings, but fix these for Shopping ads — Google's guide: ${limiting[0].documentation}`
+          : 'Approved for free listings; fix these item issues in the product editor for full Shopping-ads eligibility.',
+      };
+    }
     return { ...base, status: 'healthy', detail: `${approved}/${total} products approved` };
   } catch (err) {
     return { ...base, status: 'warning', detail: `Merchant API error: ${err.message}` };
