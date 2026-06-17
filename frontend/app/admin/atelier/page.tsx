@@ -8,10 +8,11 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 
 type Dissonance = { what: string; why: string; fix: string; severity: 'high' | 'medium' | 'low' };
 type Fix = { title: string; where: string; how: string; agent: string };
+type Room = { name: string; path: string; score: number; verdict: string; dissonances: Dissonance[]; usedScreenshot: boolean; loadMs: number };
 type Review = {
-  _id: string; wowScore: number; verdict: string; firstImpression: string;
+  _id: string; wowScore: number; weakestRoom: string; verdict: string; firstImpression: string;
   strengths: string[]; dissonances: Dissonance[]; fixes: Fix[]; benchmark: string;
-  imagesReviewed: string[]; usedVision: boolean; usedFallback: boolean; createdAt: string;
+  rooms: Room[]; usedVision: boolean; usedFallback: boolean; createdAt: string;
 };
 
 const dark = 'var(--dark, #2a2218)';
@@ -19,6 +20,7 @@ const muted = 'var(--muted, #8a8680)';
 const border = '1px solid var(--border, #e8e2d6)';
 const serif = "'Cormorant Garamond', Georgia, serif";
 const sevColor = { high: '#b03a2e', medium: '#b8863b', low: muted } as const;
+const scoreColor = (s: number) => (s >= 8 ? '#2d7d47' : s >= 6 ? '#b8863b' : '#b03a2e');
 
 function timeAgo(iso: string) {
   const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
@@ -38,11 +40,11 @@ export default function AtelierPage() {
       const res = await fetch(`${API}/api/admin/atelier`, { credentials: 'include' });
       const data = await res.json();
       setVisionReady(data.visionReady !== false);
-      if (Array.isArray(data.reviews)) { setHistory(data.reviews); if (!review && data.reviews[0]) setReview(data.reviews[0]); }
+      if (Array.isArray(data.reviews)) { setHistory(data.reviews); setReview(r => r || data.reviews[0] || null); }
     } catch { /* ignore */ }
-  }, [review]);
+  }, []);
 
-  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [load]);
 
   async function runReview() {
     setBusy(true);
@@ -51,7 +53,7 @@ export default function AtelierPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Review failed');
       setReview(data); load();
-      toast('The creative director has reviewed your entrance.', 'success');
+      toast('The creative director has walked the whole house.', 'success');
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Review failed', 'error');
     } finally { setBusy(false); }
@@ -59,18 +61,18 @@ export default function AtelierPage() {
 
   return (
     <AdminLayout>
-      <div style={{ padding: '32px 40px', maxWidth: 960 }}>
+      <div style={{ padding: '32px 40px', maxWidth: 980 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
           <div>
             <h1 style={{ fontFamily: serif, fontSize: 28, fontWeight: 300, color: dark, margin: 0, letterSpacing: '1px' }}>The Atelier</h1>
             <p style={{ fontSize: 13, color: muted, marginTop: 6, fontStyle: 'italic' }}>
-              A luxury creative director with real eyes — it looks at your entrance and judges the wow.
+              A luxury creative director with real eyes — it walks every room of the site and judges the whole experience. A villa is only as good as its worst room.
             </p>
           </div>
           <button onClick={runReview} disabled={busy} style={{
             padding: '11px 22px', background: dark, color: 'white', border: 'none',
             cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1, fontFamily: 'inherit', fontSize: 13, letterSpacing: '0.5px', whiteSpace: 'nowrap',
-          }}>{busy ? 'Looking… (~30s)' : '✦ Review the entrance'}</button>
+          }}>{busy ? 'Walking every room… (~90s)' : '✦ Review the whole house'}</button>
         </div>
 
         {!visionReady && (
@@ -83,11 +85,11 @@ export default function AtelierPage() {
 
         {history.length > 1 && (
           <div style={{ marginTop: 30 }}>
-            <h2 style={{ fontFamily: serif, fontSize: 18, color: dark, marginBottom: 10 }}>Past reviews</h2>
+            <h2 style={{ fontFamily: serif, fontSize: 18, color: dark, marginBottom: 10 }}>Past walk-throughs</h2>
             <div style={{ display: 'grid', gap: 8 }}>
               {history.map(h => (
                 <button key={h._id} onClick={() => setReview(h)} style={{ textAlign: 'left', background: 'white', border, padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                  <span style={{ fontSize: 13, color: dark }}>{h.verdict || 'Entrance review'}</span>
+                  <span style={{ fontSize: 13, color: dark }}>{h.verdict || 'House review'}</span>
                   <span style={{ fontSize: 12, color: muted, whiteSpace: 'nowrap' }}>{h.wowScore ? `${h.wowScore}/10 · ` : ''}{timeAgo(h.createdAt)}</span>
                 </button>
               ))}
@@ -101,33 +103,54 @@ export default function AtelierPage() {
 
 function ReviewView({ review }: { review: Review }) {
   const score = review.wowScore;
-  const scoreColor = score >= 8 ? '#2d7d47' : score >= 6 ? '#b8863b' : '#b03a2e';
   return (
     <div style={{ background: 'white', border, padding: '24px 26px', marginTop: 22 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
         {score > 0 && (
           <div style={{ textAlign: 'center', flexShrink: 0 }}>
-            <div style={{ fontFamily: serif, fontSize: 46, fontWeight: 400, color: scoreColor, lineHeight: 1 }}>{score}<span style={{ fontSize: 20, color: muted }}>/10</span></div>
-            <div style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: muted, marginTop: 4 }}>Entrance wow</div>
+            <div style={{ fontFamily: serif, fontSize: 48, fontWeight: 400, color: scoreColor(score), lineHeight: 1 }}>{score}<span style={{ fontSize: 20, color: muted }}>/10</span></div>
+            <div style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: muted, marginTop: 4 }}>The whole house</div>
           </div>
         )}
         <div style={{ flex: 1, minWidth: 280 }}>
           <p style={{ fontFamily: serif, fontSize: 20, color: dark, margin: 0, lineHeight: 1.35 }}>{review.verdict}</p>
           {review.firstImpression && <p style={{ fontSize: 13.5, color: muted, marginTop: 8, lineHeight: 1.6 }}>{review.firstImpression}</p>}
+          {review.weakestRoom && (
+            <p style={{ fontSize: 13, color: '#b03a2e', marginTop: 8 }}>⚠ Weakest room — fix this first: <strong>{review.weakestRoom}</strong></p>
+          )}
         </div>
       </div>
 
-      {review.imagesReviewed?.length > 0 && (
-        <div style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
-          {review.imagesReviewed.map((u, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={u} alt="" style={{ width: 84, height: 110, objectFit: 'cover', border }} />
-          ))}
+      {/* Every room, scored */}
+      {review.rooms?.length > 0 && (
+        <div style={{ marginTop: 22 }}>
+          <h3 style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: muted, margin: '0 0 10px' }}>Room by room</h3>
+          <div style={{ display: 'grid', gap: 10 }}>
+            {review.rooms.map((r, i) => (
+              <div key={i} style={{ border, padding: '12px 14px', background: r.name === review.weakestRoom ? '#fdf3f1' : '#fff' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+                  <span style={{ fontFamily: serif, fontSize: 20, fontWeight: 500, color: scoreColor(r.score), minWidth: 42 }}>{r.score || '–'}<span style={{ fontSize: 11, color: muted }}>/10</span></span>
+                  <span style={{ fontSize: 14, color: dark, fontWeight: 500 }}>{r.name}</span>
+                  <a href={`https://www.silkilinen.com${r.path}`} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#b8863b' }}>open →</a>
+                  {!r.usedScreenshot && <span style={{ fontSize: 10, color: muted, fontStyle: 'italic' }}>(content-only)</span>}
+                  {r.loadMs > 2500 && <span style={{ fontSize: 10, color: '#b03a2e' }}>· slow {Math.round(r.loadMs / 100) / 10}s</span>}
+                </div>
+                {r.verdict && <p style={{ fontSize: 12.5, color: muted, margin: '4px 0 0', lineHeight: 1.5 }}>{r.verdict}</p>}
+                {r.dissonances?.length > 0 && (
+                  <ul style={{ margin: '6px 0 0', paddingLeft: 16, fontSize: 12.5, lineHeight: 1.6 }}>
+                    {r.dissonances.map((d, j) => (
+                      <li key={j} style={{ color: dark }}><span style={{ color: sevColor[d.severity] }}>●</span> {d.what}{d.fix && <span style={{ color: muted }}> → {d.fix}</span>}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       {review.strengths?.length > 0 && (
-        <div style={{ marginTop: 20 }}>
+        <div style={{ marginTop: 22 }}>
           <h3 style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#2d7d47', margin: '0 0 8px' }}>What already reads as luxury</h3>
           <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13.5, color: dark, lineHeight: 1.7 }}>
             {review.strengths.map((s, i) => <li key={i}>{s}</li>)}
@@ -135,24 +158,9 @@ function ReviewView({ review }: { review: Review }) {
         </div>
       )}
 
-      {review.dissonances?.length > 0 && (
-        <div style={{ marginTop: 22 }}>
-          <h3 style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#b03a2e', margin: '0 0 10px' }}>The dissonance (what cheapens it)</h3>
-          <div style={{ display: 'grid', gap: 12 }}>
-            {review.dissonances.map((d, i) => (
-              <div key={i} style={{ borderLeft: `3px solid ${sevColor[d.severity]}`, paddingLeft: 14 }}>
-                <div style={{ fontSize: 14, color: dark, fontWeight: 500 }}>{d.what} <span style={{ fontSize: 10, color: sevColor[d.severity], textTransform: 'uppercase', letterSpacing: '0.5px' }}>· {d.severity}</span></div>
-                {d.why && <div style={{ fontSize: 12.5, color: muted, marginTop: 2 }}>{d.why}</div>}
-                {d.fix && <div style={{ fontSize: 12.5, color: dark, marginTop: 4 }}><strong style={{ fontWeight: 500 }}>Fix:</strong> {d.fix}</div>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {review.fixes?.length > 0 && (
         <div style={{ marginTop: 22 }}>
-          <h3 style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#b8863b', margin: '0 0 10px' }}>The entrance plan (ranked)</h3>
+          <h3 style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#b8863b', margin: '0 0 10px' }}>The house plan (ranked)</h3>
           <ol style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 8 }}>
             {review.fixes.map((f, i) => (
               <li key={i} style={{ fontSize: 13.5, color: dark, lineHeight: 1.5 }}>
@@ -165,9 +173,7 @@ function ReviewView({ review }: { review: Review }) {
       )}
 
       {review.benchmark && (
-        <p style={{ fontSize: 12.5, color: muted, marginTop: 20, paddingTop: 14, borderTop: border, fontStyle: 'italic' }}>
-          ✦ {review.benchmark}
-        </p>
+        <p style={{ fontSize: 12.5, color: muted, marginTop: 20, paddingTop: 14, borderTop: border, fontStyle: 'italic' }}>✦ {review.benchmark}</p>
       )}
     </div>
   );

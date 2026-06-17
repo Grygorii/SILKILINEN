@@ -20,14 +20,28 @@ const fixSchema = new mongoose.Schema({
   agent: { type: String, default: '' },  // which specialist could do it (e.g. Maui, Photographer)
 }, { _id: false });
 
+// One "room" of the villa — a page, judged on its own.
+const roomSchema = new mongoose.Schema({
+  name:           { type: String, default: '' },
+  path:           { type: String, default: '' },
+  score:          { type: Number, default: 0 },   // 1-10 for THIS room
+  verdict:        { type: String, default: '' },
+  dissonances:    { type: [dissonanceSchema], default: [] },
+  usedScreenshot: { type: Boolean, default: false }, // saw the rendered page vs content-only
+  loadMs:         { type: Number, default: 0 },
+}, { _id: false });
+
 const experienceReviewSchema = new mongoose.Schema({
-  wowScore:        { type: Number, default: 0 },   // 1-10: the entrance "wow"
+  scope:           { type: String, enum: ['entrance', 'house'], default: 'house' },
+  wowScore:        { type: Number, default: 0 },   // 1-10: the whole house, worst-room-weighted
+  weakestRoom:     { type: String, default: '' },  // the room that lets the villa down
   verdict:         { type: String, default: '' },  // one-line honest verdict
   firstImpression: { type: String, default: '' },  // what the first 5 seconds feel like
   strengths:       { type: [String], default: [] },
-  dissonances:     { type: [dissonanceSchema], default: [] },
-  fixes:           { type: [fixSchema], default: [] },  // the prioritised "entrance plan"
+  dissonances:     { type: [dissonanceSchema], default: [] }, // the worst across the whole house
+  fixes:           { type: [fixSchema], default: [] },  // the prioritised cross-house plan
   benchmark:       { type: String, default: '' },  // how it reads vs the top luxury houses
+  rooms:           { type: [roomSchema], default: [] }, // every page, scored
   imagesReviewed:  { type: [String], default: [] },
   usedVision:      { type: Boolean, default: false },
   usedFallback:    { type: Boolean, default: false },
