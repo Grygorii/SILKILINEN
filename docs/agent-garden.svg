@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 1380" font-family="Helvetica,Arial,sans-serif">
+<defs><marker id="ah" markerWidth="11" markerHeight="11" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 Z" fill="#C9A06F"/></marker><marker id="ahs" markerWidth="10" markerHeight="10" refX="7" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="#8FA68C"/></marker></defs>
+<rect x="0" y="0" width="1240" height="1380" rx="0" fill="#FAF8F4" stroke="#FAF8F4" stroke-width="0"/>
+<text x="620.0" y="58" font-family="Georgia,'Times New Roman',serif" font-size="34" fill="#C9A06F" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="3">SILKILINEN</text>
+<text x="620.0" y="86" font-family="Georgia,'Times New Roman',serif" font-size="16" fill="#6B6358" text-anchor="middle" font-weight="normal" font-style="italic" letter-spacing="0">The Agent Garden — your AI marketing system, end to end</text>
+<rect x="360" y="112" width="520" height="60" rx="30" fill="#C9A06F" stroke="#C9A06F" stroke-width="0"/>
+<text x="620.0" y="139" font-family="Georgia,'Times New Roman',serif" font-size="16" fill="#FFFFFF" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="0">★  AI STAR — your goal</text>
+<text x="620.0" y="159" font-family="Helvetica,Arial,sans-serif" font-size="12.5" fill="#FBF3E8" text-anchor="middle" font-weight="normal" font-style="normal" letter-spacing="0">everything below steers toward it</text>
+<line x1="620.0" y1="172" x2="620.0" y2="640" stroke="#C4A882" stroke-width="1.4" stroke-dasharray="2 6" opacity="0.7"/>
+<rect x="360" y="206" width="520" height="80" rx="12" fill="#FFFFFF" stroke="#C4A882" stroke-width="1.8"/>
+<text x="378" y="236" font-family="Georgia,'Times New Roman',serif" font-size="17" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">🎼 Da Vinci — the composer</text>
+<text x="378" y="260" font-family="Helvetica,Arial,sans-serif" font-size="12.5" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Quarter · a bold 90-day vision · on-demand</text>
+<rect x="120" y="231.0" width="180" height="30" rx="15" fill="#F5F0E8" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="210" y="251.0" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#6B6358" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="1.5">QUARTER</text>
+<rect x="360" y="308" width="520" height="80" rx="12" fill="#FFFFFF" stroke="#C4A882" stroke-width="1.8"/>
+<text x="378" y="338" font-family="Georgia,'Times New Roman',serif" font-size="17" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">🧠 Chief of Staff — the brain</text>
+<text x="378" y="362" font-family="Helvetica,Arial,sans-serif" font-size="12.5" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">This week · the honest state + 3–4 moves · auto weekly</text>
+<rect x="120" y="333.0" width="180" height="30" rx="15" fill="#F5F0E8" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="210" y="353.0" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#6B6358" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="1.5">WEEK</text>
+<line x1="620.0" y1="286" x2="620.0" y2="308" stroke="#C9A06F" stroke-width="2.2" marker-end="url(#ah)"/>
+<text x="630.0" y="301.0" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="italic" letter-spacing="0">serves</text>
+<rect x="360" y="410" width="520" height="80" rx="12" fill="#FFFFFF" stroke="#C4A882" stroke-width="1.8"/>
+<text x="378" y="440" font-family="Georgia,'Times New Roman',serif" font-size="17" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">🎯 Marketing Coordinator — the lead</text>
+<text x="378" y="464" font-family="Helvetica,Arial,sans-serif" font-size="12.5" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">A goal → one delegated plan · interactive + weekly</text>
+<rect x="120" y="435.0" width="180" height="30" rx="15" fill="#F5F0E8" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="210" y="455.0" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#6B6358" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="1.5">CAMPAIGN</text>
+<line x1="620.0" y1="388" x2="620.0" y2="410" stroke="#C9A06F" stroke-width="2.2" marker-end="url(#ah)"/>
+<text x="630.0" y="403.0" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="italic" letter-spacing="0">serves</text>
+<rect x="360" y="512" width="520" height="80" rx="12" fill="#FFFFFF" stroke="#C9A06F" stroke-width="1.8"/>
+<text x="378" y="542" font-family="Georgia,'Times New Roman',serif" font-size="17" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">⚙️ Growth Engine — the scheduler</text>
+<text x="378" y="566" font-family="Helvetica,Arial,sans-serif" font-size="12.5" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Runs the specialists on cadence · drafts you approve</text>
+<rect x="120" y="537.0" width="180" height="30" rx="15" fill="#F5F0E8" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="210" y="557.0" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#6B6358" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="1.5">CONTINUOUS</text>
+<line x1="620.0" y1="490" x2="620.0" y2="512" stroke="#C9A06F" stroke-width="2.2" marker-end="url(#ah)"/>
+<text x="630.0" y="505.0" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="italic" letter-spacing="0">serves</text>
+<text x="910" y="358" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#8FA68C" text-anchor="start" font-weight="normal" font-style="italic" letter-spacing="0">↑ reads Da Vinci’s vision</text>
+<text x="910" y="460" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#8FA68C" text-anchor="start" font-weight="normal" font-style="italic" letter-spacing="0">↑ reads the Chief’s brief</text>
+<line x1="620.0" y1="592" x2="620.0" y2="650" stroke="#C9A06F" stroke-width="2.2" marker-end="url(#ah)"/>
+<rect x="80" y="656" width="1080" height="212" rx="14" fill="#F5F0E8" stroke="#E8E2D6" stroke-width="1.8"/>
+<text x="100" y="686" font-family="Helvetica,Arial,sans-serif" font-size="14" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="1.5">THE SPECIALISTS</text>
+<text x="280" y="686" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">— the Growth Engine runs them; they draft &amp; gather, you approve</text>
+<rect x="102" y="706" width="248" height="46" rx="8" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="114" y="726" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">Demand Scout</text>
+<text x="114" y="743" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">rising searches</text>
+<rect x="368" y="706" width="248" height="46" rx="8" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="380" y="726" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">Competitor Scout</text>
+<text x="380" y="743" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">the rival field</text>
+<rect x="634" y="706" width="248" height="46" rx="8" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="646" y="726" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">Storefront Scout</text>
+<text x="646" y="743" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">rivals’ UX ideas</text>
+<rect x="900" y="706" width="248" height="46" rx="8" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="912" y="726" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">Hermes</text>
+<text x="912" y="743" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">SEO · win clicks</text>
+<rect x="102" y="766" width="248" height="46" rx="8" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="114" y="786" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">Content Writer</text>
+<text x="114" y="803" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">journal drafts</text>
+<rect x="368" y="766" width="248" height="46" rx="8" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="380" y="786" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">Social Drafter</text>
+<text x="380" y="803" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">social posts</text>
+<rect x="634" y="766" width="248" height="46" rx="8" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="646" y="786" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">Newsletter Drafter</text>
+<text x="646" y="803" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">emails</text>
+<rect x="900" y="766" width="248" height="46" rx="8" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="912" y="786" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">Eureka</text>
+<text x="912" y="803" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">product ideas</text>
+<rect x="102" y="826" width="248" height="46" rx="8" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="114" y="846" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">Prometheus</text>
+<text x="114" y="863" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">clarity fixes</text>
+<rect x="368" y="826" width="248" height="46" rx="8" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="380" y="846" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">Maui</text>
+<text x="380" y="863" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">delight moments</text>
+<rect x="634" y="826" width="248" height="46" rx="8" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="646" y="846" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">Watchdog</text>
+<text x="646" y="863" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">alerts &amp; risks</text>
+<rect x="80" y="892" width="520" height="118" rx="12" fill="#F3E7E4" stroke="#D9A6A0" stroke-width="1.6"/>
+<text x="98" y="920" font-family="Helvetica,Arial,sans-serif" font-size="14" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">THE CLERKS — your verification</text>
+<text x="98" y="944" font-family="Helvetica,Arial,sans-serif" font-size="12.5" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Logic Clerk + Reasoning Clerk fact-check &amp;</text>
+<text x="98" y="962" font-family="Helvetica,Arial,sans-serif" font-size="12.5" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">cross-check everything the specialists produce</text>
+<text x="98" y="980" font-family="Helvetica,Arial,sans-serif" font-size="12.5" fill="#6B6358" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">before you ever act on it.</text>
+<line x1="340.0" y1="892" x2="340.0" y2="870" stroke="#D9A6A0" stroke-width="2" stroke-dasharray="4 5" marker-end="url(#ah)"/>
+<text x="348.0" y="886" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#D9A6A0" text-anchor="start" font-weight="normal" font-style="italic" letter-spacing="0">verify</text>
+<rect x="640" y="892" width="520" height="118" rx="12" fill="#EEF1EC" stroke="#8FA68C" stroke-width="1.6"/>
+<text x="658" y="920" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">WHAT THE BRAIN READS — feeds Chief &amp; Coordinator</text>
+<rect x="658" y="936" width="178" height="26" rx="13" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.1"/>
+<text x="670" y="953" font-family="Helvetica,Arial,sans-serif" font-size="11.5" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Journeys · clickstream</text>
+<rect x="846" y="936" width="122" height="26" rx="13" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.1"/>
+<text x="858" y="953" font-family="Helvetica,Arial,sans-serif" font-size="11.5" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Search Console</text>
+<rect x="978" y="936" width="136" height="26" rx="13" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.1"/>
+<text x="990" y="953" font-family="Helvetica,Arial,sans-serif" font-size="11.5" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Competitor field</text>
+<rect x="658" y="970" width="129" height="26" rx="13" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.1"/>
+<text x="670" y="987" font-family="Helvetica,Arial,sans-serif" font-size="11.5" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Orders &amp; Visits</text>
+<rect x="797" y="970" width="80" height="26" rx="13" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.1"/>
+<text x="809" y="987" font-family="Helvetica,Arial,sans-serif" font-size="11.5" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Playbook</text>
+<line x1="640" y1="951.0" x2="882" y2="450.0" stroke="#8FA68C" stroke-width="1.8" stroke-dasharray="4 5" marker-end="url(#ah)"/>
+<text x="636" y="886" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#8FA68C" text-anchor="end" font-weight="normal" font-style="italic" letter-spacing="0">feeds the brain ↗</text>
+<text x="90" y="1044" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="1">OUTPUTS (drafts)</text>
+<rect x="90" y="1062" width="84.8" height="32" rx="16" fill="#FFFFFF" stroke="#C4A882" stroke-width="1.4"/>
+<text x="102" y="1083" font-family="Helvetica,Arial,sans-serif" font-size="12.5" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Articles</text>
+<rect x="184.8" y="1062" width="115.19999999999999" height="32" rx="16" fill="#FFFFFF" stroke="#C4A882" stroke-width="1.4"/>
+<text x="196.8" y="1083" font-family="Helvetica,Arial,sans-serif" font-size="12.5" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Social posts</text>
+<rect x="310.0" y="1062" width="107.6" height="32" rx="16" fill="#FFFFFF" stroke="#C4A882" stroke-width="1.4"/>
+<text x="322.0" y="1083" font-family="Helvetica,Arial,sans-serif" font-size="12.5" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Newsletters</text>
+<rect x="427.6" y="1062" width="92.39999999999999" height="32" rx="16" fill="#FFFFFF" stroke="#C4A882" stroke-width="1.4"/>
+<text x="439.6" y="1083" font-family="Helvetica,Arial,sans-serif" font-size="12.5" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">SEO fixes</text>
+<rect x="530.0" y="1062" width="130.39999999999998" height="32" rx="16" fill="#FFFFFF" stroke="#C4A882" stroke-width="1.4"/>
+<text x="542.0" y="1083" font-family="Helvetica,Arial,sans-serif" font-size="12.5" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">IndexNow pings</text>
+<line x1="674.4" y1="1078" x2="684.4" y2="1078" stroke="#C9A06F" stroke-width="2.2" marker-end="url(#ah)"/>
+<rect x="688.4" y="1058" width="170" height="40" rx="20" fill="#C9A06F" stroke="#C9A06F" stroke-width="0"/>
+<text x="773.4" y="1083" font-family="Helvetica,Arial,sans-serif" font-size="13.5" fill="#FFFFFF" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="0">✓  YOU APPROVE</text>
+<line x1="862.4" y1="1078" x2="898.4" y2="1078" stroke="#C9A06F" stroke-width="2.2" marker-end="url(#ah)"/>
+<rect x="906.4" y="1058" width="120" height="40" rx="20" fill="#8FA68C" stroke="#8FA68C" stroke-width="0"/>
+<text x="966.4" y="1083" font-family="Helvetica,Arial,sans-serif" font-size="14" fill="#FFFFFF" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="0">LIVE</text>
+<line x1="80" y1="1145" x2="1160" y2="1145" stroke="#E8E2D6" stroke-width="1.4"/>
+<text x="620.0" y="1175" font-family="Helvetica,Arial,sans-serif" font-size="12.5" fill="#6B6358" text-anchor="middle" font-weight="normal" font-style="normal" letter-spacing="0">↻  THE PLAYBOOK — the team’s shared memory: the Chief distils what works each week; every agent reads it next cycle (it merges, never overwrites).</text>
+<text x="620.0" y="1201" font-family="Georgia,'Times New Roman',serif" font-size="13" fill="#2A2218" text-anchor="middle" font-weight="bold" font-style="normal" letter-spacing="0">The chain in one line:  AI Star  →  Da Vinci (quarter)  →  Chief (week)  →  Coordinator (campaign)  →  Growth Engine (execute)</text>
+<text x="620.0" y="1227" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#6B6358" text-anchor="middle" font-weight="normal" font-style="italic" letter-spacing="0">Guardrails, always on:  quiet luxury ·  never discount or price-compete ·  first-party data only ·  you approve everything</text>
+</svg>
