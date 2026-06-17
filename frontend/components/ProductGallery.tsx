@@ -172,7 +172,7 @@ export default function ProductGallery({ images, name, productId, video }: Props
           >
             <Image
               src={item.url}
-              alt={item.alt}
+              alt={item.alt || name}
               fill
               priority
               sizes="(max-width: 900px) 100vw, 50vw"
@@ -244,7 +244,7 @@ export default function ProductGallery({ images, name, productId, video }: Props
           </button>
           <img
             src={cloudinaryThumb(item.url, 1600)}
-            alt={item.alt}
+            alt={item.alt || name}
             className={styles.lightboxImg}
             onClick={e => e.stopPropagation()}
             onError={() => setFailedUrls(prev => new Set([...prev, item.url]))}
