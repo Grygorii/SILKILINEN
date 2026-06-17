@@ -68,8 +68,10 @@ const adminAnalystRouter = require('./routes/adminAnalyst');
 const adminTodayRouter = require('./routes/adminToday');
 const adminSearchRouter = require('./routes/adminSearch');
 const adminGrowthRouter = require('./routes/adminGrowth');
+const adminMarketingCoordinatorRouter = require('./routes/adminMarketingCoordinator');
 const { runGrowthEngine } = require('./services/growthEngine');
 const { runChiefIfDue } = require('./services/chiefOfStaff');
+const { weeklyCoordinator } = require('./services/marketingCoordinator');
 const { loadShippingOverrides } = require('./services/shipping');
 const cartRecoveryRouter = require('./routes/cartRecovery');
 const { processCartRecovery } = require('./services/cartRecovery');
@@ -214,6 +216,7 @@ app.use('/api/admin/analyst', adminAnalystRouter);
 app.use('/api/admin/today', adminTodayRouter);
 app.use('/api/admin/search', adminSearchRouter);
 app.use('/api/admin/growth', adminGrowthRouter);
+app.use('/api/admin/marketing-coordinator', adminMarketingCoordinatorRouter);
 app.use('/api/cart-recovery', cartRecoveryRouter);
 
 mongoose.connect(process.env.MONGODB_URI)
@@ -283,6 +286,8 @@ let growthEngineStartTimeout = null;
 let growthEngineInterval = null;
 let chiefStartTimeout = null;
 let chiefInterval = null;
+let coordinatorStartTimeout = null;
+let coordinatorInterval = null;
 let cacheRefreshInterval = null;
 
 // These crons run as in-process timers. If Railway runs more than one web
@@ -369,6 +374,18 @@ const server = app.listen(PORT, function() {
     think();
     chiefInterval = setInterval(think, 6 * 60 * 60 * 1000);
   }, 25 * 60 * 1000);
+
+  // Marketing Coordinator — the team lead. Checks every 6h but only writes a new
+  // unified weekly plan when 7 days have passed (weeklyCoordinator guards the
+  // cadence). First check 30 min after boot, after the Chief's brief so the plan
+  // can build on the week's read.
+  coordinatorStartTimeout = setTimeout(function() {
+    const plan = () => withCronLock('marketingCoordinator', LOCK_TTL, weeklyCoordinator)
+      .then(r => { if (r && r.ran && r.plan) console.log('[coordinator] weekly plan written'); })
+      .catch(err => console.error('[coordinator]', err));
+    plan();
+    coordinatorInterval = setInterval(plan, 6 * 60 * 60 * 1000);
+  }, 30 * 60 * 1000);
 });
 
 let shuttingDown = false;
@@ -388,6 +405,8 @@ function shutdown(signal) {
   if (growthEngineInterval) clearInterval(growthEngineInterval);
   if (chiefStartTimeout) clearTimeout(chiefStartTimeout);
   if (chiefInterval) clearInterval(chiefInterval);
+  if (coordinatorStartTimeout) clearTimeout(coordinatorStartTimeout);
+  if (coordinatorInterval) clearInterval(coordinatorInterval);
 
   // Hard exit if graceful drain stalls (e.g. hung Mongo or stuck request).
   const hardExit = setTimeout(() => {
