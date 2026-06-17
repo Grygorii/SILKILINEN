@@ -81,16 +81,14 @@
 <line x1="236" y1="1182" x2="236" y2="1162" stroke="#D9A6A0" stroke-width="2" stroke-dasharray="4 5" marker-end="url(#ah)"/>
 <text x="244" y="1174" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#D9A6A0" text-anchor="start" font-weight="normal" font-style="italic" letter-spacing="0">verify</text>
 <rect x="468" y="1182" width="392" height="150" rx="13" fill="#EEF1EC" stroke="#8FA68C" stroke-width="1.8"/>
-<text x="488" y="1214" font-family="Helvetica,Arial,sans-serif" font-size="15.5" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">WHAT THE BRAIN READS</text>
+<text x="488" y="1214" font-family="Helvetica,Arial,sans-serif" font-size="15.5" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0">WHAT THE BRAIN READS — connections + memory</text>
 <text x="488" y="1236" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#8FA68C" text-anchor="start" font-weight="normal" font-style="italic" letter-spacing="0">↑ feeds Chief &amp; Coordinator</text>
-<rect x="488" y="1256" width="191.2" height="28" rx="14" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
-<text x="500" y="1275" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Journeys · clickstream</text>
-<rect x="689.2" y="1256" width="130.39999999999998" height="28" rx="14" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
-<text x="701.2" y="1275" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Search Console</text>
-<rect x="488" y="1290" width="145.6" height="28" rx="14" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
-<text x="500" y="1309" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Competitor field</text>
-<rect x="643.6" y="1290" width="138.0" height="28" rx="14" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
-<text x="655.6" y="1309" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Orders &amp; Visits</text>
+<rect x="488" y="1256" width="312.8" height="28" rx="14" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="500" y="1275" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Connections · GA4·Clarity·GSC·Merchant</text>
+<rect x="488" y="1290" width="191.2" height="28" rx="14" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="500" y="1309" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Journeys · clickstream</text>
+<rect x="689.2" y="1290" width="138.0" height="28" rx="14" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
+<text x="701.2" y="1309" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Orders &amp; Visits</text>
 <rect x="488" y="1324" width="176.0" height="28" rx="14" fill="#FFFFFF" stroke="#E8E2D6" stroke-width="1.2"/>
 <text x="500" y="1343" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#2A2218" text-anchor="start" font-weight="normal" font-style="normal" letter-spacing="0">Archivarius · memory</text>
 <text x="48" y="1378" font-family="Helvetica,Arial,sans-serif" font-size="15" fill="#2A2218" text-anchor="start" font-weight="bold" font-style="normal" letter-spacing="0.5">OUTPUTS (drafts)</text>
