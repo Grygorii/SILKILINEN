@@ -48,13 +48,16 @@ const CHANNEL_HOME = {
 
 // ── Gather: the real material the Coordinator reasons over ─────────────────────
 async function gatherContext(focus) {
-  const [agents, metrics, northStar, recentActions, competitors, playbook] = await Promise.all([
+  const [agents, metrics, northStar, recentActions, competitors, playbook, brief] = await Promise.all([
     describeAgents().catch(() => []),
     measure().catch(() => null),
     getNorthStar().catch(() => null),
     GrowthAction.find().sort({ createdAt: -1 }).limit(40).select('agent type title status').lean().catch(() => []),
     require('./competitorIntel').getCompetitors().catch(() => []),
     playbookPromptBlock().catch(() => ''),
+    // The chain: the latest Chief of Staff brief — the week's read. A plan
+    // should SERVE this, not re-decide the week from scratch.
+    require('../models/CEOBrief').findOne().sort({ createdAt: -1 }).lean().catch(() => null),
   ]);
 
   // The latest line from each specialist — their current "input" to the plan.
@@ -64,7 +67,7 @@ async function gatherContext(focus) {
     if (byAgent[a.agent].length < 3) byAgent[a.agent].push(`${a.type}: ${a.title}`);
   }
 
-  return { agents, metrics, northStar, byAgent, competitors, playbook, focus: focus || '' };
+  return { agents, metrics, northStar, byAgent, competitors, playbook, brief, focus: focus || '' };
 }
 
 const SYSTEM = `You are the MARKETING COORDINATOR for SILKILINEN — a QUIET-LUXURY Mulberry-silk & European-linen intimates brand, one founder, currency EUR. You are the team LEAD: you do not do the work yourself, you DELEGATE to the right specialist agents and compose their work into ONE coordinated campaign plan toward the founder's goal.
@@ -122,6 +125,7 @@ function buildUserPayload(ctx, goal) {
     `COMPETITOR FIELD: ${ctx.competitors.length} brands — reason about the market & white space, not one rival.`, '',
     `YOUR TEAM (delegate to these — use exact names):\n${roster}`, '',
     `WHAT EACH SPECIALIST RECENTLY PRODUCED:\n${agentIntel}`, '',
+    ctx.brief ? `THIS WEEK'S READ — Chief of Staff brief (align the plan to it; don't contradict it): "${ctx.brief.headline}". Top moves: ${(ctx.brief.moves || []).slice(0, 3).map(m => m.title).join('; ') || '—'}.` : '',
     ctx.playbook ? `PLAYBOOK (what we've learned works):\n${ctx.playbook}` : '',
     '', 'Compose the coordinated plan JSON now.',
   ].filter(x => x !== null && x !== undefined).join('\n');
@@ -263,13 +267,28 @@ async function weeklyCoordinator({ force = false } = {}) {
   if (!force && Date.now() - last < 7 * DAY) return { ran: false };
   if (!process.env.DEEPSEEK_API_KEY) return { ran: false, skipped: 'AI not configured' };
 
+  // The chain: don't re-decide the week — EXECUTE the Chief of Staff's top
+  // priority. Read the latest brief; if it's fresh and has moves, turn its #1
+  // move into the campaign. Only fall back to the North Star when there's no
+  // current brief to serve (so there's one decider per horizon, not two).
   const ns = await getNorthStar().catch(() => null);
-  const goal = ns && METRICS[ns.metric]
-    ? `Advance the North Star this week: ${METRICS[ns.metric].label} → ${ns.target}${ns.deadline ? ` by ${ns.deadline}` : ''}.`
-    : 'Grow SILKILINEN this week — build demand, traffic and considered first purchases without touching the luxury position.';
+  const brief = await require('../models/CEOBrief').findOne().sort({ createdAt: -1 }).lean().catch(() => null);
+  const briefFresh = brief?.createdAt && (Date.now() - new Date(brief.createdAt).getTime()) < 8 * DAY;
+  const nsTail = ns && METRICS[ns.metric] ? ` toward the AI Star (${METRICS[ns.metric].label} → ${ns.target})` : '';
+
+  let goal, focus;
+  if (briefFresh && (brief.moves || []).length) {
+    const top = brief.moves[0];
+    goal = `Execute this week's priority from the Chief of Staff's brief — "${top.title}"${nsTail}. Turn it into a delegated, executable plan.`;
+    focus = top.agent || '';
+  } else {
+    goal = ns && METRICS[ns.metric]
+      ? `Advance the North Star this week: ${METRICS[ns.metric].label} → ${ns.target}${ns.deadline ? ` by ${ns.deadline}` : ''}.`
+      : 'Grow SILKILINEN this week — build demand, traffic and considered first purchases without touching the luxury position.';
+  }
 
   let plan = null;
-  try { plan = await buildPlan({ goal, mode: 'weekly', triggeredBy: 'auto-weekly' }); }
+  try { plan = await buildPlan({ goal, focus, mode: 'weekly', triggeredBy: 'auto-weekly' }); }
   catch (err) { console.error('[coordinator] weekly failed:', err.message); }
   await SystemState.findOneAndUpdate({ key }, { value: new Date().toISOString() }, { upsert: true });
   return { ran: true, plan };
