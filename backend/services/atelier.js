@@ -18,6 +18,7 @@ const ExperienceReview = require('../models/ExperienceReview');
 const Product = require('../models/Product');
 const { capture } = require('./screenshot');
 const { fetchReadablePage } = require('./externalData');
+const { curate, concierge, atmosphere } = require('./atelierCritics');
 const textClient = require('./aiClient'); // DeepSeek, for the text synthesis
 const TEXT_MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
@@ -96,64 +97,90 @@ async function reviewRoom(room) {
   };
 }
 
-const SYNTH_SYSTEM = `You are the CREATIVE DIRECTOR summarising a full walk-through of the SILKILINEN site, room by room. You are given each room's score and dissonances. Produce the HOUSE verdict for a quiet-luxury brand. CRITICAL RULE: a villa is only as good as its WORST room — one cardboard room ends the visit — so weight the weakest rooms heavily; do NOT average away a bad room. Respond ONLY with JSON:
+const SYNTH_SYSTEM = `You are THE MAISON DIRECTOR — the person who DELIVERS the house. You're given a room-by-room walk-through AND four craft pillars (Look, Coherence, Voice, Speed), each scored. Produce the delivery verdict for a quiet-luxury brand. CRITICAL RULE: a villa is only as good as its WORST room and its WEAKEST pillar — one cardboard room or one slow door ends the visit — so weight the weakest heavily; NEVER average a bad room/pillar away. Your job is not just to critique but to DELIVER: a sequenced plan with an owner for each move and a clear standard. Respond ONLY with JSON:
 {
-  "wowScore": 1-10 (the WHOLE house, worst-room-weighted),
-  "weakestRoom": "the room name that most lets the house down",
-  "verdict": "one honest sentence on the whole experience",
-  "firstImpression": "2-3 sentences: does walking this site feel like the villa of the most discerning person on earth?",
-  "strengths": ["what already reads as luxury across the house — be fair"],
-  "dissonances": [ { "what": "the worst issues across the whole site", "why": "", "fix": "", "severity": "high|medium|low" } ],
-  "fixes": [ { "title": "the move", "where": "which room/page", "how": "concretely", "agent": "Photographer|Art Director|Maui|Concierge|Curator|founder" } ],
-  "benchmark": "1-2 sentences: how the house reads next to Loro Piana / Brunello Cucinelli / Hermès, and the gap to close"
+  "wowScore": 1-10 (the whole house, worst-weighted across rooms AND pillars),
+  "weakestRoom": "the room that most lets the house down",
+  "verdict": "one honest sentence on whether this delivers the villa feeling",
+  "firstImpression": "2-3 sentences: does walking this site feel like the home of the most discerning person on earth?",
+  "strengths": ["what already reads as luxury — be fair"],
+  "dissonances": [ { "what": "the worst issues across the whole house", "why": "", "fix": "", "severity": "high|medium|low" } ],
+  "fixes": [ { "title": "the move", "where": "which room/pillar", "how": "concretely", "agent": "Photographer|Art Director|Curator|Concierge|Atmosphere|Maui|developer|founder" } ],
+  "benchmark": "1-2 sentences: how the house reads next to Loro Piana / Brunello Cucinelli / Hermès, and the gap to close to 10/10"
 }
-3-6 dissonances (worst-first), 3-6 fixes. Never suggest discounts, busy effects, or stock-photo clichés.`;
+The "fixes" ARE the delivery plan — order them worst-first, each owned, each concrete. 3-6 dissonances, 3-6 fixes. Never discounts, busy effects, or stock clichés.`;
 
-async function runHouseReview({ triggeredBy } = {}) {
+// Create a 'running' review and drive it in the background (rooms + the three
+// critics are slow), so the request returns immediately and the UI polls.
+async function startReview({ triggeredBy } = {}) {
   if (!visionConfigured()) {
     return ExperienceReview.create({
-      scope: 'house', wowScore: 0, usedVision: false, usedFallback: true, triggeredBy: triggeredBy || '',
+      scope: 'house', status: 'completed', wowScore: 0, usedVision: false, usedFallback: true, triggeredBy: triggeredBy || '',
       verdict: 'The Atelier has no eyes yet — set GEMINI_API_KEY in Railway to let it see the site.',
       fixes: [{ title: 'Add GEMINI_API_KEY in Railway', where: 'env', how: 'The same Gemini key used for Image Studio gives the Atelier its eyes.', agent: 'founder' }],
     });
   }
+  const doc = await ExperienceReview.create({ scope: 'house', status: 'running', triggeredBy: triggeredBy || '' });
+  _run(doc._id).catch(err => console.error('[atelier] run failed:', err.message));
+  return doc;
+}
 
+async function _run(reviewId) {
   const rooms = await resolveRooms();
-  const results = [];
-  for (const room of rooms) {
-    try { results.push(await reviewRoom(room)); }
-    catch (err) {
-      console.error(`[atelier] room ${room.path} failed:`, err.message);
-      results.push({ name: room.name, path: room.path, score: 0, verdict: `Could not review this room (${err.message.slice(0, 80)}).`, dissonances: [], usedScreenshot: false, loadMs: 0 });
-    }
-  }
 
-  // Synthesise the house verdict from the room critiques (text model).
+  // Rooms (vision) + the three craft critics, in parallel where possible.
+  const [results, coherence, voice, speed] = await Promise.all([
+    (async () => {
+      const out = [];
+      for (const room of rooms) {
+        try { out.push(await reviewRoom(room)); }
+        catch (err) { out.push({ name: room.name, path: room.path, score: 0, verdict: `Could not review this room (${err.message.slice(0, 80)}).`, dissonances: [], usedScreenshot: false, loadMs: 0 }); }
+      }
+      return out;
+    })(),
+    curate().catch(() => ({ score: 0, summary: 'Coherence check failed.', findings: [] })),
+    concierge().catch(() => ({ score: 0, summary: 'Voice check failed.', findings: [] })),
+    atmosphere(['/', '/shop', rooms.find(r => r.path.startsWith('/product/'))?.path].filter(Boolean)).catch(() => ({ score: 0, summary: 'Performance check failed.', findings: [] })),
+  ]);
+
+  const scored = results.filter(r => r.score > 0);
+  const lookAvg = scored.length ? Math.round((scored.reduce((s, r) => s + r.score, 0) / scored.length) * 10) / 10 : 0;
+  const weakestRoomObj = scored.length ? scored.reduce((a, b) => (b.score < a.score ? b : a)) : results[0];
+
+  const dimensions = [
+    { name: 'Look', score: lookAvg, summary: 'How every rendered room looks — the visual luxury, room by room.', findings: weakestRoomObj ? [`Weakest room: ${weakestRoomObj.name} (${weakestRoomObj.score}/10).`] : [] },
+    { name: 'Coherence', score: coherence.score, summary: coherence.summary, findings: coherence.findings },
+    { name: 'Voice', score: voice.score, summary: voice.summary, findings: voice.findings },
+    { name: 'Speed', score: speed.score, summary: speed.summary, findings: speed.findings },
+  ];
+
+  // The Maison Director delivers the verdict + plan.
   let synth = null;
   try {
     const roomsText = results.map(r => `• ${r.name} (${r.path}) — ${r.score}/10. ${r.verdict}${r.dissonances.length ? ' Issues: ' + r.dissonances.map(d => `${d.what} [${d.severity}]`).join('; ') : ''}`).join('\n');
+    const pillarsText = dimensions.map(d => `• ${d.name}: ${d.score}/10 — ${d.summary} ${d.findings.join(' ')}`).join('\n');
     const res = await textClient.chat.completions.create({
       model: TEXT_MODEL,
-      messages: [{ role: 'system', content: SYNTH_SYSTEM }, { role: 'user', content: `Room-by-room walk-through:\n${roomsText}\n\nWrite the house verdict JSON now.` }],
-      temperature: 0.45, max_tokens: 1200, response_format: { type: 'json_object' },
+      messages: [{ role: 'system', content: SYNTH_SYSTEM }, { role: 'user', content: `ROOMS:\n${roomsText}\n\nCRAFT PILLARS:\n${pillarsText}\n\nDeliver the verdict + plan JSON now.` }],
+      temperature: 0.45, max_tokens: 1300, response_format: { type: 'json_object' },
     }, { timeout: 40000, maxRetries: 1 });
     synth = JSON.parse(res.choices[0]?.message?.content || '{}');
   } catch (err) {
-    console.warn('[atelier] synthesis failed, using deterministic roll-up:', err.message);
+    console.warn('[atelier] synthesis failed, deterministic roll-up:', err.message);
   }
 
-  // Deterministic fallback / safety net for the overall fields.
-  const scored = results.filter(r => r.score > 0);
-  const weakest = scored.length ? scored.reduce((a, b) => (b.score < a.score ? b : a)) : results[0];
-  const avg = scored.length ? scored.reduce((s, r) => s + r.score, 0) / scored.length : 0;
-  // Worst-room-weighted: pull the average toward the weakest room.
-  const weighted = scored.length ? Math.round(((avg + (weakest?.score || 0)) / 2) * 10) / 10 : 0;
+  // Worst-weighted: the house can't score above its weakest pillar/room by much.
+  const pillarScores = dimensions.map(d => d.score).filter(n => n > 0);
+  const worstPillar = pillarScores.length ? Math.min(...pillarScores) : 0;
+  const avgAll = pillarScores.length ? pillarScores.reduce((s, n) => s + n, 0) / pillarScores.length : 0;
+  const weighted = pillarScores.length ? Math.round(((avgAll + worstPillar * 2) / 3) * 10) / 10 : 0;
 
-  return ExperienceReview.create({
-    scope: 'house',
+  await ExperienceReview.findByIdAndUpdate(reviewId, {
+    status: 'completed',
+    dimensions,
     wowScore: synth ? clampScore(synth.wowScore) : weighted,
-    weakestRoom: str(synth?.weakestRoom || weakest?.name || '', 160),
-    verdict: str(synth?.verdict || `Walked ${results.length} rooms; weakest is "${weakest?.name || '—'}".`, 400),
+    weakestRoom: str(synth?.weakestRoom || weakestRoomObj?.name || '', 160),
+    verdict: str(synth?.verdict || `Walked ${results.length} rooms across 4 pillars; weakest pillar ${worstPillar}/10.`, 400),
     firstImpression: str(synth?.firstImpression, 600),
     strengths: (Array.isArray(synth?.strengths) ? synth.strengths : []).map(s => str(s, 200)).slice(0, 6),
     dissonances: coerceDiss(synth?.dissonances).slice(0, 6),
@@ -164,9 +191,7 @@ async function runHouseReview({ triggeredBy } = {}) {
     rooms: results,
     usedVision: results.some(r => r.usedScreenshot),
     usedFallback: !synth,
-    triggeredBy: triggeredBy || '',
-  });
+  }).catch(err => console.error('[atelier] save failed:', err.message));
 }
 
-// Back-compat alias.
-module.exports = { runHouseReview, runEntranceReview: runHouseReview, visionConfigured };
+module.exports = { startReview, visionConfigured };

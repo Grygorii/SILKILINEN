@@ -3,18 +3,19 @@ const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { aiLimit } = require('../middleware/rateLimiters');
 const ExperienceReview = require('../models/ExperienceReview');
-const { runEntranceReview, visionConfigured } = require('../services/atelier');
+const { startReview, visionConfigured } = require('../services/atelier');
 
 router.use(requireAuth);
 
-// POST /review — the creative director looks at the entrance and reports.
+// POST /review — start a whole-house walk-through (runs in the background; the
+// client polls GET /:id until status leaves 'running').
 router.post('/review', aiLimit, async (req, res) => {
   try {
-    const review = await runEntranceReview({ triggeredBy: req.user?.email || 'admin' });
-    res.status(201).json(review);
+    const review = await startReview({ triggeredBy: req.user?.email || 'admin' });
+    res.status(202).json(review);
   } catch (err) {
     console.error('[atelier] review:', err.message);
-    res.status(503).json({ error: err.message || 'The Atelier could not review the entrance — try again.' });
+    res.status(503).json({ error: err.message || 'The Atelier could not start the review — try again.' });
   }
 });
 
