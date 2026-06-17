@@ -9,10 +9,12 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 type Dissonance = { what: string; why: string; fix: string; severity: 'high' | 'medium' | 'low' };
 type Fix = { title: string; where: string; how: string; agent: string };
 type Room = { name: string; path: string; score: number; verdict: string; dissonances: Dissonance[]; usedScreenshot: boolean; loadMs: number };
+type Dimension = { name: string; score: number; summary: string; findings: string[] };
 type Review = {
-  _id: string; wowScore: number; weakestRoom: string; verdict: string; firstImpression: string;
+  _id: string; status?: 'running' | 'completed' | 'failed';
+  wowScore: number; weakestRoom: string; verdict: string; firstImpression: string;
   strengths: string[]; dissonances: Dissonance[]; fixes: Fix[]; benchmark: string;
-  rooms: Room[]; usedVision: boolean; usedFallback: boolean; createdAt: string;
+  dimensions: Dimension[]; rooms: Room[]; usedVision: boolean; usedFallback: boolean; createdAt: string;
 };
 
 const dark = 'var(--dark, #2a2218)';
@@ -50,10 +52,20 @@ export default function AtelierPage() {
     setBusy(true);
     try {
       const res = await fetch(`${API}/api/admin/atelier/review`, { method: 'POST', credentials: 'include' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Review failed');
+      let data: Review = await res.json();
+      if (!res.ok) throw new Error((data as { error?: string }).error || 'Review failed');
+      // Background job — poll until it leaves 'running'.
+      if (data.status === 'running') {
+        for (let i = 0; i < 60 && data.status === 'running'; i++) {
+          await new Promise(r => setTimeout(r, 5000));
+          const pr = await fetch(`${API}/api/admin/atelier/${data._id}`, { credentials: 'include' });
+          if (pr.ok) data = await pr.json();
+        }
+      }
       setReview(data); load();
-      toast('The creative director has walked the whole house.', 'success');
+      if (data.status === 'running') toast('Still walking — the report will appear here when it lands.', 'info');
+      else if (data.usedFallback && !data.usedVision) toast(data.verdict || 'Set GEMINI_API_KEY to enable the Atelier.', 'info');
+      else toast('The Maison Director has walked the whole house.', 'success');
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Review failed', 'error');
     } finally { setBusy(false); }
@@ -72,7 +84,7 @@ export default function AtelierPage() {
           <button onClick={runReview} disabled={busy} style={{
             padding: '11px 22px', background: dark, color: 'white', border: 'none',
             cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1, fontFamily: 'inherit', fontSize: 13, letterSpacing: '0.5px', whiteSpace: 'nowrap',
-          }}>{busy ? 'Walking every room… (~90s)' : '✦ Review the whole house'}</button>
+          }}>{busy ? 'Walking the house… (1–3 min)' : '✦ Review the whole house'}</button>
         </div>
 
         {!visionReady && (
@@ -120,6 +132,26 @@ function ReviewView({ review }: { review: Review }) {
           )}
         </div>
       </div>
+
+      {/* The four craft pillars */}
+      {review.dimensions?.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, marginTop: 22 }}>
+          {review.dimensions.map((d, i) => (
+            <div key={i} style={{ border, padding: '12px 14px' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 11, letterSpacing: '1.2px', textTransform: 'uppercase', color: muted }}>{d.name}</span>
+                <span style={{ fontFamily: serif, fontSize: 22, fontWeight: 500, color: scoreColor(d.score) }}>{d.score || '–'}<span style={{ fontSize: 11, color: muted }}>/10</span></span>
+              </div>
+              {d.summary && <p style={{ fontSize: 11.5, color: muted, margin: '4px 0 0', lineHeight: 1.45 }}>{d.summary}</p>}
+              {d.findings?.length > 0 && (
+                <ul style={{ margin: '6px 0 0', paddingLeft: 15, fontSize: 11.5, color: dark, lineHeight: 1.5 }}>
+                  {d.findings.slice(0, 3).map((f, j) => <li key={j}>{f}</li>)}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Every room, scored */}
       {review.rooms?.length > 0 && (

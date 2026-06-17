@@ -31,9 +31,20 @@ const roomSchema = new mongoose.Schema({
   loadMs:         { type: Number, default: 0 },
 }, { _id: false });
 
+// A craft pillar — Look (vision), Coherence (curator), Voice (concierge),
+// Speed (atmosphere).
+const dimensionSchema = new mongoose.Schema({
+  name:     { type: String, default: '' },
+  score:    { type: Number, default: 0 },
+  summary:  { type: String, default: '' },
+  findings: { type: [String], default: [] },
+}, { _id: false });
+
 const experienceReviewSchema = new mongoose.Schema({
+  status:          { type: String, enum: ['running', 'completed', 'failed'], default: 'completed' },
   scope:           { type: String, enum: ['entrance', 'house'], default: 'house' },
-  wowScore:        { type: Number, default: 0 },   // 1-10: the whole house, worst-room-weighted
+  dimensions:      { type: [dimensionSchema], default: [] }, // Look / Coherence / Voice / Speed
+  wowScore:        { type: Number, default: 0 },   // 1-10: the whole house, worst-weighted
   weakestRoom:     { type: String, default: '' },  // the room that lets the villa down
   verdict:         { type: String, default: '' },  // one-line honest verdict
   firstImpression: { type: String, default: '' },  // what the first 5 seconds feel like
