@@ -5,6 +5,15 @@ const Collection = require('../models/Collection');
 const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
 const { generateSEO, AIServiceError } = require('../services/aiText');
+const { pingIndexNow } = require('../services/indexNow');
+
+// Instant-index a live collection (fire-and-forget). Skip drafts/archived —
+// those URLs aren't public.
+function pingCollection(c) {
+  if (c && c.slug && c.status !== 'draft' && c.status !== 'archived') {
+    pingIndexNow(`/collections/${c.slug}`);
+  }
+}
 
 // All routes require admin auth
 router.use(requireAuth);
@@ -45,6 +54,7 @@ router.post('/', async (req, res) => {
     const { name, slug, description, heroImage, isFeatured, featuredOrder, displayOrder, status, metaTitle, metaDescription } = req.body;
     const collection = new Collection({ name, slug, description, heroImage, isFeatured, featuredOrder, displayOrder, status, metaTitle, metaDescription });
     await collection.save();
+    pingCollection(collection);
     res.status(201).json(collection);
   } catch (err) {
     if (err.code === 11000) {
@@ -82,6 +92,7 @@ router.patch('/:id', async (req, res) => {
     }
     const collection = await Collection.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
     if (!collection) return res.status(404).json({ error: 'Not found' });
+    pingCollection(collection);
     res.json(collection);
   } catch (err) {
     if (err.code === 11000) {
