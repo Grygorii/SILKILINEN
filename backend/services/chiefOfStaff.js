@@ -430,6 +430,15 @@ async function generateBriefCore() {
     clerksVerdict().catch(() => null),
   ]);
 
+  // The chain: read Da Vinci's active 90-day direction so THIS WEEK serves the
+  // quarter's vision instead of re-deriving direction. Lazy require avoids the
+  // chiefOfStaff↔davinci cycle. Only used if a composition is recent (≤100d).
+  const composition = await require('./davinci').latestComposition().catch(() => null);
+  const compAgeDays = composition?.createdAt ? Math.round((Date.now() - new Date(composition.createdAt).getTime()) / DAY) : null;
+  const directionLine = (composition && compAgeDays != null && compAgeDays <= 100)
+    ? `ACTIVE 90-DAY DIRECTION (Da Vinci's vision, ${compAgeDays}d ago — make this week's moves serve it): ${composition.grandIdea?.title ? `"${composition.grandIdea.title}" — ` : ''}${(composition.vision || '').slice(0, 300)}`
+    : '';
+
   let nsBlock = 'No North Star goal set yet.';
   let nsForStore = null;
   if (northStar && METRICS[northStar.metric]) {
@@ -441,6 +450,7 @@ async function generateBriefCore() {
 
   const userPayload = [
     nsBlock, '',
+    directionLine, '',
     `CATALOGUE REALITY (sanity-check all money against this): products priced €${metrics.priceFloorEUR}–€${metrics.priceCeilingEUR}, average €${metrics.avgPriceEUR}. The cheapest product is €${metrics.priceFloorEUR}, so any order or AOV below that is NOT a real sale.`,
     metrics.anomalousOrders30d > 0
       ? `⚠ DATA WARNING: ${metrics.anomalousOrders30d} order(s) in the last 30d are below the €${metrics.priceFloorEUR} price floor — treat these as test/refund/anomalous and EXCLUDE them from any "revenue" or "first sales" claim.`
