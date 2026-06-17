@@ -5,9 +5,18 @@ const Category = require('../models/Category');
 const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
 const { generateSEO, AIServiceError } = require('../services/aiText');
+const { pingIndexNow } = require('../services/indexNow');
 
 // All routes require admin auth
 router.use(requireAuth);
+
+// Instant-index a live category page (fire-and-forget). The category view lives
+// at /shop?category=<slug>. Skip drafts/archived.
+function pingCategory(c) {
+  if (c && c.slug && c.status !== 'draft' && c.status !== 'archived') {
+    pingIndexNow(`/shop?category=${c.slug}`);
+  }
+}
 
 // Same budget as the product SEO endpoint — bounded AI calls per hour.
 const aiRateLimit = rateLimit({
@@ -55,6 +64,7 @@ router.post('/', async (req, res) => {
     }
     const category = new Category({ slug, label, description, heroImage, displayOrder, status, metaTitle, metaDescription });
     await category.save();
+    pingCategory(category);
     res.status(201).json(category);
   } catch (err) {
     if (err.code === 11000) {
@@ -91,6 +101,7 @@ router.patch('/:id', async (req, res) => {
     }
     const category = await Category.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
     if (!category) return res.status(404).json({ error: 'Not found' });
+    pingCategory(category);
     res.json(category);
   } catch (err) {
     console.error(err);

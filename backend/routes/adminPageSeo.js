@@ -27,7 +27,10 @@ router.post('/generate', aiLimit, async function(req, res) {
 router.patch('/', async function(req, res) {
   try {
     const { path, metaTitle, metaDescription } = req.body || {};
-    res.json(await savePageSeo(path, { metaTitle, metaDescription }));
+    const saved = await savePageSeo(path, { metaTitle, metaDescription });
+    // Editable pages are always live — instant-index the updated path.
+    if (EDITABLE_PATHS.includes(String(path))) require('../services/indexNow').pingIndexNow(String(path));
+    res.json(saved);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
