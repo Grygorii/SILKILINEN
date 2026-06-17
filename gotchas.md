@@ -2,6 +2,21 @@
 
 Things that have bitten us before. Read before debugging anything that looks like one of these.
 
+## Regression guard — how we remember fixes
+
+**Every bug we fix should become an automated check, so it can't silently come back.** Don't rely on memory or a one-off manual test. The pattern:
+
+1. Fix the bug.
+2. Encode the rule that would have caught it as a check in the nearest **agent that already runs against the live system**, so a future run re-verifies it:
+   - **On-page SEO / HTML hygiene** (missing meta description, image alt, title length, multiple `<h1>`, …) → `backend/services/auditAgents.js` → `runSeoHygieneAgent` (Admin → Site Audit → the **On-page SEO** agent). Add a rule to `auditPageHtml`.
+   - **Infra / SEO / Merchant live status** → `backend/routes/adminSeoHealth.js` (Admin → SEO → Overview).
+   - **Cross-surface / data consistency** → `auditAgents.js` → `runConsistencyAgent`.
+3. Note the class of bug here so a human/agent knows the guard exists.
+
+**Logged regressions (each now has an automated check):**
+- *Merchant card said "24/24 disapproved" while Google said approved* — counted per-destination disapproval as product disapproval. Fixed in `merchantCenter.js`; guarded by the Merchant live-status check.
+- *External crawler (17 Jun 2026): missing meta description, 31 images without alt, 6 over-long titles, 2 pages with >1 `<h1>`* — fixed PDP title (absolute metaTitle) + ProductGallery alt fallback. All four classes now re-checked every run by the **On-page SEO** audit agent, which reports the exact offending URLs.
+
 ## Infrastructure
 
 **Railway Railpack BuildKit bug.** Backend deploys break on default Railpack builder. Workaround: `backend/railway.toml` forces Nixpacks. Remove this file once Railway fixes the underlying bug.

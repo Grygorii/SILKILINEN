@@ -20,7 +20,7 @@ type AgentResult = {
 
 type Finding = {
   severity: 'critical' | 'warning' | 'info';
-  agent: 'navigation' | 'journeys' | 'consistency';
+  agent: 'navigation' | 'journeys' | 'consistency' | 'seo';
   title: string;
   detail?: string;
   location?: string;
@@ -38,6 +38,7 @@ type Audit = {
     navigation: AgentResult;
     journeys: AgentResult;
     consistency: AgentResult;
+    seo: AgentResult;
   };
   findings: Finding[];
   triggeredBy?: string;
@@ -49,6 +50,7 @@ const AGENT_LABELS: Record<string, string> = {
   navigation: 'Navigation & Routing',
   journeys: 'User Journeys',
   consistency: 'Cross-Surface Consistency',
+  seo: 'On-page SEO',
 };
 
 function fmt(ms?: number) {
@@ -227,7 +229,7 @@ export default function SiteAuditPage() {
         <div className={styles.header}>
           <div>
             <h1 className={styles.title}>Site Audit</h1>
-            <p className={styles.subtitle}>Automated checks for navigation, user journeys, and data consistency</p>
+            <p className={styles.subtitle}>Automated checks for navigation, user journeys, data consistency, and on-page SEO (the regression guard)</p>
           </div>
           <button className={styles.runBtn} onClick={triggerAudit} disabled={running || audit?.status === 'running'}>
             {running ? 'Starting…' : audit?.status === 'running' ? 'Running…' : 'Run Audit'}
@@ -264,7 +266,7 @@ export default function SiteAuditPage() {
             {audit && (
               <>
                 <div className={styles.agentCards}>
-                  {(['navigation', 'journeys', 'consistency'] as const).map(name => (
+                  {(['navigation', 'journeys', 'consistency', 'seo'] as const).map(name => (
                     <AgentCard key={name} name={name} result={audit.agents[name]} />
                   ))}
                 </div>
@@ -284,7 +286,7 @@ export default function SiteAuditPage() {
                         ))}
                       </div>
                       <div className={styles.filterGroup}>
-                        {(['all', 'navigation', 'journeys', 'consistency'] as const).map(a => (
+                        {(['all', 'navigation', 'journeys', 'consistency', 'seo'] as const).map(a => (
                           <button key={a} className={`${styles.filterBtn} ${agentFilter === a ? styles.filterActive : ''}`} onClick={() => setAgentFilter(a)}>
                             {a === 'all' ? 'All agents' : AGENT_LABELS[a]}
                           </button>

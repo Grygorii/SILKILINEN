@@ -545,6 +545,92 @@ function levenshtein(a, b) {
 
 // ── Main orchestrator ────────────────────────────────────────────────────────
 
+// ── Agent 4: On-page SEO hygiene ─────────────────────────────────────────────
+// Crawls the rendered HTML of key public pages and re-checks the SEO rules that
+// have bitten us before (an external crawler flagged: missing meta description,
+// images without alt, titles >60 chars, more than one <h1>). This is the
+// regression guard — every fix we make is encoded as a check here, so a future
+// run flags the moment one comes back. Pure regex parsing, no new dependency.
+
+const SEO_STATIC_PAGES = [
+  '/', '/shop', '/about', '/contact', '/faq', '/reviews', '/shipping',
+  '/returns', '/size-guide', '/terms', '/privacy-policy', '/gift-wrapping',
+  '/journal', '/style-finder',
+];
+
+async function fetchHtml(url, timeout = 8000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const res = await fetch(url, { headers: { 'User-Agent': 'SILKILINEN-Audit/1.0' }, redirect: 'follow', signal: ctrl.signal });
+    if (!res.ok) return { ok: false, status: res.status };
+    return { ok: true, html: await res.text() };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Parse one page's HTML and return the SEO issues found. Each rule mirrors a
+// real fix; keep them in sync when you correct a new class of mistake.
+function auditPageHtml(html) {
+  const issues = [];
+
+  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const title = titleMatch ? titleMatch[1].replace(/\s+/g, ' ').trim() : '';
+  if (!title) issues.push({ sev: 'warning', type: 'Title tag missing', detail: '', sugg: 'Set a page title in metadata.' });
+  else if (title.length > 60) issues.push({ sev: 'warning', type: 'Title too long', detail: `${title.length} chars — "${title}"`, sugg: 'Trim the title (or the product metaTitle) to ≤60 chars so Google does not truncate it.' });
+
+  const metaTag = html.match(/<meta[^>]+name=["']description["'][^>]*>/i);
+  const descContent = metaTag ? (metaTag[0].match(/content=["']([^"']*)["']/i)?.[1] || '') : '';
+  if (!metaTag || !descContent.trim()) issues.push({ sev: 'warning', type: 'Meta description missing', detail: '', sugg: 'Add a 120–160 char meta description (per-page metadata or the metaDescription field).' });
+
+  const h1Count = (html.match(/<h1[\s>]/gi) || []).length;
+  if (h1Count > 1) issues.push({ sev: 'info', type: 'More than one h1', detail: `${h1Count} <h1> tags on the page`, sugg: 'Keep a single <h1> per page; demote the others to <h2>.' });
+  else if (h1Count === 0) issues.push({ sev: 'info', type: 'No h1 tag', detail: '', sugg: 'Add one <h1> describing the page.' });
+
+  const imgs = html.match(/<img\b[^>]*>/gi) || [];
+  const noAlt = imgs.filter(t => { const m = t.match(/\balt\s*=\s*["']([^"']*)["']/i); return !m || !m[1].trim(); }).length;
+  if (noAlt > 0) issues.push({ sev: 'warning', type: 'Image alt text missing', detail: `${noAlt} of ${imgs.length} images have no/empty alt`, sugg: 'Give every content image descriptive alt text (decorative images may use alt="" intentionally).' });
+
+  return issues;
+}
+
+async function runSeoHygieneAgent(frontendUrl, backendUrl) {
+  const findings = [];
+
+  // Static pages + a sample of each dynamic template so PDP / collection /
+  // article / bundle regressions are caught too (sampled, not the whole
+  // catalogue — keeps the run fast and bounded).
+  const urls = [...SEO_STATIC_PAGES];
+  try {
+    const sample = async (apiPath, toUrl, n) => {
+      const r = await fetch(`${backendUrl}${apiPath}`, { headers: { 'User-Agent': 'SILKILINEN-Audit/1.0' }, signal: AbortSignal.timeout(8000) }).then(x => x.ok ? x.json() : []).catch(() => []);
+      const arr = Array.isArray(r) ? r : (r.articles || r.collections || r.bundles || r.items || []);
+      for (const it of arr.slice(0, n)) { const u = toUrl(it); if (u) urls.push(u); }
+    };
+    await sample('/api/products?slim=true&limit=3', p => p._id && `/product/${p._id}`, 3);
+    await sample('/api/collections', c => c.slug && `/collections/${c.slug}`, 2);
+    await sample('/api/journal', a => a.slug && `/journal/${a.slug}`, 2);
+    await sample('/api/bundles', b => b.slug && `/bundles/${b.slug}`, 2);
+  } catch { /* sampling is best-effort; static pages still audited */ }
+
+  for (const path of urls) {
+    const url = `${frontendUrl}${path}`;
+    const res = await fetchHtml(url);
+    if (!res.ok) {
+      findings.push(finding('warning', 'seo', `Could not audit ${path}`, res.error || `HTTP ${res.status}`, url, 'Check the page renders for crawlers.'));
+      continue;
+    }
+    for (const i of auditPageHtml(res.html)) {
+      findings.push(finding(i.sev, 'seo', `${i.type} — ${path}`, i.detail, url, i.sugg));
+    }
+  }
+
+  return { findings, checkedCount: urls.length };
+}
+
 async function runAudit(audit) {
   const FRONTEND_URL = 'https://silkilinen.com';
   const BACKEND_URL = (process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3000}`).replace(/\/$/, '');
@@ -605,6 +691,24 @@ async function runAudit(audit) {
   } catch (err) {
     audit.agents.consistency.status = 'error';
     audit.agents.consistency.error = err.message;
+  }
+
+  // Agent 4 — on-page SEO hygiene (the regression guard)
+  const seoStart = Date.now();
+  audit.agents.seo.status = 'running';
+  await audit.save();
+  try {
+    const { findings } = await runSeoHygieneAgent(FRONTEND_URL, BACKEND_URL);
+    allFindings.push(...findings);
+    audit.agents.seo.status = 'done';
+    audit.agents.seo.duration = Date.now() - seoStart;
+    audit.agents.seo.findingsCount = findings.length;
+    audit.agents.seo.criticalCount = findings.filter(f => f.severity === 'critical').length;
+    audit.agents.seo.warningCount = findings.filter(f => f.severity === 'warning').length;
+    audit.agents.seo.infoCount = findings.filter(f => f.severity === 'info').length;
+  } catch (err) {
+    audit.agents.seo.status = 'error';
+    audit.agents.seo.error = err.message;
   }
 
   audit.findings = allFindings;

@@ -60,7 +60,12 @@ export async function generateMetadata(
   // Title template in app/layout.tsx appends " | Silkilinen", so the
   // per-page title shouldn't include the brand. metaTitle from the admin
   // editor is honoured as an absolute override when set.
-  const title = product.metaTitle || product.name;
+  // A well-written metaTitle is self-contained (≤70 chars), so use it as an
+  // ABSOLUTE title — appending the layout's " | Silkilinen" suffix to it pushed
+  // long titles past 60 chars (the "title too long" audit warning). The bare
+  // name still gets the template suffix.
+  const titleStr = product.metaTitle || product.name;
+  const title = product.metaTitle ? { absolute: product.metaTitle } : product.name;
   const description = product.metaDescription
     || (product.description ? product.description.slice(0, 155) : `Shop ${product.name} at Silkilinen. Pure silk and linen intimates, shipped worldwide from Donegal.`);
   const url = `https://www.silkilinen.com/product/${id}`;
@@ -71,7 +76,7 @@ export async function generateMetadata(
     title,
     description,
     openGraph: {
-      title,
+      title: titleStr,
       description,
       url,
       images: [{ url: image, width: 1200, height: 630, alt: product.altText || product.name }],
@@ -80,7 +85,7 @@ export async function generateMetadata(
     },
     twitter: {
       card: 'summary_large_image',
-      title,
+      title: titleStr,
       description,
       images: [image],
     },

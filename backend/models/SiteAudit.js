@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const FindingSchema = new mongoose.Schema({
   severity: { type: String, enum: ['critical', 'warning', 'info'], required: true },
-  agent: { type: String, enum: ['navigation', 'journeys', 'consistency'], required: true },
+  agent: { type: String, enum: ['navigation', 'journeys', 'consistency', 'seo'], required: true },
   title: { type: String, required: true },
   detail: String,
   location: String,
@@ -29,6 +29,7 @@ const SiteAuditSchema = new mongoose.Schema({
     navigation: { type: AgentResultSchema, default: () => ({}) },
     journeys: { type: AgentResultSchema, default: () => ({}) },
     consistency: { type: AgentResultSchema, default: () => ({}) },
+    seo: { type: AgentResultSchema, default: () => ({}) },
   },
   findings: [FindingSchema],
   triggeredBy: String,
