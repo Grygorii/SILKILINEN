@@ -12,7 +12,7 @@ export default function PrivacyPolicyPage() {
       <div className={styles.inner}>
         <header className={styles.header}>
           <h1>Privacy Policy</h1>
-          <p>Effective date: 1 May 2026 · Last updated: 16 May 2026</p>
+          <p>Effective date: 1 May 2026 · Last updated: 18 June 2026</p>
         </header>
 
         <section className={styles.section}>
@@ -54,8 +54,9 @@ export default function PrivacyPolicyPage() {
           </ul>
           <p>
             Our legal basis for processing is <strong>contract performance</strong> (Article 6(1)(b) GDPR)
-            for order-related data, and <strong>legitimate interests</strong> (Article 6(1)(f) GDPR)
-            for fraud prevention and site analytics.
+            for order-related data, <strong>legitimate interests</strong> (Article 6(1)(f) GDPR)
+            for fraud prevention, and <strong>consent</strong> (Article 6(1)(a) GDPR) for the optional
+            analytics cookies described below.
           </p>
         </section>
 
@@ -68,14 +69,17 @@ export default function PrivacyPolicyPage() {
             <li><strong>MongoDB Atlas</strong> — encrypted cloud database for order records</li>
             <li><strong>Cloudinary</strong> — product image storage and delivery</li>
             <li><strong>Resend</strong> — transactional email delivery (order confirmations)</li>
+            <li><strong>Google Analytics (Google LLC)</strong> — website analytics, loaded only with your consent. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a></li>
+            <li><strong>Microsoft Clarity (Microsoft Corporation)</strong> — behavioural analytics (heatmaps and session replay), loaded only with your consent. <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener noreferrer">Microsoft Privacy Statement</a></li>
           </ul>
           <p>We do not sell your personal data to any third party.</p>
         </section>
 
         <section className={styles.section}>
-          <h2>Cookies</h2>
-          <p>We use minimal cookies — essential cart storage only. Your cart contents are stored in your browser&apos;s local storage so items persist between visits. No server-side session cookie is created for shop visitors.</p>
-          <p>We do not currently use analytics or advertising cookies. When we introduce optional cookies in the future, you will be asked for consent before any are placed.</p>
+          <h2>Cookies and analytics</h2>
+          <p><strong>Essential storage.</strong> Your cart contents are stored in your browser&apos;s local storage so items persist between visits. No server-side session cookie is created for shop visitors. This storage is strictly necessary and always active.</p>
+          <p><strong>Optional analytics cookies.</strong> With your consent, we use <strong>Google Analytics 4</strong> and <strong>Microsoft Clarity</strong> to understand how visitors use the site so we can improve it. These tools are loaded <em>only after</em> you accept analytics cookies in our cookie banner — if you decline, they are never activated. You can change or withdraw your choice at any time using the <strong>Cookie preferences</strong> link in the footer.</p>
+          <p>We partner with Microsoft Clarity to capture how you use and interact with our website through behavioural metrics, heatmaps, and session replay, in order to improve our products and services. Website usage data is captured using first- and third-party cookies and other tracking technologies. For more information about how Microsoft collects and uses your data, see the <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener noreferrer">Microsoft Privacy Statement</a>.</p>
         </section>
 
         <section className={styles.section}>
