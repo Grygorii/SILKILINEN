@@ -357,7 +357,7 @@ checkoutRouter.get('/confirmation', checkoutRateLimit, async (req, res) => {
     const eta = new Date(created.getTime() + (HANDLING_DAYS + transitMax) * 24 * 60 * 60 * 1000);
     const estimatedDeliveryDate = eta.toISOString().slice(0, 10); // YYYY-MM-DD
 
-    res.json({ orderId: intent.id, email, country, estimatedDeliveryDate });
+    res.json({ orderId: intent.id, email, country, estimatedDeliveryDate, value: intent.amount / 100, currency: (intent.currency || 'eur').toUpperCase() });
   } catch (err) {
     console.error('[checkoutV2] confirmation error:', err.message);
     res.status(500).json({ error: 'Internal server error' });

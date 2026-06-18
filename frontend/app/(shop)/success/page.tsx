@@ -3,6 +3,7 @@
 import { useEffect, Suspense } from 'react';
 import { useCart } from '@/context/CartContext';
 import GoogleCustomerReviews from '@/components/GoogleCustomerReviews';
+import PurchaseTracking from '@/components/PurchaseTracking';
 import styles from './page.module.css';
 
 export default function SuccessPage() {
@@ -29,6 +30,7 @@ export default function SuccessPage() {
       {/* Google Customer Reviews opt-in — reads the Stripe params Stripe
           appends to this URL. Renders nothing if they're absent. */}
       <Suspense fallback={null}>
+        <PurchaseTracking />
         <GoogleCustomerReviews />
       </Suspense>
     </main>
