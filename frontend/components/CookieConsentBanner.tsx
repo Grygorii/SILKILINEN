@@ -12,19 +12,17 @@ export default function CookieConsentBanner() {
       {showBanner && (
         <div className={styles.banner} role="region" aria-label="Cookie consent">
           <p className={styles.text}>
-            We use cookies and similar technologies to personalise content, analyse traffic, and show
-            relevant ads. See our{' '}
+            We use cookies to personalise content, measure traffic, and show relevant ads. Read our{' '}
             <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">
-              Privacy Policy
-            </a>{' '}
-            for details.
+              Privacy&nbsp;Policy
+            </a>.
           </p>
           <div className={styles.buttons}>
-            <button className={`${styles.btn} ${styles.btnAccept}`} onClick={accept}>
-              ACCEPT ALL
+            <button className={styles.btnAccept} onClick={accept}>
+              Accept
             </button>
-            <button className={`${styles.btn} ${styles.btnSettings}`} onClick={openSettings}>
-              COOKIE SETTINGS
+            <button className={styles.btnText} onClick={openSettings}>
+              Manage
             </button>
           </div>
         </div>
