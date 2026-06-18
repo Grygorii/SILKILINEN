@@ -167,6 +167,7 @@ const { csrf } = require('./middleware/csrf');
 app.use(csrf);
 app.use('/api/v2/checkout', checkoutRouter);
 app.use('/api/products', productRoutes);
+app.use('/feed', require('./routes/feed')); // public product feed for Pinterest / Google / Meta
 app.use('/api/admin/products', adminProductsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', ordersRoutes);
