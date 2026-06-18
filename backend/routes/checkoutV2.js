@@ -98,6 +98,9 @@ async function firePinterestCapi({ order, eventId }) {
       const phone = order.customerPhone.replace(/[^0-9]/g, '');
       if (phone) userData.ph = [hash(phone)];
     }
+    // Pinterest rejects an event with no user identifier — skip rather than send
+    // something that 400s.
+    if (!Object.keys(userData).length) return;
 
     const payload = {
       data: [{
@@ -108,8 +111,8 @@ async function firePinterestCapi({ order, eventId }) {
         user_data:     userData,
         custom_data: {
           currency:    'EUR',
-          value:       String(order.total),
-          content_ids: (order.items || []).map(i => String(i.productId)),
+          value:       Number(order.total || 0).toFixed(2),
+          content_ids: (order.items || []).map(i => String(i.productId)).filter(id => id && id !== 'undefined'),
           num_items:   (order.items || []).reduce((n, i) => n + (i.quantity || 1), 0),
         },
       }],
