@@ -55,12 +55,21 @@ const ebGaramond = EB_Garamond({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.silkilinen.com'),
-  // Bing Webmaster Tools site verification — only rendered when the env var is
-  // set. (Or skip this and just "Import from Google Search Console" in Bing,
-  // which needs no code.) Bing also powers Copilot / ChatGPT search.
-  ...(process.env.BING_SITE_VERIFICATION
-    ? { verification: { other: { 'msvalidate.01': process.env.BING_SITE_VERIFICATION } } }
-    : {}),
+  // Site verification meta tags rendered into <head>.
+  verification: {
+    other: {
+      // Pinterest domain verification — claims silkilinen.com for the Pinterest
+      // business account (enables Rich Pins + the Pinterest tag later). Public,
+      // static token; env var can override.
+      'p:domain_verify': process.env.PINTEREST_DOMAIN_VERIFY || '6a09a041aa9ce2c91ba4e0ebef7238a2',
+      // Bing Webmaster Tools — only when the env var is set. (Or just "Import
+      // from Google Search Console" in Bing, no code needed.) Bing also powers
+      // Copilot / ChatGPT search.
+      ...(process.env.BING_SITE_VERIFICATION
+        ? { 'msvalidate.01': process.env.BING_SITE_VERIFICATION }
+        : {}),
+    },
+  },
   // Title template — every page that sets a `title` becomes
   // "Page Name | Silkilinen". Pages can opt out by setting
   // title: { absolute: '...' }. Brand casing is title-case in
