@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
+import { trackBeginCheckout } from '@/lib/analytics';
 import { useCustomer } from '@/context/CustomerContext';
 import { loadStripe } from '@stripe/stripe-js';
 import {
@@ -217,6 +218,18 @@ export default function CheckoutPage() {
   const [summary, setSummary] = useState<OrderSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [intentError, setIntentError] = useState('');
+
+  // Fire begin_checkout once when the page loads with items (first-party funnel
+  // + GA4). Cart subtotal is the right value here — discounts/shipping aren't
+  // known yet at this funnel stage.
+  const beginCheckoutFired = useRef(false);
+  useEffect(() => {
+    if (beginCheckoutFired.current || cart.length === 0) return;
+    beginCheckoutFired.current = true;
+    const value = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+    const count = cart.reduce((s, i) => s + i.quantity, 0);
+    trackBeginCheckout(value, count);
+  }, [cart]);
 
   // Bumped every time the signed-in customer identity changes so the
   // Stripe AddressElement (which doesn't update defaultValues after
