@@ -28,7 +28,7 @@ async function getConnections() {
   const groups = [
     { category: 'Analytics & behaviour', sources: [
       live('Google Analytics 4', true, 'Traffic, channels & conversions over time.', '', 'Configured with your own GA4 (G-XZG6XTZ3S8). Loads client-side after cookie consent — confirm live hits in GA4 → Reports → Realtime.'),
-      live('Microsoft Clarity', true, 'Session replays + heatmaps — watch real visits.', '', 'Configured with your own Clarity project (wkxxtbufn3). Loads after cookie consent — confirm at clarity.microsoft.com.'),
+      live('Microsoft Clarity', true, 'Session replays + heatmaps — watch real visits.', '', 'Configured with your own Clarity project (x940yl1bn0). Loads after cookie consent — confirm at clarity.microsoft.com.'),
       live('First-party Journeys', true, 'Your OWNED clickstream — funnel, on-site searches, clicks. Can’t be blocked.', ''),
     ] },
     { category: 'Search & discovery', sources: [

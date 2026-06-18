@@ -6,10 +6,10 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { useCookieConsent } from '@/context/CookieConsentContext';
 
 // Both default to the founder's OWN, confirmed properties (GA4 G-XZG6XTZ3S8 and
-// Clarity wkxxtbufn3), so analytics works zero-config. The NEXT_PUBLIC_* env vars
+// Clarity x940yl1bn0), so analytics works zero-config. The NEXT_PUBLIC_* env vars
 // still override either. Both load only after cookie consent (see below).
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-XZG6XTZ3S8';
-const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || 'wkxxtbufn3';
+const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || 'x940yl1bn0';
 // Vercel Web Analytics + Speed Insights require the project-level toggle
 // in the Vercel dashboard. When the toggle is OFF, `/_vercel/insights/script.js`
 // 404s and the browser logs MIME-type errors. Gate the components behind an
