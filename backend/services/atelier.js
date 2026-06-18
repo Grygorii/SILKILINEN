@@ -86,7 +86,7 @@ async function reviewRoom(room) {
   const result = await genai().models.generateContent({
     model: VISION_MODEL,
     contents: [{ role: 'user', parts }],
-    config: { responseMimeType: 'application/json', temperature: 0.4, maxOutputTokens: 900 },
+    config: { responseMimeType: 'application/json', temperature: 0.4, maxOutputTokens: 1200, thinkingConfig: { thinkingBudget: 0 } },
   });
   const text = result.text || result.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '{}';
   const parsed = JSON.parse(text);
