@@ -42,7 +42,8 @@ async function getConnections() {
       live('Google Merchant Center', merchant, 'Free Google Shopping listings for the catalogue.', 'Add GOOGLE_SERVICE_ACCOUNT_KEY + MERCHANT_ID in Railway.'),
       opp('Meta Pixel', 'Retargeting + ad optimisation on Meta. (Loads client-side after consent — can’t be auto-verified here.)', 'If not already set, add NEXT_PUBLIC_META_PIXEL_ID in Vercel.'),
       live('Meta CAPI (server events)', Boolean(env.META_PIXEL_ID && env.META_CONVERSIONS_API_TOKEN), 'Ad-block-proof conversions Meta needs to optimise spend.', 'Set META_PIXEL_ID + META_CONVERSIONS_API_TOKEN in Railway.'),
-      opp('Pinterest Tag', 'Pinterest skews to exactly your buyer (silk, bedding, interiors).', 'Create a Pinterest business account + tag when ready.'),
+      live('Pinterest Tag', true, 'Retargeting + reaches exactly your buyer (silk, bedding, interiors). Domain verified.', '', 'Loads client-side after cookie consent — confirm in Pinterest → Conversions → Events.'),
+      live('Pinterest CAPI (server events)', Boolean(env.PINTEREST_CONVERSION_TOKEN), 'Ad-block-proof checkout conversions, deduped with the tag.', 'Set PINTEREST_CONVERSION_TOKEN in Railway.'),
     ] },
     { category: 'Content & reach', sources: [
       live('Instagram', Boolean(env.INSTAGRAM_ACCESS_TOKEN), 'Live Instagram grid + social presence on the site.', 'Add INSTAGRAM_ACCESS_TOKEN in Railway.'),
