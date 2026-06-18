@@ -245,7 +245,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }}
         />
-        <ProductViewTracker id={product._id} name={product.name} price={product.price} image={galleryImages[0]?.url} />
+        <ProductViewTracker id={product._id} name={product.name} price={product.price} image={galleryImages[0]?.url} category={product.category} />
         <PageTracker page="product" productId={product._id} />
 
         <ProductSelectionProvider
