@@ -232,6 +232,13 @@ mongoose.connect(process.env.MONGODB_URI)
     require('./services/faq').loadFaq();
     require('./services/sizeChart').loadSizeChart();
     require('./services/pageSeo').loadPageSeo();
+    // Idempotent: make sure the optional hero-video content key exists so it
+    // shows up in Site Content without needing a manual re-seed.
+    require('./models/SiteContent').updateOne(
+      { key: 'homepage_hero_video' },
+      { $setOnInsert: { type: 'video', section: 'homepage', label: 'Hero Video (optional)', order: 1.5, value: '', active: true } },
+      { upsert: true }
+    ).catch(err => console.error('[ensure hero_video]', err.message));
   })
   .catch(function(err) {
     // Fail fast: don't accept traffic with no database (would just 500).

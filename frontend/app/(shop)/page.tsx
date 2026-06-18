@@ -54,6 +54,7 @@ export default async function Home() {
   const avg = average(allReviews);
 
   const heroImage = val(content, 'homepage_hero_image');
+  const heroVideo = val(content, 'homepage_hero_video');
   const heroTitle = val(content, 'homepage_hero_title', 'Pure silk, pure comfort.');
   const heroSubtitle = val(content, 'homepage_hero_subtitle', 'Pure silk & linen intimates');
   const heroCta = val(content, 'homepage_hero_cta', 'Shop the collection');
@@ -74,6 +75,23 @@ export default async function Home() {
             sizes="100vw"
             className={styles.heroImg}
           />
+        )}
+        {/* Optional hero video: muted autoplay loop layered over the image.
+            The image above stays the LCP element + poster, so Core Web Vitals
+            hold; the video fades in once it can play. Hidden for users who
+            prefer reduced motion (see .heroVideo in the stylesheet). */}
+        {heroVideo && (
+          <video
+            className={styles.heroVideo}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            poster={heroImage || undefined}
+          >
+            <source src={heroVideo} />
+          </video>
         )}
         <div className={styles.heroContent}>
           <h1>{heroTitle}</h1>

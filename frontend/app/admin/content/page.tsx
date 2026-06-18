@@ -119,7 +119,7 @@ const IMAGE_SPECS: Record<string, ImageSpec> = {
 type ContentItem = {
   _id: string;
   key: string;
-  type: 'image' | 'text' | 'richtext' | 'url';
+  type: 'image' | 'video' | 'text' | 'richtext' | 'url';
   value: string;
   altText: string;
   caption: string;
@@ -211,12 +211,13 @@ export default function ContentPage() {
       let finalUrl = edit.value;
 
       if (edit.file) {
+        const isVideo = edit.item.type === 'video';
         const formData = new FormData();
-        formData.append('image', edit.file);
-        const uploadRes = await fetch(
-          `${API}/api/content/upload?section=${edit.item.section}&key=${edit.item.key}`,
-          { method: 'POST', credentials: 'include', body: formData }
-        );
+        formData.append(isVideo ? 'video' : 'image', edit.file);
+        const endpoint = isVideo
+          ? `${API}/api/content/upload-video?section=${edit.item.section}`
+          : `${API}/api/content/upload?section=${edit.item.section}&key=${edit.item.key}`;
+        const uploadRes = await fetch(endpoint, { method: 'POST', credentials: 'include', body: formData });
         if (!uploadRes.ok) throw new Error((await uploadRes.json()).error || 'Upload failed');
         const uploaded = await uploadRes.json();
         finalUrl = uploaded.url;
@@ -373,6 +374,10 @@ export default function ContentPage() {
                         item.value
                           ? <img src={item.value} alt={item.altText || item.label} className={styles.thumb} />
                           : <div className={styles.thumbEmpty}>No image</div>
+                      ) : item.type === 'video' ? (
+                        item.value
+                          ? <video src={item.value} className={styles.thumb} muted loop autoPlay playsInline />
+                          : <div className={styles.thumbEmpty}>No video</div>
                       ) : (
                         <p className={styles.textPreview}>
                           {item.value
@@ -516,6 +521,62 @@ export default function ContentPage() {
                       placeholder="Shown below the image if the template supports it"
                     />
                   </div>
+                </>
+              ) : edit.item.type === 'video' ? (
+                <>
+                  <div className={styles.specPanel}>
+                    <p className={styles.specTitle}>Video Requirements</p>
+                    <div className={styles.specGrid}>
+                      <span className={styles.specLabel}>Format</span>
+                      <span className={styles.specValue}>MP4 or WebM</span>
+                      <span className={styles.specLabel}>Max size</span>
+                      <span className={styles.specValue}>30 MB</span>
+                      <span className={styles.specLabel}>Length</span>
+                      <span className={styles.specValue}>6–10s seamless loop</span>
+                      <span className={styles.specLabel}>Audio</span>
+                      <span className={styles.specValue}>Silent — it plays muted</span>
+                    </div>
+                    <p className={styles.specUsage}>
+                      Plays muted on autoplay loop behind the homepage headline. The Hero Image stays
+                      as the instant poster and as the fallback on phones / reduced-motion. Leave empty
+                      to use just the photo.
+                    </p>
+                  </div>
+
+                  <div className={styles.imgPreviewWrap}>
+                    {(edit.preview || edit.value) ? (
+                      <video
+                        src={edit.preview || edit.value}
+                        className={styles.imgPreview}
+                        muted
+                        autoPlay
+                        loop
+                        playsInline
+                      />
+                    ) : (
+                      <div className={styles.imgPlaceholder}>No video yet — upload one below</div>
+                    )}
+                  </div>
+
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime"
+                    onChange={onFileChange}
+                    className={styles.fileInput}
+                  />
+                  <button className={styles.uploadBtn} onClick={() => fileRef.current?.click()}>
+                    {edit.value ? 'Replace video' : 'Upload video'}
+                  </button>
+                  {(edit.value || edit.preview) && (
+                    <button
+                      className={styles.uploadBtn}
+                      style={{ marginTop: 8, background: 'none', color: 'var(--muted)' }}
+                      onClick={() => setEdit(prev => prev ? { ...prev, value: '', preview: null, file: null } : null)}
+                    >
+                      Remove video (use photo only)
+                    </button>
+                  )}
                 </>
               ) : (
                 <div className={styles.field}>
