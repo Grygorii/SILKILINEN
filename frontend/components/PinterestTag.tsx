@@ -4,7 +4,9 @@ import Script from 'next/script';
 import { useEffect } from 'react';
 import { useCookieConsent } from '@/context/CookieConsentContext';
 
-const RAW_TAG_ID = process.env.NEXT_PUBLIC_PINTEREST_TAG_ID;
+// Defaults to the founder's own confirmed Pinterest tag (2612639946416) so it
+// works zero-config; NEXT_PUBLIC_PINTEREST_TAG_ID (Vercel) still overrides.
+const RAW_TAG_ID = process.env.NEXT_PUBLIC_PINTEREST_TAG_ID || '2612639946416';
 // `String(undefined)` is the literal "undefined" which is truthy — that
 // was leaking into the script as pintrk('load', 'undefined', ...) and
 // causing the ct.pinterest.com/v3/... 400s on every page load.
