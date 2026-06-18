@@ -81,6 +81,54 @@ async function fireMetaCapi({ order, eventId }) {
   }
 }
 
+// ── Pinterest Conversions API ────────────────────────────────────────────────
+// Fires a server-side 'checkout' event after payment. Ad-block-proof, and
+// deduplicated with the client-side pintrk('track','checkout',{event_id}) via
+// the shared Stripe payment-intent id. Silently skips if no token configured.
+async function firePinterestCapi({ order, eventId }) {
+  const adAccountId = process.env.PINTEREST_AD_ACCOUNT_ID || '549770507607';
+  const token = process.env.PINTEREST_CONVERSION_TOKEN;
+  if (!token) return;
+
+  try {
+    const hash = v => crypto.createHash('sha256').update(String(v).trim().toLowerCase()).digest('hex');
+    const userData = {};
+    if (order.customerEmail) userData.em = [hash(order.customerEmail)];
+    if (order.customerPhone) {
+      const phone = order.customerPhone.replace(/[^0-9]/g, '');
+      if (phone) userData.ph = [hash(phone)];
+    }
+
+    const payload = {
+      data: [{
+        event_name:    'checkout',
+        action_source: 'web',
+        event_time:    Math.floor(Date.now() / 1000),
+        event_id:      eventId,
+        user_data:     userData,
+        custom_data: {
+          currency:    'EUR',
+          value:       String(order.total),
+          content_ids: (order.items || []).map(i => String(i.productId)),
+          num_items:   (order.items || []).reduce((n, i) => n + (i.quantity || 1), 0),
+        },
+      }],
+    };
+
+    const url = `https://api.pinterest.com/v5/ad_accounts/${adAccountId}/events`;
+    await Promise.race([
+      fetch(url, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body:    JSON.stringify(payload),
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Pinterest CAPI timeout')), 3000)),
+    ]);
+  } catch (err) {
+    console.error('[Pinterest CAPI] checkout event failed:', err.message);
+  }
+}
+
 // POST /api/v2/checkout/create-intent
 checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
   try {
@@ -551,6 +599,12 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
       // still produces unhandled rejections if the inner catch ever throws.
       fireMetaCapi({ order, eventId: `order-${orderNumber}` })
         .catch(err => console.error('[CAPI] unhandled:', err.message));
+
+      // Fire Pinterest Conversions API server-side checkout event. event_id is
+      // the Stripe payment-intent id, matching the client-side pintrk checkout
+      // (success page) so Pinterest dedupes the browser + server events.
+      firePinterestCapi({ order, eventId: intent.id })
+        .catch(err => console.error('[Pinterest CAPI] unhandled:', err.message));
 
       // Clear cart
       if (cart) {
