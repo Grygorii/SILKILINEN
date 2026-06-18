@@ -15,6 +15,17 @@ import InstagramGrid from '@/components/InstagramGrid';
 import { getContent, val } from '@/lib/content';
 import { getPageMeta } from '@/lib/pageSeo';
 
+// Derive a still poster frame from a Cloudinary hero video, so the slow-connection
+// fallback is an actual frame of the video itself (not a mismatched separate photo).
+// Cloudinary generates + caches the JPG on first request; so_auto picks a
+// representative frame. Falls back to '' for any non-Cloudinary URL.
+function videoPosterFrame(videoUrl: string): string {
+  if (!videoUrl.includes('/video/upload/')) return '';
+  return videoUrl
+    .replace('/video/upload/', '/video/upload/so_auto,q_auto,w_1600,c_limit/')
+    .replace(/\.(mp4|webm|mov|m4v)$/i, '.jpg');
+}
+
 // Self-referencing canonical for the homepage (kept — without it GSC flagged
 // "/" as duplicate). Title/description fall back to the layout defaults unless
 // an editable page-SEO override is set in admin / by the Rebuild SEO pipeline.
@@ -55,6 +66,8 @@ export default async function Home() {
 
   const heroImage = val(content, 'homepage_hero_image');
   const heroVideo = val(content, 'homepage_hero_video');
+  // The bad-internet still: a frame of the video when one is set, else the photo.
+  const heroStill = (heroVideo && videoPosterFrame(heroVideo)) || heroImage;
   const heroTitle = val(content, 'homepage_hero_title', 'Pure silk, pure comfort.');
   const heroSubtitle = val(content, 'homepage_hero_subtitle', 'Pure silk & linen intimates');
   const heroCta = val(content, 'homepage_hero_cta', 'Shop the collection');
@@ -62,13 +75,14 @@ export default async function Home() {
   return (
     <main>
       <section className={styles.hero}>
-        {heroImage && (
+        {heroStill && (
           // Real <img> with fetchpriority="high" so the browser preloads
           // it immediately on first byte instead of waiting to discover
           // it from a CSS background-image rule. This is the LCP element
           // and was responsible for the 18-second Lighthouse score.
+          // When a hero video is set, this still is a frame of that video.
           <Image
-            src={heroImage}
+            src={heroStill}
             alt={heroTitle}
             fill
             priority
@@ -88,7 +102,7 @@ export default async function Home() {
             loop
             playsInline
             preload="auto"
-            poster={heroImage || undefined}
+            poster={heroStill || undefined}
           >
             <source src={heroVideo} />
           </video>
