@@ -49,7 +49,9 @@
   .heroVideo { display: none; }
 }
 
-/* Gradient scrim — lifts headline legibility over busy hero photos/video */
+/* Scrim shell — desktop shows no scrim (kept clean: the headline is dark text
+   over light areas, so it reads fine). The mobile media query re-enables a
+   subtle bottom gradient where the text sits low over the image. */
 .hero::before {
   content: '';
   position: absolute;
@@ -58,7 +60,7 @@
   width: 55%;
   height: 70%;
   z-index: 1;
-  background: linear-gradient(to top right, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0) 100%);
+  background: none;
   pointer-events: none;
 }
 
