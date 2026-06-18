@@ -26,7 +26,30 @@
   z-index: 0;
 }
 
-/* Gradient scrim — lifts headline legibility over busy hero photos */
+/* Hero video — layered over the image (which remains the LCP poster),
+   covering it once it can play. Fades in to avoid a hard pop. */
+.heroVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+  animation: heroVideoFade 1.2s ease-in both;
+}
+
+@keyframes heroVideoFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Respect reduced-motion: fall back to the still hero image. */
+@media (prefers-reduced-motion: reduce) {
+  .heroVideo { display: none; }
+}
+
+/* Gradient scrim — lifts headline legibility over busy hero photos/video */
 .hero::before {
   content: '';
   position: absolute;
@@ -34,6 +57,7 @@
   left: 0;
   width: 55%;
   height: 70%;
+  z-index: 1;
   background: linear-gradient(to top right, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0) 100%);
   pointer-events: none;
 }

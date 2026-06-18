@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const siteContentSchema = new mongoose.Schema({
   key: { type: String, required: true, unique: true, trim: true },
-  type: { type: String, enum: ['image', 'text', 'richtext', 'url'], required: true },
+  type: { type: String, enum: ['image', 'video', 'text', 'richtext', 'url'], required: true },
   value: { type: String, default: '' },
   altText: { type: String, default: '' },
   caption: { type: String, default: '' },

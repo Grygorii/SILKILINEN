@@ -17,6 +17,23 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
+// Hero video: short, muted, looping background clip. Allow more headroom than
+// images, but keep it sane so the hero never becomes a megabyte hog.
+const uploadVideo = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 30 * 1024 * 1024 },
+});
+
+// Magic-byte sniff for the common web video containers (mp4/mov share the
+// ISO-BMFF 'ftyp' box; webm uses the Matroska/EBML header). multer's mime
+// filter is spoofable, so verify the bytes before touching Cloudinary.
+function isWebVideo(buf) {
+  if (!buf || buf.length < 12) return false;
+  if (buf.slice(4, 8).toString('ascii') === 'ftyp') return true;        // mp4 / mov / m4v
+  if (buf[0] === 0x1a && buf[1] === 0x45 && buf[2] === 0xdf && buf[3] === 0xa3) return true; // webm/mkv
+  return false;
+}
+
 const CONTENT_SPECS = {
   homepage_hero_image:           { width: 2400, height: 1200 },
   homepage_story_image:          { width: 1200, height: 1500 },
@@ -138,6 +155,39 @@ router.post('/upload', requireAuth, upload.single('image'), async function(req, 
     res.json({ url, publicId: result.public_id });
   } catch (err) {
     console.error('[UPLOAD] Cloudinary error:', err);
+    res.status(500).json({ error: 'Upload failed', message: err.message });
+  }
+});
+
+// POST /api/content/upload-video — upload a hero video to Cloudinary, return URL
+router.post('/upload-video', requireAuth, uploadVideo.single('video'), async function(req, res) {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    if (!isWebVideo(req.file.buffer)) {
+      return res.status(400).json({ error: 'File is not a recognised video (MP4, MOV or WebM).' });
+    }
+
+    const missingVars = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET']
+      .filter(v => !process.env[v]);
+    if (missingVars.length) {
+      return res.status(503).json({ error: `Cloudinary not configured — missing: ${missingVars.join(', ')}` });
+    }
+
+    const section = req.query.section || 'homepage';
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: `silkilinen/${section}`, resource_type: 'video', eager_async: true,
+          // Cap the delivered clip at 1080p with auto codec/quality so a big
+          // source upload still streams light on the homepage.
+          eager: [{ width: 1920, crop: 'limit', quality: 'auto', format: 'mp4' }] },
+        (error, result) => error ? reject(error) : resolve(result)
+      );
+      stream.end(req.file.buffer);
+    });
+
+    res.json({ url: result.secure_url, publicId: result.public_id });
+  } catch (err) {
+    console.error('[UPLOAD-VIDEO] Cloudinary error:', err);
     res.status(500).json({ error: 'Upload failed', message: err.message });
   }
 });
