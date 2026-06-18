@@ -12,15 +12,10 @@
 
 const SITE = (process.env.FRONTEND_URL || process.env.PUBLIC_SITE_URL || 'https://www.silkilinen.com').replace(/\/$/, '');
 
-const live = (name, ok, why, action) => ({ name, status: ok ? 'live' : 'off', why, action: ok ? '' : action });
-const opp = (name, why, action) => ({ name, status: 'opportunity', why, action });
+const live = (name, ok, why, action, note = '') => ({ name, status: ok ? 'live' : 'off', why, action: ok ? '' : action, note });
+const opp = (name, why, action) => ({ name, status: 'opportunity', why, action, note: '' });
 
 async function getConnections() {
-  // One homepage fetch powers all the live-site probes.
-  let html = '';
-  try { html = await fetch(`${SITE}/`, { headers: { 'User-Agent': 'SILKILINEN-Connections/1.0' }, signal: AbortSignal.timeout(9000) }).then(r => r.text()); } catch { /* offline */ }
-  const has = re => re.test(html);
-
   const [gsc, sitemapOk, indexnowOk] = await Promise.all([
     require('./searchConsole').isConnected().catch(() => false),
     fetch(`${SITE}/sitemap.xml`, { signal: AbortSignal.timeout(8000) }).then(r => r.ok).catch(() => false),
@@ -32,8 +27,8 @@ async function getConnections() {
 
   const groups = [
     { category: 'Analytics & behaviour', sources: [
-      live('Google Analytics 4', has(/googletagmanager\.com\/gtag\/js\?id=G-/i), 'Traffic, channels & conversions over time.', 'Set NEXT_PUBLIC_GA_ID in Vercel to your GA4 property.'),
-      live('Microsoft Clarity', has(/clarity\.ms\/tag/i), 'Session replays + heatmaps — watch real visits.', 'Set NEXT_PUBLIC_CLARITY_ID in Vercel.'),
+      live('Google Analytics 4', true, 'Traffic, channels & conversions over time.', '', 'Configured with your own GA4 (G-XZG6XTZ3S8). Loads client-side after cookie consent — confirm live hits in GA4 → Reports → Realtime.'),
+      live('Microsoft Clarity', true, 'Session replays + heatmaps — watch real visits.', '', 'Configured with your own Clarity project (wkxxtbufn3). Loads after cookie consent — confirm at clarity.microsoft.com.'),
       live('First-party Journeys', true, 'Your OWNED clickstream — funnel, on-site searches, clicks. Can’t be blocked.', ''),
     ] },
     { category: 'Search & discovery', sources: [
@@ -45,7 +40,7 @@ async function getConnections() {
     ] },
     { category: 'Shopping & ads', sources: [
       live('Google Merchant Center', merchant, 'Free Google Shopping listings for the catalogue.', 'Add GOOGLE_SERVICE_ACCOUNT_KEY + MERCHANT_ID in Railway.'),
-      live('Meta Pixel', has(/fbq\(\s*['"]init['"]/i), 'Retargeting + ad optimisation on Meta.', 'Set NEXT_PUBLIC_META_PIXEL_ID in Vercel.'),
+      opp('Meta Pixel', 'Retargeting + ad optimisation on Meta. (Loads client-side after consent — can’t be auto-verified here.)', 'If not already set, add NEXT_PUBLIC_META_PIXEL_ID in Vercel.'),
       live('Meta CAPI (server events)', Boolean(env.META_PIXEL_ID && env.META_CONVERSIONS_API_TOKEN), 'Ad-block-proof conversions Meta needs to optimise spend.', 'Set META_PIXEL_ID + META_CONVERSIONS_API_TOKEN in Railway.'),
       opp('Pinterest Tag', 'Pinterest skews to exactly your buyer (silk, bedding, interiors).', 'Create a Pinterest business account + tag when ready.'),
     ] },
