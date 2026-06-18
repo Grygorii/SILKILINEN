@@ -5,7 +5,7 @@ import AdminLayout from '@/components/AdminLayout';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-type Source = { name: string; status: 'live' | 'off' | 'opportunity'; why: string; action: string };
+type Source = { name: string; status: 'live' | 'off' | 'opportunity'; why: string; action: string; note?: string };
 type Group = { category: string; sources: Source[] };
 type Data = { groups: Group[]; summary: { live: number; off: number; opportunities: number; total: number }; checkedAt: string };
 
@@ -71,6 +71,7 @@ export default function ConnectionsPage() {
                         <span style={{ fontSize: 11, color: DOT[src.status], whiteSpace: 'nowrap' }}>● {LABEL[src.status]}</span>
                       </div>
                       <p style={{ fontSize: 12.5, color: muted, margin: '3px 0 0', lineHeight: 1.5 }}>{src.why}</p>
+                      {src.note && <p style={{ fontSize: 12, color: muted, margin: '4px 0 0', fontStyle: 'italic', lineHeight: 1.5 }}>{src.note}</p>}
                       {src.action && <p style={{ fontSize: 12, color: '#b8863b', margin: '4px 0 0' }}>→ {src.action}</p>}
                     </div>
                   ))}
