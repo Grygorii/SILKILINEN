@@ -213,6 +213,46 @@ router.post('/competitors/discover', runLimit, async function(req, res) {
   }
 });
 
+// GET /api/admin/growth/competitors/profiles — the scraped intelligence the
+// dashboard renders (prices, catalogue size, newest products per competitor).
+router.get('/competitors/profiles', async function(req, res) {
+  try {
+    const CompetitorProfile = require('../models/CompetitorProfile');
+    const Product = require('../models/Product');
+    const [profiles, agg, totalCompetitors] = await Promise.all([
+      CompetitorProfile.find().sort({ productCount: -1, updatedAt: -1 }).lean(),
+      Product.aggregate([{ $match: { status: { $in: ['active', 'sold_out'] }, price: { $gt: 0 } } }, { $group: { _id: null, min: { $min: '$price' }, max: { $max: '$price' }, avg: { $avg: '$price' }, count: { $sum: 1 } } }]),
+      getCompetitors().then(c => c.filter(x => x.domain).length),
+    ]);
+    const a = agg[0] || {};
+    res.json({
+      profiles,
+      totalCompetitors,
+      yourStore: { currency: 'EUR', productCount: a.count || 0, priceMin: a.min ?? null, priceMax: a.max ?? null, priceAvg: a.avg != null ? Math.round(a.avg * 100) / 100 : null },
+    });
+  } catch (err) {
+    console.error('[growth] profiles error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/admin/growth/competitors/scan — scrape live data for the competitor
+// set (Shopify /products.json + sitemap fallback). Runs in the background; the
+// dashboard polls the profiles endpoint.
+router.post('/competitors/scan', runLimit, async function(req, res) {
+  try {
+    const { refreshProfiles, getCompetitors } = require('../services/competitorIntel');
+    const total = (await getCompetitors()).filter(c => c.domain).length;
+    refreshProfiles({ limit: Math.min(total, 80) })
+      .then(r => console.log(`[growth] competitor scan done: ${r.ok}/${r.scanned}`))
+      .catch(err => console.error('[growth] competitor scan:', err.message));
+    res.json({ ok: true, started: true, scanning: Math.min(total, 80) });
+  } catch (err) {
+    console.error('[growth] scan error:', err.message);
+    res.status(500).json({ error: 'Scan failed to start.' });
+  }
+});
+
 // GET /api/admin/growth/brain — North Star, metric options, latest Co-CEO brief.
 router.get('/brain', async function(req, res) {
   try {

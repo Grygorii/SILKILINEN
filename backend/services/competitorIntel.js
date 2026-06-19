@@ -45,19 +45,22 @@ function normaliseCompetitor(c) {
   };
 }
 
-// Dedupe by domain first (the strong key), then by lowercased name.
+const OWN_BRAND_RE = /silki?linen/i; // our own brand (incl. the "silklinen" typo) — never study ourselves
+
+// Dedupe by domain first (the strong key), then by a normalised name key (so
+// "La Perla" / "laperla" collapse). Also drops our own brand if it crept in.
 function dedupe(list) {
   const byDomain = new Set();
   const byName = new Set();
   const out = [];
   for (const c of list) {
     const d = c.domain || '';
-    const n = c.name.toLowerCase();
+    const nameKey = c.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (OWN_BRAND_RE.test(nameKey) || d === 'silkilinen.com') continue; // never list ourselves
     if (d && byDomain.has(d)) continue;
-    if (!d && byName.has(n)) continue;
-    if (byName.has(n)) continue;
+    if (byName.has(nameKey)) continue;
     if (d) byDomain.add(d);
-    byName.add(n);
+    byName.add(nameKey);
     out.push(c);
   }
   return out;
@@ -112,4 +115,26 @@ async function liveProductSample(domain) {
   return null;
 }
 
-module.exports = { getCompetitors, setCompetitors, mergeCompetitors, normaliseCompetitor, dedupe, liveProductSample, DEFAULT_COMPETITORS };
+// Scrape rich profiles (Shopify /products.json → prices/catalog/new, sitemap
+// fallback) for up to `limit` competitors, in parallel, upserting one doc each.
+// Returns counts; meant to run in the background (a full scan can take a while).
+async function refreshProfiles({ limit = 60, concurrency = 6 } = {}) {
+  const CompetitorProfile = require('../models/CompetitorProfile');
+  const { scrapeCompetitor } = require('./competitorScraper');
+  const competitors = (await getCompetitors()).filter(c => c.domain).slice(0, limit);
+  let i = 0, ok = 0;
+  async function worker() {
+    while (i < competitors.length) {
+      const c = competitors[i++];
+      const profile = await scrapeCompetitor(c).catch(() => null);
+      if (profile?.domain) {
+        await CompetitorProfile.findOneAndUpdate({ domain: profile.domain }, profile, { upsert: true, setDefaultsOnInsert: true }).catch(() => {});
+        ok++;
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, competitors.length || 1) }, worker));
+  return { scanned: competitors.length, ok };
+}
+
+module.exports = { getCompetitors, setCompetitors, mergeCompetitors, normaliseCompetitor, dedupe, liveProductSample, refreshProfiles, DEFAULT_COMPETITORS };
