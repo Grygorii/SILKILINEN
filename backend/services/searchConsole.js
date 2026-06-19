@@ -282,6 +282,22 @@ async function getCountryBreakdown(days = 28) {
   }));
 }
 
+// ISO-3 (GSC country codes) → 2-letter geo used by the demand/evidence lookups.
+const ISO3_TO_2 = {
+  gbr: 'GB', usa: 'US', irl: 'IE', aus: 'AU', can: 'CA', deu: 'DE', fra: 'FR', nld: 'NL',
+  esp: 'ES', ita: 'IT', ind: 'IN', are: 'AE', sgp: 'SG', che: 'CH', swe: 'SE', nor: 'NO',
+  dnk: 'DK', bel: 'BE', nzl: 'NZ', jpn: 'JP', hkg: 'HK', zaf: 'ZA',
+};
+// The brand's strongest market as a 2-letter geo (where Google shows the shop
+// most), or null if Search Console isn't connected / has no country data yet.
+// Shared so the Demand Scout and the Reasoning Clerk watch the SAME country.
+async function getPrimaryMarket() {
+  if (!(await isConnected().catch(() => false))) return null;
+  const countries = await getCountryBreakdown(28).catch(() => []);
+  const top = countries.filter(c => c.impressions > 0).sort((a, b) => b.impressions - a.impressions)[0];
+  return top ? (ISO3_TO_2[String(top.country).toLowerCase()] || null) : null;
+}
+
 module.exports = {
   oauthConfigured,
   isConnected,
@@ -291,6 +307,7 @@ module.exports = {
   getSitemapsSummary,
   getSearchPerformance,
   getCountryBreakdown,
+  getPrimaryMarket,
   getQueryOpportunities,
   getQueryPagePairs,
   inspectUrl,

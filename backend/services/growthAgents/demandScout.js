@@ -62,23 +62,15 @@ async function ownQueries() {
 }
 
 // Which market to watch. The brand ships worldwide, so watching one hardcoded
-// country is a blind spot. Prefer where Google ACTUALLY shows the shop (top GSC
-// country); until there's GSC data, rotate the major English-language silk/linen
-// markets so the radar isn't single-market-locked.
-const ISO3_TO_2 = {
-  gbr: 'GB', usa: 'US', irl: 'IE', aus: 'AU', can: 'CA', deu: 'DE', fra: 'FR', nld: 'NL',
-  esp: 'ES', ita: 'IT', ind: 'IN', are: 'AE', sgp: 'SG', che: 'CH', swe: 'SE', nzl: 'NZ', jpn: 'JP', hkg: 'HK', zaf: 'ZA',
-};
+// country is a blind spot. Prefer where Google ACTUALLY shows the shop (shared
+// getPrimaryMarket, so the Reasoning Clerk checks the SAME country); until
+// there's GSC data, rotate the major English-language silk/linen markets so the
+// radar isn't single-market-locked.
 const FALLBACK_MARKETS = ['GB', 'US', 'IE'];
 async function resolveMarket(cursor) {
   try {
-    const gsc = require('../searchConsole');
-    if (await gsc.isConnected()) {
-      const countries = await gsc.getCountryBreakdown(28).catch(() => []);
-      const top = countries.filter(c => c.impressions > 0).sort((a, b) => b.impressions - a.impressions)[0];
-      const geo = top && ISO3_TO_2[String(top.country).toLowerCase()];
-      if (geo) return geo;
-    }
+    const geo = await require('../searchConsole').getPrimaryMarket();
+    if (geo) return geo;
   } catch { /* fall through to rotation */ }
   return FALLBACK_MARKETS[cursor % FALLBACK_MARKETS.length];
 }

@@ -28,11 +28,17 @@ const SEEDS = ['silk robe', 'silk pyjamas', 'silk pillowcase'];
 // around the brand's core terms, plus each term's trend direction. Every call
 // fails soft, so a blocked network just thins the evidence — it never throws.
 async function gatherEvidence() {
+  // Check evidence in the brand's real strongest market — the same country the
+  // Demand Scout watches — so the fact-checker isn't auditing UK/US claims
+  // against Irish-only signal. Falls back to IE when there's no GSC data.
+  let market = 'IE';
+  try { market = (await require('../searchConsole').getPrimaryMarket()) || 'IE'; } catch { /* keep default */ }
+
   const lines = [];
   for (const seed of SEEDS) {
     const [suggestions, trend] = await Promise.all([
-      googleAutocomplete(seed, 'IE').catch(() => []),
-      googleTrendsInterest(seed, 'IE').catch(() => null),
+      googleAutocomplete(seed, market).catch(() => []),
+      googleTrendsInterest(seed, market).catch(() => null),
     ]);
     const parts = [];
     if (suggestions.length) parts.push(`searches: ${suggestions.slice(0, 8).join('; ')}`);
