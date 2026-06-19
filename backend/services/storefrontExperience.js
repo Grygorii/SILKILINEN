@@ -24,8 +24,17 @@ const EXPERIENCE_MAP = `SILKILINEN storefront — a quiet-luxury silk & linen sh
 - Voice: considered, warm, quiet luxury; British/Irish English; never claims handmade or made-in-Ireland.`;
 
 async function gatherExperience() {
+  const pages = [...PAGES];
+  // Include a real product page — where the buy decision is actually made, and
+  // the one journey step the static page list can't cover.
+  try {
+    const Product = require('../models/Product');
+    const prod = await Product.findOne({ status: 'active' }).sort({ createdAt: -1 }).select('_id').lean();
+    if (prod) pages.push({ name: 'Product page', path: `/product/${prod._id}` });
+  } catch { /* no product to sample — fall back to the other pages */ }
+
   const parts = [];
-  for (const p of PAGES) {
+  for (const p of pages) {
     const text = await fetchReadablePage(`${SITE}${p.path}`, 2500).catch(() => '');
     if (text && text.length > 200) parts.push(`### ${p.name} (${p.path})\n${text}`);
   }

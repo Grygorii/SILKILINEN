@@ -12,6 +12,7 @@ const Product = require('../../models/Product');
 const Category = require('../../models/Category');
 const GrowthAction = require('../../models/GrowthAction');
 const { getCompetitors } = require('../competitorIntel');
+const CompetitorProfile = require('../../models/CompetitorProfile');
 
 const client = require('../aiClient'); // shared DeepSeek client
 const { playbookPromptBlock } = require('../playbook'); // house memory (Archivarius)
@@ -28,7 +29,7 @@ const EXISTING = [
 ];
 
 async function gatherContext() {
-  const [cats, priceAgg, competitors, intel] = await Promise.all([
+  const [cats, priceAgg, competitors, intel, profiles] = await Promise.all([
     Category.find({ status: 'active' }).select('label').lean().catch(() => []),
     Product.aggregate([
       { $match: { status: { $in: ['active', 'sold_out'] } } },
@@ -37,13 +38,29 @@ async function gatherContext() {
     getCompetitors(),
     GrowthAction.find({ agent: { $in: ['competitor', 'storefront', 'demand'] } })
       .sort({ createdAt: -1 }).limit(8).select('title detail').lean().catch(() => []),
+    CompetitorProfile.find().select('productTypes priceMin priceMax').lean().catch(() => []),
   ]);
   const p = priceAgg[0] || {};
+
+  // What the field ACTUALLY sells — aggregated from the scraped competitor
+  // profiles, so the Inventor finds real white space, not gaps it imagines.
+  const typeCounts = {};
+  for (const pr of profiles) for (const t of (pr.productTypes || [])) {
+    const k = String(t).trim().toLowerCase();
+    if (k) typeCounts[k] = (typeCounts[k] || 0) + 1;
+  }
+  const fieldTypes = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]).slice(0, 14).map(([t, n]) => `${t} (${n})`);
+  const mins = profiles.map(pr => pr.priceMin).filter(n => n > 0);
+  const maxs = profiles.map(pr => pr.priceMax).filter(n => n > 0);
+  const fieldPrices = mins.length ? `~${Math.round(Math.min(...mins))}–${Math.round(Math.max(...maxs))} (across ${profiles.length} scraped stores, mixed currencies)` : '';
+
   return {
     categories: cats.map(c => c.label),
     priceRange: p.min != null ? `€${Math.round(p.min)}–€${Math.round(p.max)} (${p.n} products)` : 'unknown',
     competitors: competitors.slice(0, 40).map(c => c.name),
     intel: intel.map(a => `${a.title} — ${(a.detail || '').slice(0, 160)}`),
+    fieldTypes,
+    fieldPrices,
   };
 }
 
@@ -71,10 +88,12 @@ async function run() {
     `Catalogue: ${ctx.categories.join(', ') || 'silk pieces'}; prices ${ctx.priceRange}.`,
     `Already has (do NOT re-suggest): ${EXISTING.join('; ')}.`,
     `Competitive field (${ctx.competitors.length} brands): ${ctx.competitors.join(', ') || 'luxury silk & sleepwear brands'}.`,
+    ctx.fieldTypes.length ? `What the field ACTUALLY sells (scraped from rival stores — product type, most common first; the white space is what's ABSENT here): ${ctx.fieldTypes.join(', ')}.` : '',
+    ctx.fieldPrices ? `Field price spread: ${ctx.fieldPrices}.` : '',
     ctx.intel.length ? `Recent market intel:\n- ${ctx.intel.join('\n- ')}` : 'No fresh intel this week — invent from first principles.',
     ``,
     `Now CONNECT THE DOTS. Combine proven patterns into new tools SILKILINEN could own. Return the JSON.`,
-  ].join('\n');
+  ].filter(Boolean).join('\n');
 
   let parsed = null;
   try {
