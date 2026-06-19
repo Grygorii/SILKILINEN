@@ -61,6 +61,28 @@ async function ownQueries() {
   }
 }
 
+// Which market to watch. The brand ships worldwide, so watching one hardcoded
+// country is a blind spot. Prefer where Google ACTUALLY shows the shop (top GSC
+// country); until there's GSC data, rotate the major English-language silk/linen
+// markets so the radar isn't single-market-locked.
+const ISO3_TO_2 = {
+  gbr: 'GB', usa: 'US', irl: 'IE', aus: 'AU', can: 'CA', deu: 'DE', fra: 'FR', nld: 'NL',
+  esp: 'ES', ita: 'IT', ind: 'IN', are: 'AE', sgp: 'SG', che: 'CH', swe: 'SE', nzl: 'NZ', jpn: 'JP', hkg: 'HK', zaf: 'ZA',
+};
+const FALLBACK_MARKETS = ['GB', 'US', 'IE'];
+async function resolveMarket(cursor) {
+  try {
+    const gsc = require('../searchConsole');
+    if (await gsc.isConnected()) {
+      const countries = await gsc.getCountryBreakdown(28).catch(() => []);
+      const top = countries.filter(c => c.impressions > 0).sort((a, b) => b.impressions - a.impressions)[0];
+      const geo = top && ISO3_TO_2[String(top.country).toLowerCase()];
+      if (geo) return geo;
+    }
+  } catch { /* fall through to rotation */ }
+  return FALLBACK_MARKETS[cursor % FALLBACK_MARKETS.length];
+}
+
 async function run() {
   if (!process.env.DEEPSEEK_API_KEY) {
     return [{ type: 'info', title: 'Skipped — AI not configured', status: 'info' }];
@@ -77,12 +99,15 @@ async function run() {
   const picked = [seeds[cursor % seeds.length], seeds[(cursor + 1) % seeds.length]];
   await setCursor((cursor + 2) % seeds.length);
 
-  // Gather real external demand for the picked seeds.
+  // Watch the brand's real strongest market, not a hardcoded country.
+  const market = await resolveMarket(cursor);
+
+  // Gather real external demand for the picked seeds, in that market.
   const demand = [];
   for (const seed of picked) {
     const [phrases, trend] = await Promise.all([
-      expandDemand(seed, 'IE'),
-      googleTrendsInterest(seed, 'IE'),
+      expandDemand(seed, market),
+      googleTrendsInterest(seed, market),
     ]);
     demand.push({ seed, phrases, trend });
   }
@@ -124,7 +149,8 @@ Respond ONLY with valid JSON:
 }
 2-4 opportunities, the strongest first. Use only the phrases provided.`;
 
-  const userPayload = annotated.map(a => {
+  const marketHeader = `MARKET WATCHED THIS RUN: ${market} — where Google currently shows the shop strongest (or a rotating major market until there's GSC data). Judge demand for this market.\n`;
+  const userPayload = marketHeader + '\n' + annotated.map(a => {
     const trendLine = a.trend
       ? `Trends for "${a.seed}": ${a.trend.direction}${a.trend.changePct != null ? ` (${a.trend.changePct > 0 ? '+' : ''}${a.trend.changePct}% vs earlier)` : ''}, recent interest ${a.trend.recentInterest}/100.`
       : `Trends for "${a.seed}": not available this run.`;
@@ -154,7 +180,7 @@ Respond ONLY with valid JSON:
     detail: `${o.demand} ${o.gap ? `· ${o.gap}` : ''} → ${(o.moves || []).join(' · ')}`,
     href: '/admin/growth',
     status: 'needs_approval',
-    meta: { phrase: o.phrase, moves: o.moves || [], seeds: picked },
+    meta: { phrase: o.phrase, moves: o.moves || [], seeds: picked, market },
   }));
 }
 
