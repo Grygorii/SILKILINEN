@@ -10,12 +10,31 @@
 // Fire-and-forget and fail-soft — indexing is a bonus and must never block or
 // break a save.
 
+const SystemState = require('../models/SystemState');
 const KEY = process.env.INDEXNOW_KEY || 'dc1dfa43baff3a057f22f080ab65acfc';
 const SITE = (process.env.PUBLIC_SITE_URL || 'https://www.silkilinen.com').replace(/\/$/, '');
 const HOST = SITE.replace(/^https?:\/\//, '');
+const LAST_KEY = 'indexnow_last_submit';
 
-// Submit one or more absolute or site-relative URLs.
-async function pingIndexNow(urls) {
+// Records the most recent submission so admin can show "last submitted" without
+// waiting on Bing's laggy tab.
+async function recordLastSubmit(count, source) {
+  await SystemState.findOneAndUpdate(
+    { key: LAST_KEY },
+    { value: { at: new Date().toISOString(), count, source } },
+    { upsert: true },
+  ).catch(() => {});
+}
+
+async function getLastSubmit() {
+  const doc = await SystemState.findOne({ key: LAST_KEY }).lean().catch(() => null);
+  return doc?.value || null;
+}
+
+// Submit one or more absolute or site-relative URLs. Records the submission
+// unless record:false (the bulk resubmit records the total itself, so its chunks
+// don't each overwrite the count).
+async function pingIndexNow(urls, { source = 'auto', record = true } = {}) {
   try {
     const list = (Array.isArray(urls) ? urls : [urls])
       .filter(Boolean)
@@ -29,10 +48,11 @@ async function pingIndexNow(urls) {
       body: JSON.stringify({ host: HOST, key: KEY, keyLocation: `${SITE}/${KEY}.txt`, urlList: list }),
       signal: AbortSignal.timeout(5000),
     });
-    if (!res.ok) console.warn(`[indexnow] HTTP ${res.status} for ${list.length} url(s)`);
+    if (!res.ok) { console.warn(`[indexnow] HTTP ${res.status} for ${list.length} url(s)`); return; }
+    if (record) await recordLastSubmit(list.length, source);
   } catch (err) {
     console.warn('[indexnow] ping failed:', err.message);
   }
 }
 
-module.exports = { pingIndexNow };
+module.exports = { pingIndexNow, getLastSubmit, recordLastSubmit };

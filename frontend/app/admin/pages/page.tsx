@@ -1,7 +1,7 @@
 import AdminLayout from '@/components/AdminLayout';
 import Link from 'next/link';
 import styles from './page.module.css';
-import SubmitIndexNowButton from './SubmitIndexNowButton';
+import SubmitIndexNowButton from '@/components/SubmitIndexNowButton';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 const BASE = 'https://www.silkilinen.com';

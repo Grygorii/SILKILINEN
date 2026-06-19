@@ -325,12 +325,22 @@ router.post('/resubmit-indexnow', requireAuth, async (req, res) => {
     ])];
 
     // pingIndexNow caps a single submission; chunk so a large catalogue all goes.
-    for (let i = 0; i < urls.length; i += 100) pingIndexNow(urls.slice(i, i + 100));
+    for (let i = 0; i < urls.length; i += 100) pingIndexNow(urls.slice(i, i + 100), { source: 'manual', record: false });
+    await require('../services/indexNow').recordLastSubmit(urls.length, 'manual');
 
     res.json({ submitted: urls.length });
   } catch (err) {
     console.error('[indexnow resubmit]', err.message);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /indexnow-status — when the public surface was last submitted to IndexNow.
+router.get('/indexnow-status', requireAuth, async (req, res) => {
+  try {
+    res.json(await require('../services/indexNow').getLastSubmit());
+  } catch {
+    res.json(null);
   }
 });
 

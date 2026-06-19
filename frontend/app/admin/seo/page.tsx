@@ -6,6 +6,7 @@ import { toast } from '@/lib/adminToast';
 import SeoHealthPanel from '../_components/dashboard/SeoHealthPanel';
 import SearchPerformancePanel from '../_components/dashboard/SearchPerformancePanel';
 import RebuildSeoModal from './RebuildSeoModal';
+import SubmitIndexNowButton from '@/components/SubmitIndexNowButton';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -45,7 +46,6 @@ export default function SeoHubPage() {
   const [running, setRunning] = useState(false);
   const [fixing, setFixing] = useState(false);
   const [rebuilding, setRebuilding] = useState(false);
-  const [resubmitting, setResubmitting] = useState(false);
 
   const loadHermes = useCallback(async () => {
     try {
@@ -116,20 +116,6 @@ export default function SeoHubPage() {
     }
   }
 
-  async function resubmitIndexNow() {
-    setResubmitting(true);
-    try {
-      const res = await fetch(`${API}/api/admin/seo-health/resubmit-indexnow`, { method: 'POST', credentials: 'include' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Resubmit failed');
-      toast(`Submitted ${data.submitted} URLs to IndexNow (Bing/Yandex).`, 'success');
-    } catch (e) {
-      toast(e instanceof Error ? e.message : 'Could not resubmit to IndexNow.', 'error');
-    } finally {
-      setResubmitting(false);
-    }
-  }
-
   const flagCount = hermes.filter(a => a.status === 'needs_approval').length;
 
   return (
@@ -141,19 +127,7 @@ export default function SeoHubPage() {
           your live search performance, the health of the signals Google reads, Hermes&rsquo; recommendations,
           and the one-click fixes.
         </p>
-        <button
-          type="button"
-          onClick={resubmitIndexNow}
-          disabled={resubmitting}
-          title="Re-submit every live page to Bing/Yandex via IndexNow — handy after a bulk import or a re-crawl nudge."
-          style={{
-            marginTop: 10, padding: '8px 16px', fontSize: 12, letterSpacing: '0.3px',
-            border: '1px solid var(--border, #e8e2d6)', background: 'white', color: 'var(--dark, #2a2218)',
-            cursor: resubmitting ? 'default' : 'pointer', opacity: resubmitting ? 0.6 : 1, fontFamily: 'inherit',
-          }}
-        >
-          {resubmitting ? 'Submitting…' : '↻ Resubmit all to IndexNow (Bing)'}
-        </button>
+        <SubmitIndexNowButton />
       </div>
 
       <div className={styles.tabs} role="tablist">
