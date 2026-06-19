@@ -178,7 +178,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     '@type': 'Product',
     name: product.name,
     description: product.description || '',
-    image: galleryImages[0]?.url || undefined,
+    // Google recommends multiple images for Product rich results — emit the
+    // whole gallery, not just the first shot.
+    image: galleryImages.length ? galleryImages.map(g => g.url).filter(Boolean) : undefined,
     brand: { '@type': 'Brand', name: 'SILKILINEN' },
     // Apparel attributes — also published authoritatively in /feed/google.xml,
     // but emitting the valid schema.org props here helps free listings and
