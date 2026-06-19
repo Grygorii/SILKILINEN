@@ -439,6 +439,21 @@ async function generateBriefCore() {
     clerksVerdict().catch(() => null),
   ]);
 
+  // Resilience guard. measure() is fail-soft to all-zeros (SAFE_METRICS) — but a
+  // false "0 active products" would write a "pre-launch / no products" panic AND
+  // poison the clerks (every real claim then looks like it contradicts an empty
+  // store). So before trusting an empty catalogue, re-check it authoritatively.
+  // If products actually exist, the data gather is unreliable THIS run — skip the
+  // brief and let the next cron tick (hours, not a week) retry on healthy data,
+  // rather than alarm the founder with a false-empty brief.
+  if ((metrics.activeProducts || 0) === 0) {
+    const realCount = await Product.countDocuments({ status: { $in: ['active', 'sold_out'] } }).catch(() => null);
+    if (realCount && realCount > 0) {
+      console.warn(`[chief] measure() reported 0 products but ${realCount} exist — data unreliable this run, skipping brief`);
+      return { skipped: `data gather unreliable (measured 0 products, ${realCount} exist) — will retry next cycle`, retry: true };
+    }
+  }
+
   // The chain: read Da Vinci's active 90-day direction so THIS WEEK serves the
   // quarter's vision instead of re-deriving direction. Lazy require avoids the
   // chiefOfStaff↔davinci cycle. Only used if a composition is recent (≤100d).
@@ -616,8 +631,12 @@ async function runChiefIfDue({ force = false } = {}) {
   const last = doc?.value ? new Date(doc.value).getTime() : 0;
   if (!force && Date.now() - last < 7 * DAY) return { ran: false };
   const result = await generateBrief();
-  await SystemState.findOneAndUpdate({ key }, { value: new Date().toISOString() }, { upsert: true });
-  return { ran: true, ...result };
+  // A retryable skip (data unreliable this run) must NOT consume the weekly slot
+  // — leave lastRun untouched so the next cron tick retries on healthy data.
+  if (!result?.retry) {
+    await SystemState.findOneAndUpdate({ key }, { value: new Date().toISOString() }, { upsert: true });
+  }
+  return { ran: !result?.retry, ...result };
 }
 
 module.exports = {
