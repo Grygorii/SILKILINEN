@@ -79,6 +79,17 @@ export default function MarketingDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [regenerating, setRegenerating] = useState(false);
+  const [subs, setSubs] = useState<{ total: number; unsubscribed: number; bySource: { source: string; count: number }[] } | null>(null);
+
+  useEffect(() => {
+    fetch(`${API}/api/admin/marketing/subscribers`, { credentials: 'include' })
+      .then(r => (r.ok ? r.json() : null)).then(d => d && setSubs(d)).catch(() => {});
+  }, []);
+
+  async function exportSubs() {
+    const { downloadBlob } = await import('@/lib/api');
+    await downloadBlob('/api/admin/marketing/subscribers/export.csv', 'subscribers.csv');
+  }
 
   const fetchDash = useCallback(async () => {
     setLoading(true);
@@ -135,6 +146,27 @@ export default function MarketingDashboardPage() {
             </Link>
           </div>
         </div>
+
+        {/* Email subscribers — captured leads, now usable (count + export) */}
+        {subs && (
+          <div style={{ border: '1px solid var(--border, #e8e2d6)', background: 'var(--warm-white,#faf8f4)', padding: '16px 20px', margin: '0 0 20px', borderRadius: 4 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, flexWrap: 'wrap' }}>
+              <div>
+                <p style={{ margin: 0, fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted,#8a8680)' }}>Email subscribers</p>
+                <p style={{ margin: '4px 0 0', fontSize: 26, fontFamily: 'Georgia, serif', color: 'var(--dark,#2a2218)' }}>{subs.total.toLocaleString()}</p>
+              </div>
+              <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' }}>
+                {subs.bySource.slice(0, 4).map(s => (
+                  <span key={s.source} style={{ fontSize: 12.5, color: 'var(--muted,#8a8680)' }}>{s.source}: <strong style={{ color: 'var(--dark,#2a2218)' }}>{s.count}</strong></span>
+                ))}
+                <button onClick={exportSubs} disabled={!subs.total} style={{ padding: '8px 14px', background: 'var(--dark,#2a2218)', color: '#faf8f4', border: 'none', cursor: subs.total ? 'pointer' : 'default', fontSize: 12, letterSpacing: '0.5px', borderRadius: 3, opacity: subs.total ? 1 : 0.5 }}>Export CSV</button>
+              </div>
+            </div>
+            <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--muted,#8a8680)' }}>
+              Captured from the Style Finder, popup &amp; footer — export to your email tool (the Newsletter Drafter writes the copy).{subs.unsubscribed > 0 ? ` ${subs.unsubscribed} unsubscribed, excluded.` : ''}
+            </p>
+          </div>
+        )}
 
         {/* Pulse band */}
         <div className={styles.pulseBand}>

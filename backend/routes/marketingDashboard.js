@@ -6,6 +6,7 @@ const Campaign = require('../models/Campaign');
 const Order = require('../models/Order');
 const Visit = require('../models/Visit');
 const MarketingAnalysis = require('../models/MarketingAnalysis');
+const Newsletter = require('../models/Newsletter');
 const { generateAnalysis } = require('../services/marketingAnalysis');
 
 const PAID_STATUSES = ['paid', 'processing', 'shipped', 'delivered'];
@@ -246,6 +247,55 @@ router.get('/founder', requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/marketing/subscribers — make the captured email list usable:
+// the count, a source breakdown (style-finder / popup / …), and the recent ones.
+// Without this the Style Finder & popup leads sit in the DB unseen.
+router.get('/subscribers', requireAuth, async (req, res) => {
+  try {
+    const [total, unsubscribed, bySource, recent] = await Promise.all([
+      Newsletter.countDocuments({ isUnsubscribed: { $ne: true } }),
+      Newsletter.countDocuments({ isUnsubscribed: true }),
+      Newsletter.aggregate([
+        { $match: { isUnsubscribed: { $ne: true } } },
+        { $group: { _id: '$source', n: { $sum: 1 } } },
+        { $sort: { n: -1 } },
+      ]),
+      Newsletter.find({ isUnsubscribed: { $ne: true } })
+        .sort({ subscribedAt: -1 }).limit(20)
+        .select('email source subscribedAt discountCodeUsed').lean(),
+    ]);
+    res.json({
+      total,
+      unsubscribed,
+      bySource: bySource.map(s => ({ source: s._id || 'unknown', count: s.n })),
+      recent,
+    });
+  } catch (err) {
+    console.error('[marketing] subscribers error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/marketing/subscribers/export.csv — download the active list to
+// import into the founder's email tool (the Newsletter Drafter writes the copy).
+router.get('/subscribers/export.csv', requireAuth, async (req, res) => {
+  try {
+    const subs = await Newsletter.find({ isUnsubscribed: { $ne: true } })
+      .sort({ subscribedAt: -1 }).select('email source subscribedAt').lean();
+    const rows = ['email,source,subscribedAt'];
+    for (const s of subs) {
+      rows.push([s.email, s.source, s.subscribedAt ? new Date(s.subscribedAt).toISOString() : '']
+        .map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(','));
+    }
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="subscribers.csv"');
+    res.send(rows.join('\n'));
+  } catch (err) {
+    console.error('[marketing] subscribers export error:', err.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
