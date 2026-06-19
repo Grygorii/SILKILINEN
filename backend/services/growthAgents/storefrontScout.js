@@ -9,6 +9,9 @@
 const { getCompetitors } = require('../competitorIntel');
 const { assertPublicUrl } = require('../safeUrl');
 const SystemState = require('../../models/SystemState');
+const Product = require('../../models/Product');
+const CompetitorProfile = require('../../models/CompetitorProfile');
+const { playbookPromptBlock } = require('../playbook');
 
 const client = require('../aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
@@ -54,7 +57,15 @@ async function pageDigest(url) {
   }
 }
 
-const SYSTEM = `You are a senior DTC e-commerce conversion consultant. You study competitor storefronts and tell a small luxury silk/linen brand (SILKILINEN, www.silkilinen.com) exactly what to copy or improve on its OWN website. You are given compact digests (title, meta description, headings, button/CTA wording) of a competitor's homepage and SILKILINEN's homepage.
+// A competitor product URL the Competitor Scout already scraped (free, no extra
+// crawl needed) — so the conversion advice can cover the product page, not just
+// the homepage where it's mostly won.
+async function competitorProductUrl(domain) {
+  const prof = await CompetitorProfile.findOne({ domain }).select('sampleProducts').lean().catch(() => null);
+  return prof?.sampleProducts?.find(s => s.url)?.url || null;
+}
+
+const SYSTEM = `You are a senior DTC e-commerce conversion consultant. You study competitor storefronts and tell a small luxury silk/linen brand (SILKILINEN, www.silkilinen.com) exactly what to copy or improve on its OWN website. You are given compact digests (title, meta description, headings, button/CTA wording) of a competitor's homepage and SILKILINEN's homepage — and, when available, a PRODUCT PAGE from each (judge product-page persuasion only from those).
 
 Focus on website CRAFT, not strategy: hero clarity, value proposition, trust signals (reviews, guarantees, shipping/returns framing), merchandising and category presentation, product-page persuasion, CTA wording, urgency without sleaze, gifting flows, email capture, navigation. Be concrete — quote what the competitor does and say the exact change SILKILINEN should make. Keep SILKILINEN's quiet-luxury voice (never salesy/urgent hype, never "handmade"/origin claims).
 
@@ -84,9 +95,17 @@ async function run() {
   const competitor = competitors[idx];
   await SystemState.findOneAndUpdate({ key: ROTATE_KEY }, { value: (idx + 1) % competitors.length }, { upsert: true });
 
-  const [theirs, ours] = await Promise.all([
+  // Also read ONE product page from each side — that's where luxury conversion
+  // is won (PDP trust, persuasion, gifting), which a homepage can't show.
+  const [theirPdpUrl, ourProduct] = await Promise.all([
+    competitorProductUrl(competitor.domain),
+    Product.findOne({ status: 'active' }).sort({ createdAt: -1 }).select('_id').lean().catch(() => null),
+  ]);
+  const [theirs, ours, theirsPdp, oursPdp] = await Promise.all([
     pageDigest(`https://${competitor.domain}`),
     pageDigest(OWN_SITE),
+    theirPdpUrl ? pageDigest(theirPdpUrl) : Promise.resolve(null),
+    ourProduct ? pageDigest(`${OWN_SITE}/product/${ourProduct._id}`) : Promise.resolve(null),
   ]);
 
   if (!theirs) {
@@ -105,13 +124,17 @@ async function run() {
     `SILKILINEN HOMEPAGE:`,
     ours ? JSON.stringify(ours) : '(could not read our own homepage this run — infer from the brand description)',
     ``,
+    theirsPdp ? `COMPETITOR PRODUCT PAGE (${competitor.name}):\n${JSON.stringify(theirsPdp)}` : '',
+    oursPdp ? `SILKILINEN PRODUCT PAGE:\n${JSON.stringify(oursPdp)}` : '',
+    ``,
     `Return the JSON now.`,
-  ];
+  ].filter(Boolean);
 
+  const learned = await playbookPromptBlock().catch(() => '');
   const res = await client.chat.completions.create({
     model: MODEL,
     messages: [
-      { role: 'system', content: SYSTEM },
+      { role: 'system', content: SYSTEM + learned },
       { role: 'user', content: userParts.join('\n') },
     ],
     temperature: 0.4,
