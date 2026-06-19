@@ -21,7 +21,7 @@ const Product = require('../../models/Product');
 const Category = require('../../models/Category');
 const Collection = require('../../models/Collection');
 const GrowthAction = require('../../models/GrowthAction');
-const { isConnected, getSearchPerformance, getQueryOpportunities, getQueryPagePairs, inspectUrl } = require('../searchConsole');
+const { isConnected, getSearchPerformance, getQueryOpportunities, getQueryPagePairs, inspectUrl, getCountryBreakdown } = require('../searchConsole');
 const { serpConfigured, serpAnalysis, detectCannibalisation } = require('../seoIntel');
 const { addLearning, playbookPromptBlock } = require('../playbook');
 const { EDITABLE_PATHS } = require('../pageSeo');
@@ -30,7 +30,7 @@ const client = require('../aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
 async function gatherContext() {
-  const [perf, opps, products, categories, collections, demand, competitor] = await Promise.all([
+  const [perf, opps, products, categories, collections, demand, competitor, countries] = await Promise.all([
     getSearchPerformance(28).catch(() => null),
     getQueryOpportunities(28).catch(() => []),
     Product.find({ status: 'active' }).select('name category metaTitle metaDescription').lean().catch(() => []),
@@ -39,13 +39,14 @@ async function gatherContext() {
     // OUTWARD intel from the other agents — read through the chain, not invented.
     GrowthAction.find({ agent: 'demand', type: 'demand_signal' }).sort({ createdAt: -1 }).limit(12).select('title meta').lean().catch(() => []),
     GrowthAction.find({ agent: 'competitor' }).sort({ createdAt: -1 }).limit(6).select('title').lean().catch(() => []),
+    getCountryBreakdown(28).catch(() => []),
   ]);
   const missingMeta = products
     .filter(p => !p.metaTitle || !p.metaDescription)
     .map(p => p.name);
   const demandPhrases = demand.map(a => a.meta?.phrase || a.title?.replace(/^Demand wave:\s*/, '').replace(/"/g, '')).filter(Boolean);
   const competitorNotes = competitor.map(a => a.title).filter(Boolean);
-  return { perf, opps: (opps || []).slice(0, 15), products, categories, collections, missingMeta, demandPhrases, competitorNotes };
+  return { perf, opps: (opps || []).slice(0, 15), products, categories, collections, missingMeta, demandPhrases, competitorNotes, countries };
 }
 
 // Outcome tracking — did the queries Hermes flagged ~4 weeks ago actually move?
@@ -92,6 +93,7 @@ How you think, in priority order:
 7. META GAPS: a query mapping to a product with no meta → generate it.
 8. SCHEMA: if a high-intent product/article page would benefit from structured data (Product/Article schema) for rich results, note it as a "content" play.
 9. CROSS-REFERENCE THE OTHER AGENTS: fuse inward (what you rank for) with outward (Demand Scout's rising phrases, Competitor notes). A query that is BOTH striking-distance AND rising is your single highest-priority move.
+10. GEOGRAPHY: you are given a per-country breakdown. The brand ships worldwide. A market with impressions but ~0 clicks SEES you yet doesn't click (locale/relevance/intent gap); a high-impression market where you rank poorly is one to invest in; a market with zero impressions hasn't discovered you. If geography reveals a genuine lever (e.g. real UK impressions but invisible in the US), name it in your "read" — but never manufacture geographic strategy from a handful of impressions.
 
 Hard rules:
 - QUIET LUXURY: never price/discount/"cheaper than", never clickbait. Aspire upward through specificity and fabric/craft detail.
@@ -126,7 +128,7 @@ async function run() {
     }];
   }
 
-  const { perf, opps, products, categories, collections, missingMeta, demandPhrases, competitorNotes } = await gatherContext();
+  const { perf, opps, products, categories, collections, missingMeta, demandPhrases, competitorNotes, countries } = await gatherContext();
   const impressions = perf?.totals?.impressions || 0;
   if (!perf || impressions === 0) {
     return [{
@@ -167,6 +169,9 @@ async function run() {
     ``,
     `TOP PAGES (where impressions/clicks land — read these for "seen but not clicked"):`,
     (perf.topPages || []).length ? perf.topPages.map(p => `- ${p.key.replace(/^https?:\/\/[^/]+/, '') || '/'} — ${p.impressions} imp, ${p.clicks} clk`).join('\n') : '- none yet',
+    ``,
+    `GEOGRAPHIC PICTURE (which countries Google shows the shop in — ISO codes; SILKILINEN ships worldwide, so reason about market footholds):`,
+    countries.length ? countries.map(c => `- ${String(c.country).toUpperCase()} — ${c.impressions} imp, ${c.clicks} clk, avg pos ${c.position}`).join('\n') : '- no geographic data yet',
     ``,
     `PRODUCTS (entityType "product" — use the exact name as entityRef): ${products.map(p => p.name).slice(0, 30).join(', ') || 'none'}.`,
     `CATEGORIES (entityType "category" — use the slug as entityRef): ${categories.map(c => `${c.slug} (${c.label})`).join(', ') || 'none'}.`,

@@ -263,6 +263,25 @@ async function inspectUrl(url) {
   }
 }
 
+// Geographic breakdown — which countries Google actually shows the shop in.
+// Strategic for a worldwide-shipping brand: impressions with no clicks in a
+// market = a foothold to win; zero impressions = a market that hasn't found you.
+// Returns ISO-3 country codes (gbr, usa, irl…) with clicks/impressions/position.
+async function getCountryBreakdown(days = 28) {
+  const res = await apiPost(`sites/${siteSegment()}/searchAnalytics/query`, {
+    startDate: dateStr(days + 2),
+    endDate: dateStr(2),
+    dimensions: ['country'],
+    rowLimit: 12,
+  }).catch(() => null);
+  return (res?.rows || []).map(r => ({
+    country: r.keys[0],
+    clicks: Math.round(r.clicks || 0),
+    impressions: Math.round(r.impressions || 0),
+    position: Math.round((r.position || 0) * 10) / 10,
+  }));
+}
+
 module.exports = {
   oauthConfigured,
   isConnected,
@@ -271,6 +290,7 @@ module.exports = {
   disconnect,
   getSitemapsSummary,
   getSearchPerformance,
+  getCountryBreakdown,
   getQueryOpportunities,
   getQueryPagePairs,
   inspectUrl,

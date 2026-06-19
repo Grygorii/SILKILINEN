@@ -66,11 +66,12 @@ router.get('/performance', requireAuth, async (req, res) => {
     if (!(await gsc.isConnected())) {
       return res.json({ configured: gsc.oauthConfigured(), connected: false });
     }
-    const [sitemaps, performance] = await Promise.all([
+    const [sitemaps, performance, countries] = await Promise.all([
       gsc.getSitemapsSummary().catch(() => null),
       gsc.getSearchPerformance().catch(() => null),
+      gsc.getCountryBreakdown().catch(() => []),
     ]);
-    res.json({ configured: true, connected: true, sitemaps, performance });
+    res.json({ configured: true, connected: true, sitemaps, performance, countries });
   } catch (err) {
     console.error('[gsc] performance', err);
     res.status(500).json({ error: 'Internal server error' });

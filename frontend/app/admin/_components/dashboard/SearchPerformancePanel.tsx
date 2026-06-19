@@ -17,7 +17,16 @@ type PerfData = {
     topQueries: Row[];
     topPages: Row[];
   } | null;
+  countries?: { country: string; clicks: number; impressions: number; position: number }[];
 };
+
+const COUNTRY: Record<string, string> = {
+  gbr: 'United Kingdom', usa: 'United States', irl: 'Ireland', aus: 'Australia', can: 'Canada',
+  deu: 'Germany', fra: 'France', nld: 'Netherlands', esp: 'Spain', ita: 'Italy', ind: 'India',
+  are: 'UAE', sgp: 'Singapore', che: 'Switzerland', swe: 'Sweden', nor: 'Norway', dnk: 'Denmark',
+  bel: 'Belgium', nzl: 'New Zealand', jpn: 'Japan', hkg: 'Hong Kong', zaf: 'South Africa',
+};
+const countryName = (c: string) => COUNTRY[String(c || '').toLowerCase()] || String(c || '').toUpperCase();
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
@@ -125,6 +134,20 @@ export default function SearchPerformancePanel() {
                   ))}
                 </div>
               </div>
+
+              {data.countries && data.countries.length > 0 && (
+                <div style={{ marginTop: 16 }}>
+                  <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>By country — where Google shows the shop</p>
+                  <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                    {data.countries.slice(0, 10).map((c, i) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--border)', flex: '1 1 220px', minWidth: 200 }}>
+                        <span style={{ color: 'var(--dark, #1a1916)' }}>{countryName(c.country)}</span>
+                        <span style={{ color: 'var(--muted)', whiteSpace: 'nowrap', marginLeft: 12 }}>{c.clicks} clk · {c.impressions} imp · pos {c.position}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <p className={styles.healthCheckDetail}>Connected, but no performance data returned yet (new sites take days to accumulate).</p>
