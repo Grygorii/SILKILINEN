@@ -340,7 +340,7 @@ router.put('/:id', async function(req, res) {
     // Instant-index live products (fire-and-forget, fail-soft) so a new or
     // edited product reaches Bing/Yandex in minutes.
     if (product.status === 'active') {
-      require('../services/indexNow').pingIndexNow(`/product/${product._id}`);
+      require('../services/indexNow').pingIndexNow(`/product/${product.slug || product._id}`);
     }
     res.json(product);
   } catch (err) {

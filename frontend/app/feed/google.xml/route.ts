@@ -18,6 +18,7 @@ type Variant = { sku?: string; colour?: string; size?: string; stockLevel?: numb
 type Image = { url?: string; isPrimary?: boolean; associatedColour?: string };
 type Product = {
   _id: string;
+  slug?: string;
   name: string;
   description?: string;
   price?: number;
@@ -158,7 +159,7 @@ function buildItem(
 
   const colour = opts.colour || p.colorName || p.colours?.[0] || deriveColourFromName(p.name);
   const size = opts.size || p.sizes?.[0];
-  const link = `${BASE}/product/${p._id}`;
+  const link = `${BASE}/product/${p.slug || p._id}`;
 
   // Up to 10 extra images (Google's cap), skipping the main one and anything
   // in a format Merchant can't ingest.

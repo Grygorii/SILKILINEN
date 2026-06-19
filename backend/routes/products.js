@@ -380,7 +380,16 @@ router.get('/:id/preview', async function(req, res) {
 
 router.get('/:id', async function(req, res) {
   try {
-    const product = await Product.findOne({ ...PUBLIC_FILTER, _id: req.params.id }).select(PUBLIC_PROJECTION);
+    // Resolve by slug (the canonical URL), by ObjectId (legacy/internal links),
+    // or by an old slug (so a changed URL still finds the product → 301 upstream).
+    const param = req.params.id;
+    const byId = /^[0-9a-fA-F]{24}$/.test(param);
+    let product = byId
+      ? await Product.findOne({ ...PUBLIC_FILTER, _id: param }).select(PUBLIC_PROJECTION)
+      : await Product.findOne({ ...PUBLIC_FILTER, slug: param }).select(PUBLIC_PROJECTION);
+    if (!product && !byId) {
+      product = await Product.findOne({ ...PUBLIC_FILTER, previousSlugs: param }).select(PUBLIC_PROJECTION);
+    }
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (err) {

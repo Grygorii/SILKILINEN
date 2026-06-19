@@ -12,6 +12,7 @@ type ProductImageData = { url: string; isPrimary?: boolean; alt?: string; order?
 
 export type ProductCardData = {
   _id: string;
+  slug?: string;
   name: string;
   price: number;
   materialComposition?: string;
@@ -122,7 +123,7 @@ export default function ProductCard({ product, showHeart = true }: Props) {
         {/* Stretched link: this anchor's ::after covers the whole card, so a
             click anywhere opens the PDP while keeping a real, crawlable link
             whose accessible name is the product name. */}
-        <Link href={`/product/${product._id}`} className={styles.nameLink}>
+        <Link href={`/product/${product.slug || product._id}`} className={styles.nameLink}>
           <h3 className={styles.cardName} title={product.name}>{product.name}</h3>
         </Link>
         <p className={styles.sizeHint}>{sizeHint}</p>

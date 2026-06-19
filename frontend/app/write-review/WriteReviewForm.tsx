@@ -163,7 +163,7 @@ export default function WriteReviewForm({ token }: { token: string }) {
         <p style={{ fontSize: 15, lineHeight: 1.7, color: '#8A8278', maxWidth: 440, margin: '0 auto 32px' }}>
           A member of our team will read it shortly. Approved reviews appear on the product page within a few days.
         </p>
-        <a href={product?.slug ? `/product/${product._id}` : '/shop'} style={{ display: 'inline-block', padding: '14px 32px', background: '#2A2218', color: '#FAF8F4', textDecoration: 'none', fontSize: 12, letterSpacing: '2.5px', textTransform: 'uppercase', borderRadius: 2 }}>
+        <a href={product?.slug ? `/product/${product.slug}` : (product?._id ? `/product/${product._id}` : '/shop')} style={{ display: 'inline-block', padding: '14px 32px', background: '#2A2218', color: '#FAF8F4', textDecoration: 'none', fontSize: 12, letterSpacing: '2.5px', textTransform: 'uppercase', borderRadius: 2 }}>
           View product
         </a>
       </div>

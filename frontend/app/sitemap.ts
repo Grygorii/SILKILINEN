@@ -8,7 +8,7 @@ const BASE = 'https://www.silkilinen.com';
 // product URLs reappear on the next ISR revalidation.
 const PRODUCT_FETCH_TIMEOUT_MS = 8000;
 
-type SlimProduct = { _id: string; status?: string; updatedAt?: string };
+type SlimProduct = { _id: string; slug?: string; status?: string; updatedAt?: string };
 
 async function getProducts(): Promise<SlimProduct[]> {
   if (!process.env.NEXT_PUBLIC_API_URL) return [];
@@ -78,7 +78,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   const productPages: MetadataRoute.Sitemap = products.map(p => ({
-    url: `${BASE}/product/${p._id}`,
+    url: `${BASE}/product/${p.slug || p._id}`,
     // Real per-product lastModified instead of "now" on every entry, so the
     // signal means something to crawlers.
     lastModified: p.updatedAt ? new Date(p.updatedAt) : new Date(),

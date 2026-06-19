@@ -28,7 +28,7 @@ function primaryImage(p) {
 router.get('/products.xml', async function(req, res) {
   try {
     const products = await Product.find({ status: 'active' })
-      .select('name description metaDescription price compareAtPrice images image totalStock inStock category gender ageGroup materialComposition')
+      .select('name slug description metaDescription price compareAtPrice images image totalStock inStock category gender ageGroup materialComposition')
       .lean();
 
     const items = products.map(p => {
@@ -53,7 +53,7 @@ router.get('/products.xml', async function(req, res) {
     <g:id>${esc(p._id)}</g:id>
     <title>${esc(clean(p.name, 150))}</title>
     <description>${esc(desc)}</description>
-    <link>${esc(`${SITE}/product/${p._id}`)}</link>
+    <link>${esc(`${SITE}/product/${p.slug || p._id}`)}</link>
     <g:image_link>${esc(img)}</g:image_link>
     <g:availability>${inStock ? 'in stock' : 'out of stock'}</g:availability>
     <g:condition>new</g:condition>

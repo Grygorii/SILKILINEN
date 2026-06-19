@@ -240,6 +240,19 @@ mongoose.connect(process.env.MONGODB_URI)
       { $setOnInsert: { type: 'video', section: 'homepage', label: 'Hero Video (optional)', order: 1.5, value: '', active: true } },
       { upsert: true }
     ).catch(err => console.error('[ensure hero_video]', err.message));
+    // Backfill slugs for any product that predates slug generation, so every
+    // product has a clean, unique URL.
+    (async () => {
+      const Product = require('./models/Product');
+      const { slugify } = require('./utils/slug');
+      const missing = await Product.find({ $or: [{ slug: { $exists: false } }, { slug: null }, { slug: '' }] }).select('name').lean();
+      for (const p of missing) {
+        let base = slugify(p.name) || `product-${p._id}`, slug = base, n = 2;
+        while (await Product.exists({ slug, _id: { $ne: p._id } })) slug = `${base}-${n++}`;
+        await Product.updateOne({ _id: p._id }, { slug });
+      }
+      if (missing.length) console.log(`[slug-backfill] set slugs for ${missing.length} product(s)`);
+    })().catch(err => console.error('[slug-backfill]', err.message));
   })
   .catch(function(err) {
     // Fail fast: don't accept traffic with no database (would just 500).

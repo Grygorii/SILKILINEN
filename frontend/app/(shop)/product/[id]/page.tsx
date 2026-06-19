@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
 import ProductOptions from '@/components/ProductOptions';
@@ -68,7 +69,7 @@ export async function generateMetadata(
   const title = product.metaTitle ? { absolute: product.metaTitle } : product.name;
   const description = product.metaDescription
     || (product.description ? product.description.slice(0, 155) : `Shop ${product.name} at Silkilinen. Pure silk and linen intimates, shipped worldwide from Donegal.`);
-  const url = `https://www.silkilinen.com/product/${id}`;
+  const url = `https://www.silkilinen.com/product/${product.slug || id}`;
   const primaryImage = product.images?.find((i: { isPrimary: boolean }) => i.isPrimary);
   const image = primaryImage?.url || product.images?.[0]?.url || product.image || 'https://www.silkilinen.com/og-default.jpg';
 
@@ -128,10 +129,15 @@ function StockBadge({ product }: { product: { inStock?: boolean; totalStock?: nu
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const product = await getProduct(id);
+  // Canonicalise to the slug URL: if reached via the ObjectId or an old slug,
+  // 308-redirect to the current slug so there's exactly one indexable URL.
+  if (product && product.slug && id !== product.slug) {
+    permanentRedirect(`/product/${product.slug}`);
+  }
   // Reviews specifically for this product; null when no approved reviews
   // exist yet (skip the aggregateRating/review JSON-LD fields when null
   // — Google rejects schemas with zero-count or missing values).
-  const productReviews = product ? await getProductReviews(id) : null;
+  const productReviews = product ? await getProductReviews(product._id) : null;
 
   if (!product) {
     return (
@@ -187,7 +193,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       availability: outOfStock
         ? 'https://schema.org/OutOfStock'
         : 'https://schema.org/InStock',
-      url: `https://www.silkilinen.com/product/${id}`,
+      url: `https://www.silkilinen.com/product/${product.slug || id}`,
       // GSC merchant-listing audit flagged these two as missing. Both are
       // policy-level (not per-product) so we always emit them.
       shippingDetails: shippingDetailsFor(Number(product.price) || 0),
@@ -230,7 +236,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       ...(product.category
         ? [{ '@type': 'ListItem', position: 3, name: String(product.category).replace(/-/g, ' '), item: `https://www.silkilinen.com/shop?category=${product.category}` }]
         : []),
-      { '@type': 'ListItem', position: product.category ? 4 : 3, name: product.name, item: `https://www.silkilinen.com/product/${id}` },
+      { '@type': 'ListItem', position: product.category ? 4 : 3, name: product.name, item: `https://www.silkilinen.com/product/${product.slug || id}` },
     ],
   };
 

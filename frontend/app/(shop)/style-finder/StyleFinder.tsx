@@ -23,6 +23,7 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 type ProductImg = { url: string; isPrimary?: boolean; alt?: string };
 type Product = {
   _id: string;
+  slug?: string;
   name: string;
   price: number;
   category?: string;
@@ -466,7 +467,7 @@ export default function StyleFinder({ initialProducts = [] }: { initialProducts?
                 return (
                   <Link
                     key={p._id}
-                    href={`/product/${p._id}`}
+                    href={`/product/${p.slug || p._id}`}
                     className={`${styles.card} ${isPrimaryPick ? styles.cardPrimary : ''} ${styles.reveal}`}
                     style={revealDelay(5 + i)}
                   >

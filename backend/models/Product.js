@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Schema.Types;
 const { SLOT_KEYS } = require('../config/imageSlots');
 const { SLUGS: CATEGORY_SLUGS } = require('../config/categories');
+const { slugify } = require('../utils/slug');
 
 const variantSchema = new mongoose.Schema({
   sku: { type: String },
@@ -115,6 +116,8 @@ const productSchema = new mongoose.Schema({
   metaTitle: { type: String, maxlength: 70 },
   metaDescription: { type: String, maxlength: 165 },
   slug: { type: String, sparse: true },
+  // Old slugs kept so changed URLs 301-redirect instead of 404ing.
+  previousSlugs: { type: [String], default: [] },
   keywords: [String],
   altTextTemplate: { type: String, default: '' },
 
@@ -180,10 +183,25 @@ productSchema.pre('save', async function() {
     this.status = 'active';
   }
 
-  if (!this.slug && this.name) {
-    this.slug = this.name.toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
+  // Slug: derive from the name when absent, normalise, keep unique, and remember
+  // any old slug so a changed URL 301-redirects instead of 404ing.
+  if (!this.slug && this.name) this.slug = this.name;
+  if (this.slug) {
+    this.slug = slugify(this.slug);
+    if (!this.isNew && this.isModified('slug')) {
+      const prev = await this.constructor.findById(this._id).select('slug').lean();
+      if (prev?.slug && prev.slug !== this.slug) {
+        this.previousSlugs = [...new Set([...(this.previousSlugs || []), prev.slug])];
+      }
+    }
+    // Ensure global uniqueness (append -2, -3… on collision).
+    const base = this.slug;
+    let n = 2;
+    while (await this.constructor.exists({ slug: this.slug, _id: { $ne: this._id } })) {
+      this.slug = `${base}-${n++}`;
+    }
+    // Never keep the live slug in the redirect history.
+    if (this.previousSlugs?.length) this.previousSlugs = this.previousSlugs.filter(s => s !== this.slug);
   }
 
   // Sync legacy image field from images array
