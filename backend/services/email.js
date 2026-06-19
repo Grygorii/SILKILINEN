@@ -500,29 +500,32 @@ const INTROS = {
   3: name => `Hi ${name}, this is your final reminder about the piece(s) you were considering. We'd love to see them find their home with you.`,
 };
 
-async function sendCartRecoveryEmail(order, seq) {
-  if (!process.env.RESEND_API_KEY || !order.customerEmail) return;
+// Accepts a Cart (abandoned-cart recovery) or any object with { _id, email,
+// items }. `customerName` is optional — carts don't carry one.
+async function sendCartRecoveryEmail(cart, seq) {
+  const email = cart.email || cart.customerEmail;
+  if (!process.env.RESEND_API_KEY || !email) return;
 
   const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.com';
   const BACKEND  = process.env.BACKEND_URL  || 'https://silkilinen-production.up.railway.app';
 
-  const firstName = order.customerName ? esc(order.customerName.split(' ')[0]) : 'there';
+  const firstName = cart.customerName ? esc(cart.customerName.split(' ')[0]) : 'there';
   const subject   = SUBJECTS[seq] || SUBJECTS[1];
   const headline  = HEADLINES[seq] || HEADLINES[1];
   const intro     = (INTROS[seq] || INTROS[1])(esc(firstName));
 
   // Resume link — go to the product page of the first item if we have an ID, else the shop
-  const firstProductId = order.items?.[0]?.productId;
+  const firstProductId = cart.items?.[0]?.productId;
   const resumeLink = firstProductId
     ? `${FRONTEND}/product/${firstProductId}`
     : `${FRONTEND}/shop`;
 
-  // One-click unsubscribe — encode order ID in base64url and HMAC-sign it so the
-  // link can't be forged or guessed for another customer's order.
-  const oidToken = Buffer.from(String(order._id)).toString('base64url');
-  const unsubLink = `${BACKEND}/api/cart-recovery/unsubscribe?oid=${oidToken}&sig=${signUnsub(order._id)}`;
+  // One-click unsubscribe — encode the cart ID in base64url and HMAC-sign it so
+  // the link can't be forged or guessed for another shopper's cart.
+  const oidToken = Buffer.from(String(cart._id)).toString('base64url');
+  const unsubLink = `${BACKEND}/api/cart-recovery/unsubscribe?oid=${oidToken}&sig=${signUnsub(cart._id)}`;
 
-  const itemRows = (order.items || []).map(item => `
+  const itemRows = (cart.items || []).map(item => `
     <tr>
       <td style="padding:12px 0;border-bottom:1px solid #eae8e3;">
         <span style="font-family:Georgia,serif;font-size:15px;color:#1a1916;">${esc(item.name)}</span>
@@ -535,11 +538,11 @@ async function sendCartRecoveryEmail(order, seq) {
     </tr>
   `).join('');
 
-  const subtotal = (order.items || []).reduce((s, i) => s + i.price * (i.quantity || 1), 0);
+  const subtotal = (cart.items || []).reduce((s, i) => s + i.price * (i.quantity || 1), 0);
 
   await getResend().emails.send({
     from: FROM,
-    to: order.customerEmail,
+    to: email,
     subject,
     headers: { 'List-Unsubscribe': `<${unsubLink}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
     html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>

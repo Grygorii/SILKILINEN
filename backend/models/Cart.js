@@ -28,6 +28,13 @@ const cartSchema = new mongoose.Schema({
   discountCode: { type: String, default: null },
   discountAmount: { type: Number, default: 0 },
   shippingCountry: { type: String, default: 'IE' },
+  // Abandoned-cart recovery: the email captured at checkout, which sequence
+  // emails have already been sent (dedup), and a one-click unsubscribe flag. A
+  // cart still present past the window IS an abandonment — the Stripe webhook
+  // deletes the cart on a completed purchase.
+  email: { type: String, default: null },
+  recoveryEmails: [{ seq: Number, sentAt: Date, _id: false }],
+  recoveryUnsubscribed: { type: Boolean, default: false },
   expiresAt: { type: Date, default: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
 }, { timestamps: true });
 

@@ -274,6 +274,12 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
     if (email) intentParams.receipt_email = email;
     const intent = await stripe.paymentIntents.create(intentParams);
 
+    // Remember the email on the cart so abandoned-cart recovery can reach the
+    // shopper if they don't complete. Fire-and-forget; never blocks checkout.
+    if (email && sessionId) {
+      Cart.updateOne({ sessionId }, { $set: { email: String(email).toLowerCase().trim() } }).catch(() => {});
+    }
+
     res.json({
       clientSecret: intent.client_secret,
       paymentIntentId: intent.id,
@@ -350,6 +356,11 @@ checkoutRouter.post('/update-intent', checkoutRateLimit, async (req, res) => {
       updatePayload.metadata.customerEmail = email || '';
     }
     await stripe.paymentIntents.update(paymentIntentId, updatePayload);
+
+    // Keep the cart's recovery email current as the shopper edits checkout.
+    if (email && meta.sessionId) {
+      Cart.updateOne({ sessionId: meta.sessionId }, { $set: { email: String(email).toLowerCase().trim() } }).catch(() => {});
+    }
 
     res.json({
       orderSummary: {
