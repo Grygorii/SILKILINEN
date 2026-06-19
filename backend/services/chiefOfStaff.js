@@ -158,7 +158,7 @@ async function measure() {
   const since14 = new Date(Date.now() - 14 * DAY);
   const since30 = new Date(Date.now() - 30 * DAY);
 
-  const [ordersThis, ordersPrev, revThis, revPrev, visThis, visPrev, priceStats, anomalies] = await Promise.all([
+  const [ordersThis, ordersPrev, revThis, revPrev, visThis, visPrev, priceStats, anomalies, activeProducts] = await Promise.all([
     Order.countDocuments({ status: { $in: PAID }, createdAt: { $gte: since7 } }),
     Order.countDocuments({ status: { $in: PAID }, createdAt: { $gte: since14, $lt: since7 } }),
     Order.aggregate([{ $match: { status: { $in: PAID }, createdAt: { $gte: since7 } } }, { $group: { _id: null, v: { $sum: '$total' } } }]),
@@ -166,13 +166,17 @@ async function measure() {
     // Visitors, bot-aware: exclude data-centre cities so crawlers aren't counted as shoppers.
     Visit.aggregate([{ $match: humanVisitMatch({ createdAt: { $gte: since7 } }) }, { $group: { _id: '$sessionId' } }, { $count: 'n' }]),
     Visit.aggregate([{ $match: humanVisitMatch({ createdAt: { $gte: since14, $lt: since7 } }) }, { $group: { _id: '$sessionId' } }, { $count: 'n' }]),
-    // Catalogue price floor — so the brain can sanity-check revenue against reality.
-    Product.aggregate([{ $match: { status: { $in: ['active', 'sold_out'] } } }, { $group: { _id: null, min: { $min: '$price' }, max: { $max: '$price' }, avg: { $avg: '$price' } } }]),
+    // Catalogue price floor — priced products only, so one unpriced/draft row
+    // can't drag the floor (and the whole "is this a real sale" check) to €0.
+    Product.aggregate([{ $match: { status: { $in: ['active', 'sold_out'] }, price: { $gt: 0 } } }, { $group: { _id: null, min: { $min: '$price' }, max: { $max: '$price' }, avg: { $avg: '$price' } } }]),
     // Orders whose total is below the cheapest product = test / refund / data anomaly, NOT real sales.
     Order.aggregate([
       { $match: { status: { $in: PAID }, createdAt: { $gte: since30 } } },
       { $group: { _id: null, total: { $sum: 1 }, revenue: { $sum: '$total' }, minOrder: { $min: '$total' } } },
     ]),
+    // Active catalogue size — the authoritative "do we have products" signal, so
+    // the brain never mistakes a €0 price-floor glitch for an empty catalogue.
+    Product.countDocuments({ status: { $in: ['active', 'sold_out'] } }),
   ]);
 
   const floor = priceStats[0]?.min || 0;
@@ -214,6 +218,7 @@ async function measure() {
     orders: { last7: ordersThis, prev7: ordersPrev },
     revenue: { last7: Math.round((revThis[0]?.v || 0) * 100) / 100, prev7: Math.round((revPrev[0]?.v || 0) * 100) / 100 },
     humanVisitors: { last7: visThis[0]?.n || 0, prev7: visPrev[0]?.n || 0 },
+    activeProducts,
     priceFloorEUR: Math.round(floor * 100) / 100,
     priceCeilingEUR: Math.round((priceStats[0]?.max || 0) * 100) / 100,
     avgPriceEUR: Math.round((priceStats[0]?.avg || 0) * 100) / 100,
@@ -370,7 +375,7 @@ function fallbackBriefFields(m, ns, competitors) {
 // Safe metrics shape so the brief can always render even if a query fails.
 const SAFE_METRICS = {
   orders: { last7: 0, prev7: 0 }, revenue: { last7: 0, prev7: 0 },
-  humanVisitors: { last7: 0, prev7: 0 }, priceFloorEUR: 0, priceCeilingEUR: 0, avgPriceEUR: 0,
+  humanVisitors: { last7: 0, prev7: 0 }, activeProducts: 0, priceFloorEUR: 0, priceCeilingEUR: 0, avgPriceEUR: 0,
   anomalousOrders30d: 0, sources: [], topProducts: [], search: null,
 };
 
@@ -451,7 +456,9 @@ async function generateBriefCore() {
   const userPayload = [
     nsBlock, '',
     directionLine, '',
-    `CATALOGUE REALITY (sanity-check all money against this): products priced €${metrics.priceFloorEUR}–€${metrics.priceCeilingEUR}, average €${metrics.avgPriceEUR}. The cheapest product is €${metrics.priceFloorEUR}, so any order or AOV below that is NOT a real sale.`,
+    metrics.activeProducts > 0
+      ? `CATALOGUE REALITY (sanity-check all money against this): the store has ${metrics.activeProducts} ACTIVE product(s) priced €${metrics.priceFloorEUR}–€${metrics.priceCeilingEUR}, average €${metrics.avgPriceEUR}. The catalogue is LIVE — do NOT call this "pre-launch", "a catalogue with no products", or claim there is nothing to sell. The cheapest product is €${metrics.priceFloorEUR}, so any order or AOV below that is NOT a real sale.`
+      : `CATALOGUE REALITY: no ACTIVE products were detected. This may be genuinely pre-launch OR a data glitch — say "no active products detected, verify the catalogue" and flag it to check; do NOT assert the catalogue is empty as established fact.`,
     metrics.anomalousOrders30d > 0
       ? `⚠ DATA WARNING: ${metrics.anomalousOrders30d} order(s) in the last 30d are below the €${metrics.priceFloorEUR} price floor — treat these as test/refund/anomalous and EXCLUDE them from any "revenue" or "first sales" claim.`
       : '',
