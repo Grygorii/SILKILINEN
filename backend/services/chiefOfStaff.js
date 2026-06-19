@@ -21,7 +21,7 @@ const GrowthAction = require('../models/GrowthAction');
 const Order = require('../models/Order');
 const Visit = require('../models/Visit');
 const JournalArticle = require('../models/JournalArticle');
-const { mergeLearnings } = require('./playbook');
+const { mergeLearnings, playbookPromptBlock } = require('./playbook');
 
 const client = require('./aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
@@ -453,7 +453,13 @@ async function generateBriefCore() {
     nsBlock = `North Star: ${METRICS[northStar.metric].label} — target ${northStar.target}${northStar.deadline ? ` by ${northStar.deadline}` : ''}. Current (last 30d): ${current ?? 'unknown'}${pct != null ? ` (${pct}% of target)` : ''}.${northStar.note ? ` Note: ${northStar.note}` : ''}`;
   }
 
+  // Study before teaching: load the house memory (proven lessons + the pitfalls
+  // the auditors caught) so the Chief can't repeat past mistakes. The Chief
+  // already WRITES learnings every week; now it READS them too — the loop closes.
+  const learned = await playbookPromptBlock().catch(() => '');
+
   const userPayload = [
+    learned, learned ? '' : '',
     nsBlock, '',
     directionLine, '',
     metrics.activeProducts > 0

@@ -9,6 +9,7 @@
 const { gatherExperience } = require('../storefrontExperience');
 
 const client = require('../aiClient'); // shared DeepSeek client
+const { playbookPromptBlock } = require('../playbook'); // house memory (Archivarius)
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
 const SYSTEM = `You are Prometheus, who brings the fire of clear knowledge to people. You guard the SILKILINEN storefront's CLARITY. Walk it as a first-time visitor who knows nothing about silk or the brand. Find where the experience is confusing, where jargon goes unexplained, where an obvious question is left unanswered (sizing, fit, fabric care, shipping times, returns, what "momme" means), where a visitor wouldn't know what to do next, or where navigation is a dead-end.
@@ -24,11 +25,12 @@ async function run() {
     return [{ type: 'info', title: 'Skipped — AI not configured', status: 'info' }];
   }
   const experience = await gatherExperience();
+  const learned = await playbookPromptBlock().catch(() => ''); // study the memory first
 
   let parsed = null;
   try {
     const res = await client.chat.completions.create(
-      { model: MODEL, messages: [{ role: 'system', content: SYSTEM }, { role: 'user', content: `The storefront experience:\n\n${experience}\n\nReturn the clarity issues as JSON.` }], temperature: 0.4, max_tokens: 800, response_format: { type: 'json_object' } },
+      { model: MODEL, messages: [{ role: 'system', content: SYSTEM + learned }, { role: 'user', content: `The storefront experience:\n\n${experience}\n\nReturn the clarity issues as JSON.` }], temperature: 0.4, max_tokens: 800, response_format: { type: 'json_object' } },
       { timeout: 40000, maxRetries: 1 },
     );
     parsed = JSON.parse(res.choices[0]?.message?.content || '{}');

@@ -81,20 +81,26 @@ wiser instead of repeating itself.
    make it flag a *correct* worker. **Fixed:** the new deterministic Ground-Truth
    Auditor now checks the brief against the DB and files catches to Archivarius.
 
-2. **Two clerks with fuzzy borders** (Logic Clerk *and* Reasoning Clerk). They
-   overlap. Worth either (a) giving them clearly distinct beats — Logic Clerk =
-   *internal consistency of the chain*, Reasoning Clerk = *evidence behind each
-   claim* — or (b) merging them. Right now it's unclear who owns what.
+2. **The two clerks are actually well-differentiated** (I overstated the overlap
+   when I first sketched this — on inspection they own distinct beats, keep both):
+   - **Logic Clerk** — *internal consistency*: walks the agents' claims as a
+     hashed chain and flags where they contradict each other **or the live
+     catalogue / prices / metrics**.
+   - **Reasoning Clerk** — *external evidence*: fact-checks claims against real
+     web / Google demand, flagging "fireworks" (confident claims with nothing
+     real beneath).
+   Neither audited the **Chief** — that's the gap the Ground-Truth Auditor fills.
 
 3. **The Ground-Truth Auditor should guard more than the Chief.** It's reusable.
-   The highest-value next hooks: the **Marketing Coordinator's plan**, the
-   **Analyst's answers** ("Ask your store"), and the **Makers** before publish —
-   so no agent can state a number/fact that fights the database.
+   The highest-value next hooks: the **Analyst's answers** ("Ask your store") and
+   the **Makers** before publish — so no agent can state a fact that fights the DB.
 
-4. **Make sure every agent *reads* Archivarius before acting.** Memory only
-   prevents repeats if the makers/brains load Archivarius' pitfalls into their
-   prompt *before* producing. Audit each agent for a `memoryBlock()` read; any
-   that don't are doomed to relearn the same lessons.
+4. **Every agent should *read* Archivarius before acting — now mostly closed.**
+   Audited it: the Chief *wrote* lessons every week but never *read* them (the
+   loop was open), and five producers (Maui, Prometheus, Competitor Scout,
+   Eureka, Newsletter) didn't read memory either. **Fixed** — all now inject the
+   Archivarius memory block before producing. The Marketing Coordinator and the
+   content / social / demand / search agents already did.
 
 5. **Deterministic > another LLM for facts.** The cheap, reliable wins are
    data-reconciliation gates (like the Watchdog and the Ground-Truth Auditor),

@@ -14,6 +14,7 @@ const GrowthAction = require('../../models/GrowthAction');
 const { getCompetitors } = require('../competitorIntel');
 
 const client = require('../aiClient'); // shared DeepSeek client
+const { playbookPromptBlock } = require('../playbook'); // house memory (Archivarius)
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
 // What SILKILINEN ALREADY has — so the Inventor builds new ground, never
@@ -78,7 +79,7 @@ async function run() {
   let parsed = null;
   try {
     const res = await client.chat.completions.create(
-      { model: MODEL, messages: [{ role: 'system', content: SYSTEM }, { role: 'user', content: user }], temperature: 0.8, max_tokens: 1000, response_format: { type: 'json_object' } },
+      { model: MODEL, messages: [{ role: 'system', content: SYSTEM + await playbookPromptBlock().catch(() => '') }, { role: 'user', content: user }], temperature: 0.8, max_tokens: 1000, response_format: { type: 'json_object' } },
       { timeout: 40000, maxRetries: 1 },
     );
     parsed = JSON.parse(res.choices[0]?.message?.content || '{}');

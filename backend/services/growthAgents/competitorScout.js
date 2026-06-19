@@ -12,6 +12,7 @@ const SystemState = require('../../models/SystemState');
 const { getCompetitors, liveProductSample } = require('../competitorIntel');
 
 const client = require('../aiClient'); // shared DeepSeek client
+const { playbookPromptBlock } = require('../playbook'); // house memory (Archivarius)
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 const ROTATE_KEY = 'growthCompetitorRotation';
 
@@ -65,7 +66,7 @@ async function analyse(competitor, catalog, liveSample) {
   const res = await client.chat.completions.create({
     model: MODEL,
     messages: [
-      { role: 'system', content: SYSTEM },
+      { role: 'system', content: SYSTEM + await playbookPromptBlock().catch(() => '') },
       { role: 'user', content: userParts.join('\n') },
     ],
     temperature: 0.5,

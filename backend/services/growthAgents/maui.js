@@ -9,6 +9,7 @@
 const { gatherExperience } = require('../storefrontExperience');
 
 const client = require('../aiClient'); // shared DeepSeek client
+const { playbookPromptBlock } = require('../playbook'); // house memory (Archivarius)
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
 const SYSTEM = `You are Maui — the showman who makes a journey alive and makes people follow. You guard SILKILINEN's storefront DELIGHT. Walk it and find the flat, generic or boring moments: long copy with no hook, a transactional moment that could be a small joy, a beautiful product shown like a search result, a reveal that lands without drama, a page that doesn't make the visitor lean in.
@@ -24,11 +25,12 @@ async function run() {
     return [{ type: 'info', title: 'Skipped — AI not configured', status: 'info' }];
   }
   const experience = await gatherExperience();
+  const learned = await playbookPromptBlock().catch(() => ''); // study the memory first
 
   let parsed = null;
   try {
     const res = await client.chat.completions.create(
-      { model: MODEL, messages: [{ role: 'system', content: SYSTEM }, { role: 'user', content: `The storefront experience:\n\n${experience}\n\nReturn the delight moments as JSON.` }], temperature: 0.7, max_tokens: 800, response_format: { type: 'json_object' } },
+      { model: MODEL, messages: [{ role: 'system', content: SYSTEM + learned }, { role: 'user', content: `The storefront experience:\n\n${experience}\n\nReturn the delight moments as JSON.` }], temperature: 0.7, max_tokens: 800, response_format: { type: 'json_object' } },
       { timeout: 40000, maxRetries: 1 },
     );
     parsed = JSON.parse(res.choices[0]?.message?.content || '{}');

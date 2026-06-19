@@ -18,6 +18,7 @@ const FRESH_DAYS = 14;
 
 // DeepSeek is OpenAI-compatible — same pattern as services/aiText.js.
 const deepseek = require('../aiClient'); // shared DeepSeek client
+const { playbookPromptBlock } = require('../playbook'); // house memory (Archivarius)
 
 const SYSTEM_PROMPT = `You write the weekly email for SILKILINEN, a small luxury silk and linen brand. SILKILINEN is an Irish brand based in Donegal, but products are made in mixed locations.
 
@@ -92,7 +93,7 @@ async function run() {
   const response = await deepseek.chat.completions.create({
     model: MODEL,
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: SYSTEM_PROMPT + await playbookPromptBlock().catch(() => '') },
       { role: 'user', content: buildUserPrompt(products, article) },
     ],
     temperature: 0.7,
