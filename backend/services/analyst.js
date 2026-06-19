@@ -298,7 +298,19 @@ async function ask(question, history = []) {
 
   const answer = answerRes.choices[0]?.message?.content?.trim()
     || 'I could not produce an answer — please try rephrasing the question.';
-  return { answer, toolsUsed };
+
+  // Ground-Truth Auditor — never let the analyst tell the founder something that
+  // fights the live DB (e.g. "no products" while the catalogue is stocked).
+  let finalAnswer = answer;
+  try {
+    const { findings } = await require('./groundTruthAuditor').auditText(answer);
+    if (findings.length) {
+      finalAnswer += '\n\n⚠ Live-data check: ' +
+        findings.map(f => `${f.truth} — so ignore any claim of ${f.claim} above.`).join(' ');
+    }
+  } catch { /* non-critical */ }
+
+  return { answer: finalAnswer, toolsUsed };
 }
 
 module.exports = { ask };
