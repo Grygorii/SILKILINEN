@@ -4,6 +4,36 @@ const Product = require('../models/Product');
 const Order = require('../models/Order');
 const { SLUGS: FRONTEND_CATEGORIES } = require('../config/categories');
 
+// AI reasoning layer — turns raw deterministic findings into a prioritised,
+// root-cause read. It doesn't see the code; it reasons from the findings + how
+// this Next.js + Express + MongoDB stack works. Fail-soft: the audit still
+// completes (with synthesis: null) if AI is unavailable.
+const AUDIT_REASONER_SYSTEM = `You are the lead engineer reviewing an automated Site Audit for SILKILINEN — a Next.js (frontend) + Express + MongoDB (backend) quiet-luxury silk & linen shop. You are handed RAW deterministic findings (broken links, failing API flows, data inconsistencies, missing SEO). You do NOT have the code — reason from the findings and how this stack works.
+
+Return ONLY JSON:
+{
+  "headline": "one honest sentence on the site's real health",
+  "priorities": [ { "issue": "which finding(s) this covers", "severity": "critical|warning|info", "likelyCause": "the most probable root cause", "whereToLook": "the file / route / area to check first (be specific to this stack, e.g. routes/checkoutV2.js, the product route, app/sitemap.ts)", "fix": "the concrete first step" } ],
+  "noise": "any findings that are likely false alarms or low value, and why — or empty string"
+}
+Order priorities by real business impact: a broken checkout or product page beats a missing meta description. Group related findings into one priority. If there are zero findings, return a clean-bill headline and an empty priorities array.`;
+
+async function synthesizeFindings(findings) {
+  if (!findings.length || !process.env.DEEPSEEK_API_KEY) return null;
+  const client = require('./aiClient');
+  const list = findings.map((f, i) =>
+    `${i + 1}. [${f.severity}] (${f.agent}) ${f.title}${f.location ? ' @ ' + f.location : ''}${f.detail ? ' — ' + f.detail : ''}`).join('\n');
+  const res = await client.chat.completions.create({
+    model: process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat',
+    messages: [
+      { role: 'system', content: AUDIT_REASONER_SYSTEM },
+      { role: 'user', content: `The Site Audit found these ${findings.length} issue(s):\n\n${list}\n\nReason over them.` },
+    ],
+    temperature: 0.3, max_tokens: 900, response_format: { type: 'json_object' },
+  }, { timeout: 40000, maxRetries: 1 });
+  return JSON.parse(res.choices[0]?.message?.content || 'null');
+}
+
 const SIDEMENU_LINKS = [
   { label: 'SHOP ALL', href: '/shop', filter: null },
   { label: 'ROBES', href: '/shop?category=robes', filter: 'robes' },
@@ -712,6 +742,14 @@ async function runAudit(audit) {
   }
 
   audit.findings = allFindings;
+
+  // AI reasoning layer — prioritise the findings and read the likely root causes.
+  try {
+    audit.synthesis = await synthesizeFindings(allFindings);
+  } catch (err) {
+    console.warn('[audit] synthesis failed:', err.message);
+  }
+
   audit.completedAt = new Date();
   audit.duration = Date.now() - new Date(audit.runAt).getTime();
   audit.status = 'completed';

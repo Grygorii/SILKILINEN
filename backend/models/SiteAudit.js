@@ -32,6 +32,9 @@ const SiteAuditSchema = new mongoose.Schema({
     seo: { type: AgentResultSchema, default: () => ({}) },
   },
   findings: [FindingSchema],
+  // AI reasoning layer over the deterministic findings (headline + prioritised
+  // root-cause analysis). Null when AI is unavailable or there were no findings.
+  synthesis: { type: mongoose.Schema.Types.Mixed, default: null },
   triggeredBy: String,
 }, { timestamps: false });
 
