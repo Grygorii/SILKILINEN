@@ -206,7 +206,8 @@ async function measure() {
     if (perf) {
       const gsc = require('./searchConsole');
       const opps = await gsc.getQueryOpportunities(28).catch(() => []);
-      search = { totals: perf.totals, topQueries: perf.topQueries, opportunities: (opps || []).slice(0, 10) };
+      const countries = await gsc.getCountryBreakdown(28).catch(() => []);
+      search = { totals: perf.totals, topQueries: perf.topQueries, opportunities: (opps || []).slice(0, 10), countries: (countries || []).slice(0, 6) };
     }
   } catch { /* GSC optional */ }
 
@@ -481,6 +482,9 @@ async function generateBriefCore() {
     metrics.search
       ? `GOOGLE SEARCH (real internet demand, 28d): ${metrics.search.totals.clicks} clicks, ${metrics.search.totals.impressions} impressions, avg position ${Math.round(metrics.search.totals.position)}. Queries you appear for: ${metrics.search.topQueries.map(q => `"${q.key}"(${q.impressions}imp)`).join(', ') || 'none yet'}. Opportunities (impressions but weak position): ${metrics.search.opportunities.filter(o => o.position > 8).map(o => `"${o.query}" pos ${o.position}`).slice(0, 6).join(', ') || 'none'}.`
       : 'GOOGLE SEARCH: not connected / no data yet.',
+    metrics.search?.countries?.length
+      ? `GEOGRAPHIC FOOTHOLDS (where Google actually shows the shop — ISO codes; the brand ships worldwide): ${metrics.search.countries.map(c => `${String(c.country).toUpperCase()} ${c.impressions}imp/${c.clicks}clk`).join(', ')}. Note any market warming up, and any with impressions but ~no clicks (seen but not chosen there).`
+      : '',
     '',
     require('./clickstream').clickstreamPromptLine(metrics.clickstream) || 'FIRST-PARTY CLICKSTREAM: no on-site behaviour captured yet.',
     '',
