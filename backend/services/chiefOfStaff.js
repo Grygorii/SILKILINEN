@@ -531,6 +531,35 @@ async function generateBriefCore() {
     buildIdeas: coerceIdeas(parsed.buildIdeas),
     metrics: { ...metrics, outcomes, usedFallback },
   };
+
+  // GROUND-TRUTH AUDITOR — deterministic pre-publish gate. The Chief reads the
+  // DB but its LLM can still over-claim; this checks the brief's words against
+  // live data, flags any contradiction on the brief itself (so the human sees
+  // it), and files each as a pitfall in Archivarius so the house learns not to
+  // repeat it.
+  try {
+    const briefText = [doc.headline, doc.progress, doc.whatChanged, doc.whatsWorking, doc.marketRead].filter(Boolean).join('\n');
+    const { findings } = await require('./groundTruthAuditor').auditText(briefText);
+    if (findings.length) {
+      const note = '⚠ GROUND-TRUTH AUDITOR: this brief contradicts live data — ' +
+        findings.map(f => `claimed ${f.claim}, but ${f.truth}`).join('; ') + '. Treat with caution.';
+      doc.clerksVerdict = note + (doc.clerksVerdict ? ' · ' + doc.clerksVerdict : '');
+      console.warn('[chief]', note);
+      const archivarius = require('./archivarius');
+      for (const f of findings) {
+        await archivarius.remember({
+          kind: 'pitfall',
+          text: `Never claim ${f.claim}: ground truth is that ${f.truth}. Check the live count/data before asserting it.`,
+          detail: 'Caught by the Ground-Truth Auditor on a Chief weekly brief.',
+          source: 'ground-truth-auditor',
+          tags: ['data-integrity', 'chief'],
+        }).catch(() => {});
+      }
+    }
+  } catch (auditErr) {
+    console.warn('[chief] ground-truth auditor skipped:', auditErr.message);
+  }
+
   let brief;
   try {
     brief = await CEOBrief.create(doc);
