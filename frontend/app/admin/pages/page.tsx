@@ -1,6 +1,7 @@
 import AdminLayout from '@/components/AdminLayout';
 import Link from 'next/link';
 import styles from './page.module.css';
+import SubmitIndexNowButton from './SubmitIndexNowButton';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 const BASE = 'https://www.silkilinen.com';
@@ -114,6 +115,7 @@ export default async function PagesOverview() {
             <span>·</span>
             <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer">Search Console</a>
           </div>
+          <SubmitIndexNowButton />
         </header>
 
         {sections.map(section => (
