@@ -20,6 +20,7 @@ const CEOBrief = require('../models/CEOBrief');
 const GrowthAction = require('../models/GrowthAction');
 const Order = require('../models/Order');
 const Visit = require('../models/Visit');
+const Product = require('../models/Product');
 const JournalArticle = require('../models/JournalArticle');
 const { mergeLearnings, playbookPromptBlock } = require('./playbook');
 
