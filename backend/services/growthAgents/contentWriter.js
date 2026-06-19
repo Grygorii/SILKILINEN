@@ -63,16 +63,50 @@ async function getRealQueries() {
   }
 }
 
-async function pickTopic(existingArticles, categories, realQueries) {
+// Content ideas the sister agents have ALREADY vetted from real data: Hermes'
+// content-gap plays (informational queries with no matching page) and the
+// Demand Scout's rising waves (each with an article angle). Reading these closes
+// the loop — the writer builds on the chain instead of re-deriving topics blind.
+// Skips anything an existing article already targets.
+async function getContentLeads(existingArticles) {
+  try {
+    const GrowthAction = require('../../models/GrowthAction');
+    const since = new Date(Date.now() - 30 * 86400000);
+    const [hermes, demand] = await Promise.all([
+      GrowthAction.find({ agent: 'hermes', type: 'seo', 'meta.kind': 'content', createdAt: { $gte: since } }).sort({ createdAt: -1 }).limit(10).select('title meta').lean(),
+      GrowthAction.find({ agent: 'demand', type: 'demand_signal', createdAt: { $gte: since } }).sort({ createdAt: -1 }).limit(10).select('title meta').lean(),
+    ]);
+    const written = new Set(existingArticles.flatMap(a => [a.title, ...(a.keywords || [])]).filter(Boolean).map(s => String(s).toLowerCase()));
+    const leads = [];
+    const seen = new Set();
+    const add = (q, angle, source) => {
+      const key = String(q || '').trim().toLowerCase();
+      if (!key || written.has(key) || seen.has(key)) return;
+      seen.add(key);
+      leads.push({ query: String(q).trim(), angle: angle || '', source });
+    };
+    for (const h of hermes) add(h.meta?.target, h.meta?.action, 'Hermes (SEO content-gap)');
+    for (const d of demand) add(d.meta?.phrase, (d.meta?.moves || []).join('; '), 'Demand Scout (rising wave)');
+    return leads.slice(0, 8);
+  } catch (err) {
+    console.warn('[growth:content] lead fetch failed:', err.message);
+    return [];
+  }
+}
+
+async function pickTopic(existingArticles, categories, realQueries, leads = []) {
   const grounded = Boolean(realQueries && realQueries.length);
+  const hasLeads = leads.length > 0;
   const parsed = await chat([
     {
       role: 'system',
       content: `You plan editorial content for SILKILINEN's journal (blog). ${BRAND_RULES}
 
-${grounded
-  ? `You are given REAL search queries this site already appears for in Google (with impressions and average position). You MUST pick your targetQuery from that list — prefer informational intent, high impressions, and a weak position (above ~8) where an article can move the needle. Copy the query text exactly.`
-  : `Choose ONE new long-tail informational topic a silk or linen shopper would actually search for: care guides, sleep/skin/hair benefits, fabric comparisons, styling, gifting.`}
+${hasLeads
+  ? `PRIORITY: your sister agents have already spotted these content opportunities from REAL data — Hermes from Search Console (gaps where an informational query has no matching page) and the Demand Scout from live rising search demand. STRONGLY prefer one of these: copy its targetQuery exactly, unless every one is a genuinely poor fit for the journal. These are pre-vetted demand — do not ignore them in favour of a fresh guess.`
+  : grounded
+    ? `You are given REAL search queries this site already appears for in Google (with impressions and average position). You MUST pick your targetQuery from that list — prefer informational intent, high impressions, and a weak position (above ~8) where an article can move the needle. Copy the query text exactly.`
+    : `Choose ONE new long-tail informational topic a silk or linen shopper would actually search for: care guides, sleep/skin/hair benefits, fabric comparisons, styling, gifting.`}
 It must NOT overlap with the existing article titles you are given.
 
 RESPOND ONLY WITH VALID JSON: {"topic": "working title of the article", "targetQuery": "the long-tail search phrase it targets", "angle": "one sentence on the take"}`,
@@ -81,6 +115,10 @@ RESPOND ONLY WITH VALID JSON: {"topic": "working title of the article", "targetQ
       role: 'user',
       content: [
         `Product categories we sell: ${categories.join(', ') || '(none listed)'}`,
+        ``,
+        hasLeads
+          ? `PRIORITY content opportunities from your sister agents (prefer one of these):\n${leads.map(l => `- "${l.query}"${l.angle ? ` — angle: ${l.angle}` : ''} [${l.source}]`).join('\n')}`
+          : '',
         ``,
         grounded
           ? `REAL Google queries for this site (last 28 days):\n${realQueries
@@ -102,14 +140,16 @@ RESPOND ONLY WITH VALID JSON: {"topic": "working title of the article", "targetQ
     throw new Error(`Topic pick returned invalid shape: ${JSON.stringify(parsed).slice(0, 200)}`);
   }
   // Attach provenance so the pulse feed shows the process, not just the output.
-  const match = grounded
-    ? realQueries.find(q => q.query.toLowerCase() === String(parsed.targetQuery).toLowerCase())
-    : null;
-  parsed.provenance = match
-    ? `Grounded in Search Console: "${match.query}" — ${match.impressions} impressions, avg position ${match.position}`
-    : grounded
-      ? 'Search Console data was provided but the model proposed its own phrasing — treat as editorial'
-      : 'No Search Console query data yet — topic chosen editorially';
+  const tq = String(parsed.targetQuery).toLowerCase();
+  const leadMatch = leads.find(l => l.query.toLowerCase() === tq);
+  const match = grounded ? realQueries.find(q => q.query.toLowerCase() === tq) : null;
+  parsed.provenance = leadMatch
+    ? `Picked up from the chain — ${leadMatch.source}: "${leadMatch.query}"`
+    : match
+      ? `Grounded in Search Console: "${match.query}" — ${match.impressions} impressions, avg position ${match.position}`
+      : grounded
+        ? 'Search Console data was provided but the model proposed its own phrasing — treat as editorial'
+        : 'No Search Console query data yet — topic chosen editorially';
   return parsed;
 }
 
@@ -167,7 +207,7 @@ async function run() {
 
   const [products, existingArticles] = await Promise.all([
     Product.find({ status: 'active' }).select('name category price').sort({ createdAt: -1 }).limit(30).lean(),
-    JournalArticle.find().select('title slug').lean(),
+    JournalArticle.find().select('title slug keywords').lean(),
   ]);
 
   if (products.length < 2) {
@@ -180,7 +220,8 @@ async function run() {
 
   const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
   const realQueries = await getRealQueries();
-  const topic = await pickTopic(existingArticles, categories, realQueries);
+  const leads = await getContentLeads(existingArticles);
+  const topic = await pickTopic(existingArticles, categories, realQueries, leads);
   const article = await writeArticle(topic, products);
 
   // Unique slug: slugified title, deduped against existing journal slugs.
