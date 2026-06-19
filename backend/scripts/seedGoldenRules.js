@@ -27,6 +27,10 @@ const ENTRIES = [
     text: 'A service calling Model.method() without importing the model throws ReferenceError only at CALL time — it passes load-time checks, and a fail-soft catch turns it into silent all-zeros (this zeroed every Chief brief). Verify every Model.x usage has a matching require.' },
 
   // ── Lessons — the golden rules for the future ──────────────────────────────
+  { kind: 'lesson', tags: ['engineering', 'golden-rule', 'regression'],
+    text: 'GOLDEN RULE: before fixing a bug, find WHAT broke it and WHEN (git history / root cause) — never just patch the symptom. "It worked before" means something changed; identify that change first, because the real fix may be reverting it.' },
+  { kind: 'lesson', tags: ['engineering', 'golden-rule', 'regression'],
+    text: 'GOLDEN RULE: a fix can re-break another tool that depends on the current behaviour (fix A → break B → fix B → re-break A) when BOTH must work. Before changing shared code, find every dependent; verify the fixed feature AND the previously-working ones all still work. No regressions.' },
   { kind: 'lesson', tags: ['engineering', 'golden-rule', 'testing'],
     text: 'GOLDEN RULE: audit the primary WRITE / user journeys first (add product, checkout, edit, create) — not only background services and read paths. The highest-impact bugs hide in the actions users take most.' },
   { kind: 'lesson', tags: ['engineering', 'golden-rule', 'observability'],

@@ -24,28 +24,38 @@ went unnoticed.
 
 ## The rules
 
-1. **Audit the primary WRITE/user journeys first** (add product, checkout, edit,
+1. **Find what broke it before you fix it.** Never just patch the symptom — use
+   git history / root cause. *"It worked before"* means something changed;
+   identify that change first, because the real fix may be reverting it.
+
+2. **A fix can re-break another tool — keep BOTH working.** Changing shared code
+   to fix A can break B that depended on the old behaviour (*fix A → break B → fix
+   B → re-break A*). Before changing shared code, find every dependent and verify
+   the fixed feature **and** the previously-working ones all still pass. No
+   regressions.
+
+3. **Audit the primary WRITE/user journeys first** (add product, checkout, edit,
    create) — not only background services and read paths. The highest-impact bugs
    live in the actions users take most.
 
-2. **Fail loud, not silent.** Every fallback/catch on a user-facing action must
+4. **Fail loud, not silent.** Every fallback/catch on a user-facing action must
    produce a visible error or a logged trace. Never disguise a failure as
    "nothing happened."
 
-3. **Data-layer integrity is its own defence.** Reasoning safeguards (auditors,
+5. **Data-layer integrity is its own defence.** Reasoning safeguards (auditors,
    clerks, memory) protect against bad reasoning over *good* data — they cannot
    catch a broken data gather. Guard the gather: verify before asserting
    empty/zero, and **skip** rather than emit a confident wrong result.
 
-4. **`Model.method()` requires importing the model.** A missing import fails only
+6. **`Model.method()` requires importing the model.** A missing import fails only
    at call time, slipping past load-time checks. When a service uses a model,
    confirm the `require` exists.
 
-5. **Empty-draft creates still run Mongoose validators.** Required fields make
+7. **Empty-draft creates still run Mongoose validators.** Required fields make
    `.save()` throw even when app-level validation is skipped. Use
    `save({ validateBeforeSave: false })` and re-validate on publish, or set safe
    defaults.
 
-6. **Beware unique sparse indexes + derived values.** Deriving a slug from a
+8. **Beware unique sparse indexes + derived values.** Deriving a slug from a
    placeholder name collides across drafts. Leave the unique field unset so the
    sparse index skips it; derive the real value on first edit.

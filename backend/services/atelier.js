@@ -19,6 +19,7 @@ const Product = require('../models/Product');
 const { capture } = require('./screenshot');
 const { fetchReadablePage } = require('./externalData');
 const { curate, concierge, atmosphere } = require('./atelierCritics');
+const { memoryBlock } = require('./archivarius'); // the house's accumulated lessons & pitfalls
 const textClient = require('./aiClient'); // DeepSeek, for the text synthesis
 const TEXT_MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
@@ -159,9 +160,13 @@ async function _run(reviewId) {
   try {
     const roomsText = results.map(r => `• ${r.name} (${r.path}) — ${r.score}/10. ${r.verdict}${r.dissonances.length ? ' Issues: ' + r.dissonances.map(d => `${d.what} [${d.severity}]`).join('; ') : ''}`).join('\n');
     const pillarsText = dimensions.map(d => `• ${d.name}: ${d.score}/10 — ${d.summary} ${d.findings.join(' ')}`).join('\n');
+    // Audit WITH memory: the house's accumulated lessons, pitfalls and decisions
+    // (Archivarius) so the verdict & plan consider what we've already learned,
+    // instead of critiquing blind to history.
+    const memory = await memoryBlock().catch(() => '');
     const res = await textClient.chat.completions.create({
       model: TEXT_MODEL,
-      messages: [{ role: 'system', content: SYNTH_SYSTEM }, { role: 'user', content: `ROOMS:\n${roomsText}\n\nCRAFT PILLARS:\n${pillarsText}\n\nDeliver the verdict + plan JSON now.` }],
+      messages: [{ role: 'system', content: SYNTH_SYSTEM }, { role: 'user', content: `ROOMS:\n${roomsText}\n\nCRAFT PILLARS:\n${pillarsText}\n${memory}\n\nConsider the house memory above where relevant, then deliver the verdict + plan JSON now.` }],
       temperature: 0.45, max_tokens: 1300, response_format: { type: 'json_object' },
     }, { timeout: 40000, maxRetries: 1 });
     synth = JSON.parse(res.choices[0]?.message?.content || '{}');
