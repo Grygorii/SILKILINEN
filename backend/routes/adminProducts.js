@@ -284,13 +284,22 @@ router.get('/:id', async function(req, res) {
 // POST /api/admin/products — create draft
 router.post('/', async function(req, res) {
   try {
-    // Empty-draft path: create immediately with schema defaults, bypass app-level validators
+    // Empty-draft path: create immediately so the editor can open; the founder
+    // fills in the details there.
     if (req.body.createEmptyDraft) {
+      // name & price are schema-required, so a truly blank draft fails Mongoose
+      // validation — skip it for THIS save only (the publish flow re-validates
+      // before anything goes live). Name is an empty string, not unset, so the
+      // editor's controlled inputs stay happy AND the slug pre-save hook does not
+      // derive a colliding slug across multiple drafts (sparse unique index skips
+      // an unset slug); the real slug is generated from the name on first edit.
       const product = new Product({
+        name: '',
+        price: 0,
         status: 'draft',
         lastUpdatedBy: req.user.userId,
       });
-      await product.save();
+      await product.save({ validateBeforeSave: false });
       return res.status(201).json(product);
     }
 
