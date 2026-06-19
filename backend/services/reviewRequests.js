@@ -20,13 +20,16 @@ async function processReviewRequests({ send = true, ageDays = 14 } = {}) {
   }
 
   const cutoff = new Date(Date.now() - ageDays * 24 * 60 * 60 * 1000);
+  // Oldest-eligible first, capped per run: the daily cron then drains any
+  // backlog over a few days instead of firing one unbounded burst the first
+  // time RESEND_API_KEY is enabled on a store with history (Resend rate-limits).
   const eligible = await Order.find({
     status: { $in: ['paid', 'processing', 'shipped', 'delivered'] },
     customerEmail: { $exists: true, $ne: '' },
     createdAt: { $lte: cutoff },
     reviewRequestSentAt: null,
     'items.0': { $exists: true },
-  }).select('_id customerEmail customerName items createdAt').lean();
+  }).sort({ createdAt: 1 }).limit(100).select('_id customerEmail customerName items createdAt').lean();
 
   let sent = 0;
   let skipped = 0;
