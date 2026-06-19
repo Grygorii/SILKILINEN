@@ -137,4 +137,17 @@ async function refreshProfiles({ limit = 60, concurrency = 6 } = {}) {
   return { scanned: competitors.length, ok };
 }
 
-module.exports = { getCompetitors, setCompetitors, mergeCompetitors, normaliseCompetitor, dedupe, liveProductSample, refreshProfiles, DEFAULT_COMPETITORS };
+// Weekly cadence guard (mirrors the other crons): only scans if it's been ≥
+// `days` since the last run, so restarts can't trigger constant re-scrapes.
+async function scanIfDue({ days = 7, limit = 120 } = {}) {
+  const SystemState = require('../models/SystemState');
+  const key = 'competitorScan_lastAt';
+  const doc = await SystemState.findOne({ key }).lean();
+  const last = doc?.value ? new Date(doc.value).getTime() : 0;
+  if (Date.now() - last < days * 86400000) return { ran: false };
+  const r = await refreshProfiles({ limit });
+  await SystemState.findOneAndUpdate({ key }, { value: new Date().toISOString() }, { upsert: true });
+  return { ran: true, ...r };
+}
+
+module.exports = { getCompetitors, setCompetitors, mergeCompetitors, normaliseCompetitor, dedupe, liveProductSample, refreshProfiles, scanIfDue, DEFAULT_COMPETITORS };

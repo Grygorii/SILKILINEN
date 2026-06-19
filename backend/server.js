@@ -71,6 +71,7 @@ const adminGrowthRouter = require('./routes/adminGrowth');
 const adminMarketingCoordinatorRouter = require('./routes/adminMarketingCoordinator');
 const { runGrowthEngine } = require('./services/growthEngine');
 const { runChiefIfDue } = require('./services/chiefOfStaff');
+const { scanIfDue: scanCompetitorsIfDue } = require('./services/competitorIntel');
 const { weeklyCoordinator } = require('./services/marketingCoordinator');
 const { loadShippingOverrides } = require('./services/shipping');
 const cartRecoveryRouter = require('./routes/cartRecovery');
@@ -312,6 +313,8 @@ let chiefStartTimeout = null;
 let chiefInterval = null;
 let coordinatorStartTimeout = null;
 let coordinatorInterval = null;
+let competitorScanStartTimeout = null;
+let competitorScanInterval = null;
 let cacheRefreshInterval = null;
 
 // These crons run as in-process timers. If Railway runs more than one web
@@ -410,6 +413,17 @@ const server = app.listen(PORT, function() {
     plan();
     coordinatorInterval = setInterval(plan, 6 * 60 * 60 * 1000);
   }, 30 * 60 * 1000);
+
+  // Competitor intelligence — re-scrapes the rival set weekly (scanIfDue guards
+  // the 7-day cadence so restarts don't re-scan). Checks daily; first check 35
+  // min after boot. No-op until there are competitors with domains.
+  competitorScanStartTimeout = setTimeout(function() {
+    const scan = () => withCronLock('competitorScan', LOCK_TTL, scanCompetitorsIfDue)
+      .then(r => { if (r && r.ran) console.log(`[competitors] weekly scan: ${r.ok}/${r.scanned}`); })
+      .catch(err => console.error('[competitors]', err));
+    scan();
+    competitorScanInterval = setInterval(scan, 24 * 60 * 60 * 1000);
+  }, 35 * 60 * 1000);
 });
 
 let shuttingDown = false;
@@ -425,6 +439,8 @@ function shutdown(signal) {
   if (advisorDigestInterval) clearInterval(advisorDigestInterval);
   if (reviewRequestsStartTimeout) clearTimeout(reviewRequestsStartTimeout);
   if (reviewRequestsInterval) clearInterval(reviewRequestsInterval);
+  if (competitorScanStartTimeout) clearTimeout(competitorScanStartTimeout);
+  if (competitorScanInterval) clearInterval(competitorScanInterval);
   if (growthEngineStartTimeout) clearTimeout(growthEngineStartTimeout);
   if (growthEngineInterval) clearInterval(growthEngineInterval);
   if (chiefStartTimeout) clearTimeout(chiefStartTimeout);
