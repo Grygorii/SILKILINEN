@@ -160,7 +160,7 @@ function buildHtml({ order, isAdmin }) {
 }
 
 async function sendOrderConfirmation(order) {
-  if (!process.env.RESEND_API_KEY || !order.customerEmail) return;
+  if (!process.env.RESEND_API_KEY || !order.customerEmail) return false;
   const id = shortId(order._id);
   await getResend().emails.send({
     from: FROM,
@@ -168,6 +168,7 @@ async function sendOrderConfirmation(order) {
     subject: `Your SILKILINEN order #${id} is confirmed`,
     html: buildHtml({ order, isAdmin: false }),
   });
+  return true; // actually sent — lets the caller stamp confirmationEmailSentAt
 }
 
 async function sendAdminOrderNotification(order) {

@@ -69,6 +69,10 @@ const orderSchema = new mongoose.Schema({
   // scripts/sendReviewRequests.js to avoid double-sending. One email per
   // order covers every item in that order.
   reviewRequestSentAt: { type: Date, default: null, index: true },
+  // Stamped once the buyer's order-confirmation email actually sends, so a
+  // Stripe webhook redelivery can re-send a confirmation that failed the first
+  // time (transient Resend error / crash) instead of silently never arriving.
+  confirmationEmailSentAt: { type: Date, default: null },
 
   customerNote: { type: String },
   internalNote: { type: String },

@@ -433,7 +433,17 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
     try {
       // Guard against duplicate webhooks
       const existing = await Order.findOne({ stripePaymentIntentId: intent.id });
-      if (existing) return res.json({ received: true });
+      if (existing) {
+        // Self-heal: if the buyer's confirmation never sent on the first
+        // delivery (transient Resend error, or a crash between commit and
+        // email), this redelivery re-sends it. Stripe retries for ~3 days, so
+        // a paid customer isn't left without a confirmation.
+        if (!existing.confirmationEmailSentAt) {
+          const sent = await sendOrderConfirmation(existing).catch(() => false);
+          if (sent) await Order.updateOne({ _id: existing._id }, { $set: { confirmationEmailSentAt: new Date() } }).catch(() => {});
+        }
+        return res.json({ received: true });
+      }
 
       const sessionId = meta.sessionId;
       const [cart, visit] = await Promise.all([
@@ -643,10 +653,15 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
         ).catch(err => console.error('[checkoutV2] acquisitionSource write failed:', err.message));
       }
 
-      await Promise.allSettled([
+      const [confRes] = await Promise.allSettled([
         sendOrderConfirmation(order),
         sendAdminOrderNotification(order),
       ]);
+      // Stamp only when the confirmation actually sent, so a failed send is
+      // retried by the next webhook redelivery (see the duplicate guard above).
+      if (confRes.status === 'fulfilled' && confRes.value) {
+        await Order.updateOne({ _id: order._id }, { $set: { confirmationEmailSentAt: new Date() } }).catch(() => {});
+      }
     } catch (err) {
       console.error('[checkoutV2 webhook] error:', err.message);
     }
