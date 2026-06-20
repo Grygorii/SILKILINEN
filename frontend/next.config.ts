@@ -17,12 +17,12 @@ const apiOrigin = (() => {
 // CSP would force dynamic rendering on every page — wrong trade-off here).
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://js.stripe.com https://*.js.stripe.com https://www.googletagmanager.com https://connect.facebook.net https://s.pinimg.com https://www.gstatic.com https://apis.google.com`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://js.stripe.com https://*.js.stripe.com https://www.googletagmanager.com https://connect.facebook.net https://s.pinimg.com https://ct.pinterest.com https://www.gstatic.com https://apis.google.com https://accounts.google.com https://*.clarity.ms`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://res.cloudinary.com https://www.google-analytics.com https://www.googletagmanager.com https://www.facebook.com https://ct.pinterest.com https://s.pinimg.com https://*.google.com https://*.gstatic.com https://*.googleusercontent.com",
+  "img-src 'self' data: blob: https://res.cloudinary.com https://www.google-analytics.com https://www.googletagmanager.com https://www.facebook.com https://ct.pinterest.com https://s.pinimg.com https://*.google.com https://*.gstatic.com https://*.googleusercontent.com https://*.clarity.ms",
   "font-src 'self' data:",
-  `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ''} https://api.stripe.com https://m.stripe.network https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://connect.facebook.net https://www.facebook.com https://ct.pinterest.com https://s.pinimg.com https://res.cloudinary.com`,
-  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://www.google.com",
+  `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ''} https://api.stripe.com https://m.stripe.network https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://connect.facebook.net https://www.facebook.com https://ct.pinterest.com https://s.pinimg.com https://res.cloudinary.com https://accounts.google.com https://*.clarity.ms`,
+  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://www.google.com https://accounts.google.com https://ct.pinterest.com",
   "worker-src 'self' blob:",
   "frame-ancestors 'none'",
   "base-uri 'self'",
