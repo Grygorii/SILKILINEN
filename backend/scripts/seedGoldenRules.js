@@ -25,6 +25,10 @@ const ENTRIES = [
     text: 'Deriving a slug from a placeholder name collides on a unique sparse index across drafts. Leave the unique field unset (empty name) so the sparse index skips it; derive the real value on first edit.' },
   { kind: 'pitfall', tags: ['engineering', 'backend', 'incident'],
     text: 'A service calling Model.method() without importing the model throws ReferenceError only at CALL time — it passes load-time checks, and a fail-soft catch turns it into silent all-zeros (this zeroed every Chief brief). Verify every Model.x usage has a matching require.' },
+  { kind: 'pitfall', tags: ['engineering', 'backend', 'assets', 'incident'],
+    text: 'Cloning a record with toObject() carried the same external-asset refs — duplicated products SHARED Cloudinary publicIds, so deleting/replacing an image on one destroyed it on ALL copies (products silently lost photos). Clone the assets, never share asset references.' },
+  { kind: 'pitfall', tags: ['engineering', 'backend', 'assets', 'incident'],
+    text: 'Destroying a shared external asset (a Cloudinary file) without checking other references deletes it for everyone. Before destroy, confirm no other record still references that asset (a destroyIfUnshared guard).' },
 
   // ── Lessons — the golden rules for the future ──────────────────────────────
   { kind: 'lesson', tags: ['engineering', 'golden-rule', 'regression'],
@@ -37,6 +41,10 @@ const ENTRIES = [
     text: 'GOLDEN RULE: fail loud, not silent. Every fallback or catch on a user-facing action must produce a visible error or a logged trace, so failures are observable — never disguised as "nothing happened".' },
   { kind: 'lesson', tags: ['engineering', 'golden-rule', 'data-integrity'],
     text: 'GOLDEN RULE: reasoning safeguards (auditors, clerks, memory) protect against bad reasoning over GOOD data; they cannot catch a broken data gather. Guard the gather itself — verify before asserting empty/zero, and skip rather than emit a confident wrong result.' },
+  { kind: 'lesson', tags: ['engineering', 'golden-rule', 'assets'],
+    text: 'GOLDEN RULE: when duplicating/cloning an entity that owns uploaded assets (images, files), give the copy its OWN independent assets — copy the files, never share references. Shared refs turn one edit/delete into a cascade that corrupts the siblings.' },
+  { kind: 'lesson', tags: ['audit', 'product-images', 'golden-rule'],
+    text: 'AUDIT KNOWLEDGE: broken, missing or placeholder product images are a known recurring failure (shared-asset duplication). When auditing product pages, flag any image that fails to load, is empty or a placeholder, and check each product shows its full photo set.' },
 ];
 
 async function run() {
