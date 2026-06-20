@@ -43,10 +43,11 @@ const securityHeaders = [
   // 2-year HSTS with includeSubDomains + preload — what Lighthouse Best-
   // Practices wants and what's required for the chromium HSTS preload list.
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
-  // Defence-in-depth vs XSS / card-skimming. REPORT-ONLY for now (blocks nothing);
-  // flip the key to 'Content-Security-Policy' to enforce once a clean walk-through
-  // confirms the origin list.
-  { key: 'Content-Security-Policy-Report-Only', value: csp },
+  // Defence-in-depth vs XSS / card-skimming. ENFORCING — verified clean across
+  // two console walk-throughs + a real completed order; the admin uses the same
+  // origins (uploads go through the backend API, not a client-side widget). To
+  // roll back instantly, append '-Report-Only' to the key below.
+  { key: 'Content-Security-Policy', value: csp },
 ];
 
 const nextConfig: NextConfig = {
