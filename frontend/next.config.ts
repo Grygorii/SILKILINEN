@@ -21,6 +21,9 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://res.cloudinary.com https://www.google-analytics.com https://www.googletagmanager.com https://www.facebook.com https://ct.pinterest.com https://s.pinimg.com https://*.google.com https://*.gstatic.com https://*.googleusercontent.com https://*.clarity.ms",
   "font-src 'self' data:",
+  // Video/audio (e.g. the Cloudinary homepage hero video) — without this it
+  // falls back to default-src 'self' and gets blocked.
+  "media-src 'self' blob: data: https://res.cloudinary.com",
   `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ''} https://api.stripe.com https://m.stripe.network https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://connect.facebook.net https://www.facebook.com https://ct.pinterest.com https://s.pinimg.com https://res.cloudinary.com https://accounts.google.com https://*.clarity.ms`,
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://www.google.com https://accounts.google.com https://ct.pinterest.com",
   "worker-src 'self' blob:",
