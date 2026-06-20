@@ -14,6 +14,7 @@ const INFO_LINKS = [
   { label: 'Reviews', href: '/reviews' },
   { label: 'Shipping', href: '/shipping' },
   { label: 'Size guide', href: '/size-guide' },
+  { label: 'Care guide', href: '/care-guide' },
   { label: 'Contact', href: '/contact' },
 ];
 

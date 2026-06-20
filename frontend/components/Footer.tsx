@@ -95,6 +95,7 @@ export default async function Footer() {
           <a href="/reviews">Reviews</a>
           <a href="/shipping">Shipping</a>
           <a href="/size-guide">Size guide</a>
+          <a href="/care-guide">Care guide</a>
           <a href="/contact">Contact</a>
         </div>
         <div className={styles.col}>
