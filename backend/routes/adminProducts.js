@@ -696,6 +696,17 @@ router.delete('/:id', async function(req, res) {
   }
 });
 
+// Destroy a Cloudinary asset ONLY if no other product still references it. A
+// duplicated product used to share image publicIds with its source, so a
+// delete/replace here could nuke another product's photo (the real cause of
+// products mysteriously losing images). Assets unique to this product are freed.
+async function destroyIfUnshared(publicId, exceptProductId) {
+  if (!publicId || !process.env.CLOUDINARY_CLOUD_NAME) return;
+  const shared = await Product.exists({ _id: { $ne: exceptProductId }, 'images.cloudinaryPublicId': publicId }).catch(() => null);
+  if (shared) return; // still in use elsewhere — keep the file
+  await cloudinary.uploader.destroy(publicId).catch(() => {});
+}
+
 // POST /api/admin/products/:id/duplicate — clone as draft
 router.post('/:id/duplicate', async function(req, res) {
   try {
@@ -712,11 +723,41 @@ router.post('/:id/duplicate', async function(req, res) {
     delete obj.metaTitle;
     delete obj.metaDescription;
     delete obj.keywords;
+    // Don't carry over media by reference — sharing Cloudinary publicIds meant
+    // editing/deleting an image on one product destroyed it on all its copies.
+    // The copy gets its OWN independent Cloudinary assets below.
+    delete obj.images;
+    delete obj.image;
+    delete obj.productVideo;
     obj.name = `${src.name} (copy)`;
     obj.status = 'draft';
     obj.lastUpdatedBy = req.user.userId;
 
     const copy = await Product.create(obj);
+
+    // Copy each source image into the NEW product's own Cloudinary folder so the
+    // duplicate owns independent assets (Cloudinary fetches the source URL and
+    // creates a fresh public_id). Fail-soft per image; if a copy can't be made
+    // we keep the URL but WITHOUT a publicId so a future delete can't destroy the
+    // shared source.
+    if (process.env.CLOUDINARY_CLOUD_NAME && Array.isArray(src.images) && src.images.length) {
+      const newImages = [];
+      for (const img of src.images) {
+        if (!img.url) continue;
+        try {
+          const result = await cloudinary.uploader.upload(img.url, {
+            folder: `silkilinen/products/${copy._id}`,
+            resource_type: 'image',
+          });
+          newImages.push({ url: result.secure_url, alt: img.alt, isPrimary: img.isPrimary, order: img.order, cloudinaryPublicId: result.public_id, slot: img.slot });
+        } catch {
+          newImages.push({ url: img.url, alt: img.alt, isPrimary: img.isPrimary, order: img.order, slot: img.slot });
+        }
+      }
+      copy.images = newImages;
+      await copy.save({ validateBeforeSave: false });
+    }
+
     res.status(201).json(copy);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -815,9 +856,7 @@ router.post('/:id/images', imgUpload.array('images', 20), async function(req, re
     if (slot) {
       const existing = product.images.find(img => img.slot === slot);
       if (existing) {
-        if (existing.cloudinaryPublicId) {
-          await cloudinary.uploader.destroy(existing.cloudinaryPublicId).catch(() => {});
-        }
+        await destroyIfUnshared(existing.cloudinaryPublicId, product._id);
         product.images.pull(existing._id);
       }
       // Hero slot owns isPrimary
@@ -948,9 +987,7 @@ router.delete('/:id/images/:imageId', async function(req, res) {
     const img = product.images.id(req.params.imageId);
     if (!img) return res.status(404).json({ error: 'Image not found' });
 
-    if (img.cloudinaryPublicId && process.env.CLOUDINARY_CLOUD_NAME) {
-      await cloudinary.uploader.destroy(img.cloudinaryPublicId).catch(() => {});
-    }
+    await destroyIfUnshared(img.cloudinaryPublicId, product._id);
 
     const wasPrimary = img.isPrimary;
     product.images.pull(req.params.imageId);
