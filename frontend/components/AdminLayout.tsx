@@ -51,7 +51,6 @@ const NAV: NavEntry[] = [
   { label: 'Pin Studio',  href: '/admin/pin-studio',   icon: Pin },
   { label: 'Image Studio', href: '/admin/social-assets', icon: ImageIcon },
   { section: 'Content' },
-  { label: 'Site Content', href: '/admin/content',     icon: FileText },
   { label: 'Journal',      href: '/admin/journal',     icon: BookOpen },
   { label: 'Pages',        href: '/admin/pages',       icon: FileText },
   { section: 'Finance' },

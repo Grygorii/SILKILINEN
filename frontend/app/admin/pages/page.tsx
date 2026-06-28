@@ -7,17 +7,17 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 const BASE = 'https://www.silkilinen.com';
 
 type Family =
-  | { kind: 'static'; label: string; path: string; section: string; note?: string }
+  | { kind: 'static'; label: string; path: string; section: string; note?: string; editHref?: string }
   | { kind: 'dynamic'; label: string; pathPattern: string; section: string; count: number; sampleHref: string; manageHref?: string };
 
 // Hardcoded list of route families. One row per family, not per instance.
 // /product/[id] = 1 row showing "Products (N)", not N rows.
 const STATIC_PAGES: Omit<Extract<Family, { kind: 'static' }>, 'kind'>[] = [
-  { label: 'Home',           path: '/',               section: 'Storefront' },
+  { label: 'Home',           path: '/',               section: 'Storefront', editHref: '/admin/content?page=Home&only=banner,homepage,categories,instagram,library&tab=homepage' },
   { label: 'Shop',           path: '/shop',           section: 'Storefront' },
   { label: 'Journal',        path: '/journal',        section: 'Storefront' },
   { label: 'Reviews',        path: '/reviews',        section: 'Storefront' },
-  { label: 'About',          path: '/about',          section: 'Storefront' },
+  { label: 'About',          path: '/about',          section: 'Storefront', editHref: '/admin/content?page=About&only=about,library&tab=about' },
   { label: 'Contact',        path: '/contact',        section: 'Storefront' },
   { label: 'FAQ',            path: '/faq',            section: 'Storefront' },
   { label: 'Size guide',     path: '/size-guide',     section: 'Storefront' },
@@ -158,6 +158,7 @@ export default async function PagesOverview() {
                       <td><span className={styles.tagStatic}>static</span></td>
                       <td className={styles.actions}>
                         <a href={`${BASE}${f.path}`} target="_blank" rel="noopener noreferrer">View ↗</a>
+                        {f.editHref && <Link href={f.editHref}>Edit content →</Link>}
                       </td>
                     </tr>
                   );

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
 import styles from './page.module.css';
 
@@ -155,6 +156,21 @@ export default function ContentPage() {
   const [savedKey, setSavedKey] = useState('');
   const [error, setError] = useState('');
 
+  // Opened from the Pages list? Scope the editor to that page's sections. Reads
+  // the query string client-side (avoids the useSearchParams Suspense rule).
+  // Backward-compatible: no params → the full editor with every tab.
+  const [allowedSections, setAllowedSections] = useState<string[] | null>(null);
+  const [pageLabel, setPageLabel] = useState('');
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const only = params.get('only');
+    const initialTab = params.get('tab');
+    const page = params.get('page');
+    if (only) setAllowedSections(only.split(',').map(s => s.trim()).filter(Boolean));
+    if (page) setPageLabel(page);
+    if (initialTab) setTab(initialTab);
+  }, []);
+
   // Image Studio winners — selectable as content images (#6), so the founder
   // can reuse an AI-generated winner without download-then-reupload.
   const [studioWinners, setStudioWinners] = useState<{ _id: string; url: string; surfaceLabel: string }[]>([]);
@@ -255,15 +271,16 @@ export default function ContentPage() {
   const libraryImages = items.filter(i => i.type === 'image' && i.value);
 
   return (
-    <AdminLayout active="content">
+    <AdminLayout active="pages">
       <div className={styles.page}>
         <div className={styles.header}>
-          <h1 className={styles.title}>Site Content</h1>
+          {pageLabel && <Link href="/admin/pages" style={{ fontSize: 13, color: 'var(--muted, #8a8680)', textDecoration: 'none', display: 'inline-block', marginBottom: 4 }}>← Pages</Link>}
+          <h1 className={styles.title}>{pageLabel ? `Editing: ${pageLabel}` : 'Site Content'}</h1>
           <p className={styles.sub}>Changes go live within 60 seconds</p>
         </div>
 
         <div className={styles.tabs}>
-          {TABS.map(t => (
+          {(allowedSections ? TABS.filter(t => allowedSections.includes(t.id)) : TABS).map(t => (
             <button
               key={t.id}
               className={`${styles.tab} ${tab === t.id ? styles.tabActive : ''}`}
