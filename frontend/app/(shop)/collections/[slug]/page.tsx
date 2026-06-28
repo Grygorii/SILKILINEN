@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import ProductGrid from '@/components/ProductGrid';
+import CollectionSet from './CollectionSet';
+import Breadcrumbs from '@/components/Breadcrumbs';
 import Image from 'next/image';
 import styles from './page.module.css';
 
@@ -74,6 +75,10 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
 
   return (
     <main className={styles.page}>
+      <Breadcrumbs
+        items={[{ label: 'Home', href: '/' }, { label: 'Shop', href: '/shop' }, { label: collection.name }]}
+        withSchema
+      />
       {collection.heroImage?.url && (
         <div className={styles.hero}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -108,7 +113,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
       {collection.products.length === 0 ? (
         <p className={styles.empty}>No products in this collection yet.</p>
       ) : (
-        <ProductGrid products={collection.products} />
+        <CollectionSet products={collection.products} discountPercent={collection.discountPercent ?? 0} />
       )}
     </main>
   );

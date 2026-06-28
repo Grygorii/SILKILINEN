@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { sanitizeArticleHtml } from '@/lib/sanitize';
 import { safeJsonLd } from '@/lib/safeJsonLd';
+import Breadcrumbs from '@/components/Breadcrumbs';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -74,6 +75,10 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(articleJsonLd) }}
+      />
+      <Breadcrumbs
+        items={[{ label: 'Home', href: '/' }, { label: 'Journal', href: '/journal' }, { label: article.title }]}
+        withSchema
       />
       {/* Hero image */}
       {article.heroImage?.url && (
