@@ -36,10 +36,32 @@ router.get('/:slug', async (req, res) => {
     if (!collection) return res.status(404).json({ error: 'Collection not found' });
 
     const products = await Product.find({ collections: collection._id, status: 'active' })
-      .select('_id name price compareAtPrice images image altText colours sizes totalStock inStock slug colorName colorVariants')
-      .sort({ createdAt: -1 });
+      .select('_id name price compareAtPrice images image altText colours sizes totalStock inStock slug colorName variants')
+      .sort({ createdAt: -1 })
+      .lean();
 
-    res.json({ ...collection.toObject(), products });
+    // Expose which sizes/colours are actually buyable so the "shop the set"
+    // pickers can disable sold-out options — otherwise a buyer could pick a
+    // sold-out size and only discover it when create-intent rejects the order.
+    // Variant stock itself is not sent; only the in-stock option names.
+    const shaped = products.map(p => {
+      const variants = p.variants || [];
+      const liveSizes = new Set();
+      const liveColours = new Set();
+      for (const v of variants) {
+        if ((v.stockLevel || 0) > 0) {
+          if (v.size) liveSizes.add(v.size);
+          if (v.colour) liveColours.add(v.colour);
+        }
+      }
+      // Untracked products (no variants) keep their full option lists.
+      const availableSizes = variants.length ? (p.sizes || []).filter(s => liveSizes.has(s)) : (p.sizes || []);
+      const availableColours = variants.length ? (p.colours || []).filter(c => liveColours.has(c)) : (p.colours || []);
+      const { variants: _omit, ...rest } = p;
+      return { ...rest, availableSizes, availableColours };
+    });
+
+    res.json({ ...collection.toObject(), products: shaped });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });

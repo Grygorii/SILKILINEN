@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import ProductGrid from '@/components/ProductGrid';
+import CollectionSet from './CollectionSet';
 import Image from 'next/image';
 import styles from './page.module.css';
 
@@ -108,7 +108,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
       {collection.products.length === 0 ? (
         <p className={styles.empty}>No products in this collection yet.</p>
       ) : (
-        <ProductGrid products={collection.products} />
+        <CollectionSet products={collection.products} discountPercent={collection.discountPercent ?? 0} />
       )}
     </main>
   );

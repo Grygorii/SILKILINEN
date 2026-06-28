@@ -484,7 +484,7 @@ export default function CheckoutPage() {
                 </div>
                 {summary.discountAmount > 0 && (
                   <div className={`${styles.totalRow} ${styles.discount}`}>
-                    <span>Discount ({summary.discountCode})</span>
+                    <span>{summary.discountCode ? `Discount (${summary.discountCode})` : 'Collection offer'}</span>
                     <span>−€{summary.discountAmount.toFixed(2)}</span>
                   </div>
                 )}
