@@ -49,10 +49,13 @@ ALWAYS prefer specific over general: "mulberry silk" not "luxury fabric"; "slow 
 
 Use British English: colour not color, programme not program.
 
+For a collection or category page, also write a "description": a warm, 1-2 sentence on-page blurb (under 200 characters) in brand voice that introduces the edit. For a product, return "" for "description".
+
 RESPOND ONLY WITH VALID JSON in this exact shape:
 {
   "metaTitle": "...",
   "metaDescription": "...",
+  "description": "...",
   "slug": "...",
   "keywords": ["...", "...", "..."],
   "altTextTemplate": "..."
@@ -176,6 +179,7 @@ async function generateSEO(input) {
       // without this the save throws a ValidationError ("Apply failed").
       metaTitle:       String(parsed.metaTitle).slice(0, 70),
       metaDescription: String(parsed.metaDescription).slice(0, 165),
+      description:     String(parsed.description || '').slice(0, 400),
       slug:            parsed.slug            || '',
       keywords,
       altTextTemplate: parsed.altTextTemplate || '',

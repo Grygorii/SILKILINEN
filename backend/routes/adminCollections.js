@@ -6,6 +6,16 @@ const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
 const { generateSEO, AIServiceError } = require('../services/aiText');
 const { pingIndexNow } = require('../services/indexNow');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2; // configured at load by adminProducts
+const { detectImageType } = require('../utils/fileSignature');
+
+const imgUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+function uploadBuffer(buffer, options) {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(options, (err, result) => (err ? reject(err) : resolve(result))).end(buffer);
+  });
+}
 
 // Instant-index a live collection (fire-and-forget). Skip drafts/archived —
 // those URLs aren't public.
@@ -51,8 +61,8 @@ router.get('/', async (req, res) => {
 // POST /api/admin/collections
 router.post('/', async (req, res) => {
   try {
-    const { name, slug, description, heroImage, isFeatured, featuredOrder, displayOrder, status, metaTitle, metaDescription } = req.body;
-    const collection = new Collection({ name, slug, description, heroImage, isFeatured, featuredOrder, displayOrder, status, metaTitle, metaDescription });
+    const { name, slug, description, heroImage, discountPercent, isFeatured, featuredOrder, displayOrder, status, metaTitle, metaDescription } = req.body;
+    const collection = new Collection({ name, slug, description, heroImage, discountPercent, isFeatured, featuredOrder, displayOrder, status, metaTitle, metaDescription });
     await collection.save();
     pingCollection(collection);
     res.status(201).json(collection);
@@ -85,7 +95,7 @@ router.get('/:id', async (req, res) => {
 // PATCH /api/admin/collections/:id
 router.patch('/:id', async (req, res) => {
   try {
-    const allowed = ['name', 'slug', 'description', 'heroImage', 'isFeatured', 'featuredOrder', 'displayOrder', 'status', 'metaTitle', 'metaDescription'];
+    const allowed = ['name', 'slug', 'description', 'heroImage', 'discountPercent', 'isFeatured', 'featuredOrder', 'displayOrder', 'status', 'metaTitle', 'metaDescription'];
     const updates = {};
     for (const key of allowed) {
       if (key in req.body) updates[key] = req.body[key];
@@ -100,6 +110,33 @@ router.patch('/:id', async (req, res) => {
     }
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/admin/collections/:id/image — upload the collection's hero photo
+router.post('/:id/image', imgUpload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file' });
+    if (!process.env.CLOUDINARY_CLOUD_NAME) return res.status(503).json({ error: 'Cloudinary not configured' });
+    if (!detectImageType(req.file.buffer)) return res.status(400).json({ error: 'Not a recognised image (jpeg/png/gif/webp).' });
+    const collection = await Collection.findById(req.params.id);
+    if (!collection) return res.status(404).json({ error: 'Not found' });
+    // Replace the previous hero image so we don't orphan it on Cloudinary.
+    if (collection.heroImage?.cloudinaryPublicId) {
+      await cloudinary.uploader.destroy(collection.heroImage.cloudinaryPublicId).catch(() => {});
+    }
+    const result = await uploadBuffer(req.file.buffer, {
+      folder: `silkilinen/collections/${req.params.id}`,
+      resource_type: 'image',
+      transformation: [{ width: 1600, height: 1000, crop: 'fill', gravity: 'auto' }],
+    });
+    collection.heroImage = { url: result.secure_url, cloudinaryPublicId: result.public_id, alt: collection.name };
+    await collection.save();
+    pingCollection(collection);
+    res.json({ heroImage: collection.heroImage });
+  } catch (err) {
+    console.error('[collection image] error:', err.message);
+    res.status(500).json({ error: 'Upload failed' });
   }
 });
 
@@ -191,6 +228,7 @@ router.post('/:id/generate-seo', aiRateLimit, async (req, res) => {
       seo: {
         metaTitle: String(seo.metaTitle || '').slice(0, 70),
         metaDescription: String(seo.metaDescription || '').slice(0, 165),
+        description: String(seo.description || '').slice(0, 400),
         keywords: seo.keywords,
       },
       message: 'SEO generated. Review and save to apply.',

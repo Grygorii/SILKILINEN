@@ -5,6 +5,11 @@ const collectionSchema = new mongoose.Schema({
   slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
   description: { type: String, trim: true },
 
+  // Collection-wide sale: every product in this collection sells at this % off
+  // while the collection is active. Applied authoritatively at checkout and
+  // shown on the storefront. 0 = no discount.
+  discountPercent: { type: Number, default: 0, min: 0, max: 90 },
+
   heroImage: {
     url: { type: String },
     cloudinaryPublicId: { type: String },

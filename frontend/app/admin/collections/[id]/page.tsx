@@ -15,6 +15,7 @@ type Form = {
   name: string;
   slug: string;
   description: string;
+  discountPercent: string;
   status: CollectionStatus;
   isFeatured: boolean;
   featuredOrder: string;
@@ -32,7 +33,7 @@ type Product = {
 };
 
 const EMPTY_FORM: Form = {
-  name: '', slug: '', description: '',
+  name: '', slug: '', description: '', discountPercent: '0',
   status: 'active', isFeatured: false,
   featuredOrder: '', displayOrder: '0',
   metaTitle: '', metaDescription: '',
@@ -54,6 +55,8 @@ export default function AdminCollectionEditPage({ params }: { params: Promise<{ 
   const [error, setError] = useState('');
   const [loadError, setLoadError] = useState('');
   const [generatingSeo, setGeneratingSeo] = useState(false);
+  const [heroImage, setHeroImage] = useState<{ url?: string } | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Product assignment state
   const [productSearch, setProductSearch] = useState('');
@@ -70,6 +73,7 @@ export default function AdminCollectionEditPage({ params }: { params: Promise<{ 
         name: data.name || '',
         slug: data.slug || '',
         description: data.description || '',
+        discountPercent: data.discountPercent != null ? String(data.discountPercent) : '0',
         status: data.status || 'active',
         isFeatured: data.isFeatured || false,
         featuredOrder: data.featuredOrder != null ? String(data.featuredOrder) : '',
@@ -78,6 +82,7 @@ export default function AdminCollectionEditPage({ params }: { params: Promise<{ 
         metaDescription: data.metaDescription || '',
       });
       setProducts(data.products || []);
+      setHeroImage(data.heroImage?.url ? { url: data.heroImage.url } : null);
     } catch {
       setLoadError('Failed to load collection');
     }
@@ -107,9 +112,16 @@ export default function AdminCollectionEditPage({ params }: { params: Promise<{ 
         throw new Error(err.error || 'Generation failed');
       }
       const { seo } = await res.json();
-      setForm(f => ({ ...f, metaTitle: seo.metaTitle || f.metaTitle, metaDescription: seo.metaDescription || f.metaDescription }));
+      setForm(f => ({
+        ...f,
+        metaTitle: seo.metaTitle || f.metaTitle,
+        metaDescription: seo.metaDescription || f.metaDescription,
+        // Also fill the on-page description (the founder asked for it). Generated
+        // value wins since they pressed the button.
+        description: seo.description || f.description,
+      }));
       setSaved(false);
-      toast('SEO generated — review, then Save to apply.', 'success');
+      toast('SEO + description generated — review, then Save to apply.', 'success');
     } catch (e: unknown) {
       toast(e instanceof Error ? e.message : 'Could not generate SEO.', 'error');
     } finally {
@@ -118,12 +130,27 @@ export default function AdminCollectionEditPage({ params }: { params: Promise<{ 
   }
 
   function handleNameChange(name: string) {
-    setForm(f => ({
-      ...f,
-      name,
-      slug: isNew ? slugify(name) : f.slug,
-    }));
+    // Keep the slug in step with the name (the founder asked for auto-update).
+    setForm(f => ({ ...f, name, slug: slugify(name) }));
     setSaved(false);
+  }
+
+  async function uploadPhoto(file: File) {
+    if (isNew) { toast('Save the collection first, then add a photo.', 'error'); return; }
+    setUploadingPhoto(true);
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const res = await fetch(`${API}/api/admin/collections/${id}/image`, { method: 'POST', credentials: 'include', body: fd });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || 'Upload failed'); }
+      const data = await res.json();
+      setHeroImage(data.heroImage?.url ? { url: data.heroImage.url } : null);
+      toast('Photo uploaded.', 'success');
+    } catch (e: unknown) {
+      toast(e instanceof Error ? e.message : 'Upload failed', 'error');
+    } finally {
+      setUploadingPhoto(false);
+    }
   }
 
   async function save() {
@@ -134,6 +161,7 @@ export default function AdminCollectionEditPage({ params }: { params: Promise<{ 
         name: form.name,
         slug: form.slug,
         description: form.description,
+        discountPercent: form.discountPercent !== '' ? Number(form.discountPercent) : 0,
         status: form.status,
         isFeatured: form.isFeatured,
         featuredOrder: form.featuredOrder !== '' ? Number(form.featuredOrder) : undefined,
@@ -264,6 +292,20 @@ export default function AdminCollectionEditPage({ params }: { params: Promise<{ 
               rows={4}
               placeholder="A short description shown on the collection page."
             />
+
+            <label className={styles.label}>Collection photo</label>
+            {heroImage?.url && (
+              <img src={heroImage.url} alt="" style={{ width: '100%', maxWidth: 340, borderRadius: 4, display: 'block', marginBottom: 10, border: '1px solid var(--border, #e8e2d6)' }} />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              disabled={isNew || uploadingPhoto}
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); e.target.value = ''; }}
+            />
+            <p className={styles.hint}>
+              {isNew ? 'Save the collection first, then add a photo.' : uploadingPhoto ? 'Uploading…' : 'Shown as the collection banner. Replaces the current photo.'}
+            </p>
           </section>
 
           <section className={styles.section}>
@@ -399,6 +441,18 @@ export default function AdminCollectionEditPage({ params }: { params: Promise<{ 
               placeholder="0"
             />
             <p className={styles.hint}>Lower number = appears first in lists.</p>
+
+            <label className={styles.label} style={{ marginTop: 16 }}>Collection discount (%)</label>
+            <input
+              className={styles.input}
+              type="number"
+              min="0"
+              max="90"
+              value={form.discountPercent}
+              onChange={(e) => set('discountPercent', e.target.value)}
+              placeholder="0"
+            />
+            <p className={styles.hint}>Every product in this collection sells at this % off while it&rsquo;s Active. 0 = no discount.</p>
           </section>
         </aside>
       </div>
