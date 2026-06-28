@@ -7,6 +7,7 @@ import ContactWidget from "@/components/ContactWidget";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
 import MetaPixel from "@/components/MetaPixel";
 import PinterestTag from "@/components/PinterestTag";
+import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 import { getContent } from "@/lib/content";
 
 export default async function ShopLayout({
@@ -23,6 +24,7 @@ export default async function ShopLayout({
     <>
       <SiteHeader messages={messages.length > 0 ? messages : undefined} />
       <div className="shopContent">
+        <SiteBreadcrumbs />
         {children}
       </div>
       <Footer />

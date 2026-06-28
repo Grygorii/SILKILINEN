@@ -1,0 +1,59 @@
+.nav {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 18px 6% 0;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  color: var(--muted, #8a8680);
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.link {
+  color: var(--muted, #8a8680);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.link:hover {
+  color: var(--dark, #1a1916);
+  text-decoration: underline;
+}
+
+.current {
+  color: var(--dark, #1a1916);
+}
+
+.sep {
+  color: var(--muted, #8a8680);
+  opacity: 0.55;
+}
+
+/* On phones, keep the trail to one line — the back-targets (Home / Shop) stay
+   pinned at the left, and a long leaf title scrolls off to the right rather
+   than wrapping into a tall block. */
+@media (max-width: 600px) {
+  .nav { padding-top: 14px; }
+  .list {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .list::-webkit-scrollbar { display: none; }
+  .item { white-space: nowrap; }
+}

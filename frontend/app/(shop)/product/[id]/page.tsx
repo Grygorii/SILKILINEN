@@ -10,6 +10,7 @@ import PageTracker from '@/components/PageTracker';
 import CrossSell from '@/components/CrossSell';
 import RecentlyViewed from '@/components/RecentlyViewed';
 import ProductViewTracker from '@/components/ProductViewTracker';
+import Breadcrumbs from '@/components/Breadcrumbs';
 import { ProductSelectionProvider } from '@/components/ProductSelectionContext';
 import { AccordionGroup, AccordionItem, AccordionSubLabel } from '@/components/ui/Accordion';
 import { shippingDetailsFor, merchantReturnPolicy } from '@/lib/shippingSchema';
@@ -242,6 +243,17 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     ],
   };
 
+  // Visible trail mirroring the JSON-LD above (Home / Shop / Category / Product).
+  const categoryLabel = product.category
+    ? String(product.category).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    : null;
+  const crumbs = [
+    { label: 'Home', href: '/' },
+    { label: 'Shop', href: '/shop' },
+    ...(product.category ? [{ label: categoryLabel as string, href: `/shop?category=${product.category}` }] : []),
+    { label: product.name },
+  ];
+
   return (
     <>
       <main className={styles.page}>
@@ -255,6 +267,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         />
         <ProductViewTracker id={product._id} name={product.name} price={product.price} image={galleryImages[0]?.url} category={product.category} />
         <PageTracker page="product" productId={product._id} />
+
+        <Breadcrumbs items={crumbs} />
+
 
         <ProductSelectionProvider
           defaultColour={product.colours?.[0] ?? ''}
