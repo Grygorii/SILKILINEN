@@ -12,6 +12,7 @@ import StorySection from '@/components/StorySection';
 import BlogTeaser from '@/components/BlogTeaser';
 import NewsletterBand from '@/components/NewsletterBand';
 import InstagramGrid from '@/components/InstagramGrid';
+import { EditableText, EditableImage } from '@/components/inline/InlineEdit';
 import { getContent, val } from '@/lib/content';
 import { getPageMeta } from '@/lib/pageSeo';
 
@@ -75,6 +76,7 @@ export default async function Home() {
   return (
     <main>
       <section className={styles.hero}>
+        <EditableImage contentKey="homepage_hero_image" section="homepage">
         {heroStill && (
           // Real <img> with fetchpriority="high" so the browser preloads
           // it immediately on first byte instead of waiting to discover
@@ -90,6 +92,7 @@ export default async function Home() {
             className={styles.heroImg}
           />
         )}
+        </EditableImage>
         {/* Optional hero video: muted autoplay loop layered over the image.
             The image above stays the LCP element + poster, so Core Web Vitals
             hold; the video fades in once it can play. Hidden for users who
@@ -108,9 +111,9 @@ export default async function Home() {
           </video>
         )}
         <div className={styles.heroContent}>
-          <h1>{heroTitle}</h1>
-          <p>{heroSubtitle}</p>
-          <a href="/shop" className={styles.heroBtn}>{heroCta}</a>
+          <EditableText as="h1" contentKey="homepage_hero_title" value={heroTitle} />
+          <EditableText as="p" contentKey="homepage_hero_subtitle" value={heroSubtitle} />
+          <EditableText as="a" href="/shop" className={styles.heroBtn} contentKey="homepage_hero_cta" value={heroCta} />
         </div>
       </section>
 

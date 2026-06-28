@@ -8,6 +8,7 @@ import CookieConsentBanner from "@/components/CookieConsentBanner";
 import MetaPixel from "@/components/MetaPixel";
 import PinterestTag from "@/components/PinterestTag";
 import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
+import { InlineEditProvider } from "@/components/inline/InlineEdit";
 import { getContent } from "@/lib/content";
 
 export default async function ShopLayout({
@@ -21,7 +22,7 @@ export default async function ShopLayout({
     .filter((m): m is string => Boolean(m));
 
   return (
-    <>
+    <InlineEditProvider>
       <SiteHeader messages={messages.length > 0 ? messages : undefined} />
       <div className="shopContent">
         <SiteBreadcrumbs />
@@ -35,6 +36,6 @@ export default async function ShopLayout({
       <CookieConsentBanner />
       <MetaPixel />
       <PinterestTag />
-    </>
+    </InlineEditProvider>
   );
 }

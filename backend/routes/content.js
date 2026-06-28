@@ -203,17 +203,32 @@ router.get('/:section', async function(req, res) {
   }
 });
 
-// PUT /api/content/:key — admin update
+// Derive the structural fields for a content key that has no row yet. Storefront
+// slots render from code defaults until first edited, so the in-page editor may
+// be the first thing to ever save a given key — upsert needs sane values for the
+// schema-required type/section/label.
+function deriveContentMeta(key) {
+  const type = /_image$/.test(key) ? 'image' : /_video$/.test(key) ? 'video' : 'text';
+  const section = key.includes('_') ? key.slice(0, key.indexOf('_')) : 'content';
+  const label = key.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
+  return { type, section, label };
+}
+
+// PUT /api/content/:key — admin update. Upserts: editing a slot that only had a
+// code default (no row yet) creates the row instead of 404ing.
 router.put('/:key', requireAuth, async function(req, res) {
   try {
     const { value, altText, caption } = req.body;
-    const update = { updatedBy: req.user?.id };
-    if (value !== undefined) update.value = value;
-    if (altText !== undefined) update.altText = altText;
-    if (caption !== undefined) update.caption = caption;
+    const set = { updatedBy: req.user?.id };
+    if (value !== undefined) set.value = value;
+    if (altText !== undefined) set.altText = altText;
+    if (caption !== undefined) set.caption = caption;
 
-    const item = await SiteContent.findOneAndUpdate({ key: req.params.key }, update, { new: true });
-    if (!item) return res.status(404).json({ error: 'Content key not found' });
+    const item = await SiteContent.findOneAndUpdate(
+      { key: req.params.key },
+      { $set: set, $setOnInsert: { key: req.params.key, ...deriveContentMeta(req.params.key) } },
+      { new: true, upsert: true, setDefaultsOnInsert: true },
+    );
     res.json(item);
   } catch (err) {
     res.status(400).json({ error: err.message });

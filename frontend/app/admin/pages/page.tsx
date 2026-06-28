@@ -7,13 +7,13 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 const BASE = 'https://www.silkilinen.com';
 
 type Family =
-  | { kind: 'static'; label: string; path: string; section: string; note?: string; editHref?: string; builderHref?: string }
+  | { kind: 'static'; label: string; path: string; section: string; note?: string; editHref?: string; inpageEditHref?: string }
   | { kind: 'dynamic'; label: string; pathPattern: string; section: string; count: number; sampleHref: string; manageHref?: string };
 
 // Hardcoded list of route families. One row per family, not per instance.
 // /product/[id] = 1 row showing "Products (N)", not N rows.
 const STATIC_PAGES: Omit<Extract<Family, { kind: 'static' }>, 'kind'>[] = [
-  { label: 'Home',           path: '/',               section: 'Storefront', editHref: '/admin/content?page=Home&only=banner,homepage,categories,instagram,library&tab=homepage', builderHref: '/admin/pages/builder/home' },
+  { label: 'Home',           path: '/',               section: 'Storefront', inpageEditHref: '/?edit=1' },
   { label: 'Shop',           path: '/shop',           section: 'Storefront' },
   { label: 'Journal',        path: '/journal',        section: 'Storefront' },
   { label: 'Reviews',        path: '/reviews',        section: 'Storefront' },
@@ -158,8 +158,8 @@ export default async function PagesOverview() {
                       <td><span className={styles.tagStatic}>static</span></td>
                       <td className={styles.actions}>
                         <a href={`${BASE}${f.path}`} target="_blank" rel="noopener noreferrer">View ↗</a>
+                        {f.inpageEditHref && <a href={`${BASE}${f.inpageEditHref}`} target="_blank" rel="noopener noreferrer">Edit page ↗</a>}
                         {f.editHref && <Link href={f.editHref}>Edit content →</Link>}
-                        {f.builderHref && <Link href={f.builderHref}>Build page →</Link>}
                       </td>
                     </tr>
                   );
