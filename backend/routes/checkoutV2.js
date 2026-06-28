@@ -20,6 +20,28 @@ async function activeCollectionDiscount(collectionIds) {
     .select('discountPercent').lean().catch(() => []);
   return cols.reduce((max, c) => Math.max(max, c.discountPercent || 0), 0);
 }
+
+// Stripe caps each metadata VALUE at 500 chars. The order line-items are
+// serialised into metadata so the webhook can rebuild the order on the
+// no-session (direct-items) checkout path — but a larger cart's JSON blows past
+// 500 chars and Stripe rejects the whole PaymentIntent (a 4-item "shop the set"
+// is ~590 chars). Split the JSON across numbered keys (items, items1, items2, …)
+// and reassemble on read. Stays well under Stripe's 50-key limit for any real
+// cart.
+const META_ITEMS_CHUNK = 480;
+function packItems(metadata, itemsArray) {
+  const str = JSON.stringify(itemsArray || []);
+  if (str.length <= META_ITEMS_CHUNK) { metadata.items = str; return; }
+  for (let i = 0, k = 0; i < str.length; i += META_ITEMS_CHUNK, k++) {
+    metadata[k === 0 ? 'items' : `items${k}`] = str.slice(i, i + META_ITEMS_CHUNK);
+  }
+}
+function unpackItems(meta) {
+  if (!meta || meta.items === undefined) return [];
+  let str = meta.items || '';
+  for (let k = 1; meta[`items${k}`] !== undefined; k++) str += meta[`items${k}`];
+  try { return JSON.parse(str || '[]'); } catch { return []; }
+}
 const Expense = require('../models/Expense');
 const Customer = require('../models/Customer');
 const { calculateShipping, getTierForCountry } = require('../services/shipping');
@@ -273,19 +295,10 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
         shippingCost: String(shipping.cost),
         shippingCountry: country,
         subtotal: String(subtotal),
-        // Serialise items so webhook can reconstruct order even without Cart doc.
-        // includedProducts is intentionally omitted from the JSON to stay under
-        // Stripe's 500-char metadata-value cap — the webhook re-populates a
-        // bundle's child list from the DB if it has to fall back to this path.
-        items: JSON.stringify(validatedItems.map(i => ({
-          productId: i.productId ? String(i.productId) : null,
-          bundleId: i.bundleId ? String(i.bundleId) : null,
-          name: i.name,
-          price: i.price,
-          colour: i.colour,
-          size: i.size,
-          quantity: i.quantity,
-        }))),
+        // items are serialised separately via packItems() below — the webhook
+        // reconstructs the order from them when there's no Cart doc (the
+        // direct-items checkout path sends no sessionId). includedProducts is
+        // omitted from the JSON; a bundle's children are re-fetched from the DB.
         utm_source:    attribution?.source   ?? 'direct',
         utm_medium:    attribution?.medium   ?? 'none',
         utm_campaign:  attribution?.campaign ?? 'none',
@@ -295,6 +308,17 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
       },
       description: `SILKILINEN order — ${validatedItems.length} item(s)`,
     };
+    // Chunk the line-items across metadata keys so a large cart can't exceed
+    // Stripe's 500-char-per-value cap (which 500'd the whole checkout).
+    packItems(intentParams.metadata, validatedItems.map(i => ({
+      productId: i.productId ? String(i.productId) : null,
+      bundleId: i.bundleId ? String(i.bundleId) : null,
+      name: i.name,
+      price: i.price,
+      colour: i.colour,
+      size: i.size,
+      quantity: i.quantity,
+    })));
     if (email) intentParams.receipt_email = email;
     const intent = await stripe.paymentIntents.create(intentParams);
 
@@ -336,8 +360,7 @@ checkoutRouter.post('/update-intent', checkoutRateLimit, async (req, res) => {
     const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
     const meta = intent.metadata || {};
 
-    let items = [];
-    try { items = JSON.parse(meta.items || '[]'); } catch { /* ignore */ }
+    const items = unpackItems(meta);
 
     const subtotal = meta.subtotal ? parseFloat(meta.subtotal) : items.reduce((s, i) => s + i.price * i.quantity, 0);
     const country = shippingCountry || meta.shippingCountry || 'IE';
@@ -520,8 +543,8 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
           size: i.size,
           quantity: i.quantity,
         }));
-      } else if (meta.items) {
-        try { items = JSON.parse(meta.items); } catch { /* ignore */ }
+      } else {
+        items = unpackItems(meta);
       }
 
       // Snapshot COGS from product costing data at time of sale. Bundle
