@@ -519,6 +519,16 @@ export default function ContentPage() {
                     </details>
                   )}
 
+                  {(edit.value || edit.preview) && (
+                    <button
+                      className={styles.uploadBtn}
+                      style={{ marginTop: 8, background: 'none', color: 'var(--muted)' }}
+                      onClick={() => setEdit(prev => prev ? { ...prev, value: '', preview: null, file: null } : null)}
+                    >
+                      Remove image
+                    </button>
+                  )}
+
                   <div className={styles.field}>
                     <label>Alt text</label>
                     <input
