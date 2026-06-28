@@ -28,6 +28,7 @@ type CollectionData = {
   heroImage?: { url: string; alt?: string };
   metaTitle?: string;
   metaDescription?: string;
+  discountPercent?: number;
   products: CollectionProduct[];
 };
 
@@ -96,6 +97,11 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
         )}
         {collection.description && (
           <p className={styles.description}>{collection.description}</p>
+        )}
+        {(collection.discountPercent ?? 0) > 0 && (
+          <p style={{ display: 'inline-block', marginTop: 14, padding: '8px 18px', border: '1px solid var(--dark, #2a2218)', color: 'var(--dark, #2a2218)', fontSize: 12, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
+            {collection.discountPercent}% off this collection — applied at checkout
+          </p>
         )}
       </div>
 

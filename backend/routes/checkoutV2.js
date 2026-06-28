@@ -10,6 +10,16 @@ const Order = require('../models/Order');
 const Visit = require('../models/Visit');
 const Product = require('../models/Product');
 const Bundle = require('../models/Bundle');
+const Collection = require('../models/Collection');
+
+// The biggest active collection-discount % a product qualifies for (a product can
+// sit in several collections; the customer gets the best). 0 if none.
+async function activeCollectionDiscount(collectionIds) {
+  if (!Array.isArray(collectionIds) || collectionIds.length === 0) return 0;
+  const cols = await Collection.find({ _id: { $in: collectionIds }, status: 'active', discountPercent: { $gt: 0 } })
+    .select('discountPercent').lean().catch(() => []);
+  return cols.reduce((max, c) => Math.max(max, c.discountPercent || 0), 0);
+}
 const Expense = require('../models/Expense');
 const Customer = require('../models/Customer');
 const { calculateShipping, getTierForCountry } = require('../services/shipping');
@@ -156,6 +166,7 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
     // The client never sets the price; we always recompute from the DB so a
     // tampered cart can't underpay.
     const validatedItems = [];
+    let collectionDiscountAmount = 0; // order-level sale from any discounted collections
     for (const item of sourceItems) {
       // Quantity is the one client value we act on — guard it before it reaches
       // any price arithmetic. A negative/fractional/huge qty would otherwise
@@ -210,8 +221,13 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
           size: item.size || '',
           quantity,
         });
+        // Tally any collection-wide sale as an ORDER-LEVEL discount (line items
+        // stay at full price, so order records remain consistent).
+        const colPct = await activeCollectionDiscount(product.collections);
+        if (colPct > 0) collectionDiscountAmount += product.price * quantity * (colPct / 100);
       }
     }
+    collectionDiscountAmount = Math.round(collectionDiscountAmount * 100) / 100;
 
     const subtotal = validatedItems.reduce((s, i) => s + i.price * i.quantity, 0);
     const country = shippingCountry || (cart?.shippingCountry) || 'IE';
@@ -233,6 +249,13 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
       }
     }
 
+    // Collection sale vs promo code: not stacked — the customer gets the better
+    // of the two, and a winning sale doesn't consume a single-use code.
+    if (collectionDiscountAmount > discountAmount) {
+      discountAmount = collectionDiscountAmount;
+      discountCode = null;
+    }
+
     const discountedSubtotal = Math.max(0, subtotal - discountAmount);
     const shipping = calculateShipping(country, discountedSubtotal);
     const tax = calculateTax(discountedSubtotal, country);
@@ -246,6 +269,7 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
         sessionId: sessionId || '',
         discountCode: discountCode || '',
         discountAmount: String(discountAmount),
+        collectionDiscountAmount: String(collectionDiscountAmount),
         shippingCost: String(shipping.cost),
         shippingCountry: country,
         subtotal: String(subtotal),
@@ -335,6 +359,14 @@ checkoutRouter.post('/update-intent', checkoutRateLimit, async (req, res) => {
         // Falls back to a generic for safety.
         discountError = dr.error || 'This code could not be applied.';
       }
+    }
+
+    // Collection sale (computed once at create-intent, carried in metadata) vs the
+    // promo code — better of the two, never both.
+    const collectionDiscountAmount = meta.collectionDiscountAmount ? parseFloat(meta.collectionDiscountAmount) : 0;
+    if (collectionDiscountAmount > discountAmount) {
+      discountAmount = collectionDiscountAmount;
+      discountCodeResult = null;
     }
 
     const discountedSubtotal = Math.max(0, subtotal - discountAmount);
