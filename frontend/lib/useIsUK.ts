@@ -23,6 +23,12 @@ function fetchIsUK(): Promise<boolean | null> {
 export function useIsUK(): boolean | null {
   const [isUK, setIsUK] = useState<boolean | null>(cached ?? null);
   useEffect(() => {
+    // ?uk_preview=1 force-enables the whole UK campaign (card, bar, badges) so
+    // the team can review it from any location.
+    if (new URLSearchParams(window.location.search).has('uk_preview')) {
+      setIsUK(true);
+      return;
+    }
     let active = true;
     fetchIsUK().then(v => { if (active) setIsUK(v); });
     return () => { active = false; };
