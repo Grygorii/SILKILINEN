@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useIsUK } from '@/lib/useIsUK';
 import styles from './UKShippingNotice.module.css';
 
 const STORAGE_KEY = 'slk_uk_notice_dismissed';
@@ -11,6 +12,7 @@ const SNOOZE_MS = 30 * 24 * 60 * 60 * 1000; // don't re-offer for 30 days once d
 // once, ~2s after load, and is dismissible. Country comes from /api/geo (Vercel
 // edge header) so storefront pages stay statically cached.
 export default function UKShippingNotice() {
+  const isUK = useIsUK();
   const [visible, setVisible] = useState(false);
 
   const dismiss = useCallback(() => {
@@ -18,30 +20,22 @@ export default function UKShippingNotice() {
     setVisible(false);
   }, []);
 
+  // Preview override: ?uk_preview=1 forces the card to show from any location,
+  // so the team can review the design/copy without a UK IP.
   useEffect(() => {
-    // Preview override: ?uk_preview=1 forces the card to show from any location,
-    // so the team can review the design/copy without a UK IP.
-    if (new URLSearchParams(window.location.search).has('uk_preview')) {
-      setVisible(true);
-      return;
-    }
+    if (new URLSearchParams(window.location.search).has('uk_preview')) setVisible(true);
+  }, []);
 
+  // Show once for confirmed GB visitors, ~2s after geo resolves.
+  useEffect(() => {
+    if (isUK !== true) return;
     try {
       const dismissed = localStorage.getItem(STORAGE_KEY);
       if (dismissed && Date.now() - Number(dismissed) < SNOOZE_MS) return;
     } catch { /* ignore */ }
-
-    let cancelled = false;
-    let showTimer: ReturnType<typeof setTimeout>;
-    fetch('/api/geo')
-      .then(r => (r.ok ? r.json() : null))
-      .then(data => {
-        if (cancelled || data?.country !== 'GB') return;
-        showTimer = setTimeout(() => { if (!cancelled) setVisible(true); }, 2000);
-      })
-      .catch(() => {});
-    return () => { cancelled = true; clearTimeout(showTimer); };
-  }, []);
+    const showTimer = setTimeout(() => setVisible(true), 2000);
+    return () => clearTimeout(showTimer);
+  }, [isUK]);
 
   useEffect(() => {
     if (!visible) return;

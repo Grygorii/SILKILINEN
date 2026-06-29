@@ -14,6 +14,7 @@ import {
 } from '@stripe/react-stripe-js';
 import Button from '@/components/ui/Button';
 import GoogleCheckoutSignIn from '@/components/GoogleCheckoutSignIn';
+import UKShipBadge from '@/components/UKShipBadge';
 import styles from './page.module.css';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -517,6 +518,9 @@ export default function CheckoutPage() {
                 </div>
               </div>
             )}
+
+            {/* UK shoppers: reassurance at the payment moment. */}
+            <UKShipBadge />
           </section>
         </aside>
       </div>

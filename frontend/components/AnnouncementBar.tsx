@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { sanitizeBannerHtml } from '@/lib/sanitizeInline';
+import { useIsUK } from '@/lib/useIsUK';
 import styles from './AnnouncementBar.module.css';
+
+// Shown first in the rotation for UK (GB) visitors — the Etsy campaign angle.
+const UK_MESSAGE = 'UK orders ship from within the UK — <strong>no customs or duties</strong>';
 
 // OvH-style restraint pass — dropped the OEKO-TEX certification line
 // because reading like a trust-badge undercuts the luxury voice. Kept the
@@ -17,9 +21,15 @@ const DEFAULT_MESSAGES = [
 const INTERVAL = 5000;
 
 export default function AnnouncementBar({ messages }: { messages?: string[] }) {
-  const msgs = messages && messages.length > 0 ? messages : DEFAULT_MESSAGES;
+  const isUK = useIsUK();
+  const base = messages && messages.length > 0 ? messages : DEFAULT_MESSAGES;
+  // UK visitors see the no-customs line first, then the usual rotation.
+  const msgs = isUK ? [UK_MESSAGE, ...base] : base;
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
+
+  // When geo resolves to GB, jump to the UK line so it's seen straight away.
+  useEffect(() => { if (isUK) setIndex(0); }, [isUK]);
 
   useEffect(() => {
     if (msgs.length <= 1) return;

@@ -6,6 +6,7 @@ import { useProductSelection } from './ProductSelectionContext';
 import DropAHint from './DropAHint';
 import { Gift } from '@/components/icons';
 import Button from '@/components/ui/Button';
+import UKShipBadge from '@/components/UKShipBadge';
 import { OptionPill, OptionPillGroup } from '@/components/ui/OptionPill';
 import { ColourSwatchGroup, type Swatch } from '@/components/ui/ColourSwatch';
 import styles from './ProductOptions.module.css';
@@ -165,6 +166,9 @@ export default function ProductOptions({ colours, colourHexMap, sizes, productNa
           {ctaLabel}
         </Button>
       </div>
+
+      {/* UK shoppers: ships from within the UK, so no customs at the door. */}
+      <UKShipBadge />
 
       {/* Trust row — the reassurance a considered buyer wants right at the
           add-to-bag moment (was only on the homepage / hidden in accordions). */}
