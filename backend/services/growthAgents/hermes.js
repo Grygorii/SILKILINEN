@@ -33,7 +33,7 @@ async function gatherContext() {
   const [perf, opps, products, categories, collections, demand, competitor, countries] = await Promise.all([
     getSearchPerformance(28).catch(() => null),
     getQueryOpportunities(28).catch(() => []),
-    Product.find({ status: 'active' }).select('name category metaTitle metaDescription').lean().catch(() => []),
+    Product.find({ status: 'active' }).select('name slug category metaTitle metaDescription').lean().catch(() => []),
     Category.find({ status: 'active' }).select('slug label metaTitle metaDescription').lean().catch(() => []),
     Collection.find({ status: 'active' }).select('slug name metaTitle metaDescription').lean().catch(() => []),
     // OUTWARD intel from the other agents — read through the chain, not invented.
@@ -143,6 +143,21 @@ async function run() {
   // Senior analyses the on-page-only Hermes was missing — all fail soft.
   const pairs = await getQueryPagePairs(28).catch(() => []);
   const cannibal = detectCannibalisation(pairs);
+
+  // Resolve a GSC URL path to a human name. Google frequently indexes the
+  // /product/<ObjectId> (and sometimes /product/<slug>) form, which is
+  // meaningless in an alert — show the product NAME instead, falling back to the
+  // bare path when we can't resolve it (e.g. a deleted product).
+  const productByKey = new Map();
+  for (const pr of products) {
+    if (pr._id) productByKey.set(String(pr._id), pr.name);
+    if (pr.slug) productByKey.set(pr.slug, pr.name);
+  }
+  const pageLabel = (page) => {
+    const path = String(page || '').replace(/^https?:\/\/[^/]+/, '') || '/';
+    const m = path.match(/^\/product\/([^/?#]+)/);
+    return (m && productByKey.get(m[1])) || path;
+  };
   // Current best position per query — from the full query×page set (far wider
   // than the top-15 opportunities), so outcome tracking can actually measure.
   const currentPositions = new Map();
@@ -186,7 +201,7 @@ async function run() {
     ``,
     `── SENIOR SIGNALS ──`,
     cannibal.length
-      ? `CANNIBALISATION (your OWN pages competing for one query — splitting signals; recommend consolidating to one):\n${cannibal.map(c => `- "${c.query}": ${c.pages.map(p => `${p.page.replace(/^https?:\/\/[^/]+/, '')} (pos ${p.position})`).join(', ')}`).join('\n')}`
+      ? `CANNIBALISATION (your OWN pages competing for one query — splitting signals; recommend consolidating to one):\n${cannibal.map(c => `- "${c.query}": ${c.pages.map(p => `${pageLabel(p.page)} (pos ${p.position})`).join(', ')}`).join('\n')}`
       : 'CANNIBALISATION: none detected.',
     serp.length
       ? `LIVE SERP for your striking-distance queries (judge realistically — can a meta tweak win, or are you out-gunned by deeper content?):\n${serp.map(s => `- "${s.query}": ${s.configured ? (s.results.map(r => `[${r.displayLink}] ${r.title}`).join(' | ') || 'no results returned') : 'SERP API not configured'}`).join('\n')}`
@@ -269,7 +284,7 @@ async function run() {
     extra.push({
       type: 'seo',
       title: `Cannibalisation: "${String(c.query).slice(0, 70)}"`,
-      detail: `${c.pages.length} of your own pages compete for this query (${c.pages.map(p => `${p.page.replace(/^https?:\/\/[^/]+/, '')} pos ${p.position}`).join(', ')}). Consolidate to one strong page and point the weaker ones' internal links to it.`,
+      detail: `${c.pages.length} of your own pages compete for this query (${c.pages.map(p => `${pageLabel(p.page)} — pos ${p.position}`).join(', ')}). Consolidate to one strong page and point the weaker ones' internal links to it.`,
       href: '/admin/seo',
       status: 'needs_approval',
       meta: { kind: 'content', entityType: 'page', entityRef: '', target: c.query, action: 'consolidate competing pages to one canonical page', leverage: 'high', strategic: 'cannibalisation' },
