@@ -8,6 +8,7 @@ import CookieConsentBanner from "@/components/CookieConsentBanner";
 import MetaPixel from "@/components/MetaPixel";
 import PinterestTag from "@/components/PinterestTag";
 import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
+import UKShippingNotice from "@/components/UKShippingNotice";
 import { InlineEditProvider } from "@/components/inline/InlineEdit";
 import { getContent } from "@/lib/content";
 
@@ -32,6 +33,7 @@ export default async function ShopLayout({
       <AddedToCartToast />
       <WishlistSignInNudge />
       <EmailCapturePopup />
+      <UKShippingNotice />
       <ContactWidget />
       <CookieConsentBanner />
       <MetaPixel />

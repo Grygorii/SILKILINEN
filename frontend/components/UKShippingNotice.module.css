@@ -1,0 +1,76 @@
+.card {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1000;
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  background: var(--warm-white, #faf8f4);
+  border: 1px solid var(--border, #e8e2d6);
+  box-shadow: 0 14px 44px rgba(26, 25, 22, 0.16);
+  padding: 24px 24px 22px;
+  animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 4px;
+  color: var(--muted, #8a8680);
+}
+
+.close:hover { color: var(--dark, #1a1916); }
+
+.heading {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  color: var(--dark, #1a1916);
+  margin: 0 0 9px;
+}
+
+.body {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #5c564d;
+  margin: 0 0 17px;
+}
+
+.cta {
+  display: inline-block;
+  padding: 11px 24px;
+  background: var(--dark, #1a1916);
+  color: var(--warm-white, #faf8f4);
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  transition: opacity 0.18s;
+}
+
+.cta:hover { opacity: 0.85; }
+
+/* Phones: a bottom card with side margins. Sits above the contact bubble
+   briefly; it's dismissible so it never traps the corner. */
+@media (max-width: 600px) {
+  .card {
+    right: 16px;
+    left: 16px;
+    bottom: 16px;
+    width: auto;
+    padding: 20px 20px 18px;
+  }
+}
