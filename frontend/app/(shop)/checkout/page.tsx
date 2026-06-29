@@ -20,7 +20,12 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 type ShippingInfo = { cost: number; label: string; isFree: boolean };
+type SummaryItem = { name: string; price: number; colour?: string; size?: string; quantity: number };
 type OrderSummary = {
+  // The backend-validated line items the totals below are computed from. Render
+  // these (not the raw cart) so the lines a customer sees always sum to what
+  // they're charged.
+  items?: SummaryItem[];
   subtotal: number;
   discountCode: string | null;
   discountAmount: number;
@@ -249,12 +254,18 @@ export default function CheckoutPage() {
   // Keep appliedCodeRef in sync
   useEffect(() => { appliedCodeRef.current = appliedCode; }, [appliedCode]);
 
-  // Create intent once on mount
+  // Re-validate the intent whenever the cart composition changes, so the totals
+  // ALWAYS match the line items shown. Keyed on each line's id+variant+qty.
+  // This also covers the cart loading from localStorage after first paint (so
+  // the first intent isn't built from an empty cart), and any edit made via the
+  // cart slide-over while on checkout. Without this the totals froze to the
+  // first snapshot and drifted from the displayed lines.
+  const cartKey = cart.map(i => `${i.productId || i.bundleId}:${i.colour}:${i.size}:${i.quantity}`).join('|');
   useEffect(() => {
     if (cart.length === 0) return;
     createIntent();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [cartKey]);
 
   async function createIntent() {
     setLoading(true);
@@ -270,12 +281,16 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           items: cart.map(i => ({
             productId: i.productId,
+            bundleId: i.bundleId,
             name: i.name,
             quantity: i.quantity,
             colour: i.colour,
             size: i.size,
           })),
-          shippingCountry: 'IE',
+          // Preserve the chosen country + applied discount across a re-validate
+          // (cart change) so the recreated intent doesn't reset them.
+          shippingCountry: countryRef.current || 'IE',
+          discountCode: appliedCodeRef.current || undefined,
           attribution,
         }),
       });
@@ -396,6 +411,10 @@ export default function CheckoutPage() {
 
           {clientSecret && summary ? (
             <Elements
+              // Key by clientSecret: when the cart changes we recreate the
+              // intent (new secret), and Stripe Elements can't swap secrets in
+              // place — remounting binds the form to the correct PaymentIntent.
+              key={clientSecret}
               stripe={stripePromise}
               options={{
                 clientSecret,
@@ -438,7 +457,7 @@ export default function CheckoutPage() {
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>Order summary</h2>
             <ul className={styles.itemList}>
-              {cart.map((item, i) => (
+              {(summary?.items ?? cart).map((item, i) => (
                 <li key={i} className={styles.item}>
                   <div className={styles.itemMeta}>
                     <p className={styles.itemName}>{item.name}</p>

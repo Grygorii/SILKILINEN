@@ -35,7 +35,7 @@ export default function CollectionSet({
   products, discountPercent = 0,
 }: { products: SetProduct[]; discountPercent?: number }) {
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { cart, addToCart } = useCart();
   const [adding, setAdding] = useState(false);
   const [size, setSize] = useState<Record<string, string>>({});
   const [colour, setColour] = useState<Record<string, string>>({});
@@ -69,13 +69,20 @@ export default function CollectionSet({
     if (!ready || adding) return;
     setAdding(true);
     for (const i of available) {
+      const colour = colourOf(i) ?? '';
+      const size = sizeOf(i) ?? '';
+      // Idempotent: "the set" means one of each piece. If a piece is already in
+      // the bag (re-click, or the shopper added it earlier), leave it as-is
+      // rather than incrementing — otherwise quantities balloon on every click.
+      const already = cart.some(c => c.productId === i.p._id && (c.colour || '') === colour && (c.size || '') === size);
+      if (already) continue;
       const primary = i.p.images?.find(im => im.isPrimary) ?? i.p.images?.[0];
       addToCart({
         productId: i.p._id,
         name: i.p.name,
         price: i.p.price,
-        colour: colourOf(i) ?? '',
-        size: sizeOf(i) ?? '',
+        colour,
+        size,
         quantity: 1,
         stock: i.p.totalStock,
         image: primary?.url ?? i.p.image,
