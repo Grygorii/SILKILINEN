@@ -1,0 +1,193 @@
+.root {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 64px 6% 8px;
+  border-top: 1px solid var(--border, #e8e2d6);
+}
+
+/* ── Header ── */
+.head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(26px, 4vw, 36px);
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  color: var(--dark, #1a1916);
+  margin: 0;
+}
+
+.headCount {
+  font-size: 13px;
+  color: var(--muted, #8a8680);
+  letter-spacing: 0.3px;
+}
+
+.starsRow { display: inline-flex; gap: 2px; line-height: 1; }
+.starOn { color: #c8a24c; }
+.starOff { color: #d8d2c6; }
+
+/* ── Summary + invite ── */
+.summary {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  padding: 8px 0 36px;
+}
+
+.inviteTitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--dark, #1a1916);
+  margin: 0 0 4px;
+}
+
+.inviteSub { font-size: 13px; color: var(--muted, #8a8680); margin: 0 0 16px; }
+
+.invitePicker { display: flex; align-items: center; gap: 4px; }
+
+.pickStar {
+  background: none;
+  border: none;
+  padding: 3px;
+  cursor: pointer;
+  color: #c8a24c;
+  line-height: 0;
+  transition: transform 0.12s ease;
+}
+.pickStar:hover { transform: scale(1.18); }
+.pickStar:active { transform: scale(1.05); }
+
+.pickHint {
+  margin-left: 12px;
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  color: #9a7636;
+  min-width: 80px;
+  font-style: italic;
+}
+
+/* Rating distribution bars */
+.bars { display: flex; flex-direction: column; gap: 7px; }
+.barRow { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted, #8a8680); }
+.barLabel { display: inline-flex; align-items: center; gap: 3px; width: 26px; color: #9a7636; }
+.barTrack { flex: 1; height: 6px; background: #ece4d6; border-radius: 4px; overflow: hidden; }
+.barFill { display: block; height: 100%; background: #c8a24c; border-radius: 4px; transition: width 0.5s ease; }
+.barCount { width: 22px; text-align: right; }
+
+/* ── Write form ── */
+.form, .thanks {
+  background: var(--warm-white, #faf8f4);
+  border: 1px solid var(--border, #e8e2d6);
+  padding: 26px 26px 24px;
+  margin-bottom: 40px;
+}
+
+.formTitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 21px;
+  color: var(--dark, #1a1916);
+  margin: 0 0 14px;
+}
+
+.formStars { display: flex; align-items: center; gap: 4px; margin-bottom: 18px; }
+
+.fields { display: flex; flex-direction: column; gap: 10px; }
+
+.input, .textarea {
+  font: inherit;
+  font-size: 14px;
+  color: var(--dark, #1a1916);
+  background: #fff;
+  border: 1px solid var(--border, #ddd6c8);
+  padding: 11px 13px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+.input:focus, .textarea:focus { outline: none; border-color: #c8a24c; }
+.textarea { resize: vertical; line-height: 1.6; }
+
+/* Honeypot — visually removed but reachable by bots */
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+.error { color: #c0573a; font-size: 13px; margin: 12px 0 0; }
+
+.formActions { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 18px; }
+
+.submit {
+  background: var(--dark, #1a1916);
+  color: var(--warm-white, #faf8f4);
+  border: none;
+  padding: 12px 30px;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.18s;
+}
+.submit:hover:not(:disabled) { opacity: 0.85; }
+.submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.cancel { background: none; border: none; color: var(--muted, #8a8680); font-size: 13px; cursor: pointer; }
+.cancel:hover { color: var(--dark, #1a1916); }
+.formNote { font-size: 11.5px; color: var(--muted, #8a8680); margin-left: auto; }
+
+/* ── Thank-you ── */
+.thanks { text-align: center; padding: 40px 26px; }
+.thanksIcon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 46px; height: 46px; border-radius: 50%;
+  background: #e7f0e3; color: #4d7c45; margin-bottom: 14px;
+}
+.thanksTitle { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; color: var(--dark, #1a1916); margin: 0 0 6px; }
+.thanksSub { font-size: 13.5px; color: var(--muted, #8a8680); margin: 0; }
+
+/* ── List ── */
+.listHead { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
+.listCount { font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted, #8a8680); }
+.sortRow { display: flex; gap: 4px; }
+.sortBtn {
+  background: none; border: 1px solid transparent; padding: 5px 11px;
+  font: inherit; font-size: 12px; color: var(--muted, #8a8680); cursor: pointer; border-radius: 2px;
+}
+.sortBtn:hover { color: var(--dark, #1a1916); }
+.sortOn { color: var(--dark, #1a1916); border-color: var(--border, #e8e2d6); background: var(--warm-white, #faf8f4); }
+
+.card { padding: 22px 0; border-bottom: 1px solid var(--border, #ece7da); }
+.cardTop { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
+.cardDate { font-size: 12px; color: var(--muted, #8a8680); }
+.cardTitle { font-size: 14.5px; font-weight: 600; color: var(--dark, #1a1916); margin: 0 0 6px; letter-spacing: 0.2px; }
+.cardMsg { font-size: 14px; line-height: 1.7; color: #4f4a42; margin: 0 0 12px; }
+.cardFoot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cardName { font-size: 13px; color: var(--dark, #1a1916); display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.verified {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; letter-spacing: 0.3px; color: #4d7c45;
+}
+
+.helpful {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: 1px solid var(--border, #ddd6c8);
+  padding: 6px 12px; font: inherit; font-size: 12px; color: var(--muted, #8a8680);
+  cursor: pointer; transition: border-color 0.15s, color 0.15s;
+}
+.helpful:hover:not(:disabled) { border-color: #9a7636; color: #9a7636; }
+.helpfulOn { color: #9a7636; border-color: #c8a24c; cursor: default; }
+
+.empty { font-size: 14px; color: var(--muted, #8a8680); padding: 8px 0 24px; }
+
+@media (max-width: 700px) {
+  .root { padding: 48px 6% 8px; }
+  .summary { grid-template-columns: 1fr; gap: 28px; }
+  .formNote { margin-left: 0; width: 100%; }
+}

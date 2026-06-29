@@ -9,6 +9,7 @@ import { safeJsonLd } from '@/lib/safeJsonLd';
 import PageTracker from '@/components/PageTracker';
 import CrossSell from '@/components/CrossSell';
 import RecentlyViewed from '@/components/RecentlyViewed';
+import ProductReviews from '@/components/ProductReviews';
 import ProductViewTracker from '@/components/ProductViewTracker';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import { ProductSelectionProvider } from '@/components/ProductSelectionContext';
@@ -421,6 +422,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           />
         </ProductSelectionProvider>
       </main>
+
+      <ProductReviews productId={product._id} productName={product.name} />
 
       <CrossSell productId={id} />
       <RecentlyViewed excludeId={id} />
