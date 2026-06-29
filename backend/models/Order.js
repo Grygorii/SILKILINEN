@@ -43,6 +43,11 @@ const orderSchema = new mongoose.Schema({
   discountCode: { type: String },
   discountAmount: { type: Number, default: 0 },
   total: { type: Number },
+  // All amounts above are EUR (canonical, for single-currency reporting). These
+  // record the currency the shopper actually paid in and the amount charged.
+  displayCurrency: { type: String, default: 'EUR' },
+  exchangeRate: { type: Number, default: 1 },
+  chargedTotal: { type: Number },
   shippingCost: { type: Number, default: 0 },
   shippingMethod: { type: String },
 

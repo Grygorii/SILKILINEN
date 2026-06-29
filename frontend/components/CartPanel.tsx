@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Lock } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useCurrency } from '@/context/CurrencyContext';
 import ProductImage from './products/ProductImage';
 import Button from './ui/Button';
 import styles from './CartPanel.module.css';
@@ -18,6 +19,7 @@ type Props = {
 export default function CartPanel({ isOpen, onClose }: Props) {
   const router = useRouter();
   const { cart, removeFromCart, updateQuantity } = useCart();
+  const { format } = useCurrency();
   const panelRef = useRef<HTMLDivElement>(null);
   const prevFocusRef = useRef<HTMLElement | null>(null);
 
@@ -210,7 +212,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
 
                     {/* Price row — price left, remove × right */}
                     <div className={styles.itemPriceRow}>
-                      <p className={styles.itemPrice}>€{(item.price * item.quantity).toFixed(2)}</p>
+                      <p className={styles.itemPrice}>{format(item.price * item.quantity)}</p>
                       <button
                         className={styles.remove}
                         onClick={() => removeFromCart(index)}
@@ -257,7 +259,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                   <div className={styles.freeShippingFill} style={{ width: `${freeShippingPct}%` }} />
                 </div>
                 <p className={styles.freeShippingText}>
-                  €{toFreeShipping.toFixed(0)} more for free shipping
+                  {format(toFreeShipping)} more for free shipping
                 </p>
               </div>
             ) : (
@@ -268,7 +270,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
             <div className={styles.totals}>
               <div className={styles.totalRow}>
                 <span>Subtotal</span>
-                <span>€{subtotal.toFixed(2)}</span>
+                <span>{format(subtotal)}</span>
               </div>
               <div className={styles.totalRow}>
                 <span>Shipping</span>
@@ -276,7 +278,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
               </div>
               <div className={styles.totalRowFinal}>
                 <span>Total</span>
-                <span>€{subtotal.toFixed(2)}</span>
+                <span>{format(subtotal)}</span>
               </div>
             </div>
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useProductSelection } from './ProductSelectionContext';
 import Button from '@/components/ui/Button';
 import QuickAddSheet from './QuickAddSheet';
+import Price from './Price';
 import styles from './StickyBuyBar.module.css';
 
 type Props = {
@@ -67,7 +68,7 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
       <div className={styles.bar}>
         <div className={styles.info}>
           <span className={styles.name}>{productName}</span>
-          <span className={styles.price}>€{Number(price).toFixed(2)}</span>
+          <Price eur={Number(price)} className={styles.price} />
         </div>
         <div className={styles.btnWrap}>
           <Button variant={variant} onClick={handleTap}>

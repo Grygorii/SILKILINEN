@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import { useCurrency } from '@/context/CurrencyContext';
 import ProductImage from '@/components/products/ProductImage';
 import styles from './CollectionSet.module.css';
 
@@ -36,6 +37,7 @@ export default function CollectionSet({
 }: { products: SetProduct[]; discountPercent?: number }) {
   const router = useRouter();
   const { cart, addToCart } = useCart();
+  const { format } = useCurrency();
   const [adding, setAdding] = useState(false);
   const [size, setSize] = useState<Record<string, string>>({});
   const [colour, setColour] = useState<Record<string, string>>({});
@@ -112,7 +114,7 @@ export default function CollectionSet({
                 {soldOut && <span className={styles.soldOut}>Sold out</span>}
               </Link>
               <Link href={href} className={styles.name}>{p.name}</Link>
-              <p className={styles.price}>€{Number(p.price).toFixed(2)}</p>
+              <p className={styles.price}>{format(Number(p.price))}</p>
 
               {!soldOut && colours.length > 1 && (
                 <div className={styles.opts} role="group" aria-label={`Colour for ${p.name}`}>
@@ -159,12 +161,12 @@ export default function CollectionSet({
           <div className={styles.totals}>
             {discountPercent > 0 ? (
               <>
-                <span className={styles.was}>€{subtotal.toFixed(2)}</span>
-                <span className={styles.now}>€{total.toFixed(2)}</span>
+                <span className={styles.was}>{format(subtotal)}</span>
+                <span className={styles.now}>{format(total)}</span>
                 <span className={styles.off}>{discountPercent}% off applied at checkout</span>
               </>
             ) : (
-              <span className={styles.now}>€{subtotal.toFixed(2)}</span>
+              <span className={styles.now}>{format(subtotal)}</span>
             )}
           </div>
         )}

@@ -6,6 +6,7 @@ import { useProductSelection } from './ProductSelectionContext';
 import Button from '@/components/ui/Button';
 import { OptionPill, OptionPillGroup } from '@/components/ui/OptionPill';
 import { ColourSwatchGroup, type Swatch } from '@/components/ui/ColourSwatch';
+import Price from './Price';
 import styles from './QuickAddSheet.module.css';
 
 type Props = {
@@ -68,7 +69,7 @@ export default function QuickAddSheet({
         <div className={styles.header}>
           <div className={styles.titleWrap}>
             <p className={styles.name}>{productName}</p>
-            <p className={styles.price}>€{Number(price).toFixed(2)}</p>
+            <p className={styles.price}><Price eur={Number(price)} /></p>
           </div>
           <button className={styles.close} onClick={onClose} aria-label="Close">✕</button>
         </div>

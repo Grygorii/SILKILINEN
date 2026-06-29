@@ -10,6 +10,7 @@ import PageTracker from '@/components/PageTracker';
 import CrossSell from '@/components/CrossSell';
 import RecentlyViewed from '@/components/RecentlyViewed';
 import ProductReviews from '@/components/ProductReviews';
+import Price from '@/components/Price';
 import ProductViewTracker from '@/components/ProductViewTracker';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import { ProductSelectionProvider } from '@/components/ProductSelectionContext';
@@ -320,11 +321,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               )}
 
               <p className={styles.price}>
-                <span className={product.compareAtPrice && product.compareAtPrice > product.price ? styles.priceSale : ''}>
-                  €{Number(product.price).toFixed(2)}
-                </span>
+                <Price eur={Number(product.price)} className={product.compareAtPrice && product.compareAtPrice > product.price ? styles.priceSale : ''} />
                 {product.compareAtPrice && product.compareAtPrice > product.price && (
-                  <span className={styles.priceCompare}>€{Number(product.compareAtPrice).toFixed(2)}</span>
+                  <Price eur={Number(product.compareAtPrice)} className={styles.priceCompare} />
                 )}
               </p>
 

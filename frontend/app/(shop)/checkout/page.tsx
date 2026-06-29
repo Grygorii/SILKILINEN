@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
+import { useCurrency } from '@/context/CurrencyContext';
 import { trackBeginCheckout } from '@/lib/analytics';
 import { useCustomer } from '@/context/CustomerContext';
 import { loadStripe } from '@stripe/stripe-js';
@@ -35,6 +36,9 @@ type OrderSummary = {
   discountError?: string | null;
   shipping: ShippingInfo;
   total: number;
+  // The amounts above are already in the charge currency; the symbol renders them.
+  currency?: string;
+  currencySymbol?: string;
 };
 
 // All countries covered by our shipping tiers
@@ -208,7 +212,7 @@ function PaymentForm({
         type="submit"
         variant={(!stripe || submitting) ? 'disabled' : 'primary'}
       >
-        {submitting ? 'PROCESSING…' : `PAY €${summary.total.toFixed(2)}`}
+        {submitting ? 'PROCESSING…' : `PAY ${summary.currencySymbol ?? '€'}${summary.total.toFixed(2)}`}
       </Button>
     </form>
   );
@@ -218,6 +222,7 @@ function PaymentForm({
 
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
+  const { currency, format } = useCurrency();
   const { customer, refresh: refreshCustomer } = useCustomer();
   const [discountInput, setDiscountInput] = useState('');
   const [clientSecret, setClientSecret] = useState('');
@@ -261,7 +266,7 @@ export default function CheckoutPage() {
   // the first intent isn't built from an empty cart), and any edit made via the
   // cart slide-over while on checkout. Without this the totals froze to the
   // first snapshot and drifted from the displayed lines.
-  const cartKey = cart.map(i => `${i.productId || i.bundleId}:${i.colour}:${i.size}:${i.quantity}`).join('|');
+  const cartKey = cart.map(i => `${i.productId || i.bundleId}:${i.colour}:${i.size}:${i.quantity}`).join('|') + `|${currency}`;
   useEffect(() => {
     if (cart.length === 0) return;
     createIntent();
@@ -292,6 +297,7 @@ export default function CheckoutPage() {
           // (cart change) so the recreated intent doesn't reset them.
           shippingCountry: countryRef.current || 'IE',
           discountCode: appliedCodeRef.current || undefined,
+          currency,
           attribution,
         }),
       });
@@ -469,7 +475,11 @@ export default function CheckoutPage() {
                     )}
                     <p className={styles.itemQty}>Qty: {item.quantity}</p>
                   </div>
-                  <p className={styles.itemPrice}>€{(item.price * item.quantity).toFixed(2)}</p>
+                  <p className={styles.itemPrice}>
+                    {summary?.items
+                      ? `${summary.currencySymbol ?? '€'}${(item.price * item.quantity).toFixed(2)}`
+                      : format(item.price * item.quantity)}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -493,28 +503,28 @@ export default function CheckoutPage() {
             </div>
             {discountError && <p className={styles.discountError}>{discountError}</p>}
             {appliedCode && summary?.discountAmount && summary.discountAmount > 0 && (
-              <p className={styles.discountApplied}>{appliedCode} — −€{summary.discountAmount.toFixed(2)}</p>
+              <p className={styles.discountApplied}>{appliedCode} — −{summary.currencySymbol ?? '€'}{summary.discountAmount.toFixed(2)}</p>
             )}
 
             {summary && (
               <div className={styles.totals}>
                 <div className={styles.totalRow}>
                   <span>Subtotal</span>
-                  <span>€{summary.subtotal.toFixed(2)}</span>
+                  <span>{summary.currencySymbol ?? '€'}{summary.subtotal.toFixed(2)}</span>
                 </div>
                 {summary.discountAmount > 0 && (
                   <div className={`${styles.totalRow} ${styles.discount}`}>
                     <span>{summary.discountCode ? `Discount (${summary.discountCode})` : 'Collection offer'}</span>
-                    <span>−€{summary.discountAmount.toFixed(2)}</span>
+                    <span>−{summary.currencySymbol ?? '€'}{summary.discountAmount.toFixed(2)}</span>
                   </div>
                 )}
                 <div className={styles.totalRow}>
                   <span>Shipping — {summary.shipping.label}</span>
-                  <span>{summary.shipping.isFree ? 'FREE' : `€${summary.shipping.cost.toFixed(2)}`}</span>
+                  <span>{summary.shipping.isFree ? 'FREE' : `${summary.currencySymbol ?? '€'}${summary.shipping.cost.toFixed(2)}`}</span>
                 </div>
                 <div className={`${styles.totalRow} ${styles.grandTotal}`}>
                   <span>Total</span>
-                  <span>€{summary.total.toFixed(2)}</span>
+                  <span>{summary.currencySymbol ?? '€'}{summary.total.toFixed(2)}</span>
                 </div>
               </div>
             )}

@@ -11,6 +11,7 @@ const Visit = require('../models/Visit');
 const Product = require('../models/Product');
 const Bundle = require('../models/Bundle');
 const Collection = require('../models/Collection');
+const { normalise: normaliseCurrency, getRates, SUPPORTED: CURRENCIES } = require('../services/exchangeRates');
 
 // The biggest active collection-discount % a product qualifies for (a product can
 // sit in several collections; the customer gets the best). 0 if none.
@@ -283,10 +284,18 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
     const tax = calculateTax(discountedSubtotal, country);
     const total = discountedSubtotal + shipping.cost;
 
-    // Create Stripe PaymentIntent (amount in cents)
+    // Multi-currency: charge in the shopper's currency. EUR stays canonical for
+    // the order + all reporting; we convert ONLY the Stripe charge and the
+    // returned summary. EUR (the default) is a no-op at rate 1, so that path is
+    // byte-for-byte unchanged.
+    const dispCurrency = normaliseCurrency(req.body.currency);
+    const fxRate = (await getRates())[dispCurrency] || 1;
+    const toCur = (eur) => Math.round((Number(eur) || 0) * fxRate * 100) / 100;
+
+    // Create Stripe PaymentIntent (amount in the charge currency's minor units)
     const intentParams = {
-      amount: Math.round(total * 100),
-      currency: 'eur',
+      amount: Math.round(toCur(total) * 100),
+      currency: CURRENCIES[dispCurrency].stripe,
       metadata: {
         sessionId: sessionId || '',
         discountCode: discountCode || '',
@@ -295,6 +304,9 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
         shippingCost: String(shipping.cost),
         shippingCountry: country,
         subtotal: String(subtotal),
+        // EUR amounts above stay canonical; these record the charge currency.
+        displayCurrency: dispCurrency,
+        exchangeRate: String(fxRate),
         // items are serialised separately via packItems() below — the webhook
         // reconstructs the order from them when there's no Cart doc (the
         // direct-items checkout path sends no sessionId). includedProducts is
@@ -332,14 +344,16 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
       clientSecret: intent.client_secret,
       paymentIntentId: intent.id,
       orderSummary: {
-        items: validatedItems,
-        subtotal,
+        items: validatedItems.map(i => ({ ...i, price: toCur(i.price) })),
+        subtotal: toCur(subtotal),
         discountCode,
-        discountAmount,
+        discountAmount: toCur(discountAmount),
         discountError,
-        shipping: { cost: shipping.cost, label: shipping.label, isFree: shipping.isFree },
-        tax,
-        total,
+        shipping: { cost: toCur(shipping.cost), label: shipping.label, isFree: shipping.isFree },
+        tax: toCur(tax),
+        total: toCur(total),
+        currency: dispCurrency,
+        currencySymbol: CURRENCIES[dispCurrency].symbol,
       },
     });
   } catch (err) {
@@ -395,9 +409,16 @@ checkoutRouter.post('/update-intent', checkoutRateLimit, async (req, res) => {
     const discountedSubtotal = Math.max(0, subtotal - discountAmount);
     const ship = calculateShipping(country, discountedSubtotal);
     const total = discountedSubtotal + ship.cost;
+    const tax = calculateTax(discountedSubtotal, country);
+
+    // Charge currency is fixed for the life of the intent — reuse the rate
+    // stored at creation so the amount can't drift if market rates move.
+    const dispCurrency = normaliseCurrency(meta.displayCurrency);
+    const fxRate = parseFloat(meta.exchangeRate) || 1;
+    const toCur = (eur) => Math.round((Number(eur) || 0) * fxRate * 100) / 100;
 
     const updatePayload = {
-      amount: Math.round(total * 100),
+      amount: Math.round(toCur(total) * 100),
       metadata: {
         ...meta,
         shippingCountry: country,
@@ -419,13 +440,16 @@ checkoutRouter.post('/update-intent', checkoutRateLimit, async (req, res) => {
 
     res.json({
       orderSummary: {
-        items,
-        subtotal,
+        items: items.map(i => ({ ...i, price: toCur(i.price) })),
+        subtotal: toCur(subtotal),
         discountCode: discountCodeResult,
-        discountAmount,
+        discountAmount: toCur(discountAmount),
         discountError,
-        shipping: { cost: ship.cost, label: ship.label, isFree: ship.isFree },
-        total,
+        shipping: { cost: toCur(ship.cost), label: ship.label, isFree: ship.isFree },
+        tax: toCur(tax),
+        total: toCur(total),
+        currency: dispCurrency,
+        currencySymbol: CURRENCIES[dispCurrency].symbol,
       },
     });
   } catch (err) {
@@ -592,7 +616,12 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
       const country = meta.shippingCountry || 'IE';
       const shippingCost = meta.shippingCost ? parseFloat(meta.shippingCost) : calculateShipping(country, Math.max(0, subtotal - discountAmount)).cost;
       const shipping = { cost: shippingCost, label: calculateShipping(country, Math.max(0, subtotal - discountAmount)).label };
-      const total = intent.amount / 100;
+      // Order economics stay EUR-canonical (so all reporting stays single-currency);
+      // record the charge currency + the amount actually charged separately.
+      const total = Math.max(0, subtotal - discountAmount) + shippingCost;
+      const displayCurrency = normaliseCurrency(meta.displayCurrency);
+      const exchangeRate = parseFloat(meta.exchangeRate) || 1;
+      const chargedTotal = intent.amount / 100;
 
       const stripeShipping = intent.shipping;
       const customerEmail = intent.receipt_email || intent.metadata?.customerEmail || null;
@@ -619,6 +648,9 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
         discountCode: discountCode || undefined,
         discountAmount,
         total,
+        displayCurrency,
+        exchangeRate,
+        chargedTotal,
         shippingCost: shippingCost,
         shippingMethod: shipping.label,
         status: 'paid',

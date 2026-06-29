@@ -8,6 +8,7 @@ import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCustomer } from '@/context/CustomerContext';
 import CartPanel from './CartPanel';
+import CurrencySwitcher from './CurrencySwitcher';
 import SideMenu from './SideMenu';
 import styles from './Navbar.module.css';
 
@@ -161,8 +162,9 @@ export default function Navbar() {
               </nav>
             </div>
 
-            {/* Right — search, wishlist, account, cart */}
+            {/* Right — currency, search, wishlist, account, cart */}
             <div className={styles.navRight}>
+              <CurrencySwitcher />
               <button className={`${styles.iconBtn} ${styles.desktopOnly}`} onClick={() => setSearchOpen(true)} aria-label="Search">
                 <Search size={20} strokeWidth={1.5} />
               </button>

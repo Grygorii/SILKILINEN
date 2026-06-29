@@ -1,6 +1,7 @@
 'use client';
 
 import { useCart } from '@/context/CartContext';
+import Price from './Price';
 import styles from './FloatingCartBar.module.css';
 
 export default function FloatingCartBar() {
@@ -17,7 +18,7 @@ export default function FloatingCartBar() {
   return (
     <button className={styles.bar} onClick={openCart} aria-label="View cart">
       <span className={styles.label}>View cart ({count})</span>
-      <span className={styles.price}>€{total.toFixed(2)} →</span>
+      <span className={styles.price}><Price eur={total} /> →</span>
     </button>
   );
 }

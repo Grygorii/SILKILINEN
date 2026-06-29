@@ -9,6 +9,7 @@ import Button from '@/components/ui/Button';
 import UKShipBadge from '@/components/UKShipBadge';
 import { OptionPill, OptionPillGroup } from '@/components/ui/OptionPill';
 import { ColourSwatchGroup, type Swatch } from '@/components/ui/ColourSwatch';
+import { useCurrency } from '@/context/CurrencyContext';
 import styles from './ProductOptions.module.css';
 
 type Props = {
@@ -29,6 +30,7 @@ type Props = {
 
 export default function ProductOptions({ colours, colourHexMap, sizes, productName, productId, price, outOfStock, stock, image }: Props) {
   const { selectedColour, setSelectedColour, selectedSize, setSelectedSize, qty, setQty } = useProductSelection();
+  const { format } = useCurrency();
   const [addState, setAddState] = useState<'idle' | 'adding' | 'added'>('idle');
   const [hintOpen, setHintOpen] = useState(false);
   const { addToCart } = useCart();
@@ -179,7 +181,7 @@ export default function ProductOptions({ colours, colourHexMap, sizes, productNa
           fontSize: 12, lineHeight: 1.6, color: 'var(--color-ink-muted)',
         }}
       >
-        <li>Free shipping over €150</li>
+        <li>Free shipping over {format(150)}</li>
         <li>14-day returns</li>
         <li>Secure checkout</li>
         <li>From Donegal with love</li>

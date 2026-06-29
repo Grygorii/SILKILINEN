@@ -6,6 +6,7 @@ import { Heart, Star } from 'lucide-react';
 import { useWishlist } from '@/context/WishlistContext';
 import { isValidImageUrl, cloudinaryUrl, cloudinarySrcSet } from '@/lib/imageUtils';
 import ProductImage from './products/ProductImage';
+import Price from './Price';
 import styles from './ProductCard.module.css';
 
 type ProductImageData = { url: string; isPrimary?: boolean; alt?: string; order?: number };
@@ -144,7 +145,7 @@ export default function ProductCard({ product, showHeart = true }: Props) {
           </div>
         ) : null}
         <div className={styles.priceRow}>
-          <span className={styles.price}>€{Number(product.price).toFixed(2)}</span>
+          <Price eur={Number(product.price)} className={styles.price} />
         </div>
       </div>
     </div>

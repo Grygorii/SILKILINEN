@@ -9,6 +9,7 @@ import UTMCapture from "@/components/UTMCapture";
 import GoogleAuthProvider from "@/components/GoogleAuthProvider";
 import CsrfFetchPatch from "@/components/CsrfFetchPatch";
 import { CartProvider } from "@/context/CartContext";
+import { CurrencyProvider } from "@/context/CurrencyContext";
 import { safeJsonLd } from "@/lib/safeJsonLd";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { CustomerProvider } from "@/context/CustomerContext";
@@ -234,10 +235,12 @@ export default async function RootLayout({
             <CustomerProvider>
               <WishlistProvider>
                 <CartProvider>
-                  {children}
-                  <AnalyticsLoader />
-                  <EventTracker />
-                  <UTMCapture />
+                  <CurrencyProvider>
+                    {children}
+                    <AnalyticsLoader />
+                    <EventTracker />
+                    <UTMCapture />
+                  </CurrencyProvider>
                 </CartProvider>
               </WishlistProvider>
             </CustomerProvider>

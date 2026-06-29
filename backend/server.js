@@ -198,6 +198,7 @@ app.use('/api/admin/advisor', adminAdvisorRoutes);
 app.use('/api/admin/google/search-console', adminGoogleOAuthRoutes);
 app.use('/api/admin/dashboard', adminDashboardRoutes);
 app.use('/api/track', trackRoutes);
+app.use('/api/rates', require('./routes/rates'));
 app.use('/api/collections', collectionsRoutes);
 app.use('/api/admin/collections', adminCollectionsRoutes);
 app.use('/api/bundles', bundlesRoutes);
