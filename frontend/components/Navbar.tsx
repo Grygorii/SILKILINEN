@@ -127,11 +127,24 @@ export default function Navbar() {
           </div>
         ) : (
           <>
-            {/* Left — hamburger + desktop nav */}
+            {/* Left — hamburger (mobile) + logo (desktop). Logo-left on desktop
+                balances the header like the editorial benchmarks. */}
             <div className={styles.navLeft}>
               <button className={`${styles.iconBtn} ${styles.hamburger}`} onClick={() => setMenuOpen(true)} aria-label="Open menu">
                 <Menu size={20} strokeWidth={1.5} />
               </button>
+              <Link href="/" className={`${styles.logoLink} ${styles.logoDesktop}`}>
+                <span className={styles.logoText}>SILKILINEN</span>
+                <span className={styles.logoSub}>Silk &amp; Linen</span>
+              </Link>
+            </div>
+
+            {/* Centre — logo (mobile) + nav (desktop) */}
+            <div className={styles.navCenter}>
+              <Link href="/" className={`${styles.logoLink} ${styles.logoMobile}`}>
+                <span className={styles.logoText}>SILKILINEN</span>
+                <span className={styles.logoSub}>Silk &amp; Linen</span>
+              </Link>
               <nav className={styles.desktopNav} aria-label="Main navigation">
                 {desktopNav.map(({ label, href }) => {
                   const active = pathname === href || (href !== '/shop' && pathname.startsWith(href.split('?')[0]));
@@ -146,14 +159,6 @@ export default function Navbar() {
                   );
                 })}
               </nav>
-            </div>
-
-            {/* Centre — logo */}
-            <div className={styles.navCenter}>
-              <Link href="/" className={styles.logoLink}>
-                <span className={styles.logoText}>SILKILINEN</span>
-                <span className={styles.logoSub}>Silk &amp; Linen</span>
-              </Link>
             </div>
 
             {/* Right — search, wishlist, account, cart */}

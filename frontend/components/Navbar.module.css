@@ -41,6 +41,16 @@
   gap: 2px;
 }
 
+/* Desktop: logo sits in the left cell; mobile: logo stays centred. Two logo
+   nodes toggled by breakpoint so each layout is clean. */
+.logoDesktop { display: none; }
+.logoMobile { display: flex; }
+
+@media (min-width: 1024px) {
+  .logoDesktop { display: flex; align-items: flex-start; }
+  .logoMobile { display: none; }
+}
+
 .logoText {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 22px;
@@ -214,7 +224,6 @@
     display: flex;
     align-items: center;
     gap: 24px;
-    margin-left: 16px;
   }
 }
 
