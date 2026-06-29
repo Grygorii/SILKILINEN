@@ -270,26 +270,28 @@
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 12px 12px 11px;
+  padding: 13px 12px;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
   text-align: center;
-  color: #fff;
-  background: linear-gradient(to top, rgba(26, 25, 22, 0.55), rgba(26, 25, 22, 0));
+  color: var(--color-ink, #1a1916);
+  background: var(--warm-white, #faf8f4);
+  border-top: 1px solid rgba(26, 25, 22, 0.06);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   opacity: 0;
-  transform: translateY(4px);
-  transition: opacity 0.28s ease, transform 0.28s ease;
+  transform: translateY(100%);
+  transition: opacity 0.28s ease, transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
   z-index: 2;
 }
 
 /* Reveal on hover — only on devices with a real pointer (desktops/laptops).
-   Touch devices (phones/tablets) never show it; sizes live on the product page. */
+   A clean white band slides up from the bottom of the photo; readable on any
+   image. Touch devices (phones/tablets) never show it; sizes live on the PDP. */
 @media (hover: hover) {
   .card:hover .sizeOverlay {
     opacity: 1;
