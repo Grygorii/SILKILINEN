@@ -1,0 +1,36 @@
+.hint {
+  background: rgba(180, 140, 70, 0.06);
+  border: 1px solid rgba(180, 140, 70, 0.22);
+  padding: 12px 14px;
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.title {
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #9a7636;
+  margin: 0 0 7px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+
+.pair { white-space: nowrap; }
+
+.k {
+  color: #8a8680;
+  margin-right: 4px;
+}
+
+.v { color: #2a2218; }
+
+.note {
+  margin: 8px 0 0;
+  color: #5c564d;
+}

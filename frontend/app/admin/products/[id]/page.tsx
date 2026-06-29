@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, use, useCallback } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import AiPhotoshoot from '@/components/AiPhotoshoot';
+import UploadHint from '@/components/UploadHint';
+import { UPLOAD_SPECS } from '@/lib/uploadSpecs';
 import ProductCampaigns from '@/components/admin/ProductCampaigns';
 import ImageCropModal from '@/components/ImageCropModal';
 import styles from './page.module.css';
@@ -800,6 +802,8 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               <span className={styles.cardMeta}>{images.length} image{images.length !== 1 ? 's' : ''}</span>
             </div>
 
+            <UploadHint spec={UPLOAD_SPECS.productImage} />
+
             <input
               ref={slotInputRef}
               type="file"
@@ -911,6 +915,8 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               <h3 className={styles.cardTitle}>Product video</h3>
               <span className={styles.cardMeta}>MP4 · max 30 MB</span>
             </div>
+
+            <UploadHint spec={UPLOAD_SPECS.productVideo} />
 
             {videoError && <p className={styles.uploadError}>{videoError}</p>}
 

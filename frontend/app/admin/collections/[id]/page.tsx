@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, use } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import UploadHint from '@/components/UploadHint';
+import { UPLOAD_SPECS } from '@/lib/uploadSpecs';
 import { toast } from '@/lib/adminToast';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -294,6 +296,7 @@ export default function AdminCollectionEditPage({ params }: { params: Promise<{ 
             />
 
             <label className={styles.label}>Collection photo</label>
+            <UploadHint spec={UPLOAD_SPECS.collectionHero} title="Collection banner — recommended" />
             {heroImage?.url && (
               <img src={heroImage.url} alt="" style={{ width: '100%', maxWidth: 340, borderRadius: 4, display: 'block', marginBottom: 10, border: '1px solid var(--border, #e8e2d6)' }} />
             )}

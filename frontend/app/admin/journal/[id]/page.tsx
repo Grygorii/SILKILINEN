@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
+import UploadHint from '@/components/UploadHint';
+import { UPLOAD_SPECS } from '@/lib/uploadSpecs';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
@@ -339,6 +341,7 @@ export default function JournalEditorPage() {
         <div style={{ maxWidth: 720, margin: '0 auto', padding: '48px 24px 120px' }}>
 
           {/* Hero image */}
+          <UploadHint spec={UPLOAD_SPECS.journalHero} title="Hero image — recommended" />
           <div style={{
             width: '100%', height: 280, background: '#f0ede8',
             border: article.heroImage?.url ? 'none' : '2px dashed #d0c9be',
