@@ -52,6 +52,12 @@ const reviewSchema = new mongoose.Schema({
   // Order containing this product. Rendered as a "Verified buyer"
   // badge on the storefront card.
   verifiedPurchase: { type: Boolean, default: false },
+
+  // ── Owner reply ──────────────────────────────────────────────────────
+  // A public response from the shop, shown beneath the review on the
+  // storefront ("Response from SILKILINEN"). Empty = no reply.
+  reply:     { type: String, default: '', trim: true, maxlength: 1000 },
+  repliedAt: { type: Date, default: null },
 }, { timestamps: true });
 
 // Compound index for the per-product PDP query (most common read path).

@@ -26,7 +26,8 @@ const submitRateLimit = rateLimit({
 router.get('/', async function(req, res) {
   try {
     const { sort = 'recent', page, limit, productId } = req.query;
-    const filter = { status: 'approved', starRating: { $gte: 3 } };
+    // Storefront shows 4★ and up only — lower ratings stay in admin moderation.
+    const filter = { status: 'approved', starRating: { $gte: 4 } };
     if (productId) filter.productId = productId;
 
     if (!page && !limit && sort === 'recent' && !productId) {
@@ -65,7 +66,8 @@ router.get('/', async function(req, res) {
 router.get('/summary', async function(req, res) {
   try {
     const { productId } = req.query;
-    const filter = { status: 'approved' };
+    // Match the storefront list: only 4★+ count toward the shown average.
+    const filter = { status: 'approved', starRating: { $gte: 4 } };
     if (productId) filter.productId = productId;
 
     const all = await Review.find(filter).select('starRating');

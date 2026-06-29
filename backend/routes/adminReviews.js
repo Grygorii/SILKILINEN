@@ -109,8 +109,13 @@ router.patch('/:id', async function(req, res) {
       } else if (typeof edit.productId === 'string') {
         review.productId = edit.productId;
       }
+    } else if (action === 'reply') {
+      // Public owner response. Empty string clears it.
+      const text = typeof req.body.reply === 'string' ? req.body.reply.trim().slice(0, 1000) : '';
+      review.reply = text;
+      review.repliedAt = text ? new Date() : null;
     } else {
-      return res.status(400).json({ error: 'Invalid action. Use approve, reject, spam, or edit.' });
+      return res.status(400).json({ error: 'Invalid action. Use approve, reject, spam, edit, or reply.' });
     }
 
     review.moderatedBy = req.user.userId;

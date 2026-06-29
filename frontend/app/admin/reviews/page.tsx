@@ -27,6 +27,8 @@ type Review = {
   productId: ProductRef | string | null;
   verifiedPurchase: boolean;
   rejectionReason?: string;
+  reply?: string;
+  repliedAt?: string;
 };
 
 type TabCounts = { pending: number; approved: number; rejected: number; spam: number };
@@ -178,6 +180,7 @@ export default function ReviewsModeration() {
   // Reject flow: modal with an optional reason instead of a prompt().
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
@@ -214,6 +217,25 @@ export default function ReviewsModeration() {
       await load();
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Action failed', 'error');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function saveReply(id: string, text: string) {
+    setBusyId(id);
+    try {
+      const res = await fetch(`${API}/api/admin/reviews/${id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reply', reply: text }),
+      });
+      if (!res.ok) throw new Error(`Reply failed (${res.status})`);
+      toast(text ? 'Reply saved' : 'Reply removed', 'success');
+      await load();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Reply failed', 'error');
     } finally {
       setBusyId(null);
     }
@@ -348,6 +370,39 @@ export default function ReviewsModeration() {
                 {r.rejectionReason && (
                   <div className={styles.rejectionNote}>Reason: {r.rejectionReason}</div>
                 )}
+
+                {/* Public reply — shown under the review on the storefront. */}
+                <div style={{ marginTop: 12, borderTop: '1px solid var(--border,#e8e2d6)', paddingTop: 12 }}>
+                  <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--muted,#8a8680)', marginBottom: 6 }}>
+                    {r.reply ? 'Your reply (public)' : 'Reply publicly'}
+                  </label>
+                  <textarea
+                    value={replyDrafts[r._id] ?? r.reply ?? ''}
+                    onChange={e => setReplyDrafts(d => ({ ...d, [r._id]: e.target.value }))}
+                    placeholder="Write a warm reply — it shows as “Response from SILKILINEN” under the review."
+                    rows={2}
+                    maxLength={1000}
+                    style={{ width: '100%', boxSizing: 'border-box', font: 'inherit', fontSize: 13, padding: '8px 10px', border: '1px solid var(--border,#ddd6c8)', background: '#fff', color: 'var(--dark,#2a2218)', resize: 'vertical' }}
+                  />
+                  <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+                    <button
+                      onClick={() => saveReply(r._id, (replyDrafts[r._id] ?? r.reply ?? '').trim())}
+                      disabled={busyId === r._id || (replyDrafts[r._id] ?? r.reply ?? '') === (r.reply ?? '')}
+                      style={{ padding: '7px 16px', background: 'var(--dark,#2a2218)', color: '#faf8f4', border: 'none', cursor: 'pointer', fontSize: 12, letterSpacing: '0.5px' }}
+                    >
+                      {busyId === r._id ? '…' : r.reply ? 'Update reply' : 'Reply'}
+                    </button>
+                    {r.reply && (
+                      <button
+                        onClick={() => { setReplyDrafts(d => ({ ...d, [r._id]: '' })); saveReply(r._id, ''); }}
+                        disabled={busyId === r._id}
+                        style={{ padding: '7px 14px', background: 'none', border: '1px solid var(--border,#ddd6c8)', color: 'var(--muted,#8a8680)', cursor: 'pointer', fontSize: 12 }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
               </li>
             );
           })}

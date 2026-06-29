@@ -15,6 +15,8 @@ type Review = {
   dateReviewed: string;
   helpfulCount?: number;
   verifiedPurchase?: boolean;
+  reply?: string;
+  repliedAt?: string;
 };
 type Summary = { average: number; count: number; distribution: Record<string, number> };
 type Sort = 'recent' | 'helpful' | 'highest';
@@ -219,6 +221,12 @@ export default function ProductReviews({ productId, productName }: { productId: 
               </div>
               {r.title && <p className={styles.cardTitle}>{r.title}</p>}
               {r.message && <p className={styles.cardMsg}>{r.message}</p>}
+              {r.reply && (
+                <div className={styles.reply}>
+                  <p className={styles.replyFrom}>Response from SILKILINEN</p>
+                  <p className={styles.replyText}>{r.reply}</p>
+                </div>
+              )}
               <div className={styles.cardFoot}>
                 <span className={styles.cardName}>
                   {r.reviewer}
