@@ -1,6 +1,9 @@
 .bar {
   background: var(--dark);
-  color: var(--warm-white);
+  /* A hair brighter than the cream canvas + a touch more weight, so the line
+     reads crisply on the dark bar (closer to OvH's top-bar legibility). */
+  color: #fffdf8;
+  font-weight: 500;
   text-align: center;
   padding: 10px 20px;
   font-size: 12px;
@@ -25,7 +28,7 @@
 }
 
 .bar strong {
-  font-weight: 500;
+  font-weight: 600;
 }
 
 @media (max-width: 600px) {
