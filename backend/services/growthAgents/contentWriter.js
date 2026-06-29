@@ -155,7 +155,7 @@ RESPOND ONLY WITH VALID JSON: {"topic": "working title of the article", "targetQ
 
 async function writeArticle(topic, products) {
   const productList = products
-    .map(p => `- ${p.name} (${p.category || 'silk'}, €${p.price}) — ${SITE_URL}/product/${p._id}`)
+    .map(p => `- ${p.name} (${p.category || 'silk'}, €${p.price}) — ${SITE_URL}/product/${p.slug || p._id}`)
     .join('\n');
 
   const learned = await playbookPromptBlock();
@@ -206,7 +206,7 @@ async function run() {
   }
 
   const [products, existingArticles] = await Promise.all([
-    Product.find({ status: 'active' }).select('name category price').sort({ createdAt: -1 }).limit(30).lean(),
+    Product.find({ status: 'active' }).select('name slug category price').sort({ createdAt: -1 }).limit(30).lean(),
     JournalArticle.find().select('title slug keywords').lean(),
   ]);
 
@@ -243,7 +243,7 @@ async function run() {
   });
 
   const words = article.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean).length;
-  const linked = products.filter(p => article.content.includes(`/product/${p._id}`)).map(p => p.name);
+  const linked = products.filter(p => article.content.includes(`/product/${p.slug || p._id}`)).map(p => p.name);
 
   return [{
     type: 'article_draft',

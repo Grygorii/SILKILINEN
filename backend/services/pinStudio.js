@@ -61,7 +61,7 @@ async function contextFor(type, id) {
       p.momme ? `SILK WEIGHT: ${p.momme} momme` : '',
       p.description ? `DESCRIPTION: ${String(p.description).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 600)}` : '',
     ].filter(Boolean).join('\n');
-    return { user, link: trackedLink(`/product/${id}`, p.slug || String(id)), displayTitle: p.name };
+    return { user, link: trackedLink(`/product/${p.slug || id}`, p.slug || String(id)), displayTitle: p.name };
   }
 
   if (type === 'review') {
@@ -73,7 +73,7 @@ async function contextFor(type, id) {
     if (r.productId) {
       const Product = require('../models/Product');
       const p = await Product.findById(r.productId).select('name slug').lean().catch(() => null);
-      if (p) { productName = p.name; link = trackedLink(`/product/${r.productId}`, p.slug || String(r.productId)); }
+      if (p) { productName = p.name; link = trackedLink(`/product/${p.slug || r.productId}`, p.slug || String(r.productId)); }
     }
     const user = [
       `SOURCE TYPE: REVIEW — make a tasteful testimonial pin using the REAL words; never invent or alter them.`,

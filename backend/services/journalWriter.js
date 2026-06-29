@@ -42,7 +42,7 @@ async function chat(messages, maxTokens, temperature = 0.7) {
 // Gather everything the agents know — the whole studio's intelligence on one desk.
 async function gatherIntel() {
   const [products, existing, published, categories, hermes, demand, competitor, learned, outcomes] = await Promise.all([
-    Product.find({ status: 'active' }).select('name category price images image').sort({ createdAt: -1 }).limit(40).lean().catch(() => []),
+    Product.find({ status: 'active' }).select('name slug category price images image').sort({ createdAt: -1 }).limit(40).lean().catch(() => []),
     JournalArticle.find().select('title slug').lean().catch(() => []),
     JournalArticle.find({ status: 'published' }).select('title slug').sort({ publishedAt: -1 }).limit(20).lean().catch(() => []),
     Category.find({ status: 'active' }).select('slug label').lean().catch(() => []),
@@ -99,7 +99,7 @@ RESPOND ONLY WITH VALID JSON: {"topic": "working title", "targetQuery": "the exa
 
 async function writeArticle(topic, intel, existingBody = '') {
   const productList = intel.products
-    .map(p => `- ${p.name} (${p.category || 'silk'}, €${p.price}) — ${SITE_URL}/product/${p._id}`)
+    .map(p => `- ${p.name} (${p.category || 'silk'}, €${p.price}) — ${SITE_URL}/product/${p.slug || p._id}`)
     .join('\n');
   const categoryList = intel.categories.map(c => `- ${c.label} — ${SITE_URL}/shop?category=${c.slug}`).join('\n');
   const articleList = intel.published.map(a => `- ${a.title} — ${SITE_URL}/journal/${a.slug}`).join('\n');
@@ -160,7 +160,7 @@ async function generateMasterpiece({ topic } = {}) {
   let slug = base;
   for (let i = 2; existingSlugs.has(slug); i++) slug = `${base}-${i}`;
 
-  const linked = intel.products.filter(p => article.content.includes(`/product/${p._id}`));
+  const linked = intel.products.filter(p => article.content.includes(`/product/${p.slug || p._id}`));
   const linkedIds = linked.map(p => p.name);
 
   // #5 — the "why this article" line: which data/agents drove it.

@@ -315,7 +315,7 @@ router.post('/:id/drop-hint', lightRateLimit, async function(req, res) {
       senderName,
       message,
       productName: product.name,
-      productUrl: `${FRONTEND}/product/${product._id}`,
+      productUrl: `${FRONTEND}/product/${product.slug || product._id}`,
       productImage: primaryImg?.url || product.image || null,
       price: product.price,
     });

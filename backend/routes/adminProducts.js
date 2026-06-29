@@ -459,8 +459,10 @@ router.post('/bulk-publish', async function(req, res) {
     }
 
     const result = await Product.updateMany({ _id: { $in: productIds } }, { $set: { status: 'active' } });
-    // Instant-index the whole batch (fire-and-forget, fail-soft).
-    require('../services/indexNow').pingIndexNow(productIds.map(id => `/product/${id}`));
+    // Instant-index the whole batch (fire-and-forget, fail-soft). Ping the
+    // canonical slug URL — pinging the /product/<id> form would tell search
+    // engines to crawl a URL that just 308-redirects to the slug.
+    require('../services/indexNow').pingIndexNow(products.map(p => `/product/${p.slug || p._id}`));
     res.json({ updated: result.modifiedCount });
   } catch (err) {
     console.error(err);

@@ -307,7 +307,7 @@ router.post('/resubmit-indexnow', requireAuth, async (req, res) => {
       '/gift-wrapping', '/journal', '/style-finder'];
 
     const [products, collections, categories, articles, bundles] = await Promise.all([
-      Product.find({ status: { $in: ['active', 'sold_out'] } }).select('_id').lean(),
+      Product.find({ status: { $in: ['active', 'sold_out'] } }).select('_id slug').lean(),
       Collection.find({ status: 'active' }).select('slug').lean(),
       Category.find({ status: 'active' }).select('slug').lean(),
       JournalArticle.find({ status: 'published' }).select('slug').lean(),
@@ -317,7 +317,7 @@ router.post('/resubmit-indexnow', requireAuth, async (req, res) => {
     const urls = [...new Set([
       ...STATIC_PATHS,
       ...(EDITABLE_PATHS || []),
-      ...products.map(p => `/product/${p._id}`),
+      ...products.map(p => `/product/${p.slug || p._id}`),
       ...collections.filter(c => c.slug).map(c => `/collections/${c.slug}`),
       ...categories.filter(c => c.slug).map(c => `/shop?category=${c.slug}`),
       ...articles.filter(a => a.slug).map(a => `/journal/${a.slug}`),

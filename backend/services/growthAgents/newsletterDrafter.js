@@ -48,7 +48,7 @@ function buildUserPrompt(products, article) {
   if (products.length) {
     parts.push('NEW PRODUCTS (added in the last fortnight):');
     for (const p of products) {
-      parts.push(`- ${p.name} — €${p.price} — ${SITE}/product/${p._id}`);
+      parts.push(`- ${p.name} — €${p.price} — ${SITE}/product/${p.slug || p._id}`);
       if (p.materialComposition) parts.push(`  Material: ${p.materialComposition}`);
       if (p.description) parts.push(`  About: ${String(p.description).slice(0, 300)}`);
     }
@@ -77,7 +77,7 @@ async function run() {
     Product.find({ status: 'active', createdAt: { $gte: since } })
       .sort({ createdAt: -1 })
       .limit(6)
-      .select('name price description materialComposition')
+      .select('name slug price description materialComposition')
       .lean(),
     JournalArticle.findOne({ status: 'published' })
       .sort({ publishedAt: -1, createdAt: -1 })
