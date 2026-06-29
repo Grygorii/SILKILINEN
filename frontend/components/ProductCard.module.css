@@ -263,15 +263,42 @@
 /* Size-at-a-glance — quiet, single line. Always rendered (every card shows
    either the size run or "One size") so the price row stays aligned across
    the grid. Clamps to one line; long size runs ellipsis rather than wrap. */
-.sizeHint {
-  margin-bottom: var(--s-2);
+/* Size hint — a strip across the bottom of the photo, revealed on hover.
+   pointer-events:none so the stretched card link still receives the click. */
+.sizeOverlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 12px 12px 11px;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
-  letter-spacing: 0.5px;
-  color: var(--color-ink-muted, #6B6358);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: center;
+  color: #fff;
+  background: linear-gradient(to top, rgba(26, 25, 22, 0.55), rgba(26, 25, 22, 0));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.28s ease, transform 0.28s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Reveal on hover — only on devices with a real pointer (desktops/laptops).
+   Touch devices (phones/tablets) never show it; sizes live on the product page. */
+@media (hover: hover) {
+  .card:hover .sizeOverlay {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (hover: none) {
+  .sizeOverlay { display: none; }
 }
 
 .priceRow {

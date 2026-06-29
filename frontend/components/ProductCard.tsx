@@ -117,6 +117,9 @@ export default function ProductCard({ product, showHeart = true }: Props) {
             the stretched card link still receives the click. */}
         <span className={styles.sheen} aria-hidden="true" />
         {showNew && <span className={styles.newBadge}>new</span>}
+        {/* Size hint as a hover-reveal strip over the photo. Pointer-hover
+            devices only (hidden on phones — sizes live on the product page). */}
+        <span className={styles.sizeOverlay}>{sizeHint}</span>
       </div>
 
       <div className={styles.caption}>
@@ -126,7 +129,6 @@ export default function ProductCard({ product, showHeart = true }: Props) {
         <Link href={`/product/${product.slug || product._id}`} className={styles.nameLink}>
           <h3 className={styles.cardName} title={product.name}>{product.name}</h3>
         </Link>
-        <p className={styles.sizeHint}>{sizeHint}</p>
         {product.ratingCount ? (
           <div className={styles.rating} aria-label={`Rated ${product.ratingAverage} out of 5 from ${product.ratingCount} reviews`}>
             {[1, 2, 3, 4, 5].map(n => (
