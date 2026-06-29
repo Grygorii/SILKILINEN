@@ -19,6 +19,13 @@ export default function UKShippingNotice() {
   }, []);
 
   useEffect(() => {
+    // Preview override: ?uk_preview=1 forces the card to show from any location,
+    // so the team can review the design/copy without a UK IP.
+    if (new URLSearchParams(window.location.search).has('uk_preview')) {
+      setVisible(true);
+      return;
+    }
+
     try {
       const dismissed = localStorage.getItem(STORAGE_KEY);
       if (dismissed && Date.now() - Number(dismissed) < SNOOZE_MS) return;
