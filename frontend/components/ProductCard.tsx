@@ -117,9 +117,10 @@ export default function ProductCard({ product, showHeart = true }: Props) {
             the stretched card link still receives the click. */}
         <span className={styles.sheen} aria-hidden="true" />
         {showNew && <span className={styles.newBadge}>new</span>}
-        {/* Size hint as a hover-reveal strip over the photo. Pointer-hover
-            devices only (hidden on phones — sizes live on the product page). */}
-        <span className={styles.sizeOverlay}>{sizeHint}</span>
+        {/* Size hint — a cream band that lifts up on hover, the lettering
+            settling a beat after. Pointer-hover devices only (hidden on phones;
+            sizes live on the product page). */}
+        <span className={styles.sizeOverlay}><span className={styles.sizeInner}>{sizeHint}</span></span>
       </div>
 
       <div className={styles.caption}>
