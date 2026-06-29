@@ -2,7 +2,23 @@
 
 const Product = require('../models/Product');
 const Order = require('../models/Order');
-const { SLUGS: FRONTEND_CATEGORIES } = require('../config/categories');
+const Category = require('../models/Category');
+
+// The storefront nav is data-driven: it lists ACTIVE Category docs that have at
+// least one product (see /api/categories + Navbar). Audit against that live
+// source — not a hardcoded list — so we test the menu customers actually see
+// and don't false-flag categories the nav already hides.
+async function liveNavCategories() {
+  const [cats, counts] = await Promise.all([
+    Category.find({ status: 'active' }).sort({ displayOrder: 1, createdAt: 1 }).select('slug label').lean().catch(() => []),
+    Product.aggregate([
+      { $match: { status: { $in: ['active', 'sold_out'] } } },
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+    ]).catch(() => []),
+  ]);
+  const countBySlug = Object.fromEntries(counts.map(c => [c._id, c.count]));
+  return cats.map(c => ({ slug: String(c.slug).toLowerCase(), label: c.label, count: countBySlug[c.slug] || 0 }));
+}
 
 // AI reasoning layer — turns raw deterministic findings into a prioritised,
 // root-cause read. It doesn't see the code; it reasons from the findings + how
@@ -33,16 +49,6 @@ async function synthesizeFindings(findings) {
   }, { timeout: 40000, maxRetries: 1 });
   return JSON.parse(res.choices[0]?.message?.content || 'null');
 }
-
-const SIDEMENU_LINKS = [
-  { label: 'SHOP ALL', href: '/shop', filter: null },
-  { label: 'ROBES', href: '/shop?category=robes', filter: 'robes' },
-  { label: 'PYJAMA SETS', href: '/shop?category=pyjamas', filter: 'pyjamas' },
-  { label: 'SLEEP DRESSES', href: '/shop?category=sleep-dresses', filter: 'sleep-dresses' },
-  { label: 'LINGERIE', href: '/shop?category=lingerie', filter: 'lingerie' },
-  { label: 'SCARVES', href: '/shop?category=scarves', filter: 'scarves' },
-  { label: 'ABOUT', href: '/about', filter: null },
-];
 
 const FOOTER_LINKS = [
   { label: 'New arrivals', href: '/shop' },
@@ -101,6 +107,15 @@ async function runNavigationAgent(frontendUrl) {
   const findings = [];
   const checked = [];
 
+  // The category links the storefront actually shows (active categories with
+  // products) + the structural links that bracket them.
+  const navCats = (await liveNavCategories()).filter(c => c.count > 0);
+  const sidemenuLinks = [
+    { label: 'SHOP ALL', href: '/shop', filter: null },
+    ...navCats.map(c => ({ label: c.label, href: `/shop?category=${c.slug}`, filter: c.slug })),
+    { label: 'ABOUT', href: '/about', filter: null },
+  ];
+
   // 1. Core pages
   for (const page of CORE_PAGES) {
     const url = `${frontendUrl}${page.href}`;
@@ -120,7 +135,7 @@ async function runNavigationAgent(frontendUrl) {
   }
 
   // 2. SideMenu links
-  for (const link of SIDEMENU_LINKS) {
+  for (const link of sidemenuLinks) {
     const url = `${frontendUrl}${link.href}`;
     const result = await checkUrl(url);
     checked.push({ label: `SideMenu > ${link.label}`, url, ...result });
@@ -156,7 +171,7 @@ async function runNavigationAgent(frontendUrl) {
   }
 
   // 4. SideMenu category filter correctness (API-level check)
-  for (const link of SIDEMENU_LINKS) {
+  for (const link of sidemenuLinks) {
     if (!link.filter) continue;
 
     const count = await Product.countDocuments({
@@ -422,21 +437,25 @@ async function runConsistencyAgent() {
     status: { $in: ['active', null, undefined] },
   })).filter(Boolean).map(c => c.toLowerCase());
 
-  // Frontend categories that have NO matching products in DB
-  for (const cat of FRONTEND_CATEGORIES) {
+  // The live storefront categories (active Category docs). The nav already hides
+  // any with no products, so an empty category isn't a customer-facing dead link
+  // — it's tidiness, surfaced as a warning, not a critical.
+  const frontendCategories = (await liveNavCategories()).map(c => c.slug);
+
+  for (const cat of frontendCategories) {
     if (!dbCategories.includes(cat)) {
       const similar = dbCategories.filter(c =>
         c.includes(cat) || cat.includes(c) || levenshtein(c, cat) <= 2
       );
       findings.push(finding(
-        'critical',
+        'warning',
         'consistency',
-        `Frontend category "${cat}" has no matching products in DB`,
-        `DB has categories: ${dbCategories.join(', ')}`,
-        `SideMenu > /shop?category=${cat}`,
+        `Category "${cat}" has no products yet (hidden from nav)`,
+        `DB has product categories: ${dbCategories.join(', ')}`,
+        `/shop?category=${cat}`,
         similar.length > 0
-          ? `Rename DB category "${similar[0]}" to "${cat}" in the database`
-          : `Add products with category="${cat}" or remove it from the navigation`,
+          ? `Reassign products from "${similar[0]}" to "${cat}", or archive the empty category`
+          : `Add a product in "${cat}", or archive the category if it's not in use`,
       ));
     } else if (!activeCategories.includes(cat)) {
       findings.push(finding(
@@ -450,8 +469,8 @@ async function runConsistencyAgent() {
     }
   }
 
-  // DB categories not surfaced in frontend nav
-  const unexposedCategories = dbCategories.filter(c => c && !FRONTEND_CATEGORIES.includes(c));
+  // DB product-categories with no live category page / nav link.
+  const unexposedCategories = dbCategories.filter(c => c && !frontendCategories.includes(c));
   for (const cat of unexposedCategories) {
     const count = await Product.countDocuments({ category: cat, status: { $in: ['active', null, undefined] } });
     if (count > 0) {

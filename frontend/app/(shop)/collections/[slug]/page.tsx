@@ -50,16 +50,20 @@ export async function generateMetadata(
   const collection = await getCollection(slug);
   if (!collection) return { title: 'Collection Not Found' };
 
-  const title = collection.metaTitle || `${collection.name} — SILKILINEN`;
+  // Absolute title: the root layout template appends " | Silkilinen" to any
+  // non-absolute title, which double-branded the collection ("… — SILKILINEN |
+  // Silkilinen") and pushed it past 60 chars. Set it absolute so the brand
+  // appears exactly once.
+  const brandedTitle = collection.metaTitle || `${collection.name} — SILKILINEN`;
   const description = collection.metaDescription || collection.description
     || `Shop the ${collection.name} collection at SILKILINEN. Pure silk and linen intimates, shipped worldwide from Donegal.`;
 
   return {
-    title,
+    title: { absolute: brandedTitle },
     description,
     alternates: { canonical: `https://www.silkilinen.com/collections/${slug}` },
     openGraph: {
-      title,
+      title: brandedTitle,
       description,
       url: `https://www.silkilinen.com/collections/${slug}`,
       siteName: 'Silkilinen',
