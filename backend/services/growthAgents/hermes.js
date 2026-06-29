@@ -171,7 +171,9 @@ async function run() {
   let serp = [];
   if (serpConfigured()) serp = await Promise.all(strikers.map(async o => ({ query: o.query, ...(await serpAnalysis(o.query)) }))).catch(() => []);
   const host = (perf.topPages || []).map(p => p.key).find(u => /^https?:/.test(u))?.match(/^https?:\/\/[^/]+/)?.[0] || 'https://www.silkilinen.com';
-  const keyUrls = [`${host}/`, products[0] && `${host}/product/${products[0]._id}`, categories[0] && `${host}/shop?category=${categories[0].slug}`].filter(Boolean).slice(0, 4);
+  // Inspect the CANONICAL product URL (slug) — the /product/<id> form
+  // 308-redirects to it, so inspecting the id URL can falsely read "not indexed".
+  const keyUrls = [`${host}/`, products[0] && `${host}/product/${products[0].slug || products[0]._id}`, categories[0] && `${host}/shop?category=${categories[0].slug}`].filter(Boolean).slice(0, 4);
   const indexation = await Promise.all(keyUrls.map(async u => ({ url: u.replace(host, '') || '/', ...(await inspectUrl(u) || { indexed: null }) }))).catch(() => []);
   const notIndexed = indexation.filter(i => i.indexed === false);
 
@@ -183,7 +185,7 @@ async function run() {
     opps.length ? opps.map(o => `- "${o.query}" — position ${o.position}, ${o.impressions} imp, ${o.clicks} clk`).join('\n') : '- none surfaced yet',
     ``,
     `TOP PAGES (where impressions/clicks land — read these for "seen but not clicked"):`,
-    (perf.topPages || []).length ? perf.topPages.map(p => `- ${p.key.replace(/^https?:\/\/[^/]+/, '') || '/'} — ${p.impressions} imp, ${p.clicks} clk`).join('\n') : '- none yet',
+    (perf.topPages || []).length ? perf.topPages.map(p => `- ${pageLabel(p.key)} — ${p.impressions} imp, ${p.clicks} clk`).join('\n') : '- none yet',
     ``,
     `GEOGRAPHIC PICTURE (which countries Google shows the shop in — ISO codes; SILKILINEN ships worldwide, so reason about market footholds):`,
     countries.length ? countries.map(c => `- ${String(c.country).toUpperCase()} — ${c.impressions} imp, ${c.clicks} clk, avg pos ${c.position}`).join('\n') : '- no geographic data yet',
