@@ -8,6 +8,7 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 
 type Entry = { _id: string; kind: 'lesson' | 'pitfall' | 'fact' | 'decision'; text: string; detail?: string; source?: string; weight: number; hits: number };
 type Stats = { counts: { total: number; lesson: number; pitfall: number; fact: number; decision: number }; top: Entry[] };
+type Ref = { _id: string; title?: string; refType?: string; refSource?: string; text: string; tags?: string[] };
 
 const dark = 'var(--dark, #2a2218)';
 const muted = 'var(--muted, #8a8680)';
@@ -26,6 +27,17 @@ export default function MemoryPage() {
   const [text, setText] = useState('');
   const [kind, setKind] = useState<'decision' | 'fact'>('decision');
 
+  // Library state
+  const [refs, setRefs] = useState<Ref[]>([]);
+  const [refMode, setRefMode] = useState<'link' | 'book'>('link');
+  const [url, setUrl] = useState('');
+  const [refTitle, setRefTitle] = useState('');
+  const [refAuthor, setRefAuthor] = useState('');
+  const [refText, setRefText] = useState('');
+  const [refTags, setRefTags] = useState('');
+  const [summarizing, setSummarizing] = useState(false);
+  const [savingRef, setSavingRef] = useState(false);
+
   const load = useCallback(async () => {
     try {
       const res = await fetch(`${API}/api/admin/memory`, { credentials: 'include' });
@@ -33,7 +45,58 @@ export default function MemoryPage() {
       if (data?.counts) setStats(data);
     } catch { /* ignore */ }
   }, []);
-  useEffect(() => { load(); }, [load]);
+  const loadRefs = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/api/admin/memory/library`, { credentials: 'include' });
+      const data = await res.json();
+      if (Array.isArray(data)) setRefs(data);
+    } catch { /* ignore */ }
+  }, []);
+  useEffect(() => { load(); loadRefs(); }, [load, loadRefs]);
+
+  async function summarize() {
+    if (!url.trim()) return;
+    setSummarizing(true);
+    try {
+      const res = await fetch(`${API}/api/admin/memory/library/summarize`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: url.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not summarize');
+      setRefTitle(data.title || '');
+      setRefText(data.text || '');
+      setRefTags((data.tags || []).join(', '));
+      toast('Distilled — edit the principles, then save.', 'success');
+    } catch (e) { toast(e instanceof Error ? e.message : 'Could not summarize', 'error'); }
+    finally { setSummarizing(false); }
+  }
+
+  async function saveRef() {
+    if (!refText.trim()) { toast('Add the key principles for the agents to apply.', 'error'); return; }
+    setSavingRef(true);
+    try {
+      const refSource = refMode === 'link' ? url.trim() : refAuthor.trim();
+      const res = await fetch(`${API}/api/admin/memory/library`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: refTitle.trim(), refType: refMode, refSource, text: refText.trim(), tags: refTags }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not save');
+      setUrl(''); setRefTitle(''); setRefAuthor(''); setRefText(''); setRefTags('');
+      loadRefs(); toast('Saved to the library — the agents will use it.', 'success');
+    } catch (e) { toast(e instanceof Error ? e.message : 'Could not save', 'error'); }
+    finally { setSavingRef(false); }
+  }
+
+  async function removeRef(id: string) {
+    if (!confirm('Remove this reference from the library?')) return;
+    try {
+      await fetch(`${API}/api/admin/memory/library/${id}`, { method: 'DELETE', credentials: 'include' });
+      loadRefs();
+    } catch { /* ignore */ }
+  }
 
   async function teach() {
     if (!text.trim()) return;
@@ -101,6 +164,82 @@ export default function MemoryPage() {
         ) : (
           <p style={{ fontSize: 13, color: muted }}>No memory yet — it fills as the agents run and the clerks catch things. Teach it a fact or decision above to start.</p>
         )}
+
+        {/* ── Library ── */}
+        <div style={{ marginTop: 40 }}>
+          <h2 style={{ fontFamily: serif, fontSize: 22, fontWeight: 300, color: dark, margin: '0 0 4px', letterSpacing: '0.5px' }}>Library</h2>
+          <p style={{ fontSize: 13, color: muted, margin: '0 0 16px', fontStyle: 'italic' }}>
+            Curate the sources the agents learn from — paste a link (we distil it into principles) or add a book with your key takeaways. Tagged references flow into the relevant agents&rsquo; reasoning.
+          </p>
+
+          <div style={{ background: 'white', border, padding: '16px 18px', marginBottom: 20 }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              {(['link', 'book'] as const).map(m => (
+                <button key={m} onClick={() => setRefMode(m)} style={{ padding: '7px 16px', border, background: refMode === m ? dark : 'white', color: refMode === m ? 'white' : muted, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, textTransform: 'capitalize' }}>{m}</button>
+              ))}
+            </div>
+
+            {refMode === 'link' ? (
+              <>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+                  <input value={url} onChange={e => setUrl(e.target.value)} placeholder="Paste a URL — e.g. the Google SEO Starter Guide"
+                    style={{ flex: 1, minWidth: 260, padding: '9px 12px', border, fontFamily: 'inherit', fontSize: 13.5, color: dark }} />
+                  <button onClick={summarize} disabled={summarizing || !url.trim()} style={{ padding: '9px 16px', background: '#b8863b', color: 'white', border: 'none', cursor: summarizing || !url.trim() ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 13, opacity: summarizing || !url.trim() ? 0.6 : 1 }}>{summarizing ? 'Distilling…' : '✦ Distil with AI'}</button>
+                </div>
+                <input value={refTitle} onChange={e => setRefTitle(e.target.value)} placeholder="Source name (auto-filled)"
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', border, fontFamily: 'inherit', fontSize: 13.5, color: dark, marginBottom: 10 }} />
+              </>
+            ) : (
+              <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+                <input value={refTitle} onChange={e => setRefTitle(e.target.value)} placeholder="Book title"
+                  style={{ flex: 2, minWidth: 200, padding: '9px 12px', border, fontFamily: 'inherit', fontSize: 13.5, color: dark }} />
+                <input value={refAuthor} onChange={e => setRefAuthor(e.target.value)} placeholder="Author"
+                  style={{ flex: 1, minWidth: 140, padding: '9px 12px', border, fontFamily: 'inherit', fontSize: 13.5, color: dark }} />
+              </div>
+            )}
+
+            <textarea value={refText} onChange={e => setRefText(e.target.value)} rows={4}
+              placeholder={refMode === 'link' ? 'Key principles the agents should apply (auto-filled — edit freely)' : 'Your key takeaways — the principles agents should apply from this book'}
+              style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', border, fontFamily: 'inherit', fontSize: 13, color: dark, resize: 'vertical', marginBottom: 10, lineHeight: 1.6 }} />
+
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <input value={refTags} onChange={e => setRefTags(e.target.value)} placeholder="Tags (comma separated): seo, content, imagery…"
+                style={{ flex: 1, minWidth: 200, padding: '9px 12px', border, fontFamily: 'inherit', fontSize: 13, color: dark }} />
+              <button onClick={saveRef} disabled={savingRef} style={{ padding: '9px 20px', background: dark, color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>{savingRef ? 'Saving…' : 'Add to library'}</button>
+            </div>
+          </div>
+
+          {refs.length > 0 ? (
+            <div style={{ display: 'grid', gap: 8 }}>
+              {refs.map(r => (
+                <div key={r._id} style={{ border, borderLeft: '3px solid #b8863b', padding: '12px 14px', background: 'white' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 14, color: dark, fontWeight: 500 }}>
+                      {r.title || (r.refType === 'book' ? 'Book' : 'Link')}
+                      <span style={{ fontSize: 10, color: muted, marginLeft: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{r.refType}</span>
+                    </span>
+                    <button onClick={() => removeRef(r._id)} style={{ background: 'none', border: 'none', color: muted, cursor: 'pointer', fontSize: 12 }}>Remove</button>
+                  </div>
+                  {r.refSource && (
+                    <div style={{ fontSize: 11.5, color: muted, marginTop: 2, wordBreak: 'break-all' }}>
+                      {r.refType === 'link' && /^https?:/.test(r.refSource)
+                        ? <a href={r.refSource} target="_blank" rel="noopener noreferrer" style={{ color: '#3a6ea5' }}>{r.refSource}</a>
+                        : r.refSource}
+                    </div>
+                  )}
+                  <p style={{ fontSize: 13, color: '#4f4a42', margin: '8px 0 0', lineHeight: 1.6 }}>{r.text}</p>
+                  {r.tags && r.tags.length > 0 && (
+                    <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {r.tags.map((t, i) => <span key={i} style={{ fontSize: 10, color: muted, border, padding: '2px 8px', borderRadius: 10 }}>{t}</span>)}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ fontSize: 13, color: muted }}>No references yet — add a link or a book above and the agents will start applying it.</p>
+          )}
+        </div>
       </div>
     </AdminLayout>
   );

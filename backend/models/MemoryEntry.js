@@ -12,11 +12,17 @@ const mongoose = require('mongoose');
 // is the loop that lets agents avoid repeating mistakes.
 
 const memoryEntrySchema = new mongoose.Schema({
-  kind:     { type: String, enum: ['lesson', 'pitfall', 'fact', 'decision'], default: 'lesson', index: true },
+  //   • reference — a founder-curated source (link/book) distilled into
+  //     principles the agents should apply (the "library").
+  kind:     { type: String, enum: ['lesson', 'pitfall', 'fact', 'decision', 'reference'], default: 'lesson', index: true },
   text:     { type: String, required: true },
   textKey:  { type: String, required: true },   // normalised, for dedupe/reinforce
   detail:   { type: String, default: '' },
   source:   { type: String, default: '' },      // who taught it (chief, hermes, reasoningClerk, watchdog, founder…)
+  // ── Library (kind: 'reference') ──────────────────────────────────────
+  title:    { type: String, default: '' },      // source name, e.g. "Google SEO Starter Guide"
+  refType:  { type: String, default: '' },      // 'link' | 'book'
+  refSource:{ type: String, default: '' },      // the URL (link) or author (book)
   tags:     { type: [String], default: [] },    // topics (seo, content, social, pricing, imagery…)
   weight:   { type: Number, default: 1 },       // importance/confidence — grows as it's reinforced
   hits:     { type: Number, default: 1 },       // times re-taught
