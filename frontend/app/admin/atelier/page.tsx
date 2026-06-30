@@ -36,6 +36,8 @@ export default function AtelierPage() {
   const [visionReady, setVisionReady] = useState(true);
   const [review, setReview] = useState<Review | null>(null);
   const [history, setHistory] = useState<Review[]>([]);
+  const [alt, setAlt] = useState<{ weak: number; total: number } | null>(null);
+  const [altBusy, setAltBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -44,9 +46,31 @@ export default function AtelierPage() {
       setVisionReady(data.visionReady !== false);
       if (Array.isArray(data.reviews)) { setHistory(data.reviews); setReview(r => r || data.reviews[0] || null); }
     } catch { /* ignore */ }
+    try {
+      const ar = await fetch(`${API}/api/admin/atelier/alt`, { credentials: 'include' });
+      if (ar.ok) { const a = await ar.json(); setAlt({ weak: a.weak ?? 0, total: a.total ?? 0 }); }
+    } catch { /* ignore */ }
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  async function runAlt(force: boolean) {
+    setAltBusy(true);
+    try {
+      const res = await fetch(`${API}/api/admin/atelier/alt`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Alt text failed');
+      if (!data.ran) toast(data.note || 'Set GEMINI_API_KEY to enable this.', 'info');
+      else if (data.updated > 0) toast(`Wrote alt text for ${data.updated} photo${data.updated === 1 ? '' : 's'} across ${data.productsTouched} product${data.productsTouched === 1 ? '' : 's'}${data.hitLimit ? ' — run again to finish the rest.' : '.'}`, 'success');
+      else toast('Every product photo already has descriptive alt text. ✦', 'success');
+      load();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Alt text failed', 'error');
+    } finally { setAltBusy(false); }
+  }
 
   async function runReview() {
     setBusy(true);
@@ -90,6 +114,35 @@ export default function AtelierPage() {
         {!visionReady && (
           <div style={{ marginTop: 20, padding: '14px 18px', background: '#fdf6e9', border: '1px solid #e6d9bf', fontSize: 13, color: '#8a6d2f' }}>
             The Atelier has no eyes yet — set <strong>GEMINI_API_KEY</strong> in Railway (the same key as Image Studio) to let it see the site.
+          </div>
+        )}
+
+        {/* Alt text — the Atelier looks at each product photo and writes its alt
+            text. This is also run automatically by the Site Audit; the button
+            is here for when you want to do a pass on its own. */}
+        {visionReady && (
+          <div style={{ marginTop: 20, padding: '14px 18px', background: '#fff', border, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontSize: 13.5, color: dark, fontWeight: 500 }}>Photo alt text</div>
+              <div style={{ fontSize: 12.5, color: muted, marginTop: 3 }}>
+                {alt
+                  ? (alt.weak > 0
+                      ? `${alt.weak} of ${alt.total} product photos need descriptive alt text.`
+                      : `All ${alt.total} product photos have alt text. ✦`)
+                  : 'The Atelier looks at each photo and writes its alt text — for accessibility and SEO.'}
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => runAlt(false)} disabled={altBusy} style={{
+                padding: '9px 18px', background: alt && alt.weak > 0 ? dark : '#fff', color: alt && alt.weak > 0 ? '#fff' : dark,
+                border, cursor: altBusy ? 'default' : 'pointer', opacity: altBusy ? 0.6 : 1, fontFamily: 'inherit', fontSize: 12.5, letterSpacing: '0.4px', whiteSpace: 'nowrap',
+              }}>{altBusy ? 'Looking…' : (alt && alt.weak > 0 ? `✦ Write the ${alt.weak} missing` : '✦ Write missing alt text')}</button>
+              {alt && alt.total > 0 && (
+                <button onClick={() => runAlt(true)} disabled={altBusy} title="Rewrite every alt line, not just the missing ones" style={{
+                  padding: '9px 14px', background: '#fff', color: muted, border, cursor: altBusy ? 'default' : 'pointer', opacity: altBusy ? 0.6 : 1, fontFamily: 'inherit', fontSize: 12.5, whiteSpace: 'nowrap',
+                }}>Redo all</button>
+              )}
+            </div>
           </div>
         )}
 

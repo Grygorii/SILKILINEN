@@ -819,6 +819,35 @@ async function runAudit(audit) {
     audit.agents.seo.error = err.message;
   }
 
+  // Auto-remediation — the one finding an agent can truly fix itself. If the
+  // SEO pass flagged missing/weak image alt and the Atelier has eyes
+  // (GEMINI_API_KEY), let it LOOK at each product photo and write the alt text
+  // now, so the founder doesn't have to run a second tool. A missing alt is
+  // strictly worse than an imperfect one, so we apply automatically; the
+  // founder can refine any line in the product editor. Fail-soft: a remediation
+  // error never fails the audit.
+  try {
+    const { generateAltText, visionConfigured } = require('./atelierAlt');
+    const hasAltFinding = allFindings.some(f =>
+      f.agent === 'seo' && /alt/i.test(f.title || ''));
+    if (hasAltFinding && visionConfigured()) {
+      const r = await generateAltText({});
+      if (r.ran && r.updated > 0) {
+        // Mark the alt findings resolved and report what the Atelier did.
+        allFindings.forEach(f => { if (f.agent === 'seo' && /alt/i.test(f.title || '')) f.status = 'fixed'; });
+        allFindings.push({
+          severity: 'info', agent: 'seo', status: 'fixed',
+          title: 'Atelier wrote alt text for product photos',
+          detail: `The Atelier looked at the catalogue and wrote descriptive alt text for ${r.updated} image(s) across ${r.productsTouched} product(s)${r.failed ? `, ${r.failed} could not be read` : ''}${r.hitLimit ? ' (per-run cap reached — re-run to finish the rest)' : ''}.`,
+          location: 'Admin → Products (edit any line)',
+          suggestion: 'Review the generated alt text in the product editor and adjust any wording you would phrase differently.',
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('[audit] alt auto-remediation skipped:', err.message);
+  }
+
   audit.findings = allFindings;
 
   // AI reasoning layer — prioritise the findings and read the likely root causes.

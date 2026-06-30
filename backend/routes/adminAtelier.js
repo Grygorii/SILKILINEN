@@ -4,8 +4,32 @@ const { requireAuth } = require('../middleware/auth');
 const { aiLimit } = require('../middleware/rateLimiters');
 const ExperienceReview = require('../models/ExperienceReview');
 const { startReview, visionConfigured } = require('../services/atelier');
+const { generateAltText, countWeakAlt } = require('../services/atelierAlt');
 
 router.use(requireAuth);
+
+// GET /alt — how many product photos still need alt text (drives the button label).
+router.get('/alt', async (req, res) => {
+  try {
+    res.json({ visionReady: visionConfigured(), ...(await countWeakAlt()) });
+  } catch (err) {
+    console.error('[atelier] alt count:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /alt — the Atelier looks at each product photo and writes its alt text.
+// Auto-applies (a missing alt is strictly worse than an imperfect one). Pass
+// { force: true } to re-write every alt, not just the weak/missing ones.
+router.post('/alt', aiLimit, async (req, res) => {
+  try {
+    const out = await generateAltText({ force: Boolean(req.body?.force) });
+    res.json(out);
+  } catch (err) {
+    console.error('[atelier] alt:', err.message);
+    res.status(503).json({ error: err.message || 'The Atelier could not write the alt text — try again.' });
+  }
+});
 
 // POST /review — start a whole-house walk-through (runs in the background; the
 // client polls GET /:id until status leaves 'running').
