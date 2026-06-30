@@ -9,6 +9,7 @@ import ReassuranceRow from '@/components/ReassuranceRow';
 import CategoryTiles from '@/components/CategoryTiles';
 import FeaturedCollections from '@/components/FeaturedCollections';
 import StorySection from '@/components/StorySection';
+import HeroVideo from '@/components/HeroVideo';
 import BlogTeaser from '@/components/BlogTeaser';
 import NewsletterBand from '@/components/NewsletterBand';
 import InstagramGrid from '@/components/InstagramGrid';
@@ -95,20 +96,11 @@ export default async function Home() {
         </EditableImage>
         {/* Optional hero video: muted autoplay loop layered over the image.
             The image above stays the LCP element + poster, so Core Web Vitals
-            hold; the video fades in once it can play. Hidden for users who
+            hold; the video is loaded LATE (after the LCP image paints — see
+            HeroVideo) and fades in once it can play. Hidden for users who
             prefer reduced motion (see .heroVideo in the stylesheet). */}
         {heroVideo && (
-          <video
-            className={styles.heroVideo}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            poster={heroStill || undefined}
-          >
-            <source src={heroVideo} />
-          </video>
+          <HeroVideo src={heroVideo} poster={heroStill || undefined} className={styles.heroVideo} />
         )}
         <div className={styles.heroContent}>
           <EditableText as="h1" contentKey="homepage_hero_title" value={heroTitle} />

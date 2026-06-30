@@ -219,6 +219,11 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${cormorant.variable} ${jost.variable} ${ebGaramond.variable}`}>
       <head>
+        {/* Every image (and the LCP hero) is served from Cloudinary. Opening the
+            DNS + TLS connection early takes that round-trip off the LCP image's
+            critical path — one of the cheapest real LCP wins on mobile. */}
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: safeJsonLd(orgJsonLd) }}

@@ -40,6 +40,45 @@ const ENTRIES = [
       'Cut anything that does not help her act; show both the stakes (what she avoids) and the happy ending (how life feels with the piece).',
     ].join(' '),
   },
+  {
+    title: 'Ogilvy on Advertising',
+    refType: 'book',
+    refSource: 'David Ogilvy',
+    tags: ['content', 'marketing', 'email', 'copywriting'],
+    text: [
+      'Sell the benefit, and prove it with SPECIFICS — concrete facts ("22-momme mulberry silk, hand-finished in Donegal") outsell vague adjectives ("luxurious", "premium").',
+      'The headline does most of the work; make it about the reader\'s desire or problem, and if it does not pull her into the next line, the rest is wasted.',
+      'Long copy sells when every line earns its place — give a considered buyer the full story, but never pad.',
+      'Write the way you speak: clear, warm, specific; avoid superlatives, generalisations and clichés.',
+      'Respect the reader — she is intelligent; do not shout, exaggerate, or talk down.',
+    ].join(' '),
+  },
+  {
+    title: 'Google — Product structured data',
+    refType: 'link',
+    refSource: 'https://developers.google.com/search/docs/appearance/structured-data/product',
+    tags: ['seo', 'content'],
+    text: [
+      'Add Product structured data — name, image, description, brand, and an offers block with price, priceCurrency and availability — so listings qualify for rich results.',
+      'Every value in the markup MUST match what the shopper sees on the page (same price, currency, availability) — mismatches get the rich result removed.',
+      'Use AggregateRating / Review markup ONLY from genuine, on-page customer reviews; never invent ratings — fabricated reviews are a manual-action risk.',
+      'Set offers.availability accurately (InStock / OutOfStock / PreOrder); include shipping and return details for the merchant listing experience.',
+      'One Product entity per product page; do not mark up products that are not the main subject of the page.',
+    ].join(' '),
+  },
+  {
+    title: 'Silk craft primer — momme, mulberry & weave',
+    refType: 'book',
+    refSource: 'Textile craft reference (founder knowledge)',
+    tags: ['product', 'content', 'craft'],
+    text: [
+      'Momme (mm) is silk\'s weight/density: ~19–22mm is the sweet spot for robes & slips (substantial, opaque, beautiful drape); 22–25mm is luxe bedding weight; under 16mm reads thin and cheap.',
+      'Mulberry silk is the highest grade — long, uniform fibres from the Bombyx mori silkworm — giving the smooth lustre and strength; only say "mulberry" when it is genuinely mulberry.',
+      'Weave matters: charmeuse is the satin weave used for slips & robes (glossy face, matte back); habotai is a lighter plain weave; crêpe de chine has a fine pebbled texture.',
+      'Care, stated honestly: hand-wash cool with a pH-neutral silk detergent, never wring, dry flat out of direct sun — silk is a protein fibre, so bleach and high heat destroy it.',
+      'The quality signals a discerning silk buyer looks for, and that copy should state plainly: momme weight, mulberry grade, weave, and country of origin.',
+    ].join(' '),
+  },
 ];
 
 async function main() {
