@@ -113,11 +113,11 @@ export default function SideMenu({ isOpen, onClose }: Props) {
 
       // Determine gesture direction on first meaningful movement
       if (direction === null && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
-        direction = Math.abs(dx) > Math.abs(dy) && dx > 0 ? 'horizontal' : 'vertical';
+        direction = Math.abs(dx) > Math.abs(dy) && dx < 0 ? 'horizontal' : 'vertical';
       }
 
-      if (direction === 'horizontal' && dx > 0) {
-        e.preventDefault(); // block body scroll during the right swipe
+      if (direction === 'horizontal' && dx < 0) {
+        e.preventDefault(); // block body scroll during the left swipe
         panel!.style.transition = 'none';
         panel!.style.transform = `translateX(${dx}px)`;
       }
@@ -126,16 +126,16 @@ export default function SideMenu({ isOpen, onClose }: Props) {
     function onTouchEnd(e: TouchEvent) {
       if (direction !== 'horizontal') return;
       const dx = e.changedTouches[0].clientX - startX;
-      const velocity = dx / (Date.now() - startTime); // px/ms, positive = rightward
+      const velocity = dx / (Date.now() - startTime); // px/ms, negative = leftward
 
-      const shouldClose = dx > panel!.offsetWidth * 0.3 || velocity > 0.5;
+      const shouldClose = dx < -(panel!.offsetWidth * 0.3) || velocity < -0.5;
 
       // Re-enable CSS transition, force style flush, then animate to target
       panel!.style.transition = '';
       panel!.getBoundingClientRect();
 
       if (shouldClose) {
-        panel!.style.transform = 'translateX(100%)';
+        panel!.style.transform = 'translateX(-100%)';
         setTimeout(() => {
           panel!.style.transform = '';
           onClose();

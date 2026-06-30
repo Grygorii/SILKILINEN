@@ -128,16 +128,24 @@ export default function Navbar() {
           </div>
         ) : (
           <>
-            {/* Left — logo (always left, desktop + mobile). */}
+            {/* Left — hamburger (mobile) + logo (desktop). Mobile keeps the
+                classic ☰-left / logo-centre layout shoppers expect. */}
             <div className={styles.navLeft}>
-              <Link href="/" className={styles.logoLink}>
+              <button className={`${styles.iconBtn} ${styles.hamburger}`} onClick={() => setMenuOpen(true)} aria-label="Open menu">
+                <Menu size={20} strokeWidth={1.5} />
+              </button>
+              <Link href="/" className={`${styles.logoLink} ${styles.logoDesktop}`}>
                 <span className={styles.logoText}>SILKILINEN</span>
                 <span className={styles.logoSub}>Silk &amp; Linen</span>
               </Link>
             </div>
 
-            {/* Centre — nav (desktop only) */}
+            {/* Centre — logo (mobile) + nav (desktop) */}
             <div className={styles.navCenter}>
+              <Link href="/" className={`${styles.logoLink} ${styles.logoMobile}`}>
+                <span className={styles.logoText}>SILKILINEN</span>
+                <span className={styles.logoSub}>Silk &amp; Linen</span>
+              </Link>
               <nav className={styles.desktopNav} aria-label="Main navigation">
                 {desktopNav.map(({ label, href }) => {
                   const active = pathname === href || (href !== '/shop' && pathname.startsWith(href.split('?')[0]));
@@ -221,10 +229,6 @@ export default function Navbar() {
               >
                 <ShoppingBag size={20} strokeWidth={1.5} />
                 {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
-              </button>
-
-              <button className={`${styles.iconBtn} ${styles.hamburger}`} onClick={() => setMenuOpen(true)} aria-label="Open menu">
-                <Menu size={20} strokeWidth={1.5} />
               </button>
             </div>
           </>
