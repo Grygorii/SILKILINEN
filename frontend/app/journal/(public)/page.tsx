@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { getPageMeta } from '@/lib/pageSeo';
+import { clampMeta } from '@/lib/clampMeta';
 
 export async function generateMetadata(): Promise<Metadata> {
   const o = await getPageMeta('/journal');
   return {
     title: o?.metaTitle ? { absolute: o.metaTitle } : 'Journal',
-    description: o?.metaDescription || 'Stories about silk, linen, and slow living from Donegal.',
+    description: clampMeta(o?.metaDescription || 'Stories about silk, linen, and slow living from Donegal.'),
     alternates: { canonical: 'https://www.silkilinen.com/journal' },
   };
 }

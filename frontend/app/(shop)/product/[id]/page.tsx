@@ -16,6 +16,7 @@ import Breadcrumbs from '@/components/Breadcrumbs';
 import { ProductSelectionProvider } from '@/components/ProductSelectionContext';
 import { AccordionGroup, AccordionItem, AccordionSubLabel } from '@/components/ui/Accordion';
 import { shippingDetailsFor, merchantReturnPolicy } from '@/lib/shippingSchema';
+import { clampMeta } from '@/lib/clampMeta';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -70,8 +71,8 @@ export async function generateMetadata(
   // name still gets the template suffix.
   const titleStr = product.metaTitle || product.name;
   const title = product.metaTitle ? { absolute: product.metaTitle } : product.name;
-  const description = product.metaDescription
-    || (product.description ? product.description.slice(0, 155) : `Shop ${product.name} at Silkilinen. Pure silk and linen intimates, shipped worldwide from Donegal.`);
+  const description = clampMeta(product.metaDescription
+    || (product.description ? product.description : `Shop ${product.name} at Silkilinen. Pure silk and linen intimates, shipped worldwide from Donegal.`));
   const url = `https://www.silkilinen.com/product/${product.slug || id}`;
   const primaryImage = product.images?.find((i: { isPrimary: boolean }) => i.isPrimary);
   const image = primaryImage?.url || product.images?.[0]?.url || product.image || 'https://www.silkilinen.com/og-default.jpg';

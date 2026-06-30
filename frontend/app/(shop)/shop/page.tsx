@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { clampMeta } from '@/lib/clampMeta';
 import ProductGrid from '@/components/ProductGrid';
 import BundleStrip from '@/components/BundleStrip';
 import styles from './page.module.css';
@@ -44,14 +46,15 @@ export async function generateMetadata({
     // hardcoded categories (robes, pyjamas…) are unchanged until then.
     const dbCat = (await getCategoryList()).find(x => x.slug === category);
     const c = CATEGORY_COPY[category];
-    if (dbCat || c) {
+    // Only an existing category WITH products is a real, indexable page.
+    if (dbCat && dbCat.count > 0) {
       return {
         title: dbCat?.metaTitle || c?.title || dbCat?.label || 'Shop',
-        description:
+        description: clampMeta(
           dbCat?.metaDescription ||
           c?.description ||
           dbCat?.description ||
-          `Shop ${dbCat?.label || 'silk'} at Silkilinen — pure silk and linen, shipped worldwide from Donegal.`,
+          `Shop ${dbCat?.label || 'silk'} at Silkilinen — pure silk and linen, shipped worldwide from Donegal.`),
         alternates: { canonical: `https://www.silkilinen.com/shop?category=${category}` },
       };
     }
@@ -143,22 +146,11 @@ export default async function ShopPage({
   const { category, q, new: newParam } = await searchParams;
   const newOnly = newParam === 'true' && !category;
 
-  // Validate against the live categories, not a hardcoded list.
+  // Validate against the live categories, not a hardcoded list. A category that
+  // doesn't exist OR has no products isn't a real, browsable page — return a
+  // proper 404 so it's not accessible and Google doesn't index a thin/empty grid.
   const dbCat = category ? (await getCategoryList()).find(c => c.slug === category) : null;
-
-  if (category && !dbCat) {
-    return (
-      <main className={styles.page}>
-        <div className={styles.pageHeader}>
-          <h1 className={styles.title}>Category not found</h1>
-          <p className={styles.description}>
-            We don&apos;t have a &ldquo;{category}&rdquo; collection.{' '}
-            <a href="/shop" style={{ color: 'inherit', textDecoration: 'underline' }}>Browse all products →</a>
-          </p>
-        </div>
-      </main>
-    );
-  }
+  if (category && (!dbCat || dbCat.count === 0)) notFound();
 
   const products = await getProducts(category, q, newOnly);
   const copy = category ? CATEGORY_COPY[category] : null;
