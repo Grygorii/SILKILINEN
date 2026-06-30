@@ -5,7 +5,7 @@
   /* Symmetric breathing room so the menu and the cart icons never crowd the
      centred logo — scales with viewport, min 24px even on tight desktops. */
   column-gap: clamp(24px, 4vw, 56px);
-  padding: 30px 44px;
+  padding: 22px 44px;
   background: var(--warm-white, #faf8f4);
   transition: padding 0.25s ease;
 }
@@ -43,7 +43,7 @@
 
 .logoText {
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 28px;
+  font-size: 31px;
   font-weight: 400;
   letter-spacing: 5px;
   padding-right: 5px;
@@ -254,7 +254,7 @@
     padding: 10px 20px;
   }
   .logoText {
-    font-size: 21px;
+    font-size: 23px;
     letter-spacing: 3.5px;
     padding-right: 3px;
   }
