@@ -1,0 +1,40 @@
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 22px 6% 4px;
+}
+
+.label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted, #8a8680);
+}
+
+.opts {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.opt {
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--muted, #8a8680);
+  padding: 6px 11px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.opt:hover { color: var(--dark, #2A2218); }
+
+.optOn {
+  color: var(--dark, #2A2218);
+  border-color: var(--color-line, #e8e2d6);
+}
+
+.sym { color: var(--dark, #2A2218); }

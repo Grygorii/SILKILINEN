@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import styles from './Footer.module.css';
 import CookiePreferencesLink from './CookiePreferencesLink';
+import FooterCurrency from './FooterCurrency';
 import FooterMobileNav from './FooterMobileNav';
 import GoogleReviewsBadge from './GoogleReviewsBadge';
 import { isValidSocialUrl } from '@/lib/socialUrl';
@@ -120,6 +121,8 @@ export default async function Footer() {
 
       {/* Mobile accordion — hidden on desktop */}
       <FooterMobileNav />
+
+      <FooterCurrency />
 
       <div className={styles.bottom}>
         <p>© {new Date().getFullYear()} SILKILINEN. All rights reserved.</p>
