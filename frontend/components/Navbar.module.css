@@ -5,13 +5,13 @@
   /* Symmetric breathing room so the menu and the cart icons never crowd the
      centred logo — scales with viewport, min 24px even on tight desktops. */
   column-gap: clamp(24px, 4vw, 56px);
-  padding: 24px 32px;
+  padding: 30px 44px;
   background: var(--warm-white, #faf8f4);
   transition: padding 0.25s ease;
 }
 
 .scrolled {
-  padding: 12px 32px;
+  padding: 16px 44px;
 }
 
 /* ── Grid columns ─────────────────────────────────── */
@@ -53,18 +53,18 @@
 
 .logoText {
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 400;
-  letter-spacing: 4px;
-  padding-right: 4px;
+  letter-spacing: 5px;
+  padding-right: 5px;
   color: var(--dark, #1a1916);
   line-height: 1;
 }
 
 .logoSub {
-  font-size: 9px;
-  letter-spacing: 3px;
-  padding-right: 3px;
+  font-size: 10px;
+  letter-spacing: 4px;
+  padding-right: 4px;
   text-transform: uppercase;
   color: var(--muted, #8a8680);
   font-variant: small-caps;
@@ -228,8 +228,8 @@
 }
 
 .desktopNavLink {
-  font-size: 11px;
-  letter-spacing: 2px;
+  font-size: 12px;
+  letter-spacing: 2.2px;
   text-transform: uppercase;
   color: var(--muted, #8a8680);
   text-decoration: none;
@@ -264,8 +264,8 @@
     padding: 10px 20px;
   }
   .logoText {
-    font-size: 18px;
-    letter-spacing: 3px;
+    font-size: 21px;
+    letter-spacing: 3.5px;
     padding-right: 3px;
   }
   .logoSub {
