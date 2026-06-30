@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import { orderMoney } from '@/lib/orderMoney';
 import styles from '../../account.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -26,6 +27,8 @@ type Order = {
   carrier?: string;
   estimatedDelivery?: string;
   customerNote?: string;
+  displayCurrency?: string;
+  exchangeRate?: number;
 };
 
 const STATUS_CLASS: Record<string, string> = {
@@ -119,19 +122,19 @@ export default function OrderDetailPage() {
                       <p className={styles.itemName}>{item.name}</p>
                       <p className={styles.itemMeta}>{[item.colour, item.size].filter(Boolean).join(' / ')} · qty {item.quantity}</p>
                     </div>
-                    <span className={styles.itemPrice}>€{(item.price * item.quantity).toFixed(2)}</span>
+                    <span className={styles.itemPrice}>{orderMoney(order, item.price * item.quantity)}</span>
                   </div>
                 ))}
               </div>
               {(order.shippingCost ?? 0) > 0 && (
                 <div className={styles.totalRow}>
                   <span>Shipping{order.shippingMethod ? ` (${order.shippingMethod})` : ''}</span>
-                  <span>€{order.shippingCost.toFixed(2)}</span>
+                  <span>{orderMoney(order, order.shippingCost)}</span>
                 </div>
               )}
               <div className={styles.totalRow}>
                 <strong>Total</strong>
-                <strong>€{((order.total ?? 0) + (order.shippingCost ?? 0)).toFixed(2)}</strong>
+                <strong>{orderMoney(order, (order.total ?? 0) + (order.shippingCost ?? 0))}</strong>
               </div>
             </div>
 

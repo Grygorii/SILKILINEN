@@ -1,6 +1,18 @@
 const { Resend } = require('resend');
 const { sign: signUnsub } = require('../utils/unsubscribeSign');
 const { getSiteSettings } = require('./siteSettings');
+const { SUPPORTED: CURRENCIES } = require('./exchangeRates');
+
+// Money formatter for an order. The customer sees what they actually paid (the
+// charge currency); admin always sees EUR (canonical for the books). Amounts are
+// stored in EUR, so we convert with the order's recorded exchange rate.
+function orderMoney(order, isAdmin) {
+  if (isAdmin) return (eur) => `€${(Number(eur) || 0).toFixed(2)}`;
+  const cur = String(order.displayCurrency || 'EUR').toUpperCase();
+  const sym = (CURRENCIES[cur] && CURRENCIES[cur].symbol) || '€';
+  const rate = Number(order.exchangeRate) || 1;
+  return (eur) => `${sym}${((Number(eur) || 0) * rate).toFixed(2)}`;
+}
 
 // Editable business details / welcome offer, read at send time so a change in
 // admin (Business & offers) flows into the emails too — and the welcome email's
@@ -35,7 +47,7 @@ function shortId(mongoId) {
   return String(mongoId).slice(-8).toUpperCase();
 }
 
-function buildItemsRows(items) {
+function buildItemsRows(items, m) {
   return items.map(item => `
     <tr>
       <td style="padding:12px 0;border-bottom:1px solid #eae8e3;">
@@ -45,7 +57,7 @@ function buildItemsRows(items) {
     : ''}
       </td>
       <td style="padding:12px 0;border-bottom:1px solid #eae8e3;text-align:center;font-size:13px;color:#5a5650;white-space:nowrap;">× ${item.quantity}</td>
-      <td style="padding:12px 0;border-bottom:1px solid #eae8e3;text-align:right;font-size:14px;color:#1a1916;white-space:nowrap;">€${(item.price * item.quantity).toFixed(2)}</td>
+      <td style="padding:12px 0;border-bottom:1px solid #eae8e3;text-align:right;font-size:14px;color:#1a1916;white-space:nowrap;">${m(item.price * item.quantity)}</td>
     </tr>
   `).join('');
 }
@@ -64,6 +76,7 @@ function buildHtml({ order, isAdmin }) {
   const shippingCost = order.shippingCost || 0;
   const discountAmount = order.discountAmount || 0;
   const grandTotal = order.total ?? (itemsSubtotal - discountAmount + shippingCost);
+  const m = orderMoney(order, isAdmin); // EUR for admin; the charge currency for the customer
   const firstName = order.customerName ? esc(order.customerName.split(' ')[0]) : 'there';
 
   return `<!DOCTYPE html>
@@ -112,28 +125,28 @@ function buildHtml({ order, isAdmin }) {
               <!-- Items -->
               <p style="margin:0 0 14px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8a8680;">Items ordered</p>
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-                ${buildItemsRows(order.items)}
+                ${buildItemsRows(order.items, m)}
               </table>
 
               <!-- Totals -->
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
                 <tr>
                   <td style="padding:8px 0;font-size:13px;color:#5a5650;">Items subtotal</td>
-                  <td style="padding:8px 0;font-size:13px;color:#1a1916;text-align:right;">€${itemsSubtotal.toFixed(2)}</td>
+                  <td style="padding:8px 0;font-size:13px;color:#1a1916;text-align:right;">${m(itemsSubtotal)}</td>
                 </tr>
                 ${discountAmount > 0 ? `
                 <tr>
                   <td style="padding:8px 0;font-size:13px;color:#5a5650;">Discount${order.discountCode ? ` (${order.discountCode})` : ''}</td>
-                  <td style="padding:8px 0;font-size:13px;color:#2d7d47;text-align:right;">−€${discountAmount.toFixed(2)}</td>
+                  <td style="padding:8px 0;font-size:13px;color:#2d7d47;text-align:right;">−${m(discountAmount)}</td>
                 </tr>` : ''}
                 ${shippingCost > 0 ? `
                 <tr>
                   <td style="padding:8px 0;font-size:13px;color:#5a5650;">Shipping${order.shippingMethod ? ` (${order.shippingMethod})` : ''}</td>
-                  <td style="padding:8px 0;font-size:13px;color:#1a1916;text-align:right;">€${shippingCost.toFixed(2)}</td>
+                  <td style="padding:8px 0;font-size:13px;color:#1a1916;text-align:right;">${m(shippingCost)}</td>
                 </tr>` : ''}
                 <tr>
                   <td style="padding:14px 0 0;font-size:15px;color:#1a1916;border-top:1px solid #eae8e3;"><strong>Total</strong></td>
-                  <td style="padding:14px 0 0;font-size:15px;color:#1a1916;font-weight:600;text-align:right;border-top:1px solid #eae8e3;">€${grandTotal.toFixed(2)}</td>
+                  <td style="padding:14px 0 0;font-size:15px;color:#1a1916;font-weight:600;text-align:right;border-top:1px solid #eae8e3;">${m(grandTotal)}</td>
                 </tr>
               </table>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { orderMoney } from '@/lib/orderMoney';
 import styles from '../account.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -12,6 +13,8 @@ type Order = {
   status: string;
   createdAt: string;
   items: { name: string }[];
+  displayCurrency?: string;
+  exchangeRate?: number;
 };
 
 const STATUS_CLASS: Record<string, string> = {
@@ -76,7 +79,7 @@ export default function OrdersPage() {
                 {new Date(o.createdAt).toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' })}
                 {o.items?.[0] && ` · ${o.items[0].name}${o.items.length > 1 ? ` +${o.items.length - 1} more` : ''}`}
               </span>
-              <span className={styles.orderTotal}>€{((o.total ?? 0) + (o.shippingCost ?? 0)).toFixed(2)}</span>
+              <span className={styles.orderTotal}>{orderMoney(o, (o.total ?? 0) + (o.shippingCost ?? 0))}</span>
               <span className={`${styles.orderStatus} ${STATUS_CLASS[o.status] || styles.statusDefault}`}>
                 {o.status}
               </span>
