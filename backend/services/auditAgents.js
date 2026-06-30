@@ -626,24 +626,57 @@ async function fetchHtml(url, timeout = 8000) {
 function auditPageHtml(html) {
   const issues = [];
 
+  // Title — present, not truncated, and descriptive (Google Starter Guide).
   const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   const title = titleMatch ? titleMatch[1].replace(/\s+/g, ' ').trim() : '';
   if (!title) issues.push({ sev: 'warning', type: 'Title tag missing', detail: '', sugg: 'Set a page title in metadata.' });
   else if (title.length > 60) issues.push({ sev: 'warning', type: 'Title too long', detail: `${title.length} chars — "${title}"`, sugg: 'Trim the title (or the product metaTitle) to ≤60 chars so Google does not truncate it.' });
+  else if (title.length < 15) issues.push({ sev: 'info', type: 'Title very short', detail: `${title.length} chars — "${title}"`, sugg: 'Use a fuller, descriptive title (~30–60 chars) led by the primary term.' });
 
+  // Meta description — present, unique, concise (≤160).
   const metaTag = html.match(/<meta[^>]+name=["']description["'][^>]*>/i);
-  const descContent = metaTag ? (metaTag[0].match(/content=["']([^"']*)["']/i)?.[1] || '') : '';
-  if (!metaTag || !descContent.trim()) issues.push({ sev: 'warning', type: 'Meta description missing', detail: '', sugg: 'Add a 120–160 char meta description (per-page metadata or the metaDescription field).' });
+  const desc = (metaTag ? (metaTag[0].match(/content=["']([^"']*)["']/i)?.[1] || '') : '').trim();
+  if (!metaTag || !desc) issues.push({ sev: 'warning', type: 'Meta description missing', detail: '', sugg: 'Add a 120–160 char meta description (per-page metadata or the metaDescription field).' });
+  else if (desc.length > 160) issues.push({ sev: 'info', type: 'Meta description too long', detail: `${desc.length} chars`, sugg: 'Trim to ≤160 chars so Google does not truncate the snippet.' });
+  else if (desc.length < 50) issues.push({ sev: 'info', type: 'Meta description very short', detail: `${desc.length} chars`, sugg: 'Aim for 120–160 chars to fill the snippet with a real summary.' });
 
+  // Heading structure — exactly one <h1>.
   const h1Count = (html.match(/<h1[\s>]/gi) || []).length;
   if (h1Count > 1) issues.push({ sev: 'info', type: 'More than one h1', detail: `${h1Count} <h1> tags on the page`, sugg: 'Keep a single <h1> per page; demote the others to <h2>.' });
   else if (h1Count === 0) issues.push({ sev: 'info', type: 'No h1 tag', detail: '', sugg: 'Add one <h1> describing the page.' });
 
+  // Canonical — avoid duplicate-URL dilution (the guide's canonicalisation point).
+  if (!/<link[^>]+rel=["']canonical["']/i.test(html)) {
+    issues.push({ sev: 'info', type: 'Canonical tag missing', detail: '', sugg: 'Add a self-referencing canonical (alternates.canonical) so duplicate URLs do not split signals.' });
+  }
+
+  // Images — descriptive alt (presence AND quality).
   const imgs = html.match(/<img\b[^>]*>/gi) || [];
-  const noAlt = imgs.filter(t => { const m = t.match(/\balt\s*=\s*["']([^"']*)["']/i); return !m || !m[1].trim(); }).length;
+  const altOf = (t) => { const m = t.match(/\balt\s*=\s*["']([^"']*)["']/i); return m ? m[1].trim() : null; };
+  const noAlt = imgs.filter(t => !altOf(t)).length; // null or empty (empty = intentional decorative)
   if (noAlt > 0) issues.push({ sev: 'warning', type: 'Image alt text missing', detail: `${noAlt} of ${imgs.length} images have no/empty alt`, sugg: 'Give every content image descriptive alt text (decorative images may use alt="" intentionally).' });
+  const junkAlt = imgs.filter(t => { const a = altOf(t); return a && a.length > 0 && a.length <= 2; }).length;
+  if (junkAlt > 0) issues.push({ sev: 'info', type: 'Non-descriptive image alt', detail: `${junkAlt} image(s) have a 1–2 character alt`, sugg: 'Use alt text that describes what the image shows (e.g. "Champagne silk robe, front").' });
 
   return issues;
+}
+
+// Core Web Vitals via Google PageSpeed Insights (mobile, lab + real-user CrUX).
+// PSI is slow, so callers sample only a couple of key URLs. Works keyless at low
+// volume; set PAGESPEED_API_KEY for reliable runs.
+async function measureWebVitals(url) {
+  const key = process.env.PAGESPEED_API_KEY;
+  const api = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&category=performance&strategy=mobile${key ? `&key=${key}` : ''}`;
+  const res = await fetch(api, { signal: AbortSignal.timeout(28000) });
+  if (!res.ok) throw new Error(`PageSpeed HTTP ${res.status}`);
+  const data = await res.json();
+  const score = data.lighthouseResult?.categories?.performance?.score;
+  return {
+    score: score == null ? null : Math.round(score * 100),
+    lcp: data.lighthouseResult?.audits?.['largest-contentful-paint']?.displayValue || null,
+    cls: data.lighthouseResult?.audits?.['cumulative-layout-shift']?.displayValue || null,
+    fieldOverall: data.loadingExperience?.overall_category || null, // FAST | AVERAGE | SLOW
+  };
 }
 
 async function runSeoHygieneAgent(frontendUrl, backendUrl) {
@@ -674,6 +707,32 @@ async function runSeoHygieneAgent(frontendUrl, backendUrl) {
     }
     for (const i of auditPageHtml(res.html)) {
       findings.push(finding(i.sev, 'seo', `${i.type} — ${path}`, i.detail, url, i.sugg));
+    }
+  }
+
+  // Core Web Vitals / page experience — a Google ranking signal. Sample the
+  // homepage + one product (PSI is slow, so keep it bounded + best-effort).
+  const cwvTargets = ['/'];
+  const firstProduct = urls.find(p => p.startsWith('/product/'));
+  if (firstProduct) cwvTargets.push(firstProduct);
+  for (const path of cwvTargets) {
+    const url = `${frontendUrl}${path}`;
+    try {
+      const v = await measureWebVitals(url);
+      const bits = [
+        v.score != null ? `mobile score ${v.score}/100` : null,
+        v.lcp ? `LCP ${v.lcp}` : null,
+        v.cls ? `CLS ${v.cls}` : null,
+        v.fieldOverall ? `real-user: ${v.fieldOverall}` : null,
+      ].filter(Boolean).join(' · ');
+      if (v.fieldOverall === 'SLOW' || (v.score != null && v.score < 50)) {
+        findings.push(finding('warning', 'seo', `Core Web Vitals poor — ${path}`, bits, url, 'Page experience is a ranking signal — fix the LCP element (preload the hero image), cut layout shift, and trim JS.'));
+      } else if (v.fieldOverall === 'AVERAGE' || (v.score != null && v.score < 90)) {
+        findings.push(finding('info', 'seo', `Core Web Vitals could improve — ${path}`, bits, url, 'Aim for a 90+ mobile performance score and "good" Core Web Vitals.'));
+      }
+      // "good" / 90+ → no finding (clean bill)
+    } catch (err) {
+      findings.push(finding('info', 'seo', `Core Web Vitals not measured — ${path}`, err.message, url, 'PageSpeed Insights was unreachable or rate-limited; set PAGESPEED_API_KEY for reliable measurement.'));
     }
   }
 
