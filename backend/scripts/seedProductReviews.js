@@ -1,12 +1,16 @@
 'use strict';
 
-// Seed believable, ON-BRAND reviews for every active product so the product
-// review section looks alive — briefs/knickers ("panties") get the most. Reviews
-// are 4–5★ only, APPROVED + product-linked (so they show immediately), and are
-// built from a large combinatorial sentence engine that is product-aware (knows
-// it's a robe vs a pillowcase vs briefs, and the colour/material) with:
-//   • a GLOBAL dedupe of review bodies — no two reviews repeat,
-//   • per-product dedupe of reviewer names and titles,
+// Seed believable, ON-BRAND reviews where they matter most: PANTIES (the hero
+// category for social proof) get the bulk, and ONE flagship product from each of
+// a few other categories gets a light 1–2 reviews so the shop doesn't look
+// conspicuously unreviewed. Everything else stays empty — a 4-month-old shop
+// wouldn't have reviews on every SKU. Reviews are 4–5★ only, APPROVED +
+// product-linked (so they show immediately), dated within the last ~4 months,
+// and built from a product-aware combinatorial sentence engine (knows it's a
+// robe vs a pillowcase vs briefs, and the colour/material) with:
+//   • a GLOBAL dedupe of review bodies — no two reviews repeat anywhere,
+//   • PER-PRODUCT dedupe of reviewer names, titles, AND opening/feel/closing
+//     sentences — so two reviews on the same product never share an opener,
 //   • varied length (one-liners → 3–4 sentences) and an occasional gentle
 //     4★ caveat, so nothing reads like a template.
 //
@@ -54,6 +58,13 @@ const OPENERS = [
   'I keep coming back to this one.',
   'Honestly exceeded my expectations.',
   'Such a beautiful piece — the photos do not do it justice.',
+  'Worth every penny.',
+  'This is my second order, and {subj} {be} just as lovely as the first.',
+  'I had high hopes and {subj} still managed to surprise me.',
+  'A little everyday luxury that feels properly special.',
+  'Beautifully made, beautifully packaged.',
+  'I almost cannot believe the quality for the price.',
+  'The reviews sold me, and now I understand why.',
 ];
 const FEEL = [
   'The silk feels incredible against the skin — soft and cool.',
@@ -114,8 +125,10 @@ const pickUnused = (a, used) => {
 };
 const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+// The shop has only been live ~4 months, so every review must read as recent —
+// a few weeks to a couple of months ago, never older than the site itself.
 function recentDate() {
-  return new Date(Date.now() - randInt(4, 400) * 24 * 60 * 60 * 1000);
+  return new Date(Date.now() - randInt(6, 112) * 24 * 60 * 60 * 1000);
 }
 function weightedRating() {
   return Math.random() < 0.8 ? 5 : 4; // 4–5 only; skew to 5
@@ -164,14 +177,21 @@ function fillTokens(s, ctx) {
 }
 
 // Build a unique body for this rating + product. `seen` is the GLOBAL set of
-// normalized bodies already used anywhere — guarantees no repeats.
-function makeBody(ctx, rating, seen) {
+// normalized bodies (no body repeats anywhere). `used` holds PER-PRODUCT sets of
+// the openers/feels/closers already used on THIS product, so two reviews on the
+// same product never share an opening sentence (the thing the eye catches and
+// what made the seeded batch look templated).
+function makeBody(ctx, rating, seen, used) {
   for (let attempt = 0; attempt < 30; attempt++) {
-    const parts = [fillTokens(pick(OPENERS), ctx)];
+    // On the final attempts, relax per-product uniqueness so we never loop
+    // forever once a small pool (e.g. closers) is exhausted on this product.
+    const strict = attempt < 24;
+    const opener = strict ? pickUnused(OPENERS, used.openers) : pick(OPENERS);
+    const parts = [fillTokens(opener, ctx)];
     const oneLiner = Math.random() < 0.14;
     if (!oneLiner) {
       const feelPool = ctx.isLinen && Math.random() < 0.5 ? FEEL_LINEN : FEEL;
-      parts.push(fillTokens(pick(feelPool), ctx));
+      parts.push(fillTokens(strict ? pickUnused(feelPool, used.feels) : pick(feelPool), ctx));
       if (rating === 4) {
         parts.push(fillTokens(pick(CAVEATS), ctx));
       } else if (Math.random() < 0.65) {
@@ -181,7 +201,7 @@ function makeBody(ctx, rating, seen) {
         if (ctx.panties) spool = spool.concat(SPECIFIC_PANTIES);
         parts.push(fillTokens(pick(spool), ctx));
       }
-      if (Math.random() < 0.5) parts.push(fillTokens(pick(CLOSERS), ctx));
+      if (Math.random() < 0.5) parts.push(fillTokens(strict ? pickUnused(CLOSERS, used.closers) : pick(CLOSERS), ctx));
     }
     const body = cap(parts.join(' ').replace(/\s+/g, ' ').trim());
     const key = body.toLowerCase();
@@ -193,12 +213,12 @@ function makeBody(ctx, rating, seen) {
   return body.replace(/\s\([a-z0-9]{4}\)$/, ''); // strip the disambiguator from display
 }
 
-function buildReview(productId, ctx, seenBodies, usedNames, usedTitles) {
+function buildReview(productId, ctx, seenBodies, used) {
   const rating = weightedRating();
   return {
-    reviewer: pickUnused(NAMES, usedNames),
-    title: pickUnused(rating === 5 ? TITLES_5 : TITLES_4, usedTitles),
-    message: makeBody(ctx, rating, seenBodies),
+    reviewer: pickUnused(NAMES, used.names),
+    title: pickUnused(rating === 5 ? TITLES_5 : TITLES_4, used.titles),
+    message: makeBody(ctx, rating, seenBodies, used),
     starRating: rating,
     dateReviewed: recentDate(),
     productId,
@@ -224,24 +244,46 @@ async function main() {
 
   const products = await Product.find({ status: 'active' })
     .select('name category colorName colours materialComposition').lean();
-  console.log(`Seeding reviews for ${products.length} active product(s)…\n`);
+
+  // SCOPE: reviews live on PANTIES (the hero category for social proof), plus a
+  // light touch — 1–2 reviews — on ONE flagship product from each of a few other
+  // categories, so the rest of the shop doesn't look conspicuously unreviewed.
+  // Everything else stays empty (a real 4-month-old shop wouldn't have reviews
+  // on every single SKU). Pick the first active product per hero category.
+  const panties = products.filter(p => productCtx(p).panties);
+  const HERO_CATEGORIES = ['robes', 'sleep-dresses', 'pillowcases', 'shirts'];
+  const chosenOthers = [];
+  for (const cat of HERO_CATEGORIES) {
+    const match = products.find(p => !productCtx(p).panties
+      && String(p.category || '').toLowerCase() === cat
+      && !chosenOthers.includes(p));
+    if (match) chosenOthers.push(match);
+  }
+
+  const plan = [
+    ...panties.map(p => ({ p, n: randInt(6, 10) })),     // panties: the bulk
+    ...chosenOthers.map(p => ({ p, n: randInt(1, 2) })), // a few others: a light touch
+  ];
+  console.log(`Seeding reviews for ${panties.length} panty product(s) + ${chosenOthers.length} flagship other(s)…\n`);
 
   const seenBodies = new Set(); // global dedupe across the whole catalogue
   let created = 0, skipped = 0;
 
-  for (const p of products) {
+  for (const { p, n } of plan) {
     if (await Review.countDocuments({ productId: p._id, source: 'seed' }) > 0) { skipped++; continue; }
     const ctx = productCtx(p);
-    const n = ctx.panties ? randInt(7, 11) : randInt(2, 4); // panties get the most
-    const usedNames = new Set(), usedTitles = new Set();
-    const docs = Array.from({ length: n }, () => buildReview(p._id, ctx, seenBodies, usedNames, usedTitles));
+    // Per-product sets so names, titles, openers, feels and closers never repeat
+    // within a single product's reviews.
+    const used = { names: new Set(), titles: new Set(), openers: new Set(), feels: new Set(), closers: new Set() };
+    const docs = Array.from({ length: n }, () => buildReview(p._id, ctx, seenBodies, used));
     await Review.insertMany(docs);
     created += n;
     console.log(`  ${ctx.panties ? '★' : ' '} ${p.name} — ${n} review(s)`);
   }
 
   console.log(`\nDone. Created ${created} review(s); skipped ${skipped} already-seeded product(s).`);
-  console.log('All are 4–5★, approved, product-linked, and unique. Run with --reset to regenerate.');
+  console.log('Panties + a few flagships only · 4–5★ · approved · product-linked · dated within the last ~4 months · no repeated openers per product.');
+  console.log('Run with --reset first to clear the earlier broad batch.');
   await mongoose.disconnect();
 }
 
