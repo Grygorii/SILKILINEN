@@ -27,6 +27,8 @@ type Row = {
   note: string;
 };
 type Filter = 'all' | 'attention' | 'product' | 'category' | 'collection' | 'page';
+type AutofixItem = { type: string; label: string; url?: string; filled?: string[]; metaTitle?: string; metaDescription?: string; error?: string };
+type AutofixReport = { ran: boolean; applied: number; failed: number; hitLimit: boolean; titles: number; descriptions: number; report: AutofixItem[]; flagged: string };
 
 const TITLE_MAX = 70;
 const DESC_MAX = 165;
@@ -39,6 +41,8 @@ export default function SeoBasePage() {
   // Local edits keyed by `${type}:${id}` → { title, description }.
   const [edits, setEdits] = useState<Record<string, { title: string; description: string }>>({});
   const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [fixing, setFixing] = useState(false);
+  const [report, setReport] = useState<AutofixReport | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -115,6 +119,21 @@ export default function SeoBasePage() {
     } finally { setSavingKey(null); }
   }
 
+  async function runAutofix() {
+    setFixing(true); setReport(null);
+    try {
+      const res = await fetch(`${API}/api/admin/seo-base/autofix`, { method: 'POST', credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Auto-fix failed');
+      setReport(data);
+      if (data.applied > 0) toast(`Filled ${data.titles} title${data.titles === 1 ? '' : 's'} + ${data.descriptions} description${data.descriptions === 1 ? '' : 's'}.`, 'success');
+      else toast('Nothing missing — every page already has a title and description. ✦', 'success');
+      load(); // refresh the table so filled rows turn green
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Auto-fix failed', 'error');
+    } finally { setFixing(false); }
+  }
+
   const TABS: { key: Filter; label: string }[] = [
     { key: 'all', label: 'Everything' },
     { key: 'attention', label: `Needs attention${counts.needsWork ? ` (${counts.needsWork})` : ''}` },
@@ -133,12 +152,41 @@ export default function SeoBasePage() {
           description. Edit any line; it saves back to wherever that page&apos;s SEO lives.
         </p>
 
-        <div style={{ display: 'flex', gap: 20, marginTop: 14, fontSize: 13, color: muted }}>
+        <div style={{ display: 'flex', gap: 20, marginTop: 14, fontSize: 13, color: muted, alignItems: 'center', flexWrap: 'wrap' }}>
           <span><strong style={{ color: dark }}>{counts.total}</strong> pages</span>
           <span style={{ color: counts.needsWork ? health.bad : health.good }}>
             <strong>{counts.needsWork}</strong> missing a title or description
           </span>
+          <button onClick={runAutofix} disabled={fixing || counts.needsWork === 0} title="Hermes writes a meta title + description for every page that's missing one. Safe: it only fills gaps — never changes URLs or overwrites what you've written."
+            style={{
+              marginLeft: 'auto', padding: '9px 18px', fontSize: 12.5, fontFamily: 'inherit', whiteSpace: 'nowrap',
+              border: 'none', background: counts.needsWork ? dark : 'var(--border, #e8e2d6)',
+              color: counts.needsWork ? '#fff' : muted, cursor: fixing || !counts.needsWork ? 'default' : 'pointer', opacity: fixing ? 0.6 : 1,
+            }}>{fixing ? 'Hermes is writing… (up to a minute)' : `✦ Auto-fix the ${counts.needsWork || ''} missing`}</button>
         </div>
+
+        {report && (
+          <div style={{ marginTop: 16, border, background: '#fff', padding: '16px 18px' }}>
+            <div style={{ fontFamily: serif, fontSize: 18, color: dark }}>
+              Auto-fix report — filled {report.titles} title{report.titles === 1 ? '' : 's'} + {report.descriptions} description{report.descriptions === 1 ? '' : 's'}
+              {report.failed > 0 && <span style={{ color: health.bad, fontSize: 13 }}> · {report.failed} failed</span>}
+              {report.hitLimit && <span style={{ color: health.warn, fontSize: 13 }}> · per-run cap hit, run again for the rest</span>}
+            </div>
+            <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
+              {report.report.filter(r => r.filled?.length).slice(0, 40).map((r, i) => (
+                <div key={i} style={{ borderLeft: `3px solid ${health.good}`, paddingLeft: 10 }}>
+                  <div style={{ fontSize: 12.5, color: dark }}><strong>{r.label}</strong> <span style={{ color: muted }}>· wrote {r.filled?.join(' + ')}</span></div>
+                  {r.metaTitle && <div style={{ fontSize: 12, color: muted }}>“{r.metaTitle}”</div>}
+                  {r.metaDescription && <div style={{ fontSize: 12, color: muted }}>“{r.metaDescription}”</div>}
+                </div>
+              ))}
+            </div>
+            {report.flagged && (
+              <p style={{ fontSize: 11.5, color: muted, marginTop: 12, paddingTop: 10, borderTop: border, fontStyle: 'italic' }}>{report.flagged}</p>
+            )}
+            <button onClick={() => setReport(null)} style={{ marginTop: 10, padding: '5px 12px', fontSize: 12, fontFamily: 'inherit', border, background: '#fff', color: muted, cursor: 'pointer' }}>Dismiss</button>
+          </div>
+        )}
 
         {/* Filters + search */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', margin: '18px 0 4px' }}>

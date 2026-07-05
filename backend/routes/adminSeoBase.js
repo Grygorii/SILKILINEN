@@ -10,10 +10,12 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
+const { aiLimit } = require('../middleware/rateLimiters');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const Collection = require('../models/Collection');
 const { getPageSeo, savePageSeo, EDITABLE_PATHS } = require('../services/pageSeo');
+const { generateProductSEO, generateSEO } = require('../services/aiText');
 
 router.use(requireAuth);
 
@@ -126,6 +128,87 @@ router.patch('/', async (req, res) => {
   } catch (err) {
     console.error('[seo-base] save:', err.message);
     res.status(500).json({ error: err.message || 'Save failed' });
+  }
+});
+
+// POST /autofix — Hermes' hands: discover every page MISSING a meta title or
+// description and write it, automatically. Deliberately safe-only — it fills
+// gaps, never overwrites meta you already have, and never touches URLs/slugs
+// (those need redirects) or page copy. Returns a was→became report so you review
+// after, not before. Capped per run so the AI quota survives one click.
+router.post('/autofix', aiLimit, async (req, res) => {
+  const LIMIT = Math.min(Number(req.body?.limit) || 80, 120);
+  const report = [];
+  let applied = 0, failed = 0;
+  const missing = (v) => !String(v || '').trim();
+  const fillFields = (existing, gen) => {
+    // Only the fields that are actually missing; keep anything already written.
+    const out = {}; const filled = [];
+    if (missing(existing.metaTitle) && gen.metaTitle) { out.metaTitle = String(gen.metaTitle).slice(0, 70); filled.push('title'); }
+    if (missing(existing.metaDescription) && gen.metaDescription) { out.metaDescription = String(gen.metaDescription).slice(0, 165); filled.push('description'); }
+    return { out, filled };
+  };
+
+  try {
+    // Products
+    const products = await Product.find({
+      status: { $in: ['active', 'sold_out'] },
+      $or: [{ metaTitle: { $in: [null, ''] } }, { metaDescription: { $in: [null, ''] } }],
+    }).select('name description category materialComposition colours price metaTitle metaDescription slug').limit(LIMIT);
+    for (const p of products) {
+      if (applied >= LIMIT) break;
+      try {
+        const gen = await generateProductSEO(p);
+        const { out, filled } = fillFields(p, gen);
+        if (!filled.length) continue;
+        await Product.findByIdAndUpdate(p._id, out);
+        applied++;
+        report.push({ type: 'product', label: p.name, url: `${SITE}/product/${p.slug || p._id}`, filled, ...out });
+      } catch (err) { failed++; report.push({ type: 'product', label: p.name, error: err.message.slice(0, 80) }); }
+    }
+
+    // Categories + collections — grounded in the real pieces each page lists.
+    const cats = await Category.find({ status: 'active', $or: [{ metaTitle: { $in: [null, ''] } }, { metaDescription: { $in: [null, ''] } }] })
+      .select('label slug description metaTitle metaDescription');
+    for (const c of cats) {
+      if (applied >= LIMIT) break;
+      try {
+        const items = await Product.find({ category: c.slug, status: 'active' }).select('name').limit(12).lean();
+        const gen = await generateSEO({ kind: 'category', name: c.label, description: c.description || '', items: items.map(x => x.name) });
+        const { out, filled } = fillFields(c, gen);
+        if (!filled.length) continue;
+        await Category.findByIdAndUpdate(c._id, out);
+        applied++;
+        report.push({ type: 'category', label: c.label, url: `${SITE}/shop?category=${c.slug}`, filled, ...out });
+      } catch (err) { failed++; report.push({ type: 'category', label: c.label, error: err.message.slice(0, 80) }); }
+    }
+
+    const colls = await Collection.find({ status: 'active', $or: [{ metaTitle: { $in: [null, ''] } }, { metaDescription: { $in: [null, ''] } }] })
+      .select('name slug description metaTitle metaDescription');
+    for (const c of colls) {
+      if (applied >= LIMIT) break;
+      try {
+        const items = await Product.find({ collections: c._id, status: 'active' }).select('name').limit(12).lean();
+        const gen = await generateSEO({ kind: 'collection', name: c.name, description: c.description || '', items: items.map(x => x.name) });
+        const { out, filled } = fillFields(c, gen);
+        if (!filled.length) continue;
+        await Collection.findByIdAndUpdate(c._id, out);
+        applied++;
+        report.push({ type: 'collection', label: c.name, url: `${SITE}/collections/${c.slug}`, filled, ...out });
+      } catch (err) { failed++; report.push({ type: 'collection', label: c.name, error: err.message.slice(0, 80) }); }
+    }
+
+    res.json({
+      ran: true, applied, failed, hitLimit: applied >= LIMIT,
+      titles: report.filter(r => r.filled?.includes('title')).length,
+      descriptions: report.filter(r => r.filled?.includes('description')).length,
+      report,
+      // What was deliberately NOT auto-fixed — so the founder knows the honest boundary.
+      flagged: 'URL/slug changes and page copy are never auto-applied here — they need redirects or human judgment. Find those in SEO → Recommendations.',
+    });
+  } catch (err) {
+    console.error('[seo-base] autofix:', err.message);
+    res.status(503).json({ error: err.message || 'Auto-fix could not run — try again.' });
   }
 });
 
