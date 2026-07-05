@@ -52,11 +52,12 @@
   flex-shrink: 0;
 }
 
-/* Primary — quiet dark button */
+/* Primary — a soft warm-charcoal fill (tone-on-tone with the brand, the same
+   tone as the hero CTA) rather than a stark near-black block. */
 .btnAccept {
-  background: var(--dark, #1a1916);
+  background: #2f2b25;
   color: var(--warm-white, #faf8f4);
-  border: 1px solid var(--dark, #1a1916);
+  border: 1px solid #2f2b25;
   padding: 9px 24px;
   font-size: 11px;
   letter-spacing: 1.5px;
@@ -64,11 +65,11 @@
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  transition: opacity 0.15s;
+  transition: background 0.2s ease;
 }
 
 .btnAccept:hover {
-  opacity: 0.85;
+  background: #4a443b;
 }
 
 /* Secondary — plain text link, no shouting */
