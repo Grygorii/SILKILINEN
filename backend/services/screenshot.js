@@ -12,13 +12,21 @@
 
 const DEFAULT_TPL = 'https://s.wordpress.com/mshots/v1/{url}?w={w}';
 
-function buildUrl(target, w) {
+function buildUrl(target, w, bust) {
   const tpl = process.env.SCREENSHOT_URL_TEMPLATE || DEFAULT_TPL;
-  return tpl.replace('{url}', encodeURIComponent(target)).replace('{w}', String(w));
+  let url = tpl.replace('{url}', encodeURIComponent(target)).replace('{w}', String(w));
+  // mShots caches a rendered frame by URL forever — so after a deploy the Atelier
+  // would keep grading an OLD screenshot. A rotating `vhash` forces a fresh render
+  // each bucket, so reviews reflect what's actually live.
+  if (bust) url += (url.includes('?') ? '&' : '?') + 'vhash=' + encodeURIComponent(bust);
+  return url;
 }
 
-async function capture(target, { width = 1280, retries = 4, waitMs = 4500 } = {}) {
-  const url = buildUrl(target, width);
+async function capture(target, { width = 1280, retries, waitMs, bust = '' } = {}) {
+  // A busted URL renders cold on first hit, so give mShots more patience.
+  if (retries == null) retries = bust ? 7 : 4;
+  if (waitMs == null) waitMs = bust ? 6000 : 4500;
+  const url = buildUrl(target, width, bust);
   for (let i = 0; i < retries; i++) {
     try {
       const res = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(20000) });

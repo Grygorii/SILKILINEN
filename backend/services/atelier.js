@@ -72,7 +72,10 @@ async function reviewRoom(room) {
     htmlKB = Math.round(((await r.text()) || '').length / 1024); loadMs = Date.now() - t0;
   } catch { loadMs = Date.now() - t0; }
 
-  const shot = await capture(url, { width: 1280 });
+  // Bucket the screenshot cache to 15 min: fresh enough that a review taken a few
+  // minutes after a deploy sees the new site, without cold-rendering every run.
+  const bust = String(Math.floor(Date.now() / (15 * 60 * 1000)));
+  const shot = await capture(url, { width: 1280, bust });
   const parts = [{ text: `${ROOM_SYSTEM}\n\nROOM: ${room.name}\nURL: ${url}\nLOAD: ~${loadMs} ms, HTML ${htmlKB} KB (a slow or heavy room undermines luxury).` }];
   let usedScreenshot = false;
   if (shot) {
