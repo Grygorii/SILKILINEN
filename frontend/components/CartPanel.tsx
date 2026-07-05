@@ -177,7 +177,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
               <p className={styles.emptyTitle}>Your cart is empty.</p>
               <p className={styles.emptySub}>When you add silk, it&apos;ll live here until you check out.</p>
               <div className={styles.shopBtnWrap}>
-                <Button variant="secondary" onClick={onClose}>Shop the collection</Button>
+                <Button variant="secondary" onClick={onClose}>Explore the collection</Button>
               </div>
             </div>
           ) : (

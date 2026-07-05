@@ -83,7 +83,7 @@ export default function NewArrivalsCarousel({ products }: { products: ProductCar
     <section className={styles.section}>
       <div className={styles.header}>
         <h2 className={styles.title}>New Arrivals</h2>
-        <Link href="/shop?new=true" className={styles.viewAll}>View all →</Link>
+        <Link href="/shop?new=true" className={styles.viewAll}>Discover more →</Link>
       </div>
 
       <div className={styles.viewport}>

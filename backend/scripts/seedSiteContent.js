@@ -21,7 +21,7 @@ const CONTENT = [
   { key: 'homepage_hero_subtitle', type: 'text', section: 'homepage', label: 'Hero Subtitle', order: 3,
     value: 'Pure silk & linen intimates' },
   { key: 'homepage_hero_cta', type: 'text', section: 'homepage', label: 'Hero Button Text', order: 4,
-    value: 'Shop the collection' },
+    value: 'Explore the collection' },
 
   // ── Homepage Story Section ───────────────────────────
   { key: 'homepage_story_image', type: 'image', section: 'homepage', label: 'Story Section Image', order: 5, value: '' },

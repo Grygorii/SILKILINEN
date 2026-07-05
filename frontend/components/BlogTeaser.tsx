@@ -30,7 +30,7 @@ export default async function BlogTeaser() {
     <section className={styles.section}>
       <div className={styles.header}>
         <h2 className={styles.title}>From the Journal</h2>
-        <Link href="/journal" className={styles.viewAll}>View all →</Link>
+        <Link href="/journal" className={styles.viewAll}>Discover more →</Link>
       </div>
       <div className={styles.grid}>
         {posts.map(post => (
