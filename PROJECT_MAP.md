@@ -72,6 +72,17 @@ or change an invariant, update the relevant line here in the same commit.
 - **lib/** — `clampMeta` (≤160 meta desc), `cloudinaryLoader` (f_auto,q_auto transforms),
   `content`/`pageSeo` (CMS + SEO fetch), `safeJsonLd`, `orderMoney`, `uploadSpecs`.
 
+## SEO Base (the "site plan")
+- **`backend/routes/adminSeoBase.js`** (`/api/admin/seo-base`) — GET aggregates every
+  indexable URL's meta (products/categories/collections + `pageSeo` static pages) with
+  snippet-length health; PATCH saves an edit back to the owning store. POST `/autofix`
+  (Hermes' hands) fills only MISSING meta via `aiText` `generateProductSEO`/`generateSEO`,
+  safe-only (never URLs/content), returns a was→became report.
+- **`frontend/app/admin/seo/base/page.tsx`** — the editable table + auto-fix button +
+  report + per-row Yoast-style "Preview & checks" (Google snippet + focus-phrase checklist).
+  Nav entry "SEO Base". SEO writers stay approve-first elsewhere; the Base auto-fix is the
+  one place meta is filled automatically (missing meta is strictly worse than AI meta).
+
 ## SEO invariants
 - Self-referencing `alternates.canonical` on indexable pages. Empty/stale category slugs
   `notFound()` + noindex (see `shop/page.tsx`). Meta descriptions run through `clampMeta`.
