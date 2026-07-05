@@ -70,34 +70,45 @@ async function generateAltText({ force = false, limit = 120 } = {}) {
 
   let scanned = 0, updated = 0, productsTouched = 0, failed = 0;
   const samples = [];
+  const failedList = []; // { product, reason } — so the UI can say WHY (usually a
+                         // broken/missing image the vision model can't read).
 
   for (const product of products) {
     if (updated >= limit) break;
-    let dirty = false;
+    let dirtyCount = 0;
+    const pending = [];
     for (const img of product.images) {
-      if (updated >= limit) break;
+      if (updated + dirtyCount >= limit) break;
       if (!img.url) continue;
       scanned++;
       if (!force && !isWeakAlt(img.alt, product.name)) continue;
       try {
         const alt = await describeImage(img.url, product);
         img.alt = alt;
-        dirty = true; updated++;
-        if (samples.length < 12) samples.push({ product: product.name, alt });
+        dirtyCount++;
+        pending.push({ product: product.name, alt });
       } catch (err) {
         failed++;
-        if (samples.length < 12) samples.push({ product: product.name, error: err.message.slice(0, 60) });
+        failedList.push({ product: product.name, reason: err.message.slice(0, 80) });
       }
     }
-    if (dirty) {
+    if (dirtyCount > 0) {
       // validateBeforeSave: false — we only touched image alt; don't re-run the
       // full product validation (and don't trip the slug/stock pre-save churn).
-      try { await product.save({ validateBeforeSave: false }); productsTouched++; }
-      catch (err) { console.error('[atelierAlt] save failed for', product._id, err.message); }
+      // Only COUNT the writes once they persist, so the UI never claims success
+      // for images a failed save silently dropped.
+      try {
+        await product.save({ validateBeforeSave: false });
+        updated += dirtyCount; productsTouched++;
+        for (const p of pending) if (samples.length < 12) samples.push(p);
+      } catch (err) {
+        failed += dirtyCount;
+        failedList.push({ product: product.name, reason: `save failed: ${err.message.slice(0, 60)}` });
+      }
     }
   }
 
-  return { ran: true, force, scanned, updated, productsTouched, failed, hitLimit: updated >= limit, samples };
+  return { ran: true, force, scanned, updated, productsTouched, failed, failedList: failedList.slice(0, 12), hitLimit: updated >= limit, samples };
 }
 
 // How many images would a default pass touch right now? (For the audit + the

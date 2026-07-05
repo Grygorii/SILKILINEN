@@ -5,7 +5,7 @@ const SiteContent = require('../models/SiteContent');
 const CONTENT = [
   // ── Banner ──────────────────────────────────────────
   { key: 'banner_message_1', type: 'text', section: 'banner', label: 'Banner Message 1', order: 1,
-    value: 'Free shipping on orders over €150 to Ireland 🇮🇪' },
+    value: 'An Irish silk & linen brand, based in Donegal' },
   { key: 'banner_message_2', type: 'text', section: 'banner', label: 'Banner Message 2', order: 2,
     value: 'New to Silkilinen? Use code <strong>SILK10</strong> for 10% off' },
   { key: 'banner_message_3', type: 'text', section: 'banner', label: 'Banner Message 3', order: 3,

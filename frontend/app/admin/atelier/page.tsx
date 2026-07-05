@@ -63,8 +63,10 @@ export default function AtelierPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Alt text failed');
+      const failNames = (data.failedList || []).map((f: { product: string }) => f.product).slice(0, 4).join(', ');
       if (!data.ran) toast(data.note || 'Set GEMINI_API_KEY to enable this.', 'info');
-      else if (data.updated > 0) toast(`Wrote alt text for ${data.updated} photo${data.updated === 1 ? '' : 's'} across ${data.productsTouched} product${data.productsTouched === 1 ? '' : 's'}${data.hitLimit ? ' — run again to finish the rest.' : '.'}`, 'success');
+      else if (data.updated > 0) toast(`Wrote alt text for ${data.updated} photo${data.updated === 1 ? '' : 's'} across ${data.productsTouched} product${data.productsTouched === 1 ? '' : 's'}${data.failed ? `. ${data.failed} couldn't be read (${failNames})` : ''}${data.hitLimit ? ' — run again to finish the rest.' : '.'}`, data.failed ? 'info' : 'success');
+      else if (data.failed > 0) toast(`${data.failed} photo${data.failed === 1 ? '' : 's'} couldn't be read — the image is missing or broken (${failNames}). Upload a real photo for ${data.failed === 1 ? 'it' : 'them'}, then run again.`, 'info');
       else toast('Every product photo already has descriptive alt text. ✦', 'success');
       load();
     } catch (e) {
