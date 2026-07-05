@@ -98,6 +98,10 @@ or change an invariant, update the relevant line here in the same commit.
   Organization + WebSite JSON-LD in `app/layout.tsx`. Cloudinary preconnect in `<head>`.
 
 ## Conventions
+- **Colour: use the brand tokens, never hardcode hex on the storefront.** `globals.css` :root
+  defines 7 core (`--color-bg/-surface/-surface-warm/-line/-ink-muted/-ink/-accent`, aliased
+  `--warm-white/-cream/-border/-muted/-dark/-rose`) + semantic `--color-success/-danger/-gold`
+  (+ `-soft`/`-bright`). Don't write `var(--tok, #hex)` fallbacks (the token is always defined).
 - Match existing style; surgical diffs (see root CLAUDE.md). Fail-loud in agents, fail-soft per item.
 - Prefer live DB data over hardcoded lists. Keep the EUR path untouched when touching currency.
 - Lint note: `react-hooks/set-state-in-effect` warnings on `useEffect(()=>{load()})` are

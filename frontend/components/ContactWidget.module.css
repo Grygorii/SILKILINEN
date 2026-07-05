@@ -12,15 +12,18 @@
 /* ── Trigger button ──────────────────────────────────── */
 
 .trigger {
-  width: 52px;
-  height: 52px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background: var(--dark);
   color: var(--warm-white);
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(26, 25, 22, 0.22);
-  transition: transform 0.2s ease, background 0.2s ease;
+  /* Quieter at rest — a softer shadow and a slight recede, so it sits in the
+     corner without competing with the page. It comes fully forward on hover. */
+  box-shadow: 0 3px 14px rgba(26, 25, 22, 0.14);
+  opacity: 0.82;
+  transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -28,7 +31,8 @@
 }
 
 .trigger:hover {
-  transform: scale(1.07);
+  transform: scale(1.05);
+  opacity: 1;
 }
 
 .triggerOpen {
