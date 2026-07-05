@@ -72,9 +72,11 @@ export default function ProductImage({ images, src, alt, variant, wrapClassName,
           sizes={SIZES[variant]}
           className={styles.img}
           priority={loading === 'eager'}
+          // No opacity-until-onLoad gate: that made the image wait for client
+          // hydration to become visible, delaying LCP badly on the shop grid.
+          // The skeleton sits behind and is covered once the browser paints.
           onLoad={() => setState('loaded')}
           onError={() => setState('failed')}
-          style={{ opacity: state === 'loaded' ? 1 : 0 }}
         />
       )}
     </div>

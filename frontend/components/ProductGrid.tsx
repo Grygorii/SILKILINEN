@@ -73,8 +73,10 @@ export default function ProductGrid({
         </div>
       ) : (
         <div className={styles.grid}>
-          {products.map(product => (
-            <ProductCard key={product._id} product={product} />
+          {products.map((product, i) => (
+            // First row eager-loads + preloads (the LCP image lives here); the
+            // rest lazy-load as the shopper scrolls.
+            <ProductCard key={product._id} product={product} priority={i < 4} />
           ))}
         </div>
       )}

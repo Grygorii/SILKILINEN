@@ -34,6 +34,8 @@ type Props = {
   product: ProductCardData;
   /** Show the wishlist heart top-right. Default true. */
   showHeart?: boolean;
+  /** Eager-load + preload this card's image — set on the first row (LCP). */
+  priority?: boolean;
 };
 
 /**
@@ -47,7 +49,7 @@ type Props = {
  * wishlist heart, which sits above the overlay. There is no quick-add
  * button; sizing/colour selection happens on the product page.
  */
-export default function ProductCard({ product, showHeart = true }: Props) {
+export default function ProductCard({ product, showHeart = true, priority = false }: Props) {
   const { toggle, isWished } = useWishlist();
   const [animating, setAnimating] = useState(false);
 
@@ -100,7 +102,7 @@ export default function ProductCard({ product, showHeart = true }: Props) {
       )}
 
       <div className={styles.cardImg}>
-        <ProductImage src={heroUrl} alt={heroAlt} variant="card" />
+        <ProductImage src={heroUrl} alt={heroAlt} variant="card" loading={priority ? 'eager' : 'lazy'} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {hoverUrl && (
           <img
