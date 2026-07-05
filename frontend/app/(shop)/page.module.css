@@ -91,19 +91,25 @@
 /* Solid filled CTA — visible against any hero photo */
 .heroBtn {
   display: inline-block;
-  padding: 14px 36px;
+  padding: 15px 40px;
   background: var(--dark);
   border: 1px solid var(--dark);
   color: var(--warm-white);
-  font-size: 11px;
+  font-size: 11.5px;
   letter-spacing: 3px;
   text-transform: uppercase;
   text-decoration: none;
-  transition: opacity 0.2s ease;
+  /* A more deliberate, considered hover than a flat opacity fade. */
+  transition: background 0.3s ease, border-color 0.3s ease, letter-spacing 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .heroBtn:hover {
-  opacity: 0.82;
+  /* Warm charcoal (not a wash-out), the label breathes open, a quiet lift. */
+  background: #2f2b25;
+  border-color: #2f2b25;
+  letter-spacing: 3.6px;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(26, 25, 22, 0.18);
 }
 
 /* ── Reviews section ──────────────────────────────── */

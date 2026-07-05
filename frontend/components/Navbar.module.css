@@ -223,13 +223,14 @@
   .desktopNav {
     display: flex;
     align-items: center;
-    gap: 24px;
+    /* Ample, calm spacing between nav items — considered, not crowded. */
+    gap: 34px;
   }
 }
 
 .desktopNavLink {
   font-size: 12px;
-  letter-spacing: 2.2px;
+  letter-spacing: 2.8px;
   text-transform: uppercase;
   color: var(--muted, #8a8680);
   text-decoration: none;

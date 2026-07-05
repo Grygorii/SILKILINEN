@@ -8,10 +8,15 @@
   transform: translateX(-50%);
   width: calc(100% - 48px);
   max-width: 560px;
-  background: var(--warm-white, #faf8f4);
+  /* Frosted, semi-transparent warm-white — it settles over the page rather than
+     sitting on top of it as a solid slab. Falls back to solid warm-white where
+     backdrop-filter is unsupported. */
+  background: rgba(250, 248, 244, 0.82);
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  backdrop-filter: blur(14px) saturate(1.15);
   color: var(--muted, #6b6862);
-  border: 1px solid var(--border, #e0ddd7);
-  box-shadow: 0 8px 32px rgba(26, 25, 22, 0.12);
+  border: 1px solid rgba(224, 221, 215, 0.85);
+  box-shadow: 0 6px 30px rgba(26, 25, 22, 0.09);
   z-index: 9999;
   padding: 16px 20px;
   display: flex;
