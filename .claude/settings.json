@@ -93,7 +93,9 @@
       "Bash(mkdir -p \"d:/Programming/Course_!/Silkilinen/frontend/app/\\(shop\\)/preview/[id]\")",
       "Bash(cat backend/config/imageSlots.js)",
       "Bash(find backend *)",
-      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('main','not set'\\), d.get\\('scripts',{}\\)\\)\")"
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('main','not set'\\), d.get\\('scripts',{}\\)\\)\")",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ],
     "additionalDirectories": [
       "d:\\Programming\\Course_!\\Silkilinen\\frontend\\app\\(shop)\\preview"
