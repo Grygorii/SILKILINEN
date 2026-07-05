@@ -53,6 +53,7 @@ const NAV: NavEntry[] = [
   { section: 'Content' },
   { label: 'Journal',      href: '/admin/journal',     icon: BookOpen },
   { label: 'Pages',        href: '/admin/pages',       icon: FileText },
+  { label: 'Site Content', href: '/admin/content',     icon: ImageIcon },
   { section: 'Finance' },
   { label: 'Overview',   href: '/admin/finance',           icon: BookMarked, exact: true },
   { label: 'Expenses',   href: '/admin/finance/expenses',  icon: BookMarked },

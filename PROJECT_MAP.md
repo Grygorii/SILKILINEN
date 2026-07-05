@@ -65,7 +65,12 @@ or change an invariant, update the relevant line here in the same commit.
 - **app/(shop)/** — storefront. `layout.tsx` mounts InlineEditProvider + SiteBreadcrumbs +
   UKShippingNotice. Home `page.tsx` (hero image is LCP; `HeroVideo.tsx` loads late). Key routes:
   product/[id], shop, collections/[slug], checkout, reviews, style-finder, account.
-- **app/admin/** — admin console, one folder per agent/feature. `layout.tsx` = AdminLayout.
+- **app/admin/** — admin console, one folder per agent/feature. `layout.tsx` = AdminLayout
+  (nav array lists every page). **Content editing**: `/admin/content` ("Site Content" nav) =
+  the CMS editor (SiteContent KV, tabs Banner/Homepage/Categories/About/Instagram); `/admin/pages`
+  = per-page overview that deep-links into it. The **announcement bar** text is `banner_message_1..4`
+  (section `banner`); if absent in DB, `components/AnnouncementBar.tsx` falls back to hardcoded
+  defaults. Seed/restore with `backend/scripts/seedSiteContent.js` (idempotent).
 - **components/** — incl. `inline/InlineEdit.tsx` (WYSIWYG `?edit=1`), `Price.tsx`,
   `ProductReviews.tsx`, `Navbar`, `CurrencySwitcher`, `SiteBreadcrumbs`.
 - **context/** — Cart, Currency, Wishlist, Customer, CookieConsent (nested in `app/layout.tsx`).
