@@ -382,6 +382,26 @@ router.patch('/:id/meta', async function(req, res) {
   }
 });
 
+// PATCH /api/admin/products/:id/append-copy — append an APPROVED paragraph
+// (Hermes' content draft from Rebuild SEO) to the product's on-page description,
+// the story shown on the PDP that Google reads. Approve-first: only runs when
+// the founder clicks "Add to description". findByIdAndUpdate (not save) so the
+// stock/slug pre-save hooks don't fire on a copy-only change.
+router.patch('/:id/append-copy', async function(req, res) {
+  try {
+    const para = String(req.body.paragraph || '').trim();
+    if (!para) return res.status(400).json({ error: 'No paragraph provided' });
+    const product = await Product.findById(req.params.id).select('description');
+    if (!product) return res.status(404).json({ error: 'Not found' });
+    const existing = String(product.description || '').trim();
+    const description = existing ? `${existing}\n\n${para}` : para;
+    await Product.findByIdAndUpdate(req.params.id, { description });
+    res.json({ ok: true, description });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // PATCH /api/admin/products/:id/quick-update — inline edit price / status /
 // stock / category / per-variant stock, from the products list.
 router.patch('/:id/quick-update', async function(req, res) {

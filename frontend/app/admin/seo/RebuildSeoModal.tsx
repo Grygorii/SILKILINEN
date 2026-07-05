@@ -63,6 +63,24 @@ export default function RebuildSeoModal({ onClose }: { onClose: () => void }) {
     r?.(d);
   }
 
+  // One-click: append Hermes' drafted paragraph to the product's on-page
+  // description, so the founder doesn't have to copy → open editor → paste.
+  async function addToDescription(i: number, b: Block) {
+    if (!b.entityId || !b.copy) return;
+    patch(i, { result: 'Adding it to the product description…' });
+    try {
+      const res = await fetch(`${API}/api/admin/products/${b.entityId}/append-copy`, {
+        method: 'PATCH', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paragraph: b.copy }),
+      });
+      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || `HTTP ${res.status}`); }
+      patch(i, { status: 'applied', result: 'Added to the bottom of the product description — live on the page. Tidy the wording anytime in the product editor.' });
+    } catch (e) {
+      patch(i, { result: `Couldn't add it automatically (${e instanceof Error ? e.message : 'error'}) — use Copy + Open editor instead.` });
+    }
+  }
+
   const start = useCallback(async () => {
     cancelled.current = false;
 
@@ -276,9 +294,16 @@ export default function RebuildSeoModal({ onClose }: { onClose: () => void }) {
                     )}
                     {b.status === 'drafted' && b.copy && (
                       <div className={styles.reviewBox}>
-                        <p className={styles.reviewK}>Drafted paragraph (place it on the page)</p>
+                        <p className={styles.reviewK}>Extra copy for the {b.entityType} description (the story shown on the page)</p>
                         <p className={styles.reviewV}>{b.copy}</p>
+                        <p className={styles.blockState} style={{ marginTop: 6, marginBottom: 0 }}>
+                          This is body copy, not the search snippet — it belongs in the {b.entityType}&rsquo;s Description.
+                          {b.entityType === 'product' ? ' Add it in one click below, or paste it yourself.' : ' Open the editor and paste it into the Description.'}
+                        </p>
                         <div className={styles.reviewActions}>
+                          {b.entityType === 'product' && b.entityId && (
+                            <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => addToDescription(i, b)}>+ Add to description</button>
+                          )}
                           <button className={styles.btn} onClick={() => navigator.clipboard?.writeText(b.copy || '')}>Copy</button>
                           {EDITOR[b.entityType] && b.entityId && (
                             <a className={styles.btn} href={`/admin/${EDITOR[b.entityType]}/${b.entityId}`} target="_blank" rel="noopener noreferrer">Open editor →</a>
