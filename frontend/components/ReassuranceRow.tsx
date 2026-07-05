@@ -8,9 +8,12 @@ import styles from './ReassuranceRow.module.css';
 // needs before browsing further. Copy uses the spec's recommended defaults;
 // edit the ITEMS below to change services/copy.
 const ITEMS = [
-  { icon: Truck,     headline: 'Free Shipping',    sub: 'Worldwide on orders over €150',    href: '/shipping' },
-  { icon: RotateCcw, headline: '14-day Returns',    sub: 'Easy exchanges from anywhere',    href: '/returns' },
-  { icon: Gift,      headline: 'Gift-Ready',        sub: 'Tied with silk ribbon, included', href: '/gift-wrapping' },
+  // Quiet-luxury reframe: dropped "Free Shipping — over €150" (the promotional,
+  // transactional line the Atelier flagged as reading cheap). The free-shipping
+  // threshold still lives on the /shipping page; here it's a heritage reassurance.
+  { icon: Truck,     headline: 'Worldwide Shipping', sub: 'Sent with care from Donegal',    href: '/shipping' },
+  { icon: RotateCcw, headline: '14-day Returns',     sub: 'Easy exchanges from anywhere',   href: '/returns' },
+  { icon: Gift,      headline: 'Gift-Ready',         sub: 'Tied with silk ribbon, included', href: '/gift-wrapping' },
 ];
 
 export default function ReassuranceRow() {
