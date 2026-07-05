@@ -12,29 +12,29 @@
   padding: 44px 24px;
   margin: 0;
   text-decoration: none;
-  background: linear-gradient(160deg, #f3ede2 0%, #ece4d4 100%);
-  border-top: 1px solid var(--color-line, #e8e2d6);
-  border-bottom: 1px solid var(--color-line, #e8e2d6);
+  background: linear-gradient(160deg, var(--color-line) 0%, var(--color-surface-warm) 100%);
+  border-top: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-line);
   transition: background 0.3s ease;
 }
-.finderBand:hover { background: linear-gradient(160deg, #f0e9dc 0%, #e6dccb 100%); }
+.finderBand:hover { background: linear-gradient(160deg, var(--color-surface-warm) 0%, var(--color-surface-warm) 100%); }
 
 .finderEyebrow {
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--color-ink-muted, #6b6358);
+  color: var(--color-ink-muted);
 }
 .finderTitle {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: clamp(26px, 4vw, 36px);
   font-weight: 400;
-  color: var(--color-ink, #2a2218);
+  color: var(--color-ink);
   line-height: 1.15;
 }
 .finderCue {
   font-size: 13px;
-  color: var(--color-ink-muted, #6b6358);
+  color: var(--color-ink-muted);
   letter-spacing: 0.3px;
 }
 
@@ -50,7 +50,7 @@
   font-size: 12px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--color-ink, #2a2218);
+  color: var(--color-ink);
   background: linear-gradient(115deg, #c9a06f 0%, #d9a6a0 45%, #e6c9a8 70%, #c9a06f 100%);
   background-size: 220% 100%;
   background-position: 0% 0;

@@ -53,7 +53,7 @@
 .imgWrap {
   position: relative; /* anchor for next/image fill */
   height: 220px;
-  background: #dedad4;
+  background: var(--color-line);
   transition: opacity 0.3s ease;
 }
 

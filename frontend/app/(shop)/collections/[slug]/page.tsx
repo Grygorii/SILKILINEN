@@ -108,7 +108,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
           <p className={styles.description}>{collection.description}</p>
         )}
         {(collection.discountPercent ?? 0) > 0 && (
-          <p style={{ marginTop: 12, fontSize: 13, color: 'var(--muted, #8a8680)', letterSpacing: '0.3px', fontStyle: 'italic' }}>
+          <p style={{ marginTop: 12, fontSize: 13, color: 'var(--muted)', letterSpacing: '0.3px', fontStyle: 'italic' }}>
             Taken as a set, {collection.discountPercent}% below buying each piece — reflected at checkout.
           </p>
         )}

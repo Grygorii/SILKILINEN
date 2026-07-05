@@ -14,7 +14,7 @@
   background: rgba(250, 248, 244, 0.82);
   -webkit-backdrop-filter: blur(14px) saturate(1.15);
   backdrop-filter: blur(14px) saturate(1.15);
-  color: var(--muted, #6b6862);
+  color: var(--muted);
   border: 1px solid rgba(224, 221, 215, 0.85);
   box-shadow: 0 6px 30px rgba(26, 25, 22, 0.09);
   z-index: 9999;
@@ -40,7 +40,7 @@
 }
 
 .text a {
-  color: var(--dark, #1a1916);
+  color: var(--dark);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -56,7 +56,7 @@
    tone as the hero CTA) rather than a stark near-black block. */
 .btnAccept {
   background: #2f2b25;
-  color: var(--warm-white, #faf8f4);
+  color: var(--warm-white);
   border: 1px solid #2f2b25;
   padding: 9px 24px;
   font-size: 11px;
@@ -76,7 +76,7 @@
 .btnText {
   background: none;
   border: none;
-  color: var(--muted, #8a8680);
+  color: var(--muted);
   font-size: 11px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -88,7 +88,7 @@
 }
 
 .btnText:hover {
-  color: var(--dark, #1a1916);
+  color: var(--dark);
 }
 
 @media (max-width: 600px) {

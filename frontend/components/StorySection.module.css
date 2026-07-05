@@ -5,7 +5,7 @@
 }
 
 .imageCol {
-  background: #e8e4dd;
+  background: var(--color-line);
   display: flex;
   align-items: stretch;
   overflow: hidden;

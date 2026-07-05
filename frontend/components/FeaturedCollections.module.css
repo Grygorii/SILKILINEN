@@ -1,6 +1,6 @@
 .section {
   padding: 80px 6%;
-  border-top: 1px solid var(--border, #e0ddd7);
+  border-top: 1px solid var(--border);
 }
 
 .heading {
@@ -9,7 +9,7 @@
   font-weight: 400;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--dark, #1a1916);
+  color: var(--dark);
   text-align: center;
   margin-bottom: 48px;
 }
@@ -37,7 +37,7 @@
 .tile {
   display: block;
   text-decoration: none;
-  color: var(--dark, #1a1916);
+  color: var(--dark);
   transition: opacity 0.2s;
 }
 .tile:hover { opacity: 0.85; }
@@ -48,7 +48,7 @@
   width: 100%;
   aspect-ratio: 3/2;
   overflow: hidden;
-  background: var(--cream, #f5f2ec);
+  background: var(--cream);
 }
 
 .img {
@@ -62,7 +62,7 @@
 .imgPlaceholder {
   width: 100%;
   aspect-ratio: 3/2;
-  background: var(--cream, #f5f2ec);
+  background: var(--cream);
 }
 
 .tileBody {
@@ -79,7 +79,7 @@
 
 .tileDesc {
   font-size: 13px;
-  color: var(--muted, #8a8680);
+  color: var(--muted);
   line-height: 1.7;
   display: -webkit-box;
   -webkit-line-clamp: 2;

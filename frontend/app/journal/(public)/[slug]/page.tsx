@@ -87,7 +87,7 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
           <img src={article.heroImage.url} alt={article.heroImage.alt || article.title}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           {article.heroImage.caption && (
-            <p style={{ textAlign: 'center', fontSize: 11, color: '#9a8e82', letterSpacing: '0.5px', marginTop: 8 }}>
+            <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--color-ink-muted)', letterSpacing: '0.5px', marginTop: 8 }}>
               {article.heroImage.caption}
             </p>
           )}
@@ -97,22 +97,22 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
       <article style={{ maxWidth: 720, margin: '0 auto', padding: '64px 24px 120px' }}>
         {/* Meta */}
         <div style={{ marginBottom: 32, textAlign: 'center' }}>
-          <p style={{ fontSize: 11, color: '#9a8e82', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 20 }}>
+          <p style={{ fontSize: 11, color: 'var(--color-ink-muted)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 20 }}>
             {fmtDate(article.publishedAt)}
             {article.readingTimeMinutes && ` · ${article.readingTimeMinutes} min read`}
             {` · By ${article.author}`}
           </p>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 300, lineHeight: 1.2, letterSpacing: '1px', margin: '0 0 20px', color: '#1a1510' }}>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 300, lineHeight: 1.2, letterSpacing: '1px', margin: '0 0 20px', color: 'var(--color-ink)' }}>
             {article.title}
           </h1>
           {article.excerpt && (
-            <p style={{ fontSize: 18, fontStyle: 'italic', color: '#6b5f52', lineHeight: 1.6, maxWidth: 560, margin: '0 auto' }}>
+            <p style={{ fontSize: 18, fontStyle: 'italic', color: 'var(--color-ink-muted)', lineHeight: 1.6, maxWidth: 560, margin: '0 auto' }}>
               {article.excerpt}
             </p>
           )}
         </div>
 
-        <hr style={{ border: 'none', borderTop: '1px solid #d0c9be', margin: '32px 0' }} />
+        <hr style={{ border: 'none', borderTop: '1px solid var(--color-line)', margin: '32px 0' }} />
 
         {/* Body */}
         <div
@@ -121,7 +121,7 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
         />
 
         {/* Footer */}
-        <div style={{ marginTop: 64, paddingTop: 32, borderTop: '1px solid #d0c9be' }}>
+        <div style={{ marginTop: 64, paddingTop: 32, borderTop: '1px solid var(--color-line)' }}>
           <Link href="/journal" style={{ fontSize: 13, color: '#5c35a8', textDecoration: 'none', letterSpacing: '0.5px' }}>
             ← Back to Journal
           </Link>

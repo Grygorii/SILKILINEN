@@ -146,7 +146,7 @@ export default function EmailCapturePopup() {
               </Button>
             </form>
             {status === 'error' && (
-              <p className={styles.small} style={{ color: '#c0392b' }}>
+              <p className={styles.small} style={{ color: 'var(--color-danger)' }}>
                 Something went wrong — please try again.
               </p>
             )}

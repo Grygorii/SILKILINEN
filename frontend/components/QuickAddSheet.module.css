@@ -15,7 +15,7 @@
 
 .sheet {
   width: 100%;
-  background: var(--color-bg, #faf8f4);
+  background: var(--color-bg);
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
   padding: 10px 20px calc(20px + env(safe-area-inset-bottom));
@@ -33,7 +33,7 @@
   width: 40px;
   height: 4px;
   border-radius: 2px;
-  background: var(--color-line, #e8e2d6);
+  background: var(--color-line);
   margin: 0 auto 12px;
 }
 
@@ -51,14 +51,14 @@
   margin: 0;
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 19px;
-  color: var(--color-ink, #2a2218);
+  color: var(--color-ink);
   line-height: 1.2;
 }
 
 .price {
   margin: 4px 0 0;
   font-size: 14px;
-  color: var(--color-ink-muted, #6b6358);
+  color: var(--color-ink-muted);
 }
 
 .close {
@@ -72,7 +72,7 @@
   background: none;
   border: none;
   font-size: 16px;
-  color: var(--color-ink-muted, #6b6358);
+  color: var(--color-ink-muted);
   cursor: pointer;
 }
 
@@ -92,7 +92,7 @@
   font-size: 11px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--color-ink-muted, #6b6358);
+  color: var(--color-ink-muted);
 }
 
 .sizeGuide {
@@ -100,7 +100,7 @@
   font-size: 11px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--color-ink, #2a2218);
+  color: var(--color-ink);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -108,7 +108,7 @@
 .stepper {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--color-line, #e8e2d6);
+  border: 1px solid var(--color-line);
 }
 
 .stepBtn {
@@ -117,7 +117,7 @@
   background: none;
   border: none;
   font-size: 18px;
-  color: var(--color-ink, #2a2218);
+  color: var(--color-ink);
   cursor: pointer;
 }
 .stepBtn:disabled { opacity: 0.35; cursor: default; }
@@ -126,7 +126,7 @@
   min-width: 40px;
   text-align: center;
   font-size: 15px;
-  color: var(--color-ink, #2a2218);
+  color: var(--color-ink);
 }
 
 .cta {

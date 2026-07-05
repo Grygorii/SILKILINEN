@@ -2,7 +2,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: #1a1916;
+  background: var(--color-ink);
   color: #fff;
   font-size: 11px;
   letter-spacing: 2px;

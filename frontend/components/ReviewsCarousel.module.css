@@ -40,7 +40,7 @@
 
 .stars {
   font-size: 14px;
-  color: #80660f;
+  color: var(--color-gold);
   letter-spacing: 2px;
 }
 

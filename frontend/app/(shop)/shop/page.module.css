@@ -13,14 +13,14 @@
   font-size: 32px;
   font-weight: 400;
   letter-spacing: 2px;
-  color: var(--dark, #1a1916);
+  color: var(--dark);
   text-transform: uppercase;
   margin-bottom: 20px;
 }
 
 .description {
   font-size: 15px;
-  color: var(--muted, #8a8680);
+  color: var(--muted);
   line-height: 1.85;
   letter-spacing: 0.2px;
 }

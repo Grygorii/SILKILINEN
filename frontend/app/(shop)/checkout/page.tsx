@@ -178,7 +178,7 @@ function PaymentForm({
           aria-invalid={!!emailError}
         />
         {emailError && (
-          <p style={{ marginTop: 6, fontSize: 12, color: '#c9572a' }}>{emailError}</p>
+          <p style={{ marginTop: 6, fontSize: 12, color: 'var(--color-danger)' }}>{emailError}</p>
         )}
       </div>
 
@@ -429,7 +429,7 @@ export default function CheckoutPage() {
                   theme: 'stripe',
                   variables: {
                     fontFamily: '"Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif',
-                    colorPrimary: '#1a1916',
+                    colorPrimary: 'var(--color-ink)',
                     borderRadius: '0px',
                   },
                 },

@@ -163,16 +163,16 @@
 
 .successMsg {
   font-size: 13px;
-  color: #27ae60;
+  color: var(--color-success);
   padding: 10px 0;
 }
 
 .errorMsg {
   font-size: 13px;
-  color: #c0392b;
+  color: var(--color-danger);
   padding: 10px 14px;
-  background: #fdf0ee;
-  border: 1px solid #f5c6c0;
+  background: var(--color-danger-soft);
+  border: 1px solid var(--color-danger-soft);
 }
 
 /* Orders list */
@@ -196,7 +196,7 @@
   transition: background 0.15s ease;
 }
 
-.orderRow:hover { background: #f5f3ef; }
+.orderRow:hover { background: var(--color-surface); }
 
 .orderNum {
   font-family: 'Cormorant Garamond', Georgia, serif;
@@ -223,12 +223,12 @@
   border-radius: 2px;
 }
 
-.statusPaid       { background: #eaf7ee; color: #2d7d47; }
+.statusPaid       { background: var(--color-success-soft); color: var(--color-success); }
 .statusProcessing { background: #eef3fb; color: #2155a3; }
 .statusShipped    { background: #f0ebfb; color: #6b35b8; }
-.statusDelivered  { background: #eaf7ee; color: #1a6b3c; border: 1px solid #b6e4c7; }
+.statusDelivered  { background: var(--color-success-soft); color: var(--color-success); border: 1px solid var(--color-success-soft); }
 .statusPending    { background: var(--cream); color: var(--muted); border: 1px solid var(--border); }
-.statusCancelled  { background: #fdf0ef; color: #b03a2e; }
+.statusCancelled  { background: var(--color-danger-soft); color: var(--color-danger); }
 .statusDefault    { background: var(--cream); color: var(--muted); }
 
 /* Order detail */
@@ -376,8 +376,8 @@
 /* Customer note */
 .noteBlock {
   padding: 14px 16px;
-  background: #fefdf9;
-  border: 1px solid #e8e3d4;
+  background: var(--color-bg);
+  border: 1px solid var(--color-line);
   font-size: 13px;
   color: var(--dark);
   line-height: 1.7;
@@ -431,9 +431,9 @@
 
 /* Welcome banner */
 .welcomeBanner {
-  background: #f0faf4;
-  border: 1px solid #b7e4c7;
-  color: #1a5c35;
+  background: var(--color-success-soft);
+  border: 1px solid var(--color-success-soft);
+  color: var(--color-success);
   padding: 14px 20px;
   font-size: 13px;
   margin-bottom: 28px;

@@ -52,7 +52,7 @@ type Question = {
 
 /* Tasteful swatch hexes for the colour/mood question, keyed by option index.
    Used only for presentation — scoring still flows through colourHints. */
-const MOOD_SWATCHES = ['#e8dcc4', '#2a2620', '#e3c6c2', '#c2cabb'];
+const MOOD_SWATCHES = ['#e8dcc4', 'var(--color-ink)', '#e3c6c2', '#c2cabb'];
 
 /* The whole quiz config in one place. Weights point at the real category
    slugs above; the scorer falls back gracefully if a slug isn't stocked. */

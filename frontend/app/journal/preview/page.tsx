@@ -35,14 +35,14 @@ function PreviewContent() {
   if (error) {
     return (
       <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-        <p style={{ color: '#c0392b', fontSize: 15, marginBottom: 20 }}>{error}</p>
+        <p style={{ color: 'var(--color-danger)', fontSize: 15, marginBottom: 20 }}>{error}</p>
         <Link href="/admin/journal" style={{ fontSize: 13, color: '#5c35a8' }}>← Back to Journal admin</Link>
       </div>
     );
   }
 
   if (!article) {
-    return <div style={{ padding: 40, color: '#9a8e82', fontSize: 13 }}>Loading preview…</div>;
+    return <div style={{ padding: 40, color: 'var(--color-ink-muted)', fontSize: 13 }}>Loading preview…</div>;
   }
 
   return (
@@ -57,23 +57,23 @@ function PreviewContent() {
 
       <article style={{ maxWidth: 720, margin: '0 auto', padding: '64px 24px 120px' }}>
         <div style={{ marginBottom: 32, textAlign: 'center' }}>
-          <p style={{ fontSize: 11, color: '#9a8e82', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 20 }}>
+          <p style={{ fontSize: 11, color: 'var(--color-ink-muted)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 20 }}>
             {fmtDate(article.publishedAt)}
             {article.readingTimeMinutes && ` · ${article.readingTimeMinutes} min read`}
             {` · By ${article.author}`}
           </p>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 300, lineHeight: 1.2, margin: '0 0 20px', color: '#1a1510' }}>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 300, lineHeight: 1.2, margin: '0 0 20px', color: 'var(--color-ink)' }}>
             {article.title}
           </h1>
           {article.excerpt && (
-            <p style={{ fontSize: 18, fontStyle: 'italic', color: '#6b5f52', lineHeight: 1.6, maxWidth: 560, margin: '0 auto' }}>
+            <p style={{ fontSize: 18, fontStyle: 'italic', color: 'var(--color-ink-muted)', lineHeight: 1.6, maxWidth: 560, margin: '0 auto' }}>
               {article.excerpt}
             </p>
           )}
         </div>
-        <hr style={{ border: 'none', borderTop: '1px solid #d0c9be', margin: '32px 0' }} />
+        <hr style={{ border: 'none', borderTop: '1px solid var(--color-line)', margin: '32px 0' }} />
         <div dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(article.body) }}
-          style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, lineHeight: 1.85, color: '#2a2520' }} />
+          style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, lineHeight: 1.85, color: 'var(--color-ink)' }} />
       </article>
     </main>
   );
@@ -91,7 +91,7 @@ export default function JournalPreviewPage() {
         PREVIEW MODE — not yet published · This link expires in 1 hour
       </div>
       <div style={{ paddingTop: 42 }}>
-        <Suspense fallback={<div style={{ padding: 40, color: '#9a8e82', fontSize: 13 }}>Loading…</div>}>
+        <Suspense fallback={<div style={{ padding: 40, color: 'var(--color-ink-muted)', fontSize: 13 }}>Loading…</div>}>
           <PreviewContent />
         </Suspense>
       </div>

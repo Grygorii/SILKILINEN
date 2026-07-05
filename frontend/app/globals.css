@@ -61,6 +61,15 @@ img {
   --color-ink:          #2A2218;  /* text, primary fill */
   --color-accent:       #C4A882;  /* rose-gold, used sparingly */
 
+  /* Semantic accents — formalised from the scattered greens/reds/golds the
+     storefront used ad hoc, so status colour is one token, not a dozen shades. */
+  --color-success:      #2D7D47;  /* paid / in-stock / saved / helpful  */
+  --color-success-soft: #EAF7EE;  /* success badge background            */
+  --color-danger:       #C0392B;  /* validation + error text/banners     */
+  --color-danger-soft:  #FDF0EE;  /* error badge background              */
+  --color-gold:         #9A7636;  /* rating / verified labels (AA on cream) */
+  --color-gold-bright:  #C8A24C;  /* star + bar fill                     */
+
   /* Spacing scale (4px base, 8 steps) */
   --s-1: 4px;
   --s-2: 8px;

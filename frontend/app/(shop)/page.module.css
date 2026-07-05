@@ -3,8 +3,8 @@
   height: 100vh;
   /* Warm editorial fallback when no CMS image is set OR while the
      priority hero <img> is still streaming in on slow connections. */
-  background-color: #e8e2d8;
-  background-image: linear-gradient(160deg, #ede7db 0%, #d9d0c3 100%);
+  background-color: var(--color-line);
+  background-image: linear-gradient(160deg, var(--color-line) 0%, var(--color-line) 100%);
   background-size: cover;
   background-position: center;
   display: flex;
@@ -141,7 +141,7 @@
 }
 
 .avgStar {
-  color: #80660f;
+  color: var(--color-gold);
   margin-right: 4px;
 }
 

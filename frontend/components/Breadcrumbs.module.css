@@ -15,7 +15,7 @@
   font-size: 12px;
   font-weight: 300;
   letter-spacing: 0.4px;
-  color: var(--muted, #8a8680);
+  color: var(--muted);
 }
 
 .item {
@@ -25,22 +25,22 @@
 }
 
 .link {
-  color: var(--muted, #8a8680);
+  color: var(--muted);
   text-decoration: none;
   transition: color 0.15s;
 }
 
 .link:hover {
-  color: var(--dark, #1a1916);
+  color: var(--dark);
   text-decoration: underline;
 }
 
 .current {
-  color: var(--dark, #1a1916);
+  color: var(--dark);
 }
 
 .sep {
-  color: var(--muted, #8a8680);
+  color: var(--muted);
   opacity: 0.55;
 }
 

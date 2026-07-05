@@ -29,7 +29,7 @@
 
 .errorIcon {
   font-size: 32px;
-  color: #c0392b;
+  color: var(--color-danger);
   margin-bottom: 12px;
 }
 

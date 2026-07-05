@@ -25,7 +25,7 @@
   width: 88px;
   aspect-ratio: 4 / 5;
   border: 2px solid transparent;
-  background: var(--cream, #f5f2ec);
+  background: var(--cream);
   cursor: pointer;
   padding: 0;
   overflow: hidden;
@@ -36,7 +36,7 @@
 
 .thumb:hover { opacity: 0.8; }
 
-.thumbActive { border-color: var(--dark, #1a1916); }
+.thumbActive { border-color: var(--dark); }
 
 .thumbImg {
   width: 100%;
@@ -75,7 +75,7 @@
   position: relative; /* anchor for next/image fill */
   aspect-ratio: 4 / 5;
   width: 100%;
-  background: var(--cream, #f5f2ec);
+  background: var(--cream);
   overflow: hidden;
   cursor: zoom-in;
 }
@@ -90,7 +90,7 @@
 .placeholder {
   aspect-ratio: 4 / 5;
   width: 100%;
-  background: var(--cream, #f5f2ec);
+  background: var(--cream);
 }
 
 /* ── Video ────────────────────────────────────────── */
@@ -98,7 +98,7 @@
 .videoWrap {
   aspect-ratio: 4 / 5;
   width: 100%;
-  background: var(--dark, #1a1916);
+  background: var(--dark);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -121,7 +121,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--dark, #1a1916);
+  color: var(--dark);
   width: 44px;
   height: 44px;
   display: flex;
@@ -185,7 +185,7 @@
   transition: background 0.2s ease;
 }
 
-.dotActive::before { background: var(--dark, #1a1916); }
+.dotActive::before { background: var(--dark); }
 
 /* ── Lightbox ─────────────────────────────────────── */
 
@@ -212,7 +212,7 @@
   right: 20px;
   background: none;
   border: none;
-  color: var(--warm-white, #faf8f4);
+  color: var(--warm-white);
   cursor: pointer;
   padding: 8px;
   display: flex;

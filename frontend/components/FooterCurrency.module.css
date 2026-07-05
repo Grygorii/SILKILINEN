@@ -30,11 +30,11 @@
   padding: 6px 11px;
   transition: color 0.15s, border-color 0.15s;
 }
-.opt:hover { color: var(--warm-white, #faf8f4); }
+.opt:hover { color: var(--warm-white); }
 
 .optOn {
-  color: var(--warm-white, #faf8f4);
+  color: var(--warm-white);
   border-color: rgba(255, 255, 255, 0.28);
 }
 
-.sym { color: var(--warm-white, #faf8f4); }
+.sym { color: var(--warm-white); }

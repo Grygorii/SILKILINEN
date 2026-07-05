@@ -25,7 +25,7 @@
 .heroPlaceholder {
   width: 100%;
   aspect-ratio: 4 / 5;
-  background: var(--cream, #f5f2ec);
+  background: var(--cream);
 }
 
 .heroBody {
@@ -37,7 +37,7 @@
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--color-ink-muted, #8a8278);
+  color: var(--color-ink-muted);
   margin-bottom: 12px;
 }
 
@@ -46,14 +46,14 @@
   font-size: 40px;
   font-weight: 400;
   letter-spacing: 1px;
-  color: var(--color-ink, #2A2218);
+  color: var(--color-ink);
   margin-bottom: 16px;
   line-height: 1.15;
 }
 
 .description {
   font-size: 15px;
-  color: var(--color-ink-muted, #8a8278);
+  color: var(--color-ink-muted);
   line-height: 1.7;
   margin-bottom: 28px;
 }
@@ -69,25 +69,25 @@
 .bundlePrice {
   font-size: 26px;
   font-weight: 500;
-  color: var(--color-ink, #2A2218);
+  color: var(--color-ink);
 }
 
 .originalPrice {
   font-size: 16px;
-  color: var(--color-ink-muted, #8a8278);
+  color: var(--color-ink-muted);
   text-decoration: line-through;
 }
 
 .savings {
   font-size: 12px;
-  color: #2d7d47;
+  color: var(--color-success);
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
 .addBtn {
-  background: var(--color-ink, #2A2218);
-  color: var(--color-bg, #FAF8F4);
+  background: var(--color-ink);
+  color: var(--color-bg);
   border: none;
   padding: 16px 32px;
   font-family: 'Jost', sans-serif;
@@ -118,7 +118,7 @@
   font-weight: 400;
   text-align: center;
   margin-bottom: 32px;
-  color: var(--color-ink, #2A2218);
+  color: var(--color-ink);
 }
 
 .grid {

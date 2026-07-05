@@ -23,7 +23,7 @@
 }
 
 .toastSuccess {
-  background: #2c5128;
+  background: var(--color-success);
 }
 
 .body {

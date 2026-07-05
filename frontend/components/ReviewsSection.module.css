@@ -43,13 +43,13 @@
 }
 
 .stars {
-  color: #c07a00;
+  color: var(--color-gold);
   font-size: 20px;
   letter-spacing: 2px;
 }
 
 .starsSmall {
-  color: #c07a00;
+  color: var(--color-gold);
   font-size: 14px;
   letter-spacing: 1px;
 }
@@ -107,7 +107,7 @@
 
 .distBar {
   height: 100%;
-  background: #c07a00;
+  background: var(--color-gold);
   border-radius: 3px;
   transition: width 0.5s ease;
 }
@@ -189,8 +189,8 @@
 .verifiedBadge {
   font-size: 10px;
   letter-spacing: 0.5px;
-  color: #2d7d47;
-  background: #eaf7ee;
+  color: var(--color-success);
+  background: var(--color-success-soft);
   padding: 2px 8px;
   border-radius: 2px;
 }
@@ -241,7 +241,7 @@
   margin-left: auto;
 }
 .helpfulBtn:hover:not(:disabled) { color: var(--dark); border-color: var(--dark); }
-.helpfulVoted { color: #2d7d47 !important; border-color: #b6e4c7 !important; cursor: default !important; }
+.helpfulVoted { color: var(--color-success) !important; border-color: var(--color-success-soft) !important; cursor: default !important; }
 
 /* ── Load more ───────────────────────────────────── */
 

@@ -17,7 +17,7 @@
 
 .modal {
   position: relative;
-  background: var(--warm-white, #faf8f4);
+  background: var(--warm-white);
   max-width: 420px;
   width: 100%;
   padding: 52px 44px 44px;
@@ -37,7 +37,7 @@
   background: none;
   border: none;
   font-size: 16px;
-  color: var(--muted, #8a8680);
+  color: var(--muted);
   cursor: pointer;
   line-height: 1;
   width: 44px;
@@ -47,13 +47,13 @@
   justify-content: center;
   transition: color 0.15s;
 }
-.close:hover { color: var(--dark, #1a1916); }
+.close:hover { color: var(--dark); }
 
 .eyebrow {
   font-size: 9px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: var(--muted, #8a8680);
+  color: var(--muted);
   margin-bottom: 14px;
 }
 
@@ -61,14 +61,14 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 30px;
   font-weight: 400;
-  color: var(--dark, #1a1916);
+  color: var(--dark);
   margin-bottom: 16px;
   line-height: 1.2;
 }
 
 .body {
   font-size: 13px;
-  color: var(--muted, #8a8680);
+  color: var(--muted);
   line-height: 1.75;
   margin-bottom: 28px;
 }
@@ -82,21 +82,21 @@
 
 .input {
   padding: 13px 16px;
-  border: 1px solid var(--border, #e0ddd7);
-  background: var(--cream, #f5f2ec);
-  color: var(--dark, #1a1916);
+  border: 1px solid var(--border);
+  background: var(--cream);
+  color: var(--dark);
   font-size: 13px;
   font-family: inherit;
   outline: none;
   text-align: center;
   transition: border-color 0.15s;
 }
-.input:focus { border-color: var(--dark, #1a1916); }
+.input:focus { border-color: var(--dark); }
 
 
 .small {
   font-size: 11px;
-  color: var(--muted, #8a8680);
+  color: var(--muted);
 }
 
 /* ── Success state ────────────────────────────────── */
@@ -107,7 +107,7 @@
 
 .successIcon {
   font-size: 36px;
-  color: #2d7d47;
+  color: var(--color-success);
   margin-bottom: 16px;
 }
 
@@ -115,13 +115,13 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 24px;
   font-weight: 400;
-  color: var(--dark, #1a1916);
+  color: var(--dark);
   margin-bottom: 8px;
 }
 
 .successSub {
   font-size: 13px;
-  color: var(--muted, #8a8680);
+  color: var(--muted);
 }
 
 @media (max-width: 480px) {

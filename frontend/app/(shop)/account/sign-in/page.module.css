@@ -78,10 +78,10 @@
 
 .error {
   font-size: 13px;
-  color: #c0392b;
+  color: var(--color-danger);
   padding: 10px 14px;
-  background: #fdf0ee;
-  border: 1px solid #f5c6c0;
+  background: var(--color-danger-soft);
+  border: 1px solid var(--color-danger-soft);
 }
 
 .divider {

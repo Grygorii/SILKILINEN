@@ -271,7 +271,7 @@
   right: 0;
   bottom: 0;
   padding: 14px 12px;
-  background: var(--warm-white, #faf8f4);
+  background: var(--warm-white);
   /* a whisper of gold + a soft lift, so the band feels considered */
   border-top: 1px solid rgba(200, 162, 76, 0.5);
   box-shadow: 0 -6px 20px rgba(26, 25, 22, 0.1);
@@ -290,7 +290,7 @@
   letter-spacing: 2px;
   text-transform: uppercase;
   text-align: center;
-  color: var(--color-ink, #1a1916);
+  color: var(--color-ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -341,11 +341,11 @@
   align-items: center;
   gap: 1px;
   margin: 4px 0 2px;
-  color: var(--color-ink, #2A2218);
+  color: var(--color-ink);
 }
 .ratingCount {
   margin-left: 5px;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
-  color: var(--color-ink-muted, #8A8278);
+  color: var(--color-ink-muted);
 }

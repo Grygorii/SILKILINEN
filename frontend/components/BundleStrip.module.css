@@ -7,7 +7,7 @@
   font-size: 22px;
   font-weight: 400;
   letter-spacing: 1px;
-  color: var(--color-ink, #2A2218);
+  color: var(--color-ink);
   margin-bottom: 18px;
 }
 
@@ -20,7 +20,7 @@
 
 .card {
   text-decoration: none;
-  color: var(--color-ink, #2A2218);
+  color: var(--color-ink);
   display: block;
 }
 
@@ -28,7 +28,7 @@
   position: relative;
   aspect-ratio: 2 / 3;
   overflow: hidden;
-  background: var(--cream, #f5f2ec);
+  background: var(--cream);
   margin-bottom: 10px;
 }
 
@@ -43,14 +43,14 @@
 .imgPlaceholder {
   width: 100%;
   height: 100%;
-  background: var(--cream, #f5f2ec);
+  background: var(--cream);
 }
 
 .badge {
   position: absolute;
   top: 10px;
   left: 10px;
-  background: var(--color-ink, #2A2218);
+  background: var(--color-ink);
   color: #fff;
   font-size: 10px;
   letter-spacing: 1px;
@@ -73,11 +73,11 @@
 
 .price {
   font-size: 13px;
-  color: var(--color-ink, #2A2218);
+  color: var(--color-ink);
 }
 
 .was {
   font-size: 11px;
-  color: var(--color-ink-muted, #8a8278);
+  color: var(--color-ink-muted);
   text-decoration: line-through;
 }

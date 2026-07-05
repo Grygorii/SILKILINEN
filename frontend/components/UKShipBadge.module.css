@@ -4,7 +4,7 @@
   gap: 8px;
   font-size: 12.5px;
   letter-spacing: 0.3px;
-  color: var(--dark, #1a1916);
+  color: var(--dark);
   background: rgba(180, 140, 70, 0.08);
   border: 1px solid rgba(180, 140, 70, 0.28);
   padding: 9px 14px;
@@ -12,6 +12,6 @@
 }
 
 .badge svg {
-  color: #9a7636;
+  color: var(--color-gold);
   flex-shrink: 0;
 }

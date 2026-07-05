@@ -13,8 +13,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #1a1916;
-  color: #faf8f4;
+  background: var(--color-ink);
+  color: var(--color-bg);
   padding: 12px 16px;
   font-family: 'Jost', sans-serif;
   font-size: 13px;
@@ -25,7 +25,7 @@
 }
 
 .check {
-  color: #4caf7d;
+  color: var(--color-success);
   font-size: 14px;
 }
 
@@ -48,7 +48,7 @@
 }
 
 .viewBtn:hover {
-  color: #faf8f4;
+  color: var(--color-bg);
 }
 
 @keyframes slideDown {

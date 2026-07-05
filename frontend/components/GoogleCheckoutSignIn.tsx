@@ -47,9 +47,9 @@ export default function GoogleCheckoutSignIn({ onSignedIn }: { onSignedIn: () =>
       style={{
         marginBottom: 24,
         padding: 16,
-        border: '1px solid var(--color-line, #E8E2D6)',
+        border: '1px solid var(--color-line)',
         borderRadius: 'var(--radius-control, 2px)',
-        background: 'var(--color-surface, #F5F0E8)',
+        background: 'var(--color-surface)',
       }}
     >
       <p
@@ -59,7 +59,7 @@ export default function GoogleCheckoutSignIn({ onSignedIn }: { onSignedIn: () =>
           fontSize: 12,
           letterSpacing: '1.5px',
           textTransform: 'uppercase',
-          color: 'var(--color-ink-muted, #8A8278)',
+          color: 'var(--color-ink-muted)',
         }}
       >
         Returning customer? Faster with Google
@@ -75,12 +75,12 @@ export default function GoogleCheckoutSignIn({ onSignedIn }: { onSignedIn: () =>
         />
       </div>
       {busy && (
-        <p style={{ marginTop: 8, fontSize: 12, color: 'var(--color-ink-muted, #8A8278)' }}>
+        <p style={{ marginTop: 8, fontSize: 12, color: 'var(--color-ink-muted)' }}>
           Signing in…
         </p>
       )}
       {error && (
-        <p style={{ marginTop: 8, fontSize: 12, color: '#c9572a' }}>{error}</p>
+        <p style={{ marginTop: 8, fontSize: 12, color: 'var(--color-danger)' }}>{error}</p>
       )}
     </div>
   );

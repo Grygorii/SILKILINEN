@@ -112,7 +112,7 @@
   height: 100px;
   flex-shrink: 0;
   overflow: hidden;
-  background: #f0ece8;
+  background: var(--color-surface);
 }
 
 /* Info column */
@@ -226,11 +226,11 @@
 }
 
 .stepBtn:hover:not(:disabled) {
-  background: var(--cream, #f5f2ee);
+  background: var(--cream);
 }
 
 .stepBtn:active:not(:disabled) {
-  background: var(--border, #e8e0d5);
+  background: var(--border);
 }
 
 .stepBtn:disabled {
@@ -299,7 +299,7 @@
 
 .freeShippingBar {
   height: 3px;
-  background: var(--border, #e8e0d5);
+  background: var(--border);
   border-radius: 2px;
   overflow: hidden;
   margin-bottom: 6px;
@@ -321,7 +321,7 @@
 
 .freeShippingMet {
   font-size: 11px;
-  color: #2d7d47;
+  color: var(--color-success);
   text-align: center;
   letter-spacing: 0.3px;
   margin-bottom: 14px;
