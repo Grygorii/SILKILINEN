@@ -24,27 +24,30 @@ const SITE = 'https://www.silkilinen.com';
 // Snippet-length health, mirroring Google's rough display limits. Returns
 // 'good' | 'warn' | 'bad' so the UI can colour each cell without duplicating
 // the thresholds on the frontend.
-function titleHealth(t) {
+// `neutral` = a static page with a working built-in default in code. An empty
+// override there is NOT a red gap (the page still has real meta) — it's just
+// "no custom override yet", so we show it grey and keep it out of the counts.
+function titleHealth(t, neutral) {
   const n = (t || '').trim().length;
-  if (n === 0) return 'bad';
+  if (n === 0) return neutral ? 'muted' : 'bad';
   if (n > 60) return 'warn';        // risks truncation
   if (n < 25) return 'warn';        // too thin
   return 'good';
 }
-function descHealth(d) {
+function descHealth(d, neutral) {
   const n = (d || '').trim().length;
-  if (n === 0) return 'bad';
+  if (n === 0) return neutral ? 'muted' : 'bad';
   if (n > 160) return 'warn';       // clamped in-render, but flag it
   if (n < 70) return 'warn';        // too short to be useful
   return 'good';
 }
 
-function row({ type, id, label, url, title, description, note }) {
+function row({ type, id, label, url, title, description, note, neutral }) {
   const t = String(title || ''), d = String(description || '');
   return {
     type, id, label, url,
-    title: t, titleLen: t.trim().length, titleHealth: titleHealth(t),
-    description: d, descLen: d.trim().length, descHealth: descHealth(d),
+    title: t, titleLen: t.trim().length, titleHealth: titleHealth(t, neutral),
+    description: d, descLen: d.trim().length, descHealth: descHealth(d, neutral),
     note: note || '',
   };
 }
@@ -71,7 +74,8 @@ router.get('/', async (req, res) => {
         type: 'page', id: path, label: path === '/' ? 'Homepage' : path,
         url: `${SITE}${path === '/' ? '' : path}`,
         title: o.metaTitle || '', description: o.metaDescription || '',
-        note: hasOverride ? '' : 'Using the built-in default until you set one here.',
+        note: hasOverride ? '' : 'Using the built-in default — set a custom override here only if you want to.',
+        neutral: !hasOverride, // a code-defaulted page isn't a red gap
       }));
     }
 

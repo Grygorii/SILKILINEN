@@ -6,6 +6,7 @@ import { toast } from '@/lib/adminToast';
 import SeoHealthPanel from '../_components/dashboard/SeoHealthPanel';
 import SearchPerformancePanel from '../_components/dashboard/SearchPerformancePanel';
 import RebuildSeoModal from './RebuildSeoModal';
+import SeoBasePanel from './SeoBasePanel';
 import SubmitIndexNowButton from '@/components/SubmitIndexNowButton';
 import styles from './page.module.css';
 
@@ -15,7 +16,7 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 // shows the shop and whether people click. It composes the existing health and
 // Search Console panels, surfaces Hermes' (the search-performance agent's)
 // recommendations, and gathers the one-click fixes in a single place.
-type Tab = 'overview' | 'recommendations' | 'fix';
+type Tab = 'overview' | 'recommendations' | 'base' | 'fix';
 
 type Action = {
   _id: string;
@@ -44,7 +45,6 @@ export default function SeoHubPage() {
   const [hermes, setHermes] = useState<Action[]>([]);
   const [hermesAgent, setHermesAgent] = useState<Agent | null>(null);
   const [running, setRunning] = useState(false);
-  const [fixing, setFixing] = useState(false);
   const [rebuilding, setRebuilding] = useState(false);
 
   const loadHermes = useCallback(async () => {
@@ -99,23 +99,6 @@ export default function SeoHubPage() {
     }
   }
 
-  async function generateMissingProductSeo() {
-    setFixing(true);
-    try {
-      const res = await fetch(`${API}/api/admin/products/bulk-generate-seo`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Generation failed');
-      toast(data.message || 'SEO generated.', 'success');
-    } catch (e: unknown) {
-      toast(e instanceof Error ? e.message : 'Could not generate product SEO.', 'error');
-    } finally {
-      setFixing(false);
-    }
-  }
-
   const flagCount = hermes.filter(a => a.status === 'needs_approval').length;
 
   return (
@@ -147,6 +130,14 @@ export default function SeoHubPage() {
         >
           Recommendations
           {flagCount > 0 && <span className={styles.tabCount}>{flagCount}</span>}
+        </button>
+        <button
+          className={`${styles.tab} ${tab === 'base' ? styles.tabActive : ''}`}
+          onClick={() => setTab('base')}
+          role="tab"
+          aria-selected={tab === 'base'}
+        >
+          Base
         </button>
         <button
           className={`${styles.tab} ${tab === 'fix' ? styles.tabActive : ''}`}
@@ -202,77 +193,40 @@ export default function SeoHubPage() {
         </div>
       )}
 
+      {tab === 'base' && (
+        <div className={styles.panel}>
+          <SeoBasePanel />
+        </div>
+      )}
+
       {tab === 'fix' && (
         <div className={styles.panel}>
           <div>
-            <p className={styles.title} style={{ fontSize: 18 }}>One-click fixes</p>
+            <p className={styles.title} style={{ fontSize: 18 }}>Deliver Hermes&rsquo; plan</p>
             <p className={styles.intro}>
-              Polish the words Google reads. Everything here is approve-first — generated drafts you review before
-              they go live. (URLs are left untouched; changing them safely needs redirects.)
+              Two ways to fix, and they don&rsquo;t overlap. To simply <strong>fill in blank</strong> meta titles and
+              descriptions, use the Base tab —
+              its Auto-fix does that in one click.{' '}
+              <button onClick={() => setTab('base')} style={{ background: 'none', border: 'none', padding: 0, color: '#b8863b', font: 'inherit', cursor: 'pointer', textDecoration: 'underline' }}>Go to Base →</button>.
+              This tab is for Hermes&rsquo; <strong>strategic</strong> plan:
+              rewriting meta to win clicks, and his content moves — each verified against live Search Console data and
+              paused for your approval. (URLs are left untouched; changing them safely needs redirects.)
             </p>
 
             <div className={styles.card} style={{ marginTop: 14, borderLeft: '3px solid #b8863b' }}>
               <p className={styles.cardTitle}>✦ Rebuild SEO — deliver Hermes&rsquo; plan</p>
               <p className={styles.cardText}>
                 Hermes is the brain; this is the hands. It loads Hermes&rsquo; latest plan and delivers it block by
-                block (the Clerks&rsquo; blockchain line, each step verified against live data): it writes the exact
-                meta Hermes asked for on each product/category/collection — pausing for your approval before anything
-                goes live — and drafts the paragraph for his content fixes so you just place it. Run Hermes first if
+                block (each step verified against live data): it writes the exact meta Hermes asked for on each
+                product/category/collection — pausing for your approval before anything goes live — and drafts the
+                paragraph for his content fixes so you just place it. Run Hermes first (Recommendations tab) if
                 there&rsquo;s no plan yet.
               </p>
               <div className={styles.cardActions}>
                 <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => setRebuilding(true)}>
                   Rebuild SEO
                 </button>
-              </div>
-            </div>
-
-            <p className={styles.intro} style={{ marginTop: 22 }}>Or fix individually:</p>
-            <div className={styles.cards}>
-              <div className={styles.card}>
-                <p className={styles.cardTitle}>Products missing SEO</p>
-                <p className={styles.cardText}>
-                  Generate a meta title + description for every product still missing one, in the brand voice.
-                </p>
-                <div className={styles.cardActions}>
-                  <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={generateMissingProductSeo} disabled={fixing}>
-                    {fixing ? 'Generating…' : 'Generate missing SEO'}
-                  </button>
-                  <a className={styles.btn} href="/admin/products?issues=no-seo">Review →</a>
-                </div>
-              </div>
-
-              <div className={styles.card}>
-                <p className={styles.cardTitle}>Category pages</p>
-                <p className={styles.cardText}>
-                  Each category page (/shop?category=…) can generate its own meta title + description, grounded in the
-                  products on it.
-                </p>
-                <div className={styles.cardActions}>
-                  <a className={styles.btn} href="/admin/categories">Open categories →</a>
-                </div>
-              </div>
-
-              <div className={styles.card}>
-                <p className={styles.cardTitle}>Collections</p>
-                <p className={styles.cardText}>
-                  Curated edits with their own pages. Each collection can generate its own meta title + description
-                  in the editor.
-                </p>
-                <div className={styles.cardActions}>
-                  <a className={styles.btn} href="/admin/collections">Open collections →</a>
-                </div>
-              </div>
-
-              <div className={styles.card}>
-                <p className={styles.cardTitle}>Merchant &amp; feed</p>
-                <p className={styles.cardText}>
-                  The product feed and sitemap Google reads. Check their health and Merchant Center status on the
-                  Overview tab.
-                </p>
-                <div className={styles.cardActions}>
-                  <button className={styles.btn} onClick={() => setTab('overview')}>See health →</button>
-                </div>
+                <button className={styles.btn} onClick={() => setTab('overview')}>Merchant &amp; feed health →</button>
               </div>
             </div>
           </div>

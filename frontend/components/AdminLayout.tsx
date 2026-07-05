@@ -46,7 +46,6 @@ const NAV: NavEntry[] = [
   { section: 'Marketing' },
   { label: 'Marketing',   href: '/admin/marketing',    icon: Megaphone },
   { label: 'SEO',         href: '/admin/seo',          icon: Search },
-  { label: 'SEO Base',    href: '/admin/seo/base',     icon: Layers },
   { label: 'Promo codes', href: '/admin/promo-codes',  icon: Tag },
   { label: 'Social',      href: '/admin/social',       icon: Share2 },
   { label: 'Pin Studio',  href: '/admin/pin-studio',   icon: Pin },

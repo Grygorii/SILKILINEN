@@ -78,10 +78,13 @@ or change an invariant, update the relevant line here in the same commit.
   snippet-length health; PATCH saves an edit back to the owning store. POST `/autofix`
   (Hermes' hands) fills only MISSING meta via `aiText` `generateProductSEO`/`generateSEO`,
   safe-only (never URLs/content), returns a was→became report.
-- **`frontend/app/admin/seo/base/page.tsx`** — the editable table + auto-fix button +
+- **`frontend/app/admin/seo/SeoBasePanel.tsx`** — the editable table + auto-fix button +
   report + per-row Yoast-style "Preview & checks" (Google snippet + focus-phrase checklist).
-  Nav entry "SEO Base". SEO writers stay approve-first elsewhere; the Base auto-fix is the
-  one place meta is filled automatically (missing meta is strictly worse than AI meta).
+  Rendered as the **"Base" tab** inside `app/admin/seo/page.tsx` (tabs: Overview ·
+  Recommendations · Base · Fix-it) — NOT a separate nav item. Pages using a code default
+  show grey (`muted`), not red. The Base auto-fix is the one place meta is filled
+  automatically (missing meta is strictly worse than AI meta); the **Fix-it tab** is now
+  only Hermes' strategic Rebuild plan (approve-first), not gap-filling.
 
 ## SEO invariants
 - Self-referencing `alternates.canonical` on indexable pages. Empty/stale category slugs
