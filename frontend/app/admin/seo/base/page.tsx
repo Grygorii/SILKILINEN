@@ -43,6 +43,8 @@ export default function SeoBasePage() {
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [fixing, setFixing] = useState(false);
   const [report, setReport] = useState<AutofixReport | null>(null);
+  const [openKey, setOpenKey] = useState<string | null>(null);           // which row's checks panel is open
+  const [focus, setFocus] = useState<Record<string, string>>({});        // per-row focus phrase (ephemeral)
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -227,12 +229,22 @@ export default function SeoBasePage() {
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
                     {r.note && <span style={{ fontSize: 11.5, color: muted, fontStyle: 'italic' }}>{r.note}</span>}
+                    <button onClick={() => setOpenKey(openKey === k ? null : k)} style={{
+                      marginLeft: r.note ? 0 : 'auto', padding: '7px 12px', fontSize: 12, fontFamily: 'inherit',
+                      border, background: '#fff', color: muted, cursor: 'pointer',
+                    }}>{openKey === k ? 'Hide checks' : 'Preview & checks'}</button>
                     <button onClick={() => save(r)} disabled={!dirty || savingKey === k} style={{
-                      marginLeft: 'auto', padding: '7px 16px', fontSize: 12.5, fontFamily: 'inherit',
+                      marginLeft: r.note ? 'auto' : 0, padding: '7px 16px', fontSize: 12.5, fontFamily: 'inherit',
                       border: 'none', background: dirty ? dark : 'var(--border, #e8e2d6)',
                       color: dirty ? '#fff' : muted, cursor: dirty && savingKey !== k ? 'pointer' : 'default',
                     }}>{savingKey === k ? 'Saving…' : (dirty ? 'Save' : 'Saved')}</button>
                   </div>
+
+                  {openKey === k && (
+                    <SeoChecks
+                      title={c.title} description={c.description} url={r.url}
+                      phrase={focus[k] || ''} onPhrase={v => setFocus(prev => ({ ...prev, [k]: v }))} />
+                  )}
                 </div>
               );
             })}
@@ -265,6 +277,64 @@ function Field({ label, value, max, healthColor, onChange, textarea }: {
           border: `1px solid ${healthColor}`, borderLeftWidth: 3, color: dark,
         }} />
       )}
+    </div>
+  );
+}
+
+// The Yoast-style writing assistant: a live Google snippet preview + a green/
+// amber/red checklist. Optional focus phrase — the thing you want the page to
+// rank for — checks whether it actually appears where it should. Pure client
+// analysis, nothing persisted; it's a writing aid, not a data field.
+function SeoChecks({ title, description, url, phrase, onPhrase }: {
+  title: string; description: string; url: string; phrase: string; onPhrase: (v: string) => void;
+}) {
+  const t = (title || '').trim(), d = (description || '').trim();
+  // Google shows roughly the first ~60 chars of a title and ~155 of a description.
+  const tShown = t.length > 60 ? t.slice(0, 60).trimEnd() + '…' : t;
+  const dShown = d.length > 155 ? d.slice(0, 155).trimEnd() + '…' : d;
+  let crumb = url;
+  try { const u = new URL(url); crumb = (u.host + u.pathname + u.search).replace(/\/$/, '').replace(/\//g, ' › '); } catch { /* keep raw */ }
+
+  const p = phrase.trim().toLowerCase();
+  const inText = (s: string) => p && s.toLowerCase().includes(p);
+  const checks: { ok: Health; text: string }[] = [
+    { ok: t.length === 0 ? 'bad' : t.length > 60 ? 'warn' : t.length < 25 ? 'warn' : 'good',
+      text: t.length === 0 ? 'No meta title' : t.length > 60 ? `Title is ${t.length} chars — Google may cut it off (~60)` : t.length < 25 ? `Title is short (${t.length} chars)` : `Title length is good (${t.length})` },
+    { ok: d.length === 0 ? 'bad' : d.length > 160 ? 'warn' : d.length < 70 ? 'warn' : 'good',
+      text: d.length === 0 ? 'No meta description' : d.length > 160 ? `Description is ${d.length} chars — trimmed at ~160` : d.length < 70 ? `Description is short (${d.length} chars)` : `Description length is good (${d.length})` },
+  ];
+  if (p) {
+    checks.push({ ok: inText(t) ? 'good' : 'warn', text: inText(t) ? 'Focus phrase is in the title' : 'Focus phrase is not in the title' });
+    checks.push({ ok: inText(d) ? 'good' : 'warn', text: inText(d) ? 'Focus phrase is in the description' : 'Focus phrase is not in the description' });
+    checks.push({ ok: inText(url) ? 'good' : 'warn', text: inText(url) ? 'Focus phrase is in the URL' : 'Focus phrase is not in the URL (changing URLs needs a redirect)' });
+  }
+
+  return (
+    <div style={{ marginTop: 12, paddingTop: 12, borderTop: border }}>
+      {/* Google snippet preview */}
+      <div style={{ background: '#fff', border, padding: '12px 14px', maxWidth: 600 }}>
+        <div style={{ fontSize: 12, color: '#4d5156', marginBottom: 2 }}>{crumb}</div>
+        <div style={{ fontSize: 18, color: '#1a0dab', lineHeight: 1.3, fontFamily: 'arial, sans-serif' }}>{tShown || 'Untitled page'}</div>
+        <div style={{ fontSize: 13, color: '#4d5156', lineHeight: 1.5, fontFamily: 'arial, sans-serif', marginTop: 2 }}>
+          {dShown || <span style={{ fontStyle: 'italic', color: muted }}>No description — Google will invent one from the page.</span>}
+        </div>
+      </div>
+
+      {/* Focus phrase */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0 8px' }}>
+        <label style={{ fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: muted, whiteSpace: 'nowrap' }}>Focus phrase</label>
+        <input value={phrase} onChange={e => onPhrase(e.target.value)} placeholder="e.g. silk bikini brief — what you want this page to rank for"
+          style={{ flex: 1, padding: '6px 10px', fontSize: 12.5, fontFamily: 'inherit', border }} />
+      </div>
+
+      {/* Checklist */}
+      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 4 }}>
+        {checks.map((c, i) => (
+          <li key={i} style={{ fontSize: 12.5, color: dark, display: 'flex', gap: 8, alignItems: 'baseline' }}>
+            <span style={{ color: health[c.ok], fontSize: 11 }}>●</span> {c.text}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
