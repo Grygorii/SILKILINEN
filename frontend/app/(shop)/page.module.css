@@ -104,9 +104,7 @@
 }
 
 .heroBtn:hover {
-  /* Warm charcoal (not a wash-out), the label breathes open, a quiet lift. */
-  background: #2f2b25;
-  border-color: #2f2b25;
+  /* The label breathes open with a quiet lift — motion, not a colour wash. */
   letter-spacing: 3.6px;
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(26, 25, 22, 0.18);

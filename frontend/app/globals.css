@@ -70,6 +70,11 @@ img {
   --color-gold:         #9A7636;  /* rating / verified labels (AA on cream) */
   --color-gold-bright:  #C8A24C;  /* star + bar fill                     */
 
+  /* Inverse neutrals — text/dividers on the dark footer (var(--color-ink) bg). */
+  --color-ink-inverse:       #C8C4BE;  /* text on dark     */
+  --color-ink-inverse-muted: #9A9690;  /* meta on dark     */
+  --color-line-inverse:      #2E2B27;  /* divider on dark  */
+
   /* Spacing scale (4px base, 8 steps) */
   --s-1: 4px;
   --s-2: 8px;

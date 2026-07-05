@@ -12,8 +12,19 @@ const TEXT_MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 const SITE = (process.env.FRONTEND_URL || 'https://www.silkilinen.com').replace(/\/$/, '');
 
 // ── Curator: design-system coherence ──────────────────────────────────────────
-// The intentional brand palette (from frontend globals.css tokens) + neutrals.
-const PALETTE = new Set(['#faf8f4', '#f5f0e8', '#ece4d4', '#e8e2d6', '#6b6358', '#2a2218', '#c4a882', '#ffffff', '#fff', '#000000', '#000']);
+// The intentional brand palette — MUST mirror frontend globals.css :root tokens
+// (7 core + semantic accents + inverse-on-dark) + white/black neutrals. Keep in
+// sync when globals.css tokens change, or coherence will flag real tokens.
+const PALETTE = new Set([
+  // 7 core
+  '#faf8f4', '#f5f0e8', '#ece4d4', '#e8e2d6', '#6b6358', '#2a2218', '#c4a882',
+  // semantic accents
+  '#2d7d47', '#eaf7ee', '#c0392b', '#fdf0ee', '#9a7636', '#c8a24c',
+  // inverse neutrals (text/divider on the dark footer)
+  '#c8c4be', '#9a9690', '#2e2b27',
+  // white/black
+  '#ffffff', '#fff', '#000000', '#000',
+]);
 
 async function curate() {
   try {

@@ -51,7 +51,7 @@
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--color-ink);
-  background: linear-gradient(115deg, #c9a06f 0%, #d9a6a0 45%, #e6c9a8 70%, #c9a06f 100%);
+  background: linear-gradient(115deg, var(--color-accent) 0%, var(--color-surface-warm) 50%, var(--color-accent) 100%);
   background-size: 220% 100%;
   background-position: 0% 0;
   border: 1px solid rgba(42, 34, 24, 0.22);
