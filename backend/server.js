@@ -194,6 +194,7 @@ app.use('/api/admin/site-audit', siteAuditRoutes);
 app.use('/api/admin/insights', insightsRoutes);
 app.use('/api/admin/health', adminHealthRoutes);
 app.use('/api/admin/seo-health', adminSeoHealthRoutes);
+app.use('/api/admin/seo-base', require('./routes/adminSeoBase'));
 app.use('/api/admin/advisor', adminAdvisorRoutes);
 app.use('/api/admin/google/search-console', adminGoogleOAuthRoutes);
 app.use('/api/admin/dashboard', adminDashboardRoutes);
