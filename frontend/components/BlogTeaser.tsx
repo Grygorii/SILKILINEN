@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { isValidImageUrl } from '@/lib/imageUtils';
 import styles from './BlogTeaser.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -36,7 +37,7 @@ export default async function BlogTeaser() {
         {posts.map(post => (
           <Link key={post._id} href={`/journal/${post.slug}`} className={styles.card}>
             <div className={styles.imgWrap}>
-              {post.heroImage?.url && (
+              {isValidImageUrl(post.heroImage?.url) && (
                 <Image
                   src={post.heroImage.url}
                   alt={post.heroImage.alt || post.title}

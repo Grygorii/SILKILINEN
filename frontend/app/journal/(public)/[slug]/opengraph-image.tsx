@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og';
 import { readFile } from 'fs/promises';
 import path from 'path';
 import { brand } from '@/lib/brand';
+import { isValidImageUrl } from '@/lib/imageUtils';
 
 export const runtime = 'nodejs';
 export const alt = 'Silkilinen Journal';
@@ -28,7 +29,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   ]);
 
   const title: string = article?.title || 'The Journal';
-  const heroUrl: string | null = article?.heroImage?.url || null;
+  const heroUrl: string | null = isValidImageUrl(article?.heroImage?.url) ? article.heroImage.url : null;
 
   return new ImageResponse(
     (

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { getPageMeta } from '@/lib/pageSeo';
 import { clampMeta } from '@/lib/clampMeta';
+import { isValidImageUrl } from '@/lib/imageUtils';
 
 export async function generateMetadata(): Promise<Metadata> {
   const o = await getPageMeta('/journal');
@@ -56,7 +57,7 @@ export default async function JournalPage() {
             <Link key={a._id} href={`/journal/${a.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
               <article>
                 <div style={{ height: 200, background: 'var(--color-surface)', overflow: 'hidden', marginBottom: 20 }}>
-                  {a.heroImage?.url && (
+                  {isValidImageUrl(a.heroImage?.url) && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={a.heroImage.url} alt={a.heroImage.alt || a.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }} />
                   )}

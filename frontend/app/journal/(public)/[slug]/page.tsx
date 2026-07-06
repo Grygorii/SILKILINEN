@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { sanitizeArticleHtml } from '@/lib/sanitize';
 import { safeJsonLd } from '@/lib/safeJsonLd';
+import { isValidImageUrl } from '@/lib/imageUtils';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import styles from './page.module.css';
 
@@ -38,7 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       url: `https://www.silkilinen.com/journal/${slug}`,
       title: article.metaTitle || article.title,
       description: article.metaDescription || article.excerpt,
-      images: article.heroImage?.url ? [{ url: article.heroImage.url }] : [],
+      images: isValidImageUrl(article.heroImage?.url) ? [{ url: article.heroImage.url }] : [],
     },
   };
 }
@@ -58,7 +59,7 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
     '@type': 'Article',
     headline: article.title,
     description: article.metaDescription || article.excerpt,
-    ...(article.heroImage?.url ? { image: [article.heroImage.url] } : {}),
+    ...(isValidImageUrl(article.heroImage?.url) ? { image: [article.heroImage.url] } : {}),
     datePublished: article.publishedAt,
     dateModified: article.publishedAt,
     author: { '@type': 'Person', name: article.author || 'Silkilinen' },
@@ -81,7 +82,7 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
         withSchema
       />
       {/* Hero image */}
-      {article.heroImage?.url && (
+      {isValidImageUrl(article.heroImage?.url) && (
         <div style={{ width: '100%', height: 'clamp(300px, 50vw, 560px)', overflow: 'hidden' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={article.heroImage.url} alt={article.heroImage.alt || article.title}
