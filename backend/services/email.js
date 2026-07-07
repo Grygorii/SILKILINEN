@@ -225,7 +225,9 @@ async function sendMagicLink({ email, link }) {
 
 async function sendWelcome({ email, firstName }) {
   if (!process.env.RESEND_API_KEY) return;
-  const name = firstName || 'there';
+  // HTML-escape like every sibling template — firstName can come straight from a
+  // Google OAuth given_name claim, which is attacker-controlled at signup.
+  const name = esc(firstName || 'there');
   await getResend().emails.send({
     from: FROM,
     to: email,

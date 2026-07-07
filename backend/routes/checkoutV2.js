@@ -368,10 +368,26 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
 // Keeps the same clientSecret so the mounted Elements context is preserved.
 checkoutRouter.post('/update-intent', checkoutRateLimit, async (req, res) => {
   try {
-    const { paymentIntentId, shippingCountry, discountCode, email } = req.body;
-    if (!paymentIntentId) return res.status(400).json({ error: 'paymentIntentId required' });
+    const { paymentIntentId, clientSecret, shippingCountry, discountCode, email } = req.body;
+    if (!paymentIntentId || !clientSecret) {
+      return res.status(400).json({ error: 'paymentIntentId and clientSecret required' });
+    }
 
     const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    // Ownership check: the client_secret is held only by the shopper paying this
+    // intent, so it proves the caller created it. Without this, anyone who
+    // observes a PaymentIntent id (e.g. via the /success redirect URL leaking to
+    // third-party tags) could tamper with another shopper's amount/discount.
+    // Mirrors the same guard on GET /confirmation below.
+    if (!intent || intent.client_secret !== String(clientSecret)) {
+      return res.status(403).json({ error: 'Not authorised' });
+    }
+    // Only an intent still awaiting payment may be re-priced; never mutate one
+    // that's already confirming or succeeded.
+    const editable = ['requires_payment_method', 'requires_confirmation', 'requires_action'];
+    if (!editable.includes(intent.status)) {
+      return res.status(409).json({ error: 'This payment can no longer be modified.' });
+    }
     const meta = intent.metadata || {};
 
     const items = unpackItems(meta);

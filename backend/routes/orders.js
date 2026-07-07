@@ -3,6 +3,7 @@ const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Order = require('../models/Order');
 const { requireAuth } = require('../middleware/auth');
+const { recordAudit } = require('../services/auditLog');
 const {
   sendProcessingEmail,
   sendShippedEmail,
@@ -292,6 +293,12 @@ router.put('/:id/status', requireAuth, async function(req, res) {
     const order = await Order.findByIdAndUpdate(req.params.id, update, { new: true });
     if (!order) return res.status(404).json({ error: 'Not found' });
 
+    recordAudit(req, 'order.status', {
+      targetType: 'Order',
+      targetId: order._id,
+      meta: { status, note: note || '' },
+    });
+
     if (sendEmail && STATUS_EMAIL_FNS[status] && order.customerEmail) {
       STATUS_EMAIL_FNS[status](order).catch(err =>
         console.error(`[EMAIL] Status ${status} email failed:`, err.message)
@@ -430,6 +437,13 @@ router.post('/:id/refund', requireAuth, async function(req, res) {
     };
 
     const updated = await Order.findByIdAndUpdate(req.params.id, update, { new: true });
+    // Independent, append-only record of the refund — survives later edits to
+    // the order document.
+    recordAudit(req, 'order.refund', {
+      targetType: 'Order',
+      targetId: order._id,
+      meta: { amount, reason: reason || '', stripeRefundId: stripeRefund.id, newStatus: update.status },
+    });
     res.json(updated);
   } catch (err) {
     const stripeMsg = err.raw?.message || err.message;

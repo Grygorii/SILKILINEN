@@ -4,7 +4,13 @@ export function getSessionId(): string {
   if (typeof window === 'undefined') return '';
   let id = localStorage.getItem(SESSION_KEY);
   if (!id) {
-    id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    // Cryptographically-random UUID (122 bits) — the session id also gates
+    // read/write access to the cart (which holds the captured checkout email),
+    // so it must not be guessable. The old `Date.now()-Math.random()` form was
+    // a public-knowledge timestamp plus a weak 7-char suffix.
+    id = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     localStorage.setItem(SESSION_KEY, id);
   }
   // Mirror to a first-party cookie so the same thread id is readable

@@ -143,6 +143,12 @@ function stripHtml(html) {
 // pasted link becomes guidance the agents can actually apply.
 async function summarizeReference(url) {
   const aiClient = require('./aiClient');
+  const { assertPublicUrl } = require('./safeUrl');
+  // SSRF guard — same as competitorScraper/competitorIntel/externalData/storefrontScout.
+  // This URL is admin-supplied; without the check it could reach cloud metadata
+  // (169.254.169.254) or internal Railway hostnames, and we reflect the fetched
+  // page's title/body back to the caller.
+  await assertPublicUrl(url);
   let html = '';
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(12000), headers: { 'User-Agent': 'SILKILINEN-Librarian/1.0' } });

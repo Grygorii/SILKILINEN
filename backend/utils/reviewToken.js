@@ -31,7 +31,12 @@ function signReviewToken({ orderId, productId, customerEmail }) {
 function verifyReviewToken(token) {
   if (!token || typeof token !== 'string') return null;
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET, { audience: REVIEW_TOKEN_AUDIENCE });
+    // Pin the algorithm like every other jwt.verify in the codebase — closes
+    // the algorithm-confusion class rather than relying on library defaults.
+    const payload = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ['HS256'],
+      audience: REVIEW_TOKEN_AUDIENCE,
+    });
     if (!payload?.oid || !payload?.pid || !payload?.eml) return null;
     return {
       orderId: payload.oid,
