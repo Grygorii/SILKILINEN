@@ -9,6 +9,13 @@ const { upload } = require('../utils/cloudinary');
 const { requireAuth } = require('../middleware/auth');
 const { sendDropAHint } = require('../services/email');
 const { lightRateLimit } = require('../middleware/rateLimits');
+const SystemState = require('../models/SystemState');
+
+// Drop-a-Hint sends a SILKILINEN-branded email to an address the sender types,
+// so beyond the per-IP limiter we cap how many hints any single recipient can
+// receive per day — otherwise it's a targeted-harassment / brand-abuse relay.
+const HINT_RECIPIENT_DAILY_CAP = 3;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 // In-memory multer for CSV import (no cloud upload)
 const csvUpload = multer({
@@ -303,6 +310,23 @@ router.post('/:id/drop-hint', lightRateLimit, async function(req, res) {
     if (!recipientEmail || !senderName) {
       return res.status(400).json({ error: 'recipientEmail and senderName are required' });
     }
+    if (!EMAIL_RE.test(String(recipientEmail).trim()) || String(recipientEmail).length > 200) {
+      return res.status(400).json({ error: 'Please enter a valid recipient email address.' });
+    }
+    if (message && String(message).length > 1000) {
+      return res.status(400).json({ error: 'Message is too long.' });
+    }
+
+    // Per-recipient/day cap (persistent, survives restarts) so this can't be
+    // used to flood one inbox with brand-spoofing emails.
+    const day = new Date().toISOString().slice(0, 10);
+    const rkey = `drophint_${day}_${String(recipientEmail).toLowerCase().trim()}`;
+    const st = await SystemState.findOneAndUpdate({ key: rkey }, { $inc: { value: 1 } }, { upsert: true, new: true });
+    if (st.value > HINT_RECIPIENT_DAILY_CAP) {
+      await SystemState.findOneAndUpdate({ key: rkey }, { $inc: { value: -1 } });
+      return res.status(429).json({ error: 'This recipient has already received a few hints today. Please try again tomorrow.' });
+    }
+
     const product = await Product.findOne({ ...PUBLIC_FILTER, _id: req.params.id });
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
