@@ -84,26 +84,39 @@ async function redeemDiscount(codeStr, { orderId, orderNumber, customerEmail, di
     if (existing) return;
   }
 
-  await Promise.all([
-    PromoCode.updateOne(
-      { _id: promo._id },
-      { $inc: { usageCount: 1 } },
+  // Atomic, cap-aware increment: only bump usageCount while it's still below
+  // maxUses, so two concurrent redemptions can't both push it past the cap the
+  // way the old unconditional $inc could under a race. We deliberately do NOT
+  // throw on a cap miss — this runs inside the order-creation transaction and
+  // the customer has already paid the discounted amount, so aborting would lose
+  // a paid order. Instead we still record the redemption and log for manual
+  // reconciliation. The real over-redemption prevention lives here as damage
+  // limiting; validateDiscount is the first-line check.
+  const hasCap = promo.maxUses !== null && promo.maxUses !== undefined;
+  const incResult = await PromoCode.updateOne(
+    hasCap
+      ? { _id: promo._id, $expr: { $lt: ['$usageCount', '$maxUses'] } }
+      : { _id: promo._id },
+    { $inc: { usageCount: 1 } },
+    { session: session || null }
+  );
+  if (hasCap && incResult.modifiedCount === 0) {
+    console.warn(`[discounts] promo ${promo.code} redeemed past its cap (order ${orderNumber || orderId}) — reconcile manually`);
+  }
+
+  if (orderId) {
+    await PromoCodeRedemption.create(
+      [{
+        promoCodeId:   promo._id,
+        code:          promo.code,
+        orderId,
+        orderNumber:   orderNumber || '',
+        customerEmail: customerEmail ? customerEmail.toLowerCase().trim() : '',
+        discountAmount: discountAmount || 0,
+      }],
       { session: session || null }
-    ),
-    orderId
-      ? PromoCodeRedemption.create(
-          [{
-            promoCodeId:   promo._id,
-            code:          promo.code,
-            orderId,
-            orderNumber:   orderNumber || '',
-            customerEmail: customerEmail ? customerEmail.toLowerCase().trim() : '',
-            discountAmount: discountAmount || 0,
-          }],
-          { session: session || null }
-        )
-      : Promise.resolve(),
-  ]);
+    );
+  }
 }
 
 module.exports = { validateDiscount, redeemDiscount };

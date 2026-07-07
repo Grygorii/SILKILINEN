@@ -5,6 +5,12 @@ const Product = require('../models/Product');
 const Bundle = require('../models/Bundle');
 const { calculateShipping } = require('../services/shipping');
 const { validateDiscount } = require('../services/discounts');
+const { cartRateLimit } = require('../middleware/rateLimits');
+
+// The cart is keyed by a client-generated sessionId in the URL with no auth, so
+// rate-limit the whole router: bounds promo-code brute-force on /discount and
+// unbounded Cart-document creation via GET /:sessionId.
+router.use(cartRateLimit);
 
 // Helper — compute cart totals
 function summarise(cart) {
@@ -14,6 +20,23 @@ function summarise(cart) {
   return { subtotal, shipping, total };
 }
 
+// Only the fields the storefront needs — deliberately EXCLUDES the captured
+// `email`, `recoveryEmails`, and `recoveryUnsubscribed` PII so a leaked/guessed
+// sessionId can't be turned into an email-harvesting oracle. Never spread a raw
+// cart.toObject() into a response.
+function publicCart(cart) {
+  const o = cart.toObject ? cart.toObject() : cart;
+  return {
+    _id: o._id,
+    sessionId: o.sessionId,
+    items: o.items,
+    discountCode: o.discountCode,
+    discountAmount: o.discountAmount,
+    shippingCountry: o.shippingCountry,
+    expiresAt: o.expiresAt,
+  };
+}
+
 // GET /api/cart/:sessionId
 router.get('/:sessionId', async (req, res) => {
   try {
@@ -21,7 +44,7 @@ router.get('/:sessionId', async (req, res) => {
     if (!cart) {
       cart = await Cart.create({ sessionId: req.params.sessionId });
     }
-    res.json({ ...cart.toObject(), ...summarise(cart) });
+    res.json({ ...publicCart(cart), ...summarise(cart) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -103,7 +126,7 @@ router.post('/:sessionId/items', async (req, res) => {
     // Bump expiry on activity
     cart.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await cart.save();
-    res.json({ ...cart.toObject(), ...summarise(cart) });
+    res.json({ ...publicCart(cart), ...summarise(cart) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -138,7 +161,7 @@ router.patch('/:sessionId/items/:itemId', async (req, res) => {
     }
 
     await cart.save();
-    res.json({ ...cart.toObject(), ...summarise(cart) });
+    res.json({ ...publicCart(cart), ...summarise(cart) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -158,7 +181,7 @@ router.delete('/:sessionId/items/:itemId', async (req, res) => {
       if (!result.valid) cart.discountCode = null;
     }
     await cart.save();
-    res.json({ ...cart.toObject(), ...summarise(cart) });
+    res.json({ ...publicCart(cart), ...summarise(cart) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -182,7 +205,7 @@ router.post('/:sessionId/discount', async (req, res) => {
     await cart.save();
 
     res.json({
-      ...cart.toObject(),
+      ...publicCart(cart),
       ...summarise(cart),
       replaced,
       message: replaced ? `Code replaced — ${result.code} applied` : `${result.code} applied`,
@@ -201,7 +224,7 @@ router.delete('/:sessionId/discount', async (req, res) => {
     cart.discountCode = null;
     cart.discountAmount = 0;
     await cart.save();
-    res.json({ ...cart.toObject(), ...summarise(cart) });
+    res.json({ ...publicCart(cart), ...summarise(cart) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -219,7 +242,7 @@ router.patch('/:sessionId/country', async (req, res) => {
     if (!cart) return res.status(404).json({ error: 'Cart not found' });
     cart.shippingCountry = country.toUpperCase();
     await cart.save();
-    res.json({ ...cart.toObject(), ...summarise(cart) });
+    res.json({ ...publicCart(cart), ...summarise(cart) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });

@@ -254,6 +254,7 @@ export default function CheckoutPage() {
 
   // Refs so updateIntent always reads current values without triggering effects
   const paymentIntentIdRef = useRef('');
+  const clientSecretRef = useRef('');
   const countryRef = useRef('IE');
   const appliedCodeRef = useRef('');
 
@@ -310,6 +311,7 @@ export default function CheckoutPage() {
 
       const data = await res.json();
       setClientSecret(data.clientSecret);
+      clientSecretRef.current = data.clientSecret;
       paymentIntentIdRef.current = data.paymentIntentId;
       setSummary(data.orderSummary);
     } catch {
@@ -331,6 +333,7 @@ export default function CheckoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           paymentIntentId: piId,
+          clientSecret: clientSecretRef.current,
           shippingCountry: country,
           // undefined = keep existing; '' = remove; string = apply new code
           discountCode: discountCode !== undefined ? discountCode : (appliedCodeRef.current || undefined),
@@ -359,6 +362,7 @@ export default function CheckoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           paymentIntentId: piId,
+          clientSecret: clientSecretRef.current,
           shippingCountry: countryRef.current,
           discountCode: appliedCodeRef.current || undefined,
           email,

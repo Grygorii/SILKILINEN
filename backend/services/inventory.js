@@ -64,24 +64,43 @@ async function decrementStockForOrder(items) {
       const product = await Product.findById(line.productId);
       if (!product) continue;
 
+      // Atomic decrement via $inc so two concurrent orders on the same last
+      // unit each apply their own -units, instead of both computing from a stale
+      // in-memory read and the second save() silently overwriting the first
+      // (lost update → silent oversell). We then reload and save() so the
+      // pre-save hook still recomputes totalStock/inStock and flips status to
+      // sold_out; validateBeforeSave:false keeps a legacy doc that violates a
+      // later-added validator from throwing and skipping the recompute.
       if (product.variants && product.variants.length > 0) {
         const v = matchVariant(product.variants, line.colour, line.size);
         if (!v) continue; // can't identify the variant — leave stock untouched
-        if ((v.stockLevel || 0) < line.units) {
-          console.warn(`[inventory] oversold product ${product._id} (${v.sku || v._id}): had ${v.stockLevel || 0}, sold ${line.units}`);
+        await Product.updateOne(
+          { _id: product._id, 'variants._id': v._id },
+          { $inc: { 'variants.$.stockLevel': -line.units } }
+        );
+        const fresh = await Product.findById(product._id);
+        if (!fresh) continue;
+        const fv = fresh.variants.id(v._id);
+        if (fv && fv.stockLevel < 0) {
+          console.warn(`[inventory] oversold product ${fresh._id} (${fv.sku || fv._id}): ${fv.stockLevel + line.units} in stock, sold ${line.units}`);
+          fv.stockLevel = 0; // clamp the oversell; $inc bypasses the min:0 validator
         }
-        v.stockLevel = Math.max(0, (v.stockLevel || 0) - line.units);
+        await fresh.save({ validateBeforeSave: false });
       } else if (typeof product.totalStock === 'number' && product.totalStock > 0) {
-        product.totalStock = Math.max(0, product.totalStock - line.units);
+        await Product.updateOne(
+          { _id: product._id },
+          { $inc: { totalStock: -line.units } }
+        );
+        const fresh = await Product.findById(product._id);
+        if (!fresh) continue;
+        if (typeof fresh.totalStock === 'number' && fresh.totalStock < 0) {
+          console.warn(`[inventory] oversold product ${fresh._id}: ${fresh.totalStock + line.units} in stock, sold ${line.units}`);
+          fresh.totalStock = 0;
+        }
+        await fresh.save({ validateBeforeSave: false });
       } else {
         continue; // untracked — nothing to decrement
       }
-      // save() runs the pre-save hook → recomputes totalStock/inStock and flips
-      // status to sold_out when the last unit goes. validateBeforeSave:false so a
-      // legacy doc that violates a later-added validator (e.g. an over-length
-      // metaTitle) can't throw and silently skip the decrement — pre-save hooks
-      // still run with validation off.
-      await product.save({ validateBeforeSave: false });
     } catch (err) {
       console.error('[inventory] decrement failed for', String(line.productId), err.message);
     }
