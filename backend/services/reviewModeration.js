@@ -12,6 +12,12 @@ const PHONE_RE       = /\+?\d[\d\s().-]{7,}/;
 const ALL_CAPS_RE    = /\b[A-Z]{3,}(\s+[A-Z]{3,}){3,}\b/;     // 4+ consecutive uppercase words
 const REPEAT_CHAR_RE = /(.)\1{6,}/;                            // letter repeated 7+ times (looooooove)
 const EMOJI_RE       = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F02F}]/gu;
+// Prompt-injection phrasing. Reviews can be fed into the admin AI tools (Pin
+// Studio), so surface anything that reads like an instruction to a model so the
+// admin sees it before approving. Advisory only — the AI paths also fence this
+// text as data; this is defence-in-depth at the human-review step.
+const PROMPT_INJECTION_RE = /\b(ignore|disregard|forget)\b[^.]*\b(previous|prior|above|earlier|all)\b[^.]*\b(instruction|prompt|rule|direction)/i;
+const AI_DIRECTIVE_RE     = /\b(system prompt|you are now|new task|as an ai|act as|role\s*:\s*system|assistant\s*:|<<<|reveal your (instructions|prompt))/i;
 
 // Small, conservative phrase allowlist. Add as the spam evolves; don't
 // be tempted to expand to include benign words.
@@ -47,6 +53,7 @@ function flagReview({ reviewer = '', title = '', message = '' }) {
   if (emojiDensity(body) > 0.3)     flags.push('emoji-heavy');
   if (message.trim().length > 0 && message.trim().length < 10) flags.push('very-short');
   if (message.trim().length > 2000) flags.push('excessive-length');
+  if (PROMPT_INJECTION_RE.test(body) || AI_DIRECTIVE_RE.test(body)) flags.push('prompt-injection');
 
   // Reviewer name shouldn't be a marketing handle
   if (URL_RE.test(reviewer) || EMAIL_RE.test(reviewer)) flags.push('promo-handle');
@@ -80,6 +87,7 @@ function flagLabel(tag) {
     'excessive-length':     'Excessively long',
     'promo-handle':         'Reviewer name contains a URL or email',
     'invalid-name':         'Reviewer name too short',
+    'prompt-injection':     'Reads like an AI prompt-injection attempt',
   };
   return labels[tag] || tag;
 }
