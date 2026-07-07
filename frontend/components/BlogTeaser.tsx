@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import ArticleImage from './ArticleImage';
 import { isValidImageUrl } from '@/lib/imageUtils';
 import styles from './BlogTeaser.module.css';
 
@@ -37,15 +37,11 @@ export default async function BlogTeaser() {
         {posts.map(post => (
           <Link key={post._id} href={`/journal/${post.slug}`} className={styles.card}>
             <div className={styles.imgWrap}>
-              {isValidImageUrl(post.heroImage?.url) && (
-                <Image
-                  src={post.heroImage.url}
-                  alt={post.heroImage.alt || post.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  style={{ objectFit: 'cover' }}
-                />
-              )}
+              <ArticleImage
+                src={isValidImageUrl(post.heroImage?.url) ? post.heroImage?.url : null}
+                alt={post.heroImage?.alt || post.title}
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
             </div>
             <div className={styles.cardBody}>
               <p className={styles.date}>
