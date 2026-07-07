@@ -13,10 +13,16 @@ const ALLOWED = new Set(['b', 'strong', 'i', 'em', 'u', 'br']);
 
 export function sanitizeBannerHtml(html: string): string {
   if (!html) return '';
-  return html.replace(/<\/?\s*([a-z][a-z0-9]*)\b[^>]*>/gi, (match, tag) => {
-    const t = String(tag).toLowerCase();
-    if (!ALLOWED.has(t)) return '';
-    // Re-emit the tag name only, no attributes, preserving open vs close.
-    return /^<\s*\//.test(match) ? `</${t}>` : `<${t}>`;
-  });
+  // Escape EVERYTHING first, then re-enable only the exact allowlisted inline
+  // tags. A single-pass "remove disallowed tags" regex is bypassable by nesting
+  // (`<<script>script>` → the outer token is stripped and a live `<script>` is
+  // reconstructed); escaping first makes reconstruction impossible because no
+  // raw `<`/`>` ever survives except the tokens we deliberately restore below.
+  const escaped = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // One literal-regex pass restoring only a *bare* allowlisted tag — open or
+  // close, optional self-closing slash, and crucially NO attributes (anything
+  // with a space+content or `=` fails to match and stays escaped/inert).
+  return escaped.replace(/&lt;(\/?)([a-z0-9]+)\s*\/?&gt;/gi, (m, slash, tag) =>
+    ALLOWED.has(tag.toLowerCase()) ? `<${slash}${tag.toLowerCase()}>` : m
+  );
 }

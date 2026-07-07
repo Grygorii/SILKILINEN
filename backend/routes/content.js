@@ -110,7 +110,9 @@ router.post('/upload', requireAuth, upload.single('image'), async function(req, 
       return res.status(503).json({ error: `Cloudinary not configured — missing: ${missingVars.join(', ')}` });
     }
 
-    const section = req.query.section || 'content';
+    // Allowlist the folder segment — it's interpolated into the Cloudinary
+    // upload path, so reject anything but simple slug characters (no `/`, `..`).
+    const section = /^[a-z0-9_-]{1,40}$/i.test(req.query.section) ? req.query.section : 'content';
     const key = req.query.key || '';
     const spec = CONTENT_SPECS[key];
 
@@ -173,7 +175,8 @@ router.post('/upload-video', requireAuth, uploadVideo.single('video'), async fun
       return res.status(503).json({ error: `Cloudinary not configured — missing: ${missingVars.join(', ')}` });
     }
 
-    const section = req.query.section || 'homepage';
+    // Allowlist the folder segment — see the image upload route above.
+    const section = /^[a-z0-9_-]{1,40}$/i.test(req.query.section) ? req.query.section : 'homepage';
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         { folder: `silkilinen/${section}`, resource_type: 'video', eager_async: true,
