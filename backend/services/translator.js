@@ -12,11 +12,27 @@ const Translation = require('../models/Translation');
 
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
+// Per-locale native guidance so the AI writes like a leading luxury house in
+// that market (the register + garment terminology real premium sites use) — the
+// founder can't verify these languages, so the model must land them natively,
+// not literally. `style` is injected into the system prompt.
 const SUPPORTED = {
-  de: { label: 'Deutsch', english: 'German' },
-  fr: { label: 'Français', english: 'French' },
-  it: { label: 'Italiano', english: 'Italian' },
-  es: { label: 'Español', english: 'Spanish' },
+  de: {
+    label: 'Deutsch', english: 'German',
+    style: 'Write in the restrained, precise register of a premium German fashion house — elegant, never gushing. Address the customer with the formal "Sie". Use the correct terms: Seide (silk), Maulbeerseide (mulberry silk), Leinen (linen), Seidenpyjama, Morgenmantel/Seidenkimono (robe), Nachthemd (nightdress), Dessous/Unterwäsche (lingerie), Slip (briefs). Natural German compound nouns are good; keep "Momme" for silk weight.',
+  },
+  fr: {
+    label: 'Français', english: 'French',
+    style: 'Write in the understated, refined register of a French maison — sober elegance, no hyperbole. Use: soie (silk), soie de mûrier (mulberry silk), lin (linen), pyjama de soie, peignoir/robe de chambre (robe), nuisette or chemise de nuit (slip/nightdress), lingerie, culotte (briefs). Keep "Momme".',
+  },
+  it: {
+    label: 'Italiano', english: 'Italian',
+    style: 'Write in the warm yet refined register of an Italian luxury brand — elegant and effortless. Use: seta (silk), seta di gelso (mulberry silk), lino (linen), pigiama di seta, vestaglia/kimono di seta (robe), camicia da notte (nightdress), sottoveste (slip), intimo/lingerie, slip (briefs). Keep "Momme".',
+  },
+  es: {
+    label: 'Español', english: 'Spanish',
+    style: 'Write for Spain (European Spanish) in the elegant, understated register of a refined boutique. Use: seda (silk), seda de morera (mulberry silk), lino (linen), pijama de seda, bata/kimono de seda (robe), camisón (nightdress), lencería/ropa interior, braguita (briefs). Keep "Momme".',
+  },
 };
 const LOCALES = Object.keys(SUPPORTED);
 
@@ -33,7 +49,7 @@ async function translateFields(fields, locale) {
   const res = await client.chat.completions.create({
     model: MODEL,
     messages: [
-      { role: 'system', content: `You translate copy for SILKILINEN, a quiet-luxury Mulberry-silk & European-linen house. Translate each English value into ${SUPPORTED[locale].english}. Keep the calm, refined, understated brand voice — never literal or robotic, never add hype or exclamation marks. Keep the brand name "SILKILINEN" untranslated, preserve any HTML tags exactly (e.g. <strong>), and keep measurements/units (momme, cm, €). Respond ONLY with a JSON object using the SAME keys, each value translated.` },
+      { role: 'system', content: `You are a native ${SUPPORTED[locale].english} copywriter for SILKILINEN, a quiet-luxury Mulberry-silk & European-linen house. ADAPT each English value into ${SUPPORTED[locale].english} as a native luxury brand would write it — idiomatic, not a literal translation. ${SUPPORTED[locale].style} Keep the calm, refined, understated voice — never hype or exclamation marks. Keep the brand name "SILKILINEN" untranslated, preserve any HTML tags exactly (e.g. <strong>), and keep measurements/units (cm, €). Respond ONLY with a JSON object using the SAME keys, each value adapted.` },
       { role: 'user', content: JSON.stringify(src) },
     ],
     temperature: 0.3, max_tokens: 1600, response_format: { type: 'json_object' },
