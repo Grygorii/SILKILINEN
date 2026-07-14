@@ -3,6 +3,7 @@ import styles from './Footer.module.css';
 import CookiePreferencesLink from './CookiePreferencesLink';
 import FooterCurrency from './FooterCurrency';
 import FooterMobileNav from './FooterMobileNav';
+import LanguageSwitcher from './LanguageSwitcher';
 import GoogleReviewsBadge from './GoogleReviewsBadge';
 import { isValidSocialUrl } from '@/lib/socialUrl';
 import { getSiteSettings } from '@/lib/settings';
@@ -122,7 +123,10 @@ export default async function Footer() {
       {/* Mobile accordion — hidden on desktop */}
       <FooterMobileNav />
 
-      <FooterCurrency />
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <FooterCurrency />
+        <LanguageSwitcher />
+      </div>
 
       <div className={styles.bottom}>
         <p>© {new Date().getFullYear()} SILKILINEN. All rights reserved.</p>

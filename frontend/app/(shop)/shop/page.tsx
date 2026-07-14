@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { clampMeta } from '@/lib/clampMeta';
+import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, type PageLocale } from '@/lib/i18n';
 import ProductGrid from '@/components/ProductGrid';
 import BundleStrip from '@/components/BundleStrip';
 import styles from './page.module.css';
@@ -11,9 +12,10 @@ type Cat = { slug: string; label: string; description?: string; metaTitle?: stri
 // hardcoded list — so renaming or adding a category in admin "just works" on
 // the shop page. CATEGORY_COPY (below) is only an optional rich-copy override
 // for SEO; a category is valid as long as it exists here.
-async function getCategoryList(): Promise<Cat[]> {
+async function getCategoryList(locale: PageLocale = 'en'): Promise<Cat[]> {
+  const q = apiLocaleQuery(locale);
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, { next: { revalidate: 300 } });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories${q ? `?${q}` : ''}`, { next: { revalidate: 300 } });
     return res.ok ? res.json() : [];
   } catch {
     return [];
@@ -31,6 +33,7 @@ export async function generateMetadata({
   searchParams: Promise<{ category?: string; new?: string; q?: string }>;
 }): Promise<Metadata> {
   const { category, new: newParam, q } = await searchParams;
+  const locale = await getLocale();
   // Search-result permutations are thin/duplicate — keep them out of the index.
   if (q) {
     return {
@@ -44,10 +47,11 @@ export async function generateMetadata({
     // the curated hardcoded copy, then the category's own label/description.
     // metaTitle is empty until the founder generates+approves, so existing
     // hardcoded categories (robes, pyjamas…) are unchanged until then.
-    const dbCat = (await getCategoryList()).find(x => x.slug === category);
+    const dbCat = (await getCategoryList(locale)).find(x => x.slug === category);
     const c = CATEGORY_COPY[category];
     // Only an existing category WITH products is a real, indexable page.
     if (dbCat && dbCat.count > 0) {
+      const path = `/shop?category=${category}`;
       return {
         title: dbCat?.metaTitle || c?.title || dbCat?.label || 'Shop',
         description: clampMeta(
@@ -55,7 +59,8 @@ export async function generateMetadata({
           c?.description ||
           dbCat?.description ||
           `Shop ${dbCat?.label || 'silk'} at Silkilinen — pure silk and linen, shipped worldwide from Donegal.`),
-        alternates: { canonical: `https://www.silkilinen.com/shop?category=${category}` },
+        // Self-referencing canonical per locale + hreflang across all languages.
+        alternates: { canonical: localeUrl(locale, path), languages: hreflangAlternates(path) },
       };
     }
     // Unknown/stale category slug (e.g. a renamed or removed category like
@@ -77,7 +82,7 @@ export async function generateMetadata({
   return {
     title: 'Shop',
     description: 'The full Silkilinen collection of pure silk and linen intimates — robes, slips, dresses, lounge, sleep. From an Irish brand based in Donegal, shipped worldwide.',
-    alternates: { canonical: 'https://www.silkilinen.com/shop' },
+    alternates: { canonical: localeUrl(locale, '/shop'), languages: hreflangAlternates('/shop') },
   };
 }
 
@@ -120,7 +125,7 @@ const CATEGORY_COPY: Record<string, { title: string; description: string }> = {
   },
 };
 
-async function getProducts(category?: string, q?: string, newOnly?: boolean) {
+async function getProducts(category?: string, q?: string, newOnly?: boolean, locale: PageLocale = 'en') {
   const params = new URLSearchParams();
   if (category) params.set('category', category);
   if (q) params.set('q', q);
@@ -128,6 +133,7 @@ async function getProducts(category?: string, q?: string, newOnly?: boolean) {
     params.set('isNew', 'true');
     params.set('sort', '-createdAt');
   }
+  if (locale !== 'en') params.set('locale', locale);
   const qs = params.toString();
   const url = `${process.env.NEXT_PUBLIC_API_URL}/api/products${qs ? `?${qs}` : ''}`;
   try {
@@ -145,14 +151,15 @@ export default async function ShopPage({
 }) {
   const { category, q, new: newParam } = await searchParams;
   const newOnly = newParam === 'true' && !category;
+  const locale = await getLocale();
 
   // Validate against the live categories, not a hardcoded list. A category that
   // doesn't exist OR has no products isn't a real, browsable page — return a
   // proper 404 so it's not accessible and Google doesn't index a thin/empty grid.
-  const dbCat = category ? (await getCategoryList()).find(c => c.slug === category) : null;
+  const dbCat = category ? (await getCategoryList(locale)).find(c => c.slug === category) : null;
   if (category && (!dbCat || dbCat.count === 0)) notFound();
 
-  const products = await getProducts(category, q, newOnly);
+  const products = await getProducts(category, q, newOnly, locale);
   const copy = category ? CATEGORY_COPY[category] : null;
   const heading = copy?.title ?? dbCat?.label ?? (newOnly ? 'New Arrivals' : (q ? `Search: "${q}"` : 'The Collection'));
   const description = copy?.description ?? (dbCat?.description || null) ?? (newOnly ? 'Our latest pieces — fresh off the atelier table.' : null);
