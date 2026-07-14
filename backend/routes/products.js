@@ -10,6 +10,7 @@ const { requireAuth } = require('../middleware/auth');
 const { sendDropAHint } = require('../services/email');
 const { lightRateLimit } = require('../middleware/rateLimits');
 const SystemState = require('../models/SystemState');
+const { localizeDocs } = require('../services/translator');
 
 // Drop-a-Hint sends a SILKILINEN-branded email to an address the sender types,
 // so beyond the per-IP limiter we cap how many hints any single recipient can
@@ -197,7 +198,7 @@ const SLIM_PROJECTION = 'name price slug status updatedAt isNewArrival';
 
 router.get('/', async function(req, res) {
   try {
-    const { sort, limit, category, q, ids, isNew, slim } = req.query;
+    const { sort, limit, category, q, ids, isNew, slim, locale } = req.query;
     const isSlim = slim === 'true';
     const filter = { ...PUBLIC_FILTER };
 
@@ -206,7 +207,7 @@ router.get('/', async function(req, res) {
       const idArray = ids.split(',').map(s => s.trim()).filter(Boolean);
       filter._id = { $in: idArray };
       const products = await Product.find(filter).select(PUBLIC_PROJECTION).lean();
-      return res.json(await attachRatings(products));
+      return res.json(await localizeDocs('product', await attachRatings(products), locale));
     }
 
     if (category) filter.category = String(category);
@@ -230,7 +231,7 @@ router.get('/', async function(req, res) {
     query = query.limit(lim);
     const products = await query;
     // The slim list (sitemap/feed-style consumers) doesn't need rating rollups.
-    res.json(isSlim ? products : await attachRatings(products));
+    res.json(await localizeDocs('product', isSlim ? products : await attachRatings(products), locale));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -415,7 +416,7 @@ router.get('/:id', async function(req, res) {
       product = await Product.findOne({ ...PUBLIC_FILTER, previousSlugs: param }).select(PUBLIC_PROJECTION);
     }
     if (!product) return res.status(404).json({ error: 'Product not found' });
-    res.json(product);
+    res.json(await localizeDocs('product', product, req.query.locale));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });

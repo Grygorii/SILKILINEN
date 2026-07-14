@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
 const Category = require('../models/Category');
+const { localizeDocs } = require('../services/translator');
 
 // GET /api/categories
 // Returns active categories from the DB (sorted by displayOrder) with a
@@ -23,6 +24,10 @@ router.get('/', async function(req, res) {
 
     const countMap = {};
     counts.forEach(c => { countMap[c._id] = c.count; });
+
+    // Overlay translations (label/description/meta) for a requested locale before
+    // shaping — English stays the fallback when a field isn't translated.
+    await localizeDocs('category', categories, req.query.locale);
 
     const result = categories.map(cat => ({
       slug: cat.slug,

@@ -96,4 +96,26 @@ async function getTranslation(resourceType, resourceId, locale) {
   return doc?.fields && Object.keys(doc.fields).length ? doc.fields : null;
 }
 
-module.exports = { SUPPORTED, LOCALES, configured, translateFields, translateResource, upsertTranslation, getTranslation };
+// Read-merge for the storefront: overlay stored translations onto doc(s) for a
+// locale, IN PLACE. English (or any untranslated field) is the fallback — never
+// a blank. A no-op for the default/English path or an unsupported locale, so the
+// English response stays byte-identical (same discipline as the EUR path). Works
+// on both lean objects (lists) and Mongoose docs (detail) since the merged keys
+// (name/description/metaTitle/metaDescription/label) are all schema String paths.
+async function localizeDocs(resourceType, docs, locale) {
+  if (!SUPPORTED[locale] || docs == null) return docs;
+  const arr = Array.isArray(docs) ? docs : [docs];
+  const ids = arr.filter(Boolean).map(d => String(d._id));
+  if (!ids.length) return docs;
+  const rows = await Translation.find({ resourceType, resourceId: { $in: ids }, locale }).lean().catch(() => []);
+  if (!rows.length) return docs;
+  const byId = Object.fromEntries(rows.map(r => [r.resourceId, r.fields || {}]));
+  for (const d of arr) {
+    const t = d && byId[String(d._id)];
+    if (!t) continue;
+    for (const [k, v] of Object.entries(t)) if (typeof v === 'string' && v.trim()) d[k] = v;
+  }
+  return docs;
+}
+
+module.exports = { SUPPORTED, LOCALES, configured, translateFields, translateResource, upsertTranslation, getTranslation, localizeDocs };
