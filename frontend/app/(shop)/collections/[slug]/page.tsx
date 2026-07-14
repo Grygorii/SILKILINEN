@@ -4,6 +4,7 @@ import CollectionSet from './CollectionSet';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Image from 'next/image';
 import styles from './page.module.css';
+import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, type PageLocale } from '@/lib/i18n';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -33,9 +34,10 @@ type CollectionData = {
   products: CollectionProduct[];
 };
 
-async function getCollection(slug: string): Promise<CollectionData | null> {
+async function getCollection(slug: string, locale: PageLocale = 'en'): Promise<CollectionData | null> {
+  const q = apiLocaleQuery(locale);
   try {
-    const res = await fetch(`${API}/api/collections/${slug}`, { next: { revalidate: 120 } });
+    const res = await fetch(`${API}/api/collections/${slug}${q ? `?${q}` : ''}`, { next: { revalidate: 120 } });
     if (!res.ok) return null;
     return res.json();
   } catch {
@@ -47,8 +49,10 @@ export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
   const { slug } = await params;
-  const collection = await getCollection(slug);
+  const locale = await getLocale();
+  const collection = await getCollection(slug, locale);
   if (!collection) return { title: 'Collection Not Found' };
+  const path = `/collections/${slug}`;
 
   // Absolute title: the root layout template appends " | Silkilinen" to any
   // non-absolute title, which double-branded the collection ("… — SILKILINEN |
@@ -61,11 +65,11 @@ export async function generateMetadata(
   return {
     title: { absolute: brandedTitle },
     description,
-    alternates: { canonical: `https://www.silkilinen.com/collections/${slug}` },
+    alternates: { canonical: localeUrl(locale, path), languages: hreflangAlternates(path) },
     openGraph: {
       title: brandedTitle,
       description,
-      url: `https://www.silkilinen.com/collections/${slug}`,
+      url: localeUrl(locale, path),
       siteName: 'Silkilinen',
     },
   };
@@ -73,7 +77,8 @@ export async function generateMetadata(
 
 export default async function CollectionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const collection = await getCollection(slug);
+  const locale = await getLocale();
+  const collection = await getCollection(slug, locale);
 
   if (!collection) notFound();
 

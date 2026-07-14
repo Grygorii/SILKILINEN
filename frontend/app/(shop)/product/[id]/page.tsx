@@ -17,12 +17,14 @@ import { ProductSelectionProvider } from '@/components/ProductSelectionContext';
 import { AccordionGroup, AccordionItem, AccordionSubLabel } from '@/components/ui/Accordion';
 import { shippingDetailsFor, merchantReturnPolicy } from '@/lib/shippingSchema';
 import { clampMeta } from '@/lib/clampMeta';
+import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, localeHref, type PageLocale } from '@/lib/i18n';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-async function getProduct(id: string) {
+async function getProduct(id: string, locale: PageLocale = 'en') {
+  const q = apiLocaleQuery(locale);
   try {
-    const res = await fetch(`${API}/api/products/${id}`, { next: { revalidate: 120 } });
+    const res = await fetch(`${API}/api/products/${id}${q ? `?${q}` : ''}`, { next: { revalidate: 120 } });
     if (!res.ok) return null;
     const data = await res.json();
     if (data.error) return null;
@@ -59,7 +61,8 @@ export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Metadata> {
   const { id } = await params;
-  const product = await getProduct(id);
+  const locale = await getLocale();
+  const product = await getProduct(id, locale);
   if (!product) return { title: 'Product Not Found' };
 
   // Title template in app/layout.tsx appends " | Silkilinen", so the
@@ -73,7 +76,8 @@ export async function generateMetadata(
   const title = product.metaTitle ? { absolute: product.metaTitle } : product.name;
   const description = clampMeta(product.metaDescription
     || (product.description ? product.description : `Shop ${product.name} at Silkilinen. Pure silk and linen intimates, shipped worldwide from Donegal.`));
-  const url = `https://www.silkilinen.com/product/${product.slug || id}`;
+  const productPath = `/product/${product.slug || id}`;
+  const url = localeUrl(locale, productPath);
   const primaryImage = product.images?.find((i: { isPrimary: boolean }) => i.isPrimary);
   const image = primaryImage?.url || product.images?.[0]?.url || product.image || 'https://www.silkilinen.com/og-default.jpg';
 
@@ -94,7 +98,7 @@ export async function generateMetadata(
       description,
       images: [image],
     },
-    alternates: { canonical: url },
+    alternates: { canonical: url, languages: hreflangAlternates(productPath) },
   };
 }
 
@@ -132,11 +136,13 @@ function StockBadge({ product }: { product: { inStock?: boolean; totalStock?: nu
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = await getProduct(id);
+  const locale = await getLocale();
+  const product = await getProduct(id, locale);
   // Canonicalise to the slug URL: if reached via the ObjectId or an old slug,
-  // 308-redirect to the current slug so there's exactly one indexable URL.
+  // 308-redirect to the current slug so there's exactly one indexable URL
+  // (keeping the locale prefix so /de/product/<id> → /de/product/<slug>).
   if (product && product.slug && id !== product.slug) {
-    permanentRedirect(`/product/${product.slug}`);
+    permanentRedirect(localeHref(locale, `/product/${product.slug}`));
   }
   // Reviews specifically for this product; null when no approved reviews
   // exist yet (skip the aggregateRating/review JSON-LD fields when null
