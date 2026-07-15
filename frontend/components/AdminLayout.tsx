@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   LayoutDashboard, Package, FileText, Users,
   Megaphone, Settings, Menu, Bell, X, Layers, Tag, BookOpen, BookMarked, Share2,
-  Folder, Gift, Activity, Image as ImageIcon, ShoppingBag, Star, Upload, Boxes, Truck, Sparkles, Zap, Search, Percent, Eye, Workflow, Gem, Library, Plug, Target, Pin,
+  Folder, Gift, Activity, Image as ImageIcon, ShoppingBag, Star, Upload, Boxes, Truck, Sparkles, Zap, Search, Percent, Eye, Workflow, Gem, Library, Plug, Target, Pin, Languages,
 } from 'lucide-react';
 import styles from './AdminLayout.module.css';
 import LogoutButton from './LogoutButton';
@@ -54,6 +54,7 @@ const NAV: NavEntry[] = [
   { label: 'Journal',      href: '/admin/journal',     icon: BookOpen },
   { label: 'Pages',        href: '/admin/pages',       icon: FileText },
   { label: 'Site Content', href: '/admin/content',     icon: ImageIcon },
+  { label: 'Translations', href: '/admin/translations', icon: Languages },
   { section: 'Finance' },
   { label: 'Overview',   href: '/admin/finance',           icon: BookMarked, exact: true },
   { label: 'Expenses',   href: '/admin/finance/expenses',  icon: BookMarked },
