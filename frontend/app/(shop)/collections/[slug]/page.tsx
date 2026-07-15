@@ -4,7 +4,7 @@ import CollectionSet from './CollectionSet';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Image from 'next/image';
 import styles from './page.module.css';
-import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, type PageLocale } from '@/lib/i18n';
+import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, type PageLocale } from '@/lib/i18n-server';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 

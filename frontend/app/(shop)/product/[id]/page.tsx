@@ -17,7 +17,7 @@ import { ProductSelectionProvider } from '@/components/ProductSelectionContext';
 import { AccordionGroup, AccordionItem, AccordionSubLabel } from '@/components/ui/Accordion';
 import { shippingDetailsFor, merchantReturnPolicy } from '@/lib/shippingSchema';
 import { clampMeta } from '@/lib/clampMeta';
-import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, localeHref, type PageLocale } from '@/lib/i18n';
+import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, localeHref, type PageLocale } from '@/lib/i18n-server';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 

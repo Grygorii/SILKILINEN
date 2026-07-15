@@ -1,10 +1,8 @@
-// i18n core. English is the default and stays UNPREFIXED (/shop); the four
-// extra locales are path-prefixed (/de/shop, /fr/…) and served via middleware,
-// which sets an `x-locale` header the server reads here. English requests never
-// carry the header (and never hit the middleware — see middleware.ts matcher),
-// so the English path is untouched.
-
-import { headers } from 'next/headers';
+// i18n core — CLIENT-SAFE. English is the default and stays UNPREFIXED (/shop);
+// the four extra locales are path-prefixed (/de/shop, /fr/…) and served via
+// middleware. This module must NOT import next/headers (it's imported by client
+// components like LanguageSwitcher); the server-only getLocale() lives in
+// lib/i18n-server.ts.
 
 export const LOCALES = ['de', 'fr', 'it', 'es'] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -18,18 +16,6 @@ export const LOCALE_LABELS: Record<PageLocale, string> = {
 
 export function isLocale(x: string | null | undefined): x is Locale {
   return !!x && (LOCALES as readonly string[]).includes(x);
-}
-
-// Server-only: the active locale from the middleware-set header ('en' default).
-// Next 16: headers() is async.
-export async function getLocale(): Promise<PageLocale> {
-  try {
-    const h = await headers();
-    const l = h.get('x-locale');
-    return isLocale(l) ? l : 'en';
-  } catch {
-    return 'en';
-  }
 }
 
 // A locale-prefixed href: '/de/shop'. English is unprefixed: '/shop'.
