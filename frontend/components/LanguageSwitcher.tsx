@@ -14,12 +14,20 @@ export default function LanguageSwitcher({ className }: { className?: string }) 
   const current: PageLocale = (LOCALES as readonly string[]).includes(seg) ? (seg as PageLocale) : 'en';
   const bare = current === 'en' ? pathname : (pathname.slice(current.length + 1) || '/');
 
+  // Write the choice to the same cookie the proxy reads, so the visitor stays
+  // in this language as they browse. Picking English stores 'en', which opts
+  // out of the locale redirect entirely.
+  function choose(next: PageLocale) {
+    document.cookie = `slk_locale=${next}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+    router.push(localeHref(next, bare));
+  }
+
   return (
     <select
       aria-label="Language"
       className={className}
       value={current}
-      onChange={e => router.push(localeHref(e.target.value as PageLocale, bare))}
+      onChange={e => choose(e.target.value as PageLocale)}
       style={{
         background: 'none', border: '1px solid var(--color-line)', color: 'inherit',
         font: 'inherit', fontSize: 12, letterSpacing: '0.5px', padding: '6px 10px', cursor: 'pointer',
