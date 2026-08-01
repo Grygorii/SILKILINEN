@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import ProductImage from '@/components/products/ProductImage';
+import { productPath } from '@/lib/urls';
 import styles from './CollectionSet.module.css';
 
 type SetProduct = {
@@ -106,7 +107,7 @@ export default function CollectionSet({
     <div className={styles.root}>
       <div className={styles.grid}>
         {items.map(({ p, sizes, colours, liveSizes, liveColours, soldOut }) => {
-          const href = `/product/${p.slug || p._id}`;
+          const href = productPath(p);
           return (
             <div key={p._id} className={`${styles.card} ${soldOut ? styles.soldOutCard : ''}`}>
               <Link href={href} className={styles.imgLink} aria-label={p.name}>

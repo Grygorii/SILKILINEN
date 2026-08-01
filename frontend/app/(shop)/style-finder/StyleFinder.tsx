@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { productPath } from '@/lib/urls';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -467,7 +468,7 @@ export default function StyleFinder({ initialProducts = [] }: { initialProducts?
                 return (
                   <Link
                     key={p._id}
-                    href={`/product/${p.slug || p._id}`}
+                    href={productPath(p)}
                     className={`${styles.card} ${isPrimaryPick ? styles.cardPrimary : ''} ${styles.reveal}`}
                     style={revealDelay(5 + i)}
                   >

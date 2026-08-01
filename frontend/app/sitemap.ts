@@ -1,5 +1,7 @@
 import type { MetadataRoute } from 'next';
 
+import { productPath } from '@/lib/urls';
+
 const BASE = 'https://www.silkilinen.com';
 
 // Cap the backend fetch so a slow/cold Railway never makes the whole
@@ -78,7 +80,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   const productPages: MetadataRoute.Sitemap = products.map(p => ({
-    url: `${BASE}/product/${p.slug || p._id}`,
+    url: `${BASE}${productPath(p)}`,
     // Real per-product lastModified instead of "now" on every entry, so the
     // signal means something to crawlers.
     lastModified: p.updatedAt ? new Date(p.updatedAt) : new Date(),

@@ -92,6 +92,14 @@ or change an invariant, update the relevant line here in the same commit.
   only Hermes' strategic Rebuild plan (approve-first), not gap-filling.
 
 ## SEO invariants
+- **URLs have ONE owner: `frontend/lib/urls.ts`** (`productPath`/`productHref`,
+  collection/category equivalents). Never hand-build `/product/${…}` — an ESLint
+  `no-restricted-syntax` rule fails the build if you do (admin-only preview links
+  are explicitly exempted inline). Root cause it fixes: links were built in six
+  places three different ways, and the PDP colour swatches used the raw ObjectId,
+  so Google indexed `/product/<ObjectId>` alongside the slug URL — two URLs for one
+  page. The API now serves each `colorVariants[]` sibling's slug so swatches are
+  canonical at the source.
 - Self-referencing `alternates.canonical` on indexable pages. Empty/stale category slugs
   `notFound()` + noindex (see `shop/page.tsx`). Meta descriptions run through `clampMeta`.
 - Product JSON-LD on PDP (offers EUR-canonical, aggregateRating from product-linked reviews).

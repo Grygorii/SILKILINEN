@@ -18,6 +18,7 @@ import { AccordionGroup, AccordionItem, AccordionSubLabel } from '@/components/u
 import { shippingDetailsFor, merchantReturnPolicy } from '@/lib/shippingSchema';
 import { clampMeta } from '@/lib/clampMeta';
 import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, localeHref, type PageLocale } from '@/lib/i18n-server';
+import { productHref, productPath } from '@/lib/urls';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -76,8 +77,8 @@ export async function generateMetadata(
   const title = product.metaTitle ? { absolute: product.metaTitle } : product.name;
   const description = clampMeta(product.metaDescription
     || (product.description ? product.description : `Shop ${product.name} at Silkilinen. Pure silk and linen intimates, shipped worldwide from Donegal.`));
-  const productPath = `/product/${product.slug || id}`;
-  const url = localeUrl(locale, productPath);
+  const canonicalPath = productPath({ slug: product.slug, _id: id });
+  const url = localeUrl(locale, canonicalPath);
   const primaryImage = product.images?.find((i: { isPrimary: boolean }) => i.isPrimary);
   const image = primaryImage?.url || product.images?.[0]?.url || product.image || 'https://www.silkilinen.com/og-default.jpg';
 
@@ -98,7 +99,7 @@ export async function generateMetadata(
       description,
       images: [image],
     },
-    alternates: { canonical: url, languages: hreflangAlternates(productPath) },
+    alternates: { canonical: url, languages: hreflangAlternates(canonicalPath) },
   };
 }
 
@@ -142,7 +143,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   // 308-redirect to the current slug so there's exactly one indexable URL
   // (keeping the locale prefix so /de/product/<id> → /de/product/<slug>).
   if (product && product.slug && id !== product.slug) {
-    permanentRedirect(localeHref(locale, `/product/${product.slug}`));
+    permanentRedirect(productHref({ slug: product.slug }, locale));
   }
   // Reviews specifically for this product; null when no approved reviews
   // exist yet (skip the aggregateRating/review JSON-LD fields when null
@@ -205,7 +206,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       availability: outOfStock
         ? 'https://schema.org/OutOfStock'
         : 'https://schema.org/InStock',
-      url: `https://www.silkilinen.com/product/${product.slug || id}`,
+      url: localeUrl(locale, productPath({ slug: product.slug, _id: id })),
       // GSC merchant-listing audit flagged these two as missing. Both are
       // policy-level (not per-product) so we always emit them.
       shippingDetails: shippingDetailsFor(Number(product.price) || 0),
@@ -248,7 +249,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       ...(product.category
         ? [{ '@type': 'ListItem', position: 3, name: String(product.category).replace(/-/g, ' '), item: `https://www.silkilinen.com/shop?category=${product.category}` }]
         : []),
-      { '@type': 'ListItem', position: product.category ? 4 : 3, name: product.name, item: `https://www.silkilinen.com/product/${product.slug || id}` },
+      { '@type': 'ListItem', position: product.category ? 4 : 3, name: product.name, item: localeUrl(locale, productPath({ slug: product.slug, _id: id })) },
     ],
   };
 
@@ -314,10 +315,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                     <span className={styles.cubeActive}>
                       {product.colorName || product.colours?.[0] || 'One Colour'}
                     </span>
-                    {product.colorVariants?.map((v: { productId: string; colorName: string }) => (
+                    {product.colorVariants?.map((v: { productId: string; colorName: string; slug?: string }) => (
                       <Link
                         key={v.productId}
-                        href={`/product/${v.productId}`}
+                        // Canonical by construction — the API now serves each
+                        // sibling's slug, and productHref always prefers it.
+                        href={productHref({ slug: v.slug, _id: v.productId }, locale)}
                         className={styles.cubeLink}
                       >
                         {v.colorName}

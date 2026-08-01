@@ -724,10 +724,16 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           padding: '10px 24px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', fontSize: 13,
         }}>
           <span>✓ Live at</span>
+          {/* Admin-only preview link, deliberately by ObjectId: it's behind auth,
+              never crawled, and the id is what this editor has in hand (the PDP
+              308s to the slug). Storefront links must use lib/urls — see the
+              no-restricted-syntax rule. */}
+          {/* eslint-disable-next-line no-restricted-syntax */}
           <a href={`/product/${id}`} target="_blank" rel="noopener noreferrer" style={{ color: '#1f6b3b', fontWeight: 600, textDecoration: 'underline' }}>
             silkilinen.com/product/{id}
           </a>
           <button
+            // eslint-disable-next-line no-restricted-syntax -- admin copy-link, by id (see above)
             onClick={() => { navigator.clipboard.writeText(`https://www.silkilinen.com/product/${id}`); }}
             style={{ padding: '3px 10px', fontSize: 11, border: '1px solid #1f6b3b', background: 'transparent', color: '#1f6b3b', cursor: 'pointer', fontFamily: 'inherit' }}
           >Copy link</button>

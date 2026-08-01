@@ -416,7 +416,21 @@ router.get('/:id', async function(req, res) {
       product = await Product.findOne({ ...PUBLIC_FILTER, previousSlugs: param }).select(PUBLIC_PROJECTION);
     }
     if (!product) return res.status(404).json({ error: 'Product not found' });
-    res.json(await localizeDocs('product', product, req.query.locale));
+
+    // colorVariants store only { productId, colorName }, so the PDP had to link
+    // colour swatches by ObjectId — Google then crawls /product/<id> URLs that
+    // merely 308 to the slug, splitting signals across two URLs for one page.
+    // Resolve each sibling's slug here so links can be canonical from the start.
+    const out = typeof product.toObject === 'function' ? product.toObject() : product;
+    if (Array.isArray(out.colorVariants) && out.colorVariants.length) {
+      const ids = out.colorVariants.map(v => v.productId).filter(Boolean);
+      const sibs = ids.length
+        ? await Product.find({ _id: { $in: ids } }).select('slug').lean().catch(() => [])
+        : [];
+      const slugById = Object.fromEntries(sibs.map(s => [String(s._id), s.slug]));
+      out.colorVariants = out.colorVariants.map(v => ({ ...v, slug: slugById[String(v.productId)] || '' }));
+    }
+    res.json(await localizeDocs('product', out, req.query.locale));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });

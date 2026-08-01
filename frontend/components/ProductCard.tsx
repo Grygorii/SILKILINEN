@@ -6,6 +6,7 @@ import { Heart, Star } from 'lucide-react';
 import { useWishlist } from '@/context/WishlistContext';
 import { isValidImageUrl, cloudinaryUrl, cloudinarySrcSet } from '@/lib/imageUtils';
 import ProductImage from './products/ProductImage';
+import { productPath } from '@/lib/urls';
 import Price from './Price';
 import styles from './ProductCard.module.css';
 
@@ -130,7 +131,7 @@ export default function ProductCard({ product, showHeart = true, priority = fals
         {/* Stretched link: this anchor's ::after covers the whole card, so a
             click anywhere opens the PDP while keeping a real, crawlable link
             whose accessible name is the product name. */}
-        <Link href={`/product/${product.slug || product._id}`} className={styles.nameLink}>
+        <Link href={productPath(product)} className={styles.nameLink}>
           <h3 className={styles.cardName} title={product.name}>{product.name}</h3>
         </Link>
         {product.ratingCount ? (

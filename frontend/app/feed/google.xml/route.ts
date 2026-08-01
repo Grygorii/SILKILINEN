@@ -10,6 +10,8 @@
 // without variants emit a single item. Colour/size come from the variants;
 // gender/age_group come from the new product fields (default unisex/adult).
 
+import { productPath } from '@/lib/urls';
+
 const BASE = 'https://www.silkilinen.com';
 const API = process.env.NEXT_PUBLIC_API_URL;
 const FETCH_TIMEOUT_MS = 8000;
@@ -159,7 +161,7 @@ function buildItem(
 
   const colour = opts.colour || p.colorName || p.colours?.[0] || deriveColourFromName(p.name);
   const size = opts.size || p.sizes?.[0];
-  const link = `${BASE}/product/${p.slug || p._id}`;
+  const link = `${BASE}${productPath(p)}`;
 
   // Up to 10 extra images (Google's cap), skipping the main one and anything
   // in a format Merchant can't ingest.

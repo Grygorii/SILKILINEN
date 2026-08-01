@@ -20,7 +20,22 @@ const eslintConfig = defineConfig([
       'jsx-a11y/aria-props': 'error',
       'jsx-a11y/aria-role': 'error',
       'jsx-a11y/role-has-required-aria-props': 'error',
+      // Canonical URLs by construction. Product links used to be hand-built in
+      // six places three different ways; the colour-swatch links used the raw
+      // ObjectId, so Google indexed /product/<ObjectId> next to the slug URL —
+      // two URLs for one page. Build them with lib/urls (productPath /
+      // productHref) so a wrong URL can't be written in the first place.
+      'no-restricted-syntax': ['error', {
+        selector: "TemplateLiteral > TemplateElement[value.raw=/\\/product\\/$/]",
+        message: "Don't hand-build product URLs — use productPath/productHref from '@/lib/urls' so links are always canonical (slug, not ObjectId).",
+      }],
     },
+  },
+  {
+    // lib/urls.ts is where the canonical URL is defined, so it's the one place
+    // allowed to construct the string.
+    files: ['lib/urls.ts'],
+    rules: { 'no-restricted-syntax': 'off' },
   },
   globalIgnores([
     ".next/**",
