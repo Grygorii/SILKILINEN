@@ -1,8 +1,9 @@
 import type { MetadataRoute } from 'next';
 
 import { productPath } from '@/lib/urls';
+import { brand } from '@/lib/brand';
 
-const BASE = 'https://www.silkilinen.com';
+const BASE = brand.url;
 
 // Cap the backend fetch so a slow/cold Railway never makes the whole
 // sitemap route hang past Google's fetch timeout. Returns an empty list

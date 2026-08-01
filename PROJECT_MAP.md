@@ -99,6 +99,11 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   `lib/shippingSchema.ts` (Product JSON-LD) and `lib/useFreeShipping.ts` (cart bar,
   PDP copy). Never hardcode `150`. It had drifted: JSON-LD told Google free shipping
   at €250/€200/€300 while checkout gave it at €150 — a merchant-listing mismatch.
+- **Site origin:** `lib/brand.ts` (`brand.url`) is the ONLY place the domain is written.
+  `lib/i18n.ts` re-exports it as `SITE`; sitemap/robots/feed/Breadcrumbs/layout read it.
+  For anything locale-aware use `localeUrl(locale, path)` — a literal
+  `https://www.silkilinen.com/...` in a canonical silently breaks the `/de|/fr|/it|/es`
+  versions (it did: `/de/shop?new=true` was canonicalising to the English URL).
 - **Colour:** brand tokens only (see Conventions) — never hardcode hex on the storefront.
 - **Banner/announcement copy:** the CMS (`banner_message_1..4`); code defaults are a
   fallback only.

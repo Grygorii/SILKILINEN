@@ -16,6 +16,7 @@ import { CustomerProvider } from "@/context/CustomerContext";
 import { CookieConsentProvider } from "@/context/CookieConsentContext";
 import { isValidSocialUrl } from "@/lib/socialUrl";
 import "./globals.css";
+import { brand } from '@/lib/brand';
 
 // next/font self-hosts the WOFF2 files and inlines a CSS preload, killing
 // the ~2 second render-blocking @import that PageSpeed flagged. Display
@@ -55,7 +56,7 @@ const ebGaramond = EB_Garamond({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.silkilinen.com'),
+  metadataBase: new URL(brand.url),
   // Site verification meta tags rendered into <head>.
   verification: {
     other: {
@@ -172,8 +173,8 @@ export default async function RootLayout({
     '@type': 'Organization',
     name: 'Silkilinen',
     alternateName: 'SILKILINEN',
-    url: 'https://www.silkilinen.com',
-    logo: 'https://www.silkilinen.com/og-default.jpg', // replace with a square-format logo when available
+    url: brand.url,
+    logo: `${brand.url}/og-default.jpg`, // replace with a square-format logo when available
     description: 'Pure silk and linen intimates, shipped worldwide from Donegal, Ireland.',
     foundingLocation: { '@type': 'Place', address: { '@type': 'PostalAddress', addressLocality: 'Donegal', addressCountry: 'IE' } },
     contactPoint: {
@@ -208,10 +209,10 @@ export default async function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'Silkilinen',
-    url: 'https://www.silkilinen.com',
+    url: brand.url,
     potentialAction: {
       '@type': 'SearchAction',
-      target: { '@type': 'EntryPoint', urlTemplate: 'https://www.silkilinen.com/shop?search={search_term_string}' },
+      target: { '@type': 'EntryPoint', urlTemplate: `${brand.url}/shop?search={search_term_string}` },
       'query-input': 'required name=search_term_string',
     },
   };

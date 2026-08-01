@@ -39,7 +39,7 @@ export async function generateMetadata({
     return {
       title: `Search: "${q}"`,
       robots: { index: false, follow: true },
-      alternates: { canonical: 'https://www.silkilinen.com/shop' },
+      alternates: { canonical: localeUrl(locale, '/shop') },
     };
   }
   if (category) {
@@ -69,14 +69,14 @@ export async function generateMetadata({
     return {
       title: 'Shop',
       robots: { index: false, follow: true },
-      alternates: { canonical: 'https://www.silkilinen.com/shop' },
+      alternates: { canonical: localeUrl(locale, '/shop') },
     };
   }
   if (newParam === 'true') {
     return {
       title: 'New Arrivals',
       description: 'The latest silk and linen pieces from Silkilinen — fresh arrivals, shipped worldwide from Donegal.',
-      alternates: { canonical: 'https://www.silkilinen.com/shop?new=true' },
+      alternates: { canonical: localeUrl(locale, '/shop?new=true'), languages: hreflangAlternates('/shop?new=true') },
     };
   }
   return {

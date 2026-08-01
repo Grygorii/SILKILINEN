@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { brand } from '@/lib/brand';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -7,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/admin/', '/api/'],
     },
-    sitemap: 'https://www.silkilinen.com/sitemap.xml',
+    sitemap: `${brand.url}/sitemap.xml`,
   };
 }

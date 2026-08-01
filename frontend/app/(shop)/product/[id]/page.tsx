@@ -19,6 +19,7 @@ import { shippingDetailsFor, merchantReturnPolicy } from '@/lib/shippingSchema';
 import { clampMeta } from '@/lib/clampMeta';
 import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, localeHref, type PageLocale } from '@/lib/i18n-server';
 import { productHref, productPath } from '@/lib/urls';
+import { brand } from '@/lib/brand';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -80,7 +81,7 @@ export async function generateMetadata(
   const canonicalPath = productPath({ slug: product.slug, _id: id });
   const url = localeUrl(locale, canonicalPath);
   const primaryImage = product.images?.find((i: { isPrimary: boolean }) => i.isPrimary);
-  const image = primaryImage?.url || product.images?.[0]?.url || product.image || 'https://www.silkilinen.com/og-default.jpg';
+  const image = primaryImage?.url || product.images?.[0]?.url || product.image || `${brand.url}/og-default.jpg`;
 
   return {
     title,
@@ -247,10 +248,10 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.silkilinen.com' },
-      { '@type': 'ListItem', position: 2, name: 'Shop', item: 'https://www.silkilinen.com/shop' },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: localeUrl(locale, '/') },
+      { '@type': 'ListItem', position: 2, name: 'Shop', item: localeUrl(locale, '/shop') },
       ...(product.category
-        ? [{ '@type': 'ListItem', position: 3, name: String(product.category).replace(/-/g, ' '), item: `https://www.silkilinen.com/shop?category=${product.category}` }]
+        ? [{ '@type': 'ListItem', position: 3, name: String(product.category).replace(/-/g, ' '), item: localeUrl(locale, `/shop?category=${product.category}`) }]
         : []),
       { '@type': 'ListItem', position: product.category ? 4 : 3, name: product.name, item: localeUrl(locale, productPath({ slug: product.slug, _id: id })) },
     ],

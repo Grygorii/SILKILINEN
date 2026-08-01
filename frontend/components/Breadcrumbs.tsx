@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { safeJsonLd } from '@/lib/safeJsonLd';
 import styles from './Breadcrumbs.module.css';
+import { brand } from '@/lib/brand';
 
 export type Crumb = { label: string; href?: string };
 
-const BASE = 'https://www.silkilinen.com';
+const BASE = brand.url;
 
 // A compact, tappable wayfinding trail (Home / Shop / …). Server-renderable so
 // it works in server pages and inside the client SiteBreadcrumbs. The earlier

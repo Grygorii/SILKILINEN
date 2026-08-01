@@ -1,3 +1,4 @@
+import { brand } from './brand';
 // i18n core — CLIENT-SAFE. English is the default and stays UNPREFIXED (/shop);
 // the four extra locales are path-prefixed (/de/shop, /fr/…) and served via
 // middleware. This module must NOT import next/headers (it's imported by client
@@ -31,7 +32,8 @@ export function apiLocaleQuery(locale: PageLocale): string {
 }
 
 // Base URL per locale for canonical + hreflang tags.
-export const SITE = 'https://www.silkilinen.com';
+// The canonical origin has ONE owner: lib/brand.ts. Never re-declare it.
+export const SITE: string = brand.url;
 export function localeUrl(locale: PageLocale, path: string): string {
   return `${SITE}${localeHref(locale, path)}`;
 }

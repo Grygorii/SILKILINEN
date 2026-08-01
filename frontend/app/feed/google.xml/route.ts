@@ -11,8 +11,9 @@
 // gender/age_group come from the new product fields (default unisex/adult).
 
 import { productPath } from '@/lib/urls';
+import { brand } from '@/lib/brand';
 
-const BASE = 'https://www.silkilinen.com';
+const BASE = brand.url;
 const API = process.env.NEXT_PUBLIC_API_URL;
 const FETCH_TIMEOUT_MS = 8000;
 
