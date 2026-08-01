@@ -6,8 +6,9 @@
 // of the experience so the guardians always have something real to judge.
 
 const { fetchReadablePage } = require('./externalData');
+const { SITE_URL } = require('../config/site');
 
-const SITE = (process.env.FRONTEND_URL || 'https://www.silkilinen.com').replace(/\/$/, '');
+const SITE = SITE_URL;
 const PAGES = [
   { name: 'Homepage', path: '/' },
   { name: 'Silk Style Finder quiz', path: '/style-finder' },

@@ -1,4 +1,5 @@
 const express = require('express');
+const { SITE_URL } = require('../config/site');
 const router = express.Router();
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
@@ -332,7 +333,7 @@ router.post('/:id/drop-hint', lightRateLimit, async function(req, res) {
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
     const primaryImg = product.images?.find(i => i.isPrimary) ?? product.images?.[0];
-    const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.com';
+    const FRONTEND = SITE_URL;
 
     await sendDropAHint({
       recipientName,

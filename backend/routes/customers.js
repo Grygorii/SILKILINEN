@@ -1,4 +1,5 @@
 const express = require('express');
+const { SITE_URL } = require('../config/site');
 const router = express.Router();
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
@@ -62,7 +63,7 @@ router.post('/request-magic-link', authRateLimit, async function(req, res) {
       await customer.save();
     }
 
-    const baseUrl = process.env.FRONTEND_URL || 'https://silkilinen.com';
+    const baseUrl = SITE_URL;
     await sendMagicLink({ email: customer.email, link: `${baseUrl}/account/verify?token=${token}` });
 
     res.json({ success: true });

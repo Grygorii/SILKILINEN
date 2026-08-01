@@ -1,6 +1,7 @@
 'use strict';
 
 const Product = require('../models/Product');
+const { SITE_URL } = require('../config/site');
 const Order = require('../models/Order');
 const Category = require('../models/Category');
 
@@ -740,7 +741,7 @@ async function runSeoHygieneAgent(frontendUrl, backendUrl) {
 }
 
 async function runAudit(audit) {
-  const FRONTEND_URL = 'https://silkilinen.com';
+  const FRONTEND_URL = SITE_URL;
   const BACKEND_URL = (process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3000}`).replace(/\/$/, '');
 
   const allFindings = [];

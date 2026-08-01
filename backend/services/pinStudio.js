@@ -9,12 +9,13 @@
 // a visual luxury brand, and every pin points at a page that captures leads.
 
 const JournalArticle = require('../models/JournalArticle');
+const { SITE_URL } = require('../config/site');
 const GrowthAction = require('../models/GrowthAction');
 const { playbookPromptBlock } = require('./playbook');
 
 const client = require('./aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
-const SITE = (process.env.FRONTEND_URL || 'https://www.silkilinen.com').replace(/\/$/, '');
+const SITE = SITE_URL;
 const SOCIAL = ['pinterest', 'instagram', 'facebook', 'tiktok', 'social'];
 
 function trackedLink(path, campaign) {

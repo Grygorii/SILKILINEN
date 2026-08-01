@@ -11,8 +11,10 @@
 // break a save.
 
 const SystemState = require('../models/SystemState');
+const { SITE_URL } = require('../config/site');
 const KEY = process.env.INDEXNOW_KEY || 'dc1dfa43baff3a057f22f080ab65acfc';
-const SITE = (process.env.PUBLIC_SITE_URL || 'https://www.silkilinen.com').replace(/\/$/, '');
+// PUBLIC_SITE_URL kept for backwards compatibility; otherwise the one owner.
+const SITE = (process.env.PUBLIC_SITE_URL || SITE_URL).replace(/\/$/, '');
 const HOST = SITE.replace(/^https?:\/\//, '');
 const LAST_KEY = 'indexnow_last_submit';
 

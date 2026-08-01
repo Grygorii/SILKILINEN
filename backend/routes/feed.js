@@ -1,4 +1,5 @@
 const express = require('express');
+const { SITE_URL } = require('../config/site');
 const router = express.Router();
 const Product = require('../models/Product');
 
@@ -7,7 +8,7 @@ const Product = require('../models/Product');
 // so this one endpoint is the single auto-updating source of truth: edit a
 // product in admin, and every channel picks it up on its next daily pull.
 
-const SITE = (process.env.FRONTEND_URL || 'https://www.silkilinen.com').replace(/\/$/, '');
+const SITE = SITE_URL;
 const BRAND = 'SILKILINEN';
 
 function esc(s) {

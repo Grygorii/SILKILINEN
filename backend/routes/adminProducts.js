@@ -1,4 +1,5 @@
 const express = require('express');
+const { SITE_URL } = require('../config/site');
 const router = express.Router();
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
@@ -258,7 +259,7 @@ router.get('/:id/preview-token', async function(req, res) {
 
     const secret = process.env.PREVIEW_TOKEN_SECRET || process.env.JWT_SECRET;
     const token = jwt.sign({ productId: String(product._id) }, secret, { expiresIn: '1h' });
-    const baseUrl = process.env.FRONTEND_URL || 'https://silkilinen.com';
+    const baseUrl = SITE_URL;
     const url = `${baseUrl}/preview/${product._id}?token=${token}`;
     const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
 

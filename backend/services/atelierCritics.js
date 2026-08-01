@@ -7,9 +7,10 @@
 //   • Atmosphere— SPEED, the feeling of doors that open instantly (real CWV)
 
 const { fetchReadablePage } = require('./externalData');
+const { SITE_URL } = require('../config/site');
 const textClient = require('./aiClient');
 const TEXT_MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
-const SITE = (process.env.FRONTEND_URL || 'https://www.silkilinen.com').replace(/\/$/, '');
+const SITE = SITE_URL;
 
 // ── Curator: design-system coherence ──────────────────────────────────────────
 // The intentional brand palette — MUST mirror frontend globals.css :root tokens

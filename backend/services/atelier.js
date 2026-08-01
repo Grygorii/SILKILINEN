@@ -14,6 +14,7 @@
 // whole review.
 
 const { GoogleGenAI } = require('@google/genai');
+const { SITE_URL } = require('../config/site');
 const ExperienceReview = require('../models/ExperienceReview');
 const Product = require('../models/Product');
 const { capture } = require('./screenshot');
@@ -24,7 +25,7 @@ const textClient = require('./aiClient'); // DeepSeek, for the text synthesis
 const TEXT_MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
 const VISION_MODEL = process.env.GEMINI_VISION_MODEL || 'gemini-2.5-flash';
-const SITE = (process.env.FRONTEND_URL || 'https://www.silkilinen.com').replace(/\/$/, '');
+const SITE = SITE_URL;
 
 function visionConfigured() { return Boolean(process.env.GEMINI_API_KEY); }
 function genai() { return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }); }

@@ -1,6 +1,7 @@
 const { Resend } = require('resend');
 const { sign: signUnsub } = require('../utils/unsubscribeSign');
 const { getSiteSettings } = require('./siteSettings');
+const { SITE_URL, siteUrl } = require('../config/site');
 const { SUPPORTED: CURRENCIES } = require('./exchangeRates');
 
 // Money formatter for an order. The customer sees what they actually paid (the
@@ -245,7 +246,7 @@ async function sendWelcome({ email, firstName }) {
 <p style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1916;">Welcome, ${name}</p>
 <p style="margin:0 0 24px;font-size:13px;color:#5a5650;line-height:1.8;">Thank you for joining SILKILINEN. We're an Irish silk and linen brand based in Donegal, choosing pure natural fibres for the pieces closest to your skin — made to be worn, felt, and loved.</p>
 <p style="margin:0 0 36px;font-size:13px;color:#5a5650;line-height:1.8;">As a welcome gift, use code <strong style="color:#1a1916;letter-spacing:1px;">${offerCode()}</strong> at checkout for ${offerPct()}% off your first order.</p>
-<a href="https://silkilinen.com/shop" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Shop the collection</a>
+<a href="${siteUrl('/shop')}" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Shop the collection</a>
 </td></tr>
 <tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
 <p style="margin:0;font-size:11px;color:#aca8a2;">${brandLocation()} &nbsp;·&nbsp; ${supportEmail()}</p>
@@ -278,7 +279,7 @@ async function sendWinbackReminder({ email, firstName }) {
 <p style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1916;">We’ve missed you, ${esc(name)}</p>
 <p style="margin:0 0 24px;font-size:13px;color:#5a5650;line-height:1.8;">It’s been a little while. We're still here in Donegal with the same considered silk and linen pieces you know — and a few quiet new ones have arrived since you last visited.</p>
 <p style="margin:0 0 36px;font-size:13px;color:#5a5650;line-height:1.8;">If you’d like to treat yourself, your <strong style="color:#1a1916;letter-spacing:1px;">${offerCode()}</strong> code is still good for ${offerPct()}% off whenever you’re ready.</p>
-<a href="https://silkilinen.com/shop" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">See what's new</a>
+<a href="${siteUrl('/shop')}" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">See what's new</a>
 </td></tr>
 <tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
 <p style="margin:0;font-size:11px;color:#aca8a2;">${brandLocation()} &nbsp;·&nbsp; ${supportEmail()}</p>
@@ -290,7 +291,7 @@ async function sendWinbackReminder({ email, firstName }) {
 function buildStatusHtml({ order, heading, body, trackingBlock }) {
   const id = shortId(order._id);
   const firstName = order.customerName ? esc(order.customerName.split(' ')[0]) : 'there';
-  const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.com';
+  const FRONTEND = SITE_URL;
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:40px 16px;">
@@ -393,7 +394,7 @@ async function sendCancelledEmail(order) {
 
 async function sendNewsletterWelcome({ email, code, validUntil, unsubscribeToken }) {
   if (!process.env.RESEND_API_KEY) return;
-  const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.com';
+  const FRONTEND = SITE_URL;
   const expires = validUntil
     ? new Date(validUntil).toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' })
     : '30 days';
@@ -521,7 +522,7 @@ async function sendCartRecoveryEmail(cart, seq) {
   const email = cart.email || cart.customerEmail;
   if (!process.env.RESEND_API_KEY || !email) return;
 
-  const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.com';
+  const FRONTEND = SITE_URL;
   const BACKEND  = process.env.BACKEND_URL  || 'https://silkilinen-production.up.railway.app';
 
   const firstName = cart.customerName ? esc(cart.customerName.split(' ')[0]) : 'there';

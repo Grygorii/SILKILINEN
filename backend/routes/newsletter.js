@@ -1,4 +1,5 @@
 const express = require('express');
+const { SITE_URL } = require('../config/site');
 const router = express.Router();
 const crypto = require('crypto');
 const Newsletter = require('../models/Newsletter');
@@ -7,7 +8,7 @@ const { sendNewsletterWelcome } = require('../services/email');
 const { publicWriteRateLimit } = require('../middleware/rateLimits');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const FRONTEND = process.env.FRONTEND_URL || 'https://silkilinen.com';
+const FRONTEND = SITE_URL;
 
 function generateUniqueCode() {
   return 'SILK' + crypto.randomBytes(3).toString('hex').toUpperCase();
