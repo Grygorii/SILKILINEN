@@ -91,6 +91,18 @@ or change an invariant, update the relevant line here in the same commit.
   automatically (missing meta is strictly worse than AI meta); the **Fix-it tab** is now
   only Hermes' strategic Rebuild plan (approve-first), not gap-filling.
 
+## One-owner invariants (the anti-drift rules)
+The recurring bug in this codebase is **duplicated truth** — the same fact copied
+into several files, then drifting. Each fix is the same shape: one owner + a guard.
+- **Shipping rates/thresholds:** `backend/services/shipping.js` (admin-overridable)
+  is the ONLY source, served publicly by `/api/shipping`. The storefront reads it —
+  `lib/shippingSchema.ts` (Product JSON-LD) and `lib/useFreeShipping.ts` (cart bar,
+  PDP copy). Never hardcode `150`. It had drifted: JSON-LD told Google free shipping
+  at €250/€200/€300 while checkout gave it at €150 — a merchant-listing mismatch.
+- **Colour:** brand tokens only (see Conventions) — never hardcode hex on the storefront.
+- **Banner/announcement copy:** the CMS (`banner_message_1..4`); code defaults are a
+  fallback only.
+
 ## SEO invariants
 - **URLs have ONE owner: `frontend/lib/urls.ts`** (`productPath`/`productHref`,
   collection/category equivalents). Never hand-build `/product/${…}` — an ESLint

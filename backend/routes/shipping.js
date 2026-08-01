@@ -9,8 +9,14 @@ const { getEffectiveRates } = require('../services/shipping');
 // can never contradict the live rates again. Numbers only; the page keeps its
 // own editorial copy.
 router.get('/', function(req, res) {
+  // `countries` is included so the storefront's Product JSON-LD can build
+  // per-country OfferShippingDetails from the SAME source checkout uses —
+  // those tiers used to be duplicated in the frontend and had drifted
+  // (telling Google free shipping at €250/€200/€300 while checkout gave it
+  // at €150, which invalidates the merchant listing).
   const tiers = getEffectiveRates().map(t => ({
     label: t.label,
+    countries: t.countries, // null = worldwide fallback
     cost: t.effective.cost,
     freeThreshold: t.effective.freeThreshold,
     deliveryMin: t.effective.deliveryMin,

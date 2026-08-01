@@ -149,6 +149,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   // exist yet (skip the aggregateRating/review JSON-LD fields when null
   // — Google rejects schemas with zero-count or missing values).
   const productReviews = product ? await getProductReviews(product._id) : null;
+  // Live shipping tiers (same source checkout uses) for the Offer's
+  // shippingDetails — these used to be a drifting copy in the frontend.
+  const shippingDetails = product ? await shippingDetailsFor(Number(product.price) || 0) : [];
 
   if (!product) {
     return (
@@ -209,7 +212,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       url: localeUrl(locale, productPath({ slug: product.slug, _id: id })),
       // GSC merchant-listing audit flagged these two as missing. Both are
       // policy-level (not per-product) so we always emit them.
-      shippingDetails: shippingDetailsFor(Number(product.price) || 0),
+      shippingDetails: shippingDetails,
       hasMerchantReturnPolicy: merchantReturnPolicy,
     },
     // Per-product aggregateRating + review — emitted only when there are

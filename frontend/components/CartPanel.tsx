@@ -8,8 +8,8 @@ import { useCurrency } from '@/context/CurrencyContext';
 import ProductImage from './products/ProductImage';
 import Button from './ui/Button';
 import styles from './CartPanel.module.css';
+import { useFreeShippingThreshold } from '@/lib/useFreeShipping';
 
-const FREE_SHIPPING_THRESHOLD = 150;
 
 type Props = {
   isOpen: boolean;
@@ -20,6 +20,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
   const router = useRouter();
   const { cart, removeFromCart, updateQuantity } = useCart();
   const { format } = useCurrency();
+  const freeShippingThreshold = useFreeShippingThreshold();
   const panelRef = useRef<HTMLDivElement>(null);
   const prevFocusRef = useRef<HTMLElement | null>(null);
 
@@ -141,8 +142,8 @@ export default function CartPanel({ isOpen, onClose }: Props) {
 
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const toFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
-  const freeShippingPct = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
+  const toFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
+  const freeShippingPct = Math.min(100, (subtotal / freeShippingThreshold) * 100);
 
   return (
     <>
