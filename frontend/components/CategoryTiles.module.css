@@ -12,38 +12,42 @@
   margin-bottom: 36px;
 }
 
+/* Auto-fitting gallery: 4 tiles on wide desktop, 3 on laptop, 2 on phones —
+   without hardcoding a column count that breaks when a category is added or
+   removed. `min()` keeps a single tile from overflowing narrow phones. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr));
+  gap: 14px;
 }
 
+/* 4:5 portrait — the fashion-editorial proportion, so the silk has room to
+   read. Consistent height across the row regardless of label length. */
 .tile {
   position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: 36px 16px;
-  border: 1px solid var(--border);
-  text-decoration: none;
+  aspect-ratio: 4 / 5;
   overflow: hidden;
-  transition: border-color 0.2s ease, background 0.2s ease;
-  min-height: 120px;
+  text-decoration: none;
+  /* The no-photo state is a soft cream panel, not an empty outline — it reads
+     as considered rather than unfinished. */
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  transition: border-color 0.3s ease;
 }
 
 .tile:hover {
-  border-color: var(--dark);
-  background: var(--cream);
+  border-color: var(--color-ink-muted);
 }
 
 .tileWithImage {
   border-color: transparent;
-  min-height: 180px;
 }
 
 .tileWithImage:hover {
   border-color: transparent;
-  background: none;
 }
 
 .tileImg {
@@ -52,11 +56,24 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  /* A slow, quiet zoom — luxury moves calmly. */
+  transition: transform 0.7s cubic-bezier(0.2, 0.6, 0.2, 1);
 }
 
 .tileWithImage:hover .tileImg {
-  transform: scale(1.04);
+  transform: scale(1.045);
+}
+
+/* Bottom scrim so the label stays legible on any photo without a hard pill.
+   Only drawn on image tiles. */
+.tileWithImage::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 55%;
+  background: linear-gradient(to top, rgba(26, 25, 22, 0.55) 0%, rgba(26, 25, 22, 0.12) 55%, rgba(26, 25, 22, 0) 100%);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
 }
 
 .label {
@@ -64,31 +81,50 @@
   z-index: 1;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
-  letter-spacing: 3px;
+  letter-spacing: 2.6px;
   text-transform: uppercase;
   color: var(--dark);
+  text-align: center;
+  padding: 0 12px 22px;
+  line-height: 1.4;
 }
 
+/* On a photo the label sits in the scrim — no box, just light on silk. */
 .tileWithImage .label {
   color: var(--warm-white);
-  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
-  background: rgba(0,0,0,0.18);
-  padding: 6px 14px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-  }
-
-  .tile {
-    padding: 28px 12px;
+    grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
+  .section {
+    padding: 0 5% 60px;
+  }
+  .title {
+    font-size: 26px;
+    margin-bottom: 24px;
+  }
+  /* Exactly two per row on phones — big enough to see the fabric. */
   .grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 0 8px 16px;
+  }
+}
+
+/* Respect reduced-motion: keep the hover, drop the movement. */
+@media (prefers-reduced-motion: reduce) {
+  .tileImg,
+  .tileWithImage:hover .tileImg {
+    transition: none;
+    transform: none;
   }
 }

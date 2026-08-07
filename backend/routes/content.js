@@ -4,6 +4,7 @@ const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 const sharp = require('sharp');
 const SiteContent = require('../models/SiteContent');
+const Category = require('../models/Category');
 const { requireAuth } = require('../middleware/auth');
 
 cloudinary.config({
@@ -84,7 +85,32 @@ router.get('/', async function(req, res) {
 router.get('/all-admin', requireAuth, async function(req, res) {
   try {
     const items = await SiteContent.find().sort({ section: 1, order: 1 });
-    res.json(items);
+
+    // Self-healing category tiles. The tile image/title keys used to be a
+    // hardcoded seed list that drifted from the live categories: only 4 of 9
+    // could ever have an image (and 'dresses' never matched the real
+    // 'sleep-dresses' slug), with NO upload field for the rest — which is why
+    // the homepage rendered a wall of empty boxes. Now every active category
+    // gets a slot here, and a newly added category gets one automatically.
+    // These are unsaved placeholders; PUT /api/content/:key upserts on save.
+    const cats = await Category.find({ status: 'active' })
+      .sort({ displayOrder: 1, createdAt: 1 }).select('slug label').lean().catch(() => []);
+    const have = new Set(items.map(i => i.key));
+    const placeholders = [];
+    cats.forEach((c, i) => {
+      const imgKey = `category_tile_${c.slug}_image`;
+      const titleKey = `category_tile_${c.slug}_title`;
+      if (!have.has(imgKey)) {
+        placeholders.push({ key: imgKey, type: 'image', section: 'categories', value: '', altText: '', caption: '',
+          label: `${c.label} — Image`, order: i * 2 + 1 });
+      }
+      if (!have.has(titleKey)) {
+        placeholders.push({ key: titleKey, type: 'text', section: 'categories', value: '', altText: '', caption: '',
+          label: `${c.label} — Title`, order: i * 2 + 2 });
+      }
+    });
+
+    res.json([...items, ...placeholders]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -210,9 +236,23 @@ router.get('/:section', async function(req, res) {
 // slots render from code defaults until first edited, so the in-page editor may
 // be the first thing to ever save a given key — upsert needs sane values for the
 // schema-required type/section/label.
+// Section names must match the admin editor's tab ids, or a saved item lands in
+// a section with no tab and disappears from the UI. The naive "text before the
+// first underscore" rule broke exactly that way for category tiles:
+// 'category_tile_robes_image' derived 'category', while the tab is 'categories'
+// — so an uploaded tile photo would vanish. Known prefixes are mapped explicitly.
+const SECTION_BY_PREFIX = [
+  ['category_tile_', 'categories'],
+  ['homepage_', 'homepage'],
+  ['instagram_', 'instagram'],
+  ['banner_', 'banner'],
+  ['about_', 'about'],
+];
+
 function deriveContentMeta(key) {
   const type = /_image$/.test(key) ? 'image' : /_video$/.test(key) ? 'video' : 'text';
-  const section = key.includes('_') ? key.slice(0, key.indexOf('_')) : 'content';
+  const match = SECTION_BY_PREFIX.find(([p]) => key.startsWith(p));
+  const section = match ? match[1] : (key.includes('_') ? key.slice(0, key.indexOf('_')) : 'content');
   const label = key.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
   return { type, section, label };
 }

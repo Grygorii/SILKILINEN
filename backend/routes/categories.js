@@ -14,16 +14,28 @@ const { localizeDocs } = require('../services/translator');
 // are additive and ignored by callers that don't read them.
 router.get('/', async function(req, res) {
   try {
-    const [categories, counts] = await Promise.all([
+    const [categories, counts, sampleImages] = await Promise.all([
       Category.find({ status: 'active' }).sort({ displayOrder: 1, createdAt: 1 }).lean(),
       Product.aggregate([
         { $match: { status: 'active' } },
         { $group: { _id: '$category', count: { $sum: 1 } } },
       ]),
+      // A representative photo per category, taken from the newest active
+      // product that has one. The storefront's category tiles fall back to this
+      // when no curated image is set, so the homepage never shows empty boxes —
+      // the shop always looks like a shop, even before the founder uploads
+      // bespoke category art.
+      Product.aggregate([
+        { $match: { status: 'active', 'images.0.url': { $type: 'string', $ne: '' } } },
+        { $sort: { isNewArrival: -1, createdAt: -1 } },
+        { $group: { _id: '$category', url: { $first: { $arrayElemAt: ['$images.url', 0] } }, alt: { $first: '$name' } } },
+      ]).catch(() => []),
     ]);
 
     const countMap = {};
     counts.forEach(c => { countMap[c._id] = c.count; });
+    const sampleMap = {};
+    sampleImages.forEach(s => { if (s?.url) sampleMap[s._id] = { url: s.url, alt: s.alt || '' }; });
 
     // Overlay translations (label/description/meta) for a requested locale before
     // shaping — English stays the fallback when a field isn't translated.
@@ -37,6 +49,8 @@ router.get('/', async function(req, res) {
       metaTitle: cat.metaTitle || '',
       metaDescription: cat.metaDescription || '',
       heroImage: cat.heroImage || null,
+      // Never null when the category has any photographed product.
+      sampleImage: sampleMap[cat.slug] || null,
     }));
 
     res.json(result);
