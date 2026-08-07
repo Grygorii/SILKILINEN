@@ -1,0 +1,55 @@
+/* Language selector for the dark footer, matched to FooterCurrency.
+   A native <select> renders with the OS default (white box, dark text), which
+   sat on the dark footer as a bright rectangle — so appearance is reset and the
+   control is drawn in the brand's inverse neutrals with a custom chevron. */
+.row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-ink-inverse-muted);
+}
+
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: transparent;
+  /* Custom chevron, tinted to the muted inverse ink. */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a9690' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 13px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  color: var(--color-ink-inverse-muted);
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 6px 28px 6px 11px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.select:hover {
+  color: var(--warm-white);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.select:focus-visible {
+  outline: none;
+  color: var(--warm-white);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+/* The dropdown list itself is OS-rendered; give it explicit brand colours so it
+   isn't a white flash against the dark footer where the browser honours it. */
+.select option {
+  background-color: var(--color-ink);
+  color: var(--warm-white);
+}

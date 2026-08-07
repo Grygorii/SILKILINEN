@@ -12,13 +12,14 @@
   margin-bottom: 36px;
 }
 
-/* Auto-fitting gallery: 4 tiles on wide desktop, 3 on laptop, 2 on phones —
-   without hardcoding a column count that breaks when a category is added or
-   removed. `min()` keeps a single tile from overflowing narrow phones. */
+/* Three curated tiles, three across — a clean single row with no orphan.
+   auto-fit (not auto-fill) so it still reads well if the count ever changes. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  gap: 16px;
+  max-width: 1240px;
+  margin: 0 auto;
 }
 
 /* 4:5 portrait — the fashion-editorial proportion, so the silk has room to
@@ -118,6 +119,29 @@
     letter-spacing: 2px;
     padding: 0 8px 16px;
   }
+}
+
+/* Quiet route to the categories the homepage doesn't show. */
+.more {
+  text-align: center;
+  margin-top: 28px;
+}
+
+.moreLink {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2.4px;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-line);
+  padding-bottom: 4px;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.moreLink:hover {
+  color: var(--dark);
+  border-bottom-color: var(--dark);
 }
 
 /* Respect reduced-motion: keep the hover, drop the movement. */

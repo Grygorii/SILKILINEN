@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { ALL_LOCALES, LOCALE_LABELS, LOCALES, localeHref, type PageLocale } from '@/lib/i18n';
+import styles from './LanguageSwitcher.module.css';
 
 // Language selector. Reads the current locale from the URL prefix (the rewrite
 // keeps /de/… in the address bar) and navigates to the same page in the chosen
@@ -23,19 +24,18 @@ export default function LanguageSwitcher({ className }: { className?: string }) 
   }
 
   return (
-    <select
-      aria-label="Language"
-      className={className}
-      value={current}
-      onChange={e => choose(e.target.value as PageLocale)}
-      style={{
-        background: 'none', border: '1px solid var(--color-line)', color: 'inherit',
-        font: 'inherit', fontSize: 12, letterSpacing: '0.5px', padding: '6px 10px', cursor: 'pointer',
-      }}
-    >
-      {ALL_LOCALES.map(l => (
-        <option key={l} value={l}>{LOCALE_LABELS[l]}</option>
-      ))}
-    </select>
+    <span className={`${styles.row} ${className || ''}`}>
+      <span className={styles.label}>Language</span>
+      <select
+        aria-label="Language"
+        className={styles.select}
+        value={current}
+        onChange={e => choose(e.target.value as PageLocale)}
+      >
+        {ALL_LOCALES.map(l => (
+          <option key={l} value={l}>{LOCALE_LABELS[l]}</option>
+        ))}
+      </select>
+    </span>
   );
 }

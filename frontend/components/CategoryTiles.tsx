@@ -36,10 +36,18 @@ async function getCategories(): Promise<Category[]> {
  * there was no upload field for the rest, so the section rendered as a wall of
  * empty outlined boxes. A shop should always look like a shop.
  */
+// The homepage shows THREE. Curation is the luxury signal — nine tiles of equal
+// weight read as a directory, not an edit. Which three is controlled by
+// `displayOrder` in Admin → Categories (the API already sorts by it), so the
+// founder re-orders rather than editing code. Everything else stays one click
+// away via the "All categories" link below.
+const HOME_TILE_LIMIT = 3;
+
 export default async function CategoryTiles({ content = {} }: { content?: Content }) {
   const categories = await getCategories();
   const tiles = categories
     .filter(c => c.count > 0)
+    .slice(0, HOME_TILE_LIMIT)
     .map(c => {
       const cmsImage = val(content, `category_tile_${c.slug}_image`);
       const image = cmsImage || c.heroImage?.url || c.sampleImage?.url || '';
@@ -76,6 +84,11 @@ export default async function CategoryTiles({ content = {} }: { content?: Conten
             <span className={styles.label}>{tile.label}</span>
           </Link>
         ))}
+      </div>
+      {/* The other categories stay one click away — hidden from the homepage,
+          not from the shopper (or the crawler). */}
+      <div className={styles.more}>
+        <Link href="/shop" className={styles.moreLink}>All categories</Link>
       </div>
     </section>
   );
