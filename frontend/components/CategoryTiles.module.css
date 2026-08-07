@@ -12,24 +12,23 @@
   margin-bottom: 36px;
 }
 
-/* Three curated tiles, three across — a clean single row with no orphan.
-   auto-fit (not auto-fill) so it still reads well if the count ever changes. */
+/* Three curated tiles, given real presence — near-full width, no narrow cap.
+   Desktop: one clean row of three. Phones: a swipeable scroll-snap track with
+   the next tile peeking, matching the house carousel pattern in NewArrivals. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
-  gap: 16px;
-  max-width: 1240px;
-  margin: 0 auto;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
 }
 
-/* 4:5 portrait — the fashion-editorial proportion, so the silk has room to
-   read. Consistent height across the row regardless of label length. */
+/* 3:4 portrait — taller and more editorial than a squat tile, so the silk has
+   room to read. */
 .tile {
   position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
   text-decoration: none;
   /* The no-photo state is a soft cream panel, not an empty outline — it reads
@@ -72,7 +71,7 @@
   position: absolute;
   inset: auto 0 0 0;
   height: 55%;
-  background: linear-gradient(to top, rgba(26, 25, 22, 0.55) 0%, rgba(26, 25, 22, 0.12) 55%, rgba(26, 25, 22, 0) 100%);
+  background: linear-gradient(to top, rgba(26, 25, 22, 0.58) 0%, rgba(26, 25, 22, 0.14) 55%, rgba(26, 25, 22, 0) 100%);
   pointer-events: none;
   transition: opacity 0.3s ease;
 }
@@ -81,12 +80,12 @@
   position: relative;
   z-index: 1;
   font-family: 'Jost', sans-serif;
-  font-size: 11px;
-  letter-spacing: 2.6px;
+  font-size: 13px;
+  letter-spacing: 3.4px;
   text-transform: uppercase;
   color: var(--dark);
   text-align: center;
-  padding: 0 12px 22px;
+  padding: 0 16px 30px;
   line-height: 1.4;
 }
 
@@ -95,36 +94,10 @@
   color: var(--warm-white);
 }
 
-@media (max-width: 1024px) {
-  .grid {
-    grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
-  }
-}
-
-@media (max-width: 600px) {
-  .section {
-    padding: 0 5% 60px;
-  }
-  .title {
-    font-size: 26px;
-    margin-bottom: 24px;
-  }
-  /* Exactly two per row on phones — big enough to see the fabric. */
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  .label {
-    font-size: 10px;
-    letter-spacing: 2px;
-    padding: 0 8px 16px;
-  }
-}
-
 /* Quiet route to the categories the homepage doesn't show. */
 .more {
   text-align: center;
-  margin-top: 28px;
+  margin-top: 30px;
 }
 
 .moreLink {
@@ -142,6 +115,49 @@
 .moreLink:hover {
   color: var(--dark);
   border-bottom-color: var(--dark);
+}
+
+@media (max-width: 900px) {
+  .label {
+    font-size: 12px;
+    letter-spacing: 2.8px;
+  }
+}
+
+/* ── Phones: a swipeable carousel ───────────────────────────────────────────
+   Stacking three tall portraits makes a very long page; a snap track with the
+   next tile peeking reads as a considered edit and invites the swipe. */
+@media (max-width: 700px) {
+  .section {
+    padding: 0 0 60px;               /* full-bleed track */
+  }
+  .title {
+    font-size: 26px;
+    margin-bottom: 22px;
+    padding: 0 5%;
+  }
+  .grid {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 5%;
+    padding: 0 5%;
+    scrollbar-width: none;             /* Firefox */
+    -ms-overflow-style: none;          /* old Edge */
+    -webkit-overflow-scrolling: touch; /* iOS momentum */
+  }
+  .grid::-webkit-scrollbar {
+    display: none;                     /* WebKit */
+  }
+  .tile {
+    flex: 0 0 76%;                     /* the next tile peeks */
+    scroll-snap-align: start;
+    aspect-ratio: 4 / 5;
+  }
+  .more {
+    padding: 0 5%;
+  }
 }
 
 /* Respect reduced-motion: keep the hover, drop the movement. */
