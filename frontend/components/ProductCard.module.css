@@ -138,26 +138,28 @@
 
 /* ── Heart ────────────────────────────────────────────
    Wishlist heart — IDENTICAL treatment on every surface (see
-   ProductGallery.module.css): pinned to the photo's top-right at the same
-   inset, a 48px hit area (above the 44px minimum, so it's hard to miss even
-   though the icon is small), and a light drop-shadow so a dark heart stays
-   legible on a dark photo. */
+   ProductGallery.module.css): the icon hugs the photo's top-right corner so it
+   never sits over the model, backed by a 48px hit area (above the 44px minimum)
+   that extends inward over empty space, plus a light drop-shadow so a dark
+   heart stays legible on dark photography. */
 .heartBtn {
   position: absolute;
-  top: var(--s-3);
-  right: var(--s-3);
+  top: 0;
+  right: 0;
   z-index: 2;
   width: 48px;
   height: 48px;
   background: none;
   border: none;
-  padding: 0;
+  /* Icon hugs the top-right corner; the rest of the 48px button extends down
+     and left over empty space, so the touch target stays generous. */
+  padding: var(--s-2) var(--s-2) 0 0;
   cursor: pointer;
   color: var(--color-ink);
   filter: drop-shadow(0 1px 3px rgba(250, 248, 244, 0.85));
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-end;
   -webkit-tap-highlight-color: transparent;
   transition: transform var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }

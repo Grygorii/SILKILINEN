@@ -107,13 +107,24 @@
   .section {
     padding: 60px 0;
   }
+  /* Two per row, two rows. The old swipe row made each card 44% wide, which
+     read as small and cramped on a phone — a 2-up grid gives the photography
+     room to breathe. "Discover more" in the header leads to the rest. */
   .track {
-    gap: 2px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px 8px;
     padding: 0 6%;
+    overflow-x: visible;
+    scroll-snap-type: none;
     background: #FFFFFF;
   }
   .item {
-    flex-basis: 44%;                /* ~2 cards + peek */
+    flex-basis: auto;
+  }
+  /* Four products = two rows; the rest stay on the shop page. */
+  .item:nth-child(n + 5) {
+    display: none;
   }
   .arrow {
     display: none;
