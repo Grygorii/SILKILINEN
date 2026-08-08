@@ -84,25 +84,28 @@ export default function ProductCard({ product, showHeart = true, priority = fals
 
   return (
     <div className={styles.card} data-track="card_click" data-track-product={product._id} data-track-name={product.name}>
-      {showHeart && (
-        <button
-          className={`${styles.heartBtn} ${animating ? styles.heartAnimating : ''}`}
-          onClick={handleHeart}
-          aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
-          aria-pressed={wished}
-          data-track="wishlist_toggle"
-          data-track-product={product._id}
-        >
-          <Heart
-            size={18}
-            strokeWidth={1.5}
-            fill={wished ? 'currentColor' : 'none'}
-            className={wished ? styles.heartFilled : ''}
-          />
-        </button>
-      )}
-
       <div className={styles.cardImg}>
+        {/* The heart lives INSIDE the image box, so it is pinned to the photo's
+            top-right corner on every surface (grid, carousel, wishlist,
+            cross-sell) regardless of what else the card contains. It used to be
+            a sibling anchored to the whole card, which let it drift. */}
+        {showHeart && (
+          <button
+            className={`${styles.heartBtn} ${animating ? styles.heartAnimating : ''}`}
+            onClick={handleHeart}
+            aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+            aria-pressed={wished}
+            data-track="wishlist_toggle"
+            data-track-product={product._id}
+          >
+            <Heart
+              size={18}
+              strokeWidth={1.5}
+              fill={wished ? 'currentColor' : 'none'}
+              className={wished ? styles.heartFilled : ''}
+            />
+          </button>
+        )}
         <ProductImage src={heroUrl} alt={heroAlt} variant="card" loading={priority ? 'eager' : 'lazy'} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {hoverUrl && (

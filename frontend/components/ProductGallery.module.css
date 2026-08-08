@@ -113,17 +113,19 @@
 
 /* ── Heart button (no circle, floating) ───────────── */
 
+/* Same treatment as the card heart (ProductCard.module.css) so the control
+   sits in the same place, at the same size, everywhere on the site. */
 .heartBtn {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: var(--s-3);
+  right: var(--s-3);
   z-index: 10;
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--dark);
-  width: 44px;
-  height: 44px;
+  color: var(--color-ink);
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;

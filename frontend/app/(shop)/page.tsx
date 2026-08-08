@@ -40,31 +40,51 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+// Only what the marquee needs. Calling /api/reviews with NO params hits the
+// route's unpaginated branch and returned EVERY approved review (~107) — which
+// the carousel then doubles for the infinite scroll, so hundreds of review cards
+// were serialised into the homepage HTML for a decorative strip. The true
+// average/count still come from /summary below, so the social proof stays honest.
+const CAROUSEL_REVIEWS = 12;
+
 async function getReviews(): Promise<ReviewData[]> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reviews`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reviews?limit=${CAROUSEL_REVIEWS}`, {
       next: { revalidate: 3600 },
     });
     if (!res.ok) return [];
-    return res.json();
+    const data = await res.json();
+    // The paginated branch returns { reviews, ... }; the legacy one an array.
+    return Array.isArray(data) ? data : (data.reviews ?? []);
   } catch {
     return [];
   }
 }
 
-function average(reviews: ReviewData[]) {
-  if (!reviews.length) return 0;
-  return reviews.reduce((s, r) => s + r.starRating, 0) / reviews.length;
+// Brand-wide average + count (all 4★+ reviews), independent of how many the
+// carousel displays — so "4.9 from 107+ reviews" stays accurate.
+async function getReviewSummary(): Promise<{ average: number; count: number }> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reviews/summary`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return { average: 0, count: 0 };
+    const d = await res.json();
+    return { average: Number(d?.average) || 0, count: Number(d?.count) || 0 };
+  } catch {
+    return { average: 0, count: 0 };
+  }
 }
 
 export default async function Home() {
-  const [allReviews, content] = await Promise.all([
+  const [carouselReviews, summary, content] = await Promise.all([
     getReviews(),
+    getReviewSummary(),
     getContent(),
   ]);
 
-  const withMessage = allReviews.filter(r => r.message.trim().length > 0);
-  const avg = average(allReviews);
+  const withMessage = carouselReviews.filter(r => r.message.trim().length > 0);
+  const avg = summary.average;
 
   const heroImage = val(content, 'homepage_hero_image');
   const heroVideo = val(content, 'homepage_hero_video');
@@ -111,7 +131,7 @@ export default async function Home() {
 
       {/* Social proof, high up — a considered buyer wants trust before she
           scrolls. Only shown once there are real reviews. */}
-      {allReviews.length > 0 && (
+      {summary.count > 0 && (
         <a href="/reviews" className={styles.proofStrip}>
           <span className={styles.proofStars} aria-hidden="true">★★★★★</span>
           <span>Loved by our customers · From Donegal with love</span>
@@ -138,10 +158,10 @@ export default async function Home() {
         <section className={styles.reviews}>
           <div className={styles.reviewsHeader}>
             <h2 className={styles.reviewsTitle}>What our customers say</h2>
-            {allReviews.length > 0 && (
+            {summary.count > 0 && (
               <p className={styles.reviewsSummary}>
                 <span className={styles.avgStar}>★</span>
-                {avg.toFixed(1)} from {allReviews.length}+ reviews
+                {avg.toFixed(1)} from {summary.count}+ reviews
               </p>
             )}
           </div>
