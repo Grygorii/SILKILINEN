@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { clampMeta } from '@/lib/clampMeta';
 import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, type PageLocale } from '@/lib/i18n-server';
+import { categoryHref } from '@/lib/urls';
 import ProductGrid from '@/components/ProductGrid';
 import BundleStrip from '@/components/BundleStrip';
 import styles from './page.module.css';
@@ -86,6 +87,17 @@ export async function generateMetadata({
   };
 }
 
+// Slugs merged away by scripts/consolidateCategories.js -> their new parent.
+// Kept next to the shop route because this is where a category URL is resolved.
+const RETIRED_CATEGORIES: Record<string, string> = {
+  shorts: 'lounge',
+  shirts: 'lounge',
+  'eye-masks': 'home',
+  pillowcases: 'home',
+  'sleep-dresses': 'sleepwear',
+  pyjamas: 'sleepwear',
+};
+
 const CATEGORY_COPY: Record<string, { title: string; description: string }> = {
   robes: {
     title: 'Silk Robes',
@@ -156,8 +168,26 @@ export default async function ShopPage({
   // Validate against the live categories, not a hardcoded list. A category that
   // doesn't exist OR has no products isn't a real, browsable page — return a
   // proper 404 so it's not accessible and Google doesn't index a thin/empty grid.
-  const dbCat = category ? (await getCategoryList(locale)).find(c => c.slug === category) : null;
-  if (category && (!dbCat || dbCat.count === 0)) notFound();
+  const liveCats = category ? await getCategoryList(locale) : [];
+  const dbCat = category ? liveCats.find(c => c.slug === category) : null;
+
+  // …unless it's a slug we deliberately merged away: send it to its new parent
+  // so the ranking it earned carries over instead of 404ing (?category=shorts
+  // was live in Search Console). Deliberately CONDITIONAL — it only fires once
+  // the old category is actually gone AND the target exists, so this is safe to
+  // ship before scripts/consolidateCategories.js runs and keeps working after.
+  //
+  // Done here rather than via next.config redirects because Next passes the
+  // request's query through to the destination: a config redirect from
+  // ?category=shorts to ?category=lounge yields ?category=lounge&category=shorts
+  // (a duplicate param the page can't read), and pointing it at /shop would
+  // re-append ?category=shorts and loop forever.
+  if (category && (!dbCat || dbCat.count === 0)) {
+    const mergedInto = RETIRED_CATEGORIES[category];
+    const target = mergedInto && liveCats.find(c => c.slug === mergedInto && c.count > 0);
+    if (target) permanentRedirect(categoryHref(mergedInto, locale));
+    notFound();
+  }
 
   const products = await getProducts(category, q, newOnly, locale);
   const copy = category ? CATEGORY_COPY[category] : null;
