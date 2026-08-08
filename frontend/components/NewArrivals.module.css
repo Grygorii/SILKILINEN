@@ -2,30 +2,6 @@
   padding: 80px 6%;
 }
 
-.header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 40px;
-}
-
-.title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 32px;
-  font-weight: 400;
-  color: var(--dark);
-  letter-spacing: 1px;
-}
-
-.viewAll {
-  font-size: 12px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--dark);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-
 /* ── Carousel ─────────────────────────────────────────────────────────────
    Replaces the old fixed 4-up grid. A horizontal scroll-snap track that shows
    ~4 cards on desktop and scrolls for any extra the admin flags. Arrows for
@@ -105,28 +81,22 @@
     padding: 0 6%;
   }
   .section {
-    padding: 60px 0;
+    padding: 32px 0 56px;
   }
-  /* Two per row, two rows. The old swipe row made each card 44% wide, which
-     read as small and cramped on a phone — a 2-up grid gives the photography
-     room to breathe. "Discover more" in the header leads to the rest. */
+  /* Edge-to-edge, exactly TWO cards per view — no peek, no side gutters — so
+     the photography fills the screen the way it does on the great silk houses'
+     mobile sites. Arrows stay visible as the affordance that there's more. */
   .track {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px 8px;
-    padding: 0 6%;
-    overflow-x: visible;
-    scroll-snap-type: none;
+    gap: 2px;
+    padding: 0;
     background: #FFFFFF;
+    scroll-snap-type: x mandatory;
   }
   .item {
-    flex-basis: auto;
-  }
-  /* Four products = two rows; the rest stay on the shop page. */
-  .item:nth-child(n + 5) {
-    display: none;
+    flex-basis: calc((100% - 2px) / 2);
+    scroll-snap-align: start;
   }
   .arrow {
-    display: none;
+    display: flex;
   }
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard, { type ProductCardData } from './ProductCard';
 import styles from './NewArrivals.module.css';
@@ -81,10 +80,6 @@ export default function NewArrivalsCarousel({ products }: { products: ProductCar
 
   return (
     <section className={styles.section}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>New Arrivals</h2>
-        <Link href="/shop?new=true" className={styles.viewAll}>Discover more →</Link>
-      </div>
 
       <div className={styles.viewport}>
         <button

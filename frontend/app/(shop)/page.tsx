@@ -129,15 +129,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Social proof, high up — a considered buyer wants trust before she
-          scrolls. Only shown once there are real reviews. */}
-      {summary.count > 0 && (
-        <a href="/reviews" className={styles.proofStrip}>
-          <span className={styles.proofStars} aria-hidden="true">★★★★★</span>
-          <span>Loved by our customers · From Donegal with love</span>
-        </a>
-      )}
-
       <NewArrivals />
 
       {/* Style Finder — a quiet guide for the hesitant first-time visitor.
