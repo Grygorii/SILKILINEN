@@ -1,15 +1,6 @@
 .section {
-  padding: 0 6% 80px;
-}
-
-.title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 32px;
-  font-weight: 400;
-  color: var(--dark);
-  letter-spacing: 1px;
-  text-align: center;
-  margin-bottom: 36px;
+  /* Top padding replaces the spacing the visible heading used to provide. */
+  padding: 36px 6% 80px;
 }
 
 /* Three curated tiles, given real presence — near-full width, no narrow cap.
@@ -129,12 +120,7 @@
    next tile peeking reads as a considered edit and invites the swipe. */
 @media (max-width: 700px) {
   .section {
-    padding: 0 0 60px;               /* full-bleed track */
-  }
-  .title {
-    font-size: 26px;
-    margin-bottom: 22px;
-    padding: 0 5%;
+    padding: 28px 0 60px;            /* full-bleed track */
   }
   .grid {
     display: flex;

@@ -152,3 +152,19 @@ body {
     font-size: 16px !important;
   }
 }
+/* Screen-reader-only: keeps a heading in the document outline (and in Google's
+   read of the page) when the design deliberately shows no visible title — e.g.
+   the New Arrivals and category rows, where products start immediately. Without
+   this the homepage skipped h1 → h3, which breaks heading navigation for
+   assistive tech. Do NOT use `display:none`; that removes it from the a11y tree. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

@@ -63,8 +63,10 @@ export default async function CategoryTiles({ content = {} }: { content?: Conten
   if (tiles.length === 0) return null;
 
   return (
-    <section className={styles.section}>
-      <h2 className={styles.title}>Shop by Category</h2>
+    <section className={styles.section} aria-labelledby="shop-by-category-heading">
+      {/* Matches the New Arrivals row: products/tiles lead, no visible heading,
+          but the h2 stays in the outline. */}
+      <h2 id="shop-by-category-heading" className="srOnly">Shop by Category</h2>
       <div className={styles.grid}>
         {tiles.map(tile => (
           <Link

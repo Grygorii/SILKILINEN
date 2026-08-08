@@ -79,7 +79,11 @@ export default function NewArrivalsCarousel({ products }: { products: ProductCar
   };
 
   return (
-    <section className={styles.section}>
+    <section className={styles.section} aria-labelledby="new-arrivals-heading">
+      {/* Visually hidden: the design starts with products (no visible title),
+          but the outline still needs an h2 here — without it the homepage
+          skipped h1 -> h3, breaking heading navigation for screen readers. */}
+      <h2 id="new-arrivals-heading" className="srOnly">New Arrivals</h2>
 
       <div className={styles.viewport}>
         <button
