@@ -253,3 +253,17 @@
   color: var(--muted);
   line-height: 1.5;
 }
+
+/* Description paragraphs. The founder writes the story with blank-line breaks;
+   JSX collapsed them, so it rendered as one block. Each paragraph is its own
+   <p> now, with a measure and rhythm that make long copy readable rather than
+   a slab — the pacing comes from the writing, not from an animation. */
+.descPara {
+  margin: 0 0 var(--s-4);
+  line-height: 1.8;
+  max-width: 62ch;
+}
+
+.descPara:last-child {
+  margin-bottom: 0;
+}

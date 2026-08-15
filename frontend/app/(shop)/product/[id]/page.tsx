@@ -117,6 +117,17 @@ function getMaterialSub(mat?: string): string {
   return '';
 }
 
+// The description is stored with blank-line paragraph breaks (the admin editor
+// is a textarea), but JSX collapses newlines — so multi-paragraph copy rendered
+// as one run-on block. That, not a missing animation, is why the story read as a
+// wall of text. Render the founder's own pacing instead of inventing new pacing.
+function toParagraphs(text?: string): string[] {
+  return String(text || '')
+    .split(/\n\s*\n/)
+    .map(p => p.replace(/\s*\n\s*/g, ' ').trim())
+    .filter(Boolean);
+}
+
 function getStorySnippet(description?: string): { text: string; truncated: boolean } | null {
   if (!description?.trim()) return null;
   const d = description.trim();
@@ -383,7 +394,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 <AccordionGroup>
                   {product.description && (
                     <AccordionItem label="Product details" defaultOpen>
-                      {product.description}
+                      {toParagraphs(product.description).map((para, i) => (
+                        <p key={i} className={styles.descPara}>{para}</p>
+                      ))}
                     </AccordionItem>
                   )}
                   {(product.materialComposition || product.careInstructions || product.momme) && (
