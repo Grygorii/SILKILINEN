@@ -99,6 +99,10 @@ const QUESTIONS: Question[] = [
 ];
 
 const TOTAL = QUESTIONS.length;
+// Spelled-out count, derived from the array — the intro copy used to hardcode
+// "Five quiet questions" while the quiz actually asks four, and the homepage
+// band said four. Deriving it means the prose can't drift from the questions.
+const TOTAL_WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven'][TOTAL] ?? String(TOTAL);
 
 type Answer = { questionId: string; optionIndex: number };
 
@@ -362,7 +366,8 @@ export default function StyleFinder({ initialProducts = [] }: { initialProducts?
           <p className={styles.kicker}>Silk Style Finder</p>
           <h1 className={styles.introTitle}>Which silk are you?</h1>
           <p className={styles.introSub}>
-            Five quiet questions. One edit, chosen for the way you like to live in silk.
+            {TOTAL_WORD.charAt(0).toUpperCase() + TOTAL_WORD.slice(1)} quiet questions — about a minute.
+            One edit, chosen for the way you like to live in silk.
           </p>
           <button type="button" className={styles.beginBtn} onClick={() => setPhase('quiz')}>
             Begin
@@ -375,11 +380,14 @@ export default function StyleFinder({ initialProducts = [] }: { initialProducts?
         <section className={styles.stage} aria-live="polite">
           <p className={styles.kicker}>Silk Style Finder</p>
 
-          <div className={styles.progress} aria-hidden="true">
-            <span className={styles.progressNum}>
+          <div className={styles.progress}>
+            {/* Announced to screen readers; the numerals below would be read as
+                "zero one slash zero four", so they stay decorative. */}
+            <span className="srOnly">Question {step + 1} of {TOTAL}</span>
+            <span className={styles.progressNum} aria-hidden="true">
               {String(step + 1).padStart(2, '0')} / {String(TOTAL).padStart(2, '0')}
             </span>
-            <span className={styles.progressTrack}>
+            <span className={styles.progressTrack} aria-hidden="true">
               <span
                 className={styles.progressFill}
                 style={{ transform: `scaleX(${(step + 1) / TOTAL})` }}
