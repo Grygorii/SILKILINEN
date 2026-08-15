@@ -5,7 +5,9 @@ import AnnouncementBar from './AnnouncementBar';
 import Navbar from './Navbar';
 import styles from './SiteHeader.module.css';
 
-export default function SiteHeader({ messages }: { messages?: string[] }) {
+// `messages` is null when the CMS couldn't be reached — the bar is then omitted
+// entirely rather than filled with hardcoded copy (see lib/bannerMessages).
+export default function SiteHeader({ messages }: { messages?: string[] | null }) {
   const blockRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
 
@@ -25,7 +27,7 @@ export default function SiteHeader({ messages }: { messages?: string[] }) {
 
   return (
     <div ref={blockRef} className={styles.block} data-scrolled-down="false">
-      <AnnouncementBar messages={messages} />
+      {messages && messages.length > 0 && <AnnouncementBar messages={messages} />}
       <Navbar />
     </div>
   );

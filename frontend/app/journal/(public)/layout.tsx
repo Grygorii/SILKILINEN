@@ -7,7 +7,7 @@ import ContactWidget from "@/components/ContactWidget";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
 import MetaPixel from "@/components/MetaPixel";
 import PinterestTag from "@/components/PinterestTag";
-import { getContent } from "@/lib/content";
+import { getBannerMessages } from "@/lib/bannerMessages";
 
 // Mirrors app/(shop)/layout.tsx so journal listing and article pages
 // pick up the same header, footer, cookie banner, and tracking pixels
@@ -19,14 +19,11 @@ export default async function JournalPublicLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const banner = await getContent('banner');
-  const messages = [1, 2, 3, 4]
-    .map(i => banner[`banner_message_${i}`]?.value)
-    .filter((m): m is string => Boolean(m));
+  const messages = await getBannerMessages();
 
   return (
     <>
-      <SiteHeader messages={messages.length > 0 ? messages : undefined} />
+      <SiteHeader messages={messages} />
       <div className="shopContent">
         {children}
       </div>

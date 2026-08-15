@@ -77,11 +77,14 @@ async function getReviewSummary(): Promise<{ average: number; count: number }> {
 }
 
 export default async function Home() {
-  const [carouselReviews, summary, content] = await Promise.all([
+  const [carouselReviews, summary, cms] = await Promise.all([
     getReviews(),
     getReviewSummary(),
     getContent(),
   ]);
+  // `val()` falls back per key, so an unreachable CMS just yields code defaults
+  // here — these are layout/image slots, not claims that can go stale.
+  const content = cms ?? {};
 
   const withMessage = carouselReviews.filter(r => r.message.trim().length > 0);
   const avg = summary.average;

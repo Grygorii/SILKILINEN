@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AboutPage() {
-  const content = await getContent('about');
+  const content = (await getContent('about')) ?? {};
 
   const heroImage = val(content, 'about_hero_image');
   const image1 = val(content, 'about_story_image_1');

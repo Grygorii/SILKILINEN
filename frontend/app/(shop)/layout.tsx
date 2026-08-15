@@ -10,21 +10,18 @@ import PinterestTag from "@/components/PinterestTag";
 import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 import UKShippingNotice from "@/components/UKShippingNotice";
 import { InlineEditProvider } from "@/components/inline/InlineEdit";
-import { getContent } from "@/lib/content";
+import { getBannerMessages } from "@/lib/bannerMessages";
 
 export default async function ShopLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const banner = await getContent('banner');
-  const messages = [1, 2, 3, 4]
-    .map(i => banner[`banner_message_${i}`]?.value)
-    .filter((m): m is string => Boolean(m));
+  const messages = await getBannerMessages();
 
   return (
     <InlineEditProvider>
-      <SiteHeader messages={messages.length > 0 ? messages : undefined} />
+      <SiteHeader messages={messages} />
       <div className="shopContent">
         <SiteBreadcrumbs />
         {children}
