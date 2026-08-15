@@ -166,11 +166,19 @@ async function firePinterestCapi({ order, eventId }) {
 }
 
 // POST /api/v2/checkout/create-intent
-checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
-  try {
-    const { sessionId, shippingCountry, discountCode: incomingCode, attribution, email } = req.body;
+
+// ── Pricing, extracted ────────────────────────────────────────────────────────
+// Validates the cart against live DB prices and computes the order summary.
+// Shared by /quote (summary only) and /create-intent (summary + Stripe intent),
+// so the two can never drift — the totals a customer is shown are produced by
+// exactly the code that prices the charge.
+//
+// Returns { status, error } for a rejection, otherwise the priced order. Callers
+// map that to an HTTP response.
+async function priceOrder(body) {
+    const { sessionId, shippingCountry, discountCode: incomingCode, attribution, email } = body;
     let cart = null;
-    let sourceItems = req.body.items; // direct items path
+    let sourceItems = body.items; // direct items path
 
     if (sessionId) {
       cart = await Cart.findOne({ sessionId });
@@ -180,7 +188,7 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
     }
 
     if (!sourceItems || sourceItems.length === 0) {
-      return res.status(400).json({ error: 'Cart is empty' });
+      return { status: 400, error: { error: 'Cart is empty' } };
     }
 
     // Re-validate all items against live DB prices. Two shapes are accepted:
@@ -196,7 +204,7 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
       // skew the charged total (negative qty lowers it).
       const quantity = parseInt(item.quantity, 10);
       if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
-        return res.status(400).json({ error: `Invalid quantity for "${item.name || 'item'}"` });
+        return { status: 400, error: { error: `Invalid quantity for "${item.name || 'item'}"` } };
       }
       if (item.bundleId) {
         const bundle = await Bundle.findOne({
@@ -204,11 +212,11 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
           status: 'active',
         }).populate({ path: 'products.productId', select: 'name price status' });
         if (!bundle) {
-          return res.status(400).json({ error: `"${item.name || 'Bundle'}" is no longer available` });
+          return { status: 400, error: { error: `"${item.name || 'Bundle'}" is no longer available` } };
         }
         const children = (bundle.products || []).map(p => p.productId).filter(Boolean);
         if (children.length === 0) {
-          return res.status(400).json({ error: `Bundle "${bundle.name}" has no products` });
+          return { status: 400, error: { error: `Bundle "${bundle.name}" has no products` } };
         }
         const pricing = Bundle.computePricing(children, bundle.discountPercent);
         validatedItems.push({
@@ -228,12 +236,12 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
           status: { $in: ['active', 'sold_out'] },
         }).lean();
         if (!product) {
-          return res.status(400).json({ error: `"${item.name}" is no longer available` });
+          return { status: 400, error: { error: `"${item.name}" is no longer available` } };
         }
         // Don't sell sold-out items, and don't sell more than a variant has.
         const availErr = availabilityError(product, { colour: item.colour, size: item.size, quantity });
         if (availErr) {
-          return res.status(409).json({ error: availErr });
+          return { status: 409, error: { error: availErr } };
         }
         validatedItems.push({
           productId: product._id,
@@ -288,9 +296,60 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
     // the order + all reporting; we convert ONLY the Stripe charge and the
     // returned summary. EUR (the default) is a no-op at rate 1, so that path is
     // byte-for-byte unchanged.
-    const dispCurrency = normaliseCurrency(req.body.currency);
+    const dispCurrency = normaliseCurrency(body.currency);
     const fxRate = (await getRates())[dispCurrency] || 1;
     const toCur = (eur) => Math.round((Number(eur) || 0) * fxRate * 100) / 100;
+
+  return {
+    validatedItems, subtotal, country, cart, sessionId,
+    discountCode, discountAmount, discountError, collectionDiscountAmount,
+    shipping, tax, total, dispCurrency, fxRate, toCur,
+  };
+}
+
+// Shape returned to the storefront. Built in ONE place so /quote and
+// /create-intent describe the money identically.
+function orderSummaryOf(p) {
+  const { toCur } = p;
+  return {
+    items: p.validatedItems.map(i => ({ ...i, price: toCur(i.price) })),
+    subtotal: toCur(p.subtotal),
+    discountCode: p.discountCode,
+    discountAmount: toCur(p.discountAmount),
+    discountError: p.discountError,
+    shipping: { cost: toCur(p.shipping.cost), label: p.shipping.label, isFree: p.shipping.isFree },
+    tax: toCur(p.tax),
+    total: toCur(p.total),
+    currency: p.dispCurrency,
+    currencySymbol: CURRENCIES[p.dispCurrency].symbol,
+  };
+}
+
+// POST /api/v2/checkout/quote — order summary with NO Stripe intent.
+// The checkout page calls this on load so the customer sees real, validated
+// totals immediately. Creating a PaymentIntent here instead is what filled
+// Stripe with "Incomplete" records for everyone who merely opened the page.
+checkoutRouter.post('/quote', checkoutRateLimit, async (req, res) => {
+  try {
+    const priced = await priceOrder(req.body);
+    if (priced.error) return res.status(priced.status).json(priced.error);
+    res.json({ orderSummary: orderSummaryOf(priced) });
+  } catch (err) {
+    console.error('[checkoutV2] quote error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
+  try {
+    const priced = await priceOrder(req.body);
+    if (priced.error) return res.status(priced.status).json(priced.error);
+    const {
+      validatedItems, subtotal, country, sessionId,
+      discountCode, discountAmount, collectionDiscountAmount, shipping, total,
+      dispCurrency, fxRate, toCur,
+    } = priced;
+    const { attribution, email } = req.body;
 
     // Create Stripe PaymentIntent (amount in the charge currency's minor units)
     const intentParams = {
@@ -343,18 +402,7 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
     res.json({
       clientSecret: intent.client_secret,
       paymentIntentId: intent.id,
-      orderSummary: {
-        items: validatedItems.map(i => ({ ...i, price: toCur(i.price) })),
-        subtotal: toCur(subtotal),
-        discountCode,
-        discountAmount: toCur(discountAmount),
-        discountError,
-        shipping: { cost: toCur(shipping.cost), label: shipping.label, isFree: shipping.isFree },
-        tax: toCur(tax),
-        total: toCur(total),
-        currency: dispCurrency,
-        currencySymbol: CURRENCIES[dispCurrency].symbol,
-      },
+      orderSummary: orderSummaryOf(priced),
     });
   } catch (err) {
     console.error('[checkoutV2] create-intent error:', err.message);

@@ -270,9 +270,54 @@ export default function CheckoutPage() {
   const cartKey = cart.map(i => `${i.productId || i.bundleId}:${i.colour}:${i.size}:${i.quantity}`).join('|') + `|${currency}`;
   useEffect(() => {
     if (cart.length === 0) return;
-    createIntent();
+    // Before the customer reaches the payment step we only PRICE the cart — no
+    // Stripe intent. Creating one on page load meant every visitor who merely
+    // opened checkout became an "Incomplete" payment in Stripe, burying the
+    // real abandoned carts. Once they've advanced, keep the existing behaviour:
+    // recreate the intent so the charge can never drift from the lines shown.
+    if (paymentIntentIdRef.current) createIntent();
+    else fetchQuote();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cartKey]);
+
+  // Priced order summary WITHOUT a Stripe intent — same validation, same totals.
+  async function fetchQuote(discountCode?: string): Promise<OrderSummary | null> {
+    setLoading(true);
+    setIntentError('');
+    try {
+      const res = await fetch(`${API}/api/v2/checkout/quote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cart.map(i => ({
+            productId: i.productId,
+            bundleId: i.bundleId,
+            name: i.name,
+            quantity: i.quantity,
+            colour: i.colour,
+            size: i.size,
+          })),
+          shippingCountry: countryRef.current || 'IE',
+          discountCode: discountCode !== undefined ? discountCode : (appliedCodeRef.current || undefined),
+          currency,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        setIntentError(err.error || 'Could not load your order');
+        return null;
+      }
+      const data = await res.json();
+      setSummary(data.orderSummary);
+      if (data.orderSummary.discountCode) setAppliedCode(data.orderSummary.discountCode);
+      return data.orderSummary;
+    } catch {
+      setIntentError('Network error. Please try again.');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function createIntent() {
     setLoading(true);
@@ -374,7 +419,11 @@ export default function CheckoutPage() {
   async function applyDiscount() {
     setDiscountError('');
     if (!discountInput.trim()) return;
-    const result = await updateIntent(countryRef.current, discountInput.trim());
+    // Before the payment step there is no intent to update — re-price instead.
+    const code = discountInput.trim();
+    const result = paymentIntentIdRef.current
+      ? await updateIntent(countryRef.current, code)
+      : await fetchQuote(code);
     if (!result?.discountCode) {
       // Prefer the specific reason from the backend (expired, already used,
       // minimum order, etc) and only fall back to the generic line when
@@ -458,6 +507,23 @@ export default function CheckoutPage() {
                 onBeforeSubmit={setIntentEmail}
               />
             </Elements>
+          ) : summary ? (
+            // The payment step is entered deliberately. Stripe's PaymentElement
+            // needs a clientSecret to mount, so the intent is created here — on
+            // a real click — rather than on page load. Everything downstream
+            // (Elements, confirmPayment, update-intent, the webhook) is
+            // unchanged; only the moment of creation moved.
+            <div className={styles.payGate}>
+              <p className={styles.payGateNote}>
+                Your order is ready. Continue to enter delivery and payment details.
+              </p>
+              <Button
+                variant={loading ? 'disabled' : 'primary'}
+                onClick={() => { if (!loading) createIntent(); }}
+              >
+                {loading ? 'PREPARING…' : 'CONTINUE TO PAYMENT'}
+              </Button>
+            </div>
           ) : loading ? (
             <p className={styles.loadingMsg}>Preparing secure payment…</p>
           ) : null}

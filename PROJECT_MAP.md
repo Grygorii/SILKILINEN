@@ -22,6 +22,12 @@ or change an invariant, update the relevant line here in the same commit.
 
 ## Money path (CRITICAL — change with care)
 - `backend/routes/checkoutV2.js` mounted at `/api/v2/checkout`. Webhook at `/api/webhook`.
+- **`priceOrder(body)` is the ONE pricer.** `/quote` returns `orderSummaryOf(priced)` with
+  NO Stripe call; `/create-intent` calls the same function then creates the intent. The
+  totals shown can never drift from the totals charged. Checkout **quotes on load and
+  creates the intent only when the customer clicks "Continue to payment"** — creating it on
+  load made every visitor who merely opened checkout an "Incomplete" payment in Stripe,
+  burying real abandoned carts. Once an intent exists, a cart change still recreates it.
 - **EUR is canonical** for all order economics/reporting. Multi-currency (EUR/GBP/USD)
   converts ONLY at display + the Stripe charge. EUR path must stay byte-identical (rate 1).
 - `backend/services/exchangeRates.js` — SUPPORTED currencies, `getRates()` (frankfurter.app,
