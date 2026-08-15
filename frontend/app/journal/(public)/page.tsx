@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { getPageMeta } from '@/lib/pageSeo';
 import { clampMeta } from '@/lib/clampMeta';
 import { isValidImageUrl } from '@/lib/imageUtils';
+import ArticleImage from '@/components/ArticleImage';
 
 export async function generateMetadata(): Promise<Metadata> {
   const o = await getPageMeta('/journal');
@@ -56,11 +57,16 @@ export default async function JournalPage() {
           {articles.map(a => (
             <Link key={a._id} href={`/journal/${a.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
               <article>
-                <div style={{ height: 200, background: 'var(--color-surface)', overflow: 'hidden', marginBottom: 20 }}>
-                  {isValidImageUrl(a.heroImage?.url) && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={a.heroImage.url} alt={a.heroImage.alt || a.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }} />
-                  )}
+                <div style={{ position: 'relative', height: 200, background: 'var(--color-surface)', overflow: 'hidden', marginBottom: 20 }}>
+                  {/* Same owner as the homepage teaser (BlogTeaser). This page used
+                      a raw <img>, so a hero URL that passed isValidImageUrl but
+                      failed to LOAD rendered the browser's raw alt text on the
+                      page — the Atelier read it as a text placeholder. */}
+                  <ArticleImage
+                    src={isValidImageUrl(a.heroImage?.url) ? a.heroImage.url : null}
+                    alt={a.heroImage?.alt || a.title}
+                    sizes="(max-width: 600px) 100vw, 300px"
+                  />
                 </div>
                 <p style={{ fontSize: 11, color: 'var(--color-ink-muted)', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 8 }}>
                   {fmtDate(a.publishedAt)}
@@ -72,7 +78,10 @@ export default async function JournalPage() {
                 <p style={{ fontSize: 14, color: 'var(--color-ink-muted)', lineHeight: 1.6, margin: '0 0 14px' }}>
                   {a.excerpt}
                 </p>
-                <span style={{ fontSize: 12, color: '#5c35a8', letterSpacing: '0.5px' }}>Read article →</span>
+                {/* Matches BlogTeaser's .readMore. This was a hardcoded violet
+                    (#5c35a8) — the one hardcoded hex on the page and a storefront
+                    convention break; it read as a default browser link. */}
+                <span style={{ fontSize: 11, color: 'var(--color-ink)', letterSpacing: '2px', textTransform: 'uppercase', textDecoration: 'underline', textUnderlineOffset: 3 }}>Read article →</span>
               </article>
             </Link>
           ))}

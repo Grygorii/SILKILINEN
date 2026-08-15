@@ -112,6 +112,21 @@ img {
   --border:     var(--color-line);
   --muted:      var(--color-ink-muted);
   --rose:       var(--color-accent);
+
+  /* ── Cookie bar clearance — ONE owner ─────────────────────────────────
+     The consent bar is fixed to the bottom edge. Anything else pinned down
+     there (contact button, mobile cart bar) adds this to its own bottom
+     offset so it lifts while the bar is up, instead of being covered by it.
+     0 whenever the bar isn't showing, so it's inert the rest of the time.
+     Never hardcode the bar's height elsewhere — read this. */
+  --cookie-bar-h: 0px;
+}
+
+:root[data-cookie-banner='true'] { --cookie-bar-h: 68px; }
+
+@media (max-width: 600px) {
+  /* Stacked layout on phones, so the bar is taller. */
+  :root[data-cookie-banner='true'] { --cookie-bar-h: 128px; }
 }
 
 body {

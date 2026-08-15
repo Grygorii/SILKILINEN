@@ -1,6 +1,8 @@
+/* --cookie-bar-h lifts the button clear of the consent bar while it's up
+   (0 otherwise). globals.css owns that value — don't hardcode the height. */
 .root {
   position: fixed;
-  bottom: 28px;
+  bottom: calc(28px + var(--cookie-bar-h, 0px));
   left: 28px;
   z-index: 150;
   display: flex;
@@ -170,7 +172,7 @@
 /* Small phone defaults */
 @media (max-width: 480px) {
   .root {
-    bottom: 20px;
+    bottom: calc(20px + var(--cookie-bar-h, 0px));
     left: 16px;
   }
   .panel {
@@ -181,7 +183,7 @@
 /* Product pages only — lift above the sticky Add to Bag bar (visible at ≤900px) */
 @media (max-width: 900px) {
   .rootAboveBar {
-    bottom: calc(72px + env(safe-area-inset-bottom) + 12px);
+    bottom: calc(72px + env(safe-area-inset-bottom) + 12px + var(--cookie-bar-h, 0px));
     left: 16px;
   }
 }

@@ -8,7 +8,9 @@
     align-items: center;
     justify-content: space-between;
     position: fixed;
-    bottom: 0;
+    /* Sits above the consent bar while it's showing — this bar is the
+       add-to-cart action and must never be covered. 0 otherwise. */
+    bottom: var(--cookie-bar-h, 0px);
     left: 0;
     right: 0;
     background: var(--dark);

@@ -1,13 +1,15 @@
-/* Compact, brand-consistent card — replaces the full-width black slab the
-   Atelier flagged as jarring in every room. Centred along the bottom so it
-   clears the contact button (bottom-left) and Google's badge (bottom-right). */
+/* Slim consent bar, hugging the bottom edge — it reads as page chrome rather
+   than a card floating over the room. It used to be a centred 500px card at
+   bottom:24px, which every Atelier room flagged: it sat in the middle of the
+   viewport bottom, over the product view, and on mobile it covered the
+   FloatingCartBar (bottom:0) — i.e. the add-to-cart button. Now full-width and
+   low, and while it's up the floating widgets lift by --cookie-bar-h (declared
+   in globals.css, the one owner of that offset) so nothing is ever obscured. */
 .banner {
   position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 48px);
-  max-width: 500px;
+  bottom: 0;
+  left: 0;
+  right: 0;
   /* Frosted, semi-transparent warm-white — it settles over the page rather than
      sitting on top of it as a solid slab. Falls back to solid warm-white where
      backdrop-filter is unsupported. */
@@ -15,13 +17,14 @@
   -webkit-backdrop-filter: blur(14px) saturate(1.15);
   backdrop-filter: blur(14px) saturate(1.15);
   color: var(--muted);
-  border: 1px solid rgba(224, 221, 215, 0.7);
-  box-shadow: 0 4px 22px rgba(26, 25, 22, 0.07);
+  /* Hairline on the top edge only — the other three sit on the viewport edge. */
+  border-top: 1px solid rgba(224, 221, 215, 0.7);
+  box-shadow: 0 -4px 22px rgba(26, 25, 22, 0.06);
   z-index: 9999;
-  padding: 12px 18px;
+  padding: 12px max(18px, 5%) calc(12px + env(safe-area-inset-bottom));
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 18px;
   font-family: inherit;
   font-size: 12px;
@@ -30,12 +33,14 @@
 }
 
 @keyframes cookieUp {
-  from { opacity: 0; transform: translate(-50%, 12px); }
-  to   { opacity: 1; transform: translate(-50%, 0); }
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Held to a readable measure rather than stretched across the full bar. */
 .text {
-  flex: 1;
+  flex: 0 1 auto;
+  max-width: 720px;
   margin: 0;
 }
 
@@ -96,10 +101,8 @@
   .banner {
     flex-direction: column;
     align-items: stretch;
-    bottom: 16px;
-    width: calc(100% - 32px);
-    gap: 14px;
-    padding: 16px 18px 18px;
+    gap: 12px;
+    padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
   }
 
   .buttons {
