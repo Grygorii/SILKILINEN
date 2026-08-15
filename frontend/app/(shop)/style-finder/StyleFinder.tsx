@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 import { productPath } from '@/lib/urls';
+import { QUESTION_COUNT, QUESTION_COUNT_WORD } from '@/lib/styleFinder';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -99,10 +100,20 @@ const QUESTIONS: Question[] = [
 ];
 
 const TOTAL = QUESTIONS.length;
-// Spelled-out count, derived from the array — the intro copy used to hardcode
-// "Five quiet questions" while the quiz actually asks four, and the homepage
-// band said four. Deriving it means the prose can't drift from the questions.
-const TOTAL_WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven'][TOTAL] ?? String(TOTAL);
+
+// The homepage band promises this number in prose and can't import QUESTIONS
+// (it would drag the whole quiz into the homepage bundle), so lib/styleFinder
+// holds the count for both. Fail loudly here — right next to the array — if a
+// question is added or removed without updating it. Dev only: never break a
+// customer's quiz over a copy mismatch.
+if (process.env.NODE_ENV !== 'production' && TOTAL !== QUESTION_COUNT) {
+  throw new Error(
+    `Style Finder has ${TOTAL} questions but lib/styleFinder.ts says ${QUESTION_COUNT}. ` +
+    'Update QUESTION_COUNT — the homepage band reads it for its "Answer four quiet questions" copy.',
+  );
+}
+
+const TOTAL_WORD = QUESTION_COUNT_WORD;
 
 type Answer = { questionId: string; optionIndex: number };
 
