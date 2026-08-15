@@ -90,6 +90,11 @@ or change an invariant, update the relevant line here in the same commit.
   show grey (`muted`), not red. The Base auto-fix is the one place meta is filled
   automatically (missing meta is strictly worse than AI meta); the **Fix-it tab** is now
   only Hermes' strategic Rebuild plan (approve-first), not gap-filling.
+- **Hermes invariant:** a run must never propose NEW content for a query it also
+  flags as cannibalised (a third page splits the signal further). `hermes.js`
+  enforces it after assembling both lists — `kind:'content'` plays whose `target`
+  matches a surfaced cannibalisation block are held and reported on that block;
+  `kind:'meta'` plays pass (they sharpen an existing page, adding no URL).
 
 ## One-owner invariants (the anti-drift rules)
 The recurring bug in this codebase is **duplicated truth** — the same fact copied

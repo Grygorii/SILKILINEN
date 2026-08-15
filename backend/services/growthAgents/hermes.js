@@ -104,6 +104,7 @@ Your plan is EXECUTED by a one-button "Rebuild SEO" pipeline, so each play must 
 - "kind" is "meta" only when rewriting an EXISTING page's meta title/description fixes it (pipeline generates+applies). Use "content" for anything else — a new guide, more on-page words, an internal link, consolidating cannibalised pages, schema (pipeline drafts/flags it).
 - "entityType" + "entityRef": product → exact product NAME; category/collection → SLUG; page → an exact editable path. For a content-gap guide, use entityType "page", entityRef "/journal".
 - AT MOST ONE play per entity. Dedupe ruthlessly.
+- If a query is listed under CANNIBALISATION below, do NOT propose new content for it — another page targeting that query deepens the split. Either recommend consolidating to one page, or pick a different, uncannibalised query.
 
 Respond ONLY with valid JSON:
 {
@@ -282,7 +283,8 @@ async function run() {
   // Strategic flags the pipeline can't auto-apply but the founder must see —
   // surfaced as their own blocks (kind 'content', so Rebuild flags them).
   const extra = [];
-  for (const c of cannibal.slice(0, 3)) {
+  const cannibalShown = cannibal.slice(0, 3);
+  for (const c of cannibalShown) {
     extra.push({
       type: 'seo',
       title: `Cannibalisation: "${String(c.query).slice(0, 70)}"`,
@@ -319,7 +321,40 @@ async function run() {
     }
   }
 
-  return [...mapped, ...extra];
+  // ── Conflict guard: never propose NEW content for a cannibalised query ──
+  // `mapped` (the model's plays) and `extra` (deterministic cannibalisation
+  // flags) were assembled independently and never compared, so one run could
+  // say "consolidate these duplicates to one page" AND "write a guide for this
+  // query" — advice that contradicts itself and, if followed, adds a third page
+  // splitting the same signal. Meta rewrites are left alone: they sharpen an
+  // EXISTING page and add no URL. Only 'content' plays (a new guide/paragraph
+  // targeting the query) are held back, and they're surfaced on the
+  // cannibalisation block rather than silently dropped.
+  // Built from the SURFACED blocks only (same slice as above): holding a play
+  // for a query the founder never sees flagged would drop it into a void.
+  const cannibalQueries = new Map(
+    cannibalShown.map(c => [String(c.query || '').trim().toLowerCase(), String(c.query || '')]),
+  );
+  const held = [];
+  const actionable = mapped.filter(a => {
+    if (a.meta?.kind !== 'content') return true;
+    const t = String(a.meta?.target || '').trim().toLowerCase();
+    if (!t || !cannibalQueries.has(t)) return true;
+    held.push({ query: cannibalQueries.get(t), action: a.meta?.action || a.title });
+    return false;
+  });
+
+  if (held.length) {
+    for (const block of extra) {
+      if (block.meta?.strategic !== 'cannibalisation') continue;
+      const q = String(block.meta?.target || '').trim().toLowerCase();
+      const mine = held.filter(h => String(h.query).trim().toLowerCase() === q);
+      if (!mine.length) continue;
+      block.detail += ` Note: Hermes also wanted to add content for this query (${mine.map(h => `"${String(h.action).slice(0, 90)}"`).join('; ')}) — held back, because another page targeting the same query deepens the split. Consolidate first, then point new content at the surviving page.`;
+    }
+  }
+
+  return [...actionable, ...extra];
 }
 
 module.exports = {
