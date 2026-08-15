@@ -117,6 +117,20 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
 - **Colour:** brand tokens only (see Conventions) — never hardcode hex on the storefront.
 - **Banner/announcement copy:** the CMS (`banner_message_1..4`); code defaults are a
   fallback only.
+- **Slugs:** normalised in the MODEL's `pre('save')` (`utils/slug.js` `slugify`), never
+  trusted from `req.body`. `Product`/`Collection` slugify + keep `previousSlugs` (old URL
+  301s; public routes fall back to it, storefront `permanentRedirect`s to canonical).
+  `Category` normalises only on new/changed slugs and has NO `previousSlugs` — its slug is
+  the string on `Product.category`, so re-slugging orphans products; use
+  `scripts/consolidateCategories.js`. **Never `findByIdAndUpdate` a slug** — it skips
+  `pre('save')`, which is how `/collections/a%20curated%20edit%20of%20silk%20robe,…`
+  shipped. Repair: `scripts/fixCollectionSlugs.js` (dry-run default, `--apply`).
+- **Bottom-edge clearance:** `--cookie-bar-h` (globals.css) — the consent bar is fixed to
+  `bottom:0`; anything else pinned there (ContactWidget, FloatingCartBar) adds this to its
+  own offset. 0 when the bar is hidden. Never hardcode the bar's height.
+- **Style Finder question count:** `lib/styleFinder.ts`. The homepage band can't import
+  `QUESTIONS` (bundle cost), so `StyleFinder.tsx` asserts `QUESTIONS.length` against it in
+  dev. Add a question → update `QUESTION_COUNT`.
 
 ## SEO invariants
 - **URLs have ONE owner: `frontend/lib/urls.ts`** (`productPath`/`productHref`,
