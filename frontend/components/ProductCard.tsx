@@ -37,6 +37,9 @@ type Props = {
   showHeart?: boolean;
   /** Eager-load + preload this card's image — set on the first row (LCP). */
   priority?: boolean;
+  /** Play the silk sheen once (used on scroll-reveal). The hover sheen is
+   *  pointer-only, so without this touch devices never see the effect. */
+  playSheen?: boolean;
 };
 
 /**
@@ -50,7 +53,7 @@ type Props = {
  * wishlist heart, which sits above the overlay. There is no quick-add
  * button; sizing/colour selection happens on the product page.
  */
-export default function ProductCard({ product, showHeart = true, priority = false }: Props) {
+export default function ProductCard({ product, showHeart = true, priority = false, playSheen = false }: Props) {
   const { toggle, isWished } = useWishlist();
   const [animating, setAnimating] = useState(false);
 
@@ -83,7 +86,7 @@ export default function ProductCard({ product, showHeart = true, priority = fals
   }
 
   return (
-    <div className={styles.card} data-track="card_click" data-track-product={product._id} data-track-name={product.name}>
+    <div className={`${styles.card} ${playSheen ? styles.sheenPlay : ''}`} data-track="card_click" data-track-product={product._id} data-track-name={product.name}>
       <div className={styles.cardImg}>
         {/* The heart lives INSIDE the image box, so it is pinned to the photo's
             top-right corner on every surface (grid, carousel, wishlist,

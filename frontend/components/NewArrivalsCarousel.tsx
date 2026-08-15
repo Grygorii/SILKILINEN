@@ -11,6 +11,30 @@ import styles from './NewArrivals.module.css';
 // it just scrolls. "View all" goes to the new-arrivals-only shop view.
 export default function NewArrivalsCarousel({ products }: { products: ProductCardData[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  // Scroll reveal: the row settles in rather than appearing as a block of
+  // search results. Starts FALSE and the pre-reveal styles only apply once
+  // `armed` is set on mount, so a no-JS/crawler render shows the cards
+  // normally and they can never get stuck invisible.
+  const [armed, setArmed] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') { setRevealed(true); return; }
+    setArmed(true);
+    const io = new IntersectionObserver(
+      entries => {
+        if (entries.some(e => e.isIntersecting)) { setRevealed(true); io.disconnect(); }
+      },
+      { rootMargin: '0px 0px -12% 0px' },
+    );
+    io.observe(el);
+    // Failsafe: reveal regardless after a moment, so nothing can stay hidden
+    // if the observer never fires (odd viewports, restored scroll positions).
+    const t = setTimeout(() => { setRevealed(true); io.disconnect(); }, 2000);
+    return () => { io.disconnect(); clearTimeout(t); };
+  }, []);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
 
@@ -79,7 +103,11 @@ export default function NewArrivalsCarousel({ products }: { products: ProductCar
   };
 
   return (
-    <section className={styles.section} aria-labelledby="new-arrivals-heading">
+    <section
+      ref={sectionRef}
+      className={`${styles.section} ${armed ? styles.armed : ''} ${revealed ? styles.revealed : ''}`}
+      aria-labelledby="new-arrivals-heading"
+    >
       {/* Visually hidden: the design starts with products (no visible title),
           but the outline still needs an h2 here — without it the homepage
           skipped h1 -> h3, breaking heading navigation for screen readers. */}
@@ -105,9 +133,13 @@ export default function NewArrivalsCarousel({ products }: { products: ProductCar
           onPointerLeave={endDrag}
           onClickCapture={onClickCapture}
         >
-          {products.map(product => (
-            <div className={styles.item} key={product._id}>
-              <ProductCard product={product} />
+          {products.map((product, i) => (
+            <div
+              className={styles.item}
+              key={product._id}
+              style={{ '--reveal-i': i } as React.CSSProperties}
+            >
+              <ProductCard product={product} playSheen={revealed} />
             </div>
           ))}
         </div>

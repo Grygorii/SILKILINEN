@@ -132,6 +132,15 @@
   to   { background-position: 0% 100%; }
 }
 
+/* Sheen on scroll-reveal. Deliberately OUTSIDE the (hover: hover) query above:
+   the hover sheen is pointer-only, so on a phone the silk never caught the
+   light. Reuses the same keyframes, so the visual is the one already proven on
+   desktop rather than a second competing effect. */
+.sheenPlay .sheen {
+  opacity: 1;
+  animation: sheenSweep 1.4s var(--ease, ease) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sheen { display: none; }
 }

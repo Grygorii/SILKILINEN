@@ -100,3 +100,34 @@
     display: flex;
   }
 }
+
+/* ── Scroll reveal ──────────────────────────────────────────────────────────
+   The row settles in as you reach it instead of appearing as a block of
+   search results: each card rises a few pixels and fades, staggered along the
+   row, and the silk sheen plays once (see .sheenPlay in ProductCard).
+
+   `.armed` is added by JS on mount, so the hidden state NEVER applies to a
+   server render or a no-JS visitor — the cards simply show. A 2s failsafe in
+   the component also forces the reveal if the observer never fires. */
+.armed .item {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.armed.revealed .item {
+  opacity: 1;
+  transform: none;
+  /* Staggered along the row; capped so a long carousel doesn't trail forever. */
+  transition: opacity 0.7s var(--ease, ease), transform 0.7s var(--ease, ease);
+  transition-delay: calc(min(var(--reveal-i, 0), 5) * 90ms);
+}
+
+/* Reduced motion: reveal instantly, no movement. */
+@media (prefers-reduced-motion: reduce) {
+  .armed .item,
+  .armed.revealed .item {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
