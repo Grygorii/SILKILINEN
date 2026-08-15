@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { collectionHref } from '@/lib/urls';
 import CollectionSet from './CollectionSet';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Image from 'next/image';
@@ -81,6 +82,12 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
   const collection = await getCollection(slug, locale);
 
   if (!collection) notFound();
+
+  // Reached via a previousSlug (the API resolves those): send the visitor and
+  // Google to the canonical URL rather than serving one page on two URLs.
+  if (collection.slug && collection.slug !== slug) {
+    permanentRedirect(collectionHref(collection, locale));
+  }
 
   return (
     <main className={styles.page}>

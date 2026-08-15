@@ -100,8 +100,13 @@ router.patch('/:id', async (req, res) => {
     for (const key of allowed) {
       if (key in req.body) updates[key] = req.body[key];
     }
-    const collection = await Collection.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+    // Load-modify-save, NOT findByIdAndUpdate: the slug normalisation and
+    // previousSlugs tracking live in the model's pre('save') hook, and
+    // findByIdAndUpdate skips it — which is how a sentence became a URL.
+    const collection = await Collection.findById(req.params.id);
     if (!collection) return res.status(404).json({ error: 'Not found' });
+    collection.set(updates);
+    await collection.save();
     pingCollection(collection);
     res.json(collection);
   } catch (err) {

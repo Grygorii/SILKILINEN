@@ -33,7 +33,12 @@ router.get('/featured', async (req, res) => {
 // GET /api/collections/:slug — collection detail + active products
 router.get('/:slug', async (req, res) => {
   try {
-    const collection = await Collection.findOne({ slug: req.params.slug, status: 'active' });
+    // Fall back to previousSlugs so a renamed collection's old URL still
+    // resolves; the storefront compares the returned slug and 301s.
+    let collection = await Collection.findOne({ slug: req.params.slug, status: 'active' });
+    if (!collection) {
+      collection = await Collection.findOne({ previousSlugs: req.params.slug, status: 'active' });
+    }
     if (!collection) return res.status(404).json({ error: 'Collection not found' });
 
     const products = await Product.find({ collections: collection._id, status: 'active' })
