@@ -24,6 +24,8 @@ type Product = {
   image?: string;
   images: { url: string; isPrimary?: boolean; alt?: string }[];
   variants: { _id: string; colour?: string; size?: string; sku?: string; stockLevel?: number }[];
+  colorName?: string;
+  colours?: string[];
   metaTitle?: string;
   costing?: { totalUnitCost?: number };
   updatedAt: string;
@@ -31,6 +33,37 @@ type Product = {
 };
 
 type Category = { slug: string; label: string };
+
+// Shows the colour Google will receive, or flags its absence.
+//
+// The Shopping feed derives colour from colorName, then the colours array, then
+// a colour word in the title. Merchant Center only reports a COUNT of items
+// missing it, so the founder had no way to tell WHICH — this puts it on the row
+// they would edit anyway. A title-derived colour is shown in muted type,
+// because it works today but breaks silently the moment a product is renamed.
+function ColourCell({ product }: { product: Product }) {
+  const set = product.colorName || (product.colours ?? []).find(Boolean) || '';
+  if (set) {
+    return <span style={{ fontSize: 13, color: 'var(--admin-ink)' }}>{set}</span>;
+  }
+  return (
+    <span
+      title="Google requires a colour on apparel. Without it this product stays in free listings but is held out of Shopping ads."
+      style={{
+        fontSize: 11,
+        letterSpacing: 0.5,
+        textTransform: 'uppercase',
+        color: 'var(--admin-warning)',
+        background: 'var(--admin-warning-soft)',
+        border: '1px solid var(--admin-warning)',
+        padding: '2px 8px',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      Not set
+    </span>
+  );
+}
 
 const STATUS_LABEL: Record<string, string> = {
   active: 'Active', draft: 'Draft', sold_out: 'Sold out', archived: 'Archived',
@@ -848,6 +881,7 @@ export default function AdminProductsPage() {
             <option value="no-variants">Missing variants</option>
             <option value="no-seo">Missing SEO</option>
             <option value="no-description">Missing description</option>
+            <option value="no-colour">Missing colour (Shopping ads)</option>
           </select>
 
           {hasActiveFilters && (
@@ -896,6 +930,11 @@ export default function AdminProductsPage() {
                   </button>
                 </th>
                 <th>Status</th>
+                {/* Google requires a colour on apparel; without one the item is
+                    held out of Shopping ads while still running in free
+                    listings. Merchant Center reports the COUNT but not which
+                    products, so it has to be visible where they are edited. */}
+                <th>Colour</th>
                 <th>
                   <button className={styles.sortBtn} onClick={() => handleSort('price')}>
                     Price{sortIndicator('price')}
@@ -954,6 +993,9 @@ export default function AdminProductsPage() {
                       <InlineStatusEdit product={product} onUpdate={updateProduct} />
                     </td>
                     <td>
+                      <ColourCell product={product} />
+                    </td>
+                    <td>
                       <InlinePriceEdit product={product} onUpdate={updateProduct} />
                     </td>
                     <td>
@@ -1004,7 +1046,7 @@ export default function AdminProductsPage() {
                     </div>
                   )}
                   <div className={styles.productCardMeta}>
-                    €{product.price.toFixed(2)} · <StockBadge product={product} />
+                    €{product.price.toFixed(2)} · <StockBadge product={product} /> · <ColourCell product={product} />
                   </div>
                   <IssuePills product={product} />
                   <div className={styles.productCardActions}>

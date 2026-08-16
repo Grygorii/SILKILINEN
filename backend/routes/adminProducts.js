@@ -184,6 +184,15 @@ router.get('/', async function(req, res) {
     else if (issues === 'no-seo')    filter.$or = [{ metaTitle: { $in: [null, ''] } }];
     else if (issues === 'no-variants') filter['variants.0'] = { $exists: false };
     else if (issues === 'no-description') filter.description = { $in: [null, ''] };
+    // Google requires `color` on apparel. The feed derives one from colorName,
+    // the colours array, or a colour word in the title — so an item only fails
+    // Merchant Center when the first two are empty. Matching the same condition
+    // here means this filter shows exactly the products Google is complaining
+    // about, not a broader "no colour anywhere" list.
+    else if (issues === 'no-colour') {
+      filter.colorName = { $in: [null, ''] };
+      filter.$or = [{ colours: { $size: 0 } }, { colours: { $exists: false } }];
+    }
 
     const allowedSorts = ['updatedAt', 'createdAt', 'name', 'price', 'totalStock'];
     const sortField = allowedSorts.includes(sort) ? sort : 'updatedAt';
