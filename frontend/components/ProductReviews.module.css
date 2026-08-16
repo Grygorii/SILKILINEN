@@ -31,7 +31,9 @@
 
 .starsRow { display: inline-flex; gap: 2px; line-height: 1; }
 .starOn { color: var(--color-gold-bright); }
-.starOff { color: var(--color-line); }
+/* --color-line is a DIVIDER colour at 1.14:1 — as an empty star it was
+   invisible, so a 3-star rating looked identical to a 5-star one. */
+.starOff { color: var(--color-gold-empty); }
 
 /* ── Summary + invite ── */
 .summary {

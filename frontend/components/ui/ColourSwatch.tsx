@@ -1,5 +1,6 @@
 'use client';
 
+import { colourToHex } from '@/lib/colourHex';
 import styles from './ColourSwatch.module.css';
 
 export type Swatch = {
@@ -8,8 +9,13 @@ export type Swatch = {
   soldOut?: boolean;
 };
 
-// One labelled square — replaces the text-cube row. Fallback fill is
-// surface-warm when hex is missing, so the layout never collapses.
+// One labelled square — replaces the text-cube row.
+//
+// When a product carries no colorHex, the shade is derived from its NAME before
+// falling back to the neutral placeholder. Falling straight through to
+// surface-warm meant "Silk bikini briefs in Black" rendered a CREAM square —
+// a confident wrong answer, which a customer reads as the colour rather than as
+// missing data. The placeholder now only appears for names we truly don't know.
 export function ColourSwatch({
   swatch,
   selected,
@@ -19,7 +25,7 @@ export function ColourSwatch({
   selected?: boolean;
   onSelect?: () => void;
 }) {
-  const bg = swatch.hex || 'var(--color-surface-warm)';
+  const bg = swatch.hex || colourToHex(swatch.name) || 'var(--color-surface-warm)';
   return (
     <button
       type="button"

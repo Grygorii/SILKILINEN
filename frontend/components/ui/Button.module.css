@@ -44,11 +44,16 @@
 .secondary:hover:not(:disabled) { background: var(--color-surface); }
 .secondary:active:not(:disabled) { background: var(--color-surface); opacity: 0.85; }
 
-/* Disabled primary — warm-beige fill, full-charcoal text at 0.5 */
+/* Disabled primary — warm-beige fill.
+   Was 0.5 opacity, which put the label at 2.96:1 against its own fill: below
+   the 4.5:1 text minimum, on the LARGEST element of the product page. That one
+   control is most of why the page reads "faded" — the body text is 14.77:1 and
+   was never the problem. 0.7 clears it at 5.21:1 while still reading clearly as
+   unavailable, since the beige fill is what signals disabled, not the fade. */
 .disabledPrimary {
   background: var(--color-surface-warm);
   color: var(--color-ink);
   border-color: var(--color-surface-warm);
   cursor: not-allowed;
 }
-.disabledPrimary > * { opacity: 0.5; }
+.disabledPrimary > * { opacity: 0.7; }

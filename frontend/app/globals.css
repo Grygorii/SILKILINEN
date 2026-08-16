@@ -56,7 +56,16 @@ img {
   --color-bg:           #FAF8F4;  /* canvas */
   --color-surface:      #F5F0E8;  /* hover, soft fills */
   --color-surface-warm: #ECE4D4;  /* disabled, NEW tag */
-  --color-line:         #E8E2D6;  /* dividers only */
+  --color-line:         #E8E2D6;  /* DECORATIVE dividers only — 1.22:1, invisible by design */
+  /* Interactive boundaries: size pills, inputs, buttons, anything a customer
+     is meant to see as a control. --color-line is 1.22:1 against the canvas,
+     which reads as "faded" and fails WCAG 1.4.11 (3:1 for UI components) —
+     the size pills on the product page were ghosts. This clears it at 3.34:1
+     while staying on the brand's warm axis, so the page keeps its softness
+     and the CONTROLS stop disappearing. Text was never the problem: body ink
+     is 14.77:1. Use --color-line for rules between sections, this for
+     anything clickable. */
+  --color-line-control: #948674;
   --color-ink-muted:    #6B6358;  /* meta, labels — darkened to meet WCAG AA (~5.6:1 on cream) */
   --color-ink:          #2A2218;  /* text, primary fill */
   --color-accent:       #C4A882;  /* rose-gold, used sparingly */
@@ -67,8 +76,14 @@ img {
   --color-success-soft: #EAF7EE;  /* success badge background            */
   --color-danger:       #C0392B;  /* validation + error text/banners     */
   --color-danger-soft:  #FDF0EE;  /* error badge background              */
-  --color-gold:         #9A7636;  /* rating / verified labels (AA on cream) */
-  --color-gold-bright:  #C8A24C;  /* star + bar fill                     */
+  /* Ratings are the shop's trust signal and were the hardest thing on the page
+     to read. The filled star was 2.12:1 against cream — below the 3:1 WCAG
+     needs for a meaningful graphic — and the EMPTY star was 1.14:1, so a
+     customer could not tell three stars from five without counting shapes.
+     Darkened until both clear their thresholds; still gold, just legible. */
+  --color-gold:         #856427;  /* rating text / verified labels — 5.14:1 on page */
+  --color-gold-bright:  #A67F24;  /* filled star — 3.26:1 on cream, clears 3:1     */
+  --color-gold-empty:   #C6BAA6;  /* empty star — visible enough to count against  */
 
   /* Inverse neutrals — text/dividers on the dark footer (var(--color-ink) bg). */
   --color-ink-inverse:       #C8C4BE;  /* text on dark     */
