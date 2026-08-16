@@ -50,6 +50,44 @@ const STAGES = [
   },
 ];
 
+// Stage counts for one time window. Extracted so the same maths can run over
+// the previous window and the two can be compared — a funnel that can't see
+// last week can only ever tell you the level, never the change.
+async function stageCounts(since, until) {
+  const eventTypes = STAGES.filter(s => s.event).map(s => s.event);
+  const range = until ? { $gte: since, $lt: until } : { $gte: since };
+
+  const [sessionAgg, stageAgg] = await Promise.all([
+    Visit.aggregate([
+      { $match: { createdAt: range } },
+      { $group: { _id: '$sessionId' } },
+      { $count: 'n' },
+    ]).catch(() => []),
+    Event.aggregate([
+      { $match: { createdAt: range, type: { $in: eventTypes } } },
+      { $group: { _id: { t: '$type', s: '$sessionId' } } },
+      { $group: { _id: '$_id.t', n: { $sum: 1 } } },
+    ]).catch(() => []),
+  ]);
+
+  const counts = Object.fromEntries(stageAgg.map(s => [s._id, s.n]));
+  const sessions = sessionAgg[0]?.n || 0;
+
+  let prev = null;
+  return STAGES.map(s => {
+    const raw = s.event ? (counts[s.event] || 0) : sessions;
+    // A later stage can exceed an earlier one when a visitor's session spans the
+    // window boundary (they added to cart yesterday, paid today). Clamping keeps
+    // the funnel monotonic so a "drop" is never negative and never misleads.
+    const value = prev === null ? raw : Math.min(raw, prev);
+    const lost = prev === null ? 0 : prev - value;
+    const rate = prev ? Math.round((value / prev) * 100) : 100;
+    const enteredFrom = prev === null ? value : prev;
+    prev = value;
+    return { key: s.key, label: s.label, count: value, lost, rate, enteredFrom, why: s.why, fix: s.fix };
+  });
+}
+
 /**
  * Funnel over the last `days`, counted in DISTINCT SESSIONS per stage (not raw
  * events, so one person reloading a product page five times is still one).
@@ -61,36 +99,13 @@ const STAGES = [
  */
 async function getFunnel(days = 14) {
   const since = new Date(Date.now() - days * 86400000);
-  const eventTypes = STAGES.filter(s => s.event).map(s => s.event);
+  const prevSince = new Date(Date.now() - days * 2 * 86400000);
 
-  const [sessionAgg, stageAgg] = await Promise.all([
-    Visit.aggregate([
-      { $match: { createdAt: { $gte: since } } },
-      { $group: { _id: '$sessionId' } },
-      { $count: 'n' },
-    ]).catch(() => []),
-    Event.aggregate([
-      { $match: { createdAt: { $gte: since }, type: { $in: eventTypes } } },
-      { $group: { _id: { t: '$type', s: '$sessionId' } } },
-      { $group: { _id: '$_id.t', n: { $sum: 1 } } },
-    ]).catch(() => []),
+  const [stages, prevStages] = await Promise.all([
+    stageCounts(since),
+    stageCounts(prevSince, since),
   ]);
-
-  const counts = Object.fromEntries(stageAgg.map(s => [s._id, s.n]));
-  const sessions = sessionAgg[0]?.n || 0;
-
-  let prev = null;
-  const stages = STAGES.map(s => {
-    const count = s.event ? (counts[s.event] || 0) : sessions;
-    // A later stage can exceed an earlier one when a visitor's session spans the
-    // window boundary (they added to cart yesterday, paid today). Clamping keeps
-    // the funnel monotonic so a "drop" is never negative and never misleads.
-    const value = prev === null ? count : Math.min(count, prev);
-    const lost = prev === null ? 0 : prev - value;
-    const rate = prev ? Math.round((value / prev) * 100) : 100;
-    prev = value;
-    return { key: s.key, label: s.label, count: value, lost, rate, why: s.why, fix: s.fix };
-  });
+  const sessions = stages[0].count;
 
   // The leak worth acting on: most people lost, ignoring the final stage (which
   // has nowhere to leak to).
@@ -102,12 +117,15 @@ async function getFunnel(days = 14) {
   const overall = sessions ? Math.round((stages[stages.length - 1].count / sessions) * 1000) / 10 : 0;
 
   const diagnosis = await diagnoseLeak(stages, biggestLeak, since);
+  const shifts = detectShifts(stages, prevStages);
 
   return {
     days,
     stages,
     biggestLeak,
     diagnosis,
+    shifts,
+    biggestShift: shifts.length ? shifts[0] : null,
     overallConversion: overall,
     // Pre-traction the honest answer is "not enough data yet", not a chart of
     // zeros that invites reading noise as signal.
@@ -217,4 +235,45 @@ async function diagnoseLeak(stages, biggestLeak, since) {
   return { device, source, products, minSegment: MIN_SEGMENT };
 }
 
-module.exports = { getFunnel, STAGES };
+// How many points a step's conversion rate must move week-over-week before it
+// is worth interrupting the founder. Rates on small samples wander on their own,
+// so a low threshold here would cry wolf every week and the panel would stop
+// being read — the expensive failure, not a missed alert.
+const SHIFT_POINTS = 10;
+
+/**
+ * What CHANGED, comparing this window against the one before it.
+ *
+ * A funnel that only shows the level tells you where you are; you have to
+ * remember last week yourself to know if you are sliding. This is the part that
+ * taps you on the shoulder.
+ *
+ * Both windows must have real volume entering the step (MIN_SEGMENT), because
+ * "conversion fell from 100% to 50%" across two visitors is arithmetic, not news.
+ * Sorted worst drop first, so the caller can take [0] as the headline.
+ */
+function detectShifts(stages, prevStages) {
+  const before = Object.fromEntries(prevStages.map(s => [s.key, s]));
+  return stages
+    .slice(1)
+    .map(s => {
+      const was = before[s.key];
+      if (!was) return null;
+      if (s.enteredFrom < MIN_SEGMENT || was.enteredFrom < MIN_SEGMENT) return null;
+      const delta = s.rate - was.rate;
+      if (Math.abs(delta) < SHIFT_POINTS) return null;
+      return {
+        key: s.key,
+        label: s.label,
+        rateNow: s.rate,
+        ratePrev: was.rate,
+        delta,
+        direction: delta < 0 ? 'down' : 'up',
+        fix: s.fix,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.delta - b.delta);
+}
+
+module.exports = { getFunnel, STAGES, detectShifts, MIN_SEGMENT, SHIFT_POINTS };

@@ -32,11 +32,19 @@ type Diagnosis = {
   minSegment: number;
 } | null;
 
+type Shift = {
+  key: string; label: string; rateNow: number; ratePrev: number;
+  delta: number; direction: 'up' | 'down';
+  fix: { label: string; href: string } | null;
+};
+
 type Funnel = {
   days: number;
   stages: Stage[];
   biggestLeak: Stage | null;
   diagnosis: Diagnosis;
+  shifts: Shift[];
+  biggestShift: Shift | null;
   overallConversion: number;
   hasData: boolean;
 };
@@ -106,6 +114,33 @@ export default function FunnelPanel() {
         </p>
       ) : (
         <>
+          {/* What CHANGED comes first. The level tells you where you are; the
+              movement is the part worth interrupting someone for. */}
+          {data.biggestShift && (
+            <div
+              style={{
+                background: data.biggestShift.direction === 'down' ? 'var(--admin-danger-soft)' : 'var(--admin-success-soft)',
+                borderLeft: `3px solid ${data.biggestShift.direction === 'down' ? 'var(--admin-danger)' : 'var(--admin-success)'}`,
+                padding: '10px 12px',
+                margin: '12px 0 0',
+              }}
+            >
+              <p style={{ fontSize: 13, color: 'var(--admin-ink)', margin: 0, fontWeight: 600 }}>
+                {data.biggestShift.direction === 'down' ? 'Slipping' : 'Improving'}: &ldquo;{data.biggestShift.label}&rdquo;{' '}
+                {data.biggestShift.ratePrev}% → {data.biggestShift.rateNow}%
+                {' '}({data.biggestShift.delta > 0 ? '+' : ''}{data.biggestShift.delta} pts vs the previous {data.days} days)
+              </p>
+              {data.biggestShift.direction === 'down' && data.biggestShift.fix && (
+                <Link
+                  href={data.biggestShift.fix.href}
+                  style={{ fontSize: 12, color: 'var(--admin-ink)', display: 'inline-block', marginTop: 6 }}
+                >
+                  {data.biggestShift.fix.label} →
+                </Link>
+              )}
+            </div>
+          )}
+
           {data.biggestLeak && (
             <div
               style={{
