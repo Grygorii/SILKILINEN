@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import AnalyticsLoader from "@/components/AnalyticsLoader";
+import { Analytics } from "@vercel/analytics/next";
 import EventTracker from "@/components/EventTracker";
 import UTMCapture from "@/components/UTMCapture";
 import GoogleAuthProvider from "@/components/GoogleAuthProvider";
@@ -243,6 +244,20 @@ export default async function RootLayout({
                 <CartProvider>
                   <CurrencyProvider>
                     {children}
+                    {/* Vercel Analytics — page views and traffic sources.
+                        Deliberately NOT behind cookie consent, and consistent
+                        with the first-party posture already in lib/analytics:
+                        it sets no cookies, stores no identifier, and reports to
+                        a same-origin path (/_vercel/insights), so the enforcing
+                        CSP's script-src 'self' already covers it. The tools
+                        that ARE gated — GA, Clarity, Meta, Pinterest — are
+                        gated because they set cookies and send data to someone
+                        else's account. This does neither.
+
+                        It also fills the gap the funnel work left: the panel
+                        can say where visitors drop, but nothing was recording
+                        how many arrived or where from. */}
+                    <Analytics />
                     <AnalyticsLoader />
                     <EventTracker />
                     <UTMCapture />
