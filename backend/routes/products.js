@@ -217,6 +217,23 @@ async function attachRatings(products) {
 const MAX_LIMIT = 1000;
 const SLIM_PROJECTION = 'name price slug status updatedAt isNewArrival';
 
+// Exactly what a product CARD renders, and nothing else.
+//
+// Listings were served with PUBLIC_PROJECTION, which excludes three cost fields
+// and returns everything else — full descriptions, every variant, meta fields,
+// previousSlugs. A grid renders none of that. The payload therefore grew with
+// the length of the copywriting rather than with the number of products shown,
+// and every shop, category and search page paid for it.
+//
+// Keep this in step with ProductCardData in components/ProductCard.tsx: a field
+// dropped here renders as undefined rather than failing loudly.
+const CARD_PROJECTION = [
+  '_id', 'name', 'slug', 'price', 'compareAtPrice', 'category', 'status',
+  'images', 'image', 'sizes', 'colours', 'colorName', 'materialComposition',
+  'isNewArrival', 'isNew', 'totalStock', 'inStock', 'createdAt',
+  'ratingAverage', 'ratingCount',
+].join(' ');
+
 router.get('/', async function(req, res) {
   try {
     const { sort, limit, category, q, ids, isNew, slim, locale } = req.query;
@@ -257,7 +274,11 @@ router.get('/', async function(req, res) {
         { materialComposition: { $regex: safe, $options: 'i' } },
       ];
     }
-    let query = Product.find(filter).select(isSlim ? SLIM_PROJECTION : PUBLIC_PROJECTION).lean();
+    // `full=true` is the escape hatch for any caller that genuinely needs the
+    // whole document; listings get the card projection.
+    const projection = isSlim ? SLIM_PROJECTION
+      : (req.query.full === 'true' ? PUBLIC_PROJECTION : CARD_PROJECTION);
+    let query = Product.find(filter).select(projection).lean();
     if (sort === '-createdAt') query = query.sort({ createdAt: -1 });
     // Always bound the result: honour an explicit ?limit (capped), else apply
     // the safety ceiling so the response can never grow with the whole catalogue.
