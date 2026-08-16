@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import SearchTracker from '@/components/SearchTracker';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { clampMeta } from '@/lib/clampMeta';
 import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, type PageLocale } from '@/lib/i18n-server';
@@ -196,6 +197,9 @@ export default async function ShopPage({
 
   return (
     <main className={styles.page}>
+      {/* Records the query AND how many products it returned. A zero-result
+          search is the clearest demand signal the shop can produce. */}
+      {q && <SearchTracker query={q} results={products.length} />}
       <div className={styles.pageHeader}>
         <h1 className={styles.title}>{heading}</h1>
         {description && (

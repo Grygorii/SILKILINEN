@@ -135,6 +135,20 @@ async function buildRecommendations() {
     }
   }
 
+  // ── Demand we did not meet ──
+  // A zero-result search is a customer who told us exactly what they wanted and
+  // left with nothing. It reaches the weekly digest because it decays: knowing
+  // three people searched "silk kimono" last week is actionable, knowing it
+  // three months later is trivia.
+  const cs = await require('./clickstream').getClickstreamSignals(14).catch(() => null);
+  if (cs?.unmetSearches?.length) {
+    const top = cs.unmetSearches[0];
+    const rest = cs.unmetSearches.slice(1, 4).map(u => `"${u.term}"`).join(', ');
+    recs.push(rec('high', 'Demand', `${top.people} searched "${top.term}" and found nothing`,
+      `Searches that return an empty page are the clearest demand signal we get.${rest ? ` Also unmet: ${rest}.` : ''}`,
+      'Check whether we already sell it under a different name — a synonym in the product title fixes it without new stock.'));
+  }
+
   recs.sort((a, b) => ORDER[a.priority] - ORDER[b.priority]);
   return recs;
 }

@@ -14,7 +14,7 @@ const { getFunnel } = require('./funnel');
 async function getClickstreamSignals(days = 14) {
   const since = new Date(Date.now() - days * 86400000);
 
-  const [full, searches, clicks] = await Promise.all([
+  const [full, searches, misses, clicks] = await Promise.all([
     // The funnel is NOT recomputed here. services/funnel.js owns it — including
     // the monotonic clamping, the segment gates and the week-over-week shift —
     // and this file used to run its own slightly different aggregation of the
@@ -26,6 +26,17 @@ async function getClickstreamSignals(days = 14) {
       { $match: { createdAt: { $gte: since }, type: 'search' } },
       { $group: { _id: '$props.search_term', n: { $sum: 1 } } },
       { $match: { _id: { $nin: [null, ''] } } }, { $sort: { n: -1 } }, { $limit: 10 },
+    ]).catch(() => []),
+    // Searches that returned NOTHING. The least ambiguous signal in the shop:
+    // someone typed exactly what they came to buy and we showed them an empty
+    // page. Usually a naming problem (we sell it, under a word nobody searches)
+    // before it is a stocking problem.
+    Event.aggregate([
+      { $match: { createdAt: { $gte: since }, type: 'search', 'props.no_results': true } },
+      { $group: { _id: '$props.search_term', n: { $sum: 1 }, sessions: { $addToSet: '$sessionId' } } },
+      { $match: { _id: { $nin: [null, ''] } } },
+      { $project: { n: 1, people: { $size: '$sessions' } } },
+      { $sort: { people: -1, n: -1 } }, { $limit: 8 },
     ]).catch(() => []),
     // Most-clicked products (interest, not just sales).
     Event.aggregate([
@@ -39,6 +50,7 @@ async function getClickstreamSignals(days = 14) {
   const totalSessions = byKey.sessions || 0;
   const topSearches = searches.map(s => ({ term: s._id, count: s.n }));
   const topClicked = clicks.map(c => ({ name: c._id, count: c.n }));
+  const unmetSearches = misses.map(m => ({ term: m._id, count: m.n, people: m.people }));
 
   return {
     days,
@@ -55,6 +67,7 @@ async function getClickstreamSignals(days = 14) {
     full,
     topSearches,
     topClicked,
+    unmetSearches,
     hasData: totalSessions > 0 || topSearches.length > 0 || topClicked.length > 0,
   };
 }
@@ -101,6 +114,9 @@ function clickstreamPromptLine(cs) {
 
   parts.push(`On-site SEARCHES (real demand, what visitors typed): ${searches}.`);
   parts.push(`Most-CLICKED products (interest): ${clicked}.`);
+  if (cs.unmetSearches?.length) {
+    parts.push(`SEARCHED BUT FOUND NOTHING (demand we did not meet): ${cs.unmetSearches.map(u => `"${u.term}" (${u.people} ${u.people === 1 ? 'person' : 'people'})`).join(', ')}. Check whether we sell it under a different name before treating it as a gap in the range.`);
+  }
   // Anything absent above was withheld by a sample gate, not by absence of a
   // problem — say so, or an agent will read silence as "all fine".
   parts.push('Any breakdown not listed was withheld for insufficient sample, not because it is healthy.');
