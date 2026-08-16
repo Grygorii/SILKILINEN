@@ -147,6 +147,21 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   Gates: `MIN_SEGMENT` 8 sessions to name a segment, `SHIFT_POINTS` 10 to report a
   week-over-week move. **Silence means "not enough data", never "no problem"** — say so
   in any surface that renders it, or agents read absence as health.
+- **Selling loop (added this session):** on-site search is recorded WITH its result
+  count (`components/SearchTracker.tsx`) — zero-result searches are surfaced as unmet
+  demand in the advisor + agents, and product search matches name/description/category/
+  colours/colorName/sizes/material so "sky blue" finds the piece. Back-in-stock waitlist:
+  `models/StockNotification` + `routes/stockNotify.js` + `services/stockNotify.js`
+  (hourly sweep, claims the row BEFORE sending). Checkout email persists on BLUR, not at
+  submit, or cart recovery can only reach people who already paid.
+- **Funnel self-check:** `findBlindSpots()` flags a stage whose event has NEVER been
+  recorded while the previous stage has traffic — an uninstrumented stage is
+  indistinguishable from "nobody got there", and both `search` and `add_to_cart`'s
+  `productId` were silently missing. Event `productId` is a TOP-LEVEL field; putting it
+  in `props` makes it invisible to every aggregation.
+- **Advisor ranking:** priority band first, then named-cause categories (Demand,
+  Conversion) ahead of housekeeping; the weekly digest takes the top 3 and states how
+  many it held back. Tests in `tests/advisorRank.test.js`.
 - **Style Finder question count:** `lib/styleFinder.ts`. The homepage band can't import
   `QUESTIONS` (bundle cost), so `StyleFinder.tsx` asserts `QUESTIONS.length` against it in
   dev. Add a question → update `QUESTION_COUNT`.

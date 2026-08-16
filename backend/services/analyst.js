@@ -50,8 +50,36 @@ const TOOLS = {
         bySource: f.diagnosis?.source,
         productsLosingViewers: f.diagnosis?.products || [],
         changeVsPrevious: f.biggestShift,
+        // Stages we are not recording. Handed over explicitly so the model
+        // cannot read an uninstrumented step as customers vanishing and
+        // recommend redesigning a page that is working fine.
+        notBeingRecorded: f.blindSpots || [],
         // Say it plainly, or the model reads an absent breakdown as "no problem".
         note: 'Breakdowns absent above were withheld for insufficient sample, not because they are healthy.',
+      };
+    },
+  },
+  unmet_demand: {
+    description: 'What visitors searched for on the site and found NOTHING, plus who is waiting for a sold-out piece to return. Use for "what should I stock", "what are people looking for", missed demand, restocks. Args: {days}',
+    run: async ({ days }) => {
+      const d = clampDays(days);
+      const [cs, waiting] = await Promise.all([
+        require('./clickstream').getClickstreamSignals(d).catch(() => null),
+        require('../models/StockNotification').aggregate([
+          { $match: { notifiedAt: null } },
+          { $group: { _id: '$product', people: { $sum: 1 } } },
+          { $sort: { people: -1 } }, { $limit: 5 },
+        ]).catch(() => []),
+      ]);
+      const names = waiting.length
+        ? await Product.find({ _id: { $in: waiting.map(w => w._id) } }).select('_id name').lean().catch(() => [])
+        : [];
+      const byId = Object.fromEntries(names.map(p => [String(p._id), p.name]));
+      return {
+        days: d,
+        searchedAndFoundNothing: cs?.unmetSearches || [],
+        waitingForRestock: waiting.map(w => ({ product: byId[String(w._id)] || 'unknown', people: w.people })),
+        note: 'A search returning nothing is usually a NAMING problem before a stocking one — check whether we sell it under a word nobody searches for.',
       };
     },
   },
