@@ -27,12 +27,12 @@ export default function FinanceAnomalies() {
   if (anomalies.length === 0) return null;
 
   return (
-    <div style={{ background: '#fff8e1', border: '1px solid #f0e0a0', padding: '14px 18px', marginBottom: 16 }}>
+    <div style={{ background: 'var(--admin-warning-soft)', border: '1px solid var(--admin-warning)', padding: '14px 18px', marginBottom: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <span style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#b07d00' }}>
+        <span style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-warning)' }}>
           ⚠ {anomalies.length} finance anomal{anomalies.length > 1 ? 'ies' : 'y'}
         </span>
-        <Link href="/admin/finance/reports" style={{ fontSize: 12, color: '#5c35a8', textDecoration: 'none' }}>Open Reports →</Link>
+        <Link href="/admin/finance/reports" style={{ fontSize: 12, color: 'var(--admin-info)', textDecoration: 'none' }}>Open Reports →</Link>
       </div>
       <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
         {anomalies.slice(0, 4).map((a, i) => (

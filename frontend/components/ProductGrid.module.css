@@ -2,7 +2,7 @@
    Grid-level non-token values:
      - `2px` for `column-gap` — the spec asks for a "near-zero" hairline
        gap; there is no design-system token below `--s-1 = 4px`.
-     - `#FFFFFF` — the grid background (one clean white vertical line
+     - `var(--color-bg)` — the grid background (one clean white vertical line
        between columns, visible against the warm-cream page).
    The card itself lives in ProductCard.module.css.
 */
@@ -96,7 +96,7 @@
   grid-template-columns: repeat(4, 1fr);
   column-gap: 2px;
   row-gap: 0;
-  background: #FFFFFF;
+  background: var(--color-bg);
 }
 
 /* ── Responsive — 4 / 3 / 2 columns ──────────────────

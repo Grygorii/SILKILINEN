@@ -46,8 +46,8 @@ export default function AdminModal({
         tabIndex={-1}
         onClick={e => e.stopPropagation()}
         style={{
-          background: '#fff', width: '100%', maxWidth: 460,
-          border: '1px solid #e0d9cc', boxShadow: '0 10px 40px rgba(26,25,22,0.2)',
+          background: 'var(--color-bg)', width: '100%', maxWidth: 460,
+          border: '1px solid var(--color-line)', boxShadow: '0 10px 40px rgba(26,25,22,0.2)',
           padding: 24, borderRadius: 2, outline: 'none',
         }}
       >

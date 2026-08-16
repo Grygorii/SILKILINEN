@@ -104,7 +104,7 @@
 }
 
 .avoid {
-  background: #fff;
+  background: var(--color-bg);
   border: 1px solid var(--border);
   padding: 18px 22px;
   font-size: 14px;
@@ -150,9 +150,9 @@
     top: 0;
     width: 100%;
     padding: 0 8mm;
-    background: #fff;
+    background: var(--color-bg);
   }
-  .page { background: #fff; padding: 0; }
+  .page { background: var(--color-bg); padding: 0; }
   .actions { display: none !important; }
   .header h1 { font-size: 30px; }
   .section { break-inside: avoid; border-top-color: #ddd; }

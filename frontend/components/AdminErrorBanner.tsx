@@ -17,8 +17,8 @@ export default function AdminErrorBanner({ error, onRetry }: { error: string; on
       role="alert"
       style={{
         padding: '12px 16px',
-        background: '#fdf0ed',
-        border: '1px solid #f5c2bb',
+        background: 'var(--admin-danger-soft)',
+        border: '1px solid var(--admin-danger)',
         color: 'var(--color-danger)',
         fontSize: 13,
         marginBottom: 16,

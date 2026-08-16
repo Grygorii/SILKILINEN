@@ -14,7 +14,7 @@
 .panel {
   width: 100%;
   max-width: 560px;
-  background: #fff;
+  background: var(--color-bg);
   border: 1px solid var(--color-line);
   border-radius: 8px;
   box-shadow: 0 16px 48px rgba(42, 34, 24, 0.16);
@@ -67,11 +67,11 @@
 }
 
 .row:hover {
-  background: var(--cream, #f5f2ec);
+  background: var(--color-surface);
 }
 
 .rowSelected {
-  background: var(--cream, #f5f2ec);
+  background: var(--color-surface);
   border-left-color: var(--color-ink);
 }
 
@@ -130,7 +130,7 @@
   background: none;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 5px;
-  color: var(--a-sidebar-text, #b0aca6);
+  color: var(--color-ink-muted);
   font-size: 12px;
   font-family: inherit;
   cursor: pointer;
@@ -139,7 +139,7 @@
 
 .trigger:hover {
   background: var(--a-sidebar-hover, rgba(255, 255, 255, 0.07));
-  color: var(--warm-white, #f9f6f1);
+  color: var(--color-surface);
 }
 
 .triggerKey {

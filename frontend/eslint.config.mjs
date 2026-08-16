@@ -96,17 +96,23 @@ const eslintConfig = defineConfig([
     ignores: ['app/(shop)/**/opengraph-image.tsx', 'app/(shop)/**/twitter-image.tsx'],
     rules: {
       'jsx-a11y/label-has-associated-control': ['error', { assert: 'either', depth: 3 }],
-      // ESLint applies ONE severity per rule, so the storefront hex selector
-      // cannot ride along here at 'warn' without dragging the product-URL guard
-      // down from 'error' with it — weakening a real guard to introduce a soft
-      // one. The URL selector stays error and alone; the storefront hex rule
-      // lands when its ~109 near-miss shades are consolidated and it can be an
-      // error too. Until then the convention is documented in PROJECT_MAP, and
-      // the exact-value literals are already migrated.
-      'no-restricted-syntax': ['error', {
-        selector: "TemplateLiteral > TemplateElement[value.raw=/\\/product\\/$/]",
-        message: "Don't hand-build product URLs — use productPath/productHref from '@/lib/urls' so links are always canonical (slug, not ObjectId).",
-      }],
+      // Both selectors at 'error' now that the storefront tail is migrated —
+      // ESLint applies one severity per rule, so this had to wait until the
+      // colour rule could be an error too rather than dragging the URL guard
+      // down to 'warn' with it.
+      'no-restricted-syntax': ['error',
+        {
+          selector: "TemplateLiteral > TemplateElement[value.raw=/\\/product\\/$/]",
+          message: "Don't hand-build product URLs — use productPath/productHref from '@/lib/urls' so links are always canonical (slug, not ObjectId).",
+        },
+        {
+          selector: "Literal[value=/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/]",
+          message:
+            "Don't hardcode hex on the storefront — use the brand tokens in globals.css " +
+            "(--color-ink, --color-bg, --color-line, --color-accent, --color-success, …). " +
+            "Image-generation routes (Satori) are exempt: var() does not resolve there.",
+        },
+      ],
     },
   },
   globalIgnores([

@@ -58,7 +58,7 @@
   transition: opacity 0.2s ease, background 0.2s ease;
 }
 .arrow:hover {
-  background: #fff;
+  background: var(--color-bg);
 }
 .arrow:disabled {
   opacity: 0;
@@ -89,7 +89,7 @@
   .track {
     gap: 2px;
     padding: 0;
-    background: #FFFFFF;
+    background: var(--color-bg);
     scroll-snap-type: x mandatory;
   }
   .item {

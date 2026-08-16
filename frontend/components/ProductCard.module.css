@@ -5,7 +5,7 @@
    container; this module owns the card itself.
 
    Deliberate literals (not tokens) in this file:
-     - `#FFFFFF` — the "new" badge text. The cream `--color-bg` would
+     - `var(--color-bg)` — the "new" badge text. The cream `--color-bg` would
        wash out on bright silk photography; this needs pure white.
      - `rgba(0, 0, 0, 0.5)` — text-shadow behind the white "new" badge
        for legibility on bright photography.
@@ -208,7 +208,7 @@
   right: var(--s-3);
   font-size: 11px;
   font-style: italic;
-  color: #FFFFFF;
+  color: var(--color-bg);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   letter-spacing: 0.5px;
   pointer-events: none;

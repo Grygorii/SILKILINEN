@@ -54,7 +54,11 @@ type Question = {
 
 /* Tasteful swatch hexes for the colour/mood question, keyed by option index.
    Used only for presentation — scoring still flows through colourHints. */
-const MOOD_SWATCHES = ['#e8dcc4', 'var(--color-ink)', '#e3c6c2', '#c2cabb'];
+// CONTENT, not theming. These are the colours the quiz shows as mood
+// swatches — the customer is choosing between them, so they must stay literal.
+// A token here would repaint an answer option if the brand palette changed.
+// eslint-disable-next-line no-restricted-syntax
+const MOOD_SWATCHES = ['#e8dcc4', '#2a2218', '#e3c6c2', '#c2cabb'];
 
 /* The whole quiz config in one place. Weights point at the real category
    slugs above; the scorer falls back gracefully if a slug isn't stocked. */

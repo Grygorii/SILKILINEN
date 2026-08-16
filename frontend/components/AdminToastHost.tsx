@@ -6,9 +6,9 @@ import { ADMIN_TOAST_EVENT, type ToastKind } from '@/lib/adminToast';
 type Toast = { id: number; message: string; kind: ToastKind };
 
 const COLORS: Record<ToastKind, { bg: string; border: string; fg: string }> = {
-  success: { bg: '#eef7ee', border: '#bfe3bf', fg: '#1a6b3c' },
-  error:   { bg: '#fdf0ef', border: '#f0c8c2', fg: '#b03a2e' },
-  info:    { bg: '#f5f2ec', border: '#e0d9cc', fg: 'var(--color-ink)' },
+  success: { bg: 'var(--admin-success-soft)', border: 'var(--admin-success)', fg: 'var(--color-success)' },
+  error:   { bg: 'var(--admin-danger-soft)', border: 'var(--admin-danger)', fg: 'var(--color-danger)' },
+  info:    { bg: 'var(--color-surface)', border: 'var(--color-line)', fg: 'var(--color-ink)' },
 };
 
 let nextId = 1;

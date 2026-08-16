@@ -79,7 +79,7 @@ export default function ImageCropModal({ files, onComplete, onClose }: Props) {
     canvas.width = ow; canvas.height = oh;
     const ctx = canvas.getContext('2d');
     if (!ctx || !imgRef.current) return file;
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = 'var(--color-bg)';
     ctx.fillRect(0, 0, ow, oh);
     const k = ow / vw;            // viewport → output scale
     ctx.scale(k, k);
@@ -108,10 +108,10 @@ export default function ImageCropModal({ files, onComplete, onClose }: Props) {
     <div style={overlay} onClick={busy ? undefined : onClose}>
       <div style={modal} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-          <h3 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: 18, color: '#1a1916' }}>Crop &amp; resize</h3>
+          <h3 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: 18, color: 'var(--color-ink)' }}>Crop &amp; resize</h3>
           <button onClick={onClose} disabled={busy} style={closeBtn} aria-label="Close">×</button>
         </div>
-        {files.length > 1 && <p style={{ margin: '0 0 10px', fontSize: 12, color: '#8a8680' }}>Photo {index + 1} of {files.length}</p>}
+        {files.length > 1 && <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--color-ink-muted)' }}>Photo {index + 1} of {files.length}</p>}
 
         {/* Aspect ratios */}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
@@ -123,7 +123,7 @@ export default function ImageCropModal({ files, onComplete, onClose }: Props) {
 
         {/* Crop viewport */}
         <div
-          style={{ width: vw, height: vh, margin: '0 auto', overflow: 'hidden', position: 'relative', background: '#000', touchAction: 'none', cursor: 'grab', userSelect: 'none' }}
+          style={{ width: vw, height: vh, margin: '0 auto', overflow: 'hidden', position: 'relative', background: 'var(--color-ink)', touchAction: 'none', cursor: 'grab', userSelect: 'none' }}
           onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerLeave={onUp}
         >
           {src && (
@@ -135,10 +135,10 @@ export default function ImageCropModal({ files, onComplete, onClose }: Props) {
 
         {/* Zoom */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '14px 0 4px' }}>
-          <span style={{ fontSize: 12, color: '#8a8680' }}>Zoom</span>
+          <span style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>Zoom</span>
           <input type="range" min={1} max={3} step={0.01} value={zoom} onChange={e => setZoom(Number(e.target.value))} style={{ flex: 1 }} />
         </div>
-        <p style={{ fontSize: 11, color: '#aca8a2', margin: '4px 0 14px' }}>Drag the photo to reposition. Exports a clean 1600px JPEG.</p>
+        <p style={{ fontSize: 11, color: 'var(--admin-ink-muted)', margin: '4px 0 14px' }}>Drag the photo to reposition. Exports a clean 1600px JPEG.</p>
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           <button onClick={() => advance(true)} disabled={busy} style={ghostBtn}>Use original</button>
@@ -152,9 +152,9 @@ export default function ImageCropModal({ files, onComplete, onClose }: Props) {
 }
 
 const overlay: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(26,25,22,0.55)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '32px 16px', zIndex: 2000, overflowY: 'auto' };
-const modal: React.CSSProperties = { background: '#fbf8f2', border: '1px solid #e6e1d8', padding: '22px 24px 24px', width: '100%', maxWidth: 460, boxShadow: '0 24px 60px rgba(0,0,0,0.25)' };
-const closeBtn: React.CSSProperties = { background: 'none', border: 'none', fontSize: 24, lineHeight: 1, color: '#8a8680', cursor: 'pointer' };
-const chip: React.CSSProperties = { border: '1px solid #cfc7b8', background: '#fff', padding: '5px 11px', fontSize: 12, cursor: 'pointer', color: '#1a1916' };
-const chipOn: React.CSSProperties = { background: '#1a1916', color: '#fff', borderColor: '#1a1916' };
-const primaryBtn: React.CSSProperties = { background: '#1a1916', color: '#fff', border: 'none', padding: '9px 18px', fontSize: 13, cursor: 'pointer' };
-const ghostBtn: React.CSSProperties = { background: '#fff', color: '#1a1916', border: '1px solid #cfc7b8', padding: '9px 16px', fontSize: 13, cursor: 'pointer' };
+const modal: React.CSSProperties = { background: 'var(--admin-bg)', border: '1px solid var(--color-line)', padding: '22px 24px 24px', width: '100%', maxWidth: 460, boxShadow: '0 24px 60px rgba(0,0,0,0.25)' };
+const closeBtn: React.CSSProperties = { background: 'none', border: 'none', fontSize: 24, lineHeight: 1, color: 'var(--color-ink-muted)', cursor: 'pointer' };
+const chip: React.CSSProperties = { border: '1px solid var(--color-line)', background: 'var(--color-bg)', padding: '5px 11px', fontSize: 12, cursor: 'pointer', color: 'var(--color-ink)' };
+const chipOn: React.CSSProperties = { background: 'var(--color-ink)', color: 'var(--color-bg)', borderColor: 'var(--color-ink)' };
+const primaryBtn: React.CSSProperties = { background: 'var(--color-ink)', color: 'var(--color-bg)', border: 'none', padding: '9px 18px', fontSize: 13, cursor: 'pointer' };
+const ghostBtn: React.CSSProperties = { background: 'var(--color-bg)', color: 'var(--color-ink)', border: '1px solid var(--color-line)', padding: '9px 16px', fontSize: 13, cursor: 'pointer' };

@@ -80,8 +80,8 @@ export function EditableText({
 
   if (open) {
     const field = multiline
-      ? <textarea autoFocus value={draft} onChange={e => setDraft(e.target.value)} rows={5} style={{ font: 'inherit', color: 'inherit', width: '100%', background: 'rgba(255,255,255,0.95)', border: '1px solid #c0a060', padding: 6, boxSizing: 'border-box' }} />
-      : <input autoFocus value={draft} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setOpen(false); }} style={{ font: 'inherit', color: 'inherit', width: '100%', background: 'rgba(255,255,255,0.95)', border: '1px solid #c0a060', padding: '2px 6px', boxSizing: 'border-box' }} />;
+      ? <textarea autoFocus value={draft} onChange={e => setDraft(e.target.value)} rows={5} style={{ font: 'inherit', color: 'inherit', width: '100%', background: 'rgba(255,255,255,0.95)', border: '1px solid var(--color-accent)', padding: 6, boxSizing: 'border-box' }} />
+      : <input autoFocus value={draft} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setOpen(false); }} style={{ font: 'inherit', color: 'inherit', width: '100%', background: 'rgba(255,255,255,0.95)', border: '1px solid var(--color-accent)', padding: '2px 6px', boxSizing: 'border-box' }} />;
     return (
       <Tag className={className}>
         {field}
@@ -100,7 +100,7 @@ export function EditableText({
 }
 
 function btn(primary: boolean): React.CSSProperties {
-  return { font: '12px Helvetica, Arial, sans-serif', letterSpacing: '0.5px', padding: '5px 12px', marginRight: 6, cursor: 'pointer', border: 'none', background: primary ? 'var(--color-ink)' : 'transparent', color: primary ? 'var(--color-bg)' : '#8a8680' };
+  return { font: '12px Helvetica, Arial, sans-serif', letterSpacing: '0.5px', padding: '5px 12px', marginRight: 6, cursor: 'pointer', border: 'none', background: primary ? 'var(--color-ink)' : 'transparent', color: primary ? 'var(--color-bg)' : 'var(--color-ink-muted)' };
 }
 
 // Editable image — in edit mode, an overlay "Change photo" button lets you upload

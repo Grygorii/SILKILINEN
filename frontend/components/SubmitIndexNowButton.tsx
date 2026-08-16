@@ -65,7 +65,7 @@ export default function SubmitIndexNowButton() {
       </button>
       {msg
         ? <span style={{ fontSize: 12, color: msg.ok ? 'var(--color-success)' : 'var(--color-danger)' }}>{msg.text}</span>
-        : last && <span style={{ fontSize: 12, color: 'var(--muted, #8a8680)' }}>Last submitted: {last.count} URL{last.count === 1 ? '' : 's'} · {relTime(last.at)}</span>}
+        : last && <span style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>Last submitted: {last.count} URL{last.count === 1 ? '' : 's'} · {relTime(last.at)}</span>}
     </div>
   );
 }

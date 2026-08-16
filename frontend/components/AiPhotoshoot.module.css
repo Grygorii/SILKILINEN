@@ -11,7 +11,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: #f9f7f4;
+  background: var(--color-bg);
   border: none;
   cursor: pointer;
   font-family: 'Jost', sans-serif;
@@ -36,7 +36,7 @@
   font-size: 11px;
   letter-spacing: 0.5px;
   color: var(--muted);
-  background: #ede9e2;
+  background: var(--color-surface);
   padding: 2px 8px;
   font-family: 'Jost', sans-serif;
   text-transform: none;
@@ -205,7 +205,7 @@
   font-family: 'Jost', sans-serif;
   font-size: 13px;
   color: var(--dark);
-  background: #fff;
+  background: var(--color-bg);
   min-width: 200px;
 }
 
@@ -228,11 +228,11 @@
   -webkit-tap-highlight-color: transparent;
   transition: border-color 120ms ease;
 }
-.modelOption:hover:not(:disabled) { border-color: var(--dark, #1a1916); }
+.modelOption:hover:not(:disabled) { border-color: var(--color-ink); }
 .modelOption:disabled { cursor: default; opacity: 0.55; }
 .modelOptionActive {
-  border-color: var(--dark, #1a1916);
-  box-shadow: inset 0 0 0 1px var(--dark, #1a1916);
+  border-color: var(--color-ink);
+  box-shadow: inset 0 0 0 1px var(--color-ink);
 }
 
 .modelOptThumb,
@@ -253,7 +253,7 @@
 
 .modelOptName {
   font-size: 11px;
-  color: var(--dark, #1a1916);
+  color: var(--color-ink);
   max-width: 60px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -281,14 +281,14 @@
   padding: 12px 14px;
   border: 1px solid var(--border);
   cursor: pointer;
-  background: #fff;
+  background: var(--color-bg);
   transition: border-color 0.15s ease, background 0.15s ease;
   margin-bottom: 4px;
 }
 
 .workflowOption:hover { border-color: #bbb; }
 
-.workflowActive { border-color: var(--dark) !important; background: #faf9f6; }
+.workflowActive { border-color: var(--dark) !important; background: var(--color-bg); }
 
 .workflowRadio { margin-top: 3px; flex-shrink: 0; accent-color: var(--dark); }
 
@@ -312,7 +312,7 @@
 .customPanel {
   margin-top: 4px;
   padding: 14px;
-  background: #faf9f6;
+  background: var(--color-bg);
   border: 1px solid var(--border);
   border-top: none;
   display: flex;
@@ -382,7 +382,7 @@
   letter-spacing: 0.5px;
   transition: background 0.2s ease, color 0.2s ease;
 }
-.overrideBtn:hover { background: var(--color-danger); color: #fff; }
+.overrideBtn:hover { background: var(--color-danger); color: var(--color-bg); }
 
 .error {
   font-size: 13px;
@@ -408,14 +408,14 @@
   transition: border-color 0.2s ease;
 }
 
-.resultApproved { border-color: #2ecc71; }
+.resultApproved { border-color: var(--color-success); }
 
 .resultHeader {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 8px 10px;
-  background: #f9f7f4;
+  background: var(--color-bg);
   border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
 }
@@ -448,8 +448,8 @@
   font-family: 'Jost', monospace;
 }
 
-.iterBadge { font-size: 10px; color: var(--muted); background: #ede9e2; padding: 1px 6px; }
-.approvedMark { color: #2ecc71; font-size: 12px; }
+.iterBadge { font-size: 10px; color: var(--muted); background: var(--color-surface); padding: 1px 6px; }
+.approvedMark { color: var(--color-success); font-size: 12px; }
 
 .resultImgWrap { aspect-ratio: 3 / 4; background: var(--cream); overflow: hidden; }
 
@@ -467,7 +467,7 @@
   font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: #27ae60;
+  color: var(--color-success);
   cursor: pointer;
   transition: background 0.2s ease;
 }
@@ -481,7 +481,7 @@
   font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: #27ae60;
+  color: var(--color-success);
   border-right: 1px solid var(--border);
 }
 
@@ -498,7 +498,7 @@
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
 }
-.improveBtn:hover:not(:disabled) { background: #f5f3ef; color: var(--dark); }
+.improveBtn:hover:not(:disabled) { background: var(--color-surface); color: var(--dark); }
 .improveBtnActive { background: #f0ece4; color: var(--dark); }
 .improveBtn:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -506,7 +506,7 @@
 
 .feedbackPanel {
   padding: 12px;
-  background: #faf9f6;
+  background: var(--color-bg);
   border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -587,8 +587,8 @@
 
 .finalizeBtn {
   padding: 12px 24px;
-  background: #27ae60;
-  color: #fff;
+  background: var(--color-success);
+  color: var(--color-bg);
   border: none;
   font-family: 'Jost', sans-serif;
   font-size: 12px;

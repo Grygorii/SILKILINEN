@@ -14,7 +14,7 @@
   align-items: center;
   gap: 10px;
   background: #2a2825;
-  color: #f9f7f4;
+  color: var(--color-bg);
   padding: 14px 20px;
   font-family: 'Jost', sans-serif;
   font-size: 13px;

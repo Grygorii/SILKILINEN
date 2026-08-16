@@ -51,7 +51,7 @@
   top: 10px;
   left: 10px;
   background: var(--color-ink);
-  color: #fff;
+  color: var(--color-bg);
   font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;

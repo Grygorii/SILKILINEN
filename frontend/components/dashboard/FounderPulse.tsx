@@ -42,7 +42,7 @@ export default function FounderPulse() {
     <div style={{ background: 'white', border: '1px solid var(--border)', padding: '16px 20px', marginBottom: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <span style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)' }}>This week&apos;s ads</span>
-        <Link href="/admin/marketing/founder" style={{ fontSize: 12, color: '#5c35a8', textDecoration: 'none' }}>Details →</Link>
+        <Link href="/admin/marketing/founder" style={{ fontSize: 12, color: 'var(--admin-info)', textDecoration: 'none' }}>Details →</Link>
       </div>
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         {cell('Revenue', `€${data.weekRevenue.toFixed(0)}`)}

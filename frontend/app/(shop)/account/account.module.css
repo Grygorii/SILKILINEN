@@ -121,7 +121,7 @@
   font-family: 'Jost', sans-serif;
   font-size: 13px;
   color: var(--dark);
-  background: #fff;
+  background: var(--color-bg);
   outline: none;
 }
 
