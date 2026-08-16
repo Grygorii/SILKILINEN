@@ -182,6 +182,26 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   before the reader's update landed and overwrote a real saved basket.
 - **NEW badge:** the manual `isNewArrival` flag only, on BOTH card and PDP. A time-based
   fallback on an ISR-cached page freezes at snapshot time and then lies.
+- **Product names:** `backend/utils/productName.js` — `Silk [garment] in [Colour]`,
+  sentence case, no brand prefix. The admin form calls `/api/admin/products/name-check`
+  (never blocks, just suggests); `scripts/renameProducts.js` writes a plan file you edit
+  before `--apply`, and re-cuts the slug in the same pass (`previousSlugs` 301s the old URL).
+- **GDPR erasure:** `DELETE /api/admin/customers/:id/gdpr` must purge every store holding
+  the address — Customer (anonymise), Cart (blank + unsubscribe), Newsletter and
+  StockNotification (delete). Orders are RETAINED (financial record). Miss one and cart
+  recovery or the restock sweep keeps emailing someone who asked to be deleted.
+- **Marketing email:** every marketing message needs an opt-out (GDPR Art. 21, PECR).
+  `utils/unsubscribeSign.js` signs the link; pass a `scope` so a link minted for one
+  purpose can't be replayed against another. Transactional mail is exempt.
+- **Server fetches:** storefront server components use `lib/apiFetch.ts` (4s timeout).
+  A bare `fetch` in a server component holds the render until Vercel's function timeout.
+  Use `apiListResult` where an outage must not read as an empty catalogue.
+- **Listings vs detail:** `CARD_PROJECTION` (products.js) serves grids; `?full=true` for
+  the whole document. Listings used to ship full descriptions, so payload grew with the
+  copywriting rather than the product count.
+- **Rates:** `getRates()` backs off to one attempt/min on provider failure and KEEPS a
+  stale cache — it is awaited by `/quote` and `/create-intent`, so retrying per request
+  put a 6s timeout in front of every checkout.
 - **Style Finder question count:** `lib/styleFinder.ts`. The homepage band can't import
   `QUESTIONS` (bundle cost), so `StyleFinder.tsx` asserts `QUESTIONS.length` against it in
   dev. Add a question → update `QUESTION_COUNT`.
