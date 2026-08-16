@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { apiJson } from '@/lib/apiFetch';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { collectionHref } from '@/lib/urls';
 import CollectionSet from './CollectionSet';
@@ -37,13 +38,7 @@ type CollectionData = {
 
 async function getCollection(slug: string, locale: PageLocale = 'en'): Promise<CollectionData | null> {
   const q = apiLocaleQuery(locale);
-  try {
-    const res = await fetch(`${API}/api/collections/${slug}${q ? `?${q}` : ''}`, { next: { revalidate: 120 } });
-    if (!res.ok) return null;
-    return res.json();
-  } catch {
-    return null;
-  }
+  return apiJson<CollectionData>(`${API}/api/collections/${slug}${q ? `?${q}` : ''}`, { next: { revalidate: 120 } });
 }
 
 export async function generateMetadata(

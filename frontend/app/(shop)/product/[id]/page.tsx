@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { apiJson } from '@/lib/apiFetch';
 import { permanentRedirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
@@ -25,15 +26,14 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 
 async function getProduct(id: string, locale: PageLocale = 'en') {
   const q = apiLocaleQuery(locale);
-  try {
-    const res = await fetch(`${API}/api/products/${id}${q ? `?${q}` : ''}`, { next: { revalidate: 120 } });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.error) return null;
-    return data;
-  } catch {
-    return null;
-  }
+  // Timed out: this runs during render, so an unresponsive API would hold the
+  // route open rather than letting notFound() take over cleanly.
+  // Untyped like the original: this page reads a wide, evolving set of product
+  // fields, and narrowing it here would only move the guesswork into a type
+  // that has to be kept in step by hand.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data = await apiJson<any>(`${API}/api/products/${id}${q ? `?${q}` : ''}`, { next: { revalidate: 120 } });
+  return data && !data.error ? data : null;
 }
 
 type ProductReviewSummary = { average: number; count: number };

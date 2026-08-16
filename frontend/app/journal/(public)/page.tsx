@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { apiList } from '@/lib/apiFetch';
 import type { Metadata } from 'next';
 import { getPageMeta } from '@/lib/pageSeo';
 import { clampMeta } from '@/lib/clampMeta';
@@ -23,11 +24,7 @@ type Article = {
 };
 
 async function getArticles(): Promise<Article[]> {
-  try {
-    const res = await fetch(`${API}/api/journal?limit=20`, { next: { revalidate: 60 } });
-    if (!res.ok) return [];
-    return res.json();
-  } catch { return []; }
+  return apiList<Article>(`${API}/api/journal?limit=20`, { next: { revalidate: 60 } });
 }
 
 function fmtDate(iso: string) {

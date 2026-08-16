@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { apiList } from '@/lib/apiFetch';
 import SearchTracker from '@/components/SearchTracker';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { clampMeta } from '@/lib/clampMeta';
@@ -16,12 +17,7 @@ type Cat = { slug: string; label: string; description?: string; metaTitle?: stri
 // for SEO; a category is valid as long as it exists here.
 async function getCategoryList(locale: PageLocale = 'en'): Promise<Cat[]> {
   const q = apiLocaleQuery(locale);
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories${q ? `?${q}` : ''}`, { next: { revalidate: 300 } });
-    return res.ok ? res.json() : [];
-  } catch {
-    return [];
-  }
+  return apiList<Cat>(`${process.env.NEXT_PUBLIC_API_URL}/api/categories${q ? `?${q}` : ''}`, { next: { revalidate: 300 } });
 }
 
 // Per-category metadata so /shop?category=robes gets a different
@@ -149,12 +145,12 @@ async function getProducts(category?: string, q?: string, newOnly?: boolean, loc
   if (locale !== 'en') params.set('locale', locale);
   const qs = params.toString();
   const url = `${process.env.NEXT_PUBLIC_API_URL}/api/products${qs ? `?${qs}` : ''}`;
-  try {
-    const res = await fetch(url, { next: { revalidate: 60 } });
-    return res.ok ? res.json() : [];
-  } catch {
-    return [];
-  }
+  // Timed out rather than open-ended: this runs during render, so a hanging
+  // API would hold the whole route until Vercel's function timeout.
+  // Untyped like the original — ProductGrid owns the card shape, and
+  // duplicating it here would be one more copy to keep in step.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return apiList<any>(url, { next: { revalidate: 60 } });
 }
 
 export default async function ShopPage({
