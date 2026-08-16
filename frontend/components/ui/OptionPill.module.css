@@ -1,10 +1,19 @@
+/* Pills size to their content within a sensible band rather than dividing the
+   whole row. With `1fr` columns, two or three sizes stretched into slabs that
+   read as buttons rather than options — and a single one filled the row
+   entirely. A size pill should look like a choice, never like a call to
+   action; only ADD TO BAG is allowed that weight. */
 .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--s-3);
 }
 
 .pill {
+  /* Grows to share the row when there are many, but never past a width that
+     would make it read as a primary button. */
+  flex: 1 1 64px;
+  max-width: 132px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

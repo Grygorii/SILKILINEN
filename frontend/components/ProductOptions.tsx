@@ -142,7 +142,30 @@ export default function ProductOptions({ colours, colourHexMap, sizes, available
       )}
 
       {/* Size — design-system v1 OptionPill grid + sizing chart footnote */}
-      {sizes.length > 0 && (
+      {/* One size is not a CHOICE — it is a fact about the garment.
+          Rendered as a pill it stretched to the full row (auto-fit + 1fr with a
+          single column), auto-selected to solid ink, and became a second
+          full-width dark bar sitting directly above ADD TO BAG. Two identical
+          slabs, one of which must not be pressed: people click the wrong one.
+          Say it in a line of text instead. */}
+      {sizes.length === 1 && (
+        <div className={styles.picker}>
+          <p className={styles.sizeRow}>
+            <span className={styles.pickerLabel}>SIZE</span>
+            <a
+              href="/size-guide"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.sizeGuideLink}
+            >
+              SIZING CHART
+            </a>
+          </p>
+          <p style={{ fontSize: 14, color: 'var(--color-ink)', margin: 0 }}>{sizes[0]}</p>
+        </div>
+      )}
+
+      {sizes.length > 1 && (
         <div className={styles.picker}>
           <p className={styles.sizeRow}>
             <span className={styles.pickerLabel}>SIZE</span>
