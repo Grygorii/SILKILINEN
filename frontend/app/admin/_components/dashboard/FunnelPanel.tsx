@@ -46,6 +46,7 @@ type Funnel = {
   diagnosis: Diagnosis;
   shifts: Shift[];
   biggestShift: Shift | null;
+  blindSpots: { key: string; label: string; event: string; note: string }[];
   overallConversion: number;
   hasData: boolean;
 };
@@ -110,6 +111,27 @@ export default function FunnelPanel() {
         </p>
       ) : (
         <>
+          {/* An uninstrumented stage looks exactly like a stage nobody reached.
+              Saying so is the difference between "fix the checkout" and "fix
+              the tracking", and the panel must never let the founder act on
+              the wrong one. */}
+          {data.blindSpots?.map(b => (
+            <div
+              key={b.key}
+              style={{
+                background: 'var(--admin-info-soft)',
+                borderLeft: '3px solid var(--admin-info)',
+                padding: '10px 12px',
+                margin: '12px 0 0',
+              }}
+            >
+              <p style={{ fontSize: 13, color: 'var(--admin-ink)', margin: 0, fontWeight: 600 }}>
+                &ldquo;{b.label}&rdquo; is not being recorded
+              </p>
+              <p style={{ fontSize: 12.5, color: 'var(--admin-ink-muted)', margin: '4px 0 0' }}>{b.note}</p>
+            </div>
+          ))}
+
           {/* What CHANGED comes first. The level tells you where you are; the
               movement is the part worth interrupting someone for. */}
           {data.biggestShift && (

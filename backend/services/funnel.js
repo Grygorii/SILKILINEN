@@ -141,6 +141,7 @@ async function computeFunnel(days) {
 
   const diagnosis = await diagnoseLeak(stages, biggestLeak, since);
   const shifts = detectShifts(stages, prevStages);
+  const blindSpots = await findBlindSpots(stages);
 
   return {
     days,
@@ -149,11 +150,52 @@ async function computeFunnel(days) {
     diagnosis,
     shifts,
     biggestShift: shifts.length ? shifts[0] : null,
+    blindSpots,
     overallConversion: overall,
     // Pre-traction the honest answer is "not enough data yet", not a chart of
     // zeros that invites reading noise as signal.
     hasData: sessions > 0,
   };
+}
+
+/**
+ * Stages we are not actually recording.
+ *
+ * A stage with zero sessions is normally customer behaviour: nobody got that
+ * far. But it reads identically to a stage whose event is not wired up at all —
+ * and that failure is real, not hypothetical. add_to_cart carried no productId
+ * for months, so the per-product analysis matched nothing and rendered as "no
+ * products are leaking". search was never fired at all while the agents were
+ * being told what people searched for.
+ *
+ * The tell: an event type with NO rows in the entire collection, while an
+ * earlier stage has traffic. Real customer drop-off leaves at least a trickle
+ * over the life of the store; a missing instrument leaves nothing, ever.
+ *
+ * A funnel that cannot tell "nobody did this" from "we never recorded this"
+ * will eventually report a catastrophe that is really a missing line of code —
+ * or, worse, stay quiet about one.
+ */
+async function findBlindSpots(stages) {
+  const upstreamHasTraffic = stages[0].count > 0;
+  if (!upstreamHasTraffic) return []; // pre-traction: everything is legitimately empty
+
+  const out = [];
+  for (let i = 1; i < STAGES.length; i++) {
+    if (stages[i].count > 0) continue;
+    // Only suspicious if people actually reached the step before it.
+    if (stages[i - 1].count === 0) continue;
+    const everRecorded = await Event.exists({ type: STAGES[i].event }).catch(() => true);
+    if (!everRecorded) {
+      out.push({
+        key: stages[i].key,
+        label: stages[i].label,
+        event: STAGES[i].event,
+        note: `No "${STAGES[i].event}" event has ever been recorded, while ${stages[i - 1].count} sessions reached the step before it. This stage is probably not instrumented — treat the drop as unknown, not as zero.`,
+      });
+    }
+  }
+  return out;
 }
 
 // Minimum sessions before a segment is allowed to be named. Below this, one

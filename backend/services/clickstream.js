@@ -119,6 +119,9 @@ function clickstreamPromptLine(cs) {
   }
   // Anything absent above was withheld by a sample gate, not by absence of a
   // problem — say so, or an agent will read silence as "all fine".
+  if (full?.blindSpots?.length) {
+    parts.push(`INSTRUMENTATION GAP — do NOT read these as customer behaviour: ${full.blindSpots.map(b => `"${b.label}" (${b.event}) has never been recorded`).join('; ')}. Treat those stages as unknown.`);
+  }
   parts.push('Any breakdown not listed was withheld for insufficient sample, not because it is healthy.');
   return parts.join(' ');
 }
