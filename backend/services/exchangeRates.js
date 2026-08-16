@@ -20,6 +20,14 @@ const TTL_MS = 6 * 60 * 60 * 1000; // refresh at most every 6h
 
 let cache = { rates: { ...FALLBACK }, at: 0 };
 
+// When the provider is down we must NOT retry on every request. getRates()
+// awaits refresh(), and the fetch has a 6s timeout — so a failing provider
+// added six seconds to every checkout quote and every intent creation, while
+// hammering an API that was already struggling. Back off and keep serving the
+// rates we have.
+const RETRY_MS = 60 * 1000;
+let lastAttemptAt = 0;
+
 async function refresh() {
   try {
     const to = Object.keys(SUPPORTED).filter(c => c !== 'EUR').join(',');
@@ -36,14 +44,30 @@ async function refresh() {
     }
     cache = { rates, at: Date.now() };
   } catch (err) {
-    console.warn('[rates] live fetch failed, using fallback:', err.message);
+    // Serving yesterday's ECB rates is materially better than blocking a sale,
+    // and far better than the hardcoded fallback — so a stale cache is KEPT
+    // rather than replaced. Only a cold start falls back to the constants.
+    const ageH = cache.at ? Math.round((Date.now() - cache.at) / 3600000) : 0;
+    console.warn(`[rates] live fetch failed (${err.message}); serving ${cache.at ? `cached rates ${ageH}h old` : 'hardcoded fallback'}`);
     if (!cache.at) cache = { rates: { ...FALLBACK }, at: Date.now() };
   }
 }
 
 async function getRates() {
-  if (Date.now() - cache.at > TTL_MS) await refresh();
+  const now = Date.now();
+  // Refresh when stale, but never more often than RETRY_MS — otherwise a
+  // failing provider turns every request into a 6-second wait.
+  if (now - cache.at > TTL_MS && now - lastAttemptAt > RETRY_MS) {
+    lastAttemptAt = now;
+    await refresh();
+  }
   return cache.rates;
+}
+
+/** How old the cached rates are, in hours. Surfaced so a prolonged outage is
+ *  visible rather than silently charging on stale conversions. */
+function ratesAgeHours() {
+  return cache.at ? (Date.now() - cache.at) / 3600000 : Infinity;
 }
 
 function isSupported(code) {
@@ -64,4 +88,5 @@ async function convert(eurAmount, code) {
   return { amount: Math.round(Number(eurAmount) * rate * 100) / 100, rate, currency };
 }
 
-module.exports = { SUPPORTED, getRates, convert, isSupported, normalise, refresh };
+module.exports = {
+  ratesAgeHours, SUPPORTED, getRates, convert, isSupported, normalise, refresh };
