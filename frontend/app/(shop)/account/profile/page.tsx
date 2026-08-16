@@ -60,17 +60,17 @@ export default function ProfilePage() {
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.fieldRow}>
           <div className={styles.field}>
-            <label>First name</label>
-            <input type="text" value={form.firstName} onChange={e => set('firstName', e.target.value)} />
+            <label htmlFor="firstName">First name</label>
+            <input id="firstName" name="firstName" autoComplete="given-name" type="text" value={form.firstName} onChange={e => set('firstName', e.target.value)} />
           </div>
           <div className={styles.field}>
-            <label>Last name</label>
-            <input type="text" value={form.lastName} onChange={e => set('lastName', e.target.value)} />
+            <label htmlFor="lastName">Last name</label>
+            <input id="lastName" name="lastName" autoComplete="family-name" type="text" value={form.lastName} onChange={e => set('lastName', e.target.value)} />
           </div>
         </div>
         <div className={styles.field}>
-          <label>Phone</label>
-          <input type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+353 87 000 0000" />
+          <label htmlFor="phone">Phone</label>
+          <input id="phone" name="phone" autoComplete="tel" type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+353 87 000 0000" />
         </div>
         <label className={styles.checkRow}>
           <input type="checkbox" checked={form.marketingConsent} onChange={e => set('marketingConsent', e.target.checked)} />

@@ -145,8 +145,8 @@ export default function ReviewsSection() {
         {/* Controls */}
         <div className={styles.controls}>
           <div className={styles.sortRow}>
-            <label className={styles.controlLabel}>Sort</label>
-            <select className={styles.select} value={sort} onChange={e => setSort(e.target.value)}>
+            <label className={styles.controlLabel} htmlFor="reviewFilter">Sort</label>
+              <select id="reviewFilter" name="reviewFilter" className={styles.select} value={sort} onChange={e => setSort(e.target.value)}>
               <option value="recent">Most recent</option>
               <option value="highest">Highest rated</option>
               <option value="helpful">Most helpful</option>

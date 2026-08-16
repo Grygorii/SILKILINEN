@@ -102,6 +102,8 @@ export default function SignInPage() {
                 <label htmlFor="email">Email address</label>
                 <input
                   id="email"
+                  name="email"
+                  autoComplete="email"
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}

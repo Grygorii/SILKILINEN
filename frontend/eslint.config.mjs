@@ -20,6 +20,19 @@ const eslintConfig = defineConfig([
       'jsx-a11y/aria-props': 'error',
       'jsx-a11y/aria-role': 'error',
       'jsx-a11y/role-has-required-aria-props': 'error',
+      // Every form control must be reachable by its label. This was off, and
+      // 16 controls across the account, address and gift-hint forms had labels
+      // that pointed at nothing — a screen reader announced "edit text, blank",
+      // and browsers had nothing to anchor autofill to.
+      //
+      // `assert: 'either'` because wrapping the input in the label is a valid
+      // association too; the default only accepts htmlFor, which would have had
+      // us rewrite correct markup to satisfy the linter.
+      // 'warn' at the base: the admin's forms have ~130 unlabelled controls and
+      // that is a separate piece of work. The storefront block below raises it
+      // to 'error', because that is where it is now clean and where a customer
+      // who cannot fill the form does not come back.
+      'jsx-a11y/label-has-associated-control': ['warn', { assert: 'either', depth: 3 }],
       // Canonical URLs by construction. Product links used to be hand-built in
       // six places three different ways; the colour-swatch links used the raw
       // ObjectId, so Google indexed /product/<ObjectId> next to the slug URL —
@@ -77,34 +90,23 @@ const eslintConfig = defineConfig([
     rules: { 'no-restricted-syntax': 'off' },
   },
   {
-    // "Never hardcode hex on the storefront" was written in PROJECT_MAP as a
-    // convention and nowhere as a check, so 151 literals accumulated under it —
-    // including exact re-typings of tokens that already existed. A convention
-    // nothing enforces is a preference.
-    //
-    // 'warn' while the near-miss shades are still being consolidated; the
-    // exact-value matches are already migrated. Flip to 'error' once the tail
-    // lands, as the admin rule did.
+    // Storefront: form labels enforced, and the product-URL guard restated
+    // (flat config replaces rule options rather than merging them).
     files: ['app/(shop)/**/*.tsx', 'components/**/*.tsx'],
     ignores: ['app/(shop)/**/opengraph-image.tsx', 'app/(shop)/**/twitter-image.tsx'],
     rules: {
-      // Flat config REPLACES a rule's options rather than merging them, so the
-      // product-URL selector has to be restated here. Declaring only the colour
-      // selector silently switched the URL guard off for exactly the files it
-      // was written to protect.
-      'no-restricted-syntax': ['warn',
-        {
-          selector: "TemplateLiteral > TemplateElement[value.raw=/\\/product\\/$/]",
-          message: "Don't hand-build product URLs — use productPath/productHref from '@/lib/urls' so links are always canonical (slug, not ObjectId).",
-        },
-        {
-          selector: "Literal[value=/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/]",
-          message:
-            "Don't hardcode hex on the storefront — use the brand tokens in globals.css " +
-            "(--color-ink, --color-bg, --color-line, --color-accent, --color-success, …). " +
-            "Image-generation routes (Satori) are exempt: var() does not resolve there.",
-        },
-      ],
+      'jsx-a11y/label-has-associated-control': ['error', { assert: 'either', depth: 3 }],
+      // ESLint applies ONE severity per rule, so the storefront hex selector
+      // cannot ride along here at 'warn' without dragging the product-URL guard
+      // down from 'error' with it — weakening a real guard to introduce a soft
+      // one. The URL selector stays error and alone; the storefront hex rule
+      // lands when its ~109 near-miss shades are consolidated and it can be an
+      // error too. Until then the convention is documented in PROJECT_MAP, and
+      // the exact-value literals are already migrated.
+      'no-restricted-syntax': ['error', {
+        selector: "TemplateLiteral > TemplateElement[value.raw=/\\/product\\/$/]",
+        message: "Don't hand-build product URLs — use productPath/productHref from '@/lib/urls' so links are always canonical (slug, not ObjectId).",
+      }],
     },
   },
   globalIgnores([

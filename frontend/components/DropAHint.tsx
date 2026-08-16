@@ -66,8 +66,8 @@ export default function DropAHint({ productId, productName, onClose }: Props) {
             </p>
             <form className={styles.form} onSubmit={handleSubmit}>
               <div className={styles.field}>
-                <label className={styles.label}>Their name</label>
-                <input
+                <label className={styles.label} htmlFor="hintName">Their name</label>
+                <input id="hintName" name="hintName" autoComplete="name"
                   className={styles.input}
                   value={form.recipientName}
                   onChange={e => setField('recipientName', e.target.value)}
@@ -75,8 +75,8 @@ export default function DropAHint({ productId, productName, onClose }: Props) {
                 />
               </div>
               <div className={styles.field}>
-                <label className={styles.label}>Their email *</label>
-                <input
+                <label className={styles.label} htmlFor="hintEmail">Their email *</label>
+                <input id="hintEmail" name="hintEmail" autoComplete="email"
                   className={styles.input}
                   type="email"
                   required
@@ -86,8 +86,11 @@ export default function DropAHint({ productId, productName, onClose }: Props) {
                 />
               </div>
               <div className={styles.field}>
-                <label className={styles.label}>Your name *</label>
+                <label className={styles.label} htmlFor="hintSenderName">Your name *</label>
                 <input
+                  id="hintSenderName"
+                  name="hintSenderName"
+                  autoComplete="name"
                   className={styles.input}
                   required
                   value={form.senderName}
@@ -96,8 +99,8 @@ export default function DropAHint({ productId, productName, onClose }: Props) {
                 />
               </div>
               <div className={styles.field}>
-                <label className={styles.label}>Your message (optional)</label>
-                <textarea
+                <label className={styles.label} htmlFor="hintMessage">Your message (optional)</label>
+                <textarea id="hintMessage" name="hintMessage"
                   className={styles.textarea}
                   rows={3}
                   value={form.message}

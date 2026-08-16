@@ -56,31 +56,31 @@ export default function AddressesPage() {
 
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.field}>
-          <label>Address line 1</label>
-          <input type="text" value={form.line1} onChange={e => set('line1', e.target.value)} placeholder="12 Grafton Street" />
+          <label htmlFor="line1">Address line 1</label>
+          <input id="line1" name="line1" autoComplete="address-line1" type="text" value={form.line1} onChange={e => set('line1', e.target.value)} placeholder="12 Grafton Street" />
         </div>
         <div className={styles.field}>
-          <label>Address line 2</label>
-          <input type="text" value={form.line2} onChange={e => set('line2', e.target.value)} placeholder="Apt 4" />
+          <label htmlFor="line2">Address line 2</label>
+          <input id="line2" name="line2" autoComplete="address-line2" type="text" value={form.line2} onChange={e => set('line2', e.target.value)} placeholder="Apt 4" />
         </div>
         <div className={styles.fieldRow}>
           <div className={styles.field}>
-            <label>City / Town</label>
-            <input type="text" value={form.city} onChange={e => set('city', e.target.value)} placeholder="Dublin" />
+            <label htmlFor="city">City / Town</label>
+            <input id="city" name="city" autoComplete="address-level2" type="text" value={form.city} onChange={e => set('city', e.target.value)} placeholder="Dublin" />
           </div>
           <div className={styles.field}>
-            <label>County</label>
-            <input type="text" value={form.county} onChange={e => set('county', e.target.value)} placeholder="Dublin" />
+            <label htmlFor="county">County</label>
+            <input id="county" name="county" autoComplete="address-level1" type="text" value={form.county} onChange={e => set('county', e.target.value)} placeholder="Dublin" />
           </div>
         </div>
         <div className={styles.fieldRow}>
           <div className={styles.field}>
-            <label>Postcode / Eircode</label>
-            <input type="text" value={form.postcode} onChange={e => set('postcode', e.target.value)} placeholder="D02 VX39" />
+            <label htmlFor="postcode">Postcode / Eircode</label>
+            <input id="postcode" name="postcode" autoComplete="postal-code" type="text" value={form.postcode} onChange={e => set('postcode', e.target.value)} placeholder="D02 VX39" />
           </div>
           <div className={styles.field}>
-            <label>Country</label>
-            <select value={form.country} onChange={e => set('country', e.target.value)}>
+            <label htmlFor="country">Country</label>
+            <select id="country" name="country" autoComplete="country-name" value={form.country} onChange={e => set('country', e.target.value)}>
               <option value="IE">Ireland</option>
               <option value="GB">United Kingdom</option>
               <option value="US">United States</option>
