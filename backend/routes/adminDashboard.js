@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
+const { getFunnel } = require('../services/funnel');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Visit = require('../models/Visit');
@@ -459,6 +460,19 @@ router.get('/', requireAuth, async function(req, res) {
     console.error('[dashboard] error:', err.message);
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/dashboard/funnel?days=14 — where visitors drop, and which
+// screen addresses each drop. The same signal already fed the agents via
+// services/clickstream.js; this is the founder's view of it.
+router.get('/funnel', requireAuth, async function(req, res) {
+  try {
+    const days = Math.min(90, Math.max(1, parseInt(req.query.days, 10) || 14));
+    res.json(await getFunnel(days));
+  } catch (err) {
+    console.error('[adminDashboard] funnel error:', err.message);
+    res.status(500).json({ error: 'Could not build the funnel' });
   }
 });
 

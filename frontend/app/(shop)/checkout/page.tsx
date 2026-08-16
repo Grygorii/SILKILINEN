@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
-import { trackBeginCheckout } from '@/lib/analytics';
+import { trackBeginCheckout, trackEvent } from '@/lib/analytics';
 import { useCustomer } from '@/context/CustomerContext';
 import { loadStripe } from '@stripe/stripe-js';
 import {
@@ -320,6 +320,10 @@ export default function CheckoutPage() {
   }
 
   async function createIntent() {
+    // The moment the customer commits to paying — a distinct funnel stage from
+    // "opened checkout", and only meaningful now that the intent is created on
+    // a deliberate click rather than on page load.
+    trackEvent('reached_payment', { itemCount: cart.length });
     setLoading(true);
     setIntentError('');
     try {

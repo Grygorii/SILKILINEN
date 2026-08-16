@@ -7,6 +7,7 @@ import Zone1ActionItems from './_components/dashboard/Zone1ActionItems';
 import Zone2Metrics from './_components/dashboard/Zone2Metrics';
 import Zone3Working from './_components/dashboard/Zone3Working';
 import SeoHealthPanel from './_components/dashboard/SeoHealthPanel';
+import FunnelPanel from './_components/dashboard/FunnelPanel';
 import TodayStrip from './_components/dashboard/TodayStrip';
 import AdvisorPanel from './_components/dashboard/AdvisorPanel';
 import SearchPerformancePanel from './_components/dashboard/SearchPerformancePanel';
@@ -169,6 +170,11 @@ export default function AdminDashboard() {
       )}
 
       {/* ── SEO & Merchant health — honest search/feed signal (Slice 1) ── */}
+      {/* Where visitors drop, and the screen that fixes each drop. Placed above
+          the SEO panel: SEO answers "are people arriving?", this answers "what
+          happens to the ones who did?". */}
+      <div style={{ marginBottom: 24 }}><FunnelPanel /></div>
+
       <SeoHealthPanel />
 
       {/* ── Live Search Console performance (Slice 5) ── */}
