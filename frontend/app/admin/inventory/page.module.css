@@ -9,13 +9,13 @@
 .title {
   font-size: 22px;
   font-weight: 500;
-  color: var(--dark, #2a2218);
+  color: var(--color-ink);
   margin: 0 0 4px;
 }
 
 .subtitle {
   font-size: 13px;
-  color: var(--muted, #6b6358);
+  color: var(--color-ink-muted);
   margin: 0;
   max-width: 60ch;
 }
@@ -24,9 +24,9 @@
   flex-shrink: 0;
   font-size: 12px;
   padding: 8px 14px;
-  border: 1px solid var(--border, #e8e2d6);
-  background: #fff;
-  color: var(--dark, #2a2218);
+  border: 1px solid var(--color-line);
+  background: var(--admin-surface);
+  color: var(--color-ink);
   cursor: pointer;
   border-radius: 2px;
 }
@@ -38,9 +38,9 @@
   justify-content: space-between;
   gap: 12px;
   padding: 12px 16px;
-  background: #fdf0ef;
-  color: #b03a2e;
-  border: 1px solid #f0c8c2;
+  background: var(--admin-danger-soft);
+  color: var(--admin-danger);
+  border: 1px solid var(--admin-danger-soft);
   font-size: 13px;
   margin-bottom: 16px;
 }
@@ -56,40 +56,40 @@
   flex-direction: column;
   gap: 2px;
   padding: 14px 20px;
-  border: 1px solid var(--border, #e8e2d6);
-  background: #fff;
+  border: 1px solid var(--color-line);
+  background: var(--admin-surface);
   min-width: 130px;
 }
-.statBad  { background: #fdf0ef; border-color: #f0c8c2; }
-.statWarn { background: #fdf6e9; border-color: #ecdcb6; }
+.statBad  { background: var(--admin-danger-soft); border-color: var(--admin-danger-soft); }
+.statWarn { background: var(--admin-warning-soft); border-color: var(--admin-warning-soft); }
 
 .statNum {
   font-size: 26px;
   font-weight: 600;
-  color: var(--dark, #2a2218);
+  color: var(--color-ink);
   line-height: 1;
 }
 .statLabel {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--muted, #6b6358);
+  color: var(--color-ink-muted);
 }
 
-.muted { font-size: 13px; color: var(--muted, #6b6358); }
+.muted { font-size: 13px; color: var(--color-ink-muted); }
 
 .empty {
   padding: 40px;
   text-align: center;
   font-size: 14px;
-  color: var(--muted, #6b6358);
-  background: #fff;
-  border: 1px solid var(--border, #e8e2d6);
+  color: var(--color-ink-muted);
+  background: var(--admin-surface);
+  border: 1px solid var(--color-line);
 }
 
 .tableWrap {
-  border: 1px solid var(--border, #e8e2d6);
-  background: #fff;
+  border: 1px solid var(--color-line);
+  background: var(--admin-surface);
   overflow-x: auto;
 }
 
@@ -104,32 +104,32 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--muted, #6b6358);
+  color: var(--color-ink-muted);
   font-weight: 500;
   padding: 12px 14px;
-  border-bottom: 1px solid var(--border, #e8e2d6);
-  background: var(--cream, #f5f2ec);
+  border-bottom: 1px solid var(--color-line);
+  background: var(--cream, var(--admin-bg));
 }
 
 .table td {
   padding: 12px 14px;
-  border-bottom: 1px solid var(--border, #e8e2d6);
-  color: var(--dark, #2a2218);
+  border-bottom: 1px solid var(--color-line);
+  color: var(--color-ink);
   vertical-align: middle;
 }
 .table tr:last-child td { border-bottom: none; }
 
-.rowBad td { background: #fdf6f5; }
+.rowBad td { background: var(--admin-danger-soft); }
 
 .numCol { text-align: right; white-space: nowrap; }
 
-.variant { color: var(--dark, #2a2218); }
-.sku { color: var(--muted, #6b6358); font-variant-numeric: tabular-nums; }
+.variant { color: var(--color-ink); }
+.sku { color: var(--color-ink-muted); font-variant-numeric: tabular-nums; }
 
-.prodLink { color: var(--dark, #2a2218); text-decoration: none; font-weight: 500; }
+.prodLink { color: var(--color-ink); text-decoration: none; font-weight: 500; }
 .prodLink:hover { text-decoration: underline; }
 
-.editLink { color: #8a6d18; text-decoration: none; font-size: 12px; white-space: nowrap; }
+.editLink { color: var(--admin-warning); text-decoration: none; font-size: 12px; white-space: nowrap; }
 .editLink:hover { text-decoration: underline; }
 
 .pillBad, .pillWarn {
@@ -141,5 +141,5 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
-.pillBad  { background: #f7d9d4; color: #b03a2e; }
-.pillWarn { background: #f3e4bd; color: #8a6d18; }
+.pillBad  { background: var(--admin-danger-soft); color: var(--admin-danger); }
+.pillWarn { background: var(--admin-warning-soft); color: var(--admin-warning); }

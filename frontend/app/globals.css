@@ -113,6 +113,32 @@ img {
   --muted:      var(--color-ink-muted);
   --rose:       var(--color-accent);
 
+  /* ── Admin workspace ──────────────────────────────────────────────────
+     The storefront is a boutique; the admin is an instrument. It keeps the
+     brand's warm ink so it still feels like SILKILINEN, but sits on a quieter,
+     cooler canvas with white cards — density and legibility over atmosphere.
+
+     Status colour is deliberately a CLOSED set. The admin had grown ten reds,
+     eleven greens and five ambers, all meaning the same three things, so the
+     founder had to re-learn "is this bad?" on every screen. One red, one green,
+     one amber, one info — each with a soft tint for badge backgrounds. If a new
+     state needs a colour, it reuses one of these or earns a token here.
+  */
+  --admin-bg:           #F4F2EE;  /* working canvas, quieter than shop cream */
+  --admin-surface:      #FFFFFF;  /* cards + rows sit above the canvas       */
+  --admin-line:         #E3DFD7;  /* dividers, table rules                   */
+  --admin-ink:          var(--color-ink);
+  --admin-ink-muted:    #6F6A61;  /* labels, secondary text (AA on surface)  */
+
+  --admin-success:      var(--color-success);
+  --admin-success-soft: var(--color-success-soft);
+  --admin-danger:       var(--color-danger);
+  --admin-danger-soft:  var(--color-danger-soft);
+  --admin-warning:      #8A6410;  /* one amber — replaces 5 near-miss golds  */
+  --admin-warning-soft: #FBF3DF;
+  --admin-info:         #4A3F8F;  /* one indigo — replaces the ad-hoc violets */
+  --admin-info-soft:    #EFECF9;
+
   /* ── Cookie bar clearance — ONE owner ─────────────────────────────────
      The consent bar is fixed to the bottom edge. Anything else pinned down
      there (contact button, mobile cart bar) adds this to its own bottom

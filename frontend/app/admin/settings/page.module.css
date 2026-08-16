@@ -87,7 +87,7 @@
 .deleteBtn {
   background: none;
   border: none;
-  color: #b03a2e;
+  color: var(--admin-danger);
   font-size: 12px;
   letter-spacing: 1px;
   cursor: pointer;
@@ -165,10 +165,10 @@
 
 .error {
   font-size: 13px;
-  color: #b03a2e;
+  color: var(--admin-danger);
 }
 
 .success {
   font-size: 13px;
-  color: #2d7d47;
+  color: var(--color-success);
 }

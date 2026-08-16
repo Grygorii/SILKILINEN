@@ -121,7 +121,7 @@ export default function NewCampaignPage() {
             <textarea style={{ ...field, minHeight: 80, resize: 'vertical' }} value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Target audience, creative brief, links…" />
           </div>
 
-          {error && <p style={{ color: '#c0392b', fontSize: 13, marginBottom: 16 }}>{error}</p>}
+          {error && <p style={{ color: 'var(--color-danger)', fontSize: 13, marginBottom: 16 }}>{error}</p>}
 
           <button type="submit" disabled={saving} style={{
             padding: '11px 28px', fontSize: 13, fontFamily: 'inherit', cursor: saving ? 'default' : 'pointer',

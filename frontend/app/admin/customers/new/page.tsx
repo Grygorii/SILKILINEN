@@ -61,7 +61,7 @@ export default function NewCustomerPage() {
         <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--dark)', margin: '12px 0 24px' }}>New customer</h1>
 
         <form onSubmit={submit} style={{ background: 'white', border: '1px solid var(--border)', padding: '24px 28px' }}>
-          {error && <p style={{ color: '#c0392b', fontSize: 13, marginBottom: 16 }}>{error}</p>}
+          {error && <p style={{ color: 'var(--color-danger)', fontSize: 13, marginBottom: 16 }}>{error}</p>}
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
             <div>

@@ -17,8 +17,8 @@ const COLS: { key: keyof Row; label: string }[] = [
 ];
 const BLANK: Row = { size: '', eu: '', uk: '', bustCm: '', bustIn: '', waistCm: '', waistIn: '', hipCm: '', hipIn: '' };
 
-const cell: React.CSSProperties = { width: '100%', padding: '6px 7px', border: '1px solid var(--border, #d9d2c6)', fontSize: 12, background: '#fff' };
-const btn: React.CSSProperties = { border: '1px solid var(--border, #cfc7b8)', background: '#fff', padding: '6px 10px', fontSize: 12, cursor: 'pointer' };
+const cell: React.CSSProperties = { width: '100%', padding: '6px 7px', border: '1px solid var(--border, var(--admin-line))', fontSize: 12, background: 'var(--admin-surface)' };
+const btn: React.CSSProperties = { border: '1px solid var(--border, var(--admin-line))', background: 'var(--admin-surface)', padding: '6px 10px', fontSize: 12, cursor: 'pointer' };
 
 export default function SizeGuideEditorPage() {
   const [rows, setRows] = useState<Row[]>([]);
@@ -64,7 +64,7 @@ export default function SizeGuideEditorPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 26, margin: '8px 0' }}>Size guide</h1>
           <button onClick={save} disabled={saving}
-            style={{ background: 'var(--dark, #1a1916)', color: '#fff', border: 'none', padding: '10px 22px', fontSize: 14, cursor: saving ? 'default' : 'pointer' }}>
+            style={{ background: 'var(--dark, var(--admin-ink))', color: 'var(--admin-surface)', border: 'none', padding: '10px 22px', fontSize: 14, cursor: saving ? 'default' : 'pointer' }}>
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
@@ -93,7 +93,7 @@ export default function SizeGuideEditorPage() {
                         </td>
                       ))}
                       <td style={{ padding: '3px 4px' }}>
-                        <button style={{ ...btn, color: '#b03a2e' }} onClick={() => remove(i)}>✕</button>
+                        <button style={{ ...btn, color: 'var(--admin-danger)' }} onClick={() => remove(i)}>✕</button>
                       </td>
                     </tr>
                   ))}

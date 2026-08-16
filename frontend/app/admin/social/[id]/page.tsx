@@ -223,8 +223,8 @@ export default function SocialComposerPage() {
                 onChange={e => setStatus(e.target.value as 'draft' | 'ready' | 'posted')}
                 style={{
                   fontSize: 11, padding: '3px 8px', border: '1px solid var(--border)',
-                  background: post.status === 'posted' ? '#e8f5e9' : post.status === 'ready' ? '#fff8e1' : '#f3f3f3',
-                  color: post.status === 'posted' ? '#2d7d47' : post.status === 'ready' ? '#b8860b' : '#555',
+                  background: post.status === 'posted' ? 'var(--admin-success-soft)' : post.status === 'ready' ? 'var(--admin-warning-soft)' : 'var(--admin-bg)',
+                  color: post.status === 'posted' ? 'var(--color-success)' : post.status === 'ready' ? 'var(--admin-warning)' : 'var(--admin-ink-muted)',
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}
               >
@@ -239,7 +239,7 @@ export default function SocialComposerPage() {
                 Export &amp; track →
               </button>
               <button onClick={deletePost} disabled={deleting} style={{
-                padding: '7px 10px', background: 'white', color: '#c62828', border: '1px solid #f5c6c6',
+                padding: '7px 10px', background: 'white', color: 'var(--admin-danger)', border: '1px solid var(--admin-danger-soft)',
                 cursor: 'pointer', fontFamily: 'inherit', fontSize: 11,
               }}>
                 Delete
@@ -281,7 +281,7 @@ export default function SocialComposerPage() {
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
                 style={{
-                  width: 100, height: 100, border: '1px dashed var(--border)', background: '#fafafa',
+                  width: 100, height: 100, border: '1px dashed var(--border)', background: 'var(--admin-surface)',
                   cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center',
                   justifyContent: 'center', gap: 4, color: 'var(--muted)',
                 }}
@@ -346,7 +346,7 @@ export default function SocialComposerPage() {
                       cursor: 'pointer', fontFamily: 'inherit', fontSize: 12,
                       opacity: isEnabled ? 1 : 0.5,
                     }}>
-                      <PlatformIcon icon={p.icon} color={isActive ? 'white' : (p.brandColor || '#888')} />
+                      <PlatformIcon icon={p.icon} color={isActive ? 'white' : (p.brandColor || 'var(--admin-ink-muted)')} />
                       {p.displayName}
                     </button>
                   );
@@ -355,10 +355,10 @@ export default function SocialComposerPage() {
 
               {/* Active variation editor */}
               {activePlatform && activeVariation && (
-                <div style={{ background: '#fafafa', border: '1px solid var(--border)', padding: '18px 20px' }}>
+                <div style={{ background: 'var(--admin-surface)', border: '1px solid var(--border)', padding: '18px 20px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <PlatformIcon icon={activePlatform.icon} color={activePlatform.brandColor || '#888'} />
+                      <PlatformIcon icon={activePlatform.icon} color={activePlatform.brandColor || 'var(--admin-ink-muted)'} />
                       <span style={{ fontWeight: 500, fontSize: 13 }}>{activePlatform.displayName}</span>
                       {activePlatform.captionMaxChars && (
                         <span style={{ fontSize: 11, color: 'var(--muted)' }}>max {activePlatform.captionMaxChars} chars</span>
@@ -376,7 +376,7 @@ export default function SocialComposerPage() {
                   {activeVariation.enabled && (
                     <>
                       {activePlatform.tips?.length > 0 && (
-                        <div style={{ marginBottom: 12, padding: '8px 12px', background: '#fff8e1', border: '1px solid #f0e08a', fontSize: 11, color: '#7a6000', lineHeight: 1.6 }}>
+                        <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--admin-warning-soft)', border: '1px solid var(--admin-warning-soft)', fontSize: 11, color: 'var(--admin-warning)', lineHeight: 1.6 }}>
                           {activePlatform.tips.map((tip, i) => <div key={i}>• {tip}</div>)}
                         </div>
                       )}
@@ -398,7 +398,7 @@ export default function SocialComposerPage() {
                         }}
                       />
                       {activePlatform.captionMaxChars > 0 && (
-                        <p style={{ fontSize: 10, color: effectiveCaption.length > activePlatform.captionMaxChars ? '#c62828' : 'var(--muted)', marginTop: 4 }}>
+                        <p style={{ fontSize: 10, color: effectiveCaption.length > activePlatform.captionMaxChars ? 'var(--admin-danger)' : 'var(--muted)', marginTop: 4 }}>
                           {effectiveCaption.length} / {activePlatform.captionMaxChars} characters
                         </p>
                       )}
@@ -448,8 +448,8 @@ export default function SocialComposerPage() {
                       <input type="checkbox" checked={isPosted}
                         onChange={() => togglePostedTo(v.platformKey, isPosted)}
                         style={{ width: 15, height: 15 }} />
-                      {platform && <PlatformIcon icon={platform.icon} color={platform.brandColor || '#888'} />}
-                      <span style={{ fontSize: 13, fontWeight: isPosted ? 500 : 400, color: isPosted ? '#2d7d47' : 'var(--dark)', textDecoration: isPosted ? 'none' : 'none' }}>
+                      {platform && <PlatformIcon icon={platform.icon} color={platform.brandColor || 'var(--admin-ink-muted)'} />}
+                      <span style={{ fontSize: 13, fontWeight: isPosted ? 500 : 400, color: isPosted ? 'var(--color-success)' : 'var(--dark)', textDecoration: isPosted ? 'none' : 'none' }}>
                         {platform?.displayName || v.platformKey}
                       </span>
                       {postedEntry && (
@@ -461,7 +461,7 @@ export default function SocialComposerPage() {
                   );
                 })}
                 {allEnabledPosted && (
-                  <p style={{ fontSize: 12, color: '#2d7d47', margin: '4px 0 0', fontStyle: 'italic' }}>All platforms posted ✓</p>
+                  <p style={{ fontSize: 12, color: 'var(--color-success)', margin: '4px 0 0', fontStyle: 'italic' }}>All platforms posted ✓</p>
                 )}
               </div>
             </div>
@@ -471,7 +471,7 @@ export default function SocialComposerPage() {
         {/* ─── Right panel: Preview ─── */}
         <div style={{
           width: 320, flexShrink: 0, borderLeft: '1px solid var(--border)',
-          background: '#f9f8f7', overflowY: 'auto', padding: '24px 20px',
+          background: 'var(--admin-surface)', overflowY: 'auto', padding: '24px 20px',
         }}>
           <p style={{ fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 14 }}>Preview</p>
 
@@ -499,13 +499,13 @@ export default function SocialComposerPage() {
             {/* Platform header bar */}
             {activePlatform && (
               <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <PlatformIcon icon={activePlatform.icon} color={activePlatform.brandColor || '#888'} />
+                <PlatformIcon icon={activePlatform.icon} color={activePlatform.brandColor || 'var(--admin-ink-muted)'} />
                 <span style={{ fontSize: 11, fontWeight: 500, color: activePlatform.brandColor || 'var(--dark)' }}>{activePlatform.displayName}</span>
               </div>
             )}
 
             {/* Image preview */}
-            <div style={{ background: '#f0ece8', aspectRatio: '1/1', overflow: 'hidden' }}>
+            <div style={{ background: 'var(--admin-bg)', aspectRatio: '1/1', overflow: 'hidden' }}>
               {post.defaultImages?.[post.primaryImageIndex ?? 0]?.url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -515,7 +515,7 @@ export default function SocialComposerPage() {
                 />
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--admin-line)" strokeWidth="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                 </div>
               )}
             </div>
@@ -523,7 +523,7 @@ export default function SocialComposerPage() {
             {/* Caption preview */}
             <div style={{ padding: '12px 14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#e8e0d8' }} />
+                <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--admin-line)' }} />
                 <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--dark)' }}>silkilinen</span>
               </div>
               {effectiveCaption ? (
@@ -531,10 +531,10 @@ export default function SocialComposerPage() {
                   <strong>silkilinen</strong>{' '}{effectiveCaption}
                 </p>
               ) : (
-                <p style={{ fontSize: 11, color: '#ccc', margin: '0 0 8px', fontStyle: 'italic' }}>Caption will appear here…</p>
+                <p style={{ fontSize: 11, color: 'var(--admin-line)', margin: '0 0 8px', fontStyle: 'italic' }}>Caption will appear here…</p>
               )}
               {effectiveHashtags && (
-                <p style={{ fontSize: 11, color: '#6c9ec4', margin: 0, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 11, color: 'var(--admin-info)', margin: 0, lineHeight: 1.5 }}>
                   {effectiveHashtags}
                 </p>
               )}
@@ -546,7 +546,7 @@ export default function SocialComposerPage() {
             <div style={{ marginTop: 14 }}>
               <p style={{ fontSize: 10, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6 }}>Image specs</p>
               {activePlatform?.imageSpecs.map((spec, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--muted)', padding: '3px 0', borderBottom: '1px solid #eee' }}>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--muted)', padding: '3px 0', borderBottom: '1px solid var(--admin-line)' }}>
                   <span>{spec.label}{spec.isDefault ? ' ★' : ''}</span>
                   <span>{spec.pixelWidth}×{spec.pixelHeight}</span>
                 </div>
@@ -575,7 +575,7 @@ export default function SocialComposerPage() {
                     color: exportPlatformKey === v.platformKey ? 'white' : 'var(--dark)',
                     cursor: 'pointer', fontFamily: 'inherit', fontSize: 12,
                   }}>
-                    {p && <PlatformIcon icon={p.icon} color={exportPlatformKey === v.platformKey ? 'white' : (p.brandColor || '#888')} />}
+                    {p && <PlatformIcon icon={p.icon} color={exportPlatformKey === v.platformKey ? 'white' : (p.brandColor || 'var(--admin-ink-muted)')} />}
                     {p?.displayName || v.platformKey}
                     {postedToKeys.has(v.platformKey) && <span style={{ fontSize: 10 }}>✓</span>}
                   </button>
@@ -598,7 +598,7 @@ export default function SocialComposerPage() {
                   <p style={{ fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>Caption</p>
                   <div style={{ position: 'relative', marginBottom: 20 }}>
                     <pre style={{
-                      padding: '12px 14px', background: '#f9f8f7', border: '1px solid var(--border)',
+                      padding: '12px 14px', background: 'var(--admin-surface)', border: '1px solid var(--border)',
                       fontSize: 12, lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
                       margin: 0, fontFamily: 'inherit', maxHeight: 200, overflowY: 'auto',
                     }}>
@@ -610,8 +610,8 @@ export default function SocialComposerPage() {
                       setTimeout(() => setCopied(false), 2000);
                     }} style={{
                       position: 'absolute', top: 8, right: 8, padding: '4px 10px', fontSize: 10,
-                      border: '1px solid var(--border)', background: copied ? '#e8f5e9' : 'white',
-                      color: copied ? '#2d7d47' : 'var(--muted)', cursor: 'pointer', fontFamily: 'inherit',
+                      border: '1px solid var(--border)', background: copied ? 'var(--admin-success-soft)' : 'white',
+                      color: copied ? 'var(--color-success)' : 'var(--muted)', cursor: 'pointer', fontFamily: 'inherit',
                     }}>
                       {copied ? 'Copied ✓' : 'Copy'}
                     </button>
@@ -627,7 +627,7 @@ export default function SocialComposerPage() {
                           return (
                             <a key={i} href={cloudUrl} download target="_blank" rel="noopener noreferrer" style={{
                               padding: '7px 14px', border: '1px solid var(--border)', fontSize: 11,
-                              textDecoration: 'none', color: 'var(--dark)', background: spec.isDefault ? '#f5f2ee' : 'white',
+                              textDecoration: 'none', color: 'var(--dark)', background: spec.isDefault ? 'var(--admin-bg)' : 'white',
                             }}>
                               ↓ {spec.label} ({spec.pixelWidth}×{spec.pixelHeight})
                             </a>
@@ -643,8 +643,8 @@ export default function SocialComposerPage() {
                     <button onClick={() => togglePostedTo(exportPlatformKey, isPosted)} style={{
                       padding: '10px 20px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
                       border: '1px solid var(--border)',
-                      background: isPosted ? '#e8f5e9' : 'var(--dark)',
-                      color: isPosted ? '#2d7d47' : 'white',
+                      background: isPosted ? 'var(--admin-success-soft)' : 'var(--dark)',
+                      color: isPosted ? 'var(--color-success)' : 'white',
                     }}>
                       {isPosted ? `✓ Posted to ${platform?.displayName} — unmark?` : `Mark as posted to ${platform?.displayName}`}
                     </button>

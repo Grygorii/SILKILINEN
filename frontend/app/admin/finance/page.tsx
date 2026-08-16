@@ -47,7 +47,7 @@ const CAT_LABELS: Record<string, string> = {
   tax_vat: 'VAT', refunds: 'Refunds', other: 'Other',
 };
 
-const SEG_COLORS = ['#7a5c2e','#c5a572','#2e7d32','#c62828','#1565c0','#7b1fa2','#e65100','#558b2f'];
+const SEG_COLORS = ['var(--admin-warning)','var(--admin-warning)','var(--admin-success)','var(--admin-danger)','var(--admin-info)','var(--admin-info)','var(--admin-danger)','var(--admin-success)'];
 
 function fmt(n: number | null) {
   if (n === null) return '—';
@@ -138,7 +138,7 @@ export default function FinanceOverviewPage() {
 
         {/* Hero band */}
         <div className={`${styles.heroBand} ${heroCls}`}>
-          <p className={styles.heroVerdict} style={{ color: profit > 0 ? '#a5d6a7' : profit < 0 ? '#ef9a9a' : '#f5f0eb' }}>
+          <p className={styles.heroVerdict} style={{ color: profit > 0 ? 'var(--admin-success-soft)' : profit < 0 ? 'var(--admin-danger)' : 'var(--admin-bg)' }}>
             {verdict}
           </p>
           <p className={styles.heroSub}>This month · all costs counted · honest</p>
@@ -153,7 +153,7 @@ export default function FinanceOverviewPage() {
             <hr className={styles.heroDivider} />
             <div className={styles.heroNetRow}>
               <span>Net result</span>
-              <span style={{ color: profit > 0 ? '#a5d6a7' : profit < 0 ? '#ef9a9a' : 'inherit' }}>
+              <span style={{ color: profit > 0 ? 'var(--admin-success-soft)' : profit < 0 ? 'var(--admin-danger)' : 'inherit' }}>
                 {profit >= 0 ? '+' : '−'}€{Math.abs(profit).toFixed(2)}
               </span>
             </div>
@@ -260,7 +260,7 @@ export default function FinanceOverviewPage() {
                         <td className={styles.tNum}>{fmt(row.cogs)}</td>
                         <td className={styles.tNum}>{fmt(row.stripeFee)}</td>
                         <td className={styles.tNum}>
-                          {row.shippingCost !== null ? `€${row.shippingCost.toFixed(2)}` : <span className={styles.tMuted}>— <button onClick={e => { e.stopPropagation(); openShippingModal(row); }} style={{ fontSize: 11, color: '#7a5c2e', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>Add</button></span>}
+                          {row.shippingCost !== null ? `€${row.shippingCost.toFixed(2)}` : <span className={styles.tMuted}>— <button onClick={e => { e.stopPropagation(); openShippingModal(row); }} style={{ fontSize: 11, color: 'var(--admin-warning)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>Add</button></span>}
                         </td>
                         <td className={styles.tNum}>{row.refunded > 0 ? `€${row.refunded.toFixed(2)}` : <span className={styles.tMuted}>—</span>}</td>
                         <td className={profitCls}>

@@ -37,6 +37,30 @@ const eslintConfig = defineConfig([
     files: ['lib/urls.ts'],
     rules: { 'no-restricted-syntax': 'off' },
   },
+  {
+    // The admin had 108 distinct hardcoded hex values against 26 uses of the
+    // brand tokens — including three different reds all meaning "danger", and
+    // literals that were byte-identical to tokens that already existed
+    // (#2d7d47 === --color-success, 35 times). Same disease as the storefront's
+    // hand-built URLs: a value with no owner drifts. The storefront rule lives
+    // in Conventions; this makes it enforceable in the admin too.
+    files: ['app/admin/**/*.tsx', 'app/admin/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': ['error', {
+        selector: "Literal[value=/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/]",
+        message:
+          "Don't hardcode hex in the admin — use the --color-* tokens from globals.css " +
+          "(--color-ink, --color-line, --color-success, --color-danger, --color-gold, …). " +
+          "If a third-party widget genuinely needs a literal, disable this rule on that line with a reason.",
+      }],
+    },
+  },
+  {
+    // Recharts takes literal colours into SVG attributes and its own style
+    // objects — see the note at the top of the file.
+    files: ['app/admin/_components/dashboard/Zone2Metrics.tsx'],
+    rules: { 'no-restricted-syntax': 'off' },
+  },
   globalIgnores([
     ".next/**",
     "out/**",

@@ -18,7 +18,7 @@
   font-size: 12px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--muted, #8a8680);
+  color: var(--muted, var(--admin-ink-muted));
   text-decoration: none;
   white-space: nowrap;
 }
@@ -32,16 +32,16 @@
 
 .savedBadge {
   font-size: 12px;
-  color: #2d7d47;
+  color: var(--color-success);
 }
 
 .errorBadge {
   font-size: 12px;
-  color: #c0392b;
+  color: var(--color-danger);
 }
 
 .errorMsg {
-  color: #c0392b;
+  color: var(--color-danger);
   font-size: 13px;
   margin-bottom: 16px;
 }
@@ -78,7 +78,7 @@
 }
 
 .section {
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--border, var(--admin-line));
   padding: 20px;
 }
 
@@ -105,7 +105,7 @@
 .input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--border, var(--admin-line));
   font-size: 14px;
   font-family: inherit;
   color: var(--dark);
@@ -113,12 +113,12 @@
   background: white;
 }
 .input:focus { outline: none; border-color: var(--dark); }
-.input:disabled { background: var(--cream, #f5f2ec); color: var(--muted); cursor: not-allowed; }
+.input:disabled { background: var(--cream, var(--admin-bg)); color: var(--muted); cursor: not-allowed; }
 
 .textarea {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--border, var(--admin-line));
   font-size: 14px;
   font-family: inherit;
   color: var(--dark);
@@ -130,7 +130,7 @@
 .select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--border, var(--admin-line));
   font-size: 14px;
   font-family: inherit;
   color: var(--dark);
@@ -147,7 +147,7 @@
 
 .heroPreview {
   margin-top: 12px;
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--border, var(--admin-line));
   overflow: hidden;
   aspect-ratio: 16 / 9;
 }

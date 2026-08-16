@@ -143,18 +143,18 @@ export default function AbandonedCartsPage() {
             </div>
 
             {/* Recovery-email status (#4) — which sequence emails went out + resend */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border, #eee)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border, var(--admin-line))' }}>
               {(order.recoveryEmails || []).length === 0 ? (
                 <span style={{ fontSize: 12, color: 'var(--muted)', fontStyle: 'italic' }}>No recovery email sent yet</span>
               ) : (
                 (order.recoveryEmails || []).sort((a, b) => a.seq - b.seq).map(r => (
-                  <span key={r.seq} style={{ fontSize: 11, background: '#e8f5e9', color: '#2d7d47', padding: '3px 8px' }}>
+                  <span key={r.seq} style={{ fontSize: 11, background: 'var(--admin-success-soft)', color: 'var(--color-success)', padding: '3px 8px' }}>
                     Email {r.seq} · {relativeTime(r.sentAt)}
                   </span>
                 ))
               )}
               {order.recoveryUnsubscribed ? (
-                <span style={{ fontSize: 11, color: '#c0392b' }}>Unsubscribed</span>
+                <span style={{ fontSize: 11, color: 'var(--color-danger)' }}>Unsubscribed</span>
               ) : order.customerEmail ? (
                 <button
                   onClick={() => resendRecovery(order._id)}

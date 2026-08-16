@@ -20,9 +20,9 @@ type Article = {
 };
 
 const STATUS_LABELS: Record<string, { label: string; bg: string; color: string }> = {
-  draft:     { label: 'Draft',     bg: '#f3f3f3', color: '#555' },
-  preview:   { label: 'Preview',   bg: '#ede7f6', color: '#5c35a8' },
-  published: { label: 'Published', bg: '#e8f5e9', color: '#2d7d47' },
+  draft:     { label: 'Draft',     bg: 'var(--admin-bg)', color: 'var(--admin-ink-muted)' },
+  preview:   { label: 'Preview',   bg: 'var(--admin-info-soft)', color: 'var(--admin-info)' },
+  published: { label: 'Published', bg: 'var(--admin-success-soft)', color: 'var(--color-success)' },
 };
 
 const FILTERS = ['all', 'draft', 'preview', 'published'] as const;
@@ -116,7 +116,7 @@ export default function JournalAdminPage() {
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => { setAiOpen(o => !o); setAiError(''); }} style={{
-              padding: '10px 18px', background: 'white', color: 'var(--dark)', border: '1px solid #b8863b',
+              padding: '10px 18px', background: 'white', color: 'var(--dark)', border: '1px solid var(--admin-warning)',
               cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, letterSpacing: '0.5px',
             }}>
               {aiOpen ? 'Cancel' : '✦ Write with AI'}
@@ -132,7 +132,7 @@ export default function JournalAdminPage() {
 
         {/* AI masterpiece generator */}
         {aiOpen && (
-          <form onSubmit={generateArticle} style={{ marginBottom: 28, padding: '20px 24px', background: 'white', border: '1px solid #e6d9bf' }}>
+          <form onSubmit={generateArticle} style={{ marginBottom: 28, padding: '20px 24px', background: 'white', border: '1px solid var(--admin-warning-soft)' }}>
             <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
               Writes a draft grounded in everything the agents know — Hermes&rsquo; SEO plan, rising demand, the Playbook
               and your catalogue — with a hook, real product links and correct meta. Give a topic, or leave it blank and
@@ -146,11 +146,11 @@ export default function JournalAdminPage() {
                 disabled={aiBusy}
                 style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--border)', fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, color: 'var(--dark)' }}
               />
-              <button type="submit" disabled={aiBusy} style={{ padding: '10px 20px', background: '#b8863b', color: 'white', border: 'none', cursor: aiBusy ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 13, whiteSpace: 'nowrap' }}>
+              <button type="submit" disabled={aiBusy} style={{ padding: '10px 20px', background: 'var(--admin-warning)', color: 'white', border: 'none', cursor: aiBusy ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 13, whiteSpace: 'nowrap' }}>
                 {aiBusy ? 'Writing… (~30s)' : 'Write masterpiece'}
               </button>
             </div>
-            {aiError && <p style={{ margin: '10px 0 0', fontSize: 12, color: '#b03a2e' }}>{aiError}</p>}
+            {aiError && <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--admin-danger)' }}>{aiError}</p>}
           </form>
         )}
 
@@ -219,7 +219,7 @@ export default function JournalAdminPage() {
                       background: 'rgba(0,0,0,0.55)', color: 'white', cursor: 'pointer',
                       fontSize: 16, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#b03a2e')}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--admin-danger)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.55)')}
                   >
                     ×
@@ -234,7 +234,7 @@ export default function JournalAdminPage() {
                     onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
                   >
                     {/* Thumbnail */}
-                    <div style={{ height: 120, background: '#f5f2ee', overflow: 'hidden' }}>
+                    <div style={{ height: 120, background: 'var(--admin-bg)', overflow: 'hidden' }}>
                       {article.heroImage?.url && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={article.heroImage.url} alt={article.heroImage.alt || article.title}

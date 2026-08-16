@@ -29,7 +29,7 @@
 
 .filterSelect {
   padding: 10px 12px;
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--border, var(--admin-line));
   font-size: 12px;
   font-family: inherit;
   background: white;
@@ -49,7 +49,7 @@
 .addBtn:hover { opacity: 0.8; }
 
 .errorMsg {
-  color: #c0392b;
+  color: var(--color-danger);
   font-size: 13px;
   margin-bottom: 16px;
 }
@@ -77,13 +77,13 @@
   text-transform: uppercase;
   color: var(--muted);
   padding: 8px 12px;
-  border-bottom: 1px solid var(--border, #e0ddd7);
+  border-bottom: 1px solid var(--border, var(--admin-line));
   font-weight: 400;
 }
 
 .table td {
   padding: 14px 12px;
-  border-bottom: 1px solid var(--border, #e0ddd7);
+  border-bottom: 1px solid var(--border, var(--admin-line));
   color: var(--dark);
   vertical-align: middle;
 }
@@ -113,9 +113,9 @@
   text-transform: uppercase;
 }
 
-.sActive   { background: #e6f4ec; color: #2d7d47; }
-.sDraft    { background: #f5f4f0; color: #8a8680; }
-.sArchived { background: #fdf0ed; color: #c0392b; }
+.sActive   { background: var(--admin-success-soft); color: var(--color-success); }
+.sDraft    { background: var(--admin-bg); color: var(--admin-ink-muted); }
+.sArchived { background: var(--admin-danger-soft); color: var(--color-danger); }
 
 .priceCurrent {
   color: var(--dark);
@@ -137,33 +137,33 @@
   padding: 6px 12px;
   font-size: 11px;
   letter-spacing: 0.5px;
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--border, var(--admin-line));
   color: var(--dark);
   text-decoration: none;
   transition: background 0.15s;
 }
-.editBtn:hover { background: var(--cream, #f5f2ec); }
+.editBtn:hover { background: var(--cream, var(--admin-bg)); }
 
 .archiveBtn {
   padding: 6px 12px;
   font-size: 11px;
   letter-spacing: 0.5px;
-  border: 1px solid #f5c2bb;
-  color: #c0392b;
+  border: 1px solid var(--admin-danger-soft);
+  color: var(--color-danger);
   background: transparent;
   cursor: pointer;
   font-family: inherit;
   transition: background 0.15s;
 }
-.archiveBtn:hover { background: #fdf0ed; }
+.archiveBtn:hover { background: var(--admin-danger-soft); }
 
 .deleteBtn {
   padding: 6px 12px;
   font-size: 11px;
   letter-spacing: 0.5px;
-  border: 1px solid #c0392b;
-  color: #fff;
-  background: #c0392b;
+  border: 1px solid var(--color-danger);
+  color: var(--admin-surface);
+  background: var(--color-danger);
   cursor: pointer;
   font-family: inherit;
   transition: opacity 0.15s;

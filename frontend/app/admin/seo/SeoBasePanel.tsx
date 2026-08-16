@@ -11,12 +11,12 @@ import { toast } from '@/lib/adminToast';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-const dark = 'var(--dark, #2a2218)';
-const muted = 'var(--muted, #8a8680)';
-const border = '1px solid var(--border, #e8e2d6)';
+const dark = 'var(--color-ink)';
+const muted = 'var(--muted, var(--admin-ink-muted))';
+const border = '1px solid var(--color-line)';
 const serif = "'Cormorant Garamond', Georgia, serif";
 // 'muted' = a page using its built-in default (neutral, not a red gap).
-const health = { good: '#2d7d47', warn: '#b8863b', bad: '#b03a2e', muted: '#b9b3a8' } as const;
+const health = { good: 'var(--color-success)', warn: 'var(--admin-warning)', bad: 'var(--admin-danger)', muted: 'var(--admin-line)' } as const;
 
 type Health = 'good' | 'warn' | 'bad' | 'muted';
 type RowType = 'page' | 'product' | 'category' | 'collection';
@@ -159,13 +159,13 @@ export default function SeoBasePanel() {
         <button onClick={runAutofix} disabled={fixing || counts.needsWork === 0} title="Hermes writes a meta title + description for every page that's missing one. Safe: it only fills gaps — never changes URLs or overwrites what you've written."
           style={{
             marginLeft: 'auto', padding: '9px 18px', fontSize: 12.5, fontFamily: 'inherit', whiteSpace: 'nowrap',
-            border: 'none', background: counts.needsWork ? dark : 'var(--border, #e8e2d6)',
-            color: counts.needsWork ? '#fff' : muted, cursor: fixing || !counts.needsWork ? 'default' : 'pointer', opacity: fixing ? 0.6 : 1,
+            border: 'none', background: counts.needsWork ? dark : 'var(--color-line)',
+            color: counts.needsWork ? 'var(--admin-surface)' : muted, cursor: fixing || !counts.needsWork ? 'default' : 'pointer', opacity: fixing ? 0.6 : 1,
           }}>{fixing ? 'Hermes is writing… (up to a minute)' : `✦ Auto-fix the ${counts.needsWork || ''} missing`}</button>
       </div>
 
       {report && (
-        <div style={{ marginTop: 16, border, background: '#fff', padding: '16px 18px' }}>
+        <div style={{ marginTop: 16, border, background: 'var(--admin-surface)', padding: '16px 18px' }}>
           <div style={{ fontFamily: serif, fontSize: 18, color: dark }}>
             Auto-fix report — filled {report.titles} title{report.titles === 1 ? '' : 's'} + {report.descriptions} description{report.descriptions === 1 ? '' : 's'}
             {report.failed > 0 && <span style={{ color: health.bad, fontSize: 13 }}> · {report.failed} failed</span>}
@@ -183,7 +183,7 @@ export default function SeoBasePanel() {
           {report.flagged && (
             <p style={{ fontSize: 11.5, color: muted, marginTop: 12, paddingTop: 10, borderTop: border, fontStyle: 'italic' }}>{report.flagged}</p>
           )}
-          <button onClick={() => setReport(null)} style={{ marginTop: 10, padding: '5px 12px', fontSize: 12, fontFamily: 'inherit', border, background: '#fff', color: muted, cursor: 'pointer' }}>Dismiss</button>
+          <button onClick={() => setReport(null)} style={{ marginTop: 10, padding: '5px 12px', fontSize: 12, fontFamily: 'inherit', border, background: 'var(--admin-surface)', color: muted, cursor: 'pointer' }}>Dismiss</button>
         </div>
       )}
 
@@ -191,7 +191,7 @@ export default function SeoBasePanel() {
         {TABS.map(t => (
           <button key={t.key} onClick={() => setFilter(t.key)} style={{
             padding: '6px 12px', fontSize: 12.5, fontFamily: 'inherit', cursor: 'pointer',
-            border, background: filter === t.key ? dark : '#fff', color: filter === t.key ? '#fff' : dark,
+            border, background: filter === t.key ? dark : 'var(--admin-surface)', color: filter === t.key ? 'var(--admin-surface)' : dark,
           }}>{t.label}</button>
         ))}
         <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search page or URL…" style={{
@@ -211,11 +211,11 @@ export default function SeoBasePanel() {
             const dirty = isDirty(r);
             const k = keyOf(r);
             return (
-              <div key={k} style={{ border, background: '#fff', padding: '14px 16px' }}>
+              <div key={k} style={{ border, background: 'var(--admin-surface)', padding: '14px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
                   <span style={{ fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: muted, border, padding: '1px 6px' }}>{r.type}</span>
                   <span style={{ fontSize: 14, color: dark, fontWeight: 500 }}>{r.label}</span>
-                  <a href={r.url} target="_blank" rel="noreferrer" style={{ fontSize: 11.5, color: '#b8863b' }}>open →</a>
+                  <a href={r.url} target="_blank" rel="noreferrer" style={{ fontSize: 11.5, color: 'var(--admin-warning)' }}>open →</a>
                 </div>
 
                 <Field label="Meta title" value={c.title} max={TITLE_MAX} healthColor={health[tHealth]} onChange={v => setField(r, 'title', v)} />
@@ -225,12 +225,12 @@ export default function SeoBasePanel() {
                   {r.note && <span style={{ fontSize: 11.5, color: muted, fontStyle: 'italic' }}>{r.note}</span>}
                   <button onClick={() => setOpenKey(openKey === k ? null : k)} style={{
                     marginLeft: r.note ? 0 : 'auto', padding: '7px 12px', fontSize: 12, fontFamily: 'inherit',
-                    border, background: '#fff', color: muted, cursor: 'pointer',
+                    border, background: 'var(--admin-surface)', color: muted, cursor: 'pointer',
                   }}>{openKey === k ? 'Hide checks' : 'Preview & checks'}</button>
                   <button onClick={() => save(r)} disabled={!dirty || savingKey === k} style={{
                     marginLeft: r.note ? 'auto' : 0, padding: '7px 16px', fontSize: 12.5, fontFamily: 'inherit',
-                    border: 'none', background: dirty ? dark : 'var(--border, #e8e2d6)',
-                    color: dirty ? '#fff' : muted, cursor: dirty && savingKey !== k ? 'pointer' : 'default',
+                    border: 'none', background: dirty ? dark : 'var(--color-line)',
+                    color: dirty ? 'var(--admin-surface)' : muted, cursor: dirty && savingKey !== k ? 'pointer' : 'default',
                   }}>{savingKey === k ? 'Saving…' : (dirty ? 'Save' : 'Saved')}</button>
                 </div>
 
@@ -298,10 +298,10 @@ function SeoChecks({ title, description, url, phrase, onPhrase }: {
 
   return (
     <div style={{ marginTop: 12, paddingTop: 12, borderTop: border }}>
-      <div style={{ background: '#fff', border, padding: '12px 14px', maxWidth: 600 }}>
-        <div style={{ fontSize: 12, color: '#4d5156', marginBottom: 2 }}>{crumb}</div>
-        <div style={{ fontSize: 18, color: '#1a0dab', lineHeight: 1.3, fontFamily: 'arial, sans-serif' }}>{tShown || 'Untitled page'}</div>
-        <div style={{ fontSize: 13, color: '#4d5156', lineHeight: 1.5, fontFamily: 'arial, sans-serif', marginTop: 2 }}>
+      <div style={{ background: 'var(--admin-surface)', border, padding: '12px 14px', maxWidth: 600 }}>
+        <div style={{ fontSize: 12, color: 'var(--admin-ink-muted)', marginBottom: 2 }}>{crumb}</div>
+        <div style={{ fontSize: 18, color: 'var(--admin-info)', lineHeight: 1.3, fontFamily: 'arial, sans-serif' }}>{tShown || 'Untitled page'}</div>
+        <div style={{ fontSize: 13, color: 'var(--admin-ink-muted)', lineHeight: 1.5, fontFamily: 'arial, sans-serif', marginTop: 2 }}>
           {dShown || <span style={{ fontStyle: 'italic', color: muted }}>No description — Google will invent one from the page.</span>}
         </div>
       </div>

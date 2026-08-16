@@ -111,8 +111,8 @@ export default function FinanceReportsPage() {
                 })}
               </div>
               <div className={styles.plLegend}>
-                <span><span className={styles.plLegendDot} style={{ background: '#c5a572' }}/>Revenue</span>
-                <span><span className={styles.plLegendDot} style={{ background: '#e8c9ab' }}/>Total costs</span>
+                <span><span className={styles.plLegendDot} style={{ background: 'var(--admin-warning)' }}/>Revenue</span>
+                <span><span className={styles.plLegendDot} style={{ background: 'var(--admin-warning-soft)' }}/>Total costs</span>
               </div>
 
               {/* Monthly detail table */}
@@ -135,7 +135,7 @@ export default function FinanceReportsPage() {
                         <td className={styles.tNum}>{m.stripeFees > 0 ? `−€${m.stripeFees.toFixed(2)}` : '—'}</td>
                         <td className={styles.tNum}>{m.cogs > 0 ? `−€${m.cogs.toFixed(2)}` : '—'}</td>
                         <td className={styles.tNum}>{m.expenseTotal > 0 ? `−€${m.expenseTotal.toFixed(2)}` : '—'}</td>
-                        <td className={`${styles.tNum} ${styles.tRight}`} style={{ fontWeight: 600, color: m.netProfit >= 0 ? '#2e7d32' : '#c62828' }}>
+                        <td className={`${styles.tNum} ${styles.tRight}`} style={{ fontWeight: 600, color: m.netProfit >= 0 ? 'var(--admin-success)' : 'var(--admin-danger)' }}>
                           {m.netProfit >= 0 ? '+' : '−'}€{Math.abs(m.netProfit).toFixed(2)}
                         </td>
                       </tr>
@@ -178,7 +178,7 @@ export default function FinanceReportsPage() {
                               className={`${styles.marginBar} ${marginPct >= 40 ? styles.marginBarGreen : marginPct >= 20 ? styles.marginBarAmber : styles.marginBarRed}`}
                               style={{ width: Math.max(4, marginPct) + 'px' }}
                             />
-                            <span style={{ fontSize: 13, color: marginPct >= 40 ? '#2e7d32' : marginPct >= 20 ? '#b8860b' : '#c62828' }}>
+                            <span style={{ fontSize: 13, color: marginPct >= 40 ? 'var(--admin-success)' : marginPct >= 20 ? 'var(--admin-warning)' : 'var(--admin-danger)' }}>
                               {marginPct}%
                             </span>
                           </span>
@@ -214,7 +214,7 @@ export default function FinanceReportsPage() {
                       <td className={styles.tNum}>{fmt(s.revenue)}</td>
                       <td>
                         {marginPct !== null ? (
-                          <span style={{ color: marginPct >= 40 ? '#2e7d32' : marginPct >= 20 ? '#b8860b' : '#c62828' }}>
+                          <span style={{ color: marginPct >= 40 ? 'var(--admin-success)' : marginPct >= 20 ? 'var(--admin-warning)' : 'var(--admin-danger)' }}>
                             {marginPct}%
                           </span>
                         ) : <span className={styles.tMuted}>—</span>}

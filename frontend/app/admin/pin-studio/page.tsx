@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
-const dark = 'var(--dark, #2a2218)';
-const muted = 'var(--muted, #8a8680)';
-const border = '1px solid var(--border, #e8e2d6)';
+const dark = 'var(--color-ink)';
+const muted = 'var(--muted, var(--admin-ink-muted))';
+const border = '1px solid var(--color-line)';
 const serif = "'Cormorant Garamond', Georgia, serif";
 
 type SourceType = 'article' | 'product' | 'review';
@@ -34,9 +34,9 @@ function Field({ label, value, big }: { label: string; value: string; big?: bool
     <div style={{ marginBottom: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
         <span style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: muted }}>{label}</span>
-        <button onClick={copy} style={{ fontSize: 11, color: copied ? '#5a8f3d' : dark, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{copied ? '✓ copied' : 'copy'}</button>
+        <button onClick={copy} style={{ fontSize: 11, color: copied ? 'var(--admin-success)' : dark, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{copied ? '✓ copied' : 'copy'}</button>
       </div>
-      <div style={{ fontSize: big ? 12 : 13, color: dark, lineHeight: 1.5, background: 'var(--warm-white,#faf8f4)', border, padding: '8px 10px', whiteSpace: 'pre-wrap' }}>{value}</div>
+      <div style={{ fontSize: big ? 12 : 13, color: dark, lineHeight: 1.5, background: 'var(--color-bg)', border, padding: '8px 10px', whiteSpace: 'pre-wrap' }}>{value}</div>
     </div>
   );
 }
@@ -92,7 +92,7 @@ export default function PinStudioPage() {
 
         {/* Performance loop */}
         {traffic && (
-          <div style={{ border, background: 'var(--warm-white,#faf8f4)', padding: '12px 18px', margin: '18px 0', display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'baseline' }}>
+          <div style={{ border, background: 'var(--color-bg)', padding: '12px 18px', margin: '18px 0', display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'baseline' }}>
             <span style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: muted }}>Social traffic · 30d</span>
             <span style={{ fontSize: 15, color: dark }}><strong>{traffic.total}</strong> visits</span>
             {traffic.bySource.map(s => <span key={s.source} style={{ fontSize: 12.5, color: muted }}>{s.source}: <strong style={{ color: dark }}>{s.visits}</strong></span>)}
@@ -104,7 +104,7 @@ export default function PinStudioPage() {
         {/* Source tabs */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
           {TABS.map(t => (
-            <button key={t.key} onClick={() => { setTab(t.key); setPins([]); }} style={{ padding: '8px 16px', fontSize: 13, background: tab === t.key ? dark : 'white', color: tab === t.key ? '#faf8f4' : dark, border, cursor: 'pointer', fontFamily: 'inherit' }}>{t.label}</button>
+            <button key={t.key} onClick={() => { setTab(t.key); setPins([]); }} style={{ padding: '8px 16px', fontSize: 13, background: tab === t.key ? dark : 'white', color: tab === t.key ? 'var(--color-bg)' : dark, border, cursor: 'pointer', fontFamily: 'inherit' }}>{t.label}</button>
           ))}
         </div>
         <p style={{ fontSize: 12, color: muted, margin: '0 0 14px' }}>{TABS.find(t => t.key === tab)?.hint}</p>
@@ -114,10 +114,10 @@ export default function PinStudioPage() {
             {items.length === 0 && <option value="">Nothing here yet</option>}
             {items.map(i => <option key={i.id} value={i.id}>{i.label}{i.note ? ` · ${i.note}` : ''}</option>)}
           </select>
-          <button onClick={generate} disabled={loading || !selected} style={{ padding: '10px 20px', background: dark, color: '#faf8f4', border: 'none', cursor: loading || !selected ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 12, letterSpacing: '1px', textTransform: 'uppercase', opacity: loading || !selected ? 0.6 : 1 }}>{loading ? 'Composing…' : '✦ Generate 3 pins'}</button>
+          <button onClick={generate} disabled={loading || !selected} style={{ padding: '10px 20px', background: dark, color: 'var(--color-bg)', border: 'none', cursor: loading || !selected ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 12, letterSpacing: '1px', textTransform: 'uppercase', opacity: loading || !selected ? 0.6 : 1 }}>{loading ? 'Composing…' : '✦ Generate 3 pins'}</button>
         </div>
 
-        {error && <p style={{ fontSize: 13, color: '#c0392b' }}>{error}</p>}
+        {error && <p style={{ fontSize: 13, color: 'var(--color-danger)' }}>{error}</p>}
         {loading && <p style={{ fontSize: 13, color: muted }}>Composing pins…</p>}
 
         {pins.length > 0 && (

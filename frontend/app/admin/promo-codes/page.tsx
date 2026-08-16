@@ -63,11 +63,11 @@ const CODE_TYPES = ['all', 'broad', 'personal'] as const;
 type CodeTypeFilter = typeof CODE_TYPES[number];
 
 const pillStyle: Record<string, React.CSSProperties> = {
-  active:   { background: '#e8f5e9', color: '#2d7d47' },
-  paused:   { background: '#fff8e1', color: '#b07d00' },
-  expired:  { background: '#f3f3f3', color: '#666' },
-  draft:    { background: '#ede7f6', color: '#5c35a8' },
-  archived: { background: '#eceae5', color: '#777' },
+  active:   { background: 'var(--admin-success-soft)', color: 'var(--color-success)' },
+  paused:   { background: 'var(--admin-warning-soft)', color: 'var(--admin-warning)' },
+  expired:  { background: 'var(--admin-bg)', color: 'var(--admin-ink-muted)' },
+  draft:    { background: 'var(--admin-info-soft)', color: 'var(--admin-info)' },
+  archived: { background: 'var(--admin-bg)', color: 'var(--admin-ink-muted)' },
 };
 
 export default function PromoCodesPage() {
@@ -267,7 +267,7 @@ export default function PromoCodesPage() {
                   <button key={d} onClick={() => setUsageDays(d)} style={{
                     padding: '5px 12px', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer',
                     border: '1px solid var(--border)',
-                    background: usageDays === d ? '#5c35a8' : 'white', color: usageDays === d ? 'white' : 'var(--dark)',
+                    background: usageDays === d ? 'var(--admin-info)' : 'white', color: usageDays === d ? 'white' : 'var(--dark)',
                   }}>{d === 365 ? '1y' : `${d}d`}</button>
                 ))}
               </div>
@@ -294,7 +294,7 @@ export default function PromoCodesPage() {
                       <td style={{ padding: '8px', textAlign: 'right' }}>{r.orders}</td>
                       <td style={{ padding: '8px', textAlign: 'right' }}>€{r.revenue.toFixed(2)}</td>
                       <td style={{ padding: '8px', textAlign: 'right' }}>€{r.aov.toFixed(2)}</td>
-                      <td style={{ padding: '8px', textAlign: 'right', color: '#c0392b' }}>−€{r.discountGiven.toFixed(2)}</td>
+                      <td style={{ padding: '8px', textAlign: 'right', color: 'var(--color-danger)' }}>−€{r.discountGiven.toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -323,7 +323,7 @@ export default function PromoCodesPage() {
               <button key={t} onClick={() => setCodeTypeFilter(t)} style={{
                 padding: '6px 14px', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer',
                 border: '1px solid var(--border)', letterSpacing: '0.04em',
-                background: codeTypeFilter === t ? '#5c35a8' : 'white',
+                background: codeTypeFilter === t ? 'var(--admin-info)' : 'white',
                 color: codeTypeFilter === t ? 'white' : 'var(--muted)',
                 textTransform: 'capitalize',
               }}>
@@ -404,7 +404,7 @@ export default function PromoCodesPage() {
                           {c.code}
                         </Link>
                         {personal && (
-                          <span style={{ marginLeft: 8, display: 'inline-block', padding: '1px 6px', fontSize: 9, letterSpacing: '0.8px', textTransform: 'uppercase', borderRadius: 2, background: '#ede7f6', color: '#5c35a8' }}>
+                          <span style={{ marginLeft: 8, display: 'inline-block', padding: '1px 6px', fontSize: 9, letterSpacing: '0.8px', textTransform: 'uppercase', borderRadius: 2, background: 'var(--admin-info-soft)', color: 'var(--admin-info)' }}>
                             Personal
                           </span>
                         )}
@@ -425,7 +425,7 @@ export default function PromoCodesPage() {
                       <td style={tdStyle}>{fmtDate(c.validUntil)}</td>
                       <td style={tdStyle}>
                         {c.stripeCouponId
-                          ? <span style={{ fontSize: 11, color: '#2d7d47' }}>✓ synced</span>
+                          ? <span style={{ fontSize: 11, color: 'var(--color-success)' }}>✓ synced</span>
                           : <span style={{ fontSize: 11, color: 'var(--muted)' }}>not synced</span>
                         }
                       </td>
@@ -442,7 +442,7 @@ export default function PromoCodesPage() {
                           Duplicate
                         </button>
                         {st !== 'archived' && (
-                          <button onClick={() => archiveRow(c)} style={{ fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', color: '#c0392b', padding: 0 }}>
+                          <button onClick={() => archiveRow(c)} style={{ fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', padding: 0 }}>
                             Archive
                           </button>
                         )}

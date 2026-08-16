@@ -222,13 +222,13 @@ export default function SeoHubPage() {
               Two ways to fix, and they don&rsquo;t overlap. To simply <strong>fill in blank</strong> meta titles and
               descriptions, use the Base tab —
               its Auto-fix does that in one click.{' '}
-              <button onClick={() => setTab('base')} style={{ background: 'none', border: 'none', padding: 0, color: '#b8863b', font: 'inherit', cursor: 'pointer', textDecoration: 'underline' }}>Go to Base →</button>.
+              <button onClick={() => setTab('base')} style={{ background: 'none', border: 'none', padding: 0, color: 'var(--admin-warning)', font: 'inherit', cursor: 'pointer', textDecoration: 'underline' }}>Go to Base →</button>.
               This tab is for Hermes&rsquo; <strong>strategic</strong> plan:
               rewriting meta to win clicks, and his content moves — each verified against live Search Console data and
               paused for your approval. (URLs are left untouched; changing them safely needs redirects.)
             </p>
 
-            <div className={styles.card} style={{ marginTop: 14, borderLeft: '3px solid #b8863b' }}>
+            <div className={styles.card} style={{ marginTop: 14, borderLeft: '3px solid var(--admin-warning)' }}>
               <p className={styles.cardTitle}>✦ Rebuild SEO — deliver Hermes&rsquo; plan</p>
               <p className={styles.cardText}>
                 Hermes is the brain; this is the hands. It loads Hermes&rsquo; latest plan and delivers it block by

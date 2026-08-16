@@ -114,13 +114,13 @@
   text-transform: uppercase;
 }
 
-.badgePaid       { background: #eaf7ee; color: #2d7d47; }
-.badgeProcessing { background: #eef3fb; color: #2155a3; }
-.badgeShipped    { background: #f0ebfb; color: #6b35b8; }
-.badgeDelivered  { background: #eaf7ee; color: #1a6b3c; border: 1px solid #b6e4c7; }
+.badgePaid       { background: var(--color-success-soft); color: var(--color-success); }
+.badgeProcessing { background: var(--admin-info-soft); color: var(--admin-info); }
+.badgeShipped    { background: var(--admin-info-soft); color: var(--admin-info); }
+.badgeDelivered  { background: var(--color-success-soft); color: var(--admin-success); border: 1px solid var(--admin-success-soft); }
 .badgePending    { background: var(--cream); color: var(--muted); border: 1px solid var(--border); }
-.badgeCancelled  { background: #fdf0ef; color: #b03a2e; }
-.badgeFailed     { background: #fdf0ef; color: #b03a2e; }
+.badgeCancelled  { background: var(--admin-danger-soft); color: var(--admin-danger); }
+.badgeFailed     { background: var(--admin-danger-soft); color: var(--admin-danger); }
 
 /* ── Items table ─────────────────────────────────── */
 
@@ -181,7 +181,7 @@
 }
 
 .totalRowDiscount {
-  color: #2d7d47;
+  color: var(--color-success);
 }
 
 /* ── Form controls ───────────────────────────────── */
@@ -377,7 +377,7 @@
 }
 
 .refundedRow span:last-child {
-  color: #c0392b;
+  color: var(--color-danger);
 }
 
 /* ── Refund panel ────────────────────────────────── */
@@ -397,7 +397,7 @@
 .refundBtn {
   height: 36px;
   padding: 0 20px;
-  background: #c0392b;
+  background: var(--color-danger);
   color: white;
   border: none;
   font-size: 12px;
@@ -413,5 +413,5 @@
 
 .errorMsg {
   font-size: 12px;
-  color: #c0392b;
+  color: var(--color-danger);
 }

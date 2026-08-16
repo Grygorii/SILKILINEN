@@ -38,13 +38,13 @@ function ActionRow({
         background:  'none',
         border:      'none',
         borderBottom: '1px solid var(--border)',
-        borderLeft:   danger ? '3px solid #c0392b' : 'none',
+        borderLeft:   danger ? '3px solid var(--color-danger)' : 'none',
         cursor:      'pointer',
         textAlign:   'left',
       }}
     >
-      <Icon size={18} color={danger ? '#c0392b' : 'var(--muted)'} style={{ flexShrink: 0 }} />
-      <span style={{ flex: 1, fontSize: 13, color: danger ? '#c0392b' : 'var(--dark)' }}>
+      <Icon size={18} color={danger ? 'var(--color-danger)' : 'var(--muted)'} style={{ flexShrink: 0 }} />
+      <span style={{ flex: 1, fontSize: 13, color: danger ? 'var(--color-danger)' : 'var(--dark)' }}>
         {label}
       </span>
       <ChevronRight size={14} color="var(--muted)" style={{ flexShrink: 0 }} />

@@ -247,10 +247,10 @@ function SurfaceCard({ surface }: { surface: Surface }) {
             value={assignSearch}
             onChange={e => setAssignSearch(e.target.value)}
             placeholder="Search products by name…"
-            style={{ width: '100%', padding: '8px 10px', fontSize: 13, border: '1px solid #e0d9cc', marginBottom: 12, boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '8px 10px', fontSize: 13, border: '1px solid var(--admin-line)', marginBottom: 12, boxSizing: 'border-box' }}
           />
           {assignSearch.trim().length >= 2 && assignMatches.length === 0 && (
-            <p style={{ fontSize: 13, color: '#6b6358', margin: '0 0 8px' }}>No products matched.</p>
+            <p style={{ fontSize: 13, color: 'var(--color-ink-muted)', margin: '0 0 8px' }}>No products matched.</p>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 240, overflowY: 'auto' }}>
             {assignMatches.map(m => (
@@ -260,7 +260,7 @@ function SurfaceCard({ surface }: { surface: Surface }) {
                 disabled={assignBusy}
                 style={{
                   textAlign: 'left', padding: '10px 12px', fontSize: 13,
-                  border: '1px solid #e0d9cc', background: '#fff',
+                  border: '1px solid var(--admin-line)', background: 'var(--admin-surface)',
                   cursor: assignBusy ? 'default' : 'pointer',
                 }}
               >

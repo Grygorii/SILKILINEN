@@ -61,19 +61,19 @@ export default function PackingSlip({ params }: { params: Promise<{ id: string }
     <div className="slip">
       <style>{`
         @media print { .noprint { display: none !important; } @page { margin: 18mm; } }
-        body { background: #fff; }
-        .slip { max-width: 680px; margin: 0 auto; padding: 40px; color: #1a1916; font-family: Georgia, 'Times New Roman', serif; }
+        body { background: var(--admin-surface); }
+        .slip { max-width: 680px; margin: 0 auto; padding: 40px; color: var(--admin-ink); font-family: Georgia, 'Times New Roman', serif; }
         .brand { font-size: 26px; letter-spacing: 3px; font-weight: 400; margin: 0; }
-        .tagline { font-size: 12px; color: #6b6358; letter-spacing: 1px; margin: 4px 0 0; }
+        .tagline { font-size: 12px; color: var(--color-ink-muted); letter-spacing: 1px; margin: 4px 0 0; }
         .meta { display: flex; justify-content: space-between; margin: 28px 0; font-size: 13px; }
-        .meta h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #6b6358; margin: 0 0 6px; font-family: system-ui, sans-serif; }
+        .meta h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--color-ink-muted); margin: 0 0 6px; font-family: system-ui, sans-serif; }
         table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; }
-        th { text-align: left; border-bottom: 2px solid #1a1916; padding: 8px 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-family: system-ui, sans-serif; }
-        td { padding: 10px 4px; border-bottom: 1px solid #e0d9cc; }
+        th { text-align: left; border-bottom: 2px solid var(--admin-ink); padding: 8px 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-family: system-ui, sans-serif; }
+        td { padding: 10px 4px; border-bottom: 1px solid var(--admin-line); }
         .qty { text-align: center; width: 60px; }
-        .note { margin-top: 24px; padding: 14px 16px; background: #f7f3ec; font-size: 13px; }
-        .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #6b6358; border-top: 1px solid #e0d9cc; padding-top: 20px; }
-        .btn { font-family: system-ui, sans-serif; font-size: 13px; padding: 8px 16px; border: 1px solid #1a1916; background: #1a1916; color: #fff; cursor: pointer; }
+        .note { margin-top: 24px; padding: 14px 16px; background: var(--admin-bg); font-size: 13px; }
+        .footer { margin-top: 40px; text-align: center; font-size: 12px; color: var(--color-ink-muted); border-top: 1px solid var(--admin-line); padding-top: 20px; }
+        .btn { font-family: system-ui, sans-serif; font-size: 13px; padding: 8px 16px; border: 1px solid var(--admin-ink); background: var(--admin-ink); color: var(--admin-surface); cursor: pointer; }
       `}</style>
 
       <div className="noprint" style={{ textAlign: 'right', marginBottom: 16 }}>
@@ -95,7 +95,7 @@ export default function PackingSlip({ params }: { params: Promise<{ id: string }
         <div style={{ textAlign: 'right' }}>
           <h3>Order</h3>
           <div>{ref}</div>
-          <div style={{ color: '#6b6358' }}>{date}</div>
+          <div style={{ color: 'var(--color-ink-muted)' }}>{date}</div>
         </div>
       </div>
 

@@ -10,11 +10,11 @@ import { toast } from '@/lib/adminToast';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-const dark = 'var(--color-ink, #2a2218)';
-const muted = 'var(--color-ink-muted, #6b6358)';
-const border = '1px solid var(--color-line, #e8e2d6)';
+const dark = 'var(--color-ink)';
+const muted = 'var(--color-ink-muted)';
+const border = '1px solid var(--color-line)';
 const serif = "'Cormorant Garamond', Georgia, serif";
-const good = '#2d7d47';
+const good = 'var(--color-success)';
 
 type LocaleMeta = { label: string; english: string };
 type Summary = {
@@ -85,14 +85,14 @@ export default function TranslationsPage() {
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => run(false)} disabled={running || summary?.configured === false} style={{
-              padding: '11px 22px', background: dark, color: '#fff', border: 'none',
+              padding: '11px 22px', background: dark, color: 'var(--admin-surface)', border: 'none',
               cursor: running ? 'default' : 'pointer', opacity: running ? 0.6 : 1, fontFamily: 'inherit', fontSize: 13, letterSpacing: '0.5px', whiteSpace: 'nowrap',
             }}>{running ? 'Translating… (up to a minute)' : '✦ Translate the catalogue'}</button>
           </div>
         </div>
 
         {summary?.configured === false && (
-          <div style={{ marginTop: 20, padding: '14px 18px', background: '#fdf6e9', border: '1px solid #e6d9bf', fontSize: 13, color: '#8a6d2f' }}>
+          <div style={{ marginTop: 20, padding: '14px 18px', background: 'var(--admin-warning-soft)', border: '1px solid var(--admin-warning-soft)', fontSize: 13, color: 'var(--admin-warning)' }}>
             Translation needs <strong>DEEPSEEK_API_KEY</strong> in Railway (the same key the other AI agents use).
           </div>
         )}
@@ -106,12 +106,12 @@ export default function TranslationsPage() {
                 const done = localeTotal(code);
                 const pct = totalSources ? Math.round((done / totalSources) * 100) : 0;
                 return (
-                  <div key={code} style={{ border, background: '#fff', padding: '16px 18px' }}>
+                  <div key={code} style={{ border, background: 'var(--admin-surface)', padding: '16px 18px' }}>
                     <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: 15, color: dark, fontWeight: 500 }}>{meta.label}</span>
                       <span style={{ fontSize: 12, color: pct >= 90 ? good : muted, fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>
                     </div>
-                    <div style={{ height: 4, background: 'var(--color-line, #e8e2d6)', borderRadius: 2, margin: '8px 0 10px', overflow: 'hidden' }}>
+                    <div style={{ height: 4, background: 'var(--color-line)', borderRadius: 2, margin: '8px 0 10px', overflow: 'hidden' }}>
                       <div style={{ width: `${pct}%`, height: '100%', background: good }} />
                     </div>
                     {TYPES.map(t => (

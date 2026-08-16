@@ -68,8 +68,8 @@ export default function CustomersFounderPage() {
   }
 
   const SEGMENT_COLORS: Record<string, string> = {
-    vip: '#5c35a8', repeat: '#2d7d47', 'first-time': '#1565c0',
-    'newsletter-only': '#b07d00', recent: '#00838f', lapsed: '#e65100', 'at-risk': '#c62828',
+    vip: 'var(--admin-info)', repeat: 'var(--color-success)', 'first-time': 'var(--admin-info)',
+    'newsletter-only': 'var(--admin-warning)', recent: 'var(--admin-info)', lapsed: 'var(--admin-danger)', 'at-risk': 'var(--admin-danger)',
   };
 
   if (loading) return <AdminLayout><div style={{ padding: 28, color: 'var(--muted)', fontSize: 13 }}>Loading…</div></AdminLayout>;
@@ -98,8 +98,8 @@ export default function CustomersFounderPage() {
             const pct = total > 0 ? Math.round((seg.count / total) * 100) : 0;
             return (
               <Link key={seg.slug} href={`/admin/customers?segment=${seg.slug}`} style={{ textDecoration: 'none' }}>
-                <div style={{ background: 'white', border: `1px solid var(--border)`, borderLeft: `4px solid ${SEGMENT_COLORS[seg.slug] || '#ccc'}`, padding: '14px 16px' }}>
-                  <p style={{ fontSize: 22, fontWeight: 600, color: SEGMENT_COLORS[seg.slug] || '#333', margin: '0 0 4px' }}>{seg.count}</p>
+                <div style={{ background: 'white', border: `1px solid var(--border)`, borderLeft: `4px solid ${SEGMENT_COLORS[seg.slug] || 'var(--admin-line)'}`, padding: '14px 16px' }}>
+                  <p style={{ fontSize: 22, fontWeight: 600, color: SEGMENT_COLORS[seg.slug] || 'var(--admin-ink)', margin: '0 0 4px' }}>{seg.count}</p>
                   <p style={{ fontSize: 13, color: 'var(--dark)', margin: '0 0 2px', fontWeight: 500 }}>{seg.label}</p>
                   <p style={{ fontSize: 11, color: 'var(--muted)', margin: 0 }}>{pct}% of all · {seg.description}</p>
                 </div>
@@ -112,7 +112,7 @@ export default function CustomersFounderPage() {
         {stats && (
           <div style={{ background: 'white', border: '1px solid var(--border)', padding: '20px 24px', marginBottom: 24 }}>
             <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 8px', color: 'var(--dark)' }}>Repeat purchase rate</p>
-            <p style={{ fontSize: 32, fontWeight: 700, color: stats.repeatRate >= 30 ? '#2d7d47' : stats.repeatRate >= 15 ? '#b07d00' : '#c62828', margin: '0 0 6px' }}>
+            <p style={{ fontSize: 32, fontWeight: 700, color: stats.repeatRate >= 30 ? 'var(--color-success)' : stats.repeatRate >= 15 ? 'var(--admin-warning)' : 'var(--admin-danger)', margin: '0 0 6px' }}>
               {stats.repeatRate}%
             </p>
             <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>

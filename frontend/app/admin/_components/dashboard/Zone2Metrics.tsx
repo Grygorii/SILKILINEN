@@ -1,5 +1,9 @@
 'use client';
 
+// Recharts renders these colours into SVG presentation attributes and its own
+// internal style objects, not into stylesheets we control. CSS custom properties
+// are deliberately NOT used here: this is the one admin file that keeps literal
+// hex, kept in sync by hand with the --color-* tokens in globals.css.
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Card from '../Card';
 
@@ -20,7 +24,7 @@ function Delta({ comparison }: { comparison: Comparison }) {
   if (direction === 'neutral' || deltaPercent === null) {
     return <span style={{ fontSize: 11, color: 'var(--muted)' }}>— No comparison yet</span>;
   }
-  const color = direction === 'up' ? '#4a7c59' : '#c0392b';
+  const color = direction === 'up' ? '#4a7c59' : '#C0392B';
   const arrow = direction === 'up' ? '▲' : '▼';
   const sign  = direction === 'up' && deltaPercent > 0 ? '+' : '';
   return (

@@ -20,7 +20,7 @@
 }
 .checkbox { display: inline-flex; align-items: center; gap: 6px; font-family: 'Jost', sans-serif; font-size: 13px; color: var(--color-ink-muted); cursor: pointer; }
 
-.error { background: #fde2e2; border: 1px solid #c9572a; color: #c9572a; padding: var(--s-3, 12px); border-radius: var(--radius-control, 2px); font-size: 13px; margin-bottom: var(--s-4, 16px); }
+.error { background: var(--admin-danger-soft); border: 1px solid var(--admin-danger); color: var(--admin-danger); padding: var(--s-3, 12px); border-radius: var(--radius-control, 2px); font-size: 13px; margin-bottom: var(--s-4, 16px); }
 .loading, .empty { font-family: 'Jost', sans-serif; font-size: 14px; color: var(--color-ink-muted); padding: var(--s-6, 32px) 0; text-align: center; }
 
 .list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--s-4, 16px); }
@@ -38,7 +38,7 @@
 .verifiedBadge { font-family: 'Jost', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; background: var(--color-surface-warm); color: var(--color-ink); padding: 2px 8px; border-radius: var(--radius-control, 2px); }
 .source { font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--color-ink-muted); }
 .meta { display: inline-flex; align-items: center; gap: var(--s-3, 12px); }
-.stars { color: #c4a882; font-size: 14px; }
+.stars { color: var(--color-accent); font-size: 14px; }
 .date  { font-family: 'Jost', sans-serif; font-size: 12px; color: var(--color-ink-muted); }
 
 .reviewTitle { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 20px; color: var(--color-ink); margin: 0 0 var(--s-2, 8px); }
@@ -58,8 +58,8 @@
 
 .flags { display: inline-flex; gap: 6px; flex-wrap: wrap; }
 .flag {
-  font-family: 'Jost', sans-serif; font-size: 11px; color: #c9572a;
-  background: #fdf0e8; border: 1px solid #f4c9aa; border-radius: var(--radius-control, 2px);
+  font-family: 'Jost', sans-serif; font-size: 11px; color: var(--admin-danger);
+  background: var(--admin-danger-soft); border: 1px solid var(--admin-warning-soft); border-radius: var(--radius-control, 2px);
   padding: 2px 8px;
 }
 
@@ -70,7 +70,7 @@
 }
 .approve { background: var(--color-ink); color: var(--color-bg); border: 1px solid var(--color-ink); }
 .reject  { background: transparent; color: var(--color-ink); border: 1px solid var(--color-line); }
-.spam    { background: transparent; color: #c9572a; border: 1px solid #f4c9aa; }
+.spam    { background: transparent; color: var(--admin-danger); border: 1px solid var(--admin-warning-soft); }
 .del     { background: transparent; color: var(--color-ink-muted); border: 1px solid transparent; }
 .approve:hover, .reject:hover, .spam:hover, .del:hover { opacity: 0.85; }
 .approve:disabled, .reject:disabled, .spam:disabled, .del:disabled { opacity: 0.5; cursor: not-allowed; }

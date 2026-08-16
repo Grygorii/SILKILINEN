@@ -41,7 +41,7 @@ export default function NewProductPage() {
       <div className={styles.creating}>
         {error ? (
           <>
-            <p className={styles.creatingText} style={{ color: '#c0392b' }}>Couldn’t create a new product: {error}</p>
+            <p className={styles.creatingText} style={{ color: 'var(--color-danger)' }}>Couldn’t create a new product: {error}</p>
             <p className={styles.creatingText}>
               <button onClick={() => location.reload()} style={{ marginRight: 12, textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', font: 'inherit' }}>Try again</button>
               <a href="/admin/products" style={{ textDecoration: 'underline' }}>Back to products</a>

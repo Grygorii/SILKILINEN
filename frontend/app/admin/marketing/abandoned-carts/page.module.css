@@ -19,7 +19,7 @@
 
 .error {
   font-size: 13px;
-  color: #c0392b;
+  color: var(--color-danger);
 }
 
 .allClear {
@@ -32,7 +32,7 @@
 }
 
 .card {
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--border, var(--admin-line));
   background: white;
   padding: 20px 24px;
   margin-bottom: 12px;
@@ -84,7 +84,7 @@
   padding: 6px 12px;
   font-size: 11px;
   letter-spacing: 0.5px;
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--border, var(--admin-line));
   background: transparent;
   color: var(--dark);
   cursor: pointer;
@@ -92,7 +92,7 @@
   transition: background 0.15s;
   white-space: nowrap;
 }
-.expandBtn:hover { background: var(--cream, #f5f2ec); }
+.expandBtn:hover { background: var(--cream, var(--admin-bg)); }
 
 .viewOrderLink {
   font-size: 11px;
@@ -106,7 +106,7 @@
   list-style: none;
   padding: 0;
   margin: 16px 0 0;
-  border-top: 1px solid var(--border, #e0ddd7);
+  border-top: 1px solid var(--border, var(--admin-line));
 }
 
 .item {
@@ -114,7 +114,7 @@
   align-items: baseline;
   gap: 10px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--border, #e0ddd7);
+  border-bottom: 1px solid var(--border, var(--admin-line));
   font-size: 13px;
 }
 .item:last-child { border-bottom: none; }

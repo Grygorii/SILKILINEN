@@ -73,7 +73,7 @@ export default function SocialConnectionsPage() {
   const [saved, setSaved] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newPlatform, setNewPlatform] = useState({ key: '', displayName: '', icon: '', brandColor: '#000000', baseUrl: '', sortOrder: 99 });
+  const [newPlatform, setNewPlatform] = useState({ key: '', displayName: '', icon: '', brandColor: 'var(--admin-ink)', baseUrl: '', sortOrder: 99 });
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState('');
 
@@ -145,7 +145,7 @@ export default function SocialConnectionsPage() {
       setPlatforms(ps => [...ps, p].sort((a, b) => a.sortOrder - b.sortOrder || a.displayName.localeCompare(b.displayName)));
       setUrls(u => ({ ...u, [p.key]: p.url || '' }));
       setShowAddModal(false);
-      setNewPlatform({ key: '', displayName: '', icon: '', brandColor: '#000000', baseUrl: '', sortOrder: 99 });
+      setNewPlatform({ key: '', displayName: '', icon: '', brandColor: 'var(--admin-ink)', baseUrl: '', sortOrder: 99 });
     } catch { setAddError('Network error'); }
     setAdding(false);
   }
@@ -183,13 +183,13 @@ export default function SocialConnectionsPage() {
                 padding: '18px 20px', opacity: p.isActive ? 1 : 0.55,
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                  {getPlatformIcon(p.icon, p.brandColor || '#888')}
+                  {getPlatformIcon(p.icon, p.brandColor || 'var(--admin-ink-muted)')}
                   <span style={{ fontWeight: 500, fontSize: 14, color: 'var(--dark)' }}>{p.displayName}</span>
                   {p.url && isValidUrl(p.url) && (
-                    <span style={{ fontSize: 10, padding: '1px 6px', background: '#e8f5e9', color: '#2d7d47', borderRadius: 2, letterSpacing: '0.5px' }}>CONNECTED</span>
+                    <span style={{ fontSize: 10, padding: '1px 6px', background: 'var(--admin-success-soft)', color: 'var(--color-success)', borderRadius: 2, letterSpacing: '0.5px' }}>CONNECTED</span>
                   )}
                   {!p.isActive && (
-                    <span style={{ fontSize: 10, padding: '1px 6px', background: '#f3f3f3', color: '#888', borderRadius: 2, letterSpacing: '0.5px' }}>HIDDEN</span>
+                    <span style={{ fontSize: 10, padding: '1px 6px', background: 'var(--admin-bg)', color: 'var(--admin-ink-muted)', borderRadius: 2, letterSpacing: '0.5px' }}>HIDDEN</span>
                   )}
                   <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)', cursor: 'pointer', textDecoration: 'underline' }}
                     onClick={() => toggleActive(p.key, p.isActive)}>
@@ -204,7 +204,7 @@ export default function SocialConnectionsPage() {
                     placeholder={`https://${p.icon}.com/silkilinen`}
                     onKeyDown={e => e.key === 'Enter' && saveUrl(p.key)}
                     style={{
-                      flex: 1, padding: '8px 12px', border: `1px solid ${errors[p.key] ? '#c62828' : 'var(--border)'}`,
+                      flex: 1, padding: '8px 12px', border: `1px solid ${errors[p.key] ? 'var(--admin-danger)' : 'var(--border)'}`,
                       fontFamily: 'inherit', fontSize: 13, color: 'var(--dark)',
                     }}
                   />
@@ -213,15 +213,15 @@ export default function SocialConnectionsPage() {
                     disabled={saving === p.key}
                     style={{
                       padding: '8px 18px', border: '1px solid var(--border)',
-                      background: saved[p.key] ? '#e8f5e9' : 'white',
-                      color: saved[p.key] ? '#2d7d47' : 'var(--dark)',
+                      background: saved[p.key] ? 'var(--admin-success-soft)' : 'white',
+                      color: saved[p.key] ? 'var(--color-success)' : 'var(--dark)',
                       cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, transition: 'all 0.2s',
                     }}
                   >
                     {saving === p.key ? 'Saving…' : saved[p.key] ? 'Saved ✓' : 'Save'}
                   </button>
                 </div>
-                {errors[p.key] && <p style={{ fontSize: 11, color: '#c62828', marginTop: 4 }}>{errors[p.key]}</p>}
+                {errors[p.key] && <p style={{ fontSize: 11, color: 'var(--admin-danger)', marginTop: 4 }}>{errors[p.key]}</p>}
                 {p.url && (
                   <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>
                     <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--muted)' }}>{p.url}</a>
@@ -275,7 +275,7 @@ export default function SocialConnectionsPage() {
                     placeholder="https://instagram.com/"
                     style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
                 </div>
-                {addError && <p style={{ fontSize: 12, color: '#c62828', margin: 0 }}>{addError}</p>}
+                {addError && <p style={{ fontSize: 12, color: 'var(--admin-danger)', margin: 0 }}>{addError}</p>}
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
                   <button type="button" onClick={() => setShowAddModal(false)} style={{ padding: '10px 20px', border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Cancel</button>
                   <button type="submit" disabled={adding} style={{ padding: '10px 24px', background: 'var(--dark)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>

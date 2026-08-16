@@ -278,18 +278,18 @@ export default function SiteAuditPage() {
                 {audit.status === 'completed' && (
                   <>
                     {audit.synthesis && (audit.synthesis.headline || audit.synthesis.priorities?.length) && (
-                      <div style={{ border: '1px solid var(--border,#e8e2d6)', background: 'var(--warm-white,#faf8f4)', padding: '16px 18px', marginBottom: 16 }}>
-                        <p style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted,#8a8680)', margin: '0 0 8px' }}>✦ AI reading — likely causes &amp; where to look</p>
-                        {audit.synthesis.headline && <p style={{ fontSize: 14.5, color: 'var(--dark,#2a2218)', margin: '0 0 10px', fontStyle: 'italic' }}>{audit.synthesis.headline}</p>}
+                      <div style={{ border: '1px solid var(--color-line)', background: 'var(--color-bg)', padding: '16px 18px', marginBottom: 16 }}>
+                        <p style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted,var(--admin-ink-muted))', margin: '0 0 8px' }}>✦ AI reading — likely causes &amp; where to look</p>
+                        {audit.synthesis.headline && <p style={{ fontSize: 14.5, color: 'var(--color-ink)', margin: '0 0 10px', fontStyle: 'italic' }}>{audit.synthesis.headline}</p>}
                         {audit.synthesis.priorities?.map((p, i) => (
-                          <div key={i} style={{ borderLeft: `3px solid ${p.severity === 'critical' ? '#c0392b' : p.severity === 'warning' ? '#b8863b' : '#8a8680'}`, padding: '6px 0 6px 12px', margin: '8px 0' }}>
-                            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark,#2a2218)', margin: 0 }}>{p.issue}</p>
-                            {p.likelyCause && <p style={{ fontSize: 12.5, color: 'var(--muted,#6b6862)', margin: '3px 0 0' }}>Likely cause: {p.likelyCause}</p>}
-                            {p.whereToLook && <p style={{ fontSize: 12.5, color: 'var(--muted,#6b6862)', margin: '2px 0 0' }}>Where to look: <code>{p.whereToLook}</code></p>}
-                            {p.fix && <p style={{ fontSize: 12.5, color: '#2d7d47', margin: '2px 0 0' }}>→ {p.fix}</p>}
+                          <div key={i} style={{ borderLeft: `3px solid ${p.severity === 'critical' ? 'var(--color-danger)' : p.severity === 'warning' ? 'var(--admin-warning)' : 'var(--admin-ink-muted)'}`, padding: '6px 0 6px 12px', margin: '8px 0' }}>
+                            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)', margin: 0 }}>{p.issue}</p>
+                            {p.likelyCause && <p style={{ fontSize: 12.5, color: 'var(--muted,var(--admin-ink-muted))', margin: '3px 0 0' }}>Likely cause: {p.likelyCause}</p>}
+                            {p.whereToLook && <p style={{ fontSize: 12.5, color: 'var(--muted,var(--admin-ink-muted))', margin: '2px 0 0' }}>Where to look: <code>{p.whereToLook}</code></p>}
+                            {p.fix && <p style={{ fontSize: 12.5, color: 'var(--color-success)', margin: '2px 0 0' }}>→ {p.fix}</p>}
                           </div>
                         ))}
-                        {audit.synthesis.noise && <p style={{ fontSize: 12, color: 'var(--muted,#8a8680)', margin: '10px 0 0', fontStyle: 'italic' }}>Likely noise: {audit.synthesis.noise}</p>}
+                        {audit.synthesis.noise && <p style={{ fontSize: 12, color: 'var(--muted,var(--admin-ink-muted))', margin: '10px 0 0', fontStyle: 'italic' }}>Likely noise: {audit.synthesis.noise}</p>}
                       </div>
                     )}
                     {openCritical > 0 && (

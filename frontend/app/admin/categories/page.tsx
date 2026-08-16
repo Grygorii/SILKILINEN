@@ -182,16 +182,16 @@ export default function AdminCategoriesPage() {
 
       {reassign && (
         <AdminModal title="Move products first" onClose={() => setReassign(null)}>
-          <p style={{ fontSize: 13, color: 'var(--muted, #6b6358)', margin: '0 0 14px', lineHeight: 1.6 }}>
+          <p style={{ fontSize: 13, color: 'var(--color-ink-muted)', margin: '0 0 14px', lineHeight: 1.6 }}>
             {reassign.message}
           </p>
-          <label style={{ display: 'block', fontSize: 12, marginBottom: 6, color: 'var(--dark, #2a2218)' }}>
+          <label style={{ display: 'block', fontSize: 12, marginBottom: 6, color: 'var(--color-ink)' }}>
             Move its products to:
           </label>
           <select
             value={reassignTarget}
             onChange={e => setReassignTarget(e.target.value)}
-            style={{ width: '100%', padding: '8px 10px', fontSize: 13, border: '1px solid #e0d9cc', marginBottom: 18 }}
+            style={{ width: '100%', padding: '8px 10px', fontSize: 13, border: '1px solid var(--admin-line)', marginBottom: 18 }}
           >
             <option value="">Choose a category…</option>
             {categories
@@ -203,7 +203,7 @@ export default function AdminCategoriesPage() {
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
             <button
               onClick={() => setReassign(null)}
-              style={{ padding: '8px 14px', fontSize: 13, border: '1px solid #e0d9cc', background: '#fff', cursor: 'pointer' }}
+              style={{ padding: '8px 14px', fontSize: 13, border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer' }}
             >
               Cancel
             </button>
@@ -211,8 +211,8 @@ export default function AdminCategoriesPage() {
               onClick={confirmReassign}
               disabled={!reassignTarget || reassignBusy}
               style={{
-                padding: '8px 14px', fontSize: 13, border: '1px solid #2a2218',
-                background: '#2a2218', color: '#fff',
+                padding: '8px 14px', fontSize: 13, border: '1px solid var(--color-ink)',
+                background: 'var(--color-ink)', color: 'var(--admin-surface)',
                 cursor: !reassignTarget || reassignBusy ? 'default' : 'pointer',
                 opacity: !reassignTarget || reassignBusy ? 0.5 : 1,
               }}

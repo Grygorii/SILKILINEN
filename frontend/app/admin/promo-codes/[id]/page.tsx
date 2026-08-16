@@ -47,10 +47,10 @@ const sectionTitleStyle: React.CSSProperties = {
   marginBottom: 16, display: 'block',
 };
 const pillStyle: Record<string, React.CSSProperties> = {
-  active:  { background: '#e8f5e9', color: '#2d7d47' },
-  paused:  { background: '#fff8e1', color: '#b07d00' },
-  expired: { background: '#f3f3f3', color: '#666' },
-  draft:   { background: '#ede7f6', color: '#5c35a8' },
+  active:  { background: 'var(--admin-success-soft)', color: 'var(--color-success)' },
+  paused:  { background: 'var(--admin-warning-soft)', color: 'var(--admin-warning)' },
+  expired: { background: 'var(--admin-bg)', color: 'var(--admin-ink-muted)' },
+  draft:   { background: 'var(--admin-info-soft)', color: 'var(--admin-info)' },
 };
 
 export default function PromoCodeDetailPage() {
@@ -141,7 +141,7 @@ export default function PromoCodeDetailPage() {
   }
 
   if (loading) return <AdminLayout><div style={{ padding: 32, fontSize: 13, color: 'var(--muted)' }}>Loading…</div></AdminLayout>;
-  if (!promo)  return <AdminLayout><div style={{ padding: 32, fontSize: 13, color: '#c0392b' }}>Promo code not found.</div></AdminLayout>;
+  if (!promo)  return <AdminLayout><div style={{ padding: 32, fontSize: 13, color: 'var(--color-danger)' }}>Promo code not found.</div></AdminLayout>;
 
   const st = resolveStatus(promo);
   const pill = pillStyle[st] || pillStyle.draft;
@@ -168,7 +168,7 @@ export default function PromoCodeDetailPage() {
               <button onClick={toggleStatus} style={{ ...inputStyle, cursor: 'pointer' }}>
                 {st === 'active' ? 'Pause' : 'Resume'}
               </button>
-              <button onClick={deleteCode} style={{ ...inputStyle, cursor: 'pointer', color: '#c0392b', borderColor: '#c0392b' }}>
+              <button onClick={deleteCode} style={{ ...inputStyle, cursor: 'pointer', color: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}>
                 Delete
               </button>
             </div>
@@ -257,7 +257,7 @@ export default function PromoCodeDetailPage() {
               <label style={labelStyle}>Source</label>
               <input style={{ ...inputStyle, width: '100%' }} value={editForm.source} onChange={e => setEF('source', e.target.value)} placeholder="newsletter_welcome, instagram_ad…" />
             </div>
-            {error && <p style={{ color: '#c0392b', fontSize: 13, marginBottom: 12 }}>{error}</p>}
+            {error && <p style={{ color: 'var(--color-danger)', fontSize: 13, marginBottom: 12 }}>{error}</p>}
             <button onClick={saveEdit} disabled={saving} style={{
               padding: '10px 24px', fontSize: 13, fontFamily: 'inherit',
               cursor: saving ? 'default' : 'pointer',

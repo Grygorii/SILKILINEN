@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
-const dark = 'var(--dark, #2a2218)';
-const muted = 'var(--muted, #8a8680)';
-const border = '1px solid var(--border, #e8e2d6)';
+const dark = 'var(--color-ink)';
+const muted = 'var(--muted, var(--admin-ink-muted))';
+const border = '1px solid var(--color-line)';
 const serif = "'Cormorant Garamond', Georgia, serif";
 
 type Sample = { title?: string; price?: number | null; url?: string; type?: string };
@@ -19,7 +19,7 @@ type Profile = {
 };
 type YourStore = { currency: string; productCount: number; priceMin: number | null; priceMax: number | null; priceAvg: number | null };
 
-const PLATFORM_COLOR: Record<string, string> = { shopify: '#5a8f3d', woocommerce: '#7a5db8', jsonld: '#3d7d8f', other: '#8a8680', unknown: '#c0392b' };
+const PLATFORM_COLOR: Record<string, string> = { shopify: 'var(--admin-success)', woocommerce: 'var(--admin-info)', jsonld: 'var(--admin-info)', other: 'var(--admin-ink-muted)', unknown: 'var(--color-danger)' };
 const cur = (sym?: string | null) => (sym === 'GBP' ? '£' : sym === 'USD' ? '$' : sym === 'EUR' ? '€' : '');
 function money(p?: Profile) {
   if (p?.priceMin == null) return '—';
@@ -76,14 +76,14 @@ export default function CompetitorsPage() {
               Live data scraped from every brand we can read — Shopify, WooCommerce, or any site&rsquo;s product schema. Prices, catalogue size, what&rsquo;s new.
             </p>
           </div>
-          <button onClick={scan} disabled={scanning} style={{ padding: '10px 18px', background: dark, color: '#faf8f4', border: 'none', cursor: scanning ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 12, letterSpacing: '1px', textTransform: 'uppercase', opacity: scanning ? 0.7 : 1 }}>
+          <button onClick={scan} disabled={scanning} style={{ padding: '10px 18px', background: dark, color: 'var(--color-bg)', border: 'none', cursor: scanning ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 12, letterSpacing: '1px', textTransform: 'uppercase', opacity: scanning ? 0.7 : 1 }}>
             {scanning ? 'Scanning…' : '✦ Scan competitors'}
           </button>
         </div>
 
         {/* Your benchmark */}
         {your && (
-          <div style={{ border, background: 'var(--warm-white,#faf8f4)', padding: '14px 18px', margin: '18px 0', display: 'flex', gap: 28, flexWrap: 'wrap', alignItems: 'baseline' }}>
+          <div style={{ border, background: 'var(--color-bg)', padding: '14px 18px', margin: '18px 0', display: 'flex', gap: 28, flexWrap: 'wrap', alignItems: 'baseline' }}>
             <span style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: muted }}>You</span>
             <span style={{ fontSize: 14, color: dark }}><strong>{your.productCount}</strong> products</span>
             <span style={{ fontSize: 14, color: dark }}>€{your.priceMin}–€{your.priceMax} <span style={{ color: muted }}>(avg €{your.priceAvg})</span></span>
@@ -94,7 +94,7 @@ export default function CompetitorsPage() {
         {/* Sort */}
         <div style={{ display: 'flex', gap: 8, margin: '0 0 14px' }}>
           {(['count', 'price'] as const).map(s => (
-            <button key={s} onClick={() => setSort(s)} style={{ padding: '6px 12px', fontSize: 12, background: sort === s ? dark : 'white', color: sort === s ? '#faf8f4' : dark, border, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button key={s} onClick={() => setSort(s)} style={{ padding: '6px 12px', fontSize: 12, background: sort === s ? dark : 'white', color: sort === s ? 'var(--color-bg)' : dark, border, cursor: 'pointer', fontFamily: 'inherit' }}>
               {s === 'count' ? 'Biggest catalogue' : 'Highest avg price'}
             </button>
           ))}

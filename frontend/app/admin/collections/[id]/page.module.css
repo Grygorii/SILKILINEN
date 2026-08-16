@@ -18,7 +18,7 @@
   font-size: 12px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--muted, #8a8680);
+  color: var(--muted, var(--admin-ink-muted));
   text-decoration: none;
   white-space: nowrap;
 }
@@ -32,16 +32,16 @@
 
 .savedBadge {
   font-size: 12px;
-  color: #2d7d47;
+  color: var(--color-success);
 }
 
 .errorBadge {
   font-size: 12px;
-  color: #c0392b;
+  color: var(--color-danger);
 }
 
 .errorMsg {
-  color: #c0392b;
+  color: var(--color-danger);
   font-size: 13px;
   margin-bottom: 16px;
 }
@@ -80,7 +80,7 @@
 }
 
 .section {
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--border, var(--admin-line));
   padding: 20px;
 }
 
@@ -108,7 +108,7 @@
 .input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--border, var(--admin-line));
   font-size: 14px;
   font-family: inherit;
   color: var(--dark);
@@ -120,7 +120,7 @@
 .textarea {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--border, var(--admin-line));
   font-size: 14px;
   font-family: inherit;
   color: var(--dark);
@@ -132,7 +132,7 @@
 .select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--border, var(--admin-line));
   font-size: 14px;
   font-family: inherit;
   color: var(--dark);
@@ -165,7 +165,7 @@
   list-style: none;
   padding: 0;
   margin: 4px 0 0;
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--border, var(--admin-line));
   background: white;
   max-height: 200px;
   overflow-y: auto;
@@ -176,7 +176,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
-  border-bottom: 1px solid var(--border, #e0ddd7);
+  border-bottom: 1px solid var(--border, var(--admin-line));
   font-size: 13px;
 }
 .searchItem:last-child { border-bottom: none; }
@@ -184,14 +184,14 @@
 .addProductBtn {
   padding: 4px 10px;
   font-size: 11px;
-  border: 1px solid var(--border, #e0ddd7);
+  border: 1px solid var(--border, var(--admin-line));
   background: transparent;
   cursor: pointer;
   font-family: inherit;
   color: var(--dark);
   transition: background 0.15s;
 }
-.addProductBtn:hover { background: var(--cream, #f5f2ec); }
+.addProductBtn:hover { background: var(--cream, var(--admin-bg)); }
 
 .productTable {
   width: 100%;
@@ -205,12 +205,12 @@
   text-transform: uppercase;
   color: var(--muted);
   padding: 6px 8px;
-  border-bottom: 1px solid var(--border, #e0ddd7);
+  border-bottom: 1px solid var(--border, var(--admin-line));
   font-weight: 400;
 }
 .productTable td {
   padding: 10px 8px;
-  border-bottom: 1px solid var(--border, #e0ddd7);
+  border-bottom: 1px solid var(--border, var(--admin-line));
   color: var(--dark);
 }
 
@@ -223,11 +223,11 @@
 .removeBtn {
   padding: 4px 10px;
   font-size: 11px;
-  border: 1px solid #f5c2bb;
-  color: #c0392b;
+  border: 1px solid var(--admin-danger-soft);
+  color: var(--color-danger);
   background: transparent;
   cursor: pointer;
   font-family: inherit;
   transition: background 0.15s;
 }
-.removeBtn:hover { background: #fdf0ed; }
+.removeBtn:hover { background: var(--admin-danger-soft); }

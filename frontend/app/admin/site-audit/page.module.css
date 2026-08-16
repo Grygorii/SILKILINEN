@@ -16,20 +16,20 @@
 .title {
   font-size: 22px;
   font-weight: 600;
-  color: #1a1916;
+  color: var(--admin-ink);
   margin: 0 0 4px;
 }
 
 .subtitle {
   font-size: 13px;
-  color: #8a8680;
+  color: var(--admin-ink-muted);
   margin: 0;
 }
 
 .runBtn {
   padding: 10px 24px;
-  background: #1a1916;
-  color: #fff;
+  background: var(--admin-ink);
+  color: var(--admin-surface);
   border: none;
   font-size: 13px;
   letter-spacing: 1px;
@@ -66,7 +66,7 @@
   font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: #8a8680;
+  color: var(--admin-ink-muted);
   background: none;
   border: none;
   cursor: pointer;
@@ -74,13 +74,13 @@
   text-decoration: underline;
 }
 
-.clearBtn:hover { color: #c0392b; }
+.clearBtn:hover { color: var(--color-danger); }
 
 .sidebarTitle {
   font-size: 11px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: #8a8680;
+  color: var(--admin-ink-muted);
   margin: 0;
 }
 
@@ -98,16 +98,16 @@
   transition: background 0.15s;
 }
 
-.historyItem:hover { background: #f5f3ef; }
+.historyItem:hover { background: var(--admin-bg); }
 
 .historyActive {
-  background: #f5f3ef;
-  border-color: #e0ddd7;
+  background: var(--admin-bg);
+  border-color: var(--admin-line);
 }
 
 .historyTime {
   font-size: 12px;
-  color: #1a1916;
+  color: var(--admin-ink);
 }
 
 .historyStatus {
@@ -124,7 +124,7 @@
 .emptyState {
   padding: 80px 0;
   text-align: center;
-  color: #8a8680;
+  color: var(--admin-ink-muted);
   font-size: 14px;
 }
 
@@ -138,7 +138,7 @@
 }
 
 .agentCard {
-  border: 1px solid #e0ddd7;
+  border: 1px solid var(--admin-line);
   padding: 20px;
 }
 
@@ -152,7 +152,7 @@
 .agentName {
   font-size: 12px;
   font-weight: 600;
-  color: #1a1916;
+  color: var(--admin-ink);
 }
 
 .agentStatus {
@@ -169,14 +169,14 @@
   flex-wrap: wrap;
 }
 
-.countCritical { font-size: 12px; color: #c0392b; }
-.countWarning { font-size: 12px; color: #b5631a; }
-.countInfo { font-size: 12px; color: #8a8680; }
-.countDuration { font-size: 11px; color: #c5c2bc; margin-left: auto; }
+.countCritical { font-size: 12px; color: var(--color-danger); }
+.countWarning { font-size: 12px; color: var(--admin-danger); }
+.countInfo { font-size: 12px; color: var(--admin-ink-muted); }
+.countDuration { font-size: 11px; color: var(--admin-line); margin-left: auto; }
 
 .agentError {
   font-size: 11px;
-  color: #c0392b;
+  color: var(--color-danger);
   margin: 8px 0 0;
 }
 
@@ -184,13 +184,13 @@
 
 .progressBar {
   height: 2px;
-  background: #e0ddd7;
+  background: var(--admin-line);
   overflow: hidden;
 }
 
 .progressFill {
   height: 100%;
-  background: #1a1916;
+  background: var(--admin-ink);
   width: 40%;
   animation: slide 1.4s ease-in-out infinite;
 }
@@ -202,17 +202,17 @@
 
 /* ── Status colours ──────────────────────────────── */
 
-.statusPending { background: #f5f3ef; color: #8a8680; }
-.statusRunning { background: #fef9e7; color: #b5631a; }
-.statusDone    { background: #eafaf1; color: #27ae60; }
-.statusError   { background: #fdf2f0; color: #c0392b; }
+.statusPending { background: var(--admin-bg); color: var(--admin-ink-muted); }
+.statusRunning { background: var(--admin-warning-soft); color: var(--admin-danger); }
+.statusDone    { background: var(--admin-success-soft); color: var(--admin-success); }
+.statusError   { background: var(--admin-danger-soft); color: var(--color-danger); }
 
 /* ── Critical banner ─────────────────────────────── */
 
 .criticalBanner {
-  background: #fdf2f0;
-  border: 1px solid #e8c4c0;
-  color: #c0392b;
+  background: var(--admin-danger-soft);
+  border: 1px solid var(--admin-danger-soft);
+  color: var(--color-danger);
   padding: 12px 16px;
   font-size: 13px;
   margin-bottom: 20px;
@@ -238,18 +238,18 @@
   letter-spacing: 1px;
   text-transform: uppercase;
   background: none;
-  border: 1px solid #e0ddd7;
-  color: #8a8680;
+  border: 1px solid var(--admin-line);
+  color: var(--admin-ink-muted);
   cursor: pointer;
   transition: all 0.15s;
 }
 
-.filterBtn:hover { border-color: #1a1916; color: #1a1916; }
+.filterBtn:hover { border-color: var(--admin-ink); color: var(--admin-ink); }
 
 .filterActive {
-  background: #1a1916;
-  border-color: #1a1916;
-  color: #fff;
+  background: var(--admin-ink);
+  border-color: var(--admin-ink);
+  color: var(--admin-surface);
 }
 
 /* ── Findings ────────────────────────────────────── */
@@ -262,7 +262,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 16px 0;
-  border-bottom: 1px solid #e0ddd7;
+  border-bottom: 1px solid var(--admin-line);
 }
 
 .findingResolved {
@@ -286,35 +286,35 @@
   margin-top: 2px;
 }
 
-.sevCritical { background: #fdf2f0; color: #c0392b; }
-.sevWarning  { background: #fef9e7; color: #b5631a; }
-.sevInfo     { background: #f5f3ef; color: #8a8680; }
+.sevCritical { background: var(--admin-danger-soft); color: var(--color-danger); }
+.sevWarning  { background: var(--admin-warning-soft); color: var(--admin-danger); }
+.sevInfo     { background: var(--admin-bg); color: var(--admin-ink-muted); }
 
 .findingContent { min-width: 0; }
 
 .findingTitle {
   font-size: 13px;
   font-weight: 600;
-  color: #1a1916;
+  color: var(--admin-ink);
   margin: 0 0 4px;
 }
 
 .findingLocation {
   font-size: 11px;
-  color: #8a8680;
+  color: var(--admin-ink-muted);
   margin: 0 0 4px;
   font-family: monospace;
 }
 
 .findingDetail {
   font-size: 12px;
-  color: #6b6864;
+  color: var(--admin-ink-muted);
   margin: 0 0 4px;
 }
 
 .findingSuggestion {
   font-size: 12px;
-  color: #27ae60;
+  color: var(--admin-success);
   margin: 4px 0 0;
 }
 
@@ -330,8 +330,8 @@
   font-size: 11px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  background: #1a1916;
-  color: #fff;
+  background: var(--admin-ink);
+  color: var(--admin-surface);
   border: none;
   cursor: pointer;
   transition: opacity 0.15s;
@@ -346,18 +346,18 @@
   letter-spacing: 1px;
   text-transform: uppercase;
   background: none;
-  color: #8a8680;
-  border: 1px solid #e0ddd7;
+  color: var(--admin-ink-muted);
+  border: 1px solid var(--admin-line);
   cursor: pointer;
   transition: all 0.15s;
 }
 
-.btnWontFix:hover { border-color: #8a8680; }
+.btnWontFix:hover { border-color: var(--admin-ink-muted); }
 .btnWontFix:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .resolvedLabel {
   font-size: 11px;
-  color: #8a8680;
+  color: var(--admin-ink-muted);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -365,7 +365,7 @@
 
 .undoBtn {
   font-size: 11px;
-  color: #8a8680;
+  color: var(--admin-ink-muted);
   background: none;
   border: none;
   cursor: pointer;
@@ -373,23 +373,23 @@
   padding: 0;
 }
 
-.undoBtn:hover { color: #1a1916; }
+.undoBtn:hover { color: var(--admin-ink); }
 
 /* ── Audit meta ──────────────────────────────────── */
 
 .auditMeta {
   font-size: 11px;
-  color: #c5c2bc;
+  color: var(--admin-line);
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid #e0ddd7;
+  border-top: 1px solid var(--admin-line);
 }
 
 /* ── Empty ───────────────────────────────────────── */
 
 .empty {
   font-size: 13px;
-  color: #8a8680;
+  color: var(--admin-ink-muted);
   padding: 16px 0;
 }
 

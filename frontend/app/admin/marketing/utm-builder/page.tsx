@@ -150,7 +150,7 @@ export default function UtmBuilderPage() {
         </div>
 
         {/* Output */}
-        <div style={{ marginTop: 28, background: '#f5f2ec', border: '1px solid var(--border)', padding: '16px 18px' }}>
+        <div style={{ marginTop: 28, background: 'var(--admin-bg)', border: '1px solid var(--border)', padding: '16px 18px' }}>
           <div style={{ fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 10 }}>Your link</div>
           <p style={{ fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all', color: 'var(--dark)', margin: '0 0 16px' }}>{url}</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -173,7 +173,7 @@ export default function UtmBuilderPage() {
             >
               {savingCampaign ? 'Creating…' : 'Save as campaign →'}
             </button>
-            {campaignMsg && <span style={{ fontSize: 12, color: '#c0392b' }}>{campaignMsg}</span>}
+            {campaignMsg && <span style={{ fontSize: 12, color: 'var(--color-danger)' }}>{campaignMsg}</span>}
           </div>
         </div>
 

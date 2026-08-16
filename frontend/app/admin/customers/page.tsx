@@ -27,8 +27,8 @@ type Customer = {
 };
 
 const SEGMENT_COLORS: Record<string, string> = {
-  vip: '#5c35a8', repeat: '#2d7d47', 'first-time': '#1565c0',
-  'newsletter-only': '#b07d00', recent: '#00838f', lapsed: '#e65100', 'at-risk': '#c62828',
+  vip: 'var(--admin-info)', repeat: 'var(--color-success)', 'first-time': 'var(--admin-info)',
+  'newsletter-only': 'var(--admin-warning)', recent: 'var(--admin-info)', lapsed: 'var(--admin-danger)', 'at-risk': 'var(--admin-danger)',
 };
 
 function fmtDate(d: string | null) {
@@ -119,7 +119,7 @@ export default function CustomersPage() {
 
   // Map slug → colour from the segments returned by the API (same colours as the sidebar buttons)
   const segColor = (slug: string) =>
-    segments.find(s => s.slug === slug)?.color || SEGMENT_COLORS[slug] || '#999';
+    segments.find(s => s.slug === slug)?.color || SEGMENT_COLORS[slug] || 'var(--admin-ink-muted)';
 
   const hasFilters = Boolean(search || segmentFilter || consentFilter);
   function clearFilters() {
@@ -150,7 +150,7 @@ export default function CustomersPage() {
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             {segmentFilter === 'at-risk' && (
-              <button onClick={sendWinback} disabled={winbackSending} style={{ padding: '8px 14px', fontSize: 12, border: '1px solid #c62828', background: '#fff5f5', cursor: 'pointer', color: '#c62828', fontFamily: 'inherit' }}>
+              <button onClick={sendWinback} disabled={winbackSending} style={{ padding: '8px 14px', fontSize: 12, border: '1px solid var(--admin-danger)', background: 'var(--admin-danger-soft)', cursor: 'pointer', color: 'var(--admin-danger)', fontFamily: 'inherit' }}>
                 {winbackSending ? 'Sending…' : 'Send win-back reminder'}
               </button>
             )}
@@ -276,7 +276,7 @@ export default function CustomersPage() {
                           <td style={tdStyle}>{fmtMoney(c.totalSpend)}</td>
                           <td style={tdStyle}>{fmtDate(c.lastOrderAt)}</td>
                           <td style={tdStyle}>
-                            <span style={{ fontSize: 11, color: c.marketingConsent ? '#2d7d47' : 'var(--muted)' }}>
+                            <span style={{ fontSize: 11, color: c.marketingConsent ? 'var(--color-success)' : 'var(--muted)' }}>
                               {c.marketingConsent ? '✓ yes' : '—'}
                             </span>
                           </td>

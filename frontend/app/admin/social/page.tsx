@@ -17,9 +17,9 @@ type Post = {
 };
 
 const STATUS_LABELS: Record<string, { label: string; bg: string; color: string }> = {
-  draft:  { label: 'Draft',  bg: '#f3f3f3', color: '#555' },
-  ready:  { label: 'Ready',  bg: '#fff8e1', color: '#b8860b' },
-  posted: { label: 'Posted', bg: '#e8f5e9', color: '#2d7d47' },
+  draft:  { label: 'Draft',  bg: 'var(--admin-bg)', color: 'var(--admin-ink-muted)' },
+  ready:  { label: 'Ready',  bg: 'var(--admin-warning-soft)', color: 'var(--admin-warning)' },
+  posted: { label: 'Posted', bg: 'var(--admin-success-soft)', color: 'var(--color-success)' },
 };
 
 function timeAgo(iso: string) {
@@ -156,13 +156,13 @@ export default function SocialIndexPage() {
                     onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
                   >
                     {/* Thumbnail */}
-                    <div style={{ height: 130, background: '#f5f2ee', overflow: 'hidden', position: 'relative' }}>
+                    <div style={{ height: 130, background: 'var(--admin-bg)', overflow: 'hidden', position: 'relative' }}>
                       {thumb ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={thumb} alt={post.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--admin-line)" strokeWidth="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                         </div>
                       )}
                     </div>

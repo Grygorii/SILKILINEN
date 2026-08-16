@@ -1,10 +1,10 @@
 type Status = 'healthy' | 'warning' | 'critical' | 'info';
 
 const PALETTE: Record<string, { bg: string; color: string }> = {
-  healthy:  { bg: '#d4edda', color: '#155724' },
-  warning:  { bg: '#fff3cd', color: '#856404' },
-  critical: { bg: '#f8d7da', color: '#721c24' },
-  info:     { bg: '#d1ecf1', color: '#0c5460' },
+  healthy:  { bg: 'var(--admin-success-soft)', color: 'var(--admin-success)' },
+  warning:  { bg: 'var(--admin-warning-soft)', color: 'var(--admin-warning)' },
+  critical: { bg: 'var(--admin-danger-soft)', color: 'var(--admin-danger)' },
+  info:     { bg: 'var(--admin-info-soft)', color: 'var(--admin-info)' },
 };
 
 export default function StatusPill({ status }: { status: Status | string }) {

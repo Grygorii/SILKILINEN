@@ -49,9 +49,9 @@ function fmt(n: number) {
 
 function roasColor(r: number | null) {
   if (r === null) return {};
-  if (r >= 3) return { color: '#2d7d47' };
+  if (r >= 3) return { color: 'var(--color-success)' };
   if (r >= 1.5) return {};
-  return { color: '#c0392b' };
+  return { color: 'var(--color-danger)' };
 }
 
 function statusPill(status: string) {
@@ -120,7 +120,7 @@ export default function MarketingDashboardPage() {
   }
 
   if (loading) return <AdminLayout><div className={styles.page}><p style={{ color: 'var(--muted)', fontSize: 13 }}>Loading…</p></div></AdminLayout>;
-  if (error)   return <AdminLayout><div className={styles.page}><p style={{ color: '#c0392b', fontSize: 13 }}>{error}</p></div></AdminLayout>;
+  if (error)   return <AdminLayout><div className={styles.page}><p style={{ color: 'var(--color-danger)', fontSize: 13 }}>{error}</p></div></AdminLayout>;
   if (!data)   return null;
 
   const { pulse, analysis, campaigns, topAdProducts, topCreatives, revenueByChannel, geoCountries } = data;
@@ -149,20 +149,20 @@ export default function MarketingDashboardPage() {
 
         {/* Email subscribers — captured leads, now usable (count + export) */}
         {subs && (
-          <div style={{ border: '1px solid var(--border, #e8e2d6)', background: 'var(--warm-white,#faf8f4)', padding: '16px 20px', margin: '0 0 20px', borderRadius: 4 }}>
+          <div style={{ border: '1px solid var(--color-line)', background: 'var(--color-bg)', padding: '16px 20px', margin: '0 0 20px', borderRadius: 4 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, flexWrap: 'wrap' }}>
               <div>
-                <p style={{ margin: 0, fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted,#8a8680)' }}>Email subscribers</p>
-                <p style={{ margin: '4px 0 0', fontSize: 26, fontFamily: 'Georgia, serif', color: 'var(--dark,#2a2218)' }}>{subs.total.toLocaleString()}</p>
+                <p style={{ margin: 0, fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted,var(--admin-ink-muted))' }}>Email subscribers</p>
+                <p style={{ margin: '4px 0 0', fontSize: 26, fontFamily: 'Georgia, serif', color: 'var(--color-ink)' }}>{subs.total.toLocaleString()}</p>
               </div>
               <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' }}>
                 {subs.bySource.slice(0, 4).map(s => (
-                  <span key={s.source} style={{ fontSize: 12.5, color: 'var(--muted,#8a8680)' }}>{s.source}: <strong style={{ color: 'var(--dark,#2a2218)' }}>{s.count}</strong></span>
+                  <span key={s.source} style={{ fontSize: 12.5, color: 'var(--muted,var(--admin-ink-muted))' }}>{s.source}: <strong style={{ color: 'var(--color-ink)' }}>{s.count}</strong></span>
                 ))}
-                <button onClick={exportSubs} disabled={!subs.total} style={{ padding: '8px 14px', background: 'var(--dark,#2a2218)', color: '#faf8f4', border: 'none', cursor: subs.total ? 'pointer' : 'default', fontSize: 12, letterSpacing: '0.5px', borderRadius: 3, opacity: subs.total ? 1 : 0.5 }}>Export CSV</button>
+                <button onClick={exportSubs} disabled={!subs.total} style={{ padding: '8px 14px', background: 'var(--color-ink)', color: 'var(--color-bg)', border: 'none', cursor: subs.total ? 'pointer' : 'default', fontSize: 12, letterSpacing: '0.5px', borderRadius: 3, opacity: subs.total ? 1 : 0.5 }}>Export CSV</button>
               </div>
             </div>
-            <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--muted,#8a8680)' }}>
+            <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--muted,var(--admin-ink-muted))' }}>
               Captured from the Style Finder, popup &amp; footer — export to your email tool (the Newsletter Drafter writes the copy).{subs.unsubscribed > 0 ? ` ${subs.unsubscribed} unsubscribed, excluded.` : ''}
             </p>
           </div>

@@ -58,8 +58,8 @@
   font-size: 12px;
 }
 
-.changePos { color: #4a7c59; }
-.changeNeg { color: #c0392b; }
+.changePos { color: var(--admin-success); }
+.changeNeg { color: var(--color-danger); }
 .changeMuted { color: var(--muted); }
 
 /* ── Two-column row ── */
@@ -120,9 +120,9 @@
   border-radius: 2px;
 }
 
-.statusPaid    { background: #d4edda; color: #155724; }
-.statusPending { background: #fff3cd; color: #856404; }
-.statusFailed  { background: #f8d7da; color: #721c24; }
+.statusPaid    { background: var(--admin-success-soft); color: var(--admin-success); }
+.statusPending { background: var(--admin-warning-soft); color: var(--admin-warning); }
+.statusFailed  { background: var(--admin-danger-soft); color: var(--admin-danger); }
 
 /* ── Top products list ── */
 .topList {
@@ -272,7 +272,7 @@
   gap: 12px;
   padding: 14px 16px;
   border: 1px solid var(--border);
-  background: var(--cream, #f5f2ec);
+  background: var(--cream, var(--admin-bg));
 }
 
 .insightDot {
@@ -283,9 +283,9 @@
   margin-top: 5px;
 }
 
-.insightDotSuccess { background: #4a7c59; }
-.insightDotWarning { background: #c0392b; }
-.insightDotInfo    { background: var(--muted, #8a8680); }
+.insightDotSuccess { background: var(--admin-success); }
+.insightDotWarning { background: var(--color-danger); }
+.insightDotInfo    { background: var(--muted, var(--admin-ink-muted)); }
 
 .insightTitle {
   font-size: 13px;
@@ -321,9 +321,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: #fdf0f0;
-  border: 1px solid #f5c6cb;
-  color: #721c24;
+  background: var(--admin-danger-soft);
+  border: 1px solid var(--admin-danger-soft);
+  color: var(--admin-danger);
   font-size: 13px;
   padding: 12px 16px;
   margin-bottom: 20px;

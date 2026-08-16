@@ -344,8 +344,8 @@ export default function GrowthEnginePage() {
               drafting social posts and newsletters, and watching the shop. Anything public is a
               draft until you approve it.
             </p>
-            <p style={{ fontSize: 12, color: 'var(--muted, #6b6358)', marginTop: 8 }}>
-              <strong style={{ color: 'var(--dark, #2a2218)' }}>New here?</strong>{' '}
+            <p style={{ fontSize: 12, color: 'var(--color-ink-muted)', marginTop: 8 }}>
+              <strong style={{ color: 'var(--color-ink)' }}>New here?</strong>{' '}
               ① <strong>Pulse now</strong> wakes the agents → ② <strong>New brief</strong> has your co-CEO read the results →
               ③ <strong>✺ Unleash Da Vinci</strong> composes the masterwork from everything. Start with Pulse.
             </p>
@@ -357,7 +357,7 @@ export default function GrowthEnginePage() {
               disabled={selfTestBusy}
               style={{
                 fontSize: 13, padding: '10px 16px', cursor: selfTestBusy ? 'default' : 'pointer',
-                border: '1px solid var(--border, #e8e2d6)', background: '#fff', color: 'var(--dark, #2a2218)',
+                border: '1px solid var(--color-line)', background: 'var(--admin-surface)', color: 'var(--color-ink)',
                 opacity: selfTestBusy ? 0.6 : 1, whiteSpace: 'nowrap',
               }}
               title="Ping every dependency and check every agent — proves the machine is alive"
@@ -385,12 +385,12 @@ export default function GrowthEnginePage() {
         </div>
 
         {selfTest && (
-          <div style={{ border: '1px solid var(--border, #e8e2d6)', background: '#fff', padding: '18px 20px', marginBottom: 20 }}>
+          <div style={{ border: '1px solid var(--color-line)', background: 'var(--admin-surface)', padding: '18px 20px', marginBottom: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
               <p style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 600, margin: 0 }}>
                 Self-test — the machine, checked
               </p>
-              <span style={{ fontSize: 12, color: selfTest.summary.failed ? '#b03a2e' : '#1a6b3c' }}>
+              <span style={{ fontSize: 12, color: selfTest.summary.failed ? 'var(--admin-danger)' : 'var(--admin-success)' }}>
                 {selfTest.summary.failed ? `${selfTest.summary.failed} failed` : 'all systems live'}
               </span>
             </div>
@@ -398,7 +398,7 @@ export default function GrowthEnginePage() {
               {selfTest.checks.map(c => (
                 <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
                   <span style={{ width: 9, height: 9, borderRadius: '50%', flexShrink: 0,
-                    background: c.ok === true ? '#1a6b3c' : c.ok === false ? '#b03a2e' : '#c8a24a' }} />
+                    background: c.ok === true ? 'var(--admin-success)' : c.ok === false ? 'var(--admin-danger)' : 'var(--admin-warning)' }} />
                   <span style={{ width: 190, color: 'var(--dark)' }}>{c.name}</span>
                   <span style={{ color: 'var(--muted)', flex: 1 }}>{c.detail}</span>
                   <span style={{ color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{c.ms}ms</span>
@@ -410,7 +410,7 @@ export default function GrowthEnginePage() {
               {selfTest.agents.map(a => (
                 <span key={a.label} title={`last run: ${a.lastRun ? new Date(a.lastRun).toLocaleString('en-IE') : 'never'}`}
                   style={{ fontSize: 11, padding: '3px 9px', borderRadius: 10, border: '1px solid var(--border)',
-                    background: a.enabled ? 'var(--cream)' : '#fff', color: a.enabled ? 'var(--dark)' : 'var(--muted)' }}>
+                    background: a.enabled ? 'var(--cream)' : 'var(--admin-surface)', color: a.enabled ? 'var(--dark)' : 'var(--muted)' }}>
                   {a.enabled ? '●' : '○'} {a.label} · {a.lastRun ? timeAgo(a.lastRun) : 'never'}
                 </span>
               ))}
@@ -531,8 +531,8 @@ export default function GrowthEnginePage() {
                       {action.detail && <p className={styles.feedDetail}>{action.detail}</p>}
                       <span className={styles.feedTime}>
                         {timeAgo(action.createdAt)}
-                        {action.status === 'completed' && <span style={{ color: '#1a6b3c', marginLeft: 8 }}>✓ done</span>}
-                        {action.status === 'rejected' && <span style={{ color: '#b03a2e', marginLeft: 8 }}>✕ rejected</span>}
+                        {action.status === 'completed' && <span style={{ color: 'var(--admin-success)', marginLeft: 8 }}>✓ done</span>}
+                        {action.status === 'rejected' && <span style={{ color: 'var(--admin-danger)', marginLeft: 8 }}>✕ rejected</span>}
                       </span>
                     </div>
                     <button type="button" className={styles.reviewLink} style={{ background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => setReviewAction(action)}>
@@ -636,7 +636,7 @@ function CompetitorEditor() {
           disabled={discovering || saving}
           style={{
             fontSize: 12, padding: '7px 14px', cursor: discovering ? 'default' : 'pointer',
-            border: '1px solid var(--dark, #2a2218)', background: 'var(--dark, #2a2218)', color: '#fff',
+            border: '1px solid var(--color-ink)', background: 'var(--color-ink)', color: 'var(--admin-surface)',
             opacity: discovering ? 0.6 : 1, whiteSpace: 'nowrap',
           }}
           title="Let the AI find silk & sleepwear brands across every market you ship to, verify they're live, and add them"
@@ -650,7 +650,7 @@ function CompetitorEditor() {
           marginTop: 12,
           maxHeight: showAll ? 280 : 116,
           overflowY: 'auto',
-          maskImage: !showAll && list.length > 18 ? 'linear-gradient(to bottom, #000 70%, transparent)' : undefined,
+          maskImage: !showAll && list.length > 18 ? 'linear-gradient(to bottom, var(--admin-ink) 70%, transparent)' : undefined,
         }}
       >
         {(showAll ? list : list.slice(0, 18)).map((c, i) => (
@@ -671,7 +671,7 @@ function CompetitorEditor() {
         <button
           type="button"
           onClick={() => setShowAll(s => !s)}
-          style={{ marginTop: 8, fontSize: 12, color: 'var(--muted, #6b6358)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3 }}
+          style={{ marginTop: 8, fontSize: 12, color: 'var(--color-ink-muted)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3 }}
         >
           {showAll ? 'Show fewer' : `Show all ${list.length} brands`}
         </button>
@@ -746,7 +746,7 @@ function ReviewRoom({ action, onClose, onDecide }: {
       {action.href && (
         <a href={action.href} target="_blank" rel="noopener noreferrer"
           style={{ display: 'inline-block', marginBottom: 18, fontSize: 13, padding: '9px 16px',
-            border: '1px solid var(--dark, #2a2218)', background: 'var(--dark, #2a2218)', color: '#fff', textDecoration: 'none' }}>
+            border: '1px solid var(--color-ink)', background: 'var(--color-ink)', color: 'var(--admin-surface)', textDecoration: 'none' }}>
           Open to deliver →
         </a>
       )}
@@ -765,11 +765,11 @@ function ReviewRoom({ action, onClose, onDecide }: {
             style={{ width: '100%', padding: '9px 11px', fontSize: 13, border: '1px solid var(--border)', resize: 'vertical', boxSizing: 'border-box', marginBottom: 14 }} />
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
             <button onClick={() => decide('rejected')} disabled={busy}
-              style={{ padding: '9px 14px', fontSize: 13, border: '1px solid #b03a2e', background: '#fff', color: '#b03a2e', cursor: busy ? 'default' : 'pointer' }}>
+              style={{ padding: '9px 14px', fontSize: 13, border: '1px solid var(--admin-danger)', background: 'var(--admin-surface)', color: 'var(--admin-danger)', cursor: busy ? 'default' : 'pointer' }}>
               Reject
             </button>
             <button onClick={() => decide('completed')} disabled={busy}
-              style={{ padding: '9px 16px', fontSize: 13, border: '1px solid #1a6b3c', background: '#1a6b3c', color: '#fff', cursor: busy ? 'default' : 'pointer' }}>
+              style={{ padding: '9px 16px', fontSize: 13, border: '1px solid var(--admin-success)', background: 'var(--admin-success)', color: 'var(--admin-surface)', cursor: busy ? 'default' : 'pointer' }}>
               {busy ? 'Saving…' : 'Mark done'}
             </button>
           </div>
@@ -923,9 +923,9 @@ function NorthStarSection({ loading, error, onRetry, northStar, starStatus, metr
           style={{
             display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 12,
             padding: '10px 12px', fontSize: 13, lineHeight: 1.55,
-            background: starStatus.pace === 'drifting' ? '#fdf6e9' : 'var(--cream, #f5f2ec)',
-            border: `1px solid ${starStatus.pace === 'drifting' ? '#ecdcb6' : 'var(--border, #e8e2d6)'}`,
-            color: 'var(--dark, #2a2218)',
+            background: starStatus.pace === 'drifting' ? 'var(--admin-warning-soft)' : 'var(--cream, var(--admin-bg))',
+            border: `1px solid ${starStatus.pace === 'drifting' ? 'var(--admin-warning-soft)' : 'var(--color-line)'}`,
+            color: 'var(--color-ink)',
           }}
         >
           <span aria-hidden style={{ flexShrink: 0 }}>

@@ -39,7 +39,7 @@ function timeAgo(iso: string) {
 
 function Skeleton() {
   const box = (h: number) => (
-    <div style={{ background: 'var(--cream, #f5f2ec)', height: h, border: '1px solid var(--border)', marginBottom: 12 }} />
+    <div style={{ background: 'var(--cream, var(--admin-bg))', height: h, border: '1px solid var(--border)', marginBottom: 12 }} />
   );
   return (
     <div>

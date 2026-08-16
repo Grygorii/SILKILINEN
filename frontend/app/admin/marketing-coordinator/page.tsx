@@ -15,9 +15,9 @@ type Plan = {
   status: string; createdAt: string;
 };
 
-const dark = 'var(--dark, #2a2218)';
-const muted = 'var(--muted, #8a8680)';
-const border = '1px solid var(--border, #e8e2d6)';
+const dark = 'var(--color-ink)';
+const muted = 'var(--muted, var(--admin-ink-muted))';
+const border = '1px solid var(--color-line)';
 const serif = "'Cormorant Garamond', Georgia, serif";
 
 function timeAgo(iso: string) {
@@ -168,16 +168,16 @@ function PlanView({ plan, onToggle }: { plan: Plan; onToggle: (p: string, t: str
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '14px 0' }}>
           <span style={{ fontSize: 11, color: muted, alignSelf: 'center' }}>Engaged:</span>
           {plan.engagedAgents.map(a => (
-            <span key={a} style={{ fontSize: 11, padding: '2px 9px', borderRadius: 2, background: '#f3efe8', color: dark }}>{a}</span>
+            <span key={a} style={{ fontSize: 11, padding: '2px 9px', borderRadius: 2, background: 'var(--admin-bg)', color: dark }}>{a}</span>
           ))}
         </div>
       )}
 
       <div style={{ display: 'grid', gap: 14, marginTop: 8 }}>
         {plan.plays.map(play => (
-          <div key={play._id} style={{ borderLeft: '2px solid #d9a6a0', paddingLeft: 14 }}>
+          <div key={play._id} style={{ borderLeft: '2px solid var(--admin-danger-soft)', paddingLeft: 14 }}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.6px', color: '#b8863b' }}>{play.channel}</span>
+              <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--admin-warning)' }}>{play.channel}</span>
               <span style={{ fontSize: 15, color: dark, fontWeight: 500 }}>{play.title}</span>
               {play.agent && <span style={{ fontSize: 11, color: muted }}>· {play.agent}</span>}
             </div>
@@ -188,7 +188,7 @@ function PlanView({ plan, onToggle }: { plan: Plan; onToggle: (p: string, t: str
                   <input type="checkbox" checked={t.done} onChange={e => onToggle(plan._id, t._id, e.target.checked)} style={{ marginTop: 3, cursor: 'pointer' }} />
                   <span style={{ color: t.done ? muted : dark, textDecoration: t.done ? 'line-through' : 'none' }}>
                     {t.text}
-                    {t.href && <a href={t.href} style={{ marginLeft: 8, fontSize: 11, color: '#b8863b' }}>open →</a>}
+                    {t.href && <a href={t.href} style={{ marginLeft: 8, fontSize: 11, color: 'var(--admin-warning)' }}>open →</a>}
                   </span>
                 </li>
               ))}

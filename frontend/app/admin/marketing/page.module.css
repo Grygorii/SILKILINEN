@@ -90,7 +90,7 @@
 
 /* Summary line */
 .summaryLine {
-  background: #f5f2ec;
+  background: var(--admin-bg);
   border: 1px solid var(--border);
   padding: 14px 18px;
   font-size: 13px;
@@ -222,10 +222,10 @@
   text-transform: uppercase;
   border-radius: 2px;
 }
-.pillActive   { background: #e8f5e9; color: #2d7d47; }
-.pillPaused   { background: #fff8e1; color: #b07d00; }
-.pillEnded    { background: #f3f3f3; color: #666; }
-.pillDraft    { background: #ede7f6; color: #5c35a8; }
+.pillActive   { background: var(--admin-success-soft); color: var(--color-success); }
+.pillPaused   { background: var(--admin-warning-soft); color: var(--admin-warning); }
+.pillEnded    { background: var(--admin-bg); color: var(--admin-ink-muted); }
+.pillDraft    { background: var(--admin-info-soft); color: var(--admin-info); }
 
 /* Bottom grids */
 .bottomGrid {

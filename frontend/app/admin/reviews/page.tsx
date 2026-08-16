@@ -85,18 +85,18 @@ function ReviewRequestTrigger({ onSent }: { onSent: () => void }) {
   }
 
   return (
-    <div style={{ marginTop: 16, padding: 16, border: '1px solid var(--color-line, #E8E2D6)', borderRadius: 2, background: 'var(--color-surface, #F5F0E8)' }}>
+    <div style={{ marginTop: 16, padding: 16, border: '1px solid var(--color-line)', borderRadius: 2, background: 'var(--color-surface)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <p style={{ margin: 0, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18 }}>Review requests</p>
-          <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-ink-muted, #8A8278)' }}>
+          <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-ink-muted, var(--admin-ink-muted))' }}>
             Send a tokenised &ldquo;how was it?&rdquo; email to every order at least
             <em style={{ fontStyle: 'normal', fontWeight: 500 }}> {ageDays} {ageDays === 1 ? 'day' : 'days'} </em>
             old that hasn&rsquo;t received one yet.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--color-ink-muted, #8A8278)' }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--color-ink-muted, var(--admin-ink-muted))' }}>
             Days
             <input
               type="number"
@@ -107,33 +107,33 @@ function ReviewRequestTrigger({ onSent }: { onSent: () => void }) {
               onChange={e => setAgeDays(Math.max(0, Math.min(365, parseInt(e.target.value, 10) || 0)))}
               style={{
                 width: 60, height: 32, padding: '0 8px',
-                border: '1px solid var(--color-line, #E8E2D6)', background: 'var(--color-bg, #FAF8F4)',
-                borderRadius: 2, fontFamily: 'Jost, sans-serif', fontSize: 13, color: 'var(--color-ink, #2A2218)',
+                border: '1px solid var(--color-line)', background: 'var(--color-bg)',
+                borderRadius: 2, fontFamily: 'Jost, sans-serif', fontSize: 13, color: 'var(--color-ink)',
               }}
             />
           </label>
           <button onClick={() => run(true)} disabled={busy}
-            style={{ padding: '8px 16px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', border: '1px solid var(--color-line, #E8E2D6)', background: 'transparent', cursor: 'pointer', borderRadius: 2 }}>
+            style={{ padding: '8px 16px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', border: '1px solid var(--color-line)', background: 'transparent', cursor: 'pointer', borderRadius: 2 }}>
             {busy ? 'Checking…' : 'Dry run'}
           </button>
           <button onClick={() => run(false)} disabled={busy}
-            style={{ padding: '8px 16px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', border: '1px solid var(--color-ink, #2A2218)', background: 'var(--color-ink, #2A2218)', color: 'var(--color-bg, #FAF8F4)', cursor: 'pointer', borderRadius: 2 }}>
+            style={{ padding: '8px 16px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', border: '1px solid var(--color-ink)', background: 'var(--color-ink)', color: 'var(--color-bg)', cursor: 'pointer', borderRadius: 2 }}>
             {busy ? 'Sending…' : 'Send now'}
           </button>
         </div>
       </div>
       {result && (
         <>
-          <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--color-ink, #2A2218)' }}>
+          <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--color-ink)' }}>
             Eligible: <strong>{result.eligible}</strong> · Sent: <strong>{result.sent}</strong> · Skipped (no products): <strong>{result.skipped}</strong>
-            {result.errors > 0 && <> · Errors: <strong style={{ color: '#c9572a' }}>{result.errors}</strong></>}
+            {result.errors > 0 && <> · Errors: <strong style={{ color: 'var(--admin-danger)' }}>{result.errors}</strong></>}
           </p>
           {result.diagnostics && result.eligible === 0 && result.diagnostics.totalOrders > 0 && (
-            <div style={{ marginTop: 8, padding: 10, background: 'var(--color-bg, #FAF8F4)', border: '1px dashed var(--color-line, #E8E2D6)', borderRadius: 2 }}>
-              <p style={{ margin: 0, fontSize: 11, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--color-ink-muted, #8A8278)' }}>
+            <div style={{ marginTop: 8, padding: 10, background: 'var(--color-bg)', border: '1px dashed var(--color-line)', borderRadius: 2 }}>
+              <p style={{ margin: 0, fontSize: 11, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--color-ink-muted, var(--admin-ink-muted))' }}>
                 Why no orders matched ({result.diagnostics.totalOrders} total)
               </p>
-              <ul style={{ margin: '6px 0 0', paddingLeft: 16, fontSize: 12, color: 'var(--color-ink, #2A2218)', lineHeight: 1.7 }}>
+              <ul style={{ margin: '6px 0 0', paddingLeft: 16, fontSize: 12, color: 'var(--color-ink)', lineHeight: 1.7 }}>
                 {result.diagnostics.excludedByStatus > 0 && (
                   <li><strong>{result.diagnostics.excludedByStatus}</strong> not in paid/processing/shipped/delivered status</li>
                 )}
@@ -155,11 +155,11 @@ function ReviewRequestTrigger({ onSent }: { onSent: () => void }) {
         </>
       )}
       {ageDays < 7 && (
-        <p style={{ margin: '8px 0 0', fontSize: 11, color: '#c9572a' }}>
+        <p style={{ margin: '8px 0 0', fontSize: 11, color: 'var(--admin-danger)' }}>
           Low age threshold — useful for testing, but customers usually need ≥7 days to have actually tried the product.
         </p>
       )}
-      {err && <p style={{ margin: '12px 0 0', fontSize: 12, color: '#c9572a' }}>{err}</p>}
+      {err && <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--admin-danger)' }}>{err}</p>}
     </div>
   );
 }
@@ -372,8 +372,8 @@ export default function ReviewsModeration() {
                 )}
 
                 {/* Public reply — shown under the review on the storefront. */}
-                <div style={{ marginTop: 12, borderTop: '1px solid var(--border,#e8e2d6)', paddingTop: 12 }}>
-                  <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--muted,#8a8680)', marginBottom: 6 }}>
+                <div style={{ marginTop: 12, borderTop: '1px solid var(--color-line)', paddingTop: 12 }}>
+                  <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--muted,var(--admin-ink-muted))', marginBottom: 6 }}>
                     {r.reply ? 'Your reply (public)' : 'Reply publicly'}
                   </label>
                   <textarea
@@ -382,13 +382,13 @@ export default function ReviewsModeration() {
                     placeholder="Write a warm reply — it shows as “Response from SILKILINEN” under the review."
                     rows={2}
                     maxLength={1000}
-                    style={{ width: '100%', boxSizing: 'border-box', font: 'inherit', fontSize: 13, padding: '8px 10px', border: '1px solid var(--border,#ddd6c8)', background: '#fff', color: 'var(--dark,#2a2218)', resize: 'vertical' }}
+                    style={{ width: '100%', boxSizing: 'border-box', font: 'inherit', fontSize: 13, padding: '8px 10px', border: '1px solid var(--border,var(--admin-line))', background: 'var(--admin-surface)', color: 'var(--color-ink)', resize: 'vertical' }}
                   />
                   <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
                     <button
                       onClick={() => saveReply(r._id, (replyDrafts[r._id] ?? r.reply ?? '').trim())}
                       disabled={busyId === r._id || (replyDrafts[r._id] ?? r.reply ?? '') === (r.reply ?? '')}
-                      style={{ padding: '7px 16px', background: 'var(--dark,#2a2218)', color: '#faf8f4', border: 'none', cursor: 'pointer', fontSize: 12, letterSpacing: '0.5px' }}
+                      style={{ padding: '7px 16px', background: 'var(--color-ink)', color: 'var(--color-bg)', border: 'none', cursor: 'pointer', fontSize: 12, letterSpacing: '0.5px' }}
                     >
                       {busyId === r._id ? '…' : r.reply ? 'Update reply' : 'Reply'}
                     </button>
@@ -396,7 +396,7 @@ export default function ReviewsModeration() {
                       <button
                         onClick={() => { setReplyDrafts(d => ({ ...d, [r._id]: '' })); saveReply(r._id, ''); }}
                         disabled={busyId === r._id}
-                        style={{ padding: '7px 14px', background: 'none', border: '1px solid var(--border,#ddd6c8)', color: 'var(--muted,#8a8680)', cursor: 'pointer', fontSize: 12 }}
+                        style={{ padding: '7px 14px', background: 'none', border: '1px solid var(--border,var(--admin-line))', color: 'var(--muted,var(--admin-ink-muted))', cursor: 'pointer', fontSize: 12 }}
                       >
                         Remove
                       </button>
@@ -411,7 +411,7 @@ export default function ReviewsModeration() {
 
       {rejectId && (
         <AdminModal title="Reject review" onClose={() => setRejectId(null)}>
-          <label style={{ display: 'block', fontSize: 12, marginBottom: 6, color: 'var(--dark, #2a2218)' }}>
+          <label style={{ display: 'block', fontSize: 12, marginBottom: 6, color: 'var(--color-ink)' }}>
             Reason (optional — kept for your audit trail):
           </label>
           <textarea
@@ -419,18 +419,18 @@ export default function ReviewsModeration() {
             value={rejectReason}
             onChange={e => setRejectReason(e.target.value)}
             rows={3}
-            style={{ width: '100%', padding: '8px 10px', fontSize: 13, border: '1px solid #e0d9cc', resize: 'vertical', boxSizing: 'border-box', marginBottom: 16 }}
+            style={{ width: '100%', padding: '8px 10px', fontSize: 13, border: '1px solid var(--admin-line)', resize: 'vertical', boxSizing: 'border-box', marginBottom: 16 }}
           />
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
             <button
               onClick={() => setRejectId(null)}
-              style={{ padding: '8px 14px', fontSize: 13, border: '1px solid #e0d9cc', background: '#fff', cursor: 'pointer' }}
+              style={{ padding: '8px 14px', fontSize: 13, border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer' }}
             >
               Cancel
             </button>
             <button
               onClick={() => { const id = rejectId; setRejectId(null); moderate(id, 'reject', rejectReason.trim() || undefined); }}
-              style={{ padding: '8px 14px', fontSize: 13, border: '1px solid #b03a2e', background: '#b03a2e', color: '#fff', cursor: 'pointer' }}
+              style={{ padding: '8px 14px', fontSize: 13, border: '1px solid var(--admin-danger)', background: 'var(--admin-danger)', color: 'var(--admin-surface)', cursor: 'pointer' }}
             >
               Reject review
             </button>

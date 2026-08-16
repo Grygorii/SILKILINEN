@@ -281,14 +281,14 @@ export default function RebuildSeoModal({ onClose }: { onClose: () => void }) {
                     </p>
                     {/* The Clerks' check on this recommendation, before you act. */}
                     {b.verified ? (
-                      <p className={styles.blockState} style={{ color: '#1a6b3c' }}>✓ Verified — entity live, query in Search Console</p>
+                      <p className={styles.blockState} style={{ color: 'var(--admin-success)' }}>✓ Verified — entity live, query in Search Console</p>
                     ) : (
                       b.warnings?.length > 0 && (
-                        <p className={styles.blockState} style={{ color: '#b8863b' }}>⚠ {b.warnings.join(' · ')}</p>
+                        <p className={styles.blockState} style={{ color: 'var(--admin-warning)' }}>⚠ {b.warnings.join(' · ')}</p>
                       )
                     )}
                     {(b.result || b.error) && (
-                      <p className={styles.blockState} style={b.status === 'error' ? { color: '#b03a2e' } : undefined}>
+                      <p className={styles.blockState} style={b.status === 'error' ? { color: 'var(--admin-danger)' } : undefined}>
                         {b.error ? `Error: ${b.error}` : b.result}
                       </p>
                     )}

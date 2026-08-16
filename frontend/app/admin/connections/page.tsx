@@ -9,12 +9,12 @@ type Source = { name: string; status: 'live' | 'off' | 'opportunity'; why: strin
 type Group = { category: string; sources: Source[] };
 type Data = { groups: Group[]; summary: { live: number; off: number; opportunities: number; total: number }; checkedAt: string };
 
-const dark = 'var(--dark, #2a2218)';
-const muted = 'var(--muted, #8a8680)';
-const border = '1px solid var(--border, #e8e2d6)';
+const dark = 'var(--color-ink)';
+const muted = 'var(--muted, var(--admin-ink-muted))';
+const border = '1px solid var(--color-line)';
 const serif = "'Cormorant Garamond', Georgia, serif";
 
-const DOT = { live: '#2d7d47', off: '#c0392b', opportunity: '#b8863b' } as const;
+const DOT = { live: 'var(--color-success)', off: 'var(--color-danger)', opportunity: 'var(--admin-warning)' } as const;
 const LABEL = { live: 'Live', off: 'Off', opportunity: 'Add to grow' } as const;
 
 export default function ConnectionsPage() {
@@ -72,7 +72,7 @@ export default function ConnectionsPage() {
                       </div>
                       <p style={{ fontSize: 12.5, color: muted, margin: '3px 0 0', lineHeight: 1.5 }}>{src.why}</p>
                       {src.note && <p style={{ fontSize: 12, color: muted, margin: '4px 0 0', fontStyle: 'italic', lineHeight: 1.5 }}>{src.note}</p>}
-                      {src.action && <p style={{ fontSize: 12, color: '#b8863b', margin: '4px 0 0' }}>→ {src.action}</p>}
+                      {src.action && <p style={{ fontSize: 12, color: 'var(--admin-warning)', margin: '4px 0 0' }}>→ {src.action}</p>}
                     </div>
                   ))}
                 </div>

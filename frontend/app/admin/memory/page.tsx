@@ -10,16 +10,16 @@ type Entry = { _id: string; kind: 'lesson' | 'pitfall' | 'fact' | 'decision'; te
 type Stats = { counts: { total: number; lesson: number; pitfall: number; fact: number; decision: number }; top: Entry[] };
 type Ref = { _id: string; title?: string; refType?: string; refSource?: string; text: string; tags?: string[] };
 
-const dark = 'var(--dark, #2a2218)';
-const muted = 'var(--muted, #8a8680)';
-const border = '1px solid var(--border, #e8e2d6)';
+const dark = 'var(--color-ink)';
+const muted = 'var(--muted, var(--admin-ink-muted))';
+const border = '1px solid var(--color-line)';
 const serif = "'Cormorant Garamond', Georgia, serif";
 
 const KIND = {
-  lesson:   { label: 'What works', color: '#2d7d47', bg: '#e8f5e9' },
-  pitfall:  { label: 'Avoid (we got it wrong)', color: '#b03a2e', bg: '#fdf3f1' },
-  fact:     { label: 'Verified fact', color: '#3a6ea5', bg: '#eef3f8' },
-  decision: { label: 'Decision to honour', color: '#b8863b', bg: '#fbf3e7' },
+  lesson:   { label: 'What works', color: 'var(--color-success)', bg: 'var(--admin-success-soft)' },
+  pitfall:  { label: 'Avoid (we got it wrong)', color: 'var(--admin-danger)', bg: 'var(--admin-danger-soft)' },
+  fact:     { label: 'Verified fact', color: 'var(--admin-info)', bg: 'var(--admin-info-soft)' },
+  decision: { label: 'Decision to honour', color: 'var(--admin-warning)', bg: 'var(--admin-warning-soft)' },
 } as const;
 
 export default function MemoryPage() {
@@ -184,7 +184,7 @@ export default function MemoryPage() {
                 <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
                   <input value={url} onChange={e => setUrl(e.target.value)} placeholder="Paste a URL — e.g. the Google SEO Starter Guide"
                     style={{ flex: 1, minWidth: 260, padding: '9px 12px', border, fontFamily: 'inherit', fontSize: 13.5, color: dark }} />
-                  <button onClick={summarize} disabled={summarizing || !url.trim()} style={{ padding: '9px 16px', background: '#b8863b', color: 'white', border: 'none', cursor: summarizing || !url.trim() ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 13, opacity: summarizing || !url.trim() ? 0.6 : 1 }}>{summarizing ? 'Distilling…' : '✦ Distil with AI'}</button>
+                  <button onClick={summarize} disabled={summarizing || !url.trim()} style={{ padding: '9px 16px', background: 'var(--admin-warning)', color: 'white', border: 'none', cursor: summarizing || !url.trim() ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 13, opacity: summarizing || !url.trim() ? 0.6 : 1 }}>{summarizing ? 'Distilling…' : '✦ Distil with AI'}</button>
                 </div>
                 <input value={refTitle} onChange={e => setRefTitle(e.target.value)} placeholder="Source name (auto-filled)"
                   style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', border, fontFamily: 'inherit', fontSize: 13.5, color: dark, marginBottom: 10 }} />
@@ -212,7 +212,7 @@ export default function MemoryPage() {
           {refs.length > 0 ? (
             <div style={{ display: 'grid', gap: 8 }}>
               {refs.map(r => (
-                <div key={r._id} style={{ border, borderLeft: '3px solid #b8863b', padding: '12px 14px', background: 'white' }}>
+                <div key={r._id} style={{ border, borderLeft: '3px solid var(--admin-warning)', padding: '12px 14px', background: 'white' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline' }}>
                     <span style={{ fontSize: 14, color: dark, fontWeight: 500 }}>
                       {r.title || (r.refType === 'book' ? 'Book' : 'Link')}
@@ -223,11 +223,11 @@ export default function MemoryPage() {
                   {r.refSource && (
                     <div style={{ fontSize: 11.5, color: muted, marginTop: 2, wordBreak: 'break-all' }}>
                       {r.refType === 'link' && /^https?:/.test(r.refSource)
-                        ? <a href={r.refSource} target="_blank" rel="noopener noreferrer" style={{ color: '#3a6ea5' }}>{r.refSource}</a>
+                        ? <a href={r.refSource} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--admin-info)' }}>{r.refSource}</a>
                         : r.refSource}
                     </div>
                   )}
-                  <p style={{ fontSize: 13, color: '#4f4a42', margin: '8px 0 0', lineHeight: 1.6 }}>{r.text}</p>
+                  <p style={{ fontSize: 13, color: 'var(--admin-ink)', margin: '8px 0 0', lineHeight: 1.6 }}>{r.text}</p>
                   {r.tags && r.tags.length > 0 && (
                     <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       {r.tags.map((t, i) => <span key={i} style={{ fontSize: 10, color: muted, border, padding: '2px 8px', borderRadius: 10 }}>{t}</span>)}

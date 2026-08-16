@@ -28,9 +28,9 @@ type Article = {
 };
 
 const STATUS_COLORS = {
-  draft: { bg: '#f3f3f3', color: '#555' },
-  preview: { bg: '#ede7f6', color: '#5c35a8' },
-  published: { bg: '#e8f5e9', color: '#2d7d47' },
+  draft: { bg: 'var(--admin-bg)', color: 'var(--admin-ink-muted)' },
+  preview: { bg: 'var(--admin-info-soft)', color: 'var(--admin-info)' },
+  published: { bg: 'var(--admin-success-soft)', color: 'var(--color-success)' },
 };
 
 function timeAgo(iso: string) {
@@ -250,11 +250,11 @@ export default function JournalEditorPage() {
 
   return (
     <AdminLayout>
-      <div style={{ minHeight: '100vh', background: '#faf9f7' }}>
+      <div style={{ minHeight: '100vh', background: 'var(--admin-surface)' }}>
 
         {/* Why this article — AI provenance, so the founder trusts it's grounded. */}
         {article.aiProvenance && (
-          <div style={{ background: '#fbf4e6', borderBottom: '1px solid #e6d9bf', padding: '8px 24px', fontSize: 12, color: '#7a5f2b' }}>
+          <div style={{ background: 'var(--admin-warning-soft)', borderBottom: '1px solid var(--admin-warning-soft)', padding: '8px 24px', fontSize: 12, color: 'var(--admin-warning)' }}>
             ✦ {article.aiProvenance}
           </div>
         )}
@@ -280,7 +280,7 @@ export default function JournalEditorPage() {
 
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <button onClick={refreshWithAI} disabled={refreshing} title="Improve & expand this article toward its search query — loads a rewrite for you to review (does not save until you do)"
-              style={{ padding: '7px 14px', fontSize: 12, border: '1px solid #b8863b', background: 'white', color: '#7a5f2b', cursor: refreshing ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+              style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-warning)', background: 'white', color: 'var(--admin-warning)', cursor: refreshing ? 'default' : 'pointer', fontFamily: 'inherit' }}>
               {refreshing ? 'Refreshing…' : '✦ Refresh with AI'}
             </button>
             <button onClick={() => save('draft')} style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -290,7 +290,7 @@ export default function JournalEditorPage() {
               Preview ↗
             </button>
             {article.status === 'published' ? (
-              <button onClick={unpublish} style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', color: '#c0392b' }}>
+              <button onClick={unpublish} style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--color-danger)' }}>
                 Unpublish
               </button>
             ) : (
@@ -305,7 +305,7 @@ export default function JournalEditorPage() {
             knows the article actually went public + can grab the link. */}
         {justPublished && article.status === 'published' && (
           <div style={{
-            background: '#e6f4ec', borderBottom: '1px solid #b7e0c7', color: '#1f6b3b',
+            background: 'var(--admin-success-soft)', borderBottom: '1px solid var(--admin-success-soft)', color: 'var(--admin-success)',
             padding: '10px 24px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', fontSize: 13,
           }}>
             <span>✓ Published live at</span>
@@ -313,7 +313,7 @@ export default function JournalEditorPage() {
               href={`/journal/${article.slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: '#1f6b3b', fontWeight: 600, textDecoration: 'underline' }}
+              style={{ color: 'var(--admin-success)', fontWeight: 600, textDecoration: 'underline' }}
             >
               silkilinen.com/journal/{article.slug}
             </a>
@@ -323,13 +323,13 @@ export default function JournalEditorPage() {
                 setCopiedUrl(true);
                 setTimeout(() => setCopiedUrl(false), 2000);
               }}
-              style={{ padding: '3px 10px', fontSize: 11, border: '1px solid #1f6b3b', background: 'transparent', color: '#1f6b3b', cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ padding: '3px 10px', fontSize: 11, border: '1px solid var(--admin-success)', background: 'transparent', color: 'var(--admin-success)', cursor: 'pointer', fontFamily: 'inherit' }}
             >
               {copiedUrl ? 'Copied!' : 'Copy link'}
             </button>
             <button
               onClick={() => setJustPublished(false)}
-              style={{ marginLeft: 'auto', padding: '3px 8px', fontSize: 11, border: 'none', background: 'transparent', color: '#1f6b3b', cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ marginLeft: 'auto', padding: '3px 8px', fontSize: 11, border: 'none', background: 'transparent', color: 'var(--admin-success)', cursor: 'pointer', fontFamily: 'inherit' }}
               aria-label="Dismiss"
             >
               ✕
@@ -343,8 +343,8 @@ export default function JournalEditorPage() {
           {/* Hero image */}
           <UploadHint spec={UPLOAD_SPECS.journalHero} title="Hero image — recommended" />
           <div style={{
-            width: '100%', height: 280, background: '#f0ede8',
-            border: article.heroImage?.url ? 'none' : '2px dashed #d0c9be',
+            width: '100%', height: 280, background: 'var(--admin-bg)',
+            border: article.heroImage?.url ? 'none' : '2px dashed var(--admin-line)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             marginBottom: 40, overflow: 'hidden', position: 'relative',
           }}>
@@ -353,14 +353,14 @@ export default function JournalEditorPage() {
               <img src={article.heroImage.url} alt={article.heroImage.alt || title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               <div style={{ textAlign: 'center' }}>
-                <p style={{ fontSize: 13, color: '#a09380', marginBottom: 12 }}>
+                <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', marginBottom: 12 }}>
                   {uploadingHero ? 'Uploading…' : 'Add hero image'}
                 </p>
                 <input ref={heroFileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleHeroUpload} />
                 <button
                   onClick={() => heroFileRef.current?.click()}
                   disabled={uploadingHero}
-                  style={{ border: '1px solid #d0c9be', padding: '6px 18px', fontFamily: 'inherit', fontSize: 12, background: 'transparent', cursor: 'pointer' }}
+                  style={{ border: '1px solid var(--admin-line)', padding: '6px 18px', fontFamily: 'inherit', fontSize: 12, background: 'transparent', cursor: 'pointer' }}
                 >
                   Choose file
                 </button>
@@ -411,7 +411,7 @@ export default function JournalEditorPage() {
             style={{
               fontSize: 17,
               fontStyle: 'italic',
-              color: '#6b5f52',
+              color: 'var(--admin-ink-muted)',
               lineHeight: 1.6,
               outline: 'none',
               marginBottom: 40,
@@ -474,7 +474,7 @@ export default function JournalEditorPage() {
 
           {/* Body editor */}
           <div style={{
-            fontSize: 17, lineHeight: 1.8, color: '#2a2520',
+            fontSize: 17, lineHeight: 1.8, color: 'var(--admin-ink)',
             fontFamily: "'Cormorant Garamond', Georgia, serif",
           }}>
             <style>{`
@@ -482,13 +482,13 @@ export default function JournalEditorPage() {
               .tiptap p { margin-bottom: 1.2em; }
               .tiptap h2 { font-size: 1.6em; font-weight: 400; margin: 1.4em 0 0.6em; letter-spacing: 0.5px; }
               .tiptap h3 { font-size: 1.3em; font-weight: 400; margin: 1.2em 0 0.5em; }
-              .tiptap blockquote { border-left: 3px solid #c8bfb0; padding-left: 20px; font-style: italic; color: #6b5f52; margin: 1.5em 0; }
+              .tiptap blockquote { border-left: 3px solid var(--admin-line); padding-left: 20px; font-style: italic; color: var(--admin-ink-muted); margin: 1.5em 0; }
               .tiptap img { max-width: 100%; height: auto; margin: 1.5em 0; }
               .tiptap ul, .tiptap ol { padding-left: 1.5em; margin-bottom: 1em; }
               .tiptap li { margin-bottom: 0.4em; }
-              .tiptap hr { border: none; border-top: 1px solid #d0c9be; margin: 2em 0; }
-              .tiptap a { color: #5c35a8; text-decoration: underline; }
-              .tiptap p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: #b0a898; pointer-events: none; float: left; height: 0; }
+              .tiptap hr { border: none; border-top: 1px solid var(--admin-line); margin: 2em 0; }
+              .tiptap a { color: var(--admin-info); text-decoration: underline; }
+              .tiptap p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--admin-ink-muted); pointer-events: none; float: left; height: 0; }
             `}</style>
             <EditorContent editor={editor} />
           </div>

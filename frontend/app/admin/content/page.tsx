@@ -274,7 +274,7 @@ export default function ContentPage() {
     <AdminLayout active="pages">
       <div className={styles.page}>
         <div className={styles.header}>
-          {pageLabel && <Link href="/admin/pages" style={{ fontSize: 13, color: 'var(--muted, #8a8680)', textDecoration: 'none', display: 'inline-block', marginBottom: 4 }}>← Pages</Link>}
+          {pageLabel && <Link href="/admin/pages" style={{ fontSize: 13, color: 'var(--muted, var(--admin-ink-muted))', textDecoration: 'none', display: 'inline-block', marginBottom: 4 }}>← Pages</Link>}
           <h1 className={styles.title}>{pageLabel ? `Editing: ${pageLabel}` : 'Site Content'}</h1>
           <p className={styles.sub}>Changes go live within 60 seconds</p>
         </div>
@@ -297,42 +297,42 @@ export default function ContentPage() {
           <>
             {tab === 'instagram' ? (
               <div style={{ maxWidth: 560 }}>
-                <div style={{ background: '#fff', border: '1px solid #e8e0d5', borderRadius: 8, padding: '24px 28px', marginBottom: 24 }}>
+                <div style={{ background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', borderRadius: 8, padding: '24px 28px', marginBottom: 24 }}>
                   <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Instagram Connection</h2>
                   {igStatus === null ? (
-                    <p style={{ color: '#888', fontSize: 14 }}>Loading status…</p>
+                    <p style={{ color: 'var(--admin-ink-muted)', fontSize: 14 }}>Loading status…</p>
                   ) : !igStatus.configured ? (
                     <>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#e53935', display: 'inline-block' }} />
-                        <span style={{ fontSize: 14, color: '#e53935', fontWeight: 500 }}>Not connected</span>
+                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--admin-danger)', display: 'inline-block' }} />
+                        <span style={{ fontSize: 14, color: 'var(--admin-danger)', fontWeight: 500 }}>Not connected</span>
                       </div>
-                      <p style={{ fontSize: 13, color: '#666', marginBottom: 12 }}>
-                        <code style={{ background: '#f4f0eb', padding: '2px 6px', borderRadius: 3 }}>INSTAGRAM_ACCESS_TOKEN</code> is not set in Railway environment variables.
+                      <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', marginBottom: 12 }}>
+                        <code style={{ background: 'var(--admin-bg)', padding: '2px 6px', borderRadius: 3 }}>INSTAGRAM_ACCESS_TOKEN</code> is not set in Railway environment variables.
                       </p>
-                      <p style={{ fontSize: 13, color: '#666' }}>
-                        Follow the setup guide in <code style={{ background: '#f4f0eb', padding: '2px 6px', borderRadius: 3 }}>backend/docs/instagram-setup.md</code> to generate a token and add it to Railway.
+                      <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>
+                        Follow the setup guide in <code style={{ background: 'var(--admin-bg)', padding: '2px 6px', borderRadius: 3 }}>backend/docs/instagram-setup.md</code> to generate a token and add it to Railway.
                       </p>
                     </>
                   ) : (
                     <>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#43a047', display: 'inline-block' }} />
-                        <span style={{ fontSize: 14, color: '#43a047', fontWeight: 500 }}>Connected</span>
+                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--admin-success)', display: 'inline-block' }} />
+                        <span style={{ fontSize: 14, color: 'var(--admin-success)', fontWeight: 500 }}>Connected</span>
                         {igStatus.cachedPostCount > 0 && (
-                          <span style={{ fontSize: 13, color: '#888', marginLeft: 4 }}>— {igStatus.cachedPostCount} posts cached</span>
+                          <span style={{ fontSize: 13, color: 'var(--admin-ink-muted)', marginLeft: 4 }}>— {igStatus.cachedPostCount} posts cached</span>
                         )}
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '8px 12px', fontSize: 13, marginBottom: 20 }}>
-                        <span style={{ color: '#888' }}>Posts fetched</span>
+                        <span style={{ color: 'var(--admin-ink-muted)' }}>Posts fetched</span>
                         <span>{igStatus.fetchedAt ? new Date(igStatus.fetchedAt).toLocaleString() : '—'}</span>
-                        <span style={{ color: '#888' }}>Token refreshed</span>
+                        <span style={{ color: 'var(--admin-ink-muted)' }}>Token refreshed</span>
                         <span>{igStatus.tokenRefreshedAt ? new Date(igStatus.tokenRefreshedAt).toLocaleString() : 'Not yet this session'}</span>
-                        <span style={{ color: '#888' }}>Auto-refresh</span>
+                        <span style={{ color: 'var(--admin-ink-muted)' }}>Auto-refresh</span>
                         <span>Weekly (background job)</span>
                       </div>
                       {igStatus.lastError && (
-                        <p style={{ fontSize: 13, color: '#c62828', background: '#fff3e0', border: '1px solid #ffcc80', borderRadius: 4, padding: '8px 12px', marginBottom: 16 }}>
+                        <p style={{ fontSize: 13, color: 'var(--admin-danger)', background: 'var(--admin-warning-soft)', border: '1px solid var(--admin-warning-soft)', borderRadius: 4, padding: '8px 12px', marginBottom: 16 }}>
                           Last error: {igStatus.lastError}
                         </p>
                       )}
@@ -348,14 +348,14 @@ export default function ContentPage() {
                           }
                         }}
                         disabled={igRefreshing}
-                        style={{ fontSize: 13, padding: '8px 16px', border: '1px solid #c5a572', borderRadius: 4, background: '#fff', cursor: igRefreshing ? 'default' : 'pointer', color: '#7a5c2e', opacity: igRefreshing ? 0.6 : 1 }}
+                        style={{ fontSize: 13, padding: '8px 16px', border: '1px solid var(--admin-warning)', borderRadius: 4, background: 'var(--admin-surface)', cursor: igRefreshing ? 'default' : 'pointer', color: 'var(--admin-warning)', opacity: igRefreshing ? 0.6 : 1 }}
                       >
                         {igRefreshing ? 'Refreshing…' : 'Refresh token now'}
                       </button>
                     </>
                   )}
                 </div>
-                <p style={{ fontSize: 12, color: '#aaa' }}>
+                <p style={{ fontSize: 12, color: 'var(--admin-ink-muted)' }}>
                   The homepage Instagram section automatically shows real posts from @silkilinen. No manual uploads needed.
                 </p>
               </div>

@@ -277,7 +277,7 @@ function DataHygieneCard() {
   return (
     <section className={styles.section}>
       <h3 className={styles.sectionTitle}>Data hygiene</h3>
-      <div style={{ border: '1px solid var(--border)', background: '#fff', padding: '18px 20px', maxWidth: 560 }}>
+      <div style={{ border: '1px solid var(--border)', background: 'var(--admin-surface)', padding: '18px 20px', maxWidth: 560 }}>
         <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark)', marginBottom: 4 }}>Crawler traffic clean-up</p>
         <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 12 }}>
           Googlebot visits recorded before the bot filter (data-centre cities like San Jose and Mountain View)
@@ -294,7 +294,7 @@ function DataHygieneCard() {
           disabled={busy || done || !preview || preview.count === 0}
           style={{
             fontSize: 13, padding: '9px 16px', cursor: busy || done ? 'default' : 'pointer',
-            border: '1px solid var(--dark)', background: 'var(--dark)', color: '#fff',
+            border: '1px solid var(--dark)', background: 'var(--dark)', color: 'var(--admin-surface)',
             opacity: busy || done || (preview && preview.count === 0) ? 0.5 : 1,
           }}
         >

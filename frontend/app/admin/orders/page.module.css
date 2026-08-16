@@ -36,7 +36,7 @@
 .chip {
   height: 32px;
   padding: 0 14px;
-  background: #fff;
+  background: var(--admin-surface);
   border: 1px solid var(--border);
   color: var(--dark);
   font-size: 12px;
@@ -55,7 +55,7 @@
 .chipActive:hover {
   background: var(--dark);
   border-color: var(--dark);
-  color: #fff;
+  color: var(--admin-surface);
 }
 
 /* ── Fulfilment banner ───────────────────────────── */
@@ -240,13 +240,13 @@
   text-transform: uppercase;
 }
 
-.badgePaid       { background: #eaf7ee; color: #2d7d47; }
-.badgeProcessing { background: #eef3fb; color: #2155a3; }
-.badgeShipped    { background: #f0ebfb; color: #6b35b8; }
-.badgeDelivered  { background: #eaf7ee; color: #1a6b3c; border: 1px solid #b6e4c7; }
+.badgePaid       { background: var(--color-success-soft); color: var(--color-success); }
+.badgeProcessing { background: var(--admin-info-soft); color: var(--admin-info); }
+.badgeShipped    { background: var(--admin-info-soft); color: var(--admin-info); }
+.badgeDelivered  { background: var(--color-success-soft); color: var(--admin-success); border: 1px solid var(--admin-success-soft); }
 .badgePending    { background: var(--cream); color: var(--muted); border: 1px solid var(--border); }
-.badgeCancelled  { background: #fdf0ef; color: #b03a2e; }
-.badgeFailed     { background: #fdf0ef; color: #b03a2e; }
+.badgeCancelled  { background: var(--admin-danger-soft); color: var(--admin-danger); }
+.badgeFailed     { background: var(--admin-danger-soft); color: var(--admin-danger); }
 
 /* ── Chevron ─────────────────────────────────────── */
 
@@ -271,7 +271,7 @@
 .detailRow td {
   padding: 0;
   border-bottom: 2px solid var(--border);
-  background: #f9f6f1;
+  background: var(--admin-surface);
 }
 
 .detail {

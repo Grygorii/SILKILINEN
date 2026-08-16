@@ -123,7 +123,7 @@ export default function CampaignDetailPage() {
   }
 
   if (loading) return <AdminLayout><div style={{ padding: 32, fontSize: 13, color: 'var(--muted)' }}>Loading…</div></AdminLayout>;
-  if (error)   return <AdminLayout><div style={{ padding: 32, fontSize: 13, color: '#c0392b' }}>{error}</div></AdminLayout>;
+  if (error)   return <AdminLayout><div style={{ padding: 32, fontSize: 13, color: 'var(--color-danger)' }}>{error}</div></AdminLayout>;
   if (!camp)   return null;
 
   const { stats } = camp;
@@ -177,7 +177,7 @@ export default function CampaignDetailPage() {
         </div>
 
         {/* UTM base link */}
-        <div style={{ background: '#f5f2ec', border: '1px solid var(--border)', padding: '12px 16px', marginBottom: 28, fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>
+        <div style={{ background: 'var(--admin-bg)', border: '1px solid var(--border)', padding: '12px 16px', marginBottom: 28, fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>
           <span style={{ fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--muted)', fontFamily: 'inherit', display: 'block', marginBottom: 4 }}>Base UTM link</span>
           {utmBase}
         </div>
@@ -266,7 +266,7 @@ export default function CampaignDetailPage() {
 
         {/* Notes */}
         {camp.notes && (
-          <div style={{ background: '#f5f2ec', border: '1px solid var(--border)', padding: '14px 18px', fontSize: 13, color: 'var(--dark)', lineHeight: 1.6 }}>
+          <div style={{ background: 'var(--admin-bg)', border: '1px solid var(--border)', padding: '14px 18px', fontSize: 13, color: 'var(--dark)', lineHeight: 1.6 }}>
             <span style={sectionTitle}>Notes</span>
             <p style={{ margin: 0 }}>{camp.notes}</p>
           </div>

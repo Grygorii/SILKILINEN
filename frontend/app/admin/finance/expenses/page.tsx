@@ -206,7 +206,7 @@ export default function FinanceExpensesPage() {
                       <td>{catLabel(e.category)}{e.isAutomatic && <span className={styles.autoTag}>auto</span>}</td>
                       <td>
                         {e.description}
-                        {e.notes && <span style={{ color: '#aaa', fontSize: 11, display: 'block' }}>{e.notes}</span>}
+                        {e.notes && <span style={{ color: 'var(--admin-ink-muted)', fontSize: 11, display: 'block' }}>{e.notes}</span>}
                       </td>
                       <td>
                         {e.receiptId ? (

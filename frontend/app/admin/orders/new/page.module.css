@@ -8,22 +8,22 @@
 .backBtn {
   font-size: 12px;
   padding: 6px 12px;
-  border: 1px solid var(--border, #e8e2d6);
-  background: #fff;
+  border: 1px solid var(--color-line);
+  background: var(--admin-surface);
   cursor: pointer;
-  color: var(--dark, #2a2218);
+  color: var(--color-ink);
 }
 
 .title {
   font-size: 22px;
   font-weight: 500;
   margin: 0;
-  color: var(--dark, #2a2218);
+  color: var(--color-ink);
 }
 
 .hint {
   font-size: 13px;
-  color: var(--muted, #6b6358);
+  color: var(--color-ink-muted);
   margin: 0 0 20px;
   max-width: 70ch;
 }
@@ -39,8 +39,8 @@
 }
 
 .card {
-  background: #fff;
-  border: 1px solid var(--border, #e8e2d6);
+  background: var(--admin-surface);
+  border: 1px solid var(--color-line);
   padding: 18px;
   margin-bottom: 16px;
 }
@@ -50,7 +50,7 @@
   text-transform: uppercase;
   letter-spacing: 0.6px;
   font-weight: 500;
-  color: var(--muted, #6b6358);
+  color: var(--color-ink-muted);
   margin: 0 0 14px;
 }
 
@@ -58,7 +58,7 @@
   width: 100%;
   padding: 9px 11px;
   font-size: 13px;
-  border: 1px solid var(--border, #e8e2d6);
+  border: 1px solid var(--color-line);
   margin-bottom: 10px;
   box-sizing: border-box;
 }
@@ -83,25 +83,25 @@
   text-align: left;
   padding: 10px 12px;
   font-size: 13px;
-  border: 1px solid var(--border, #e8e2d6);
-  background: var(--cream, #f5f2ec);
+  border: 1px solid var(--color-line);
+  background: var(--cream, var(--admin-bg));
   cursor: pointer;
 }
-.matchBtn:hover { background: #efe9de; }
+.matchBtn:hover { background: var(--admin-bg); }
 
-.matchPrice { color: var(--muted, #6b6358); }
+.matchPrice { color: var(--color-ink-muted); }
 
-.muted { font-size: 13px; color: var(--muted, #6b6358); }
+.muted { font-size: 13px; color: var(--color-ink-muted); }
 
 .line {
   padding: 12px 0;
-  border-top: 1px solid var(--border, #e8e2d6);
+  border-top: 1px solid var(--color-line);
 }
 
 .lineName {
   font-size: 14px;
   font-weight: 500;
-  color: var(--dark, #2a2218);
+  color: var(--color-ink);
   margin-bottom: 8px;
 }
 
@@ -115,8 +115,8 @@
 .select {
   padding: 7px 9px;
   font-size: 13px;
-  border: 1px solid var(--border, #e8e2d6);
-  background: #fff;
+  border: 1px solid var(--color-line);
+  background: var(--admin-surface);
 }
 
 .miniLabel {
@@ -124,14 +124,14 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: var(--muted, #6b6358);
+  color: var(--color-ink-muted);
 }
 
 .numInput {
   width: 84px;
   padding: 7px 9px;
   font-size: 13px;
-  border: 1px solid var(--border, #e8e2d6);
+  border: 1px solid var(--color-line);
 }
 
 .removeBtn {
@@ -139,7 +139,7 @@
   background: none;
   border: none;
   font-size: 18px;
-  color: #b03a2e;
+  color: var(--admin-danger);
   cursor: pointer;
   padding: 4px 8px;
 }
@@ -150,11 +150,11 @@
   align-items: center;
   font-size: 13px;
   padding: 6px 0;
-  color: var(--dark, #2a2218);
+  color: var(--color-ink);
 }
 
 .sumTotal {
-  border-top: 1px solid var(--border, #e8e2d6);
+  border-top: 1px solid var(--color-line);
   margin-top: 6px;
   padding-top: 12px;
   font-size: 16px;
@@ -164,7 +164,7 @@
 .label {
   display: block;
   font-size: 12px;
-  color: var(--muted, #6b6358);
+  color: var(--color-ink-muted);
   margin: 14px 0 6px;
 }
 
@@ -172,7 +172,7 @@
   width: 100%;
   padding: 9px 11px;
   font-size: 13px;
-  border: 1px solid var(--border, #e8e2d6);
+  border: 1px solid var(--color-line);
   resize: vertical;
   box-sizing: border-box;
 }
@@ -182,9 +182,9 @@
   margin-top: 18px;
   padding: 12px;
   font-size: 14px;
-  border: 1px solid var(--dark, #2a2218);
-  background: var(--dark, #2a2218);
-  color: #fff;
+  border: 1px solid var(--color-ink);
+  background: var(--color-ink);
+  color: var(--admin-surface);
   cursor: pointer;
 }
 .saveBtn:disabled { opacity: 0.5; cursor: default; }

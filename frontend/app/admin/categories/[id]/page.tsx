@@ -346,8 +346,8 @@ export default function AdminCategoryEditPage({ params }: { params: Promise<{ id
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {products.map(p => (
-                    <div key={p._id} style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between', borderBottom: '1px solid var(--border, #eee)', paddingBottom: 8 }}>
-                      <a href={`/admin/products/${p._id}`} style={{ flex: 1, color: 'var(--dark, #1a1916)', textDecoration: 'none', fontSize: 14 }}>{p.name}</a>
+                    <div key={p._id} style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between', borderBottom: '1px solid var(--border, var(--admin-line))', paddingBottom: 8 }}>
+                      <a href={`/admin/products/${p._id}`} style={{ flex: 1, color: 'var(--dark, var(--admin-ink))', textDecoration: 'none', fontSize: 14 }}>{p.name}</a>
                       <select
                         className={styles.select}
                         value={p.category || form.slug}

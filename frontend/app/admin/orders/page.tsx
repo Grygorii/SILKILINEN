@@ -172,8 +172,8 @@ export default function AdminOrdersPage() {
           href="/admin/orders/new"
           style={{
             marginLeft: 'auto', fontSize: 12, padding: '8px 14px',
-            border: '1px solid var(--dark, #2a2218)', background: 'var(--dark, #2a2218)',
-            color: '#fff', textDecoration: 'none',
+            border: '1px solid var(--color-ink)', background: 'var(--color-ink)',
+            color: 'var(--admin-surface)', textDecoration: 'none',
           }}
         >
           + New order

@@ -201,9 +201,9 @@
   text-transform: uppercase;
 }
 
-.badgeImported { background: #eaf7ee; color: #2d7d47; }
+.badgeImported { background: var(--color-success-soft); color: var(--color-success); }
 .badgeSkipped  { background: var(--cream); color: var(--muted); border: 1px solid var(--border); }
-.badgeError    { background: #fdf0ef; color: #b03a2e; }
+.badgeError    { background: var(--admin-danger-soft); color: var(--admin-danger); }
 
 /* ── Summary bar ─────────────────────────────────── */
 
@@ -216,7 +216,7 @@
 
 .summaryImported {
   font-size: 14px;
-  color: #2d7d47;
+  color: var(--color-success);
   font-weight: 500;
 }
 
@@ -286,6 +286,6 @@
 
 .error {
   font-size: 13px;
-  color: #b03a2e;
+  color: var(--admin-danger);
   margin-top: 12px;
 }

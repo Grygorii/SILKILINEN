@@ -720,7 +720,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       {/* Publish confirmation — shows the live URL when a product goes active. */}
       {justPublished && form.status === 'active' && (
         <div style={{
-          background: '#e6f4ec', borderBottom: '1px solid #b7e0c7', color: '#1f6b3b',
+          background: 'var(--admin-success-soft)', borderBottom: '1px solid var(--admin-success-soft)', color: 'var(--admin-success)',
           padding: '10px 24px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', fontSize: 13,
         }}>
           <span>✓ Live at</span>
@@ -729,17 +729,17 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               308s to the slug). Storefront links must use lib/urls — see the
               no-restricted-syntax rule. */}
           {/* eslint-disable-next-line no-restricted-syntax */}
-          <a href={`/product/${id}`} target="_blank" rel="noopener noreferrer" style={{ color: '#1f6b3b', fontWeight: 600, textDecoration: 'underline' }}>
+          <a href={`/product/${id}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--admin-success)', fontWeight: 600, textDecoration: 'underline' }}>
             silkilinen.com/product/{id}
           </a>
           <button
             // eslint-disable-next-line no-restricted-syntax -- admin copy-link, by id (see above)
             onClick={() => { navigator.clipboard.writeText(`https://www.silkilinen.com/product/${id}`); }}
-            style={{ padding: '3px 10px', fontSize: 11, border: '1px solid #1f6b3b', background: 'transparent', color: '#1f6b3b', cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ padding: '3px 10px', fontSize: 11, border: '1px solid var(--admin-success)', background: 'transparent', color: 'var(--admin-success)', cursor: 'pointer', fontFamily: 'inherit' }}
           >Copy link</button>
           <button
             onClick={() => setJustPublished(false)}
-            style={{ marginLeft: 'auto', padding: '3px 8px', fontSize: 11, border: 'none', background: 'transparent', color: '#1f6b3b', cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ marginLeft: 'auto', padding: '3px 8px', fontSize: 11, border: 'none', background: 'transparent', color: 'var(--admin-success)', cursor: 'pointer', fontFamily: 'inherit' }}
             aria-label="Dismiss"
           >✕</button>
         </div>
@@ -1132,7 +1132,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               on attributes the reference photo doesn't fully show. */}
           <section className={styles.card}>
             <h3 className={styles.cardTitle}>AI photoshoot — garment descriptor</h3>
-            <p style={{ fontSize: 12, color: 'var(--color-ink-muted, #8A8278)', margin: '0 0 12px', lineHeight: 1.5 }}>
+            <p style={{ fontSize: 12, color: 'var(--color-ink-muted, var(--admin-ink-muted))', margin: '0 0 12px', lineHeight: 1.5 }}>
               Optional. Written once per product, then injected verbatim into every AI generation as a
               GARMENT — exact specification block. Pin the things Gemini drifts on: length, sleeve cut,
               hem treatment, trim, piping, pockets.
@@ -1203,10 +1203,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           {/* Costing */}
           <details className={styles.card} open={!costing.materialCost && !costing.laborCost && !costing.packagingCost}>
             <summary className={styles.cardTitle} style={{ cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span>Costing{(!costing.materialCost && !costing.laborCost && !costing.packagingCost) && <span style={{ marginLeft: 8, fontSize: 11, color: '#c9572a', fontWeight: 500 }}>⚠ Missing</span>}</span>
-              <span style={{ fontSize: 12, color: '#aaa' }}>▾</span>
+              <span>Costing{(!costing.materialCost && !costing.laborCost && !costing.packagingCost) && <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--admin-danger)', fontWeight: 500 }}>⚠ Missing</span>}</span>
+              <span style={{ fontSize: 12, color: 'var(--admin-ink-muted)' }}>▾</span>
             </summary>
-            <p style={{ fontSize: 12, color: '#888', margin: '8px 0 16px' }}>Used for COGS tracking in the Finance tab. Snapshotted at order creation time.</p>
+            <p style={{ fontSize: 12, color: 'var(--admin-ink-muted)', margin: '8px 0 16px' }}>Used for COGS tracking in the Finance tab. Snapshotted at order creation time.</p>
             <div className={styles.frow}>
               <div className={styles.fg}>
                 <label className={styles.label}>Material cost (€/unit)</label>
@@ -1225,7 +1225,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               <p style={{ fontSize: 13, fontWeight: 600, margin: '8px 0' }}>
                 Total unit cost: €{(Number(costing.materialCost) + Number(costing.laborCost) + Number(costing.packagingCost)).toFixed(2)}
                 {form.price && (
-                  <span style={{ fontWeight: 400, color: '#888', marginLeft: 8 }}>
+                  <span style={{ fontWeight: 400, color: 'var(--admin-ink-muted)', marginLeft: 8 }}>
                     · {Math.round(((Number(form.price) - (Number(costing.materialCost) + Number(costing.laborCost) + Number(costing.packagingCost))) / Number(form.price)) * 100)}% gross margin
                   </span>
                 )}
@@ -1239,7 +1239,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               <button className={styles.saveBtn} onClick={saveCosting} disabled={costingSaving}>
                 {costingSaving ? 'Saving…' : 'Save costing'}
               </button>
-              {costingMsg && <span style={{ fontSize: 13, color: costingMsg.includes('fail') || costingMsg.includes('fail') ? '#c00' : '#2e7d32' }}>{costingMsg}</span>}
+              {costingMsg && <span style={{ fontSize: 13, color: costingMsg.includes('fail') || costingMsg.includes('fail') ? 'var(--admin-danger)' : 'var(--admin-success)' }}>{costingMsg}</span>}
             </div>
           </details>
 

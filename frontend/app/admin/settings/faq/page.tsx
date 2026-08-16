@@ -9,9 +9,9 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 
 type Faq = { q: string; a: string };
 
-const input: React.CSSProperties = { width: '100%', padding: '9px 12px', border: '1px solid var(--border, #d9d2c6)', fontSize: 14, background: '#fff' };
-const card: React.CSSProperties = { border: '1px solid var(--border, #e6e1d8)', background: '#fff', padding: 16, marginBottom: 12 };
-const btn: React.CSSProperties = { border: '1px solid var(--border, #cfc7b8)', background: '#fff', padding: '7px 12px', fontSize: 13, cursor: 'pointer' };
+const input: React.CSSProperties = { width: '100%', padding: '9px 12px', border: '1px solid var(--border, var(--admin-line))', fontSize: 14, background: 'var(--admin-surface)' };
+const card: React.CSSProperties = { border: '1px solid var(--border, var(--admin-line))', background: 'var(--admin-surface)', padding: 16, marginBottom: 12 };
+const btn: React.CSSProperties = { border: '1px solid var(--border, var(--admin-line))', background: 'var(--admin-surface)', padding: '7px 12px', fontSize: 13, cursor: 'pointer' };
 
 export default function FaqEditorPage() {
   const [items, setItems] = useState<Faq[]>([]);
@@ -67,7 +67,7 @@ export default function FaqEditorPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 26, margin: '8px 0' }}>FAQ</h1>
           <button onClick={save} disabled={saving}
-            style={{ background: 'var(--dark, #1a1916)', color: '#fff', border: 'none', padding: '10px 22px', fontSize: 14, cursor: saving ? 'default' : 'pointer' }}>
+            style={{ background: 'var(--dark, var(--admin-ink))', color: 'var(--admin-surface)', border: 'none', padding: '10px 22px', fontSize: 14, cursor: saving ? 'default' : 'pointer' }}>
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
@@ -88,7 +88,7 @@ export default function FaqEditorPage() {
                 <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                   <button style={btn} onClick={() => move(i, -1)} disabled={i === 0}>↑</button>
                   <button style={btn} onClick={() => move(i, 1)} disabled={i === items.length - 1}>↓</button>
-                  <button style={{ ...btn, color: '#b03a2e', marginLeft: 'auto' }} onClick={() => remove(i)}>Remove</button>
+                  <button style={{ ...btn, color: 'var(--admin-danger)', marginLeft: 'auto' }} onClick={() => remove(i)}>Remove</button>
                 </div>
               </div>
             ))}

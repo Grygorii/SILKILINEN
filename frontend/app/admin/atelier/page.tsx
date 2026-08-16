@@ -17,12 +17,12 @@ type Review = {
   dimensions: Dimension[]; rooms: Room[]; usedVision: boolean; usedFallback: boolean; createdAt: string;
 };
 
-const dark = 'var(--dark, #2a2218)';
-const muted = 'var(--muted, #8a8680)';
-const border = '1px solid var(--border, #e8e2d6)';
+const dark = 'var(--color-ink)';
+const muted = 'var(--muted, var(--admin-ink-muted))';
+const border = '1px solid var(--color-line)';
 const serif = "'Cormorant Garamond', Georgia, serif";
-const sevColor = { high: '#b03a2e', medium: '#b8863b', low: muted } as const;
-const scoreColor = (s: number) => (s >= 8 ? '#2d7d47' : s >= 6 ? '#b8863b' : '#b03a2e');
+const sevColor = { high: 'var(--admin-danger)', medium: 'var(--admin-warning)', low: muted } as const;
+const scoreColor = (s: number) => (s >= 8 ? 'var(--color-success)' : s >= 6 ? 'var(--admin-warning)' : 'var(--admin-danger)');
 
 function timeAgo(iso: string) {
   const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
@@ -114,7 +114,7 @@ export default function AtelierPage() {
         </div>
 
         {!visionReady && (
-          <div style={{ marginTop: 20, padding: '14px 18px', background: '#fdf6e9', border: '1px solid #e6d9bf', fontSize: 13, color: '#8a6d2f' }}>
+          <div style={{ marginTop: 20, padding: '14px 18px', background: 'var(--admin-warning-soft)', border: '1px solid var(--admin-warning-soft)', fontSize: 13, color: 'var(--admin-warning)' }}>
             The Atelier has no eyes yet — set <strong>GEMINI_API_KEY</strong> in Railway (the same key as Image Studio) to let it see the site.
           </div>
         )}
@@ -123,7 +123,7 @@ export default function AtelierPage() {
             text. This is also run automatically by the Site Audit; the button
             is here for when you want to do a pass on its own. */}
         {visionReady && (
-          <div style={{ marginTop: 20, padding: '14px 18px', background: '#fff', border, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ marginTop: 20, padding: '14px 18px', background: 'var(--admin-surface)', border, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
             <div>
               <div style={{ fontSize: 13.5, color: dark, fontWeight: 500 }}>Photo alt text</div>
               <div style={{ fontSize: 12.5, color: muted, marginTop: 3 }}>
@@ -136,12 +136,12 @@ export default function AtelierPage() {
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => runAlt(false)} disabled={altBusy} style={{
-                padding: '9px 18px', background: alt && alt.weak > 0 ? dark : '#fff', color: alt && alt.weak > 0 ? '#fff' : dark,
+                padding: '9px 18px', background: alt && alt.weak > 0 ? dark : 'var(--admin-surface)', color: alt && alt.weak > 0 ? 'var(--admin-surface)' : dark,
                 border, cursor: altBusy ? 'default' : 'pointer', opacity: altBusy ? 0.6 : 1, fontFamily: 'inherit', fontSize: 12.5, letterSpacing: '0.4px', whiteSpace: 'nowrap',
               }}>{altBusy ? 'Looking…' : (alt && alt.weak > 0 ? `✦ Write the ${alt.weak} missing` : '✦ Write missing alt text')}</button>
               {alt && alt.total > 0 && (
                 <button onClick={() => runAlt(true)} disabled={altBusy} title="Rewrite every alt line, not just the missing ones" style={{
-                  padding: '9px 14px', background: '#fff', color: muted, border, cursor: altBusy ? 'default' : 'pointer', opacity: altBusy ? 0.6 : 1, fontFamily: 'inherit', fontSize: 12.5, whiteSpace: 'nowrap',
+                  padding: '9px 14px', background: 'var(--admin-surface)', color: muted, border, cursor: altBusy ? 'default' : 'pointer', opacity: altBusy ? 0.6 : 1, fontFamily: 'inherit', fontSize: 12.5, whiteSpace: 'nowrap',
                 }}>Redo all</button>
               )}
             </div>
@@ -183,7 +183,7 @@ function ReviewView({ review }: { review: Review }) {
           <p style={{ fontFamily: serif, fontSize: 20, color: dark, margin: 0, lineHeight: 1.35 }}>{review.verdict}</p>
           {review.firstImpression && <p style={{ fontSize: 13.5, color: muted, marginTop: 8, lineHeight: 1.6 }}>{review.firstImpression}</p>}
           {review.weakestRoom && (
-            <p style={{ fontSize: 13, color: '#b03a2e', marginTop: 8 }}>⚠ Weakest room — fix this first: <strong>{review.weakestRoom}</strong></p>
+            <p style={{ fontSize: 13, color: 'var(--admin-danger)', marginTop: 8 }}>⚠ Weakest room — fix this first: <strong>{review.weakestRoom}</strong></p>
           )}
         </div>
       </div>
@@ -214,13 +214,13 @@ function ReviewView({ review }: { review: Review }) {
           <h3 style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: muted, margin: '0 0 10px' }}>Room by room</h3>
           <div style={{ display: 'grid', gap: 10 }}>
             {review.rooms.map((r, i) => (
-              <div key={i} style={{ border, padding: '12px 14px', background: r.name === review.weakestRoom ? '#fdf3f1' : '#fff' }}>
+              <div key={i} style={{ border, padding: '12px 14px', background: r.name === review.weakestRoom ? 'var(--admin-danger-soft)' : 'var(--admin-surface)' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
                   <span style={{ fontFamily: serif, fontSize: 20, fontWeight: 500, color: scoreColor(r.score), minWidth: 42 }}>{r.score || '–'}<span style={{ fontSize: 11, color: muted }}>/10</span></span>
                   <span style={{ fontSize: 14, color: dark, fontWeight: 500 }}>{r.name}</span>
-                  <a href={`https://www.silkilinen.com${r.path}`} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#b8863b' }}>open →</a>
+                  <a href={`https://www.silkilinen.com${r.path}`} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: 'var(--admin-warning)' }}>open →</a>
                   {!r.usedScreenshot && <span style={{ fontSize: 10, color: muted, fontStyle: 'italic' }}>(content-only)</span>}
-                  {r.loadMs > 2500 && <span style={{ fontSize: 10, color: '#b03a2e' }}>· slow {Math.round(r.loadMs / 100) / 10}s</span>}
+                  {r.loadMs > 2500 && <span style={{ fontSize: 10, color: 'var(--admin-danger)' }}>· slow {Math.round(r.loadMs / 100) / 10}s</span>}
                 </div>
                 {r.verdict && <p style={{ fontSize: 12.5, color: muted, margin: '4px 0 0', lineHeight: 1.5 }}>{r.verdict}</p>}
                 {r.dissonances?.length > 0 && (
@@ -238,7 +238,7 @@ function ReviewView({ review }: { review: Review }) {
 
       {review.strengths?.length > 0 && (
         <div style={{ marginTop: 22 }}>
-          <h3 style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#2d7d47', margin: '0 0 8px' }}>What already reads as luxury</h3>
+          <h3 style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--color-success)', margin: '0 0 8px' }}>What already reads as luxury</h3>
           <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13.5, color: dark, lineHeight: 1.7 }}>
             {review.strengths.map((s, i) => <li key={i}>{s}</li>)}
           </ul>
@@ -247,12 +247,12 @@ function ReviewView({ review }: { review: Review }) {
 
       {review.fixes?.length > 0 && (
         <div style={{ marginTop: 22 }}>
-          <h3 style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#b8863b', margin: '0 0 10px' }}>The house plan (ranked)</h3>
+          <h3 style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-warning)', margin: '0 0 10px' }}>The house plan (ranked)</h3>
           <ol style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 8 }}>
             {review.fixes.map((f, i) => (
               <li key={i} style={{ fontSize: 13.5, color: dark, lineHeight: 1.5 }}>
                 <strong style={{ fontWeight: 600 }}>{f.title}</strong>{f.where && <span style={{ color: muted }}> · {f.where}</span>}
-                {f.how && <div style={{ fontSize: 12.5, color: muted }}>{f.how}{f.agent && <span style={{ color: '#b8863b' }}> — {f.agent}</span>}</div>}
+                {f.how && <div style={{ fontSize: 12.5, color: muted }}>{f.how}{f.agent && <span style={{ color: 'var(--admin-warning)' }}> — {f.agent}</span>}</div>}
               </li>
             ))}
           </ol>

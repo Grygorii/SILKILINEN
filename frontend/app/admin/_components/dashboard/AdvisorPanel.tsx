@@ -15,10 +15,10 @@ type Rec = {
 type AdvisorData = { generatedAt: string; recommendations: Rec[]; cached: boolean };
 
 const PRIORITY_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  high:        { bg: '#f8d7da', color: '#721c24', label: 'DO NOW' },
-  medium:      { bg: '#fff3cd', color: '#856404', label: 'SOON' },
-  low:         { bg: '#e2e3e5', color: '#383d41', label: 'LATER' },
-  opportunity: { bg: '#d4edda', color: '#155724', label: 'OPPORTUNITY' },
+  high:        { bg: 'var(--admin-danger-soft)', color: 'var(--admin-danger)', label: 'DO NOW' },
+  medium:      { bg: 'var(--admin-warning-soft)', color: 'var(--admin-warning)', label: 'SOON' },
+  low:         { bg: 'var(--admin-info-soft)', color: 'var(--admin-info)', label: 'LATER' },
+  opportunity: { bg: 'var(--admin-success-soft)', color: 'var(--admin-success)', label: 'OPPORTUNITY' },
 };
 
 function PriorityBadge({ priority }: { priority: string }) {

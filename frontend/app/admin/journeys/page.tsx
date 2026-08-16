@@ -21,9 +21,9 @@ type Data = {
   journeys: Journey[];
 };
 
-const muted = 'var(--muted, #8a8680)';
-const dark = 'var(--dark, #2a2218)';
-const border = '1px solid var(--border, #e8e2d6)';
+const muted = 'var(--muted, var(--admin-ink-muted))';
+const dark = 'var(--color-ink)';
+const border = '1px solid var(--color-line)';
 const serif = "'Cormorant Garamond', Georgia, serif";
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
@@ -91,12 +91,12 @@ export default function JourneysPage() {
                 {data.funnel.map((f, i) => (
                   <div key={f.stage} style={{ display: 'grid', gridTemplateColumns: '150px 1fr 120px', alignItems: 'center', gap: 12 }}>
                     <span style={{ fontSize: 13, color: dark }}>{f.stage}</span>
-                    <div style={{ background: '#f3efe8', height: 26, position: 'relative', overflow: 'hidden' }}>
-                      <div style={{ position: 'absolute', inset: 0, width: `${(f.sessions / maxFunnel) * 100}%`, background: 'linear-gradient(90deg,#c9a06f,#d9a6a0)', transition: 'width .4s ease' }} />
+                    <div style={{ background: 'var(--admin-bg)', height: 26, position: 'relative', overflow: 'hidden' }}>
+                      <div style={{ position: 'absolute', inset: 0, width: `${(f.sessions / maxFunnel) * 100}%`, background: 'linear-gradient(90deg,var(--admin-warning),var(--admin-danger-soft))', transition: 'width .4s ease' }} />
                       <span style={{ position: 'absolute', left: 8, top: 4, fontSize: 12, color: dark, fontVariantNumeric: 'tabular-nums' }}>{f.sessions}</span>
                     </div>
                     <span style={{ fontSize: 12, color: muted, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                      {f.ofSessions}% all{i > 0 && <span style={{ color: f.ofPrev < 40 ? '#b03a2e' : muted }}> · {f.ofPrev}% step</span>}
+                      {f.ofSessions}% all{i > 0 && <span style={{ color: f.ofPrev < 40 ? 'var(--admin-danger)' : muted }}> · {f.ofPrev}% step</span>}
                     </span>
                   </div>
                 ))}
@@ -108,7 +108,7 @@ export default function JourneysPage() {
               <Card title="Top searches">
                 {data.topSearches.length === 0 ? <p style={{ fontSize: 12, color: muted }}>No searches yet.</p> :
                   data.topSearches.map(s => (
-                    <div key={s.term} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid #f3efe8' }}>
+                    <div key={s.term} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--admin-bg)' }}>
                       <span style={{ color: dark }}>{s.term}</span><span style={{ color: muted }}>{s.count}</span>
                     </div>
                   ))}
@@ -116,7 +116,7 @@ export default function JourneysPage() {
               <Card title="Most-clicked products">
                 {data.topProducts.length === 0 ? <p style={{ fontSize: 12, color: muted }}>No card clicks yet.</p> :
                   data.topProducts.map(p => (
-                    <div key={p.name} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid #f3efe8' }}>
+                    <div key={p.name} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--admin-bg)' }}>
                       <span style={{ color: dark }}>{p.name}</span><span style={{ color: muted }}>{p.count}</span>
                     </div>
                   ))}
@@ -127,7 +127,7 @@ export default function JourneysPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <Card title="Sessions by source">
                 {data.sources.map(s => (
-                  <div key={s.source} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid #f3efe8' }}>
+                  <div key={s.source} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--admin-bg)' }}>
                     <span style={{ color: dark }}>{s.source || 'direct'}</span><span style={{ color: muted }}>{s.sessions}</span>
                   </div>
                 ))}
@@ -135,7 +135,7 @@ export default function JourneysPage() {
               <Card title="Revenue by source">
                 {data.revenueBySource.length === 0 ? <p style={{ fontSize: 12, color: muted }}>No revenue in range.</p> :
                   data.revenueBySource.map(r => (
-                    <div key={r.source} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid #f3efe8' }}>
+                    <div key={r.source} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--admin-bg)' }}>
                       <span style={{ color: dark }}>{r.source || 'direct'} <span style={{ color: muted, fontSize: 11 }}>({r.orders})</span></span>
                       <span style={{ color: dark, fontVariantNumeric: 'tabular-nums' }}>€{Number(r.revenue || 0).toFixed(0)}</span>
                     </div>
@@ -148,13 +148,13 @@ export default function JourneysPage() {
               {data.journeys.length === 0 ? <p style={{ fontSize: 12, color: muted }}>No completed journeys yet.</p> :
                 <div style={{ display: 'grid', gap: 14 }}>
                   {data.journeys.map(j => (
-                    <div key={j.sessionId} style={{ borderLeft: '2px solid #d9a6a0', paddingLeft: 14 }}>
+                    <div key={j.sessionId} style={{ borderLeft: '2px solid var(--admin-danger-soft)', paddingLeft: 14 }}>
                       <div style={{ fontSize: 11, color: muted, marginBottom: 6 }}>session {j.sessionId.slice(0, 12)}… · purchased {timeAgo(j.at)} · {j.steps.length} steps</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                         {j.steps.map((st, i) => (
                           <span key={i} title={st.page} style={{
-                            fontSize: 11, padding: '2px 8px', borderRadius: 2, background: st.type === 'purchase' ? '#e8f5e9' : '#f3efe8',
-                            color: st.type === 'purchase' ? '#2d7d47' : dark,
+                            fontSize: 11, padding: '2px 8px', borderRadius: 2, background: st.type === 'purchase' ? 'var(--admin-success-soft)' : 'var(--admin-bg)',
+                            color: st.type === 'purchase' ? 'var(--color-success)' : dark,
                           }}>
                             {st.type}{st.props?.search_term ? `: ${st.props.search_term}` : ''}
                           </span>

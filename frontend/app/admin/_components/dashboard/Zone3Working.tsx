@@ -208,7 +208,7 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
                 )}
                 <div>
                   <p style={{ fontSize: 13, color: 'var(--dark)' }}>{bestConvertingProduct30d.productName}</p>
-                  <p style={{ fontSize: 11, color: '#4a7c59' }}>
+                  <p style={{ fontSize: 11, color: 'var(--admin-success)' }}>
                     {bestConvertingProduct30d.conversionPercent.toFixed(1)}% of viewers buy
                   </p>
                 </div>

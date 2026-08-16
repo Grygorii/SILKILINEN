@@ -27,12 +27,12 @@ type Customer = {
 };
 
 const SEGMENT_COLORS: Record<string, string> = {
-  vip: '#5c35a8', repeat: '#2d7d47', 'first-time': '#1565c0',
-  'newsletter-only': '#b07d00', recent: '#00838f', lapsed: '#e65100', 'at-risk': '#c62828',
+  vip: 'var(--admin-info)', repeat: 'var(--color-success)', 'first-time': 'var(--admin-info)',
+  'newsletter-only': 'var(--admin-warning)', recent: 'var(--admin-info)', lapsed: 'var(--admin-danger)', 'at-risk': 'var(--admin-danger)',
 };
 const STATUS_COLORS: Record<string, string> = {
-  paid: '#2d7d47', processing: '#1565c0', shipped: '#00838f',
-  delivered: '#2d7d47', cancelled: '#c62828', pending: '#b07d00', refunded: '#666',
+  paid: 'var(--color-success)', processing: 'var(--admin-info)', shipped: 'var(--admin-info)',
+  delivered: 'var(--color-success)', cancelled: 'var(--admin-danger)', pending: 'var(--admin-warning)', refunded: 'var(--admin-ink-muted)',
 };
 
 function fmtDate(d: string | null) {
@@ -209,7 +209,7 @@ export default function CustomerDetailPage() {
             <a href={`mailto:${customer.email}`} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--border)', background: 'white', color: 'var(--dark)', textDecoration: 'none' }}>Email customer</a>
             <button onClick={() => { navigator.clipboard.writeText(customer.email); toast('Email copied.'); }} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>Copy email</button>
             <button onClick={gdprExport} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>Export data</button>
-            <button onClick={gdprDelete} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid #c0392b', color: '#c0392b', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>GDPR delete</button>
+            <button onClick={gdprDelete} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--color-danger)', color: 'var(--color-danger)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>GDPR delete</button>
           </div>
         </div>
 
@@ -217,7 +217,7 @@ export default function CustomerDetailPage() {
         {customer.segments?.length > 0 && (
           <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
             {customer.segments.map(s => (
-              <span key={s} style={{ padding: '3px 10px', fontSize: 10, borderRadius: 2, letterSpacing: '0.8px', textTransform: 'uppercase', background: SEGMENT_COLORS[s] || '#eee', color: 'white' }}>
+              <span key={s} style={{ padding: '3px 10px', fontSize: 10, borderRadius: 2, letterSpacing: '0.8px', textTransform: 'uppercase', background: SEGMENT_COLORS[s] || 'var(--admin-line)', color: 'white' }}>
                 {s}
               </span>
             ))}
@@ -291,7 +291,7 @@ export default function CustomerDetailPage() {
                 <div style={{ gridColumn: '1/-1' }}>
                   <p style={label}>Tags</p>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
-                    {customer.tags.map(t => <span key={t} style={{ padding: '2px 8px', background: '#f3f3f3', fontSize: 12, color: 'var(--dark)' }}>{t}</span>)}
+                    {customer.tags.map(t => <span key={t} style={{ padding: '2px 8px', background: 'var(--admin-bg)', fontSize: 12, color: 'var(--dark)' }}>{t}</span>)}
                   </div>
                 </div>
               )}
@@ -316,13 +316,13 @@ export default function CustomerDetailPage() {
 
         {/* Abandoned-cart nudge (#7) */}
         {abandonedCart && (
-          <div style={{ ...card, background: '#fff8e1', borderColor: '#f0e0a0', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, background: '#b07d00', color: 'white', padding: '3px 8px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Abandoned cart</span>
+          <div style={{ ...card, background: 'var(--admin-warning-soft)', borderColor: 'var(--admin-warning-soft)', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 11, background: 'var(--admin-warning)', color: 'white', padding: '3px 8px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Abandoned cart</span>
             <span style={{ fontSize: 13, color: 'var(--dark)' }}>
               €{abandonedCart.total.toFixed(2)} pending since {new Date(abandonedCart.createdAt).toLocaleDateString('en-IE', { day: 'numeric', month: 'short' })}
             </span>
             {recoverySent ? (
-              <span style={{ marginLeft: 'auto', fontSize: 13, color: '#2d7d47' }}>✓ Recovery email sent</span>
+              <span style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--color-success)' }}>✓ Recovery email sent</span>
             ) : (
               <button onClick={sendCartRecovery} style={{ marginLeft: 'auto', padding: '7px 16px', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer', border: 'none', background: 'var(--dark)', color: 'white' }}>
                 Send recovery email
@@ -355,7 +355,7 @@ export default function CustomerDetailPage() {
                     <td style={tdStyle}>{(o.items || []).map(i => i.name).join(', ')}</td>
                     <td style={tdStyle}>{fmtMoney(o.total)}</td>
                     <td style={tdStyle}>
-                      <span style={{ fontSize: 11, padding: '2px 6px', borderRadius: 2, background: STATUS_COLORS[o.status] ? STATUS_COLORS[o.status] + '20' : '#f3f3f3', color: STATUS_COLORS[o.status] || '#666', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                      <span style={{ fontSize: 11, padding: '2px 6px', borderRadius: 2, background: STATUS_COLORS[o.status] ? STATUS_COLORS[o.status] + '20' : 'var(--admin-bg)', color: STATUS_COLORS[o.status] || 'var(--admin-ink-muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                         {o.status}
                       </span>
                     </td>
@@ -382,12 +382,12 @@ export default function CustomerDetailPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {customer.notes.map(n => (
-                <div key={n._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: '#fafafa', border: '1px solid var(--border)' }}>
+                <div key={n._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: 'var(--admin-surface)', border: '1px solid var(--border)' }}>
                   <div>
                     <p style={{ fontSize: 13, color: 'var(--dark)', margin: 0 }}>{n.body}</p>
                     <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>{fmtDate(n.createdAt)}</p>
                   </div>
-                  <button onClick={() => deleteNote(n._id)} style={{ fontSize: 11, background: 'none', border: 'none', color: '#c0392b', cursor: 'pointer' }}>Remove</button>
+                  <button onClick={() => deleteNote(n._id)} style={{ fontSize: 11, background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer' }}>Remove</button>
                 </div>
               ))}
             </div>
@@ -404,10 +404,10 @@ export default function CustomerDetailPage() {
           </div>
 
           {generatedPromo && (
-            <div style={{ padding: '12px 16px', background: '#e8f5e9', border: '1px solid #2d7d47', marginBottom: 12 }}>
-              <p style={{ fontSize: 12, color: '#2d7d47', margin: 0 }}>
+            <div style={{ padding: '12px 16px', background: 'var(--admin-success-soft)', border: '1px solid var(--color-success)', marginBottom: 12 }}>
+              <p style={{ fontSize: 12, color: 'var(--color-success)', margin: 0 }}>
                 Code created: <strong>{generatedPromo.code}</strong> — {generatedPromo.value}{generatedPromo.type === 'percentage' ? '%' : '€'} off.{' '}
-                <Link href={`/admin/promo-codes/${generatedPromo._id}`} style={{ color: '#2d7d47' }}>View in promo codes →</Link>
+                <Link href={`/admin/promo-codes/${generatedPromo._id}`} style={{ color: 'var(--color-success)' }}>View in promo codes →</Link>
               </p>
             </div>
           )}
@@ -441,7 +441,7 @@ export default function CustomerDetailPage() {
                   style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
               </div>
               <div style={{ gridColumn: '1/-1' }}>
-                <button onClick={generatePromo} style={{ padding: '8px 18px', background: '#5c35a8', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
+                <button onClick={generatePromo} style={{ padding: '8px 18px', background: 'var(--admin-info)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
                   Generate &amp; save
                 </button>
               </div>

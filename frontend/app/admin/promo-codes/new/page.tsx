@@ -221,7 +221,7 @@ export default function NewPromoCodePage() {
             </div>
           </div>
 
-          {error && <p style={{ color: '#c0392b', fontSize: 13, marginBottom: 16 }}>{error}</p>}
+          {error && <p style={{ color: 'var(--color-danger)', fontSize: 13, marginBottom: 16 }}>{error}</p>}
 
           <button type="submit" disabled={saving} style={{
             padding: '11px 28px', fontSize: 13, fontFamily: 'inherit',

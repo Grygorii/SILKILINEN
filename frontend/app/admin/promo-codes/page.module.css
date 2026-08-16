@@ -90,7 +90,7 @@
 .codeTag {
   font-family: monospace;
   font-size: 13px;
-  background: #f0ede8;
+  background: var(--admin-bg);
   padding: 3px 8px;
   border-radius: 2px;
   letter-spacing: 1px;
@@ -98,13 +98,13 @@
 
 .badgeOk {
   font-size: 11px;
-  color: #27ae60;
+  color: var(--admin-success);
   font-weight: 500;
 }
 
 .badgeActive {
   font-size: 11px;
-  color: #27ae60;
+  color: var(--admin-success);
   font-weight: 500;
 }
 
@@ -131,7 +131,7 @@
   border: none;
   font-family: 'Jost', sans-serif;
   font-size: 12px;
-  color: #c0392b;
+  color: var(--color-danger);
   cursor: pointer;
   padding: 0;
   transition: opacity 0.2s ease;
@@ -238,10 +238,10 @@
 
 .errorMsg {
   font-size: 13px;
-  color: #c0392b;
+  color: var(--color-danger);
   padding: 10px 14px;
-  background: #fdf0ee;
-  border: 1px solid #f5c6c0;
+  background: var(--color-danger-soft);
+  border: 1px solid var(--admin-danger-soft);
 }
 
 .submitBtn {
@@ -310,7 +310,7 @@
 }
 
 .rowSelected td {
-  background: #f5f0ea;
+  background: var(--admin-bg);
 }
 
 /* ── Bulk action bar (fixed bottom) ───────────────── */
@@ -361,13 +361,13 @@
 }
 
 .bulkBtnDanger {
-  border-color: #f5a59a;
-  color: #fdd7d0;
+  border-color: var(--admin-danger-soft);
+  color: var(--admin-danger-soft);
 }
 
 .bulkBtnDanger:hover:not(:disabled) {
   background: rgba(245, 165, 154, 0.12);
-  border-color: #f5a59a;
+  border-color: var(--admin-danger-soft);
 }
 
 .bulkClear {

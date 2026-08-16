@@ -153,6 +153,13 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   Organization + WebSite JSON-LD in `app/layout.tsx`. Cloudinary preconnect in `<head>`.
 
 ## Conventions
+- **Admin colour:** `--admin-*` tokens (globals.css) — its own quieter workspace
+  palette (white cards on `--admin-bg`, brand ink) with a CLOSED status set: one
+  `--admin-success`/`-danger`/`-warning`/`-info`, each with a `-soft` tint. It had
+  grown 190 literals — 10 reds, 11 greens, 5 ambers — so "is this bad?" had to be
+  re-learned per screen. An ESLint rule fails the build on any hex under
+  `app/admin`; `_components/dashboard/Zone2Metrics.tsx` is the one exemption
+  (Recharts takes literal colours into SVG attributes).
 - **Colour: use the brand tokens, never hardcode hex on the storefront.** `globals.css` :root
   defines 7 core (`--color-bg/-surface/-surface-warm/-line/-ink-muted/-ink/-accent`, aliased
   `--warm-white/-cream/-border/-muted/-dark/-rose`) + semantic `--color-success/-danger/-gold`

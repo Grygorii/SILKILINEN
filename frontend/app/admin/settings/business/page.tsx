@@ -22,7 +22,7 @@ const EMPTY: Settings = {
 };
 
 const label: React.CSSProperties = { display: 'block', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--muted)', margin: '16px 0 6px' };
-const input: React.CSSProperties = { width: '100%', maxWidth: 420, padding: '9px 12px', border: '1px solid var(--border, #d9d2c6)', fontSize: 14, background: '#fff' };
+const input: React.CSSProperties = { width: '100%', maxWidth: 420, padding: '9px 12px', border: '1px solid var(--border, var(--admin-line))', fontSize: 14, background: 'var(--admin-surface)' };
 const hint: React.CSSProperties = { fontSize: 12, color: 'var(--muted)', marginTop: 4 };
 
 export default function BusinessSettingsPage() {
@@ -102,7 +102,7 @@ export default function BusinessSettingsPage() {
 
             <div style={{ marginTop: 24 }}>
               <button onClick={save} disabled={saving}
-                style={{ background: 'var(--dark, #1a1916)', color: '#fff', border: 'none', padding: '10px 22px', fontSize: 14, cursor: saving ? 'default' : 'pointer' }}>
+                style={{ background: 'var(--dark, var(--admin-ink))', color: 'var(--admin-surface)', border: 'none', padding: '10px 22px', fontSize: 14, cursor: saving ? 'default' : 'pointer' }}>
                 {saving ? 'Saving…' : 'Save'}
               </button>
             </div>

@@ -31,7 +31,7 @@
 .tile {
   flex: 1 1 150px;
   min-width: 150px;
-  background: #fff;
+  background: var(--admin-surface);
   border: 1px solid var(--border);
   padding: 14px 16px;
   text-decoration: none;
@@ -62,12 +62,12 @@ a.tile:hover {
 
 .deltaUp {
   font-size: 11px;
-  color: #1a6b3c;
+  color: var(--admin-success);
 }
 
 .deltaDown {
   font-size: 11px;
-  color: #b03a2e;
+  color: var(--admin-danger);
 }
 
 .deltaFlat {
@@ -79,6 +79,6 @@ a.tile:hover {
   flex: 1 1 150px;
   min-width: 150px;
   height: 66px;
-  background: var(--cream, #f5f2ec);
+  background: var(--cream, var(--admin-bg));
   border: 1px solid var(--border);
 }
