@@ -212,7 +212,13 @@ async function priceOrder(body) {
           status: 'active',
         }).populate({ path: 'products.productId', select: 'name price status' });
         if (!bundle) {
-          return { status: 400, error: { error: `"${item.name || 'Bundle'}" is no longer available` } };
+          return { status: 400, error: {
+            error: `"${item.name || 'Bundle'}" is no longer available`,
+            // Structured so checkout can offer to remove this exact line rather
+            // than leaving the customer at a dead end with a message and no
+            // action. Matching on the message text would be fragile.
+            unavailable: { bundleId: String(item.bundleId || ''), name: item.name || 'Bundle' },
+          } };
         }
         const children = (bundle.products || []).map(p => p.productId).filter(Boolean);
         if (children.length === 0) {
@@ -236,12 +242,18 @@ async function priceOrder(body) {
           status: { $in: ['active', 'sold_out'] },
         }).lean();
         if (!product) {
-          return { status: 400, error: { error: `"${item.name}" is no longer available` } };
+          return { status: 400, error: {
+            error: `"${item.name}" is no longer available`,
+            unavailable: { productId: String(item.productId || item._id || ''), name: item.name, colour: item.colour || '', size: item.size || '' },
+          } };
         }
         // Don't sell sold-out items, and don't sell more than a variant has.
         const availErr = availabilityError(product, { colour: item.colour, size: item.size, quantity });
         if (availErr) {
-          return { status: 409, error: { error: availErr } };
+          return { status: 409, error: {
+            error: availErr,
+            unavailable: { productId: String(item.productId || item._id || ''), name: item.name, colour: item.colour || '', size: item.size || '' },
+          } };
         }
         validatedItems.push({
           productId: product._id,

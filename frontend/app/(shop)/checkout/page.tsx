@@ -230,7 +230,7 @@ function PaymentForm({
 // ── Main checkout page ────────────────────────────────────────────────────────
 
 export default function CheckoutPage() {
-  const { cart, clearCart } = useCart();
+  const { cart, clearCart, removeFromCart } = useCart();
   const { currency, format } = useCurrency();
   const { customer, refresh: refreshCustomer } = useCustomer();
   const [discountInput, setDiscountInput] = useState('');
@@ -238,6 +238,27 @@ export default function CheckoutPage() {
   const [summary, setSummary] = useState<OrderSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [intentError, setIntentError] = useState('');
+  // Which cart line the backend refused, so we can offer to remove it. A cart
+  // holding something that sold out used to dead-end the customer at the final
+  // step: a message naming the piece, and no way to proceed except working out
+  // for themselves that they had to go back and delete it.
+  const [unavailable, setUnavailable] = useState<
+    { productId?: string; bundleId?: string; name: string; colour?: string; size?: string } | null
+  >(null);
+
+  function dropUnavailableLine() {
+    if (!unavailable) return;
+    const i = cart.findIndex(item =>
+      (unavailable.bundleId && item.bundleId === unavailable.bundleId) ||
+      (unavailable.productId && item.productId === unavailable.productId
+        && (!unavailable.colour || item.colour === unavailable.colour)
+        && (!unavailable.size || item.size === unavailable.size)));
+    if (i >= 0) removeFromCart(i);
+    // Clear the error either way: the cartKey effect re-quotes on the change,
+    // and a stale error would outlive the problem it described.
+    setUnavailable(null);
+    setIntentError('');
+  }
 
   // Fire begin_checkout once when the page loads with items (first-party funnel
   // + GA4). Cart subtotal is the right value here — discounts/shipping aren't
@@ -314,6 +335,7 @@ export default function CheckoutPage() {
       if (!res.ok) {
         const err = await res.json();
         setIntentError(err.error || 'Could not load your order');
+        setUnavailable(err.unavailable || null);
         return null;
       }
       const data = await res.json();
@@ -364,6 +386,7 @@ export default function CheckoutPage() {
       if (!res.ok) {
         const err = await res.json();
         setIntentError(err.error || 'Could not initialise checkout');
+        setUnavailable(err.unavailable || null);
         return;
       }
 
@@ -480,7 +503,31 @@ export default function CheckoutPage() {
             // signed in to avoid confusion.
             <GoogleCheckoutSignIn onSignedIn={refreshCustomer} />
           )}
-          {intentError && <p className={styles.intentError}>{intentError}</p>}
+          {intentError && (
+            <div className={styles.intentError}>
+              <p style={{ margin: 0 }}>{intentError}</p>
+              {unavailable && (
+                <button
+                  type="button"
+                  onClick={dropUnavailableLine}
+                  style={{
+                    marginTop: 8,
+                    background: 'transparent',
+                    border: '1px solid currentColor',
+                    color: 'inherit',
+                    font: 'inherit',
+                    fontSize: 12,
+                    letterSpacing: 1,
+                    textTransform: 'uppercase',
+                    padding: '6px 14px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Remove it and continue
+                </button>
+              )}
+            </div>
+          )}
 
           {clientSecret && summary ? (
             <Elements
