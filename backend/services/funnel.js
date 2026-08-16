@@ -88,6 +88,18 @@ async function stageCounts(since, until) {
   });
 }
 
+// Short-lived memo. getFunnel runs ~10 aggregations over Event and Visit, and it
+// now has five callers — the dashboard panel (which auto-refreshes), the
+// clickstream brief feeding two agents, the analyst's tool and the advisor
+// (which itself runs on dashboard load and in the weekly digest). Without this,
+// one dashboard render could fan out to fifty aggregations over the same rows.
+//
+// 60s is chosen so the panel's own refresh cycle and the agents that run
+// alongside it share one computation, while the number on screen is never more
+// than a minute stale — this is a trend panel, not a live order feed.
+const CACHE_MS = 60 * 1000;
+const cache = new Map();
+
 /**
  * Funnel over the last `days`, counted in DISTINCT SESSIONS per stage (not raw
  * events, so one person reloading a product page five times is still one).
@@ -98,6 +110,15 @@ async function stageCounts(since, until) {
  * step 4 people reach is noise, while a 40% drop on 500 is the whole business.
  */
 async function getFunnel(days = 14) {
+  const hit = cache.get(days);
+  if (hit && Date.now() - hit.at < CACHE_MS) return hit.value;
+
+  const value = await computeFunnel(days);
+  cache.set(days, { at: Date.now(), value });
+  return value;
+}
+
+async function computeFunnel(days) {
   const since = new Date(Date.now() - days * 86400000);
   const prevSince = new Date(Date.now() - days * 2 * 86400000);
 
