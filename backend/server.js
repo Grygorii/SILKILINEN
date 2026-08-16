@@ -479,3 +479,24 @@ function shutdown(signal) {
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
+
+// Node kills the process on an unhandled rejection, and without these the only
+// trace is Railway restarting for no stated reason. Crashing is the RIGHT
+// behaviour — process state after an unhandled throw is untrustworthy, and
+// Railway restarts us — but it has to be loud, or a recurring fault looks like
+// random downtime.
+//
+// The rejection path drains gracefully so in-flight requests (a checkout
+// mid-confirm) are not cut off. The uncaughtException path does not: by
+// definition something escaped every handler, so the safe move is to log and
+// go, not to keep serving from a process we cannot reason about.
+process.on('unhandledRejection', (reason) => {
+  const detail = reason instanceof Error ? `${reason.message}\n${reason.stack}` : String(reason);
+  console.error('[fatal] unhandled promise rejection:', detail);
+  shutdown('unhandledRejection');
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[fatal] uncaught exception:', err.message, '\n', err.stack);
+  process.exit(1);
+});

@@ -1,4 +1,5 @@
 const express = require('express');
+const { csvCell, csvRow } = require('../utils/csv');
 const { SITE_URL } = require('../config/site');
 const router = express.Router();
 const multer = require('multer');
@@ -591,7 +592,7 @@ router.post('/export', async function(req, res) {
       ['ID', 'Name', 'Status', 'Category', 'Price', 'CompareAtPrice', 'TotalStock', 'Variants', 'Images', 'Created'].join(','),
       ...products.map(p => [
         p._id,
-        `"${(p.name || '').replace(/"/g, '""')}"`,
+        csvCell(p.name),
         p.status,
         p.category,
         p.price,

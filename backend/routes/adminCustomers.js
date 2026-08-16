@@ -1,4 +1,5 @@
 const express = require('express');
+const { csvCell, csvRow } = require('../utils/csv');
 const router = express.Router();
 const crypto = require('crypto');
 const { requireAuth } = require('../middleware/auth');
@@ -301,7 +302,7 @@ router.get('/export/csv', async (req, res) => {
 
     const rows = ['email,firstName,lastName,phone'];
     for (const c of customers) {
-      rows.push([c.email, c.firstName, c.lastName, c.phone].map(v => `"${(v || '').replace(/"/g, '""')}"`).join(','));
+      rows.push(csvRow([c.email, c.firstName, c.lastName, c.phone]));
     }
 
     res.setHeader('Content-Type', 'text/csv');

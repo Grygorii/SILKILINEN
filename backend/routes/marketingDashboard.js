@@ -1,4 +1,5 @@
 const express = require('express');
+const { csvCell, csvRow } = require('../utils/csv');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { aiLimit } = require('../middleware/rateLimiters');
@@ -289,7 +290,7 @@ router.get('/subscribers/export.csv', requireAuth, async (req, res) => {
     const rows = ['email,source,subscribedAt'];
     for (const s of subs) {
       rows.push([s.email, s.source, s.subscribedAt ? new Date(s.subscribedAt).toISOString() : '']
-        .map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(','));
+        .map(v => csvCell(v)).join(','));
     }
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="subscribers.csv"');

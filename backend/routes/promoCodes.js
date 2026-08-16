@@ -1,4 +1,5 @@
 const express = require('express');
+const { csvCell, csvRow } = require('../utils/csv');
 const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const PromoCode = require('../models/PromoCode');
@@ -162,7 +163,7 @@ router.get('/export', requireAuth, async function(req, res) {
     const esc = v => {
       if (v === null || v === undefined) return '';
       const s = String(v);
-      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      return csvCell(s);
     };
 
     const header = ['code','type','value','minOrderValue','status','usageCount','maxUses','validUntil','createdAt','description'];
