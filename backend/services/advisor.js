@@ -106,6 +106,35 @@ async function buildRecommendations() {
   }
 
   const ORDER = { high: 0, medium: 1, opportunity: 2, low: 3 };
+  // ── Conversion funnel ──
+  // The advisor feeds both the dashboard and the weekly email digest, so this is
+  // where a funnel finding actually reaches the founder unprompted rather than
+  // waiting for someone to open a panel. Everything here is already sample-gated
+  // in services/funnel.js; if the gates withheld it, nothing is added — an
+  // advisor that invents urgency from four sessions trains you to ignore it.
+  const funnel = await require('./funnel').getFunnel(14).catch(() => null);
+  if (funnel?.hasData) {
+    const shift = funnel.biggestShift;
+    if (shift && shift.direction === 'down') {
+      recs.push(rec('high', 'Conversion', `"${shift.label}" fell ${Math.abs(shift.delta)} points`,
+        `It converted ${shift.ratePrev}% in the previous 14 days and ${shift.rateNow}% now — this is a change, not a level, so something moved.`,
+        shift.fix ? `Open ${shift.fix.label}.` : 'Check what changed on that step.'));
+    }
+
+    const d = funnel.diagnosis;
+    if (d?.device) {
+      recs.push(rec('high', 'Conversion', `${d.device.segment} converts ${d.device.bestRate - d.device.rate} points worse`,
+        `At the worst-leaking step, ${d.device.segment} keeps ${d.device.rate}% against ${d.device.bestRate}% on ${d.device.bestSegment} — ${d.device.lost} people lost.`,
+        `Walk that step on ${d.device.segment} yourself, then check Session Replay.`));
+    }
+    if (d?.products?.length) {
+      const worst = d.products[0];
+      recs.push(rec('medium', 'Conversion', `"${worst.name}" loses most of its viewers`,
+        `${worst.added} of ${worst.viewed} people who opened it added it to the cart (${worst.rate}%).`,
+        'Open it in Products — photography, price framing, or sizing confidence.'));
+    }
+  }
+
   recs.sort((a, b) => ORDER[a.priority] - ORDER[b.priority]);
   return recs;
 }

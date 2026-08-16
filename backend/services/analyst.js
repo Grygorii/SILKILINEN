@@ -31,6 +31,30 @@ function clampDays(d, def = 30) {
 // ── Tool catalog ──────────────────────────────────────────────────────────────
 
 const TOOLS = {
+  // "Ask AI" is the agent the founder actually talks to, and it was the one
+  // agent with no view of on-site behaviour — it could describe revenue but not
+  // why revenue was not happening. Exposed as a TOOL rather than injected into
+  // every prompt, so it is fetched when the question is about conversion and
+  // costs nothing when it is not.
+  conversion_funnel: {
+    description: 'Where visitors drop before buying: visited → opened a product → added to cart → reached checkout → started payment → paid, in distinct sessions. Includes the worst-leaking step, which device/traffic source converts worst, which products lose the most viewers, and what changed vs the previous period. Use for "why are people not buying", conversion, drop-off, cart abandonment. Args: {days}',
+    run: async ({ days }) => {
+      const f = await require('./funnel').getFunnel(clampDays(days));
+      if (!f?.hasData) return { note: 'No visits recorded in this window — the funnel is empty, not broken.' };
+      return {
+        days: f.days,
+        stages: f.stages.map(s => ({ step: s.label, sessions: s.count, lostHere: s.lost, keptPercent: s.rate })),
+        overallConversionPercent: f.overallConversion,
+        worstStep: f.biggestLeak && { step: f.biggestLeak.label, peopleLost: f.biggestLeak.lost },
+        byDevice: f.diagnosis?.device,
+        bySource: f.diagnosis?.source,
+        productsLosingViewers: f.diagnosis?.products || [],
+        changeVsPrevious: f.biggestShift,
+        // Say it plainly, or the model reads an absent breakdown as "no problem".
+        note: 'Breakdowns absent above were withheld for insufficient sample, not because they are healthy.',
+      };
+    },
+  },
   sales_summary: {
     description: 'Orders, revenue, average order value for the last N days, with the previous period for comparison. Args: {days}',
     run: async ({ days }) => {
