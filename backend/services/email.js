@@ -693,7 +693,11 @@ async function sendAdvisorDigest({ recommendations = [], generatedAt } = {}) {
   if (!process.env.RESEND_API_KEY || !ADMIN_EMAIL) return;
 
   const dateStr = new Date(generatedAt || Date.now()).toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' });
-  const top = recommendations.slice(0, 8);
+  // Three, not eight. The digest's job is to be acted on once a week, and a
+  // list long enough to skim is a list long enough to postpone. The rest stay
+  // in the admin, where the founder goes when they have time to work a queue.
+  const top = recommendations.slice(0, 3);
+  const remaining = Math.max(0, recommendations.length - top.length);
 
   const rows = top.length
     ? top.map(r => {
@@ -708,6 +712,15 @@ async function sendAdvisorDigest({ recommendations = [], generatedAt } = {}) {
       </td></tr>`;
       }).join('')
     : `<tr><td style="padding:24px 0;text-align:center;font-size:14px;color:#5a5650;">Nothing pressing this week — catalogue, content and reviews are in good shape.</td></tr>`;
+
+  // Say what was withheld. A digest that silently truncates trains the reader to
+  // believe three is all there was, and the next long queue arrives as a
+  // surprise.
+  const moreRow = remaining > 0
+    ? `<tr><td style="padding:14px 0 0;font-size:13px;color:#5a5650;">
+         ${remaining} more ${remaining === 1 ? 'item is' : 'items are'} waiting in the admin — these three are the ones worth this week.
+       </td></tr>`
+    : '';
 
   await getResend().emails.send({
     from: FROM,
@@ -725,7 +738,7 @@ async function sendAdvisorDigest({ recommendations = [], generatedAt } = {}) {
 <tr><td style="background:#faf8f4;padding:40px;">
 <p style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#1a1916;">What to do next</p>
 <p style="margin:0 0 24px;font-size:13px;color:#8a8680;">${dateStr} · top ${top.length} action${top.length === 1 ? '' : 's'}</p>
-<table width="100%" cellpadding="0" cellspacing="0">${rows}</table>
+<table width="100%" cellpadding="0" cellspacing="0">${rows}${moreRow}</table>
 </td></tr>
 <tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
 <p style="margin:0;font-size:11px;color:#aca8a2;">Generated from your live store data · silkilinen.com/admin</p>

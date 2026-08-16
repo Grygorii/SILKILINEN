@@ -171,7 +171,20 @@ async function buildRecommendations() {
     }
   }
 
-  recs.sort((a, b) => ORDER[a.priority] - ORDER[b.priority]);
+  // Rank, then decide. Sixteen recommendations sorted by priority is still a
+  // list, and a list of sixteen is a list nobody works through — the failure
+  // mode of every advisory panel. Within a priority band, put the items whose
+  // cause is a NAMED person or piece first: "4 people are waiting for the Sky
+  // Blue robe" is actionable in a way "12 products are missing meta
+  // descriptions" is not, even though both are high priority.
+  //
+  // Demand and Conversion are named-cause categories: they came from someone's
+  // actual behaviour this fortnight, and they decay — acting next month is
+  // worth less. Housekeeping keeps.
+  const URGENCY = { Demand: 0, Conversion: 1 };
+  recs.sort((a, b) =>
+    (ORDER[a.priority] - ORDER[b.priority]) ||
+    ((URGENCY[a.category] ?? 9) - (URGENCY[b.category] ?? 9)));
   return recs;
 }
 
