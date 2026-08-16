@@ -50,6 +50,46 @@ describe('product rename parser', () => {
   });
 });
 
+// Artefacts found LIVE on /shop after the first run. Each one shipped to
+// customers and to Google, so they are pinned here permanently.
+describe('artefacts the first version produced', () => {
+  it('strips the brand from the middle, not just the front', () => {
+    expect(name("Silk men's pure boxer shorts — silkilinen in Copper", { colorName: 'Copper' }))
+      .toBe("Silk men's pure boxer shorts in Copper");
+  });
+
+  it('strips a stray word of a two-word colour', () => {
+    // "Sunset Copper" — "sunset" alone is not a known term, so it survived
+    // into the garment as "Silk sunset nightshirt in Copper".
+    expect(name('Silk sunset nightshirt in Copper', { colorName: 'Sunset Copper' }))
+      .toBe('Silk nightshirt in Sunset Copper');
+  });
+
+  it('never emits a doubled "in"', () => {
+    expect(name('Silk boxer short in bare in Champagne', { colorName: 'Bare Champagne' }))
+      .not.toMatch(/\bin\b.*\bin\b/);
+  });
+
+  it('pluralises a singular pair-garment', () => {
+    expect(name('Silk boxer short in Sky Blue', { colorName: 'Sky Blue' }))
+      .toBe('Silk boxer shorts in Sky Blue');
+  });
+
+  it('is idempotent on every live name that had drifted', () => {
+    const live = [
+      ["Silk men's pure boxer shorts — silkilinen in Copper", 'Copper'],
+      ['Silk slip dress in pare in Champagne', 'Pare Champagne'],
+      ['Silk sunset nightshirt in Copper', 'Sunset Copper'],
+      ['Silk boxer short in bare in Champagne', 'Bare Champagne'],
+      ['Silk satin scarf — The Grand Tour', ''],
+    ];
+    for (const [n, colorName] of live) {
+      const once = name(n, { colorName });
+      expect(name(once, { colorName })).toBe(once);
+    }
+  });
+});
+
 describe('checkName (what the admin form shows)', () => {
   it('passes a name already following the convention', () => {
     const r = checkName('Silk pillowcase in Silver');

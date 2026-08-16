@@ -27,7 +27,7 @@ const MATERIALS = ['silk satin', 'silk', 'linen'];
 
 // Garments that are inherently plural. "Brief" and "Briefs" both existed for
 // the same product; a pair of briefs is a pair.
-const ALWAYS_PLURAL = ['brief', 'briefs', 'pyjama', 'pyjamas', 'shorts', 'knickers'];
+const ALWAYS_PLURAL = ['brief', 'briefs', 'pyjama', 'pyjamas', 'short', 'shorts', 'knicker', 'knickers'];
 
 const titleCase = s => s.replace(/\b[a-z]/g, c => c.toUpperCase());
 
@@ -35,8 +35,10 @@ function parse(product) {
   const original = String(product.name || '').trim();
   let work = original;
 
-  // 1. Drop the brand prefix.
-  work = work.replace(/^silkilinen\s+/i, '');
+  // 1. Drop the brand ANYWHERE, not just as a prefix. A first pass only
+  // stripped it from the front, so "…boxer shorts — silkilinen" kept it in the
+  // middle of the garment and it survived into the live catalogue.
+  work = work.replace(/\s*[—–-]\s*silkilinen\b/ig, ' ').replace(/\bsilkilinen\b/ig, ' ');
 
   // 2. Colour: prefer the real field over guessing from prose.
   const fromField = product.colorName || (product.colours || []).find(Boolean) || '';
@@ -50,15 +52,21 @@ function parse(product) {
   // Strip the colour from the item. Prefer the FULL colour field when it appears
   // in the name: matching only the recognised word left "Silk slip dress in Pare
   // champagne" as "slip dress in pare", because "Pare" is not in COLOURS.
+  // Strip the colour from the garment — the whole phrase first, then each of
+  // its WORDS. Removing only the phrase left "sunset nightshirt" (colour
+  // "Sunset Copper") and "slip dress in pare" (colour "Pare Champagne"),
+  // because the stray word is not itself a known colour term.
   const strip = [];
-  if (colour) strip.push(colour);
-  if (matched) strip.push(matched);
-  for (const term of strip) {
-    const esc = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    work = work.replace(new RegExp(`\\b(in\\s+)?(soft\\s+)?${esc}\\b`, 'ig'), ' ');
+  if (colour) strip.push(colour, ...String(colour).split(/\s+/));
+  if (matched) strip.push(matched, ...String(matched).split(/\s+/));
+  for (const term of strip.filter(Boolean)) {
+    const esc = String(term).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    work = work.replace(new RegExp(`\\b(in\\s+)?(soft\\s+|bare\\s+)?${esc}\\b`, 'ig'), ' ');
   }
-  // Any "in" left orphaned by the removal above.
-  work = work.replace(/\bin\b\s*$/i, ' ').replace(/\s+in\s+$/i, ' ');
+  // Any "in" left orphaned by the removals above, wherever it now sits. This is
+  // what produced "slip dress in pare in Pare Champagne" when the rule was run
+  // a second time over its own output.
+  work = work.replace(/\bin\b/ig, ' ');
 
   // 3. A named piece — anything wrapped in quotes, or a leading "The ...".
   let pieceName = '';

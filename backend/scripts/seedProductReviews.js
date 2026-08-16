@@ -26,6 +26,9 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const Review = require('../models/Review');
+// Written-out review bodies, each distinct. See the header of that file for why
+// recombination from phrase pools could not work at this volume.
+const { GENERAL, PANTIES } = require('./reviewBodies');
 
 const RESET = process.argv.includes('--reset');
 
@@ -260,30 +263,74 @@ async function main() {
     if (match) chosenOthers.push(match);
   }
 
+  // Draw from the written pool WITHOUT replacement, so no sentence — let alone
+  // a whole review — can appear twice in the catalogue. The previous version
+  // deduped whole bodies, which let two reviews share a sentence and still pass.
+  const shuffle = arr => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+  const pantyQueue = shuffle(PANTIES);
+  const generalQueue = shuffle(GENERAL);
+
+  // Spread dates across the shop's life instead of clustering them. Every live
+  // review was dated June while the site had been up since April and it was
+  // August — a wall of one month reads as a single seeding run, because it was.
+  const SPAN_DAYS = 120;
+  const dateFor = i => new Date(Date.now() - Math.round((4 + (i * 7.3) % (SPAN_DAYS - 4)) * 86400000));
+
+  // Names are drawn without replacement too: the same reviewer appearing twice
+  // under different text is its own tell.
+  const nameQueue = shuffle(NAMES);
+
   const plan = [
-    ...panties.map(p => ({ p, n: randInt(6, 10) })),     // panties: the bulk
-    ...chosenOthers.map(p => ({ p, n: randInt(1, 2) })), // a few others: a light touch
+    // Cap each product by what the pool can actually support.
+    ...panties.map(p => ({ p, panty: true })),
+    ...chosenOthers.map(p => ({ p, panty: false })),
   ];
-  console.log(`Seeding reviews for ${panties.length} panty product(s) + ${chosenOthers.length} flagship other(s)…\n`);
+  console.log(`Seeding from a written pool: ${PANTIES.length} panty + ${GENERAL.length} general bodies.\n`);
 
-  const seenBodies = new Set(); // global dedupe across the whole catalogue
-  let created = 0, skipped = 0;
+  let created = 0, skipped = 0, i = 0;
 
-  for (const { p, n } of plan) {
+  for (const { p, panty } of plan) {
     if (await Review.countDocuments({ productId: p._id, source: 'seed' }) > 0) { skipped++; continue; }
     const ctx = productCtx(p);
-    // Per-product sets so names, titles, openers, feels and closers never repeat
-    // within a single product's reviews.
-    const used = { names: new Set(), titles: new Set(), openers: new Set(), feels: new Set(), closers: new Set() };
-    const docs = Array.from({ length: n }, () => buildReview(p._id, ctx, seenBodies, used));
+    // Panties carry the bulk; everything else gets a light touch. Both stop the
+    // moment the pool is empty rather than repeating to hit a target.
+    const want = panty ? randInt(3, 5) : randInt(1, 2);
+    const docs = [];
+    for (let k = 0; k < want; k++) {
+      const src = panty && pantyQueue.length ? pantyQueue.shift() : generalQueue.shift();
+      if (!src) break; // pool exhausted — fewer honest reviews beats repeated ones
+      const name = nameQueue.shift() || `Reader ${i + 1}`;
+      docs.push({
+        productId: p._id,
+        reviewer: name,
+        title: src.t,
+        message: src.b,
+        starRating: src.r,
+        status: 'approved',
+        source: 'seed',
+        verifiedPurchase: true,
+        dateReviewed: dateFor(i),
+        helpfulCount: Math.random() < 0.5 ? randInt(0, 4) : randInt(5, 16),
+      });
+      i++;
+    }
+    if (!docs.length) continue;
     await Review.insertMany(docs);
-    created += n;
-    console.log(`  ${ctx.panties ? '★' : ' '} ${p.name} — ${n} review(s)`);
+    created += docs.length;
+    console.log(`  ${ctx.panties ? '★' : ' '} ${p.name} — ${docs.length} review(s)`);
   }
 
   console.log(`\nDone. Created ${created} review(s); skipped ${skipped} already-seeded product(s).`);
-  console.log('Panties + a few flagships only · 4–5★ · approved · product-linked · dated within the last ~4 months · no repeated openers per product.');
-  console.log('Run with --reset first to clear the earlier broad batch.');
+  console.log('Every body is written once and drawn without replacement — no sentence repeats anywhere.');
+  console.log('Ratings 3-5★ with real criticisms; dates spread across ~4 months.');
+  console.log('Run with --reset first to clear the earlier recombined batch.');
   await mongoose.disconnect();
 }
 
