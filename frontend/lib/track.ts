@@ -95,7 +95,14 @@ export function trackVisit({ page, productId }: { page: string; productId?: stri
 // Vercel proxy → backend), so ad-blockers can't drop it and the data is ours.
 // Uses sendBeacon when available so events survive page-unload (outbound
 // clicks, navigations) without blocking the UX; falls back to keepalive fetch.
-export function trackClientEvent(type: string, props: Record<string, unknown> = {}) {
+export function trackClientEvent(
+  type: string,
+  props: Record<string, unknown> = {},
+  // Promoted to a TOP-LEVEL Event field, not left inside props. The Event model
+  // indexes productId and the funnel's per-product analysis matches on it, so a
+  // product id buried in props is invisible to every aggregation that needs it.
+  productId?: string,
+) {
   try {
     if (typeof window === 'undefined') return;
     if (window.location.pathname.startsWith('/admin')) return; // never track the admin
@@ -104,6 +111,7 @@ export function trackClientEvent(type: string, props: Record<string, unknown> = 
       sessionId: getSessionId(),
       type,
       page: window.location.pathname,
+      productId: productId || undefined,
       props,
       source: getSource(window.location.search, document.referrer || null),
       device: detectDevice(),

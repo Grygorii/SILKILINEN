@@ -44,12 +44,12 @@ const PINTEREST_EVENTS: Record<string, { event: string; map: (p: Record<string, 
   purchase:    { event: 'checkout',  map: p => ({ value: p.value, order_quantity: p.num_items ?? 1, currency: 'EUR', order_id: p.transaction_id, event_id: p.transaction_id }) },
 };
 
-export function trackEvent(name: string, properties: Record<string, unknown> = {}) {
+export function trackEvent(name: string, properties: Record<string, unknown> = {}, productId?: string) {
   // First-party store ALWAYS records the event (same posture as Visit tracking)
   // — it's same-origin, owned, and the one signal that can't be ad-blocked or
   // silently flow to someone else's account. Third-party tools below stay gated
   // behind cookie consent.
-  trackClientEvent(name, properties);
+  trackClientEvent(name, properties, productId);
 
   if (!hasConsent()) return;
   gtagFire(name, properties);
@@ -58,20 +58,20 @@ export function trackEvent(name: string, properties: Record<string, unknown> = {
   if (pin) pintrkFire(pin.event, pin.map(properties));
 }
 
-export function trackViewItem(product: { name: string; price: number; category?: string }) {
+export function trackViewItem(product: { name: string; price: number; category?: string; productId?: string }) {
   trackEvent('view_item', {
     currency: 'EUR',
     value: product.price,
     items: [{ item_name: product.name, item_category: product.category, price: product.price }],
-  });
+  }, product.productId);
 }
 
-export function trackAddToCart(product: { name: string; price: number; category?: string }) {
+export function trackAddToCart(product: { name: string; price: number; category?: string; productId?: string }) {
   trackEvent('add_to_cart', {
     currency: 'EUR',
     value: product.price,
     items: [{ item_name: product.name, item_category: product.category, price: product.price, quantity: 1 }],
-  });
+  }, product.productId);
 }
 
 export function trackRemoveFromCart(name: string, price: number) {

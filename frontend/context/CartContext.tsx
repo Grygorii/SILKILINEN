@@ -57,7 +57,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [cart]);
 
   function addToCart(item: CartItem) {
-    trackAddToCart({ name: item.name, price: item.price });
+    // productId is what makes the per-product funnel analysis possible — which
+    // pieces people open and never add. Without it those aggregations match
+    // nothing and silently return empty.
+    trackAddToCart({ name: item.name, price: item.price, productId: item.productId });
 
     const maxQty = Math.min(item.stock ?? 10, 10);
     const matchFn = (i: CartItem) => {
