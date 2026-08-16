@@ -27,10 +27,10 @@ export function InlineEditProvider({ children }: { children: React.ReactNode }) 
     <Ctx.Provider value={{ editing }}>
       {children}
       {editing && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, background: '#2a2218', color: '#faf8f4', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 16, fontSize: 13, fontFamily: 'Helvetica, Arial, sans-serif' }}>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, background: 'var(--color-ink)', color: 'var(--color-bg)', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 16, fontSize: 13, fontFamily: 'Helvetica, Arial, sans-serif' }}>
           <strong style={{ letterSpacing: '0.5px' }}>Editing this page</strong>
           <span style={{ opacity: 0.8 }}>Click any highlighted text or image to change it — it saves instantly.</span>
-          <button onClick={() => { window.location.href = window.location.pathname; }} style={{ marginLeft: 'auto', background: '#faf8f4', color: '#2a2218', border: 'none', padding: '7px 16px', cursor: 'pointer', fontSize: 12, letterSpacing: '1px', textTransform: 'uppercase' }}>Done</button>
+          <button onClick={() => { window.location.href = window.location.pathname; }} style={{ marginLeft: 'auto', background: 'var(--color-bg)', color: 'var(--color-ink)', border: 'none', padding: '7px 16px', cursor: 'pointer', fontSize: 12, letterSpacing: '1px', textTransform: 'uppercase' }}>Done</button>
         </div>
       )}
     </Ctx.Provider>
@@ -100,7 +100,7 @@ export function EditableText({
 }
 
 function btn(primary: boolean): React.CSSProperties {
-  return { font: '12px Helvetica, Arial, sans-serif', letterSpacing: '0.5px', padding: '5px 12px', marginRight: 6, cursor: 'pointer', border: 'none', background: primary ? '#2a2218' : 'transparent', color: primary ? '#faf8f4' : '#8a8680' };
+  return { font: '12px Helvetica, Arial, sans-serif', letterSpacing: '0.5px', padding: '5px 12px', marginRight: 6, cursor: 'pointer', border: 'none', background: primary ? 'var(--color-ink)' : 'transparent', color: primary ? 'var(--color-bg)' : '#8a8680' };
 }
 
 // Editable image — in edit mode, an overlay "Change photo" button lets you upload
@@ -134,7 +134,7 @@ export function EditableImage({
   return (
     <>
       {children}
-      <button onClick={() => ref.current?.click()} disabled={uploading} style={{ position: 'absolute', top: 14, left: 14, zIndex: 6, background: 'rgba(42,34,24,0.92)', color: '#faf8f4', border: OUTLINE, padding: '8px 15px', cursor: 'pointer', fontSize: 12, letterSpacing: '0.5px' }}>
+      <button onClick={() => ref.current?.click()} disabled={uploading} style={{ position: 'absolute', top: 14, left: 14, zIndex: 6, background: 'rgba(42,34,24,0.92)', color: 'var(--color-bg)', border: OUTLINE, padding: '8px 15px', cursor: 'pointer', fontSize: 12, letterSpacing: '0.5px' }}>
         {uploading ? 'Uploading…' : '↑ Change photo'}
       </button>
       <input ref={ref} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ''; }} />

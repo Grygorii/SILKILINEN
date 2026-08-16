@@ -247,7 +247,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--cream, #f5f0e8);
+  background: var(--color-surface);
   font-size: 22px;
 }
 
@@ -369,12 +369,12 @@
 .costFigure { font-size: 16px; font-weight: 600; color: var(--dark); }
 .costLabel { font-size: 12px; color: var(--muted); }
 .costWarn { font-size: 12px; color: #c8830a; font-weight: 500; }
-.costOver { font-size: 12px; color: #c0392b; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.costOver { font-size: 12px; color: var(--color-danger); font-weight: 500; display: flex; align-items: center; gap: 8px; }
 
 .overrideBtn {
   background: none;
-  border: 1px solid #c0392b;
-  color: #c0392b;
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
   font-size: 11px;
   padding: 3px 10px;
   cursor: pointer;
@@ -382,13 +382,13 @@
   letter-spacing: 0.5px;
   transition: background 0.2s ease, color 0.2s ease;
 }
-.overrideBtn:hover { background: #c0392b; color: #fff; }
+.overrideBtn:hover { background: var(--color-danger); color: #fff; }
 
 .error {
   font-size: 13px;
-  color: #c0392b;
+  color: var(--color-danger);
   padding: 10px 14px;
-  background: #fdf0ee;
+  background: var(--color-danger-soft);
   border: 1px solid #f5c6c0;
 }
 

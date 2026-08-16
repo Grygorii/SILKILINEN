@@ -1,6 +1,6 @@
 /* Silk Style Finder — quiet-luxury quiz.
    Tokens with literal fallbacks so it holds even outside the storefront vars:
-     --dark #2a2218 · --muted #6b6358 · --border #e8e2d6 · --cream var(--color-surface)  */
+     --dark var(--color-ink) · --muted var(--color-ink-muted) · --border var(--color-line) · --cream var(--color-surface)  */
 
 .page {
   min-height: 70vh;

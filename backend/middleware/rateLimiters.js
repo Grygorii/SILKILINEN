@@ -23,4 +23,24 @@ const aiLimit = rateLimit({
   message: { error: 'Too many AI generation calls in the last hour. Wait a few minutes and try again.' },
 });
 
-module.exports = { emailBlastLimit, aiLimit };
+// Global floor for the whole API. Every public route — products, collections,
+// content, journal, shipping, rates, track — had NO limiter at all: only
+// checkout, the AI endpoints and email blasts were protected. A single client
+// could hammer /api/products or /api/track and drive Mongo load and Railway
+// spend with nothing to stop it.
+//
+// Deliberately generous. This is a floor against abuse, not a traffic policy:
+// a real shopper browsing quickly, with a page firing several parallel product
+// and content requests, must never see a 429. The tighter per-route limits
+// (checkout: 20/5min, ai: 20/hr) still apply on top.
+const globalLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Health checks are what tells us the box is alive; never throttle them.
+  skip: req => req.path === '/api/health' || req.path === '/health',
+  message: { error: 'Too many requests. Please slow down.' },
+});
+
+module.exports = { emailBlastLimit, aiLimit, globalLimit };

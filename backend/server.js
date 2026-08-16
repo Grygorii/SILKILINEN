@@ -164,6 +164,10 @@ app.use(express.json());
 // any query. Runs right after the body is parsed, before any route.
 app.use(require('./middleware/sanitize').sanitizeBody);
 
+// Rate-limit floor for every API route, before any of them run. Per-route
+// limiters (checkout, AI, email) stay in place and bind tighter.
+app.use('/api', require('./middleware/rateLimiters').globalLimit);
+
 // CSRF defence: require a custom header on every write. See middleware/csrf.js.
 const { csrf } = require('./middleware/csrf');
 app.use(csrf);

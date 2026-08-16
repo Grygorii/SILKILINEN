@@ -19,7 +19,7 @@ export default function AdminErrorBanner({ error, onRetry }: { error: string; on
         padding: '12px 16px',
         background: '#fdf0ed',
         border: '1px solid #f5c2bb',
-        color: '#c0392b',
+        color: 'var(--color-danger)',
         fontSize: 13,
         marginBottom: 16,
         display: 'flex',
@@ -34,9 +34,9 @@ export default function AdminErrorBanner({ error, onRetry }: { error: string; on
         onClick={onRetry}
         style={{
           padding: '4px 12px',
-          border: '1px solid #c0392b',
+          border: '1px solid var(--color-danger)',
           background: 'transparent',
-          color: '#c0392b',
+          color: 'var(--color-danger)',
           cursor: 'pointer',
           fontFamily: 'inherit',
           fontSize: 12,

@@ -11,7 +11,7 @@
   font-size: 10px;
   letter-spacing: 1.2px;
   text-transform: uppercase;
-  color: #9a7636;
+  color: var(--color-gold);
   margin: 0 0 7px;
 }
 
@@ -28,7 +28,7 @@
   margin-right: 4px;
 }
 
-.v { color: #2a2218; }
+.v { color: var(--color-ink); }
 
 .note {
   margin: 8px 0 0;

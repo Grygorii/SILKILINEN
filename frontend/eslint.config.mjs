@@ -65,6 +65,27 @@ const eslintConfig = defineConfig([
     files: ['app/admin/_components/dashboard/Zone2Metrics.tsx'],
     rules: { 'no-restricted-syntax': 'off' },
   },
+  {
+    // "Never hardcode hex on the storefront" was written in PROJECT_MAP as a
+    // convention and nowhere as a check, so 151 literals accumulated under it —
+    // including exact re-typings of tokens that already existed. A convention
+    // nothing enforces is a preference.
+    //
+    // 'warn' while the near-miss shades are still being consolidated; the
+    // exact-value matches are already migrated. Flip to 'error' once the tail
+    // lands, as the admin rule did.
+    files: ['app/(shop)/**/*.tsx', 'components/**/*.tsx'],
+    ignores: ['app/(shop)/**/opengraph-image.tsx', 'app/(shop)/**/twitter-image.tsx'],
+    rules: {
+      'no-restricted-syntax': ['warn', {
+        selector: "Literal[value=/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/]",
+        message:
+          "Don't hardcode hex on the storefront — use the brand tokens in globals.css " +
+          "(--color-ink, --color-bg, --color-line, --color-accent, --color-success, …). " +
+          "Image-generation routes (Satori) are exempt: var() does not resolve there.",
+      }],
+    },
+  },
   globalIgnores([
     ".next/**",
     "out/**",

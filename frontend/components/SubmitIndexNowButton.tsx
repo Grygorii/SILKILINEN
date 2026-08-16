@@ -57,14 +57,14 @@ export default function SubmitIndexNowButton() {
         title="Ping Bing/Yandex via IndexNow to re-crawl every live page — use after you've made changes to the site."
         style={{
           padding: '8px 16px', fontSize: 12, letterSpacing: '0.3px',
-          border: '1px solid var(--border, #e8e2d6)', background: 'white', color: 'var(--dark, #2a2218)',
+          border: '1px solid var(--color-line)', background: 'white', color: 'var(--color-ink)',
           cursor: submitting ? 'default' : 'pointer', opacity: submitting ? 0.6 : 1, fontFamily: 'inherit',
         }}
       >
         {submitting ? 'Submitting…' : '↻ Submit all pages to IndexNow (Bing)'}
       </button>
       {msg
-        ? <span style={{ fontSize: 12, color: msg.ok ? '#2d7d47' : '#c0392b' }}>{msg.text}</span>
+        ? <span style={{ fontSize: 12, color: msg.ok ? 'var(--color-success)' : 'var(--color-danger)' }}>{msg.text}</span>
         : last && <span style={{ fontSize: 12, color: 'var(--muted, #8a8680)' }}>Last submitted: {last.count} URL{last.count === 1 ? '' : 's'} · {relTime(last.at)}</span>}
     </div>
   );

@@ -8,7 +8,7 @@ type Toast = { id: number; message: string; kind: ToastKind };
 const COLORS: Record<ToastKind, { bg: string; border: string; fg: string }> = {
   success: { bg: '#eef7ee', border: '#bfe3bf', fg: '#1a6b3c' },
   error:   { bg: '#fdf0ef', border: '#f0c8c2', fg: '#b03a2e' },
-  info:    { bg: '#f5f2ec', border: '#e0d9cc', fg: '#2a2218' },
+  info:    { bg: '#f5f2ec', border: '#e0d9cc', fg: 'var(--color-ink)' },
 };
 
 let nextId = 1;
