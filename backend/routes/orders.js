@@ -13,6 +13,25 @@ const {
 
 const VALID_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'refunded'];
 
+// Which statuses may follow which. The enum stopped an INVALID status; nothing
+// stopped an impossible JOURNEY, so "cancelled" -> "shipped" and "refunded" ->
+// "paid" were both accepted — and each of those fires a customer email. One
+// mis-click told someone their cancelled order was on its way.
+//
+// Terminal states (delivered, refunded) have no forward moves. `returned` can
+// still be refunded, because that is the real sequence.
+const STATUS_TRANSITIONS = {
+  pending:    ['paid', 'failed', 'cancelled'],
+  paid:       ['processing', 'shipped', 'cancelled', 'refunded'],
+  processing: ['shipped', 'cancelled', 'refunded'],
+  shipped:    ['delivered', 'returned', 'refunded'],
+  delivered:  ['returned', 'refunded'],
+  returned:   ['refunded'],
+  cancelled:  [],
+  refunded:   [],
+  failed:     ['pending', 'cancelled'],
+};
+
 const STATUS_EMAIL_FNS = {
   processing: sendProcessingEmail,
   shipped: sendShippedEmail,
@@ -271,9 +290,31 @@ router.get('/:id', requireAuth, async function(req, res) {
 // PUT /api/orders/:id/status — change status + optional email notification
 router.put('/:id/status', requireAuth, async function(req, res) {
   try {
-    const { status, note, sendEmail = true } = req.body;
+    const { status, note, sendEmail = true, force = false } = req.body;
     if (!VALID_STATUSES.includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const current = await Order.findById(req.params.id).select('status').lean();
+    if (!current) return res.status(404).json({ error: 'Not found' });
+
+    // Re-selecting the same status is a no-op, not an illegal move.
+    if (current.status !== status) {
+      const allowed = STATUS_TRANSITIONS[current.status] ?? [];
+      if (!allowed.includes(status) && !force) {
+        // 409, not 400: the request is well-formed, it conflicts with the
+        // order's actual state. `force` exists because real fulfilment has
+        // genuine corrections, and blocking those outright would just push the
+        // founder into editing the database by hand.
+        return res.status(409).json({
+          error: `An order that is "${current.status}" cannot become "${status}".`,
+          allowed,
+          hint: allowed.length
+            ? `Valid next steps: ${allowed.join(', ')}.`
+            : `"${current.status}" is a final state.`,
+          overridable: true,
+        });
+      }
     }
 
     const update = {
@@ -281,7 +322,9 @@ router.put('/:id/status', requireAuth, async function(req, res) {
       $push: {
         statusHistory: {
           status,
-          note: note || '',
+          // Record the override, so a corrected order is distinguishable from
+          // a normal one when someone reads the history later.
+          note: (note || '') + (force && current.status !== status ? ` [forced from ${current.status}]` : ''),
           changedBy: req.user.userId,
           timestamp: new Date(),
         },
