@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { apiList } from '@/lib/apiFetch';
+import { apiList, apiListResult } from '@/lib/apiFetch';
 import SearchTracker from '@/components/SearchTracker';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { clampMeta } from '@/lib/clampMeta';
@@ -150,7 +150,7 @@ async function getProducts(category?: string, q?: string, newOnly?: boolean, loc
   // Untyped like the original — ProductGrid owns the card shape, and
   // duplicating it here would be one more copy to keep in step.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return apiList<any>(url, { next: { revalidate: 60 } });
+  return apiListResult<any>(url, { next: { revalidate: 60 } });
 }
 
 export default async function ShopPage({
@@ -186,7 +186,7 @@ export default async function ShopPage({
     notFound();
   }
 
-  const products = await getProducts(category, q, newOnly, locale);
+  const { items: products, reachable } = await getProducts(category, q, newOnly, locale);
   const copy = category ? CATEGORY_COPY[category] : null;
   const heading = copy?.title ?? dbCat?.label ?? (newOnly ? 'New Arrivals' : (q ? `Search: "${q}"` : 'The Collection'));
   const description = copy?.description ?? (dbCat?.description || null) ?? (newOnly ? 'Our latest pieces — fresh off the atelier table.' : null);
@@ -203,7 +203,7 @@ export default async function ShopPage({
         )}
       </div>
       {category && <BundleStrip category={category} />}
-      <ProductGrid products={products} currentCategory={category ?? 'all'} />
+      <ProductGrid products={products} currentCategory={category ?? 'all'} reachable={reachable} />
     </main>
   );
 }

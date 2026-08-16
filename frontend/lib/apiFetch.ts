@@ -46,3 +46,17 @@ export async function apiList<T>(url: string, options: Options = {}): Promise<T[
   const data = await apiJson<T[]>(url, options);
   return Array.isArray(data) ? data : [];
 }
+
+/**
+ * A list, plus whether the request actually succeeded.
+ *
+ * Falling back to [] keeps a page rendering, but it makes an outage
+ * indistinguishable from an empty catalogue — the shop would tell a customer
+ * "no products yet" when the truth is "we could not reach the server". That is
+ * the same failure the funnel panel guards against: silence read as a fact.
+ */
+export async function apiListResult<T>(url: string, options: Options = {}): Promise<{ items: T[]; reachable: boolean }> {
+  const data = await apiJson<T[]>(url, options);
+  if (data === null) return { items: [], reachable: false };
+  return { items: Array.isArray(data) ? data : [], reachable: true };
+}

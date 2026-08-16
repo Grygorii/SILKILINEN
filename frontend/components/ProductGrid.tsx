@@ -17,9 +17,13 @@ type Product = ProductCardData & {
 export default function ProductGrid({
   products,
   currentCategory = 'all',
+  reachable = true,
 }: {
   products: Product[];
   currentCategory?: string;
+  /** false when the product API could not be reached, so an outage is not
+   *  reported to the customer as an empty catalogue. */
+  reachable?: boolean;
 }) {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -61,8 +65,13 @@ export default function ProductGrid({
 
       {products.length === 0 ? (
         <div className={styles.emptyState}>
+          {/* An unreachable API and an empty category look identical once the
+              fetch has fallen back to []. Telling a customer "no products yet"
+              during an outage is a lie that costs the visit. */}
           <p className={styles.emptyStateText}>
-            No products in this category yet — check back soon.
+            {reachable === false
+              ? 'We couldn\u2019t load the collection just now. Please refresh in a moment.'
+              : 'No products in this category yet — check back soon.'}
           </p>
           <button
             className={styles.emptyStateBtn}
