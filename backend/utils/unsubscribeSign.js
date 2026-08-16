@@ -12,13 +12,18 @@ function secret() {
   return process.env.UNSUBSCRIBE_SECRET || process.env.JWT_SECRET || '';
 }
 
-function sign(id) {
-  return crypto.createHmac('sha256', secret()).update(String(id)).digest('hex').slice(0, 24);
+// `scope` namespaces the signature so a link minted to unsubscribe one KIND of
+// thing cannot be replayed against another. It defaults to empty, which
+// reproduces the original signature byte-for-byte — links in emails already
+// sitting in customers' inboxes must keep working.
+function sign(id, scope = '') {
+  const payload = scope ? `${scope}:${id}` : String(id);
+  return crypto.createHmac('sha256', secret()).update(payload).digest('hex').slice(0, 24);
 }
 
-function verify(id, sig) {
+function verify(id, sig, scope = '') {
   if (typeof sig !== 'string' || !sig) return false;
-  const expected = sign(id);
+  const expected = sign(id, scope);
   const a = Buffer.from(expected);
   const b = Buffer.from(sig);
   return a.length === b.length && crypto.timingSafeEqual(a, b);

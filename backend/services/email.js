@@ -219,6 +219,7 @@ async function sendMagicLink({ email, link }) {
 </td></tr>
 <tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
 <p style="margin:0;font-size:11px;color:#aca8a2;">${brandLocation()} &nbsp;·&nbsp; ${supportEmail()}</p>
+${unsubLink ? `<p style="margin:8px 0 0;font-size:11px;color:#aca8a2;"><a href="${unsubLink}" style="color:#aca8a2;">Unsubscribe from offers</a></p>` : ''}
 </td></tr>
 </table></td></tr></table></body></html>`,
   });
@@ -259,9 +260,18 @@ async function sendWelcome({ email, firstName }) {
 // reminding them the existing 10% welcome offer is still available. No new
 // code minted (founder choice). Only send to customers who haven't already
 // redeemed SILK10 — the caller filters those out.
-async function sendWinbackReminder({ email, firstName }) {
+async function sendWinbackReminder({ email, firstName, customerId }) {
   if (!process.env.RESEND_API_KEY) return;
   const name = firstName || 'there';
+  // Every marketing message must carry an opt-out — GDPR Art. 21(2) and PECR.
+  // The audience was already gated on marketingConsent, but a recipient had no
+  // way to withdraw it short of writing to us. Scoped signature so the link
+  // cannot be replayed against the cart-recovery unsubscribe.
+  const unsubLink = customerId
+    ? `${process.env.BACKEND_URL || 'https://silkilinen-production.up.railway.app'}/api/customers/unsubscribe`
+      + `?cid=${Buffer.from(String(customerId)).toString('base64url')}`
+      + `&sig=${signUnsub(customerId, 'customer')}`
+    : '';
   await getResend().emails.send({
     from: FROM,
     to: email,

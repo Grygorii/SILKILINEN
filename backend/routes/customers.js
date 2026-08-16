@@ -284,4 +284,38 @@ router.delete('/me/wishlist/:productId', requireCustomer, async function(req, re
   }
 });
 
+// GET /api/customers/unsubscribe?cid=<base64url>&sig=<hmac>
+//
+// Opt out of MARKETING email (winback, campaigns). GDPR Art. 21(2) and PECR
+// require an opt-out in every marketing message, and the winback email carried
+// none — the audience was correctly gated on marketingConsent, but a recipient
+// had no way to withdraw it except by writing to us.
+//
+// Scoped signature, so a cart-recovery link cannot be replayed here. No auth:
+// the whole point is that it works from an inbox, and the HMAC is what makes it
+// unforgeable. Never reveals whether the customer exists.
+router.get('/unsubscribe', async function(req, res) {
+  try {
+    const { cid, sig } = req.query;
+    if (typeof cid !== 'string' || !cid) return res.status(400).send('Missing reference.');
+
+    const customerId = Buffer.from(cid, 'base64url').toString('utf8');
+    const { verify } = require('../utils/unsubscribeSign');
+    if (!verify(customerId, sig, 'customer')) return res.status(403).send('This link is invalid.');
+
+    await Customer.updateOne({ _id: customerId }, { $set: { marketingConsent: false } }).catch(() => {});
+
+    res.set('Content-Type', 'text/html').send(`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Unsubscribed</title></head>
+<body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#FAF8F4;color:#2A2218;font-family:Georgia,serif;text-align:center;padding:40px">
+<div><p style="font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#6B6358;margin:0 0 20px">SILKILINEN</p>
+<h1 style="font-size:30px;font-weight:300;margin:0 0 12px">You're unsubscribed.</h1>
+<p style="font-size:15px;color:#6B6358;line-height:1.6;margin:0">You won't receive marketing email from us again.<br>Order updates still reach you, as they must.</p>
+</div></body></html>`);
+  } catch (err) {
+    console.error('[customer unsubscribe]', err.message);
+    res.status(500).send('Something went wrong. Please try again.');
+  }
+});
+
 module.exports = router;

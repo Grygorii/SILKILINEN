@@ -73,7 +73,7 @@ router.post('/winback', emailBlastLimit, async (req, res) => {
       gdprDeletedAt: null,
       marketingConsent: true,
       email: { $exists: true, $nin: [null, ''] },
-    }).select('email firstName').limit(300).lean();
+    }).select('_id email firstName').limit(300).lean();
 
     // Emails that already redeemed SILK10 — exclude them (code is single-use
     // per customer, so reminding them would be hollow).
@@ -86,7 +86,7 @@ router.post('/winback', emailBlastLimit, async (req, res) => {
     for (const c of customers) {
       if (usedSilk10.has((c.email || '').toLowerCase())) { skipped++; continue; }
       try {
-        await sendWinbackReminder({ email: c.email, firstName: c.firstName });
+        await sendWinbackReminder({ email: c.email, firstName: c.firstName, customerId: c._id });
         sent++;
       } catch (err) {
         console.error('[winback] send failed:', maskEmail(c.email), err.message);
