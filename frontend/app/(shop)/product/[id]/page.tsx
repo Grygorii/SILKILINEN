@@ -358,6 +358,23 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               <StockBadge product={product} />
 
               <ProductOptions
+                // Which sizes actually have stock. Without this the picker
+                // offered every size, so a customer could choose one that was
+                // gone, add it, and only be refused at checkout — the last
+                // place you want to tell someone no. The collections route
+                // already exposed this for its "shop the set" pickers; the
+                // product page did not.
+                availableSizes={
+                  Array.isArray(product.variants) && product.variants.length
+                    ? [...new Set<string>(
+                        product.variants
+                          .filter((v: { size?: string; stockLevel?: number }) => (v.stockLevel ?? 0) > 0 && v.size)
+                          .map((v: { size?: string }) => String(v.size)),
+                      )]
+                    // No variant data at all means stock is untracked for this
+                    // piece, not that everything is sold out.
+                    : null
+                }
                 colours={product.colours ?? []}
                 colourHexMap={
                   // Build a name→hex map from the product's own colorName/Hex

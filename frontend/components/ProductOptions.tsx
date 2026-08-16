@@ -26,10 +26,13 @@ type Props = {
   price: number;
   outOfStock: boolean;
   stock?: number | null;
+  /** Sizes with stock. null means the piece has no variant-level tracking, in
+   *  which case every size stays selectable. */
+  availableSizes?: string[] | null;
   image?: string;
 };
 
-export default function ProductOptions({ colours, colourHexMap, sizes, productName, productId, price, outOfStock, stock, image }: Props) {
+export default function ProductOptions({ colours, colourHexMap, sizes, availableSizes = null, productName, productId, price, outOfStock, stock, image }: Props) {
   const { selectedColour, setSelectedColour, selectedSize, setSelectedSize, qty, setQty } = useProductSelection();
   const { format } = useCurrency();
   const freeShippingThreshold = useFreeShippingThreshold();
@@ -153,16 +156,22 @@ export default function ProductOptions({ colours, colourHexMap, sizes, productNa
             </a>
           </p>
           <OptionPillGroup ariaLabel="Size">
-            {sizes.map(size => (
-              <OptionPill
-                key={size}
-                selected={selectedSize === size}
-                onSelect={() => setSelectedSize(size)}
-                ariaLabel={`Size ${size}`}
-              >
-                {size}
-              </OptionPill>
-            ))}
+            {sizes.map(size => {
+              const soldOut = availableSizes !== null && !availableSizes.includes(size);
+              return (
+                <OptionPill
+                  key={size}
+                  selected={selectedSize === size}
+                  disabled={soldOut}
+                  onSelect={() => { if (!soldOut) setSelectedSize(size); }}
+                  // Say WHY it cannot be chosen — a pill that simply does not
+                  // respond reads as a broken page.
+                  ariaLabel={soldOut ? `Size ${size} — sold out` : `Size ${size}`}
+                >
+                  {size}
+                </OptionPill>
+              );
+            })}
           </OptionPillGroup>
         </div>
       )}
