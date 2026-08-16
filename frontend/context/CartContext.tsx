@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { trackAddToCart, trackRemoveFromCart } from '@/lib/analytics';
 
 // A cart line is either a regular product OR a bundle — never both. Bundle
@@ -46,13 +46,27 @@ const CartContext = createContext<CartContextType>({
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
+  // The cart cannot be read during SSR, so it hydrates from localStorage after
+  // mount. That left a window where the SAVED cart was overwritten by the
+  // EMPTY one: effects run in declaration order after the same commit, so the
+  // writer below fired with cart === [] before the reader's state update had
+  // landed, storing '[]' over a real cart. It self-healed on the next render,
+  // but a customer who closed the tab in that instant lost their basket — and
+  // under StrictMode's double-invoked effects the window is hit every time.
+  //
+  // The writer now waits until hydration has actually happened.
+  const hydrated = useRef(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('cart');
-    if (saved) setCart(JSON.parse(saved));
+    try {
+      const saved = localStorage.getItem('cart');
+      if (saved) setCart(JSON.parse(saved));
+    } catch { /* corrupt JSON — start with an empty cart rather than crashing */ }
+    hydrated.current = true;
   }, []);
 
   useEffect(() => {
+    if (!hydrated.current) return;
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
 
