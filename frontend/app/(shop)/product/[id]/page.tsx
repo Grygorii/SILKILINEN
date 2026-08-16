@@ -259,6 +259,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   // Breadcrumb JSON-LD — surfaces a structured trail in Google results
   // (Home > Shop > Category > Product) instead of the raw URL.
+  // Fetched ONCE, above both the structured data and the visible trail.
+  //
+  // Ask for the label rather than prettifying the slug: `lounge` is the
+  // category "Loungewear", and the breadcrumb said "Lounge" to every customer.
+  // Resolved here rather than beside the visible crumbs because Google requires
+  // BreadcrumbList to MATCH what is on the page — fixing one and not the other
+  // would trade a wrong name for a structured-data mismatch, which is worse.
+  const categoryLabelText = await categoryLabel(product.category);
+
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -266,18 +275,13 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       { '@type': 'ListItem', position: 1, name: 'Home', item: localeUrl(locale, '/') },
       { '@type': 'ListItem', position: 2, name: 'Shop', item: localeUrl(locale, '/shop') },
       ...(product.category
-        ? [{ '@type': 'ListItem', position: 3, name: String(product.category).replace(/-/g, ' '), item: localeUrl(locale, `/shop?category=${product.category}`) }]
+        ? [{ '@type': 'ListItem', position: 3, name: categoryLabelText as string, item: localeUrl(locale, `/shop?category=${product.category}`) }]
         : []),
       { '@type': 'ListItem', position: product.category ? 4 : 3, name: product.name, item: localeUrl(locale, productPath({ slug: product.slug, _id: id })) },
     ],
   };
 
   // Visible trail mirroring the JSON-LD above (Home / Shop / Category / Product).
-  //
-  // Ask for the label rather than prettifying the slug. A slug is an
-  // identifier, not a name: `lounge` is the category "Loungewear", and the
-  // breadcrumb said "Lounge" to every customer who reached this page.
-  const categoryLabelText = await categoryLabel(product.category);
   const crumbs = [
     { label: 'Home', href: '/' },
     { label: 'Shop', href: '/shop' },

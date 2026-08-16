@@ -11,6 +11,7 @@
 // gender/age_group come from the new product fields (default unisex/adult).
 
 import { productPath } from '@/lib/urls';
+import { apiList } from '@/lib/apiFetch';
 import { brand } from '@/lib/brand';
 
 const BASE = brand.url;
@@ -151,6 +152,8 @@ function buildItem(
     availability: 'in_stock' | 'out_of_stock';
     imageLink: string;
     groupId?: string;
+    /** Human category name for g:product_type; falls back to the slug. */
+    categoryLabel?: string;
   },
 ): string {
   const regular = Number(p.price) || 0;
@@ -193,14 +196,14 @@ function buildItem(
     size ? `      <g:size>${xml(size)}</g:size>` : '',
     p.materialComposition ? `      <g:material>${xml(cleanText(p.materialComposition, 200))}</g:material>` : '',
     p.category
-      ? `      <g:product_type>${xml(cleanText(String(p.category).replace(/-/g, ' '), 750))}</g:product_type>`
+      ? `      <g:product_type>${xml(cleanText(opts.categoryLabel || String(p.category).replace(/-/g, ' '), 750))}</g:product_type>`
       : '',
   ].filter(Boolean);
 
   return `    <item>\n${lines.join('\n')}\n    </item>`;
 }
 
-function itemsForProduct(p: Product): string[] {
+function itemsForProduct(p: Product, labelBySlug: Record<string, string> = {}): string[] {
   if (!p?._id || !p.name || !(Number(p.price) > 0)) return [];
 
   const variants = (p.variants || []).filter(v => v.colour || v.size);
@@ -215,6 +218,7 @@ function itemsForProduct(p: Product): string[] {
         availability: inStock ? 'in_stock' : 'out_of_stock',
         imageLink: imageForColour(p, v.colour),
         groupId: p._id,
+        categoryLabel: labelBySlug[String(p.category || '')] || '',
       });
     });
   }
@@ -223,6 +227,7 @@ function itemsForProduct(p: Product): string[] {
   return [
     buildItem(p, {
       id: p._id,
+      categoryLabel: labelBySlug[String(p.category || '')] || '',
       availability: inStock ? 'in_stock' : 'out_of_stock',
       imageLink: imageForColour(p),
     }),
@@ -231,7 +236,21 @@ function itemsForProduct(p: Product): string[] {
 
 export async function GET() {
   const products = await getProducts();
-  const items = products.flatMap(itemsForProduct);
+
+  // g:product_type carried the raw SLUG — Google was told these pieces belong
+  // to "lounge" and "pillowcases" rather than "Loungewear" and "Sleep
+  // Essential". product_type is our own taxonomy signal for Shopping, so
+  // sending an internal identifier weakens the categorisation for nothing.
+  // Same fix as the breadcrumb: ask for the label instead of guessing it.
+  const cats = await apiList<{ slug: string; label: string }>(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/categories`,
+    { next: { revalidate: 300 } },
+  );
+  const labelBySlug: Record<string, string> = Object.fromEntries(
+    cats.filter(c => c.slug && c.label).map(c => [c.slug, c.label]),
+  );
+
+  const items = products.flatMap(p => itemsForProduct(p, labelBySlug));
 
   // An empty result almost always means the backend was unreachable (the
   // store always has products). Return 503 rather than a valid-but-empty
