@@ -49,7 +49,12 @@ export default function JourneysPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${API}/api/admin/insights/journeys?days=${days}`, { credentials: 'include' })
+    // ?stage= arrives from the funnel panel's "Watch a session" link, so the
+    // page opens on the sessions that stopped at the step being described
+    // rather than a generic list. Read from location rather than
+    // useSearchParams, which would force this page into a Suspense boundary.
+    const stage = new URLSearchParams(window.location.search).get('stage') || '';
+    fetch(`${API}/api/admin/insights/journeys?days=${days}${stage ? `&stage=${encodeURIComponent(stage)}` : ''}`, { credentials: 'include' })
       .then(r => r.json())
       .then(d => { setData(d?.error ? null : d); setLoading(false); })
       .catch(() => setLoading(false));

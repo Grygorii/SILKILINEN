@@ -209,12 +209,50 @@ router.get('/journeys', requireAuth, async function(req, res) {
       ofPrev: i === 0 || !arr[i - 1].sessions ? 100 : Math.round((s.sessions / arr[i - 1].sessions) * 1000) / 10,
     }));
 
+    // Which sessions to reconstruct.
+    //
+    // This only ever sampled sessions that PURCHASED, which inverts the value:
+    // with no sales the page is empty, and the sessions worth watching are
+    // precisely the ones that left. ?outcome=abandoned (the default) samples
+    // sessions that reached a stage and never took the next step; ?stage=
+    // narrows to one step, so the funnel's "Watch a session" link can land on
+    // the exact leak it is describing.
+    const outcome = req.query.outcome === 'purchased' ? 'purchased' : 'abandoned';
+    const STEP_AFTER = {
+      view_item: 'add_to_cart',
+      add_to_cart: 'begin_checkout',
+      begin_checkout: 'reached_payment',
+      reached_payment: 'purchase',
+    };
+    const wantStage = STEP_AFTER[req.query.stage] ? req.query.stage : null;
+
+    let sampleSessions;
+    if (outcome === 'purchased') {
+      sampleSessions = recentPurchases.map(p => ({ sessionId: p.sessionId, at: p.createdAt }));
+    } else {
+      const reachedTypes = wantStage ? [wantStage] : Object.keys(STEP_AFTER);
+      const nextTypes = wantStage ? [STEP_AFTER[wantStage]] : ['purchase'];
+      const reached = await Event.aggregate([
+        { $match: { createdAt: { $gte: since }, type: { $in: reachedTypes } } },
+        { $group: { _id: '$sessionId', at: { $max: '$createdAt' } } },
+        { $sort: { at: -1 } },
+        { $limit: 200 },
+      ]).catch(() => []);
+      const converted = new Set(
+        await Event.distinct('sessionId', { createdAt: { $gte: since }, type: { $in: nextTypes } }).catch(() => []),
+      );
+      sampleSessions = reached
+        .filter(r => !converted.has(r._id))
+        .slice(0, 8)
+        .map(r => ({ sessionId: r._id, at: r.at }));
+    }
+
     // Reconstruct each sample session's ordered path (bounded).
     const journeys = [];
-    for (const p of recentPurchases) {
+    for (const p of sampleSessions) {
       const path = await Event.find({ sessionId: p.sessionId })
         .sort({ createdAt: 1 }).limit(40).select('type page props createdAt -_id').lean();
-      journeys.push({ sessionId: p.sessionId, at: p.createdAt, steps: path });
+      journeys.push({ sessionId: p.sessionId, at: p.at, steps: path, outcome });
     }
 
     res.json({

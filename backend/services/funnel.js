@@ -26,17 +26,19 @@ const STAGES = [
   {
     key: 'viewedProduct', label: 'Opened a product', event: 'view_item',
     why: 'They look but do not add — photography, price framing, or sizing confidence.',
-    fix: { label: 'Check product pages', href: '/admin/products' },
+    fix: { label: 'Watch a session', href: '/admin/journeys?stage=view_item' },
   },
   {
     key: 'addedToCart', label: 'Added to cart', event: 'add_to_cart',
     why: 'Carts are filled and abandoned before checkout — usually shipping cost or hesitation.',
-    fix: { label: 'Shipping & offers', href: '/admin/settings/business' },
+    fix: { label: 'Watch a session', href: '/admin/journeys?stage=add_to_cart' },
   },
   {
     key: 'reachedCheckout', label: 'Reached checkout', event: 'begin_checkout',
     why: 'They open checkout but never start paying — friction or trust at the final step.',
-    fix: { label: 'Watch a session', href: '/admin/journeys' },
+    // Carries the stage so Session Replay opens on the sessions that stopped
+    // at exactly this step, rather than a generic list.
+    fix: { label: 'Watch a session', href: '/admin/journeys?stage=begin_checkout' },
   },
   {
     key: 'startedPayment', label: 'Started payment', event: 'reached_payment',
