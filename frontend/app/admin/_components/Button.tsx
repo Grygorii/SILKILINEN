@@ -1,9 +1,9 @@
 type Variant = 'primary' | 'secondary' | 'ghost';
 
 const VARIANTS: Record<Variant, React.CSSProperties> = {
-  primary:   { background: 'var(--dark)', color: 'var(--warm-white)', border: 'none' },
-  secondary: { background: 'none', border: '1px solid var(--border)', color: 'var(--dark)' },
-  ghost:     { background: 'none', border: 'none', color: 'var(--muted)', padding: '6px 12px' },
+  primary:   { background: 'var(--admin-ink)', color: 'var(--admin-surface)', border: 'none' },
+  secondary: { background: 'none', border: '1px solid var(--admin-line)', color: 'var(--admin-ink)' },
+  ghost:     { background: 'none', border: 'none', color: 'var(--admin-ink-muted)', padding: '6px 12px' },
 };
 
 export default function Button({

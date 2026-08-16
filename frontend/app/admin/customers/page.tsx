@@ -131,12 +131,12 @@ export default function CustomersPage() {
 
   const thStyle: React.CSSProperties = {
     textAlign: 'left', padding: '8px 12px', fontSize: 10, letterSpacing: '1.2px',
-    textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 400,
-    borderBottom: '1px solid var(--border)',
+    textTransform: 'uppercase', color: 'var(--admin-ink-muted)', fontWeight: 400,
+    borderBottom: '1px solid var(--admin-line)',
   };
   const tdStyle: React.CSSProperties = {
-    padding: '10px 12px', borderBottom: '1px solid var(--border)',
-    fontSize: 13, color: 'var(--dark)', verticalAlign: 'middle',
+    padding: '10px 12px', borderBottom: '1px solid var(--admin-line)',
+    fontSize: 13, color: 'var(--admin-ink)', verticalAlign: 'middle',
   };
 
   return (
@@ -145,8 +145,8 @@ export default function CustomersPage() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--dark)', margin: 0 }}>Customers</h1>
-            <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>{total} total</p>
+            <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--admin-ink)', margin: 0 }}>Customers</h1>
+            <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', marginTop: 4 }}>{total} total</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             {segmentFilter === 'at-risk' && (
@@ -154,13 +154,13 @@ export default function CustomersPage() {
                 {winbackSending ? 'Sending…' : 'Send win-back reminder'}
               </button>
             )}
-            <Link href="/admin/customers/founder" style={{ padding: '8px 14px', fontSize: 12, border: '1px solid var(--border)', color: 'var(--dark)', textDecoration: 'none' }}>
+            <Link href="/admin/customers/founder" style={{ padding: '8px 14px', fontSize: 12, border: '1px solid var(--admin-line)', color: 'var(--admin-ink)', textDecoration: 'none' }}>
               Founder view
             </Link>
-            <button onClick={exportCsv} style={{ padding: '8px 14px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', color: 'var(--dark)', fontFamily: 'inherit' }}>
+            <button onClick={exportCsv} style={{ padding: '8px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', color: 'var(--admin-ink)', fontFamily: 'inherit' }}>
               Export CSV
             </button>
-            <Link href="/admin/customers/new" style={{ padding: '8px 16px', fontSize: 12, background: 'var(--dark)', color: 'white', textDecoration: 'none' }}>
+            <Link href="/admin/customers/new" style={{ padding: '8px 16px', fontSize: 12, background: 'var(--admin-ink)', color: 'white', textDecoration: 'none' }}>
               + New customer
             </Link>
           </div>
@@ -169,20 +169,20 @@ export default function CustomersPage() {
         <div style={{ display: 'flex', gap: 20 }}>
           {/* Segment sidebar */}
           <div style={{ width: 180, flexShrink: 0 }}>
-            <p style={{ fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>Segments</p>
+            <p style={{ fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 8 }}>Segments</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <button onClick={() => { setSegmentFilter(''); setPage(1); }} style={{
-                textAlign: 'left', padding: '6px 10px', fontSize: 12, border: '1px solid var(--border)',
-                background: !segmentFilter ? 'var(--dark)' : 'white', color: !segmentFilter ? 'white' : 'var(--dark)',
+                textAlign: 'left', padding: '6px 10px', fontSize: 12, border: '1px solid var(--admin-line)',
+                background: !segmentFilter ? 'var(--admin-ink)' : 'white', color: !segmentFilter ? 'white' : 'var(--admin-ink)',
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>
                 All customers
               </button>
               {segments.map(seg => (
                 <button key={seg.slug} onClick={() => { setSegmentFilter(seg.slug); setPage(1); }} style={{
-                  textAlign: 'left', padding: '6px 10px', fontSize: 12, border: '1px solid var(--border)',
+                  textAlign: 'left', padding: '6px 10px', fontSize: 12, border: '1px solid var(--admin-line)',
                   background: segmentFilter === seg.slug ? seg.color : 'white',
-                  color: segmentFilter === seg.slug ? 'white' : 'var(--dark)',
+                  color: segmentFilter === seg.slug ? 'white' : 'var(--admin-ink)',
                   cursor: 'pointer', fontFamily: 'inherit', display: 'flex', justifyContent: 'space-between',
                 }}>
                   <span>{seg.label}</span>
@@ -191,8 +191,8 @@ export default function CustomersPage() {
               ))}
             </div>
             <button onClick={recompute} disabled={recomputing} style={{
-              marginTop: 12, width: '100%', padding: '6px 10px', fontSize: 11, border: '1px solid var(--border)',
-              background: 'white', color: 'var(--muted)', cursor: 'pointer', fontFamily: 'inherit',
+              marginTop: 12, width: '100%', padding: '6px 10px', fontSize: 11, border: '1px solid var(--admin-line)',
+              background: 'white', color: 'var(--admin-ink-muted)', cursor: 'pointer', fontFamily: 'inherit',
             }}>
               {recomputing ? 'Recomputing…' : 'Recompute now'}
             </button>
@@ -206,9 +206,9 @@ export default function CustomersPage() {
                 value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1); }}
                 placeholder="Search name or email…"
-                style={{ padding: '6px 12px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, color: 'var(--dark)', background: 'white', outline: 'none', flex: 1, minWidth: 200 }}
+                style={{ padding: '6px 12px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, color: 'var(--admin-ink)', background: 'white', outline: 'none', flex: 1, minWidth: 200 }}
               />
-              <select value={consentFilter} onChange={e => { setConsentFilter(e.target.value); setPage(1); }} style={{ padding: '6px 10px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, color: 'var(--dark)', background: 'white' }}>
+              <select value={consentFilter} onChange={e => { setConsentFilter(e.target.value); setPage(1); }} style={{ padding: '6px 10px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, color: 'var(--admin-ink)', background: 'white' }}>
                 <option value="">All consent</option>
                 <option value="yes">Marketing opt-in</option>
               </select>
@@ -216,27 +216,27 @@ export default function CustomersPage() {
 
             {/* Table */}
             {loading ? (
-              <p style={{ fontSize: 13, color: 'var(--muted)' }}>Loading customers…</p>
+              <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>Loading customers…</p>
             ) : error ? (
-              <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', border: '1px solid var(--border)' }}>
-                <p style={{ fontSize: 14, color: 'var(--muted)' }}>Couldn&apos;t load customers.{' '}
+              <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', border: '1px solid var(--admin-line)' }}>
+                <p style={{ fontSize: 14, color: 'var(--admin-ink-muted)' }}>Couldn&apos;t load customers.{' '}
                   <button onClick={load} style={{ cursor: 'pointer', textDecoration: 'underline', background: 'none', border: 'none', font: 'inherit', color: 'inherit' }}>Retry</button>
                 </p>
               </div>
             ) : customers.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', border: '1px solid var(--border)' }}>
-                <p style={{ fontSize: 14, color: 'var(--muted)', margin: 0 }}>
+              <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', border: '1px solid var(--admin-line)' }}>
+                <p style={{ fontSize: 14, color: 'var(--admin-ink-muted)', margin: 0 }}>
                   {hasFilters ? 'No customers match' : 'No customers yet'}
                 </p>
                 {hasFilters && (
-                  <button onClick={clearFilters} style={{ marginTop: 12, padding: '7px 14px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', color: 'var(--dark)', fontFamily: 'inherit' }}>
+                  <button onClick={clearFilters} style={{ marginTop: 12, padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', color: 'var(--admin-ink)', fontFamily: 'inherit' }}>
                     Clear filters
                   </button>
                 )}
               </div>
             ) : (
               <>
-                <div style={{ overflowX: 'auto', background: 'white', border: '1px solid var(--border)' }}>
+                <div style={{ overflowX: 'auto', background: 'white', border: '1px solid var(--admin-line)' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead>
                       <tr>
@@ -250,15 +250,15 @@ export default function CustomersPage() {
                         <tr
                           key={c._id}
                           onClick={() => router.push(`/admin/customers/${c._id}`)}
-                          onMouseEnter={e => { e.currentTarget.style.background = 'var(--cream)'; }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'var(--admin-bg)'; }}
                           onMouseLeave={e => { e.currentTarget.style.background = ''; }}
                           style={{ cursor: 'pointer' }}
                         >
                           <td style={tdStyle}>
-                            <Link href={`/admin/customers/${c._id}`} onClick={e => e.stopPropagation()} style={{ color: 'var(--dark)', textDecoration: 'none', fontWeight: 500 }}>
+                            <Link href={`/admin/customers/${c._id}`} onClick={e => e.stopPropagation()} style={{ color: 'var(--admin-ink)', textDecoration: 'none', fontWeight: 500 }}>
                               {c.firstName || c.lastName ? `${c.firstName} ${c.lastName}`.trim() : c.email}
                             </Link>
-                            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>{c.email}</div>
+                            <div style={{ fontSize: 11, color: 'var(--admin-ink-muted)', marginTop: 1 }}>{c.email}</div>
                           </td>
                           <td style={tdStyle}>
                             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
@@ -276,12 +276,12 @@ export default function CustomersPage() {
                           <td style={tdStyle}>{fmtMoney(c.totalSpend)}</td>
                           <td style={tdStyle}>{fmtDate(c.lastOrderAt)}</td>
                           <td style={tdStyle}>
-                            <span style={{ fontSize: 11, color: c.marketingConsent ? 'var(--color-success)' : 'var(--muted)' }}>
+                            <span style={{ fontSize: 11, color: c.marketingConsent ? 'var(--color-success)' : 'var(--admin-ink-muted)' }}>
                               {c.marketingConsent ? '✓ yes' : '—'}
                             </span>
                           </td>
                           <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
-                            <Link href={`/admin/customers/${c._id}`} onClick={e => e.stopPropagation()} style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'none' }}>
+                            <Link href={`/admin/customers/${c._id}`} onClick={e => e.stopPropagation()} style={{ fontSize: 12, color: 'var(--admin-ink-muted)', textDecoration: 'none' }}>
                               View
                             </Link>
                           </td>
@@ -294,9 +294,9 @@ export default function CustomersPage() {
                 {/* Pagination */}
                 {total > 50 && (
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 16 }}>
-                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '6px 12px', border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12 }}>← Prev</button>
-                    <span style={{ padding: '6px 12px', fontSize: 12, color: 'var(--muted)' }}>Page {page}</span>
-                    <button onClick={() => setPage(p => p + 1)} disabled={customers.length < 50} style={{ padding: '6px 12px', border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12 }}>Next →</button>
+                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '6px 12px', border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12 }}>← Prev</button>
+                    <span style={{ padding: '6px 12px', fontSize: 12, color: 'var(--admin-ink-muted)' }}>Page {page}</span>
+                    <button onClick={() => setPage(p => p + 1)} disabled={customers.length < 50} style={{ padding: '6px 12px', border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12 }}>Next →</button>
                   </div>
                 )}
               </>

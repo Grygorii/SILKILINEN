@@ -15,19 +15,19 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 28px;
   font-weight: 400;
-  color: var(--dark);
+  color: var(--admin-ink);
   margin-bottom: 4px;
 }
 
 .sub {
   font-size: 13px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 .newBtn {
   padding: 10px 22px;
-  background: var(--dark);
-  color: var(--warm-white);
+  background: var(--admin-ink);
+  color: var(--admin-surface);
   border: none;
   font-family: 'Jost', sans-serif;
   font-size: 12px;
@@ -42,7 +42,7 @@
 .newBtn:hover { opacity: 0.8; }
 
 .loading {
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   font-size: 14px;
 }
 
@@ -65,15 +65,15 @@
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--muted);
-  border-bottom: 1px solid var(--border);
+  color: var(--admin-ink-muted);
+  border-bottom: 1px solid var(--admin-line);
   white-space: nowrap;
 }
 
 .table td {
   padding: 14px;
-  border-bottom: 1px solid var(--border);
-  color: var(--dark);
+  border-bottom: 1px solid var(--admin-line);
+  color: var(--admin-ink);
   vertical-align: middle;
 }
 
@@ -83,7 +83,7 @@
 
 .empty {
   text-align: center;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   padding: 40px 14px;
 }
 
@@ -110,21 +110,21 @@
 
 .badgeOff {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 .syncBtn {
   background: none;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   padding: 4px 10px;
   cursor: pointer;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   transition: border-color 0.2s ease, color 0.2s ease;
 }
 
-.syncBtn:hover { border-color: var(--dark); color: var(--dark); }
+.syncBtn:hover { border-color: var(--admin-ink); color: var(--admin-ink); }
 
 .deactivateBtn {
   background: none;
@@ -153,7 +153,7 @@
 }
 
 .modal {
-  background: var(--warm-white);
+  background: var(--admin-surface);
   width: 100%;
   max-width: 560px;
   max-height: 90vh;
@@ -172,14 +172,14 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 22px;
   font-weight: 400;
-  color: var(--dark);
+  color: var(--admin-ink);
 }
 
 .modalClose {
   background: none;
   border: none;
   font-size: 16px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   cursor: pointer;
   padding: 4px;
   line-height: 1;
@@ -209,23 +209,23 @@
   font-weight: 600;
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  color: var(--dark);
+  color: var(--admin-ink);
 }
 
 .hint {
   font-weight: 400;
   text-transform: none;
   letter-spacing: 0;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 .field input,
 .field select {
   padding: 10px 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   font-family: 'Jost', sans-serif;
   font-size: 14px;
-  color: var(--dark);
+  color: var(--admin-ink);
   background: white;
   outline: none;
   width: 100%;
@@ -233,7 +233,7 @@
 
 .field input:focus,
 .field select:focus {
-  border-color: var(--dark);
+  border-color: var(--admin-ink);
 }
 
 .errorMsg {
@@ -246,8 +246,8 @@
 
 .submitBtn {
   padding: 13px 24px;
-  background: var(--dark);
-  color: var(--warm-white);
+  background: var(--admin-ink);
+  color: var(--admin-surface);
   border: none;
   font-family: 'Jost', sans-serif;
   font-size: 12px;
@@ -267,7 +267,7 @@
   display: flex;
   gap: 0;
   margin-bottom: 16px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--admin-line);
 }
 
 .tab {
@@ -279,17 +279,17 @@
   font-size: 12px;
   letter-spacing: 1.2px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease;
   margin-bottom: -1px;
 }
 
-.tab:hover { color: var(--dark); }
+.tab:hover { color: var(--admin-ink); }
 
 .tabActive {
-  color: var(--dark);
-  border-bottom-color: var(--dark);
+  color: var(--admin-ink);
+  border-bottom-color: var(--admin-ink);
 }
 
 /* ── Checkbox column ──────────────────────────────── */
@@ -304,7 +304,7 @@
   width: 15px;
   height: 15px;
   cursor: pointer;
-  accent-color: var(--dark);
+  accent-color: var(--admin-ink);
   margin: 0;
   vertical-align: middle;
 }
@@ -321,8 +321,8 @@
   right: 0;
   bottom: 0;
   z-index: 50;
-  background: var(--dark);
-  color: var(--warm-white);
+  background: var(--admin-ink);
+  color: var(--admin-surface);
   display: flex;
   align-items: center;
   gap: 16px;
@@ -340,7 +340,7 @@
 .bulkBtn {
   background: none;
   border: 1px solid rgba(255, 255, 255, 0.4);
-  color: var(--warm-white);
+  color: var(--admin-surface);
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   letter-spacing: 1.5px;
@@ -352,7 +352,7 @@
 
 .bulkBtn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.1);
-  border-color: var(--warm-white);
+  border-color: var(--admin-surface);
 }
 
 .bulkBtn:disabled {
@@ -373,7 +373,7 @@
 .bulkClear {
   background: none;
   border: none;
-  color: var(--warm-white);
+  color: var(--admin-surface);
   font-size: 18px;
   line-height: 1;
   padding: 4px 8px;
@@ -399,7 +399,7 @@
 .confirmBody {
   padding: 24px 28px 8px;
   font-size: 14px;
-  color: var(--dark);
+  color: var(--admin-ink);
   line-height: 1.5;
 }
 
@@ -412,8 +412,8 @@
 
 .confirmCancel {
   background: none;
-  border: 1px solid var(--border);
-  color: var(--dark);
+  border: 1px solid var(--admin-line);
+  color: var(--admin-ink);
   padding: 10px 18px;
   font-family: 'Jost', sans-serif;
   font-size: 12px;
@@ -422,11 +422,11 @@
   cursor: pointer;
 }
 
-.confirmCancel:hover { border-color: var(--dark); }
+.confirmCancel:hover { border-color: var(--admin-ink); }
 
 .confirmConfirm {
-  background: var(--dark);
-  color: var(--warm-white);
+  background: var(--admin-ink);
+  color: var(--admin-surface);
   border: none;
   padding: 10px 20px;
   font-family: 'Jost', sans-serif;

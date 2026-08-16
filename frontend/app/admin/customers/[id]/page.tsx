@@ -172,21 +172,21 @@ export default function CustomerDetailPage() {
     } catch { toast('Network error', 'error'); }
   }
 
-  const card: React.CSSProperties = { background: 'white', border: '1px solid var(--border)', padding: '20px 24px', marginBottom: 16 };
-  const label: React.CSSProperties = { fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 };
-  const val: React.CSSProperties = { fontSize: 14, color: 'var(--dark)' };
-  const thStyle: React.CSSProperties = { textAlign: 'left', padding: '8px 12px', fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 400, borderBottom: '1px solid var(--border)' };
-  const tdStyle: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--border)', fontSize: 13, color: 'var(--dark)', verticalAlign: 'middle' };
+  const card: React.CSSProperties = { background: 'white', border: '1px solid var(--admin-line)', padding: '20px 24px', marginBottom: 16 };
+  const label: React.CSSProperties = { fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 4 };
+  const val: React.CSSProperties = { fontSize: 14, color: 'var(--admin-ink)' };
+  const thStyle: React.CSSProperties = { textAlign: 'left', padding: '8px 12px', fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', fontWeight: 400, borderBottom: '1px solid var(--admin-line)' };
+  const tdStyle: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--admin-line)', fontSize: 13, color: 'var(--admin-ink)', verticalAlign: 'middle' };
 
   if (loading) {
-    return <AdminLayout><div style={{ padding: 28, color: 'var(--muted)', fontSize: 13 }}>Loading customer…</div></AdminLayout>;
+    return <AdminLayout><div style={{ padding: 28, color: 'var(--admin-ink-muted)', fontSize: 13 }}>Loading customer…</div></AdminLayout>;
   }
   if (!customer) {
     return (
       <AdminLayout>
         <div style={{ padding: 28 }}>
           <AdminErrorBanner error={loadError} onRetry={load} />
-          {!loadError && <div style={{ color: 'var(--muted)', fontSize: 13 }}>Customer not found.</div>}
+          {!loadError && <div style={{ color: 'var(--admin-ink-muted)', fontSize: 13 }}>Customer not found.</div>}
         </div>
       </AdminLayout>
     );
@@ -199,16 +199,16 @@ export default function CustomerDetailPage() {
       <div style={{ padding: '24px 28px', maxWidth: 1000 }}>
 
         {/* Back + header */}
-        <Link href="/admin/customers" style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'none' }}>← Customers</Link>
+        <Link href="/admin/customers" style={{ fontSize: 12, color: 'var(--admin-ink-muted)', textDecoration: 'none' }}>← Customers</Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', margin: '12px 0 20px' }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 600, margin: 0, color: 'var(--dark)' }}>{name}</h1>
-            <p style={{ fontSize: 13, color: 'var(--muted)', margin: '4px 0 0' }}>{customer.email}</p>
+            <h1 style={{ fontSize: 22, fontWeight: 600, margin: 0, color: 'var(--admin-ink)' }}>{name}</h1>
+            <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', margin: '4px 0 0' }}>{customer.email}</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <a href={`mailto:${customer.email}`} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--border)', background: 'white', color: 'var(--dark)', textDecoration: 'none' }}>Email customer</a>
-            <button onClick={() => { navigator.clipboard.writeText(customer.email); toast('Email copied.'); }} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>Copy email</button>
-            <button onClick={gdprExport} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>Export data</button>
+            <a href={`mailto:${customer.email}`} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', color: 'var(--admin-ink)', textDecoration: 'none' }}>Email customer</a>
+            <button onClick={() => { navigator.clipboard.writeText(customer.email); toast('Email copied.'); }} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>Copy email</button>
+            <button onClick={gdprExport} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>Export data</button>
             <button onClick={gdprDelete} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--color-danger)', color: 'var(--color-danger)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>GDPR delete</button>
           </div>
         </div>
@@ -232,7 +232,7 @@ export default function CustomerDetailPage() {
             { label: 'Avg order value', value: orders.length > 0 ? fmtMoney(totalSpend / orders.length) : '—' },
             { label: 'Customer since', value: fmtDate(customer.createdAt) },
           ].map(({ label: l, value }) => (
-            <div key={l} style={{ background: 'white', border: '1px solid var(--border)', padding: '14px 18px' }}>
+            <div key={l} style={{ background: 'white', border: '1px solid var(--admin-line)', padding: '14px 18px' }}>
               <p style={label}>{l}</p>
               <p style={{ ...val, fontWeight: 600 }}>{value}</p>
             </div>
@@ -244,7 +244,7 @@ export default function CustomerDetailPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <p style={{ fontWeight: 600, fontSize: 14, margin: 0 }}>Profile</p>
             {!editing && (
-              <button onClick={() => setEditing(true)} style={{ fontSize: 12, border: '1px solid var(--border)', background: 'white', padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Edit</button>
+              <button onClick={() => setEditing(true)} style={{ fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Edit</button>
             )}
           </div>
           {editing ? (
@@ -257,19 +257,19 @@ export default function CustomerDetailPage() {
                 <div key={key}>
                   <p style={label}>{l}</p>
                   <input value={(editForm as Record<string, string>)[key]} onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))}
-                    style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
                 </div>
               ))}
               <div>
                 <p style={label}>Customer type</p>
                 <select value={editForm.customerType} onChange={e => setEditForm(f => ({ ...f, customerType: e.target.value }))}
-                  style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13 }}>
+                  style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13 }}>
                   {['retail', 'wholesale', 'vip', 'internal'].map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div style={{ gridColumn: '1/-1', display: 'flex', gap: 8, marginTop: 4 }}>
-                <button onClick={saveEdit} style={{ padding: '8px 18px', background: 'var(--dark)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Save</button>
-                <button onClick={() => setEditing(false)} style={{ padding: '8px 18px', border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Cancel</button>
+                <button onClick={saveEdit} style={{ padding: '8px 18px', background: 'var(--admin-ink)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Save</button>
+                <button onClick={() => setEditing(false)} style={{ padding: '8px 18px', border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Cancel</button>
               </div>
             </div>
           ) : (
@@ -291,7 +291,7 @@ export default function CustomerDetailPage() {
                 <div style={{ gridColumn: '1/-1' }}>
                   <p style={label}>Tags</p>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
-                    {customer.tags.map(t => <span key={t} style={{ padding: '2px 8px', background: 'var(--admin-bg)', fontSize: 12, color: 'var(--dark)' }}>{t}</span>)}
+                    {customer.tags.map(t => <span key={t} style={{ padding: '2px 8px', background: 'var(--admin-bg)', fontSize: 12, color: 'var(--admin-ink)' }}>{t}</span>)}
                   </div>
                 </div>
               )}
@@ -318,13 +318,13 @@ export default function CustomerDetailPage() {
         {abandonedCart && (
           <div style={{ ...card, background: 'var(--admin-warning-soft)', borderColor: 'var(--admin-warning-soft)', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 11, background: 'var(--admin-warning)', color: 'white', padding: '3px 8px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Abandoned cart</span>
-            <span style={{ fontSize: 13, color: 'var(--dark)' }}>
+            <span style={{ fontSize: 13, color: 'var(--admin-ink)' }}>
               €{abandonedCart.total.toFixed(2)} pending since {new Date(abandonedCart.createdAt).toLocaleDateString('en-IE', { day: 'numeric', month: 'short' })}
             </span>
             {recoverySent ? (
               <span style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--color-success)' }}>✓ Recovery email sent</span>
             ) : (
-              <button onClick={sendCartRecovery} style={{ marginLeft: 'auto', padding: '7px 16px', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer', border: 'none', background: 'var(--dark)', color: 'white' }}>
+              <button onClick={sendCartRecovery} style={{ marginLeft: 'auto', padding: '7px 16px', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer', border: 'none', background: 'var(--admin-ink)', color: 'white' }}>
                 Send recovery email
               </button>
             )}
@@ -335,7 +335,7 @@ export default function CustomerDetailPage() {
         <div style={card}>
           <p style={{ fontWeight: 600, fontSize: 14, margin: '0 0 16px' }}>Orders ({orders.length})</p>
           {orders.length === 0 ? (
-            <p style={{ fontSize: 13, color: 'var(--muted)' }}>No orders yet.</p>
+            <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>No orders yet.</p>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
@@ -347,7 +347,7 @@ export default function CustomerDetailPage() {
                 {orders.map(o => (
                   <tr key={o._id}>
                     <td style={tdStyle}>
-                      <Link href={`/admin/orders/${o._id}`} style={{ color: 'var(--dark)', textDecoration: 'none', fontWeight: 500 }}>
+                      <Link href={`/admin/orders/${o._id}`} style={{ color: 'var(--admin-ink)', textDecoration: 'none', fontWeight: 500 }}>
                         #{o.orderNumber}
                       </Link>
                     </td>
@@ -372,20 +372,20 @@ export default function CustomerDetailPage() {
           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
             <input value={noteInput} onChange={e => setNoteInput(e.target.value)} placeholder="Add a note…"
               onKeyDown={e => e.key === 'Enter' && addNote()}
-              style={{ flex: 1, padding: '7px 10px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13 }} />
-            <button onClick={addNote} disabled={savingNote} style={{ padding: '7px 14px', background: 'var(--dark)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
+              style={{ flex: 1, padding: '7px 10px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13 }} />
+            <button onClick={addNote} disabled={savingNote} style={{ padding: '7px 14px', background: 'var(--admin-ink)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
               Add
             </button>
           </div>
           {(customer.notes || []).length === 0 ? (
-            <p style={{ fontSize: 13, color: 'var(--muted)' }}>No notes yet.</p>
+            <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>No notes yet.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {customer.notes.map(n => (
-                <div key={n._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: 'var(--admin-surface)', border: '1px solid var(--border)' }}>
+                <div key={n._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: 'var(--admin-surface)', border: '1px solid var(--admin-line)' }}>
                   <div>
-                    <p style={{ fontSize: 13, color: 'var(--dark)', margin: 0 }}>{n.body}</p>
-                    <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>{fmtDate(n.createdAt)}</p>
+                    <p style={{ fontSize: 13, color: 'var(--admin-ink)', margin: 0 }}>{n.body}</p>
+                    <p style={{ fontSize: 11, color: 'var(--admin-ink-muted)', marginTop: 4 }}>{fmtDate(n.createdAt)}</p>
                   </div>
                   <button onClick={() => deleteNote(n._id)} style={{ fontSize: 11, background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer' }}>Remove</button>
                 </div>
@@ -398,7 +398,7 @@ export default function CustomerDetailPage() {
         <div style={card}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <p style={{ fontWeight: 600, fontSize: 14, margin: 0 }}>Personal promo code</p>
-            <button onClick={() => { setGenPromo(g => !g); setGeneratedPromo(null); }} style={{ fontSize: 12, border: '1px solid var(--border)', background: 'white', padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={() => { setGenPromo(g => !g); setGeneratedPromo(null); }} style={{ fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
               {genPromo ? 'Cancel' : '+ Generate code'}
             </button>
           </div>
@@ -417,7 +417,7 @@ export default function CustomerDetailPage() {
               <div>
                 <p style={label}>Discount type</p>
                 <select value={promoForm.type} onChange={e => setPromoForm(f => ({ ...f, type: e.target.value }))}
-                  style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13 }}>
+                  style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13 }}>
                   <option value="percentage">Percentage</option>
                   <option value="fixed">Fixed €</option>
                 </select>
@@ -426,19 +426,19 @@ export default function CustomerDetailPage() {
                 <p style={label}>Value</p>
                 <input value={promoForm.value} onChange={e => setPromoForm(f => ({ ...f, value: e.target.value }))}
                   type="number" min="1"
-                  style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
+                  style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
               </div>
               <div>
                 <p style={label}>Min order (€)</p>
                 <input value={promoForm.minOrderValue} onChange={e => setPromoForm(f => ({ ...f, minOrderValue: e.target.value }))}
                   type="number" min="0"
-                  style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
+                  style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
               </div>
               <div>
                 <p style={label}>Valid for (days, blank = forever)</p>
                 <input value={promoForm.validDays} onChange={e => setPromoForm(f => ({ ...f, validDays: e.target.value }))}
                   type="number" min="1" placeholder="e.g. 30"
-                  style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
+                  style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
               </div>
               <div style={{ gridColumn: '1/-1' }}>
                 <button onClick={generatePromo} style={{ padding: '8px 18px', background: 'var(--admin-info)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>

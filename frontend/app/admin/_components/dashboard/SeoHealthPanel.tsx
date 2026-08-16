@@ -61,7 +61,7 @@ export default function SeoHealthPanel() {
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, marginTop: 12 }}>
             <StatusPill status={data.overall} />
-            <span style={{ fontSize: 13, color: 'var(--muted)' }}>
+            <span style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>
               {data.overall === 'healthy'
                 ? 'Search & feed signals look good'
                 : data.overall === 'warning'

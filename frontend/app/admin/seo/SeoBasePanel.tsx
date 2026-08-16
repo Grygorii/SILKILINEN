@@ -12,7 +12,7 @@ import { toast } from '@/lib/adminToast';
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 const dark = 'var(--color-ink)';
-const muted = 'var(--muted, var(--admin-ink-muted))';
+const muted = 'var(--admin-ink-muted)';
 const border = '1px solid var(--color-line)';
 const serif = "'Cormorant Garamond', Georgia, serif";
 // 'muted' = a page using its built-in default (neutral, not a red gap).

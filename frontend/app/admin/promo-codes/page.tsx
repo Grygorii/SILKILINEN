@@ -229,12 +229,12 @@ export default function PromoCodesPage() {
 
   const thStyle: React.CSSProperties = {
     textAlign: 'left', padding: '8px 12px', fontSize: 10, letterSpacing: '1.2px',
-    textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 400,
-    borderBottom: '1px solid var(--border)',
+    textTransform: 'uppercase', color: 'var(--admin-ink-muted)', fontWeight: 400,
+    borderBottom: '1px solid var(--admin-line)',
   };
   const tdStyle: React.CSSProperties = {
-    padding: '12px 12px', borderBottom: '1px solid var(--border)',
-    fontSize: 13, color: 'var(--dark)', verticalAlign: 'middle',
+    padding: '12px 12px', borderBottom: '1px solid var(--admin-line)',
+    fontSize: 13, color: 'var(--admin-ink)', verticalAlign: 'middle',
   };
 
   return (
@@ -249,7 +249,7 @@ export default function PromoCodesPage() {
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button
               onClick={() => setShowUsage(s => !s)}
-              style={{ padding: '9px 18px', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer', border: '1px solid var(--border)', background: showUsage ? 'var(--dark)' : 'white', color: showUsage ? 'white' : 'var(--dark)' }}
+              style={{ padding: '9px 18px', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer', border: '1px solid var(--admin-line)', background: showUsage ? 'var(--admin-ink)' : 'white', color: showUsage ? 'white' : 'var(--admin-ink)' }}
             >
               {showUsage ? 'Hide usage' : '📊 Usage report'}
             </button>
@@ -259,27 +259,27 @@ export default function PromoCodesPage() {
 
         {/* Usage report panel (#2) */}
         {showUsage && (
-          <div style={{ border: '1px solid var(--border)', padding: 18, marginBottom: 24, background: 'white' }}>
+          <div style={{ border: '1px solid var(--admin-line)', padding: 18, marginBottom: 24, background: 'white' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--dark)', margin: 0 }}>Code usage — last {usageDays} days</h2>
+              <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--admin-ink)', margin: 0 }}>Code usage — last {usageDays} days</h2>
               <div style={{ display: 'flex', gap: 2 }}>
                 {[30, 90, 365].map(d => (
                   <button key={d} onClick={() => setUsageDays(d)} style={{
                     padding: '5px 12px', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer',
-                    border: '1px solid var(--border)',
-                    background: usageDays === d ? 'var(--admin-info)' : 'white', color: usageDays === d ? 'white' : 'var(--dark)',
+                    border: '1px solid var(--admin-line)',
+                    background: usageDays === d ? 'var(--admin-info)' : 'white', color: usageDays === d ? 'white' : 'var(--admin-ink)',
                   }}>{d === 365 ? '1y' : `${d}d`}</button>
                 ))}
               </div>
             </div>
             {usageLoading ? (
-              <p style={{ fontSize: 13, color: 'var(--muted)' }}>Loading…</p>
+              <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>Loading…</p>
             ) : usageRows.length === 0 ? (
-              <p style={{ fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' }}>No code redemptions in this window.</p>
+              <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', fontStyle: 'italic' }}>No code redemptions in this window.</p>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
-                  <tr style={{ textAlign: 'left', color: 'var(--muted)', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  <tr style={{ textAlign: 'left', color: 'var(--admin-ink-muted)', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase' }}>
                     <th style={{ padding: '6px 8px' }}>Code</th>
                     <th style={{ padding: '6px 8px', textAlign: 'right' }}>Orders</th>
                     <th style={{ padding: '6px 8px', textAlign: 'right' }}>Revenue</th>
@@ -289,7 +289,7 @@ export default function PromoCodesPage() {
                 </thead>
                 <tbody>
                   {usageRows.map(r => (
-                    <tr key={r.code} style={{ borderTop: '1px solid var(--border)' }}>
+                    <tr key={r.code} style={{ borderTop: '1px solid var(--admin-line)' }}>
                       <td style={{ padding: '8px', fontFamily: 'monospace', fontWeight: 600 }}>{r.code}</td>
                       <td style={{ padding: '8px', textAlign: 'right' }}>{r.orders}</td>
                       <td style={{ padding: '8px', textAlign: 'right' }}>€{r.revenue.toFixed(2)}</td>
@@ -322,9 +322,9 @@ export default function PromoCodesPage() {
             {CODE_TYPES.map(t => (
               <button key={t} onClick={() => setCodeTypeFilter(t)} style={{
                 padding: '6px 14px', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer',
-                border: '1px solid var(--border)', letterSpacing: '0.04em',
+                border: '1px solid var(--admin-line)', letterSpacing: '0.04em',
                 background: codeTypeFilter === t ? 'var(--admin-info)' : 'white',
-                color: codeTypeFilter === t ? 'white' : 'var(--muted)',
+                color: codeTypeFilter === t ? 'white' : 'var(--admin-ink-muted)',
                 textTransform: 'capitalize',
               }}>
                 {t === 'all' ? 'All codes' : t === 'personal' ? 'Personal only' : 'Broad only'}
@@ -336,18 +336,18 @@ export default function PromoCodesPage() {
             onChange={e => setSearch(e.target.value.toUpperCase())}
             placeholder="Search code…"
             style={{
-              padding: '6px 12px', border: '1px solid var(--border)', fontFamily: 'inherit',
-              fontSize: 13, color: 'var(--dark)', background: 'white', outline: 'none',
+              padding: '6px 12px', border: '1px solid var(--admin-line)', fontFamily: 'inherit',
+              fontSize: 13, color: 'var(--admin-ink)', background: 'white', outline: 'none',
             }}
           />
         </div>
 
         {/* Table */}
         {loading ? (
-          <p style={{ fontSize: 13, color: 'var(--muted)' }}>Loading…</p>
+          <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>Loading…</p>
         ) : codes.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', border: '1px solid var(--border)' }}>
-            <p style={{ fontSize: 16, color: 'var(--muted)', marginBottom: 20, fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+          <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', border: '1px solid var(--admin-line)' }}>
+            <p style={{ fontSize: 16, color: 'var(--admin-ink-muted)', marginBottom: 20, fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
               {tab === 'archive' ? 'No archived codes yet' : 'No promo codes yet'}
             </p>
             {tab !== 'archive' && (
@@ -376,7 +376,7 @@ export default function PromoCodesPage() {
               </thead>
               <tbody>
                 {visibleCodes.length === 0 && (
-                  <tr><td colSpan={9} style={{ ...tdStyle, textAlign: 'center', color: 'var(--muted)', padding: '32px' }}>
+                  <tr><td colSpan={9} style={{ ...tdStyle, textAlign: 'center', color: 'var(--admin-ink-muted)', padding: '32px' }}>
                     No codes match these filters.
                   </td></tr>
                 )}
@@ -400,7 +400,7 @@ export default function PromoCodesPage() {
                         />
                       </td>
                       <td style={tdStyle}>
-                        <Link href={`/admin/promo-codes/${c._id}`} style={{ color: 'var(--dark)', textDecoration: 'none', fontWeight: 500 }}>
+                        <Link href={`/admin/promo-codes/${c._id}`} style={{ color: 'var(--admin-ink)', textDecoration: 'none', fontWeight: 500 }}>
                           {c.code}
                         </Link>
                         {personal && (
@@ -408,7 +408,7 @@ export default function PromoCodesPage() {
                             Personal
                           </span>
                         )}
-                        {c.description && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{c.description}</div>}
+                        {c.description && <div style={{ fontSize: 11, color: 'var(--admin-ink-muted)', marginTop: 2 }}>{c.description}</div>}
                       </td>
                       <td style={tdStyle}>{fmtDiscount(c)}</td>
                       <td style={tdStyle}>{c.minOrderValue > 0 ? `€${c.minOrderValue}` : '—'}</td>
@@ -426,19 +426,19 @@ export default function PromoCodesPage() {
                       <td style={tdStyle}>
                         {c.stripeCouponId
                           ? <span style={{ fontSize: 11, color: 'var(--color-success)' }}>✓ synced</span>
-                          : <span style={{ fontSize: 11, color: 'var(--muted)' }}>not synced</span>
+                          : <span style={{ fontSize: 11, color: 'var(--admin-ink-muted)' }}>not synced</span>
                         }
                       </td>
                       <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
-                        <Link href={`/admin/promo-codes/${c._id}`} style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'none', marginRight: 10 }}>
+                        <Link href={`/admin/promo-codes/${c._id}`} style={{ fontSize: 12, color: 'var(--admin-ink-muted)', textDecoration: 'none', marginRight: 10 }}>
                           View
                         </Link>
                         {st !== 'expired' && st !== 'archived' && (
-                          <button onClick={() => toggleStatus(c)} style={{ fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: 0, marginRight: 10 }}>
+                          <button onClick={() => toggleStatus(c)} style={{ fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--admin-ink-muted)', padding: 0, marginRight: 10 }}>
                             {st === 'active' ? 'Pause' : 'Resume'}
                           </button>
                         )}
-                        <button onClick={() => duplicate(c)} style={{ fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: 0, marginRight: 10 }}>
+                        <button onClick={() => duplicate(c)} style={{ fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--admin-ink-muted)', padding: 0, marginRight: 10 }}>
                           Duplicate
                         </button>
                         {st !== 'archived' && (

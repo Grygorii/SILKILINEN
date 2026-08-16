@@ -21,7 +21,7 @@ type Data = {
   journeys: Journey[];
 };
 
-const muted = 'var(--muted, var(--admin-ink-muted))';
+const muted = 'var(--admin-ink-muted)';
 const dark = 'var(--color-ink)';
 const border = '1px solid var(--color-line)';
 const serif = "'Cormorant Garamond', Georgia, serif";

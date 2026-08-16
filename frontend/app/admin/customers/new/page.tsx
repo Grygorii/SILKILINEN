@@ -51,16 +51,16 @@ export default function NewCustomerPage() {
     router.push(`/admin/customers/${data._id}`);
   }
 
-  const label: React.CSSProperties = { fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4, display: 'block' };
-  const input: React.CSSProperties = { width: '100%', padding: '8px 10px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' };
+  const label: React.CSSProperties = { fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 4, display: 'block' };
+  const input: React.CSSProperties = { width: '100%', padding: '8px 10px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' };
 
   return (
     <AdminLayout>
       <div style={{ padding: '24px 28px', maxWidth: 600 }}>
-        <Link href="/admin/customers" style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'none' }}>← Customers</Link>
-        <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--dark)', margin: '12px 0 24px' }}>New customer</h1>
+        <Link href="/admin/customers" style={{ fontSize: 12, color: 'var(--admin-ink-muted)', textDecoration: 'none' }}>← Customers</Link>
+        <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--admin-ink)', margin: '12px 0 24px' }}>New customer</h1>
 
-        <form onSubmit={submit} style={{ background: 'white', border: '1px solid var(--border)', padding: '24px 28px' }}>
+        <form onSubmit={submit} style={{ background: 'white', border: '1px solid var(--admin-line)', padding: '24px 28px' }}>
           {error && <p style={{ color: 'var(--color-danger)', fontSize: 13, marginBottom: 16 }}>{error}</p>}
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
@@ -92,16 +92,16 @@ export default function NewCustomerPage() {
             </div>
           </div>
 
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--dark)', cursor: 'pointer', marginBottom: 24 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--admin-ink)', cursor: 'pointer', marginBottom: 24 }}>
             <input type="checkbox" checked={form.marketingConsent} onChange={e => set('marketingConsent', e.target.checked)} />
             Marketing consent (email opt-in)
           </label>
 
           <div style={{ display: 'flex', gap: 10 }}>
-            <button type="submit" disabled={saving} style={{ padding: '10px 22px', background: 'var(--dark)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
+            <button type="submit" disabled={saving} style={{ padding: '10px 22px', background: 'var(--admin-ink)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
               {saving ? 'Saving…' : 'Create customer'}
             </button>
-            <Link href="/admin/customers" style={{ padding: '10px 18px', border: '1px solid var(--border)', color: 'var(--dark)', textDecoration: 'none', fontSize: 13 }}>
+            <Link href="/admin/customers" style={{ padding: '10px 18px', border: '1px solid var(--admin-line)', color: 'var(--admin-ink)', textDecoration: 'none', fontSize: 13 }}>
               Cancel
             </Link>
           </div>

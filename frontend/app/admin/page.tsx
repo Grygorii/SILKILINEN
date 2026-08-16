@@ -39,7 +39,7 @@ function timeAgo(iso: string) {
 
 function Skeleton() {
   const box = (h: number) => (
-    <div style={{ background: 'var(--cream, var(--admin-bg))', height: h, border: '1px solid var(--border)', marginBottom: 12 }} />
+    <div style={{ background: 'var(--admin-bg)', height: h, border: '1px solid var(--admin-line)', marginBottom: 12 }} />
   );
   return (
     <div>
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
         <h2>Dashboard</h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {dashData?.generatedAt && (
-            <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+            <span style={{ fontSize: 11, color: 'var(--admin-ink-muted)' }}>
               Updated {timeAgo(dashData.generatedAt)}{dashData.cached ? ' · cached' : ''}
             </span>
           )}
@@ -202,7 +202,7 @@ export default function AdminDashboard() {
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, marginTop: 12 }}>
               <StatusPill status={health.overall} />
-              <span style={{ fontSize: 13, color: 'var(--muted)' }}>
+              <span style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>
                 {health.overall === 'healthy'
                   ? 'All systems operational'
                   : health.overall === 'warning'

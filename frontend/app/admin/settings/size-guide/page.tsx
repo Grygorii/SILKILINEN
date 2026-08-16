@@ -17,8 +17,8 @@ const COLS: { key: keyof Row; label: string }[] = [
 ];
 const BLANK: Row = { size: '', eu: '', uk: '', bustCm: '', bustIn: '', waistCm: '', waistIn: '', hipCm: '', hipIn: '' };
 
-const cell: React.CSSProperties = { width: '100%', padding: '6px 7px', border: '1px solid var(--border, var(--admin-line))', fontSize: 12, background: 'var(--admin-surface)' };
-const btn: React.CSSProperties = { border: '1px solid var(--border, var(--admin-line))', background: 'var(--admin-surface)', padding: '6px 10px', fontSize: 12, cursor: 'pointer' };
+const cell: React.CSSProperties = { width: '100%', padding: '6px 7px', border: '1px solid var(--admin-line)', fontSize: 12, background: 'var(--admin-surface)' };
+const btn: React.CSSProperties = { border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', padding: '6px 10px', fontSize: 12, cursor: 'pointer' };
 
 export default function SizeGuideEditorPage() {
   const [rows, setRows] = useState<Row[]>([]);
@@ -60,27 +60,27 @@ export default function SizeGuideEditorPage() {
   return (
     <AdminLayout>
       <div style={{ maxWidth: 900 }}>
-        <Link href="/admin/settings" style={{ fontSize: 13, color: 'var(--muted)', textDecoration: 'none' }}>← Settings</Link>
+        <Link href="/admin/settings" style={{ fontSize: 13, color: 'var(--admin-ink-muted)', textDecoration: 'none' }}>← Settings</Link>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 26, margin: '8px 0' }}>Size guide</h1>
           <button onClick={save} disabled={saving}
-            style={{ background: 'var(--dark, var(--admin-ink))', color: 'var(--admin-surface)', border: 'none', padding: '10px 22px', fontSize: 14, cursor: saving ? 'default' : 'pointer' }}>
+            style={{ background: 'var(--admin-ink)', color: 'var(--admin-surface)', border: 'none', padding: '10px 22px', fontSize: 14, cursor: saving ? 'default' : 'pointer' }}>
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
-        <p style={{ fontSize: 14, color: 'var(--muted)', margin: '0 0 18px' }}>
+        <p style={{ fontSize: 14, color: 'var(--admin-ink-muted)', margin: '0 0 18px' }}>
           The measurement table on the storefront size guide. Use ranges like “80–84”. Rows without a size are dropped.
         </p>
 
         {loading ? (
-          <p style={{ color: 'var(--muted)' }}>Loading…</p>
+          <p style={{ color: 'var(--admin-ink-muted)' }}>Loading…</p>
         ) : (
           <>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 760 }}>
                 <thead>
                   <tr>
-                    {COLS.map(c => <th key={c.key} style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.4px', color: 'var(--muted)', textAlign: 'left', padding: '4px 6px' }}>{c.label}</th>)}
+                    {COLS.map(c => <th key={c.key} style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.4px', color: 'var(--admin-ink-muted)', textAlign: 'left', padding: '4px 6px' }}>{c.label}</th>)}
                     <th />
                   </tr>
                 </thead>

@@ -37,17 +37,17 @@ function ActionRow({
         paddingLeft:  danger ? 10 : 0,
         background:  'none',
         border:      'none',
-        borderBottom: '1px solid var(--border)',
+        borderBottom: '1px solid var(--admin-line)',
         borderLeft:   danger ? '3px solid var(--color-danger)' : 'none',
         cursor:      'pointer',
         textAlign:   'left',
       }}
     >
-      <Icon size={18} color={danger ? 'var(--color-danger)' : 'var(--muted)'} style={{ flexShrink: 0 }} />
-      <span style={{ flex: 1, fontSize: 13, color: danger ? 'var(--color-danger)' : 'var(--dark)' }}>
+      <Icon size={18} color={danger ? 'var(--color-danger)' : 'var(--admin-ink-muted)'} style={{ flexShrink: 0 }} />
+      <span style={{ flex: 1, fontSize: 13, color: danger ? 'var(--color-danger)' : 'var(--admin-ink)' }}>
         {label}
       </span>
-      <ChevronRight size={14} color="var(--muted)" style={{ flexShrink: 0 }} />
+      <ChevronRight size={14} color="var(--admin-ink-muted)" style={{ flexShrink: 0 }} />
     </button>
   );
 }
@@ -65,10 +65,10 @@ export default function Zone1ActionItems({ data }: { data: Zone1Data }) {
     <Card title="NEEDS YOUR ATTENTION">
       {allClear ? (
         <div style={{ textAlign: 'center', padding: '28px 0' }}>
-          <div style={{ width: 32, height: 1, background: 'var(--border)', margin: '0 auto 16px' }} />
+          <div style={{ width: 32, height: 1, background: 'var(--admin-line)', margin: '0 auto 16px' }} />
           <p style={{
             fontSize: 15,
-            color: 'var(--dark)',
+            color: 'var(--admin-ink)',
             fontStyle: 'italic',
             fontFamily: "'Cormorant Garamond', Georgia, serif",
           }}>

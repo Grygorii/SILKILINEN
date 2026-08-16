@@ -8,22 +8,22 @@ import AdminLayout from '@/components/AdminLayout';
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', border: '1px solid var(--border)',
-  fontFamily: 'inherit', fontSize: 13, color: 'var(--dark)',
+  width: '100%', padding: '10px 12px', border: '1px solid var(--admin-line)',
+  fontFamily: 'inherit', fontSize: 13, color: 'var(--admin-ink)',
   background: 'white', boxSizing: 'border-box', outline: 'none',
 };
 const labelStyle: React.CSSProperties = {
   display: 'block', fontSize: 11, letterSpacing: '1px',
-  textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6,
+  textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 6,
 };
-const hintStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', marginTop: 4 };
+const hintStyle: React.CSSProperties = { fontSize: 11, color: 'var(--admin-ink-muted)', marginTop: 4 };
 const radioGroupStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 8 };
 const radioLabelStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer' };
 const sectionStyle: React.CSSProperties = {
-  background: 'white', border: '1px solid var(--border)', padding: '22px 24px', marginBottom: 16,
+  background: 'white', border: '1px solid var(--admin-line)', padding: '22px 24px', marginBottom: 16,
 };
 const sectionTitleStyle: React.CSSProperties = {
-  fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)',
+  fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)',
   marginBottom: 18, display: 'block',
 };
 
@@ -92,10 +92,10 @@ export default function NewPromoCodePage() {
     <AdminLayout>
       <div style={{ padding: 32, maxWidth: 620 }}>
         <div style={{ marginBottom: 28 }}>
-          <Link href="/admin/promo-codes" style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'none' }}>
+          <Link href="/admin/promo-codes" style={{ fontSize: 12, color: 'var(--admin-ink-muted)', textDecoration: 'none' }}>
             ← Promo codes
           </Link>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 400, color: 'var(--dark)', marginTop: 10, marginBottom: 4 }}>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 400, color: 'var(--admin-ink)', marginTop: 10, marginBottom: 4 }}>
             New promo code
           </h1>
         </div>
@@ -159,11 +159,11 @@ export default function NewPromoCodePage() {
                 <input type="radio" name="appliesTo" value="all" checked={form.appliesTo === 'all'} onChange={() => set('appliesTo', 'all')} />
                 Whole cart
               </label>
-              <label style={{ ...radioLabelStyle, color: 'var(--muted)' }}>
+              <label style={{ ...radioLabelStyle, color: 'var(--admin-ink-muted)' }}>
                 <input type="radio" name="appliesTo" value="specific_products" disabled />
                 Specific products <span style={{ fontSize: 11 }}>(coming soon)</span>
               </label>
-              <label style={{ ...radioLabelStyle, color: 'var(--muted)' }}>
+              <label style={{ ...radioLabelStyle, color: 'var(--admin-ink-muted)' }}>
                 <input type="radio" name="appliesTo" value="specific_collections" disabled />
                 Specific collections <span style={{ fontSize: 11 }}>(coming soon)</span>
               </label>
@@ -226,7 +226,7 @@ export default function NewPromoCodePage() {
           <button type="submit" disabled={saving} style={{
             padding: '11px 28px', fontSize: 13, fontFamily: 'inherit',
             cursor: saving ? 'default' : 'pointer',
-            border: '1px solid var(--dark)', background: 'var(--dark)',
+            border: '1px solid var(--admin-ink)', background: 'var(--admin-ink)',
             color: 'white', letterSpacing: '0.04em', opacity: saving ? 0.6 : 1,
           }}>
             {saving ? 'Creating…' : 'Create promo code'}

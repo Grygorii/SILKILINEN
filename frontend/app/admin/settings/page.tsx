@@ -220,13 +220,13 @@ export default function SettingsPage() {
           {ADVANCED_TOOLS.map(tool => (
             <Link key={tool.href} href={tool.href} style={{ textDecoration: 'none' }}>
               <div style={{
-                border: '1px solid var(--border)',
+                border: '1px solid var(--admin-line)',
                 background: 'white',
                 padding: '18px 20px',
                 transition: 'box-shadow 0.2s',
               }}>
-                <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark)', marginBottom: 4 }}>{tool.title}</p>
-                <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>{tool.description}</p>
+                <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--admin-ink)', marginBottom: 4 }}>{tool.title}</p>
+                <p style={{ fontSize: 12, color: 'var(--admin-ink-muted)', lineHeight: 1.5 }}>{tool.description}</p>
               </div>
             </Link>
           ))}
@@ -277,15 +277,15 @@ function DataHygieneCard() {
   return (
     <section className={styles.section}>
       <h3 className={styles.sectionTitle}>Data hygiene</h3>
-      <div style={{ border: '1px solid var(--border)', background: 'var(--admin-surface)', padding: '18px 20px', maxWidth: 560 }}>
-        <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--dark)', marginBottom: 4 }}>Crawler traffic clean-up</p>
-        <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 12 }}>
+      <div style={{ border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', padding: '18px 20px', maxWidth: 560 }}>
+        <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--admin-ink)', marginBottom: 4 }}>Crawler traffic clean-up</p>
+        <p style={{ fontSize: 12, color: 'var(--admin-ink-muted)', lineHeight: 1.6, marginBottom: 12 }}>
           Googlebot visits recorded before the bot filter (data-centre cities like San Jose and Mountain View)
           inflate &ldquo;Direct&rdquo; traffic and hold conversion at 0%. Removing them makes the dashboard reflect
           real shoppers immediately. Sessions that placed an order are never removed.
         </p>
         {preview && !done && (
-          <p style={{ fontSize: 12, color: 'var(--dark)', marginBottom: 12 }}>
+          <p style={{ fontSize: 12, color: 'var(--admin-ink)', marginBottom: 12 }}>
             Found <strong>{preview.count}</strong> crawler visit(s) out of {preview.total} recorded.
           </p>
         )}
@@ -294,7 +294,7 @@ function DataHygieneCard() {
           disabled={busy || done || !preview || preview.count === 0}
           style={{
             fontSize: 13, padding: '9px 16px', cursor: busy || done ? 'default' : 'pointer',
-            border: '1px solid var(--dark)', background: 'var(--dark)', color: 'var(--admin-surface)',
+            border: '1px solid var(--admin-ink)', background: 'var(--admin-ink)', color: 'var(--admin-surface)',
             opacity: busy || done || (preview && preview.count === 0) ? 0.5 : 1,
           }}
         >

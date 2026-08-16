@@ -12,10 +12,10 @@ const CHANNELS = ['meta', 'pinterest', 'google', 'tiktok', 'email', 'influencer'
 const field: React.CSSProperties = {
   width: '100%',
   padding: '10px 12px',
-  border: '1px solid var(--border)',
+  border: '1px solid var(--admin-line)',
   fontFamily: 'inherit',
   fontSize: 13,
-  color: 'var(--dark)',
+  color: 'var(--admin-ink)',
   background: 'white',
   boxSizing: 'border-box',
   outline: 'none',
@@ -26,7 +26,7 @@ const label: React.CSSProperties = {
   fontSize: 11,
   letterSpacing: '1px',
   textTransform: 'uppercase',
-  color: 'var(--muted)',
+  color: 'var(--admin-ink-muted)',
   marginBottom: 6,
 };
 
@@ -79,10 +79,10 @@ export default function NewCampaignPage() {
     <AdminLayout>
       <div style={{ padding: 32, maxWidth: 560 }}>
         <div style={{ marginBottom: 28 }}>
-          <Link href="/admin/marketing" style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'none' }}>
+          <Link href="/admin/marketing" style={{ fontSize: 12, color: 'var(--admin-ink-muted)', textDecoration: 'none' }}>
             ← Marketing
           </Link>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 400, color: 'var(--dark)', marginTop: 10, marginBottom: 4 }}>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 400, color: 'var(--admin-ink)', marginTop: 10, marginBottom: 4 }}>
             New campaign
           </h1>
         </div>
@@ -125,7 +125,7 @@ export default function NewCampaignPage() {
 
           <button type="submit" disabled={saving} style={{
             padding: '11px 28px', fontSize: 13, fontFamily: 'inherit', cursor: saving ? 'default' : 'pointer',
-            border: '1px solid var(--dark)', background: 'var(--dark)', color: 'white', letterSpacing: '0.04em',
+            border: '1px solid var(--admin-ink)', background: 'var(--admin-ink)', color: 'white', letterSpacing: '0.04em',
             opacity: saving ? 0.6 : 1,
           }}>
             {saving ? 'Creating…' : 'Create campaign'}

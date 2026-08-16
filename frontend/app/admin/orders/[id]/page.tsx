@@ -400,7 +400,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
                 className={styles.saveBtn}
                 onClick={markAsShipped}
                 disabled={trackingSaving || statusSaving || order.status === 'shipped' || order.status === 'delivered'}
-                style={{ background: 'var(--dark)', color: 'var(--warm-white)' }}
+                style={{ background: 'var(--admin-ink)', color: 'var(--admin-surface)' }}
               >
                 {trackingSaving ? 'Shipping…' : 'Mark as shipped'}
               </button>
@@ -408,7 +408,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
                 className={styles.saveBtn}
                 onClick={saveTracking}
                 disabled={trackingSaving}
-                style={{ background: 'transparent', color: 'var(--dark)', border: '1px solid var(--border)' }}
+                style={{ background: 'transparent', color: 'var(--admin-ink)', border: '1px solid var(--admin-line)' }}
               >
                 {trackingSaving ? 'Saving…' : 'Save tracking only'}
               </button>

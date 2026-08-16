@@ -21,9 +21,9 @@ const EMPTY: Settings = {
   supportEmail: '', brandTagline: '', brandLocation: '', freeShippingThreshold: 150,
 };
 
-const label: React.CSSProperties = { display: 'block', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--muted)', margin: '16px 0 6px' };
-const input: React.CSSProperties = { width: '100%', maxWidth: 420, padding: '9px 12px', border: '1px solid var(--border, var(--admin-line))', fontSize: 14, background: 'var(--admin-surface)' };
-const hint: React.CSSProperties = { fontSize: 12, color: 'var(--muted)', marginTop: 4 };
+const label: React.CSSProperties = { display: 'block', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--admin-ink-muted)', margin: '16px 0 6px' };
+const input: React.CSSProperties = { width: '100%', maxWidth: 420, padding: '9px 12px', border: '1px solid var(--admin-line)', fontSize: 14, background: 'var(--admin-surface)' };
+const hint: React.CSSProperties = { fontSize: 12, color: 'var(--admin-ink-muted)', marginTop: 4 };
 
 export default function BusinessSettingsPage() {
   const [s, setS] = useState<Settings>(EMPTY);
@@ -63,15 +63,15 @@ export default function BusinessSettingsPage() {
   return (
     <AdminLayout>
       <div style={{ maxWidth: 640 }}>
-        <Link href="/admin/settings" style={{ fontSize: 13, color: 'var(--muted)', textDecoration: 'none' }}>← Settings</Link>
+        <Link href="/admin/settings" style={{ fontSize: 13, color: 'var(--admin-ink-muted)', textDecoration: 'none' }}>← Settings</Link>
         <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 26, margin: '8px 0 4px' }}>Business &amp; offers</h1>
-        <p style={{ fontSize: 14, color: 'var(--muted)', margin: 0 }}>
+        <p style={{ fontSize: 14, color: 'var(--admin-ink-muted)', margin: 0 }}>
           Edit these once and they update everywhere — the welcome offer across the banner, newsletter and pop-up
           (and the discount actually issued), plus your business details across the site and emails.
         </p>
 
         {loading ? (
-          <p style={{ marginTop: 24, color: 'var(--muted)' }}>Loading…</p>
+          <p style={{ marginTop: 24, color: 'var(--admin-ink-muted)' }}>Loading…</p>
         ) : (
           <div style={{ marginTop: 20 }}>
             <h3 style={{ fontFamily: 'Georgia, serif', fontSize: 17, marginBottom: 0 }}>Welcome offer</h3>
@@ -102,7 +102,7 @@ export default function BusinessSettingsPage() {
 
             <div style={{ marginTop: 24 }}>
               <button onClick={save} disabled={saving}
-                style={{ background: 'var(--dark, var(--admin-ink))', color: 'var(--admin-surface)', border: 'none', padding: '10px 22px', fontSize: 14, cursor: saving ? 'default' : 'pointer' }}>
+                style={{ background: 'var(--admin-ink)', color: 'var(--admin-surface)', border: 'none', padding: '10px 22px', fontSize: 14, cursor: saving ? 'default' : 'pointer' }}>
                 {saving ? 'Saving…' : 'Save'}
               </button>
             </div>

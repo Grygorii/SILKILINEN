@@ -197,8 +197,8 @@ export default function SocialComposerPage() {
     return `${Math.floor(secs / 60)}m ago`;
   }
 
-  if (loading) return <AdminLayout><p style={{ padding: 40, color: 'var(--muted)', fontSize: 13 }}>Loading…</p></AdminLayout>;
-  if (!post) return <AdminLayout><p style={{ padding: 40, color: 'var(--muted)', fontSize: 13 }}>Post not found.</p></AdminLayout>;
+  if (loading) return <AdminLayout><p style={{ padding: 40, color: 'var(--admin-ink-muted)', fontSize: 13 }}>Loading…</p></AdminLayout>;
+  if (!post) return <AdminLayout><p style={{ padding: 40, color: 'var(--admin-ink-muted)', fontSize: 13 }}>Post not found.</p></AdminLayout>;
 
   const postedToKeys = new Set((post.postedTo || []).map(p => p.platformKey));
   const allEnabledPosted = enabledVariations.length > 0 && enabledVariations.every(v => postedToKeys.has(v.platformKey));
@@ -211,9 +211,9 @@ export default function SocialComposerPage() {
         <div style={{ flex: 1, overflowY: 'auto', padding: '28px 32px', minWidth: 0 }}>
           {/* Nav + status bar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-            <Link href="/admin/social" style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'none' }}>← Social</Link>
+            <Link href="/admin/social" style={{ fontSize: 12, color: 'var(--admin-ink-muted)', textDecoration: 'none' }}>← Social</Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 11, color: 'var(--muted)', fontStyle: 'italic' }}>
+              <span style={{ fontSize: 11, color: 'var(--admin-ink-muted)', fontStyle: 'italic' }}>
                 {saving ? 'Saving…' : savedAt ? `Saved ${formatSavedAt()}` : ''}
               </span>
               {/* Status badge + quick change */}
@@ -222,7 +222,7 @@ export default function SocialComposerPage() {
                 disabled={statusSaving}
                 onChange={e => setStatus(e.target.value as 'draft' | 'ready' | 'posted')}
                 style={{
-                  fontSize: 11, padding: '3px 8px', border: '1px solid var(--border)',
+                  fontSize: 11, padding: '3px 8px', border: '1px solid var(--admin-line)',
                   background: post.status === 'posted' ? 'var(--admin-success-soft)' : post.status === 'ready' ? 'var(--admin-warning-soft)' : 'var(--admin-bg)',
                   color: post.status === 'posted' ? 'var(--color-success)' : post.status === 'ready' ? 'var(--admin-warning)' : 'var(--admin-ink-muted)',
                   cursor: 'pointer', fontFamily: 'inherit',
@@ -233,7 +233,7 @@ export default function SocialComposerPage() {
                 <option value="posted">Posted</option>
               </select>
               <button onClick={() => { setShowExport(true); setExportPlatformKey(activePlatformKey); }} style={{
-                padding: '7px 16px', background: 'var(--dark)', color: 'white', border: 'none',
+                padding: '7px 16px', background: 'var(--admin-ink)', color: 'white', border: 'none',
                 cursor: 'pointer', fontFamily: 'inherit', fontSize: 12,
               }}>
                 Export &amp; track →
@@ -254,14 +254,14 @@ export default function SocialComposerPage() {
             placeholder="Post title…"
             style={{
               width: '100%', padding: '10px 0', fontSize: 24, fontWeight: 300,
-              fontFamily: "'Cormorant Garamond', Georgia, serif", border: 'none', borderBottom: '1px solid var(--border)',
-              color: 'var(--dark)', outline: 'none', marginBottom: 24, background: 'transparent', boxSizing: 'border-box',
+              fontFamily: "'Cormorant Garamond', Georgia, serif", border: 'none', borderBottom: '1px solid var(--admin-line)',
+              color: 'var(--admin-ink)', outline: 'none', marginBottom: 24, background: 'transparent', boxSizing: 'border-box',
             }}
           />
 
           {/* Image grid */}
           <div style={{ marginBottom: 24 }}>
-            <p style={{ fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 10 }}>Images</p>
+            <p style={{ fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 10 }}>Images</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
               {(post.defaultImages || []).map((img, i) => (
                 <div key={i} style={{ position: 'relative', width: 100, height: 100 }}>
@@ -281,9 +281,9 @@ export default function SocialComposerPage() {
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
                 style={{
-                  width: 100, height: 100, border: '1px dashed var(--border)', background: 'var(--admin-surface)',
+                  width: 100, height: 100, border: '1px dashed var(--admin-line)', background: 'var(--admin-surface)',
                   cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center',
-                  justifyContent: 'center', gap: 4, color: 'var(--muted)',
+                  justifyContent: 'center', gap: 4, color: 'var(--admin-ink-muted)',
                 }}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -296,30 +296,30 @@ export default function SocialComposerPage() {
 
           {/* Default caption */}
           <div style={{ marginBottom: 20 }}>
-            <p style={{ fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>Default caption</p>
+            <p style={{ fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 8 }}>Default caption</p>
             <textarea
               value={caption}
               onChange={e => updateAndSave(() => setCaption(e.target.value))}
               placeholder="Write your caption here…"
               rows={6}
               style={{
-                width: '100%', padding: '12px 14px', border: '1px solid var(--border)',
+                width: '100%', padding: '12px 14px', border: '1px solid var(--admin-line)',
                 fontFamily: 'inherit', fontSize: 14, lineHeight: 1.6, resize: 'vertical',
-                color: 'var(--dark)', boxSizing: 'border-box', outline: 'none',
+                color: 'var(--admin-ink)', boxSizing: 'border-box', outline: 'none',
               }}
             />
           </div>
 
           {/* Default hashtags */}
           <div style={{ marginBottom: 28 }}>
-            <p style={{ fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>Default hashtags</p>
+            <p style={{ fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 8 }}>Default hashtags</p>
             <input
               value={hashtags}
               onChange={e => updateAndSave(() => setHashtags(e.target.value))}
               placeholder="#silkilinen #silk #linen"
               style={{
-                width: '100%', padding: '10px 12px', border: '1px solid var(--border)',
-                fontFamily: 'inherit', fontSize: 13, color: 'var(--dark)', boxSizing: 'border-box', outline: 'none',
+                width: '100%', padding: '10px 12px', border: '1px solid var(--admin-line)',
+                fontFamily: 'inherit', fontSize: 13, color: 'var(--admin-ink)', boxSizing: 'border-box', outline: 'none',
               }}
             />
           </div>
@@ -328,11 +328,11 @@ export default function SocialComposerPage() {
           {platforms.length > 0 && (
             <div style={{ marginBottom: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <p style={{ fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)', margin: 0 }}>Per-platform variations</p>
+                <p style={{ fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', margin: 0 }}>Per-platform variations</p>
               </div>
 
               {/* Tab bar */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 16, borderBottom: '1px solid var(--admin-line)', paddingBottom: 8 }}>
                 {platforms.map(p => {
                   const v = variations[p.key];
                   const isActive = activePlatformKey === p.key;
@@ -340,9 +340,9 @@ export default function SocialComposerPage() {
                   return (
                     <button key={p.key} onClick={() => setActivePlatformKey(p.key)} style={{
                       display: 'flex', alignItems: 'center', gap: 5,
-                      padding: '5px 12px', border: `1px solid ${isActive ? p.brandColor || 'var(--dark)' : 'var(--border)'}`,
-                      background: isActive ? (p.brandColor || 'var(--dark)') : 'white',
-                      color: isActive ? 'white' : isEnabled ? 'var(--dark)' : 'var(--muted)',
+                      padding: '5px 12px', border: `1px solid ${isActive ? p.brandColor || 'var(--admin-ink)' : 'var(--admin-line)'}`,
+                      background: isActive ? (p.brandColor || 'var(--admin-ink)') : 'white',
+                      color: isActive ? 'white' : isEnabled ? 'var(--admin-ink)' : 'var(--admin-ink-muted)',
                       cursor: 'pointer', fontFamily: 'inherit', fontSize: 12,
                       opacity: isEnabled ? 1 : 0.5,
                     }}>
@@ -355,13 +355,13 @@ export default function SocialComposerPage() {
 
               {/* Active variation editor */}
               {activePlatform && activeVariation && (
-                <div style={{ background: 'var(--admin-surface)', border: '1px solid var(--border)', padding: '18px 20px' }}>
+                <div style={{ background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: '18px 20px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <PlatformIcon icon={activePlatform.icon} color={activePlatform.brandColor || 'var(--admin-ink-muted)'} />
                       <span style={{ fontWeight: 500, fontSize: 13 }}>{activePlatform.displayName}</span>
                       {activePlatform.captionMaxChars && (
-                        <span style={{ fontSize: 11, color: 'var(--muted)' }}>max {activePlatform.captionMaxChars} chars</span>
+                        <span style={{ fontSize: 11, color: 'var(--admin-ink-muted)' }}>max {activePlatform.captionMaxChars} chars</span>
                       )}
                     </div>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>
@@ -381,7 +381,7 @@ export default function SocialComposerPage() {
                         </div>
                       )}
 
-                      <p style={{ fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6 }}>
+                      <p style={{ fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 6 }}>
                         Custom caption <span style={{ fontStyle: 'italic', textTransform: 'none' }}>(leave blank to use default)</span>
                       </p>
                       <textarea
@@ -392,20 +392,20 @@ export default function SocialComposerPage() {
                         placeholder={caption || 'Will use default caption…'}
                         rows={5}
                         style={{
-                          width: '100%', padding: '10px 12px', border: '1px solid var(--border)',
+                          width: '100%', padding: '10px 12px', border: '1px solid var(--admin-line)',
                           fontFamily: 'inherit', fontSize: 13, lineHeight: 1.6, resize: 'vertical',
                           boxSizing: 'border-box', outline: 'none', background: 'white',
                         }}
                       />
                       {activePlatform.captionMaxChars > 0 && (
-                        <p style={{ fontSize: 10, color: effectiveCaption.length > activePlatform.captionMaxChars ? 'var(--admin-danger)' : 'var(--muted)', marginTop: 4 }}>
+                        <p style={{ fontSize: 10, color: effectiveCaption.length > activePlatform.captionMaxChars ? 'var(--admin-danger)' : 'var(--admin-ink-muted)', marginTop: 4 }}>
                           {effectiveCaption.length} / {activePlatform.captionMaxChars} characters
                         </p>
                       )}
 
                       {activePlatform.hashtagsAllowed && (
                         <>
-                          <p style={{ fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6, marginTop: 12 }}>
+                          <p style={{ fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 6, marginTop: 12 }}>
                             Custom hashtags <span style={{ fontStyle: 'italic', textTransform: 'none' }}>(leave blank to use default)</span>
                           </p>
                           <input
@@ -418,12 +418,12 @@ export default function SocialComposerPage() {
                             })))}
                             placeholder={hashtags || '#silkilinen #silk'}
                             style={{
-                              width: '100%', padding: '8px 12px', border: '1px solid var(--border)',
+                              width: '100%', padding: '8px 12px', border: '1px solid var(--admin-line)',
                               fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box', outline: 'none', background: 'white',
                             }}
                           />
                           {activePlatform.hashtagsRecommended > 0 && (
-                            <p style={{ fontSize: 10, color: 'var(--muted)', marginTop: 4 }}>Recommended: {activePlatform.hashtagsRecommended} hashtags</p>
+                            <p style={{ fontSize: 10, color: 'var(--admin-ink-muted)', marginTop: 4 }}>Recommended: {activePlatform.hashtagsRecommended} hashtags</p>
                           )}
                         </>
                       )}
@@ -437,8 +437,8 @@ export default function SocialComposerPage() {
           {/* Posted-to checklist */}
           {post.status !== 'draft' && enabledVariations.length > 0 && (
             <div style={{ marginTop: 28 }}>
-              <p style={{ fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 10 }}>Posting checklist</p>
-              <div style={{ background: 'white', border: '1px solid var(--border)', padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <p style={{ fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 10 }}>Posting checklist</p>
+              <div style={{ background: 'white', border: '1px solid var(--admin-line)', padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {enabledVariations.map(v => {
                   const platform = platforms.find(p => p.key === v.platformKey);
                   const isPosted = postedToKeys.has(v.platformKey);
@@ -449,11 +449,11 @@ export default function SocialComposerPage() {
                         onChange={() => togglePostedTo(v.platformKey, isPosted)}
                         style={{ width: 15, height: 15 }} />
                       {platform && <PlatformIcon icon={platform.icon} color={platform.brandColor || 'var(--admin-ink-muted)'} />}
-                      <span style={{ fontSize: 13, fontWeight: isPosted ? 500 : 400, color: isPosted ? 'var(--color-success)' : 'var(--dark)', textDecoration: isPosted ? 'none' : 'none' }}>
+                      <span style={{ fontSize: 13, fontWeight: isPosted ? 500 : 400, color: isPosted ? 'var(--color-success)' : 'var(--admin-ink)', textDecoration: isPosted ? 'none' : 'none' }}>
                         {platform?.displayName || v.platformKey}
                       </span>
                       {postedEntry && (
-                        <span style={{ fontSize: 11, color: 'var(--muted)', marginLeft: 'auto' }}>
+                        <span style={{ fontSize: 11, color: 'var(--admin-ink-muted)', marginLeft: 'auto' }}>
                           {new Date(postedEntry.postedAt).toLocaleDateString('en-IE', { day: 'numeric', month: 'short' })}
                         </span>
                       )}
@@ -470,19 +470,19 @@ export default function SocialComposerPage() {
 
         {/* ─── Right panel: Preview ─── */}
         <div style={{
-          width: 320, flexShrink: 0, borderLeft: '1px solid var(--border)',
+          width: 320, flexShrink: 0, borderLeft: '1px solid var(--admin-line)',
           background: 'var(--admin-surface)', overflowY: 'auto', padding: '24px 20px',
         }}>
-          <p style={{ fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 14 }}>Preview</p>
+          <p style={{ fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 14 }}>Preview</p>
 
           {/* Platform selector for preview */}
           {platforms.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 14 }}>
               {platforms.filter(p => variations[p.key]?.enabled !== false).map(p => (
                 <button key={p.key} onClick={() => setActivePlatformKey(p.key)} style={{
-                  padding: '3px 8px', fontSize: 10, border: `1px solid ${activePlatformKey === p.key ? p.brandColor || 'var(--dark)' : 'var(--border)'}`,
-                  background: activePlatformKey === p.key ? (p.brandColor || 'var(--dark)') : 'white',
-                  color: activePlatformKey === p.key ? 'white' : 'var(--muted)',
+                  padding: '3px 8px', fontSize: 10, border: `1px solid ${activePlatformKey === p.key ? p.brandColor || 'var(--admin-ink)' : 'var(--admin-line)'}`,
+                  background: activePlatformKey === p.key ? (p.brandColor || 'var(--admin-ink)') : 'white',
+                  color: activePlatformKey === p.key ? 'white' : 'var(--admin-ink-muted)',
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}>
                   {p.displayName}
@@ -493,14 +493,14 @@ export default function SocialComposerPage() {
 
           {/* Phone mockup */}
           <div style={{
-            background: 'white', border: '1px solid var(--border)',
+            background: 'white', border: '1px solid var(--admin-line)',
             borderRadius: 8, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
           }}>
             {/* Platform header bar */}
             {activePlatform && (
-              <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--admin-line)', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <PlatformIcon icon={activePlatform.icon} color={activePlatform.brandColor || 'var(--admin-ink-muted)'} />
-                <span style={{ fontSize: 11, fontWeight: 500, color: activePlatform.brandColor || 'var(--dark)' }}>{activePlatform.displayName}</span>
+                <span style={{ fontSize: 11, fontWeight: 500, color: activePlatform.brandColor || 'var(--admin-ink)' }}>{activePlatform.displayName}</span>
               </div>
             )}
 
@@ -524,10 +524,10 @@ export default function SocialComposerPage() {
             <div style={{ padding: '12px 14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                 <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--admin-line)' }} />
-                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--dark)' }}>silkilinen</span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--admin-ink)' }}>silkilinen</span>
               </div>
               {effectiveCaption ? (
-                <p style={{ fontSize: 11, lineHeight: 1.6, color: 'var(--dark)', margin: '0 0 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                <p style={{ fontSize: 11, lineHeight: 1.6, color: 'var(--admin-ink)', margin: '0 0 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                   <strong>silkilinen</strong>{' '}{effectiveCaption}
                 </p>
               ) : (
@@ -544,9 +544,9 @@ export default function SocialComposerPage() {
           {/* Image spec info */}
           {(activePlatform?.imageSpecs?.length ?? 0) > 0 && (
             <div style={{ marginTop: 14 }}>
-              <p style={{ fontSize: 10, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6 }}>Image specs</p>
+              <p style={{ fontSize: 10, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 6 }}>Image specs</p>
               {activePlatform?.imageSpecs.map((spec, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--muted)', padding: '3px 0', borderBottom: '1px solid var(--admin-line)' }}>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--admin-ink-muted)', padding: '3px 0', borderBottom: '1px solid var(--admin-line)' }}>
                   <span>{spec.label}{spec.isDefault ? ' ★' : ''}</span>
                   <span>{spec.pixelWidth}×{spec.pixelHeight}</span>
                 </div>
@@ -570,9 +570,9 @@ export default function SocialComposerPage() {
                 return (
                   <button key={v.platformKey} onClick={() => setExportPlatformKey(v.platformKey)} style={{
                     display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px',
-                    border: `1px solid ${exportPlatformKey === v.platformKey ? (p?.brandColor || 'var(--dark)') : 'var(--border)'}`,
-                    background: exportPlatformKey === v.platformKey ? (p?.brandColor || 'var(--dark)') : 'white',
-                    color: exportPlatformKey === v.platformKey ? 'white' : 'var(--dark)',
+                    border: `1px solid ${exportPlatformKey === v.platformKey ? (p?.brandColor || 'var(--admin-ink)') : 'var(--admin-line)'}`,
+                    background: exportPlatformKey === v.platformKey ? (p?.brandColor || 'var(--admin-ink)') : 'white',
+                    color: exportPlatformKey === v.platformKey ? 'white' : 'var(--admin-ink)',
                     cursor: 'pointer', fontFamily: 'inherit', fontSize: 12,
                   }}>
                     {p && <PlatformIcon icon={p.icon} color={exportPlatformKey === v.platformKey ? 'white' : (p.brandColor || 'var(--admin-ink-muted)')} />}
@@ -595,10 +595,10 @@ export default function SocialComposerPage() {
               return (
                 <div>
                   {/* Caption copy box */}
-                  <p style={{ fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>Caption</p>
+                  <p style={{ fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 8 }}>Caption</p>
                   <div style={{ position: 'relative', marginBottom: 20 }}>
                     <pre style={{
-                      padding: '12px 14px', background: 'var(--admin-surface)', border: '1px solid var(--border)',
+                      padding: '12px 14px', background: 'var(--admin-surface)', border: '1px solid var(--admin-line)',
                       fontSize: 12, lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
                       margin: 0, fontFamily: 'inherit', maxHeight: 200, overflowY: 'auto',
                     }}>
@@ -610,8 +610,8 @@ export default function SocialComposerPage() {
                       setTimeout(() => setCopied(false), 2000);
                     }} style={{
                       position: 'absolute', top: 8, right: 8, padding: '4px 10px', fontSize: 10,
-                      border: '1px solid var(--border)', background: copied ? 'var(--admin-success-soft)' : 'white',
-                      color: copied ? 'var(--color-success)' : 'var(--muted)', cursor: 'pointer', fontFamily: 'inherit',
+                      border: '1px solid var(--admin-line)', background: copied ? 'var(--admin-success-soft)' : 'white',
+                      color: copied ? 'var(--color-success)' : 'var(--admin-ink-muted)', cursor: 'pointer', fontFamily: 'inherit',
                     }}>
                       {copied ? 'Copied ✓' : 'Copy'}
                     </button>
@@ -620,14 +620,14 @@ export default function SocialComposerPage() {
                   {/* Image download */}
                   {mainImage?.url && (platform?.imageSpecs?.length ?? 0) > 0 && (
                     <>
-                      <p style={{ fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>Download image</p>
+                      <p style={{ fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 8 }}>Download image</p>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
                         {platform?.imageSpecs.map((spec, i) => {
                           const cloudUrl = mainImage.url.replace('/upload/', `/upload/c_fill,w_${spec.pixelWidth},h_${spec.pixelHeight}/`);
                           return (
                             <a key={i} href={cloudUrl} download target="_blank" rel="noopener noreferrer" style={{
-                              padding: '7px 14px', border: '1px solid var(--border)', fontSize: 11,
-                              textDecoration: 'none', color: 'var(--dark)', background: spec.isDefault ? 'var(--admin-bg)' : 'white',
+                              padding: '7px 14px', border: '1px solid var(--admin-line)', fontSize: 11,
+                              textDecoration: 'none', color: 'var(--admin-ink)', background: spec.isDefault ? 'var(--admin-bg)' : 'white',
                             }}>
                               ↓ {spec.label} ({spec.pixelWidth}×{spec.pixelHeight})
                             </a>
@@ -638,12 +638,12 @@ export default function SocialComposerPage() {
                   )}
 
                   {/* Mark as posted */}
-                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: 20 }}>
-                    <p style={{ fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 10 }}>Posting status</p>
+                  <div style={{ borderTop: '1px solid var(--admin-line)', paddingTop: 20 }}>
+                    <p style={{ fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 10 }}>Posting status</p>
                     <button onClick={() => togglePostedTo(exportPlatformKey, isPosted)} style={{
                       padding: '10px 20px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
-                      border: '1px solid var(--border)',
-                      background: isPosted ? 'var(--admin-success-soft)' : 'var(--dark)',
+                      border: '1px solid var(--admin-line)',
+                      background: isPosted ? 'var(--admin-success-soft)' : 'var(--admin-ink)',
                       color: isPosted ? 'var(--color-success)' : 'white',
                     }}>
                       {isPosted ? `✓ Posted to ${platform?.displayName} — unmark?` : `Mark as posted to ${platform?.displayName}`}
@@ -655,7 +655,7 @@ export default function SocialComposerPage() {
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24 }}>
               <button onClick={() => setShowExport(false)} style={{
-                padding: '10px 24px', border: '1px solid var(--border)', background: 'white',
+                padding: '10px 24px', border: '1px solid var(--admin-line)', background: 'white',
                 cursor: 'pointer', fontFamily: 'inherit', fontSize: 13,
               }}>Close</button>
             </div>

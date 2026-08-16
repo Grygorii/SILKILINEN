@@ -387,7 +387,7 @@ export default function GrowthEnginePage() {
         {selfTest && (
           <div style={{ border: '1px solid var(--color-line)', background: 'var(--admin-surface)', padding: '18px 20px', marginBottom: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-              <p style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 600, margin: 0 }}>
+              <p style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: 'var(--admin-ink-muted)', fontWeight: 600, margin: 0 }}>
                 Self-test — the machine, checked
               </p>
               <span style={{ fontSize: 12, color: selfTest.summary.failed ? 'var(--admin-danger)' : 'var(--admin-success)' }}>
@@ -399,18 +399,18 @@ export default function GrowthEnginePage() {
                 <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
                   <span style={{ width: 9, height: 9, borderRadius: '50%', flexShrink: 0,
                     background: c.ok === true ? 'var(--admin-success)' : c.ok === false ? 'var(--admin-danger)' : 'var(--admin-warning)' }} />
-                  <span style={{ width: 190, color: 'var(--dark)' }}>{c.name}</span>
-                  <span style={{ color: 'var(--muted)', flex: 1 }}>{c.detail}</span>
-                  <span style={{ color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{c.ms}ms</span>
+                  <span style={{ width: 190, color: 'var(--admin-ink)' }}>{c.name}</span>
+                  <span style={{ color: 'var(--admin-ink-muted)', flex: 1 }}>{c.detail}</span>
+                  <span style={{ color: 'var(--admin-ink-muted)', fontVariantNumeric: 'tabular-nums' }}>{c.ms}ms</span>
                 </div>
               ))}
             </div>
-            <p style={{ fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--muted)', margin: '0 0 8px' }}>The 10 agents</p>
+            <p style={{ fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--admin-ink-muted)', margin: '0 0 8px' }}>The 10 agents</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {selfTest.agents.map(a => (
                 <span key={a.label} title={`last run: ${a.lastRun ? new Date(a.lastRun).toLocaleString('en-IE') : 'never'}`}
-                  style={{ fontSize: 11, padding: '3px 9px', borderRadius: 10, border: '1px solid var(--border)',
-                    background: a.enabled ? 'var(--cream)' : 'var(--admin-surface)', color: a.enabled ? 'var(--dark)' : 'var(--muted)' }}>
+                  style={{ fontSize: 11, padding: '3px 9px', borderRadius: 10, border: '1px solid var(--admin-line)',
+                    background: a.enabled ? 'var(--admin-bg)' : 'var(--admin-surface)', color: a.enabled ? 'var(--admin-ink)' : 'var(--admin-ink-muted)' }}>
                   {a.enabled ? '●' : '○'} {a.label} · {a.lastRun ? timeAgo(a.lastRun) : 'never'}
                 </span>
               ))}
@@ -724,20 +724,20 @@ function ReviewRoom({ action, onClose, onDecide }: {
 
   return (
     <AdminModal title={action.title} onClose={onClose}>
-      {action.detail && <p style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--dark)', margin: '0 0 14px' }}>{action.detail}</p>}
+      {action.detail && <p style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--admin-ink)', margin: '0 0 14px' }}>{action.detail}</p>}
 
       {metaLines.length > 0 && (
-        <div style={{ fontSize: 12.5, lineHeight: 1.7, color: 'var(--muted)', margin: '0 0 14px' }}>
+        <div style={{ fontSize: 12.5, lineHeight: 1.7, color: 'var(--admin-ink-muted)', margin: '0 0 14px' }}>
           {metaLines.map(([k, v]) => (
-            <div key={k}><span style={{ textTransform: 'capitalize', color: 'var(--dark)' }}>{k}:</span> {v}</div>
+            <div key={k}><span style={{ textTransform: 'capitalize', color: 'var(--admin-ink)' }}>{k}:</span> {v}</div>
           ))}
         </div>
       )}
 
       {moves && (
         <div style={{ margin: '0 0 16px' }}>
-          <p style={{ fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--muted)', margin: '0 0 6px' }}>The work</p>
-          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.7, color: 'var(--dark)' }}>
+          <p style={{ fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--admin-ink-muted)', margin: '0 0 6px' }}>The work</p>
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.7, color: 'var(--admin-ink)' }}>
             {moves.map((m, i) => <li key={i}>{m}</li>)}
           </ul>
         </div>
@@ -752,17 +752,17 @@ function ReviewRoom({ action, onClose, onDecide }: {
       )}
 
       {decided ? (
-        <p style={{ fontSize: 13, padding: '10px 14px', background: 'var(--cream)', border: '1px solid var(--border)', color: 'var(--dark)' }}>
+        <p style={{ fontSize: 13, padding: '10px 14px', background: 'var(--admin-bg)', border: '1px solid var(--admin-line)', color: 'var(--admin-ink)' }}>
           {action.status === 'completed' ? '✓ You marked this done.' : '✕ You rejected this.'} It stays in the feed as memory.
         </p>
       ) : (
         <>
-          <label style={{ display: 'block', fontSize: 12, color: 'var(--dark)', marginBottom: 6 }}>
-            Your reason / feedback <span style={{ color: 'var(--muted)' }}>— becomes memory the agents learn from</span>
+          <label style={{ display: 'block', fontSize: 12, color: 'var(--admin-ink)', marginBottom: 6 }}>
+            Your reason / feedback <span style={{ color: 'var(--admin-ink-muted)' }}>— becomes memory the agents learn from</span>
           </label>
           <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3}
             placeholder="e.g. Love the hair angle — do more like this. / Too salesy, rejected."
-            style={{ width: '100%', padding: '9px 11px', fontSize: 13, border: '1px solid var(--border)', resize: 'vertical', boxSizing: 'border-box', marginBottom: 14 }} />
+            style={{ width: '100%', padding: '9px 11px', fontSize: 13, border: '1px solid var(--admin-line)', resize: 'vertical', boxSizing: 'border-box', marginBottom: 14 }} />
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
             <button onClick={() => decide('rejected')} disabled={busy}
               style={{ padding: '9px 14px', fontSize: 13, border: '1px solid var(--admin-danger)', background: 'var(--admin-surface)', color: 'var(--admin-danger)', cursor: busy ? 'default' : 'pointer' }}>
@@ -923,7 +923,7 @@ function NorthStarSection({ loading, error, onRetry, northStar, starStatus, metr
           style={{
             display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 12,
             padding: '10px 12px', fontSize: 13, lineHeight: 1.55,
-            background: starStatus.pace === 'drifting' ? 'var(--admin-warning-soft)' : 'var(--cream, var(--admin-bg))',
+            background: starStatus.pace === 'drifting' ? 'var(--admin-warning-soft)' : 'var(--admin-bg)',
             border: `1px solid ${starStatus.pace === 'drifting' ? 'var(--admin-warning-soft)' : 'var(--color-line)'}`,
             color: 'var(--color-ink)',
           }}

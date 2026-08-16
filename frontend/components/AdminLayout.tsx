@@ -23,26 +23,34 @@ type NavEntry =
 // so the catalogue, the things that sell, marketing, and content each have a
 // home you can scan in one glance.
 const NAV: NavEntry[] = [
-  { section: 'Core' },
-  { label: 'Dashboard',  href: '/admin',            icon: LayoutDashboard, exact: true },
-  { label: 'Ask AI',     href: '/admin/analyst',    icon: Sparkles },
-  { label: 'Growth Engine', href: '/admin/growth',  icon: Zap },
-  { label: 'Competitors', href: '/admin/competitors', icon: Target },
-  { label: 'Marketing Coordinator', href: '/admin/marketing-coordinator', icon: Workflow },
-  { label: 'The Atelier', href: '/admin/atelier', icon: Gem },
-  { label: 'Archivarius', href: '/admin/memory', icon: Library },
-  { label: 'Connections', href: '/admin/connections', icon: Plug },
-  { label: 'Journeys',   href: '/admin/journeys',   icon: Eye },
-  { label: 'Orders',     href: '/admin/orders',     icon: ShoppingBag },
-  { label: 'Customers',  href: '/admin/customers',  icon: Users },
-  { label: 'Reviews',    href: '/admin/reviews',    icon: Star },
+  // Grouped by WHEN you use them, not by what built them. "Core" had become a
+  // grab-bag of twelve: six AI agents sitting beside Orders and Customers. The
+  // daily commerce screens now lead; every agent lives in one place (Studio).
+  { section: 'Today' },
+  { label: 'Dashboard',  href: '/admin',           icon: LayoutDashboard, exact: true },
+  { label: 'Orders',     href: '/admin/orders',    icon: ShoppingBag },
+  { label: 'Customers',  href: '/admin/customers', icon: Users },
+  { label: 'Reviews',    href: '/admin/reviews',   icon: Star },
+  { label: 'Inventory',  href: '/admin/inventory', icon: Boxes },
+  // Renamed from "Journeys": auditAgents.js also has a "journeys" agent, which
+  // analyses site navigation. This one is customer session replay — same word,
+  // unrelated things, both surfaced in the admin.
+  { label: 'Session Replay', href: '/admin/journeys', icon: Eye },
   { section: 'Catalogue' },
   { label: 'Products',    href: '/admin/products',    icon: Package },
-  { label: 'Inventory',   href: '/admin/inventory',   icon: Boxes },
   { label: 'Categories',  href: '/admin/categories',  icon: Folder },
   { label: 'Collections', href: '/admin/collections', icon: Layers },
   { label: 'Bundles',     href: '/admin/bundles',     icon: Gift },
   { label: 'Import',      href: '/admin/import',      icon: Upload },
+  // The house of agents — all of them, one group.
+  { section: 'Studio' },
+  { label: 'Ask AI',      href: '/admin/analyst',     icon: Sparkles },
+  { label: 'Growth Engine', href: '/admin/growth',    icon: Zap },
+  { label: 'The Atelier', href: '/admin/atelier',     icon: Gem },
+  { label: 'Site Audit',  href: '/admin/settings/advanced/site-audit', icon: Activity },
+  { label: 'Competitors', href: '/admin/competitors', icon: Target },
+  { label: 'Marketing Coordinator', href: '/admin/marketing-coordinator', icon: Workflow },
+  { label: 'Archivarius', href: '/admin/memory',      icon: Library },
   { section: 'Marketing' },
   { label: 'Marketing',   href: '/admin/marketing',    icon: Megaphone },
   { label: 'SEO',         href: '/admin/seo',          icon: Search },
@@ -52,19 +60,21 @@ const NAV: NavEntry[] = [
   { label: 'Image Studio', href: '/admin/social-assets', icon: ImageIcon },
   { section: 'Content' },
   { label: 'Journal',      href: '/admin/journal',     icon: BookOpen },
-  { label: 'Pages',        href: '/admin/pages',       icon: FileText },
+  // "Pages" was a second door onto the same CMS — /admin/pages is a per-page
+  // overview that deep-links into /admin/content. One entry; the overview is
+  // still linked from inside Site Content.
   { label: 'Site Content', href: '/admin/content',     icon: ImageIcon },
   { label: 'Translations', href: '/admin/translations', icon: Languages },
   { section: 'Finance' },
   { label: 'Overview',   href: '/admin/finance',           icon: BookMarked, exact: true },
   { label: 'Expenses',   href: '/admin/finance/expenses',  icon: BookMarked },
   { label: 'Reports',    href: '/admin/finance/reports',   icon: BookMarked },
-  { section: 'Config' },
+  { section: 'Settings' },
   { label: 'Business & offers', href: '/admin/settings/business', icon: Percent },
+  { label: 'Shipping',   href: '/admin/settings/shipping', icon: Truck },
   { label: 'FAQ',        href: '/admin/settings/faq',      icon: BookOpen },
   { label: 'Size guide', href: '/admin/settings/size-guide', icon: BookMarked },
-  { label: 'Shipping',   href: '/admin/settings/shipping', icon: Truck },
-  { label: 'Site Audit', href: '/admin/settings/advanced/site-audit', icon: Activity },
+  { label: 'Connections', href: '/admin/connections', icon: Plug },
   { label: 'Settings',   href: '/admin/settings',   icon: Settings, exact: true },
 ];
 

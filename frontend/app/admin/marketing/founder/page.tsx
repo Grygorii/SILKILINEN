@@ -31,10 +31,10 @@ export default function FounderPage() {
   }, []);
 
   const card = (label: string, value: string, sub?: string) => (
-    <div style={{ background: 'white', border: '1px solid var(--border)', padding: '20px 22px' }}>
-      <div style={{ fontSize: 10, letterSpacing: '1.4px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>{label}</div>
-      <div style={{ fontSize: 26, fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 400, color: 'var(--dark)' }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>{sub}</div>}
+    <div style={{ background: 'white', border: '1px solid var(--admin-line)', padding: '20px 22px' }}>
+      <div style={{ fontSize: 10, letterSpacing: '1.4px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 26, fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 400, color: 'var(--admin-ink)' }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: 'var(--admin-ink-muted)', marginTop: 4 }}>{sub}</div>}
     </div>
   );
 
@@ -42,14 +42,14 @@ export default function FounderPage() {
     <AdminLayout>
       <div style={{ padding: 32, maxWidth: 700 }}>
         <div style={{ marginBottom: 32 }}>
-          <Link href="/admin/marketing" style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'none' }}>← Marketing</Link>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 28, fontWeight: 400, color: 'var(--dark)', marginTop: 10, marginBottom: 4 }}>
+          <Link href="/admin/marketing" style={{ fontSize: 12, color: 'var(--admin-ink-muted)', textDecoration: 'none' }}>← Marketing</Link>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 28, fontWeight: 400, color: 'var(--admin-ink)', marginTop: 10, marginBottom: 4 }}>
             This week's ads
           </h1>
-          <p style={{ fontSize: 13, color: 'var(--muted)' }}>Plain-English summary. Monday to today.</p>
+          <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>Plain-English summary. Monday to today.</p>
         </div>
 
-        {loading && <p style={{ fontSize: 13, color: 'var(--muted)' }}>Loading…</p>}
+        {loading && <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>Loading…</p>}
 
         {data && !loading && (
           <>
@@ -63,29 +63,29 @@ export default function FounderPage() {
             </div>
 
             {data.founderBullets.length > 0 && (
-              <div style={{ background: 'white', border: '1px solid var(--border)', padding: '22px 24px', marginBottom: 28 }}>
-                <div style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 16 }}>What's happening</div>
+              <div style={{ background: 'white', border: '1px solid var(--admin-line)', padding: '22px 24px', marginBottom: 28 }}>
+                <div style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 16 }}>What's happening</div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {data.founderBullets.map((b, i) => (
-                    <li key={i} style={{ fontSize: 14, color: 'var(--dark)', lineHeight: 1.6, paddingLeft: 18, position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: 0, color: 'var(--muted)', fontSize: 12, top: 3 }}>→</span>
+                    <li key={i} style={{ fontSize: 14, color: 'var(--admin-ink)', lineHeight: 1.6, paddingLeft: 18, position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: 0, color: 'var(--admin-ink-muted)', fontSize: 12, top: 3 }}>→</span>
                       {b}
                     </li>
                   ))}
                 </ul>
                 {data.generatedAt && (
-                  <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 16, marginBottom: 0 }}>
+                  <p style={{ fontSize: 11, color: 'var(--admin-ink-muted)', marginTop: 16, marginBottom: 0 }}>
                     Last updated {new Date(data.generatedAt).toLocaleDateString()} ·{' '}
-                    <Link href="/admin/marketing" style={{ color: 'var(--muted)' }}>Regenerate in full dashboard →</Link>
+                    <Link href="/admin/marketing" style={{ color: 'var(--admin-ink-muted)' }}>Regenerate in full dashboard →</Link>
                   </p>
                 )}
               </div>
             )}
 
             {data.founderBullets.length === 0 && (
-              <p style={{ fontSize: 13, color: 'var(--muted)' }}>
+              <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>
                 No analysis yet. Go to the{' '}
-                <Link href="/admin/marketing" style={{ color: 'var(--dark)' }}>marketing dashboard</Link>{' '}
+                <Link href="/admin/marketing" style={{ color: 'var(--admin-ink)' }}>marketing dashboard</Link>{' '}
                 and click Regenerate.
               </p>
             )}

@@ -119,7 +119,7 @@ export default function MarketingDashboardPage() {
     finally { setRegenerating(false); }
   }
 
-  if (loading) return <AdminLayout><div className={styles.page}><p style={{ color: 'var(--muted)', fontSize: 13 }}>Loading…</p></div></AdminLayout>;
+  if (loading) return <AdminLayout><div className={styles.page}><p style={{ color: 'var(--admin-ink-muted)', fontSize: 13 }}>Loading…</p></div></AdminLayout>;
   if (error)   return <AdminLayout><div className={styles.page}><p style={{ color: 'var(--color-danger)', fontSize: 13 }}>{error}</p></div></AdminLayout>;
   if (!data)   return null;
 
@@ -152,17 +152,17 @@ export default function MarketingDashboardPage() {
           <div style={{ border: '1px solid var(--color-line)', background: 'var(--color-bg)', padding: '16px 20px', margin: '0 0 20px', borderRadius: 4 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, flexWrap: 'wrap' }}>
               <div>
-                <p style={{ margin: 0, fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted,var(--admin-ink-muted))' }}>Email subscribers</p>
+                <p style={{ margin: 0, fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)' }}>Email subscribers</p>
                 <p style={{ margin: '4px 0 0', fontSize: 26, fontFamily: 'Georgia, serif', color: 'var(--color-ink)' }}>{subs.total.toLocaleString()}</p>
               </div>
               <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' }}>
                 {subs.bySource.slice(0, 4).map(s => (
-                  <span key={s.source} style={{ fontSize: 12.5, color: 'var(--muted,var(--admin-ink-muted))' }}>{s.source}: <strong style={{ color: 'var(--color-ink)' }}>{s.count}</strong></span>
+                  <span key={s.source} style={{ fontSize: 12.5, color: 'var(--admin-ink-muted)' }}>{s.source}: <strong style={{ color: 'var(--color-ink)' }}>{s.count}</strong></span>
                 ))}
                 <button onClick={exportSubs} disabled={!subs.total} style={{ padding: '8px 14px', background: 'var(--color-ink)', color: 'var(--color-bg)', border: 'none', cursor: subs.total ? 'pointer' : 'default', fontSize: 12, letterSpacing: '0.5px', borderRadius: 3, opacity: subs.total ? 1 : 0.5 }}>Export CSV</button>
               </div>
             </div>
-            <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--muted,var(--admin-ink-muted))' }}>
+            <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--admin-ink-muted)' }}>
               Captured from the Style Finder, popup &amp; footer — export to your email tool (the Newsletter Drafter writes the copy).{subs.unsubscribed > 0 ? ` ${subs.unsubscribed} unsubscribed, excluded.` : ''}
             </p>
           </div>
@@ -216,7 +216,7 @@ export default function MarketingDashboardPage() {
               {analysis.bullets.map((b, i) => <li key={i}>{b}</li>)}
             </ul>
           ) : (
-            <p style={{ fontSize: 13, color: 'var(--muted)' }}>
+            <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>
               No analysis yet. Click Regenerate to generate today's read.
             </p>
           )}
@@ -258,11 +258,11 @@ export default function MarketingDashboardPage() {
           <div className={styles.card}>
             <div className={styles.cardTitle}>Top ad products (30d)</div>
             {topAdProducts.length === 0
-              ? <p style={{ fontSize: 13, color: 'var(--muted)' }}>No ad-attributed orders yet.</p>
+              ? <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>No ad-attributed orders yet.</p>
               : topAdProducts.map((p, i) => (
                 <div key={i} className={styles.miniRow}>
                   <span>{p.name}</span>
-                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>{p.units} units · {fmt(p.revenue)}</span>
+                  <span style={{ fontSize: 11, color: 'var(--admin-ink-muted)' }}>{p.units} units · {fmt(p.revenue)}</span>
                 </div>
               ))
             }
@@ -270,11 +270,11 @@ export default function MarketingDashboardPage() {
           <div className={styles.card}>
             <div className={styles.cardTitle}>Top creatives (30d)</div>
             {topCreatives.length === 0
-              ? <p style={{ fontSize: 13, color: 'var(--muted)' }}>No creative data yet.</p>
+              ? <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>No creative data yet.</p>
               : topCreatives.map((c, i) => (
                 <div key={i} className={styles.miniRow}>
                   <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{c.utmContent}</span>
-                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>{c.orders} orders · {fmt(c.revenue)}</span>
+                  <span style={{ fontSize: 11, color: 'var(--admin-ink-muted)' }}>{c.orders} orders · {fmt(c.revenue)}</span>
                 </div>
               ))
             }
@@ -285,7 +285,7 @@ export default function MarketingDashboardPage() {
           <div className={styles.card}>
             <div className={styles.cardTitle}>Revenue by channel (30d)</div>
             {revenueByChannel.length === 0
-              ? <p style={{ fontSize: 13, color: 'var(--muted)' }}>No data yet.</p>
+              ? <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>No data yet.</p>
               : revenueByChannel.map((c, i) => (
                 <div key={i} className={styles.miniRow}>
                   <span>{c.channel}</span>
@@ -297,7 +297,7 @@ export default function MarketingDashboardPage() {
           <div className={styles.card}>
             <div className={styles.cardTitle}>Visitor countries (30d, paid traffic)</div>
             {geoCountries.length === 0
-              ? <p style={{ fontSize: 13, color: 'var(--muted)' }}>No geo data yet.</p>
+              ? <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>No geo data yet.</p>
               : geoCountries.map((g, i) => (
                 <div key={i} className={styles.miniRow}>
                   <span>{g.country}</span>

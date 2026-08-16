@@ -6,12 +6,12 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 32px;
   font-weight: 400;
-  color: var(--dark);
+  color: var(--admin-ink);
 }
 
 .section {
-  background: var(--warm-white);
-  border: 1px solid var(--border);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-line);
   padding: 28px 32px;
   margin-bottom: 24px;
 }
@@ -23,7 +23,7 @@
   font-size: 11px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   margin-bottom: 14px;
 }
 
@@ -36,37 +36,37 @@
 
 .platformBtn {
   background: none;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   padding: 9px 20px;
   font-family: 'Jost', sans-serif;
   font-size: 12px;
   letter-spacing: 1.5px;
   cursor: pointer;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   transition: all 0.15s ease;
 }
 
 .platformBtn:hover {
-  border-color: var(--dark);
-  color: var(--dark);
+  border-color: var(--admin-ink);
+  color: var(--admin-ink);
 }
 
 .platformActive {
-  background: var(--dark);
-  border-color: var(--dark);
-  color: var(--warm-white);
+  background: var(--admin-ink);
+  border-color: var(--admin-ink);
+  color: var(--admin-surface);
 }
 
 .hint {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   line-height: 1.6;
 }
 
 /* ── Drop zone ───────────────────────────────────── */
 
 .dropzone {
-  border: 1.5px dashed var(--border);
+  border: 1.5px dashed var(--admin-line);
   padding: 52px 32px;
   text-align: center;
   cursor: pointer;
@@ -75,23 +75,23 @@
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 .dropzone:hover {
-  border-color: var(--dark);
-  background: var(--cream);
+  border-color: var(--admin-ink);
+  background: var(--admin-bg);
 }
 
 .dropzoneDrag {
-  border-color: var(--dark);
-  background: var(--cream);
+  border-color: var(--admin-ink);
+  background: var(--admin-bg);
 }
 
 .dropzoneHasFile {
   border-style: solid;
-  border-color: var(--dark);
-  color: var(--dark);
+  border-color: var(--admin-ink);
+  color: var(--admin-ink);
 }
 
 .fileInput {
@@ -105,7 +105,7 @@
 
 .dropSub {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 /* ── Preview ─────────────────────────────────────── */
@@ -119,21 +119,21 @@
 
 .previewCount {
   font-size: 14px;
-  color: var(--dark);
+  color: var(--admin-ink);
 }
 
 .changeBtn {
   background: none;
   border: none;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   cursor: pointer;
   text-decoration: underline;
   padding: 0;
 }
 
 .changeBtn:hover {
-  color: var(--dark);
+  color: var(--admin-ink);
 }
 
 /* ── Table ───────────────────────────────────────── */
@@ -146,7 +146,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
 }
 
 .table th {
@@ -155,18 +155,18 @@
   font-size: 10px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--muted);
-  border-bottom: 1px solid var(--border);
+  color: var(--admin-ink-muted);
+  border-bottom: 1px solid var(--admin-line);
   font-weight: 400;
   white-space: nowrap;
-  background: var(--cream);
+  background: var(--admin-bg);
 }
 
 .table td {
   padding: 12px 16px;
   font-size: 13px;
-  color: var(--dark);
-  border-bottom: 1px solid var(--border);
+  color: var(--admin-ink);
+  border-bottom: 1px solid var(--admin-line);
   vertical-align: middle;
 }
 
@@ -176,18 +176,18 @@
 
 .tagsCell {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   max-width: 200px;
 }
 
 .empty {
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   opacity: 0.5;
 }
 
 .reason {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 /* ── Status badges ───────────────────────────────── */
@@ -202,7 +202,7 @@
 }
 
 .badgeImported { background: var(--color-success-soft); color: var(--color-success); }
-.badgeSkipped  { background: var(--cream); color: var(--muted); border: 1px solid var(--border); }
+.badgeSkipped  { background: var(--admin-bg); color: var(--admin-ink-muted); border: 1px solid var(--admin-line); }
 .badgeError    { background: var(--admin-danger-soft); color: var(--admin-danger); }
 
 /* ── Summary bar ─────────────────────────────────── */
@@ -222,7 +222,7 @@
 
 .summarySkipped {
   font-size: 14px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 /* ── Actions ─────────────────────────────────────── */
@@ -234,8 +234,8 @@
 }
 
 .importBtn {
-  background: var(--dark);
-  color: var(--warm-white);
+  background: var(--admin-ink);
+  color: var(--admin-surface);
   border: none;
   padding: 13px 32px;
   font-family: 'Jost', sans-serif;
@@ -257,20 +257,20 @@
 
 .cancelBtn {
   background: none;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   padding: 12px 24px;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   cursor: pointer;
   transition: border-color 0.2s ease, color 0.2s ease;
 }
 
 .cancelBtn:hover:not(:disabled) {
-  border-color: var(--dark);
-  color: var(--dark);
+  border-color: var(--admin-ink);
+  color: var(--admin-ink);
 }
 
 .cancelBtn:disabled {
@@ -280,7 +280,7 @@
 
 .viewBtn {
   font-size: 13px;
-  color: var(--dark);
+  color: var(--admin-ink);
   text-decoration: underline;
 }
 

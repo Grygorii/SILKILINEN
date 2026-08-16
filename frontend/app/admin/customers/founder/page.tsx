@@ -19,10 +19,10 @@ type Stats = {
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div style={{ background: 'white', border: '1px solid var(--border)', padding: '18px 22px' }}>
-      <p style={{ fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--muted)', margin: '0 0 6px' }}>{label}</p>
-      <p style={{ fontSize: 26, fontWeight: 600, color: 'var(--dark)', margin: 0 }}>{value}</p>
-      {sub && <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>{sub}</p>}
+    <div style={{ background: 'white', border: '1px solid var(--admin-line)', padding: '18px 22px' }}>
+      <p style={{ fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', margin: '0 0 6px' }}>{label}</p>
+      <p style={{ fontSize: 26, fontWeight: 600, color: 'var(--admin-ink)', margin: 0 }}>{value}</p>
+      {sub && <p style={{ fontSize: 12, color: 'var(--admin-ink-muted)', marginTop: 4 }}>{sub}</p>}
     </div>
   );
 }
@@ -72,7 +72,7 @@ export default function CustomersFounderPage() {
     'newsletter-only': 'var(--admin-warning)', recent: 'var(--admin-info)', lapsed: 'var(--admin-danger)', 'at-risk': 'var(--admin-danger)',
   };
 
-  if (loading) return <AdminLayout><div style={{ padding: 28, color: 'var(--muted)', fontSize: 13 }}>Loading…</div></AdminLayout>;
+  if (loading) return <AdminLayout><div style={{ padding: 28, color: 'var(--admin-ink-muted)', fontSize: 13 }}>Loading…</div></AdminLayout>;
 
   const total = stats?.totalCustomers || 0;
 
@@ -81,13 +81,13 @@ export default function CustomersFounderPage() {
       <div style={{ padding: '24px 28px', maxWidth: 900 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
           <div>
-            <Link href="/admin/customers" style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'none' }}>← All customers</Link>
-            <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--dark)', margin: '8px 0 4px', fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+            <Link href="/admin/customers" style={{ fontSize: 12, color: 'var(--admin-ink-muted)', textDecoration: 'none' }}>← All customers</Link>
+            <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--admin-ink)', margin: '8px 0 4px', fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
               Your customers
             </h1>
-            <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>{total} people who love Silkilinen</p>
+            <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', margin: 0 }}>{total} people who love Silkilinen</p>
           </div>
-          <button onClick={recompute} disabled={recomputing} style={{ padding: '8px 14px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--dark)' }}>
+          <button onClick={recompute} disabled={recomputing} style={{ padding: '8px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--admin-ink)' }}>
             {recomputing ? 'Refreshing…' : 'Refresh segments'}
           </button>
         </div>
@@ -98,10 +98,10 @@ export default function CustomersFounderPage() {
             const pct = total > 0 ? Math.round((seg.count / total) * 100) : 0;
             return (
               <Link key={seg.slug} href={`/admin/customers?segment=${seg.slug}`} style={{ textDecoration: 'none' }}>
-                <div style={{ background: 'white', border: `1px solid var(--border)`, borderLeft: `4px solid ${SEGMENT_COLORS[seg.slug] || 'var(--admin-line)'}`, padding: '14px 16px' }}>
+                <div style={{ background: 'white', border: `1px solid var(--admin-line)`, borderLeft: `4px solid ${SEGMENT_COLORS[seg.slug] || 'var(--admin-line)'}`, padding: '14px 16px' }}>
                   <p style={{ fontSize: 22, fontWeight: 600, color: SEGMENT_COLORS[seg.slug] || 'var(--admin-ink)', margin: '0 0 4px' }}>{seg.count}</p>
-                  <p style={{ fontSize: 13, color: 'var(--dark)', margin: '0 0 2px', fontWeight: 500 }}>{seg.label}</p>
-                  <p style={{ fontSize: 11, color: 'var(--muted)', margin: 0 }}>{pct}% of all · {seg.description}</p>
+                  <p style={{ fontSize: 13, color: 'var(--admin-ink)', margin: '0 0 2px', fontWeight: 500 }}>{seg.label}</p>
+                  <p style={{ fontSize: 11, color: 'var(--admin-ink-muted)', margin: 0 }}>{pct}% of all · {seg.description}</p>
                 </div>
               </Link>
             );
@@ -110,12 +110,12 @@ export default function CustomersFounderPage() {
 
         {/* Repeat rate highlight */}
         {stats && (
-          <div style={{ background: 'white', border: '1px solid var(--border)', padding: '20px 24px', marginBottom: 24 }}>
-            <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 8px', color: 'var(--dark)' }}>Repeat purchase rate</p>
+          <div style={{ background: 'white', border: '1px solid var(--admin-line)', padding: '20px 24px', marginBottom: 24 }}>
+            <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 8px', color: 'var(--admin-ink)' }}>Repeat purchase rate</p>
             <p style={{ fontSize: 32, fontWeight: 700, color: stats.repeatRate >= 30 ? 'var(--color-success)' : stats.repeatRate >= 15 ? 'var(--admin-warning)' : 'var(--admin-danger)', margin: '0 0 6px' }}>
               {stats.repeatRate}%
             </p>
-            <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>
+            <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', margin: 0 }}>
               {stats.repeatRate >= 30
                 ? 'Strong — more than 1 in 3 customers comes back.'
                 : stats.repeatRate >= 15
@@ -127,7 +127,7 @@ export default function CustomersFounderPage() {
 
         {/* Quick actions */}
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <Link href="/admin/customers/new" style={{ padding: '10px 18px', background: 'var(--dark)', color: 'white', textDecoration: 'none', fontSize: 13 }}>
+          <Link href="/admin/customers/new" style={{ padding: '10px 18px', background: 'var(--admin-ink)', color: 'white', textDecoration: 'none', fontSize: 13 }}>
             + Add customer manually
           </Link>
           <button
@@ -136,11 +136,11 @@ export default function CustomersFounderPage() {
               try { await downloadBlob('/api/admin/customers/export/csv', 'customers.csv'); }
               catch (err) { toast(err instanceof Error ? err.message : 'Export failed', 'error'); }
             }}
-            style={{ padding: '10px 18px', border: '1px solid var(--border)', color: 'var(--dark)', background: 'transparent', textDecoration: 'none', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ padding: '10px 18px', border: '1px solid var(--admin-line)', color: 'var(--admin-ink)', background: 'transparent', textDecoration: 'none', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             Export all (CSV)
           </button>
-          <Link href="/admin/customers?segment=lapsed" style={{ padding: '10px 18px', border: '1px solid var(--border)', color: 'var(--dark)', textDecoration: 'none', fontSize: 13 }}>
+          <Link href="/admin/customers?segment=lapsed" style={{ padding: '10px 18px', border: '1px solid var(--admin-line)', color: 'var(--admin-ink)', textDecoration: 'none', fontSize: 13 }}>
             View lapsed customers
           </Link>
         </div>

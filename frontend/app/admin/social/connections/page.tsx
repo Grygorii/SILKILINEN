@@ -156,17 +156,17 @@ export default function SocialConnectionsPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-              <Link href="/admin/social" style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'none' }}>← Social</Link>
+              <Link href="/admin/social" style={{ fontSize: 12, color: 'var(--admin-ink-muted)', textDecoration: 'none' }}>← Social</Link>
             </div>
-            <h1 style={{ fontSize: 26, fontWeight: 300, fontFamily: "'Cormorant Garamond', Georgia, serif", color: 'var(--dark)', margin: 0, letterSpacing: '1px' }}>
+            <h1 style={{ fontSize: 26, fontWeight: 300, fontFamily: "'Cormorant Garamond', Georgia, serif", color: 'var(--admin-ink)', margin: 0, letterSpacing: '1px' }}>
               Social Connections
             </h1>
-            <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4, fontStyle: 'italic' }}>
+            <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', marginTop: 4, fontStyle: 'italic' }}>
               Platform URLs power footer icons, "Follow on Instagram", and email footers.
             </p>
           </div>
           <button onClick={() => setShowAddModal(true)} style={{
-            padding: '10px 18px', background: 'var(--dark)', color: 'white', border: 'none',
+            padding: '10px 18px', background: 'var(--admin-ink)', color: 'white', border: 'none',
             cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, letterSpacing: '0.5px',
           }}>
             + Add platform
@@ -174,24 +174,24 @@ export default function SocialConnectionsPage() {
         </div>
 
         {loading ? (
-          <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 40 }}>Loading…</p>
+          <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', marginTop: 40 }}>Loading…</p>
         ) : (
           <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {platforms.map(p => (
               <div key={p.key} style={{
-                background: 'white', border: '1px solid var(--border)',
+                background: 'white', border: '1px solid var(--admin-line)',
                 padding: '18px 20px', opacity: p.isActive ? 1 : 0.55,
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                   {getPlatformIcon(p.icon, p.brandColor || 'var(--admin-ink-muted)')}
-                  <span style={{ fontWeight: 500, fontSize: 14, color: 'var(--dark)' }}>{p.displayName}</span>
+                  <span style={{ fontWeight: 500, fontSize: 14, color: 'var(--admin-ink)' }}>{p.displayName}</span>
                   {p.url && isValidUrl(p.url) && (
                     <span style={{ fontSize: 10, padding: '1px 6px', background: 'var(--admin-success-soft)', color: 'var(--color-success)', borderRadius: 2, letterSpacing: '0.5px' }}>CONNECTED</span>
                   )}
                   {!p.isActive && (
                     <span style={{ fontSize: 10, padding: '1px 6px', background: 'var(--admin-bg)', color: 'var(--admin-ink-muted)', borderRadius: 2, letterSpacing: '0.5px' }}>HIDDEN</span>
                   )}
-                  <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)', cursor: 'pointer', textDecoration: 'underline' }}
+                  <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--admin-ink-muted)', cursor: 'pointer', textDecoration: 'underline' }}
                     onClick={() => toggleActive(p.key, p.isActive)}>
                     {p.isActive ? 'Deactivate' : 'Activate'}
                   </span>
@@ -204,17 +204,17 @@ export default function SocialConnectionsPage() {
                     placeholder={`https://${p.icon}.com/silkilinen`}
                     onKeyDown={e => e.key === 'Enter' && saveUrl(p.key)}
                     style={{
-                      flex: 1, padding: '8px 12px', border: `1px solid ${errors[p.key] ? 'var(--admin-danger)' : 'var(--border)'}`,
-                      fontFamily: 'inherit', fontSize: 13, color: 'var(--dark)',
+                      flex: 1, padding: '8px 12px', border: `1px solid ${errors[p.key] ? 'var(--admin-danger)' : 'var(--admin-line)'}`,
+                      fontFamily: 'inherit', fontSize: 13, color: 'var(--admin-ink)',
                     }}
                   />
                   <button
                     onClick={() => saveUrl(p.key)}
                     disabled={saving === p.key}
                     style={{
-                      padding: '8px 18px', border: '1px solid var(--border)',
+                      padding: '8px 18px', border: '1px solid var(--admin-line)',
                       background: saved[p.key] ? 'var(--admin-success-soft)' : 'white',
-                      color: saved[p.key] ? 'var(--color-success)' : 'var(--dark)',
+                      color: saved[p.key] ? 'var(--color-success)' : 'var(--admin-ink)',
                       cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, transition: 'all 0.2s',
                     }}
                   >
@@ -223,8 +223,8 @@ export default function SocialConnectionsPage() {
                 </div>
                 {errors[p.key] && <p style={{ fontSize: 11, color: 'var(--admin-danger)', marginTop: 4 }}>{errors[p.key]}</p>}
                 {p.url && (
-                  <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>
-                    <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--muted)' }}>{p.url}</a>
+                  <p style={{ fontSize: 11, color: 'var(--admin-ink-muted)', marginTop: 6 }}>
+                    <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--admin-ink-muted)' }}>{p.url}</a>
                   </p>
                 )}
               </div>
@@ -240,45 +240,45 @@ export default function SocialConnectionsPage() {
               <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 22, fontWeight: 400, margin: '0 0 20px' }}>Add platform</h2>
               <form onSubmit={addPlatform} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
-                  <label style={{ fontSize: 11, letterSpacing: '0.5px', color: 'var(--muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Key (slug) *</label>
+                  <label style={{ fontSize: 11, letterSpacing: '0.5px', color: 'var(--admin-ink-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Key (slug) *</label>
                   <input value={newPlatform.key} onChange={e => setNewPlatform(p => ({ ...p, key: e.target.value.toLowerCase().replace(/\s+/g, '_') }))}
                     placeholder="e.g. instagram, linkedin" required
-                    style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, letterSpacing: '0.5px', color: 'var(--muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Display name *</label>
+                  <label style={{ fontSize: 11, letterSpacing: '0.5px', color: 'var(--admin-ink-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Display name *</label>
                   <input value={newPlatform.displayName} onChange={e => setNewPlatform(p => ({ ...p, displayName: e.target.value }))}
                     placeholder="Instagram" required
-                    style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, letterSpacing: '0.5px', color: 'var(--muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Icon key * <span style={{ fontSize: 10, fontStyle: 'italic' }}>(instagram, pinterest, facebook, tiktok, threads, youtube, twitter_x)</span></label>
+                  <label style={{ fontSize: 11, letterSpacing: '0.5px', color: 'var(--admin-ink-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Icon key * <span style={{ fontSize: 10, fontStyle: 'italic' }}>(instagram, pinterest, facebook, tiktok, threads, youtube, twitter_x)</span></label>
                   <input value={newPlatform.icon} onChange={e => setNewPlatform(p => ({ ...p, icon: e.target.value.toLowerCase() }))}
                     placeholder="instagram" required
-                    style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
-                    <label style={{ fontSize: 11, letterSpacing: '0.5px', color: 'var(--muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Brand color</label>
+                    <label style={{ fontSize: 11, letterSpacing: '0.5px', color: 'var(--admin-ink-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Brand color</label>
                     <input type="color" value={newPlatform.brandColor} onChange={e => setNewPlatform(p => ({ ...p, brandColor: e.target.value }))}
-                      style={{ width: '100%', height: 36, border: '1px solid var(--border)', cursor: 'pointer' }} />
+                      style={{ width: '100%', height: 36, border: '1px solid var(--admin-line)', cursor: 'pointer' }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, letterSpacing: '0.5px', color: 'var(--muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Sort order</label>
+                    <label style={{ fontSize: 11, letterSpacing: '0.5px', color: 'var(--admin-ink-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Sort order</label>
                     <input type="number" value={newPlatform.sortOrder} onChange={e => setNewPlatform(p => ({ ...p, sortOrder: Number(e.target.value) }))}
-                      style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
+                      style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
                   </div>
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, letterSpacing: '0.5px', color: 'var(--muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Base URL (optional)</label>
+                  <label style={{ fontSize: 11, letterSpacing: '0.5px', color: 'var(--admin-ink-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Base URL (optional)</label>
                   <input value={newPlatform.baseUrl} onChange={e => setNewPlatform(p => ({ ...p, baseUrl: e.target.value }))}
                     placeholder="https://instagram.com/"
-                    style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
                 </div>
                 {addError && <p style={{ fontSize: 12, color: 'var(--admin-danger)', margin: 0 }}>{addError}</p>}
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
-                  <button type="button" onClick={() => setShowAddModal(false)} style={{ padding: '10px 20px', border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Cancel</button>
-                  <button type="submit" disabled={adding} style={{ padding: '10px 24px', background: 'var(--dark)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
+                  <button type="button" onClick={() => setShowAddModal(false)} style={{ padding: '10px 20px', border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Cancel</button>
+                  <button type="submit" disabled={adding} style={{ padding: '10px 24px', background: 'var(--admin-ink)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
                     {adding ? 'Adding…' : 'Add platform'}
                   </button>
                 </div>

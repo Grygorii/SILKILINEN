@@ -8,13 +8,13 @@ export default function Card({
   style?: React.CSSProperties;
 }) {
   return (
-    <div style={{ background: 'white', border: '1px solid var(--border)', padding: 24, ...style }}>
+    <div style={{ background: 'white', border: '1px solid var(--admin-line)', padding: 24, ...style }}>
       {title && (
         <p style={{
           fontSize: 11,
           letterSpacing: 2,
           textTransform: 'uppercase',
-          color: 'var(--muted)',
+          color: 'var(--admin-ink-muted)',
           marginBottom: 16,
         }}>
           {title}

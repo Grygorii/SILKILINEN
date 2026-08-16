@@ -46,11 +46,11 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
 
         {/* Top products */}
         <div>
-          <p style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 12 }}>
+          <p style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 12 }}>
             Top products (30 days)
           </p>
           {topProducts30d.length === 0 ? (
-            <p style={{ fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' }}>
+            <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', fontStyle: 'italic' }}>
               Top products will appear here once you have orders.
             </p>
           ) : (
@@ -64,7 +64,7 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
                     alignItems: 'center',
                     gap:         10,
                     background: 'none',
-                    border:     '1px solid var(--border)',
+                    border:     '1px solid var(--admin-line)',
                     padding:    '10px 12px',
                     cursor:     'pointer',
                     textAlign:  'left',
@@ -74,13 +74,13 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
                   {p.imageUrl ? (
                     <img src={p.imageUrl} alt={p.productName} style={{ width: 36, height: 36, objectFit: 'cover', flexShrink: 0 }} />
                   ) : (
-                    <div style={{ width: 36, height: 36, background: 'var(--cream)', flexShrink: 0 }} />
+                    <div style={{ width: 36, height: 36, background: 'var(--admin-bg)', flexShrink: 0 }} />
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, color: 'var(--dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <p style={{ fontSize: 13, color: 'var(--admin-ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {p.productName}
                     </p>
-                    <p style={{ fontSize: 11, color: 'var(--muted)' }}>
+                    <p style={{ fontSize: 11, color: 'var(--admin-ink-muted)' }}>
                       {p.unitsSold} sold · {fmtCents(p.revenue)}
                     </p>
                   </div>
@@ -94,16 +94,16 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Traffic sources */}
           <div>
-            <p style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 12 }}>
+            <p style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 12 }}>
               Top sources (30 days)
             </p>
             {topTrafficSources30d.length === 0 ? (
-              <p style={{ fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' }}>
+              <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', fontStyle: 'italic' }}>
                 Traffic sources will appear here as customers visit.
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                <div style={{ display: 'flex', gap: 12, padding: '4px 0 8px', fontSize: 10, color: 'var(--muted)', letterSpacing: '0.5px' }}>
+                <div style={{ display: 'flex', gap: 12, padding: '4px 0 8px', fontSize: 10, color: 'var(--admin-ink-muted)', letterSpacing: '0.5px' }}>
                   <span style={{ flex: 1 }} />
                   <span style={{ width: 56, textAlign: 'right' }}>% traffic</span>
                   {showConversion && <span style={{ width: 56, textAlign: 'right' }}>conv.</span>}
@@ -116,16 +116,16 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
                       alignItems:    'center',
                       gap:            12,
                       padding:       '10px 0',
-                      borderBottom:  '1px solid var(--border)',
+                      borderBottom:  '1px solid var(--admin-line)',
                       fontSize:       13,
                     }}
                   >
-                    <span style={{ flex: 1, color: 'var(--dark)' }}>{s.displayLabel}</span>
-                    <span style={{ width: 56, textAlign: 'right', color: 'var(--muted)', fontSize: 12 }}>
+                    <span style={{ flex: 1, color: 'var(--admin-ink)' }}>{s.displayLabel}</span>
+                    <span style={{ width: 56, textAlign: 'right', color: 'var(--admin-ink-muted)', fontSize: 12 }}>
                       {s.percentOfTraffic != null ? `${s.percentOfTraffic.toFixed(1)}%` : '—'}
                     </span>
                     {showConversion && (
-                      <span style={{ width: 56, textAlign: 'right', color: 'var(--muted)', fontSize: 12 }}>
+                      <span style={{ width: 56, textAlign: 'right', color: 'var(--admin-ink-muted)', fontSize: 12 }}>
                         {s.conversionPercent != null ? `${s.conversionPercent.toFixed(1)}%` : '—'}
                       </span>
                     )}
@@ -138,14 +138,14 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
           {/* Top countries */}
           {topCountries30d.length > 0 && (
             <div>
-              <p style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 12 }}>
+              <p style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 12 }}>
                 Top countries (30 days)
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                 {topCountries30d.map(c => (
-                  <div key={c.country} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                    <span style={{ flex: 1, color: 'var(--dark)' }}>{c.country}</span>
-                    <span style={{ color: 'var(--muted)', fontSize: 12, textAlign: 'right' }}>
+                  <div key={c.country} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--admin-line)', fontSize: 13 }}>
+                    <span style={{ flex: 1, color: 'var(--admin-ink)' }}>{c.country}</span>
+                    <span style={{ color: 'var(--admin-ink-muted)', fontSize: 12, textAlign: 'right' }}>
                       {c.percentOfTraffic != null ? `${c.percentOfTraffic.toFixed(1)}%` : `${c.visitors}`}
                     </span>
                   </div>
@@ -157,14 +157,14 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
           {/* Top cities */}
           {topCities30d.length > 0 && (
             <div>
-              <p style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 12 }}>
+              <p style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 12 }}>
                 Top cities (30 days)
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                 {topCities30d.map(c => (
-                  <div key={`${c.city}-${c.country}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                    <span style={{ flex: 1, color: 'var(--dark)' }}>{c.city}{c.country ? `, ${c.country}` : ''}</span>
-                    <span style={{ color: 'var(--muted)', fontSize: 12, textAlign: 'right' }}>
+                  <div key={`${c.city}-${c.country}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--admin-line)', fontSize: 13 }}>
+                    <span style={{ flex: 1, color: 'var(--admin-ink)' }}>{c.city}{c.country ? `, ${c.country}` : ''}</span>
+                    <span style={{ color: 'var(--admin-ink-muted)', fontSize: 12, textAlign: 'right' }}>
                       {c.percentOfTraffic != null ? `${c.percentOfTraffic.toFixed(1)}%` : `${c.visitors}`}
                     </span>
                   </div>
@@ -175,11 +175,11 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
 
           {/* Best converting */}
           <div>
-            <p style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 12 }}>
+            <p style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 12 }}>
               Best converting
             </p>
             {bestConvertingProduct30d === null ? (
-              <p style={{ fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' }}>
+              <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', fontStyle: 'italic' }}>
                 Best-converting product surfaces once any product crosses 50 unique visits.
               </p>
             ) : (
@@ -190,7 +190,7 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
                   alignItems: 'center',
                   gap:         10,
                   background: 'none',
-                  border:     '1px solid var(--border)',
+                  border:     '1px solid var(--admin-line)',
                   padding:    '10px 12px',
                   cursor:     'pointer',
                   textAlign:  'left',
@@ -204,10 +204,10 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
                     style={{ width: 36, height: 36, objectFit: 'cover', flexShrink: 0 }}
                   />
                 ) : (
-                  <div style={{ width: 36, height: 36, background: 'var(--cream)', flexShrink: 0 }} />
+                  <div style={{ width: 36, height: 36, background: 'var(--admin-bg)', flexShrink: 0 }} />
                 )}
                 <div>
-                  <p style={{ fontSize: 13, color: 'var(--dark)' }}>{bestConvertingProduct30d.productName}</p>
+                  <p style={{ fontSize: 13, color: 'var(--admin-ink)' }}>{bestConvertingProduct30d.productName}</p>
                   <p style={{ fontSize: 11, color: 'var(--admin-success)' }}>
                     {bestConvertingProduct30d.conversionPercent.toFixed(1)}% of viewers buy
                   </p>

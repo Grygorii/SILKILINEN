@@ -143,9 +143,9 @@ export default function AbandonedCartsPage() {
             </div>
 
             {/* Recovery-email status (#4) — which sequence emails went out + resend */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border, var(--admin-line))' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--admin-line)' }}>
               {(order.recoveryEmails || []).length === 0 ? (
-                <span style={{ fontSize: 12, color: 'var(--muted)', fontStyle: 'italic' }}>No recovery email sent yet</span>
+                <span style={{ fontSize: 12, color: 'var(--admin-ink-muted)', fontStyle: 'italic' }}>No recovery email sent yet</span>
               ) : (
                 (order.recoveryEmails || []).sort((a, b) => a.seq - b.seq).map(r => (
                   <span key={r.seq} style={{ fontSize: 11, background: 'var(--admin-success-soft)', color: 'var(--color-success)', padding: '3px 8px' }}>
@@ -159,7 +159,7 @@ export default function AbandonedCartsPage() {
                 <button
                   onClick={() => resendRecovery(order._id)}
                   disabled={resending === order._id}
-                  style={{ marginLeft: 'auto', padding: '5px 12px', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', border: '1px solid var(--dark)', background: 'white', color: 'var(--dark)' }}
+                  style={{ marginLeft: 'auto', padding: '5px 12px', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', border: '1px solid var(--admin-ink)', background: 'white', color: 'var(--admin-ink)' }}
                 >
                   {resending === order._id ? 'Sending…' : 'Send recovery email'}
                 </button>

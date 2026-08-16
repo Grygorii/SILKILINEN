@@ -107,22 +107,22 @@ export default function JournalAdminPage() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 300, fontFamily: "'Cormorant Garamond', Georgia, serif", color: 'var(--dark)', margin: 0, letterSpacing: '1px' }}>
+            <h1 style={{ fontSize: 28, fontWeight: 300, fontFamily: "'Cormorant Garamond', Georgia, serif", color: 'var(--admin-ink)', margin: 0, letterSpacing: '1px' }}>
               Journal
             </h1>
-            <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 6, fontStyle: 'italic' }}>
+            <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', marginTop: 6, fontStyle: 'italic' }}>
               Sabreen&apos;s writing space
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => { setAiOpen(o => !o); setAiError(''); }} style={{
-              padding: '10px 18px', background: 'white', color: 'var(--dark)', border: '1px solid var(--admin-warning)',
+              padding: '10px 18px', background: 'white', color: 'var(--admin-ink)', border: '1px solid var(--admin-warning)',
               cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, letterSpacing: '0.5px',
             }}>
               {aiOpen ? 'Cancel' : '✦ Write with AI'}
             </button>
             <button onClick={() => setCreating(c => !c)} style={{
-              padding: '10px 20px', background: 'var(--dark)', color: 'white', border: 'none',
+              padding: '10px 20px', background: 'var(--admin-ink)', color: 'white', border: 'none',
               cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, letterSpacing: '0.5px',
             }}>
               {creating ? 'Cancel' : '+ New article'}
@@ -133,7 +133,7 @@ export default function JournalAdminPage() {
         {/* AI masterpiece generator */}
         {aiOpen && (
           <form onSubmit={generateArticle} style={{ marginBottom: 28, padding: '20px 24px', background: 'white', border: '1px solid var(--admin-warning-soft)' }}>
-            <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
+            <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--admin-ink-muted)', lineHeight: 1.6 }}>
               Writes a draft grounded in everything the agents know — Hermes&rsquo; SEO plan, rising demand, the Playbook
               and your catalogue — with a hook, real product links and correct meta. Give a topic, or leave it blank and
               the editor picks the highest‑value one.
@@ -144,7 +144,7 @@ export default function JournalAdminPage() {
                 onChange={e => setAiTopic(e.target.value)}
                 placeholder="Optional topic — e.g. how to care for a silk pillowcase"
                 disabled={aiBusy}
-                style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--border)', fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, color: 'var(--dark)' }}
+                style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--admin-line)', fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, color: 'var(--admin-ink)' }}
               />
               <button type="submit" disabled={aiBusy} style={{ padding: '10px 20px', background: 'var(--admin-warning)', color: 'white', border: 'none', cursor: aiBusy ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 13, whiteSpace: 'nowrap' }}>
                 {aiBusy ? 'Writing… (~30s)' : 'Write masterpiece'}
@@ -156,15 +156,15 @@ export default function JournalAdminPage() {
 
         {/* Quick-create form */}
         {creating && (
-          <form onSubmit={createArticle} style={{ display: 'flex', gap: 10, marginBottom: 28, padding: '20px 24px', background: 'white', border: '1px solid var(--border)' }}>
+          <form onSubmit={createArticle} style={{ display: 'flex', gap: 10, marginBottom: 28, padding: '20px 24px', background: 'white', border: '1px solid var(--admin-line)' }}>
             <input
               autoFocus
               value={newTitle}
               onChange={e => setNewTitle(e.target.value)}
               placeholder="Article title…"
-              style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--border)', fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, color: 'var(--dark)' }}
+              style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--admin-line)', fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, color: 'var(--admin-ink)' }}
             />
-            <button type="submit" style={{ padding: '10px 20px', background: 'var(--dark)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
+            <button type="submit" style={{ padding: '10px 20px', background: 'var(--admin-ink)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
               Create &amp; open
             </button>
           </form>
@@ -174,10 +174,10 @@ export default function JournalAdminPage() {
         <div style={{ display: 'flex', gap: 4, marginBottom: 24 }}>
           {FILTERS.map(f => (
             <button key={f} onClick={() => setFilter(f)} style={{
-              padding: '6px 16px', fontSize: 12, border: '1px solid var(--border)', cursor: 'pointer',
+              padding: '6px 16px', fontSize: 12, border: '1px solid var(--admin-line)', cursor: 'pointer',
               fontFamily: 'inherit', textTransform: 'capitalize', letterSpacing: '0.3px',
-              background: filter === f ? 'var(--dark)' : 'white',
-              color: filter === f ? 'white' : 'var(--muted)',
+              background: filter === f ? 'var(--admin-ink)' : 'white',
+              color: filter === f ? 'white' : 'var(--admin-ink-muted)',
             }}>
               {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
@@ -186,16 +186,16 @@ export default function JournalAdminPage() {
 
         {/* Article cards */}
         {loading ? (
-          <p style={{ fontSize: 13, color: 'var(--muted)' }}>Loading…</p>
+          <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>Loading…</p>
         ) : visible.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 20px', background: 'white', border: '1px solid var(--border)' }}>
-            <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, color: 'var(--muted)' }}>
+          <div style={{ textAlign: 'center', padding: '80px 20px', background: 'white', border: '1px solid var(--admin-line)' }}>
+            <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, color: 'var(--admin-ink-muted)' }}>
               {filter === 'all'
                 ? "No articles yet. When Sabreen writes one, it'll live here."
                 : `No ${filter} articles.`}
             </p>
             {filter === 'all' && (
-              <button onClick={() => setCreating(true)} style={{ marginTop: 20, padding: '10px 24px', background: 'var(--dark)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
+              <button onClick={() => setCreating(true)} style={{ marginTop: 20, padding: '10px 24px', background: 'var(--admin-ink)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
                 Write the first article
               </button>
             )}
@@ -226,7 +226,7 @@ export default function JournalAdminPage() {
                   </button>
                   <Link href={`/admin/journal/${article._id}`} style={{ textDecoration: 'none' }}>
                   <div style={{
-                    background: 'white', border: '1px solid var(--border)', overflow: 'hidden',
+                    background: 'white', border: '1px solid var(--admin-line)', overflow: 'hidden',
                     transition: 'box-shadow 0.2s ease',
                     cursor: 'pointer',
                   }}
@@ -247,13 +247,13 @@ export default function JournalAdminPage() {
                         <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 2, letterSpacing: '0.8px', textTransform: 'uppercase', background: st.bg, color: st.color }}>
                           {st.label}
                         </span>
-                        <span style={{ fontSize: 11, color: 'var(--muted)' }}>{timeAgo(article.updatedAt)}</span>
+                        <span style={{ fontSize: 11, color: 'var(--admin-ink-muted)' }}>{timeAgo(article.updatedAt)}</span>
                       </div>
-                      <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, fontWeight: 500, color: 'var(--dark)', margin: '0 0 6px', lineHeight: 1.3 }}>
+                      <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, fontWeight: 500, color: 'var(--admin-ink)', margin: '0 0 6px', lineHeight: 1.3 }}>
                         {article.title}
                       </h3>
                       {article.excerpt && (
-                        <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        <p style={{ fontSize: 12, color: 'var(--admin-ink-muted)', margin: 0, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                           {article.excerpt}
                         </p>
                       )}

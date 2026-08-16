@@ -9,7 +9,7 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 32px;
   font-weight: 400;
-  color: var(--dark);
+  color: var(--admin-ink);
 }
 
 .section {
@@ -20,7 +20,7 @@
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   margin-bottom: 16px;
 }
 
@@ -32,8 +32,8 @@
 }
 
 .metricCard {
-  background: var(--warm-white);
-  border: 1px solid var(--border);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-line);
   padding: 24px;
 }
 
@@ -41,7 +41,7 @@
   font-size: 11px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   margin-bottom: 12px;
 }
 
@@ -49,7 +49,7 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 34px;
   font-weight: 400;
-  color: var(--dark);
+  color: var(--admin-ink);
   margin-bottom: 6px;
   line-height: 1;
 }
@@ -60,7 +60,7 @@
 
 .changePos { color: var(--admin-success); }
 .changeNeg { color: var(--color-danger); }
-.changeMuted { color: var(--muted); }
+.changeMuted { color: var(--admin-ink-muted); }
 
 /* ── Two-column row ── */
 .twoCol {
@@ -70,8 +70,8 @@
 }
 
 .card {
-  background: var(--warm-white);
-  border: 1px solid var(--border);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-line);
   padding: 24px;
 }
 
@@ -79,7 +79,7 @@
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   margin-bottom: 20px;
 }
 
@@ -95,16 +95,16 @@
   font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   padding-bottom: 10px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--admin-line);
   font-weight: 400;
 }
 
 .miniTable td {
   padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-  color: var(--dark);
+  border-bottom: 1px solid var(--admin-line);
+  color: var(--admin-ink);
 }
 
 .miniTable tr:last-child td {
@@ -136,9 +136,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--admin-line);
   font-size: 13px;
-  color: var(--dark);
+  color: var(--admin-ink);
   gap: 12px;
 }
 
@@ -155,7 +155,7 @@
 
 .topQty {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   flex-shrink: 0;
 }
 
@@ -171,7 +171,7 @@
   align-items: center;
   gap: 12px;
   padding: 8px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--admin-line);
   font-size: 13px;
 }
 
@@ -182,33 +182,33 @@
 .geoBar {
   flex: 1;
   height: 4px;
-  background: var(--border);
+  background: var(--admin-line);
   border-radius: 2px;
   overflow: hidden;
 }
 
 .geoFill {
   height: 100%;
-  background: var(--dark);
+  background: var(--admin-ink);
   border-radius: 2px;
 }
 
 .geoCount {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   min-width: 24px;
   text-align: right;
 }
 
 /* ── Loading / empty ── */
 .loading {
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   font-size: 14px;
   padding: 20px 0;
 }
 
 .emptyState {
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   font-size: 13px;
   padding: 32px 0;
   text-align: center;
@@ -227,16 +227,16 @@
   font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   padding-bottom: 10px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--admin-line);
   font-weight: 400;
 }
 
 .attrTable td {
   padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-  color: var(--dark);
+  border-bottom: 1px solid var(--admin-line);
+  color: var(--admin-ink);
   vertical-align: middle;
 }
 
@@ -246,14 +246,14 @@
 
 .attrBar {
   height: 4px;
-  background: var(--dark);
+  background: var(--admin-ink);
   border-radius: 2px;
   min-width: 2px;
 }
 
 .attrPct {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 /* ── Insights list ── */
@@ -271,8 +271,8 @@
   display: flex;
   gap: 12px;
   padding: 14px 16px;
-  border: 1px solid var(--border);
-  background: var(--cream, var(--admin-bg));
+  border: 1px solid var(--admin-line);
+  background: var(--admin-bg);
 }
 
 .insightDot {
@@ -285,18 +285,18 @@
 
 .insightDotSuccess { background: var(--admin-success); }
 .insightDotWarning { background: var(--color-danger); }
-.insightDotInfo    { background: var(--muted, var(--admin-ink-muted)); }
+.insightDotInfo    { background: var(--admin-ink-muted); }
 
 .insightTitle {
   font-size: 13px;
-  color: var(--dark);
+  color: var(--admin-ink);
   margin-bottom: 3px;
   font-weight: 500;
 }
 
 .insightBody {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   line-height: 1.5;
 }
 
@@ -330,11 +330,11 @@
 }
 
 .errorCard {
-  background: var(--warm-white);
-  border: 1px solid var(--border);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-line);
   padding: 24px;
   font-size: 13px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   font-style: italic;
 }
 
@@ -349,23 +349,23 @@
 
 .healthMeta {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 .healthRefreshBtn {
   background: none;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   padding: 5px 12px;
   cursor: pointer;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   transition: border-color 0.2s, color 0.2s;
 }
 
 .healthRefreshBtn:hover:not(:disabled) {
-  border-color: var(--dark);
-  color: var(--dark);
+  border-color: var(--admin-ink);
+  color: var(--admin-ink);
 }
 
 .healthRefreshBtn:disabled {
@@ -380,8 +380,8 @@
 }
 
 .healthCheck {
-  background: var(--warm-white);
-  border: 1px solid var(--border);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-line);
   padding: 16px;
 }
 
@@ -396,14 +396,14 @@
 .healthCheckLabel {
   font-size: 11px;
   letter-spacing: 0.5px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   text-transform: uppercase;
   font-size: 10px;
 }
 
 .healthCheckDetail {
   font-size: 13px;
-  color: var(--dark);
+  color: var(--admin-ink);
   line-height: 1.4;
 }
 

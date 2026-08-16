@@ -89,14 +89,14 @@ function ReviewRequestTrigger({ onSent }: { onSent: () => void }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <p style={{ margin: 0, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18 }}>Review requests</p>
-          <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-ink-muted, var(--admin-ink-muted))' }}>
+          <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--admin-ink-muted)' }}>
             Send a tokenised &ldquo;how was it?&rdquo; email to every order at least
             <em style={{ fontStyle: 'normal', fontWeight: 500 }}> {ageDays} {ageDays === 1 ? 'day' : 'days'} </em>
             old that hasn&rsquo;t received one yet.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--color-ink-muted, var(--admin-ink-muted))' }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)' }}>
             Days
             <input
               type="number"
@@ -130,7 +130,7 @@ function ReviewRequestTrigger({ onSent }: { onSent: () => void }) {
           </p>
           {result.diagnostics && result.eligible === 0 && result.diagnostics.totalOrders > 0 && (
             <div style={{ marginTop: 8, padding: 10, background: 'var(--color-bg)', border: '1px dashed var(--color-line)', borderRadius: 2 }}>
-              <p style={{ margin: 0, fontSize: 11, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--color-ink-muted, var(--admin-ink-muted))' }}>
+              <p style={{ margin: 0, fontSize: 11, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)' }}>
                 Why no orders matched ({result.diagnostics.totalOrders} total)
               </p>
               <ul style={{ margin: '6px 0 0', paddingLeft: 16, fontSize: 12, color: 'var(--color-ink)', lineHeight: 1.7 }}>
@@ -373,7 +373,7 @@ export default function ReviewsModeration() {
 
                 {/* Public reply — shown under the review on the storefront. */}
                 <div style={{ marginTop: 12, borderTop: '1px solid var(--color-line)', paddingTop: 12 }}>
-                  <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--muted,var(--admin-ink-muted))', marginBottom: 6 }}>
+                  <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 6 }}>
                     {r.reply ? 'Your reply (public)' : 'Reply publicly'}
                   </label>
                   <textarea
@@ -382,7 +382,7 @@ export default function ReviewsModeration() {
                     placeholder="Write a warm reply — it shows as “Response from SILKILINEN” under the review."
                     rows={2}
                     maxLength={1000}
-                    style={{ width: '100%', boxSizing: 'border-box', font: 'inherit', fontSize: 13, padding: '8px 10px', border: '1px solid var(--border,var(--admin-line))', background: 'var(--admin-surface)', color: 'var(--color-ink)', resize: 'vertical' }}
+                    style={{ width: '100%', boxSizing: 'border-box', font: 'inherit', fontSize: 13, padding: '8px 10px', border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', color: 'var(--color-ink)', resize: 'vertical' }}
                   />
                   <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
                     <button
@@ -396,7 +396,7 @@ export default function ReviewsModeration() {
                       <button
                         onClick={() => { setReplyDrafts(d => ({ ...d, [r._id]: '' })); saveReply(r._id, ''); }}
                         disabled={busyId === r._id}
-                        style={{ padding: '7px 14px', background: 'none', border: '1px solid var(--border,var(--admin-line))', color: 'var(--muted,var(--admin-ink-muted))', cursor: 'pointer', fontSize: 12 }}
+                        style={{ padding: '7px 14px', background: 'none', border: '1px solid var(--admin-line)', color: 'var(--admin-ink-muted)', cursor: 'pointer', fontSize: 12 }}
                       >
                         Remove
                       </button>

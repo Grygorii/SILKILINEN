@@ -42,8 +42,8 @@ const VALID_STATUSES = ['draft', 'active', 'paused', 'ended'];
 
 function fmt(n: number) { return `€${n.toFixed(2)}`; }
 
-const cellStyle: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--border)', fontSize: 13, color: 'var(--dark)' };
-const thStyle: React.CSSProperties = { textAlign: 'left', padding: '8px 12px', fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 400, borderBottom: '1px solid var(--border)' };
+const cellStyle: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--admin-line)', fontSize: 13, color: 'var(--admin-ink)' };
+const thStyle: React.CSSProperties = { textAlign: 'left', padding: '8px 12px', fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', fontWeight: 400, borderBottom: '1px solid var(--admin-line)' };
 
 export default function CampaignDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -122,14 +122,14 @@ export default function CampaignDetailPage() {
     }
   }
 
-  if (loading) return <AdminLayout><div style={{ padding: 32, fontSize: 13, color: 'var(--muted)' }}>Loading…</div></AdminLayout>;
+  if (loading) return <AdminLayout><div style={{ padding: 32, fontSize: 13, color: 'var(--admin-ink-muted)' }}>Loading…</div></AdminLayout>;
   if (error)   return <AdminLayout><div style={{ padding: 32, fontSize: 13, color: 'var(--color-danger)' }}>{error}</div></AdminLayout>;
   if (!camp)   return null;
 
   const { stats } = camp;
 
-  const inputStyle: React.CSSProperties = { padding: '9px 12px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, color: 'var(--dark)', background: 'white', outline: 'none' };
-  const sectionTitle: React.CSSProperties = { fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 14, display: 'block' };
+  const inputStyle: React.CSSProperties = { padding: '9px 12px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, color: 'var(--admin-ink)', background: 'white', outline: 'none' };
+  const sectionTitle: React.CSSProperties = { fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 14, display: 'block' };
 
   const utmBase = `https://www.silkilinen.com?utm_source=${camp.channel}&utm_medium=paid&utm_campaign=${camp.slug}`;
 
@@ -138,19 +138,19 @@ export default function CampaignDetailPage() {
       <div style={{ padding: 32, maxWidth: 960 }}>
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
-          <Link href="/admin/marketing" style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'none' }}>← Marketing</Link>
+          <Link href="/admin/marketing" style={{ fontSize: 12, color: 'var(--admin-ink-muted)', textDecoration: 'none' }}>← Marketing</Link>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginTop: 10, flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 400, color: 'var(--dark)', marginBottom: 4 }}>
+              <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 400, color: 'var(--admin-ink)', marginBottom: 4 }}>
                 {camp.name}
               </h1>
-              <p style={{ fontSize: 13, color: 'var(--muted)' }}>{camp.channel} · slug: <code style={{ fontSize: 12 }}>{camp.slug}</code></p>
+              <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>{camp.channel} · slug: <code style={{ fontSize: 12 }}>{camp.slug}</code></p>
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <select value={camp.status} onChange={e => changeStatus(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
                 {VALID_STATUSES.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
               </select>
-              <button onClick={duplicate} style={{ ...inputStyle, cursor: 'pointer', background: 'none', border: '1px solid var(--border)' }}>
+              <button onClick={duplicate} style={{ ...inputStyle, cursor: 'pointer', background: 'none', border: '1px solid var(--admin-line)' }}>
                 Duplicate
               </button>
             </div>
@@ -158,7 +158,7 @@ export default function CampaignDetailPage() {
         </div>
 
         {/* Stats band */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 1, background: 'var(--border)', border: '1px solid var(--border)', marginBottom: 28 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 1, background: 'var(--admin-line)', border: '1px solid var(--admin-line)', marginBottom: 28 }}>
           {[
             ['Visits', stats.visits],
             ['Orders', stats.orders],
@@ -170,28 +170,28 @@ export default function CampaignDetailPage() {
             ['Cost/order', stats.costPerOrder !== null ? fmt(stats.costPerOrder) : '—'],
           ].map(([label, val]) => (
             <div key={label as string} style={{ background: 'white', padding: '16px 18px' }}>
-              <div style={{ fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6 }}>{label}</div>
+              <div style={{ fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 6 }}>{label}</div>
               <div style={{ fontSize: 20, fontFamily: "'Cormorant Garamond', Georgia, serif" }}>{val}</div>
             </div>
           ))}
         </div>
 
         {/* UTM base link */}
-        <div style={{ background: 'var(--admin-bg)', border: '1px solid var(--border)', padding: '12px 16px', marginBottom: 28, fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>
-          <span style={{ fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--muted)', fontFamily: 'inherit', display: 'block', marginBottom: 4 }}>Base UTM link</span>
+        <div style={{ background: 'var(--admin-bg)', border: '1px solid var(--admin-line)', padding: '12px 16px', marginBottom: 28, fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all' }}>
+          <span style={{ fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', fontFamily: 'inherit', display: 'block', marginBottom: 4 }}>Base UTM link</span>
           {utmBase}
         </div>
 
         {/* Two-col: spend log + creatives */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 32 }}>
           {/* Spend log */}
-          <div style={{ background: 'white', border: '1px solid var(--border)', padding: 20 }}>
+          <div style={{ background: 'white', border: '1px solid var(--admin-line)', padding: 20 }}>
             <span style={sectionTitle}>Spend log · total {fmt(camp.spend)}</span>
             {camp.spendUpdates.length === 0
-              ? <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>No spend recorded yet.</p>
+              ? <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', marginBottom: 16 }}>No spend recorded yet.</p>
               : <div style={{ marginBottom: 16 }}>
                 {[...camp.spendUpdates].reverse().map((u, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid var(--admin-line)', fontSize: 13 }}>
                     <span>{new Date(u.date).toLocaleDateString()}{u.note ? ` — ${u.note}` : ''}</span>
                     <span>{fmt(u.amount)}</span>
                   </div>
@@ -201,24 +201,24 @@ export default function CampaignDetailPage() {
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <input style={{ ...inputStyle, flex: '0 0 100px' }} type="number" step="0.01" min="0" placeholder="€ amount" value={spendAmt} onChange={e => setSpendAmt(e.target.value)} />
               <input style={{ ...inputStyle, flex: 1, minWidth: 80 }} placeholder="Note (optional)" value={spendNote} onChange={e => setSpendNote(e.target.value)} />
-              <button onClick={addSpend} disabled={addingSpend} style={{ ...inputStyle, cursor: 'pointer', background: 'var(--dark)', color: 'white', border: '1px solid var(--dark)', whiteSpace: 'nowrap' }}>
+              <button onClick={addSpend} disabled={addingSpend} style={{ ...inputStyle, cursor: 'pointer', background: 'var(--admin-ink)', color: 'white', border: '1px solid var(--admin-ink)', whiteSpace: 'nowrap' }}>
                 {addingSpend ? '…' : 'Add'}
               </button>
             </div>
           </div>
 
           {/* Creatives */}
-          <div style={{ background: 'white', border: '1px solid var(--border)', padding: 20 }}>
+          <div style={{ background: 'white', border: '1px solid var(--admin-line)', padding: 20 }}>
             <span style={sectionTitle}>Creatives</span>
             {camp.creatives.length === 0
-              ? <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>No creatives added yet.</p>
+              ? <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', marginBottom: 16 }}>No creatives added yet.</p>
               : <div style={{ marginBottom: 16 }}>
                 {camp.creatives.map((cr, i) => (
-                  <div key={i} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
+                  <div key={i} style={{ padding: '7px 0', borderBottom: '1px solid var(--admin-line)', fontSize: 13 }}>
                     <span style={{ fontWeight: 500 }}>{cr.name}</span>
-                    <span style={{ color: 'var(--muted)', fontSize: 12, marginLeft: 8 }}>utm_content={cr.utmContent}</span>
+                    <span style={{ color: 'var(--admin-ink-muted)', fontSize: 12, marginLeft: 8 }}>utm_content={cr.utmContent}</span>
                     {stats.topCreatives.find(c => c.utmContent === cr.utmContent) && (
-                      <span style={{ color: 'var(--muted)', fontSize: 11, marginLeft: 8 }}>
+                      <span style={{ color: 'var(--admin-ink-muted)', fontSize: 11, marginLeft: 8 }}>
                         ({stats.topCreatives.find(c => c.utmContent === cr.utmContent)?.orders} orders)
                       </span>
                     )}
@@ -229,7 +229,7 @@ export default function CampaignDetailPage() {
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <input style={{ ...inputStyle, flex: 1, minWidth: 100 }} placeholder="Creative name" value={crName} onChange={e => setCrName(e.target.value)} />
               <input style={{ ...inputStyle, flex: 1, minWidth: 100 }} placeholder="utm_content value" value={crContent} onChange={e => setCrContent(e.target.value)} />
-              <button onClick={addCreative} disabled={addingCr} style={{ ...inputStyle, cursor: 'pointer', background: 'var(--dark)', color: 'white', border: '1px solid var(--dark)' }}>
+              <button onClick={addCreative} disabled={addingCr} style={{ ...inputStyle, cursor: 'pointer', background: 'var(--admin-ink)', color: 'white', border: '1px solid var(--admin-ink)' }}>
                 {addingCr ? '…' : 'Add'}
               </button>
             </div>
@@ -248,10 +248,10 @@ export default function CampaignDetailPage() {
           </thead>
           <tbody>
             {stats.attributedOrders.length === 0
-              ? <tr><td colSpan={7} style={{ ...cellStyle, textAlign: 'center', color: 'var(--muted)', padding: '28px 12px' }}>No orders attributed to this campaign yet.</td></tr>
+              ? <tr><td colSpan={7} style={{ ...cellStyle, textAlign: 'center', color: 'var(--admin-ink-muted)', padding: '28px 12px' }}>No orders attributed to this campaign yet.</td></tr>
               : stats.attributedOrders.map(o => (
                 <tr key={o._id}>
-                  <td style={cellStyle}><Link href={`/admin/orders/${o._id}`} style={{ color: 'var(--dark)', textDecoration: 'none' }}>{o.orderNumber}</Link></td>
+                  <td style={cellStyle}><Link href={`/admin/orders/${o._id}`} style={{ color: 'var(--admin-ink)', textDecoration: 'none' }}>{o.orderNumber}</Link></td>
                   <td style={cellStyle}>{new Date(o.createdAt).toLocaleDateString()}</td>
                   <td style={cellStyle}>{fmt(o.total)}</td>
                   <td style={cellStyle}>{o.status}</td>
@@ -266,7 +266,7 @@ export default function CampaignDetailPage() {
 
         {/* Notes */}
         {camp.notes && (
-          <div style={{ background: 'var(--admin-bg)', border: '1px solid var(--border)', padding: '14px 18px', fontSize: 13, color: 'var(--dark)', lineHeight: 1.6 }}>
+          <div style={{ background: 'var(--admin-bg)', border: '1px solid var(--admin-line)', padding: '14px 18px', fontSize: 13, color: 'var(--admin-ink)', lineHeight: 1.6 }}>
             <span style={sectionTitle}>Notes</span>
             <p style={{ margin: 0 }}>{camp.notes}</p>
           </div>

@@ -9,9 +9,9 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 
 type Faq = { q: string; a: string };
 
-const input: React.CSSProperties = { width: '100%', padding: '9px 12px', border: '1px solid var(--border, var(--admin-line))', fontSize: 14, background: 'var(--admin-surface)' };
-const card: React.CSSProperties = { border: '1px solid var(--border, var(--admin-line))', background: 'var(--admin-surface)', padding: 16, marginBottom: 12 };
-const btn: React.CSSProperties = { border: '1px solid var(--border, var(--admin-line))', background: 'var(--admin-surface)', padding: '7px 12px', fontSize: 13, cursor: 'pointer' };
+const input: React.CSSProperties = { width: '100%', padding: '9px 12px', border: '1px solid var(--admin-line)', fontSize: 14, background: 'var(--admin-surface)' };
+const card: React.CSSProperties = { border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', padding: 16, marginBottom: 12 };
+const btn: React.CSSProperties = { border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', padding: '7px 12px', fontSize: 13, cursor: 'pointer' };
 
 export default function FaqEditorPage() {
   const [items, setItems] = useState<Faq[]>([]);
@@ -63,20 +63,20 @@ export default function FaqEditorPage() {
   return (
     <AdminLayout>
       <div style={{ maxWidth: 720 }}>
-        <Link href="/admin/settings" style={{ fontSize: 13, color: 'var(--muted)', textDecoration: 'none' }}>← Settings</Link>
+        <Link href="/admin/settings" style={{ fontSize: 13, color: 'var(--admin-ink-muted)', textDecoration: 'none' }}>← Settings</Link>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 26, margin: '8px 0' }}>FAQ</h1>
           <button onClick={save} disabled={saving}
-            style={{ background: 'var(--dark, var(--admin-ink))', color: 'var(--admin-surface)', border: 'none', padding: '10px 22px', fontSize: 14, cursor: saving ? 'default' : 'pointer' }}>
+            style={{ background: 'var(--admin-ink)', color: 'var(--admin-surface)', border: 'none', padding: '10px 22px', fontSize: 14, cursor: saving ? 'default' : 'pointer' }}>
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
-        <p style={{ fontSize: 14, color: 'var(--muted)', margin: '0 0 18px' }}>
+        <p style={{ fontSize: 14, color: 'var(--admin-ink-muted)', margin: '0 0 18px' }}>
           Edit the questions &amp; answers shown on the storefront FAQ page. Empty rows are dropped on save.
         </p>
 
         {loading ? (
-          <p style={{ color: 'var(--muted)' }}>Loading…</p>
+          <p style={{ color: 'var(--admin-ink-muted)' }}>Loading…</p>
         ) : (
           <>
             {items.map((it, i) => (

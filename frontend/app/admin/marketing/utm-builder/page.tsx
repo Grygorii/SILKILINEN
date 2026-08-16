@@ -15,10 +15,10 @@ function slugify(str: string) {
 const field: React.CSSProperties = {
   width: '100%',
   padding: '10px 12px',
-  border: '1px solid var(--border)',
+  border: '1px solid var(--admin-line)',
   fontFamily: 'inherit',
   fontSize: 13,
-  color: 'var(--dark)',
+  color: 'var(--admin-ink)',
   background: 'white',
   boxSizing: 'border-box',
   outline: 'none',
@@ -29,7 +29,7 @@ const label: React.CSSProperties = {
   fontSize: 11,
   letterSpacing: '1px',
   textTransform: 'uppercase',
-  color: 'var(--muted)',
+  color: 'var(--admin-ink-muted)',
   marginBottom: 6,
 };
 
@@ -101,11 +101,11 @@ export default function UtmBuilderPage() {
     <AdminLayout>
       <div style={{ padding: 32, maxWidth: 640 }}>
         <div style={{ marginBottom: 28 }}>
-          <Link href="/admin/marketing" style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'none' }}>← Marketing</Link>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 400, color: 'var(--dark)', marginTop: 10, marginBottom: 4 }}>
+          <Link href="/admin/marketing" style={{ fontSize: 12, color: 'var(--admin-ink-muted)', textDecoration: 'none' }}>← Marketing</Link>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 400, color: 'var(--admin-ink)', marginTop: 10, marginBottom: 4 }}>
             UTM link builder
           </h1>
-          <p style={{ fontSize: 13, color: 'var(--muted)' }}>Build tracked links for your ad campaigns.</p>
+          <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>Build tracked links for your ad campaigns.</p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -131,7 +131,7 @@ export default function UtmBuilderPage() {
             <label style={label}>Campaign (utm_campaign)</label>
             <input style={field} value={form.campaign} onChange={e => set('campaign', e.target.value)} placeholder="Must match your campaign slug exactly" />
             {form.campaign && (
-              <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
+              <p style={{ fontSize: 11, color: 'var(--admin-ink-muted)', marginTop: 4 }}>
                 Slug preview: <code>{slugify(form.campaign) || form.campaign}</code>
               </p>
             )}
@@ -150,14 +150,14 @@ export default function UtmBuilderPage() {
         </div>
 
         {/* Output */}
-        <div style={{ marginTop: 28, background: 'var(--admin-bg)', border: '1px solid var(--border)', padding: '16px 18px' }}>
-          <div style={{ fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 10 }}>Your link</div>
-          <p style={{ fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all', color: 'var(--dark)', margin: '0 0 16px' }}>{url}</p>
+        <div style={{ marginTop: 28, background: 'var(--admin-bg)', border: '1px solid var(--admin-line)', padding: '16px 18px' }}>
+          <div style={{ fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 10 }}>Your link</div>
+          <p style={{ fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all', color: 'var(--admin-ink)', margin: '0 0 16px' }}>{url}</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <button onClick={copy} style={{
               padding: '9px 22px', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer',
-              border: '1px solid var(--dark)', background: copied ? 'var(--dark)' : 'white',
-              color: copied ? 'white' : 'var(--dark)', letterSpacing: '0.04em', transition: 'all 0.15s',
+              border: '1px solid var(--admin-ink)', background: copied ? 'var(--admin-ink)' : 'white',
+              color: copied ? 'white' : 'var(--admin-ink)', letterSpacing: '0.04em', transition: 'all 0.15s',
             }}>
               {copied ? 'Copied!' : 'Copy link'}
             </button>
@@ -167,7 +167,7 @@ export default function UtmBuilderPage() {
               style={{
                 padding: '9px 22px', fontSize: 13, fontFamily: 'inherit',
                 cursor: form.campaign.trim() ? 'pointer' : 'default',
-                border: '1px solid var(--dark)', background: 'var(--dark)', color: 'white',
+                border: '1px solid var(--admin-ink)', background: 'var(--admin-ink)', color: 'white',
                 letterSpacing: '0.04em', opacity: form.campaign.trim() ? 1 : 0.4,
               }}
             >
@@ -177,8 +177,8 @@ export default function UtmBuilderPage() {
           </div>
         </div>
 
-        <div style={{ marginTop: 24, background: 'white', border: '1px solid var(--border)', padding: '14px 18px', fontSize: 12, color: 'var(--muted)', lineHeight: 1.7 }}>
-          <strong style={{ color: 'var(--dark)', fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase' }}>Tips</strong><br />
+        <div style={{ marginTop: 24, background: 'white', border: '1px solid var(--admin-line)', padding: '14px 18px', fontSize: 12, color: 'var(--admin-ink-muted)', lineHeight: 1.7 }}>
+          <strong style={{ color: 'var(--admin-ink)', fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase' }}>Tips</strong><br />
           The <strong>campaign slug</strong> must exactly match the slug in your campaign record for attribution to work.<br />
           Use <strong>utm_content</strong> to track which creative drove each order.<br />
           Paste UTM links directly into Meta Ads Manager, Pinterest Ads, or anywhere as the destination URL.

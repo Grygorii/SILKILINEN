@@ -71,7 +71,7 @@ export default function AdvisorPanel() {
       <div className={styles.healthHeader}>
         <p className={styles.sectionTitle} style={{ margin: 0 }}>What to do next</p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {emailMsg && <span style={{ fontSize: 11, color: 'var(--muted)' }}>{emailMsg}</span>}
+          {emailMsg && <span style={{ fontSize: 11, color: 'var(--admin-ink-muted)' }}>{emailMsg}</span>}
           <button className={styles.healthRefreshBtn} onClick={sendTest} disabled={emailing} title="Send this list to your admin email now">
             {emailing ? 'Sending…' : 'Email me this'}
           </button>
@@ -96,7 +96,7 @@ export default function AdvisorPanel() {
               <div className={styles.healthCheckTop} style={{ gap: 8 }}>
                 <p className={styles.healthCheckLabel} style={{ margin: 0 }}>{r.title}</p>
                 <span style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
-                  <span style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{r.category}</span>
+                  <span style={{ fontSize: 10, color: 'var(--admin-ink-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{r.category}</span>
                   <PriorityBadge priority={r.priority} />
                 </span>
               </div>

@@ -16,7 +16,7 @@ type Plan = {
 };
 
 const dark = 'var(--color-ink)';
-const muted = 'var(--muted, var(--admin-ink-muted))';
+const muted = 'var(--admin-ink-muted)';
 const border = '1px solid var(--color-line)';
 const serif = "'Cormorant Garamond', Georgia, serif";
 

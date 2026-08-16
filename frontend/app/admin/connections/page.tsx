@@ -10,7 +10,7 @@ type Group = { category: string; sources: Source[] };
 type Data = { groups: Group[]; summary: { live: number; off: number; opportunities: number; total: number }; checkedAt: string };
 
 const dark = 'var(--color-ink)';
-const muted = 'var(--muted, var(--admin-ink-muted))';
+const muted = 'var(--admin-ink-muted)';
 const border = '1px solid var(--color-line)';
 const serif = "'Cormorant Garamond', Georgia, serif";
 

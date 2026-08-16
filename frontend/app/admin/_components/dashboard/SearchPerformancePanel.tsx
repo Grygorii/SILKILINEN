@@ -30,9 +30,9 @@ const countryName = (c: string) => COUNTRY[String(c || '').toLowerCase()] || Str
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ flex: 1, minWidth: 110, border: '1px solid var(--border)', padding: '12px 14px' }}>
-      <p style={{ margin: 0, fontSize: 22, fontFamily: 'Georgia, serif', color: 'var(--dark, var(--admin-ink))' }}>{value}</p>
-      <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</p>
+    <div style={{ flex: 1, minWidth: 110, border: '1px solid var(--admin-line)', padding: '12px 14px' }}>
+      <p style={{ margin: 0, fontSize: 22, fontFamily: 'Georgia, serif', color: 'var(--admin-ink)' }}>{value}</p>
+      <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--admin-ink-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</p>
     </div>
   );
 }
@@ -114,22 +114,22 @@ export default function SearchPerformancePanel() {
 
               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: 220 }}>
-                  <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Top queries</p>
+                  <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--admin-ink-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Top queries</p>
                   {data.performance.topQueries.length === 0 && <p className={styles.healthCheckDetail}>No data yet.</p>}
                   {data.performance.topQueries.map((q, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--border)' }}>
-                      <span style={{ color: 'var(--dark, var(--admin-ink))' }}>{q.key}</span>
-                      <span style={{ color: 'var(--muted)', whiteSpace: 'nowrap', marginLeft: 12 }}>{q.clicks} clk · {q.impressions} imp</span>
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--admin-line)' }}>
+                      <span style={{ color: 'var(--admin-ink)' }}>{q.key}</span>
+                      <span style={{ color: 'var(--admin-ink-muted)', whiteSpace: 'nowrap', marginLeft: 12 }}>{q.clicks} clk · {q.impressions} imp</span>
                     </div>
                   ))}
                 </div>
                 <div style={{ flex: 1, minWidth: 220 }}>
-                  <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Top pages</p>
+                  <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--admin-ink-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Top pages</p>
                   {data.performance.topPages.length === 0 && <p className={styles.healthCheckDetail}>No data yet.</p>}
                   {data.performance.topPages.map((p, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--border)' }}>
-                      <span style={{ color: 'var(--dark, var(--admin-ink))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.key.replace(/^https?:\/\/[^/]+/, '') || '/'}</span>
-                      <span style={{ color: 'var(--muted)', whiteSpace: 'nowrap', marginLeft: 12 }}>{p.clicks} clk · {p.impressions} imp</span>
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--admin-line)' }}>
+                      <span style={{ color: 'var(--admin-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.key.replace(/^https?:\/\/[^/]+/, '') || '/'}</span>
+                      <span style={{ color: 'var(--admin-ink-muted)', whiteSpace: 'nowrap', marginLeft: 12 }}>{p.clicks} clk · {p.impressions} imp</span>
                     </div>
                   ))}
                 </div>
@@ -137,12 +137,12 @@ export default function SearchPerformancePanel() {
 
               {data.countries && data.countries.length > 0 && (
                 <div style={{ marginTop: 16 }}>
-                  <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>By country — where Google shows the shop</p>
+                  <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--admin-ink-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>By country — where Google shows the shop</p>
                   <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                     {data.countries.slice(0, 10).map((c, i) => (
-                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--border)', flex: '1 1 220px', minWidth: 200 }}>
-                        <span style={{ color: 'var(--dark, var(--admin-ink))' }}>{countryName(c.country)}</span>
-                        <span style={{ color: 'var(--muted)', whiteSpace: 'nowrap', marginLeft: 12 }}>{c.clicks} clk · {c.impressions} imp · pos {c.position}</span>
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--admin-line)', flex: '1 1 220px', minWidth: 200 }}>
+                        <span style={{ color: 'var(--admin-ink)' }}>{countryName(c.country)}</span>
+                        <span style={{ color: 'var(--admin-ink-muted)', whiteSpace: 'nowrap', marginLeft: 12 }}>{c.clicks} clk · {c.impressions} imp · pos {c.position}</span>
                       </div>
                     ))}
                   </div>

@@ -9,7 +9,7 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 26px;
   font-weight: 400;
-  color: var(--dark);
+  color: var(--admin-ink);
 }
 
 .headerRight {
@@ -20,15 +20,15 @@
 
 .costBadge {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   background: var(--admin-bg);
   padding: 6px 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
 }
 
 .addBtn {
-  background: var(--dark);
-  color: var(--warm-white);
+  background: var(--admin-ink);
+  color: var(--admin-surface);
   border: none;
   padding: 10px 20px;
   font-family: 'Jost', sans-serif;
@@ -54,7 +54,7 @@
 .empty {
   grid-column: 1 / -1;
   text-align: center;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   padding: 60px 0;
   font-size: 15px;
 }
@@ -62,7 +62,7 @@
 /* ── Model Card ──────────────────────────────────── */
 
 .card {
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   background: var(--admin-surface);
   display: flex;
   flex-direction: column;
@@ -80,7 +80,7 @@
 .cardPhoto {
   position: relative;
   height: 200px;
-  background: var(--cream);
+  background: var(--admin-bg);
   overflow: hidden;
 }
 
@@ -96,7 +96,7 @@
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   letter-spacing: 0.5px;
 }
 
@@ -111,11 +111,11 @@
 
 .badge {
   background: rgba(255, 255, 255, 0.92);
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   font-size: 10px;
   padding: 3px 8px;
   letter-spacing: 0.5px;
-  color: var(--dark);
+  color: var(--admin-ink);
 }
 
 .badgeInactive {
@@ -131,25 +131,25 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 18px;
   font-weight: 400;
-  color: var(--dark);
+  color: var(--admin-ink);
   margin-bottom: 4px;
 }
 
 .modelHeritage {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   margin-bottom: 6px;
 }
 
 .useCases {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   letter-spacing: 0.3px;
 }
 
 .cardActions {
   padding: 10px 16px 14px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--admin-line);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -164,10 +164,10 @@
 .tierSelect {
   flex: 1;
   padding: 7px 10px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   font-family: 'Jost', sans-serif;
   font-size: 11px;
-  color: var(--dark);
+  color: var(--admin-ink);
   background: var(--admin-surface);
   outline: none;
   width: 100%;
@@ -177,19 +177,19 @@
   width: 100%;
   padding: 9px 12px;
   background: none;
-  border: 1px solid var(--dark);
+  border: 1px solid var(--admin-ink);
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   cursor: pointer;
-  color: var(--dark);
+  color: var(--admin-ink);
   transition: background 0.2s ease, color 0.2s ease;
 }
 
 .actionBtn:hover:not(:disabled) {
-  background: var(--dark);
-  color: var(--warm-white);
+  background: var(--admin-ink);
+  color: var(--admin-surface);
 }
 
 .actionBtn:disabled {
@@ -206,40 +206,40 @@
   flex: 1;
   padding: 7px 10px;
   background: none;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   cursor: pointer;
-  color: var(--dark);
+  color: var(--admin-ink);
   transition: border-color 0.2s ease;
 }
 
 .editBtn:hover {
-  border-color: var(--dark);
+  border-color: var(--admin-ink);
 }
 
 .lockBtn, .activeBtn {
   padding: 7px 10px;
   background: none;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   font-size: 11px;
   cursor: pointer;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   transition: border-color 0.2s ease, color 0.2s ease;
 }
 
 .lockBtn:hover, .activeBtn:hover {
-  border-color: var(--dark);
-  color: var(--dark);
+  border-color: var(--admin-ink);
+  color: var(--admin-ink);
 }
 
 .deleteBtn {
   padding: 7px 10px;
   background: none;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   font-size: 11px;
   cursor: pointer;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   transition: color 0.2s ease, border-color 0.2s ease;
 }
 
@@ -276,14 +276,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--admin-line);
 }
 
 .modalHeader h3 {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 20px;
   font-weight: 400;
-  color: var(--dark);
+  color: var(--admin-ink);
 }
 
 .modalClose {
@@ -291,7 +291,7 @@
   border: none;
   font-size: 16px;
   cursor: pointer;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   min-width: 36px;
   min-height: 36px;
   display: flex;
@@ -325,23 +325,23 @@
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.5px;
-  color: var(--dark);
+  color: var(--admin-ink);
   text-transform: uppercase;
 }
 
 .field input, .field textarea, .field select {
   padding: 9px 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   font-family: 'Jost', sans-serif;
   font-size: 13px;
-  color: var(--dark);
+  color: var(--admin-ink);
   background: var(--admin-surface);
   outline: none;
   width: 100%;
 }
 
 .field input:focus, .field textarea:focus {
-  border-color: var(--dark);
+  border-color: var(--admin-ink);
 }
 
 .field textarea {
@@ -355,7 +355,7 @@
 
 .hint {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   line-height: 1.5;
 }
 
@@ -370,7 +370,7 @@
   align-items: center;
   gap: 5px;
   font-size: 12px;
-  color: var(--dark);
+  color: var(--admin-ink);
   cursor: pointer;
 }
 
@@ -379,7 +379,7 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: var(--dark);
+  color: var(--admin-ink);
   cursor: pointer;
 }
 
@@ -388,23 +388,23 @@
   gap: 10px;
   justify-content: flex-end;
   padding: 16px 24px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--admin-line);
 }
 
 .cancelBtn {
   padding: 10px 20px;
   background: none;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   font-family: 'Jost', sans-serif;
   font-size: 12px;
   cursor: pointer;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 .saveBtn {
   padding: 10px 24px;
-  background: var(--dark);
-  color: var(--warm-white);
+  background: var(--admin-ink);
+  color: var(--admin-surface);
   border: none;
   font-family: 'Jost', sans-serif;
   font-size: 12px;

@@ -1,7 +1,7 @@
 .loading,
 .empty {
   font-size: 14px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 /* ── Top bar ─────────────────────────────────────── */
@@ -18,14 +18,14 @@
   background: transparent;
   border: none;
   font-size: 13px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   cursor: pointer;
   padding: 0;
   font-family: inherit;
   transition: color 0.15s;
 }
 
-.backBtn:hover { color: var(--dark); }
+.backBtn:hover { color: var(--admin-ink); }
 
 .orderTitle {
   display: flex;
@@ -37,12 +37,12 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 28px;
   font-weight: 400;
-  color: var(--dark);
+  color: var(--admin-ink);
 }
 
 .orderDate {
   font-size: 13px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   margin-left: auto;
 }
 
@@ -81,8 +81,8 @@
 /* ── Card ────────────────────────────────────────── */
 
 .card {
-  background: var(--warm-white);
-  border: 1px solid var(--border);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-line);
   padding: 24px;
 }
 
@@ -90,7 +90,7 @@
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   font-weight: 400;
   margin-bottom: 16px;
 }
@@ -118,7 +118,7 @@
 .badgeProcessing { background: var(--admin-info-soft); color: var(--admin-info); }
 .badgeShipped    { background: var(--admin-info-soft); color: var(--admin-info); }
 .badgeDelivered  { background: var(--color-success-soft); color: var(--admin-success); border: 1px solid var(--admin-success-soft); }
-.badgePending    { background: var(--cream); color: var(--muted); border: 1px solid var(--border); }
+.badgePending    { background: var(--admin-bg); color: var(--admin-ink-muted); border: 1px solid var(--admin-line); }
 .badgeCancelled  { background: var(--admin-danger-soft); color: var(--admin-danger); }
 .badgeFailed     { background: var(--admin-danger-soft); color: var(--admin-danger); }
 
@@ -136,16 +136,16 @@
   font-size: 10px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--muted);
-  border-bottom: 1px solid var(--border);
+  color: var(--admin-ink-muted);
+  border-bottom: 1px solid var(--admin-line);
   font-weight: 400;
 }
 
 .itemsTable td {
   padding: 12px 0;
   font-size: 13px;
-  color: var(--dark);
-  border-bottom: 1px solid var(--border);
+  color: var(--admin-ink);
+  border-bottom: 1px solid var(--admin-line);
   vertical-align: middle;
 }
 
@@ -153,31 +153,31 @@
   border-bottom: none;
 }
 
-.muted { color: var(--muted); }
+.muted { color: var(--admin-ink-muted); }
 
 /* ── Totals ──────────────────────────────────────── */
 
 .totalsBlock {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--admin-line);
 }
 
 .totalRow {
   display: flex;
   justify-content: space-between;
   font-size: 13px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   padding: 4px 0;
 }
 
 .totalRowFinal {
   font-size: 15px;
   font-weight: 500;
-  color: var(--dark);
+  color: var(--admin-ink);
   margin-top: 4px;
   padding-top: 8px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--admin-line);
 }
 
 .totalRowDiscount {
@@ -203,7 +203,7 @@
   font-size: 11px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 .mt12 { margin-top: 12px; }
@@ -212,9 +212,9 @@
 .textarea {
   width: 100%;
   padding: 9px 12px;
-  border: 1px solid var(--border);
-  background: var(--cream);
-  color: var(--dark);
+  border: 1px solid var(--admin-line);
+  background: var(--admin-bg);
+  color: var(--admin-ink);
   font-size: 13px;
   font-family: inherit;
   border-radius: 2px;
@@ -224,8 +224,8 @@
 
 .input:focus,
 .textarea:focus {
-  border-color: var(--dark);
-  background: var(--warm-white);
+  border-color: var(--admin-ink);
+  background: var(--admin-surface);
 }
 
 .textarea {
@@ -237,7 +237,7 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: var(--dark);
+  color: var(--admin-ink);
   margin-top: 12px;
   cursor: pointer;
 }
@@ -245,8 +245,8 @@
 .saveBtn {
   height: 36px;
   padding: 0 20px;
-  background: var(--dark);
-  color: var(--warm-white);
+  background: var(--admin-ink);
+  color: var(--admin-surface);
   border: none;
   font-size: 12px;
   letter-spacing: 1px;
@@ -262,7 +262,7 @@
 
 .saveMsg {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 /* ── Status panel ────────────────────────────────── */
@@ -272,7 +272,7 @@
   align-items: center;
   gap: 10px;
   font-size: 13px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   margin-bottom: 16px;
 }
 
@@ -293,14 +293,14 @@
 .infoRow span:first-child {
   width: 72px;
   flex-shrink: 0;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   font-size: 11px;
   letter-spacing: 0.5px;
   padding-top: 1px;
 }
 
 .infoRow span:last-child {
-  color: var(--dark);
+  color: var(--admin-ink);
   line-height: 1.6;
   word-break: break-word;
 }
@@ -331,14 +331,14 @@
   top: 14px;
   bottom: 0;
   width: 1px;
-  background: var(--border);
+  background: var(--admin-line);
 }
 
 .timelineDot {
   width: 11px;
   height: 11px;
   border-radius: 50%;
-  background: var(--dark);
+  background: var(--admin-ink);
   flex-shrink: 0;
   margin-top: 3px;
 }
@@ -357,12 +357,12 @@
 
 .timelineDate {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 .timelineNote {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   margin-top: 4px;
   line-height: 1.5;
 }
@@ -371,7 +371,7 @@
 
 .sessionId {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   word-break: break-all;
   line-height: 1.6;
 }
@@ -391,7 +391,7 @@
 
 .refundEntry {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 .refundBtn {

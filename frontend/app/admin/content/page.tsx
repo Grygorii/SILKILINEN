@@ -274,9 +274,22 @@ export default function ContentPage() {
     <AdminLayout active="pages">
       <div className={styles.page}>
         <div className={styles.header}>
-          {pageLabel && <Link href="/admin/pages" style={{ fontSize: 13, color: 'var(--muted, var(--admin-ink-muted))', textDecoration: 'none', display: 'inline-block', marginBottom: 4 }}>← Pages</Link>}
+          {pageLabel && <Link href="/admin/pages" style={{ fontSize: 13, color: 'var(--admin-ink-muted)', textDecoration: 'none', display: 'inline-block', marginBottom: 4 }}>← Pages</Link>}
           <h1 className={styles.title}>{pageLabel ? `Editing: ${pageLabel}` : 'Site Content'}</h1>
-          <p className={styles.sub}>Changes go live within 60 seconds</p>
+          <p className={styles.sub}>
+            Changes go live within 60 seconds
+            {!pageLabel && (
+              <>
+                {' · '}
+                {/* Site Content and Pages are two views of the same CMS, so they
+                    share one nav entry. This is the only door to the per-page
+                    overview — the back-link above only renders while editing. */}
+                <Link href="/admin/pages" style={{ color: 'var(--admin-ink-muted)' }}>
+                  Browse page by page →
+                </Link>
+              </>
+            )}
+          </p>
         </div>
 
         <div className={styles.tabs}>
@@ -487,7 +500,7 @@ export default function ContentPage() {
                   {/* Image Studio winners (#6) — pick one instead of uploading */}
                   {studioWinners.length > 0 && (
                     <div style={{ marginTop: 18 }}>
-                      <p style={{ fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 10 }}>
+                      <p style={{ fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 10 }}>
                         Or reuse an Image Studio winner
                       </p>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))', gap: 8 }}>
@@ -496,7 +509,7 @@ export default function ContentPage() {
                             key={w._id}
                             onClick={() => reuseImage(w.url)}
                             title={w.surfaceLabel}
-                            style={{ padding: 0, border: edit.value === w.url ? '2px solid var(--dark)' : '1px solid var(--border)', background: 'none', cursor: 'pointer', aspectRatio: '1', overflow: 'hidden' }}
+                            style={{ padding: 0, border: edit.value === w.url ? '2px solid var(--admin-ink)' : '1px solid var(--admin-line)', background: 'none', cursor: 'pointer', aspectRatio: '1', overflow: 'hidden' }}
                           >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={w.url} alt={w.surfaceLabel} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -522,7 +535,7 @@ export default function ContentPage() {
                   {(edit.value || edit.preview) && (
                     <button
                       className={styles.uploadBtn}
-                      style={{ marginTop: 8, background: 'none', color: 'var(--muted)' }}
+                      style={{ marginTop: 8, background: 'none', color: 'var(--admin-ink-muted)' }}
                       onClick={() => setEdit(prev => prev ? { ...prev, value: '', preview: null, file: null } : null)}
                     >
                       Remove image
@@ -598,7 +611,7 @@ export default function ContentPage() {
                   {(edit.value || edit.preview) && (
                     <button
                       className={styles.uploadBtn}
-                      style={{ marginTop: 8, background: 'none', color: 'var(--muted)' }}
+                      style={{ marginTop: 8, background: 'none', color: 'var(--admin-ink-muted)' }}
                       onClick={() => setEdit(prev => prev ? { ...prev, value: '', preview: null, file: null } : null)}
                     >
                       Remove video (use photo only)

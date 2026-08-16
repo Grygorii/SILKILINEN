@@ -11,7 +11,7 @@ type Stats = { counts: { total: number; lesson: number; pitfall: number; fact: n
 type Ref = { _id: string; title?: string; refType?: string; refSource?: string; text: string; tags?: string[] };
 
 const dark = 'var(--color-ink)';
-const muted = 'var(--muted, var(--admin-ink-muted))';
+const muted = 'var(--admin-ink-muted)';
 const border = '1px solid var(--color-line)';
 const serif = "'Cormorant Garamond', Georgia, serif";
 

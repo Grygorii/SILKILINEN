@@ -32,18 +32,18 @@ function resolveStatus(c: PromoCode): string {
 }
 
 const inputStyle: React.CSSProperties = {
-  padding: '9px 12px', border: '1px solid var(--border)', fontFamily: 'inherit',
-  fontSize: 13, color: 'var(--dark)', background: 'white', outline: 'none',
+  padding: '9px 12px', border: '1px solid var(--admin-line)', fontFamily: 'inherit',
+  fontSize: 13, color: 'var(--admin-ink)', background: 'white', outline: 'none',
 };
 const labelStyle: React.CSSProperties = {
   display: 'block', fontSize: 11, letterSpacing: '1px',
-  textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6,
+  textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 6,
 };
 const sectionStyle: React.CSSProperties = {
-  background: 'white', border: '1px solid var(--border)', padding: '20px 24px', marginBottom: 16,
+  background: 'white', border: '1px solid var(--admin-line)', padding: '20px 24px', marginBottom: 16,
 };
 const sectionTitleStyle: React.CSSProperties = {
-  fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)',
+  fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)',
   marginBottom: 16, display: 'block',
 };
 const pillStyle: Record<string, React.CSSProperties> = {
@@ -140,7 +140,7 @@ export default function PromoCodeDetailPage() {
     router.push('/admin/promo-codes');
   }
 
-  if (loading) return <AdminLayout><div style={{ padding: 32, fontSize: 13, color: 'var(--muted)' }}>Loading…</div></AdminLayout>;
+  if (loading) return <AdminLayout><div style={{ padding: 32, fontSize: 13, color: 'var(--admin-ink-muted)' }}>Loading…</div></AdminLayout>;
   if (!promo)  return <AdminLayout><div style={{ padding: 32, fontSize: 13, color: 'var(--color-danger)' }}>Promo code not found.</div></AdminLayout>;
 
   const st = resolveStatus(promo);
@@ -151,10 +151,10 @@ export default function PromoCodeDetailPage() {
       <div style={{ padding: 32, maxWidth: 900 }}>
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
-          <Link href="/admin/promo-codes" style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'none' }}>← Promo codes</Link>
+          <Link href="/admin/promo-codes" style={{ fontSize: 12, color: 'var(--admin-ink-muted)', textDecoration: 'none' }}>← Promo codes</Link>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginTop: 12, flexWrap: 'wrap', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 32, fontWeight: 400, color: 'var(--dark)', margin: 0, letterSpacing: '2px' }}>
+              <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 32, fontWeight: 400, color: 'var(--admin-ink)', margin: 0, letterSpacing: '2px' }}>
                 {promo.code}
               </h1>
               <span style={{ display: 'inline-block', padding: '3px 10px', fontSize: 10, letterSpacing: '0.8px', textTransform: 'uppercase', borderRadius: 2, ...pill }}>
@@ -162,7 +162,7 @@ export default function PromoCodeDetailPage() {
               </span>
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <button onClick={() => setEditing(e => !e)} style={{ ...inputStyle, cursor: 'pointer', background: editing ? 'var(--dark)' : 'white', color: editing ? 'white' : 'var(--dark)' }}>
+              <button onClick={() => setEditing(e => !e)} style={{ ...inputStyle, cursor: 'pointer', background: editing ? 'var(--admin-ink)' : 'white', color: editing ? 'white' : 'var(--admin-ink)' }}>
                 {editing ? 'Cancel edit' : 'Edit'}
               </button>
               <button onClick={toggleStatus} style={{ ...inputStyle, cursor: 'pointer' }}>
@@ -173,11 +173,11 @@ export default function PromoCodeDetailPage() {
               </button>
             </div>
           </div>
-          {promo.description && <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 8 }}>{promo.description}</p>}
+          {promo.description && <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', marginTop: 8 }}>{promo.description}</p>}
         </div>
 
         {/* Performance band */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 1, background: 'var(--border)', border: '1px solid var(--border)', marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 1, background: 'var(--admin-line)', border: '1px solid var(--admin-line)', marginBottom: 24 }}>
           {[
             ['Redemptions', promo.maxUses ? `${promo.performance.totalRedemptions} / ${promo.maxUses}` : `${promo.performance.totalRedemptions} / ∞`],
             ['Discount given', `€${promo.performance.totalDiscountGiven.toFixed(2)}`],
@@ -185,7 +185,7 @@ export default function PromoCodeDetailPage() {
             ['Avg order', promo.performance.avgOrderValue !== null ? `€${promo.performance.avgOrderValue.toFixed(2)}` : '—'],
           ].map(([label, val]) => (
             <div key={label} style={{ background: 'white', padding: '16px 18px' }}>
-              <div style={{ fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6 }}>{label}</div>
+              <div style={{ fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 6 }}>{label}</div>
               <div style={{ fontSize: 20, fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 400 }}>{val}</div>
             </div>
           ))}
@@ -261,7 +261,7 @@ export default function PromoCodeDetailPage() {
             <button onClick={saveEdit} disabled={saving} style={{
               padding: '10px 24px', fontSize: 13, fontFamily: 'inherit',
               cursor: saving ? 'default' : 'pointer',
-              border: '1px solid var(--dark)', background: 'var(--dark)',
+              border: '1px solid var(--admin-ink)', background: 'var(--admin-ink)',
               color: 'white', letterSpacing: '0.04em', opacity: saving ? 0.6 : 1,
             }}>
               {saving ? 'Saving…' : 'Save changes'}
@@ -284,8 +284,8 @@ export default function PromoCodeDetailPage() {
               ['Stripe', promo.stripeCouponId ? '✓ synced' : 'not synced'],
             ].map(([label, val]) => (
               <div key={label}>
-                <div style={{ fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 3 }}>{label}</div>
-                <div style={{ fontSize: 13, color: 'var(--dark)' }}>{val}</div>
+                <div style={{ fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 3 }}>{label}</div>
+                <div style={{ fontSize: 13, color: 'var(--admin-ink)' }}>{val}</div>
               </div>
             ))}
           </div>
@@ -295,35 +295,35 @@ export default function PromoCodeDetailPage() {
         <div style={sectionStyle}>
           <span style={sectionTitleStyle}>Recent redemptions</span>
           {promo.redemptions.length === 0 ? (
-            <p style={{ fontSize: 13, color: 'var(--muted)' }}>No redemptions yet.</p>
+            <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>No redemptions yet.</p>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr>
                   {['Order', 'Date', 'Email', 'Discount', 'Status'].map(h => (
-                    <th key={h} style={{ textAlign: 'left', padding: '6px 10px', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 400, borderBottom: '1px solid var(--border)' }}>{h}</th>
+                    <th key={h} style={{ textAlign: 'left', padding: '6px 10px', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', fontWeight: 400, borderBottom: '1px solid var(--admin-line)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {promo.redemptions.map(r => (
                   <tr key={r._id}>
-                    <td style={{ padding: '10px 10px', borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '10px 10px', borderBottom: '1px solid var(--admin-line)' }}>
                       {r.orderId
-                        ? <Link href={`/admin/orders/${r.orderId}`} style={{ color: 'var(--dark)', textDecoration: 'none' }}>{r.orderNumber}</Link>
+                        ? <Link href={`/admin/orders/${r.orderId}`} style={{ color: 'var(--admin-ink)', textDecoration: 'none' }}>{r.orderNumber}</Link>
                         : r.orderNumber || '—'
                       }
                     </td>
-                    <td style={{ padding: '10px 10px', borderBottom: '1px solid var(--border)', color: 'var(--muted)', fontSize: 12 }}>
+                    <td style={{ padding: '10px 10px', borderBottom: '1px solid var(--admin-line)', color: 'var(--admin-ink-muted)', fontSize: 12 }}>
                       {new Date(r.redeemedAt).toLocaleDateString('en-IE')}
                     </td>
-                    <td style={{ padding: '10px 10px', borderBottom: '1px solid var(--border)', fontSize: 12 }}>
+                    <td style={{ padding: '10px 10px', borderBottom: '1px solid var(--admin-line)', fontSize: 12 }}>
                       {r.customerEmail ? r.customerEmail.replace(/(.{3}).*@/, '$1***@') : '—'}
                     </td>
-                    <td style={{ padding: '10px 10px', borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '10px 10px', borderBottom: '1px solid var(--admin-line)' }}>
                       €{(r.discountAmount || 0).toFixed(2)}
                     </td>
-                    <td style={{ padding: '10px 10px', borderBottom: '1px solid var(--border)', fontSize: 12, color: 'var(--muted)' }}>
+                    <td style={{ padding: '10px 10px', borderBottom: '1px solid var(--admin-line)', fontSize: 12, color: 'var(--admin-ink-muted)' }}>
                       {r.orderStatus || '—'}
                     </td>
                   </tr>

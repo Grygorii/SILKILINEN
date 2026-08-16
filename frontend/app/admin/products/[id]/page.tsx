@@ -1132,7 +1132,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               on attributes the reference photo doesn't fully show. */}
           <section className={styles.card}>
             <h3 className={styles.cardTitle}>AI photoshoot — garment descriptor</h3>
-            <p style={{ fontSize: 12, color: 'var(--color-ink-muted, var(--admin-ink-muted))', margin: '0 0 12px', lineHeight: 1.5 }}>
+            <p style={{ fontSize: 12, color: 'var(--admin-ink-muted)', margin: '0 0 12px', lineHeight: 1.5 }}>
               Optional. Written once per product, then injected verbatim into every AI generation as a
               GARMENT — exact specification block. Pin the things Gemini drifts on: length, sleeve cut,
               hem treatment, trim, piping, pockets.

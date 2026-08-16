@@ -57,7 +57,7 @@
   font-size: 12px;
   padding: 8px 14px;
   border: 1px solid var(--color-line);
-  background: var(--cream, var(--admin-bg));
+  background: var(--admin-bg);
   color: var(--color-ink);
   cursor: pointer;
   border-radius: 16px;
@@ -78,7 +78,7 @@
 }
 
 .aiMsg .msgBody {
-  background: var(--cream, var(--admin-bg));
+  background: var(--admin-bg);
   color: var(--color-ink);
   padding: 12px 16px;
   font-size: 13px;

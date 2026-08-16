@@ -239,7 +239,7 @@ export default function JournalEditorPage() {
   if (loading || !article) {
     return (
       <AdminLayout>
-        <div style={{ padding: 40, color: 'var(--muted)', fontSize: 13 }}>Loading…</div>
+        <div style={{ padding: 40, color: 'var(--admin-ink-muted)', fontSize: 13 }}>Loading…</div>
       </AdminLayout>
     );
   }
@@ -262,10 +262,10 @@ export default function JournalEditorPage() {
         {/* Sticky top bar */}
         <div style={{
           position: 'sticky', top: 0, zIndex: 100,
-          background: 'white', borderBottom: '1px solid var(--border)',
+          background: 'white', borderBottom: '1px solid var(--admin-line)',
           padding: '10px 24px', display: 'flex', alignItems: 'center', gap: 16,
         }}>
-          <Link href="/admin/journal" style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'none', flexShrink: 0 }}>
+          <Link href="/admin/journal" style={{ fontSize: 12, color: 'var(--admin-ink-muted)', textDecoration: 'none', flexShrink: 0 }}>
             ← Journal
           </Link>
 
@@ -273,7 +273,7 @@ export default function JournalEditorPage() {
             <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 2, letterSpacing: '0.8px', textTransform: 'uppercase', background: st.bg, color: st.color }}>
               {article.status}
             </span>
-            <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+            <span style={{ fontSize: 11, color: 'var(--admin-ink-muted)' }}>
               {saving ? 'Saving…' : savedAt ? `Saved ${timeAgo(savedAt.toISOString())}` : ''}
             </span>
           </div>
@@ -283,18 +283,18 @@ export default function JournalEditorPage() {
               style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-warning)', background: 'white', color: 'var(--admin-warning)', cursor: refreshing ? 'default' : 'pointer', fontFamily: 'inherit' }}>
               {refreshing ? 'Refreshing…' : '✦ Refresh with AI'}
             </button>
-            <button onClick={() => save('draft')} style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={() => save('draft')} style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>
               Save draft
             </button>
-            <button onClick={openPreview} style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={openPreview} style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>
               Preview ↗
             </button>
             {article.status === 'published' ? (
-              <button onClick={unpublish} style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--color-danger)' }}>
+              <button onClick={unpublish} style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--color-danger)' }}>
                 Unpublish
               </button>
             ) : (
-              <button onClick={publish} style={{ padding: '7px 14px', fontSize: 12, background: 'var(--dark)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button onClick={publish} style={{ padding: '7px 14px', fontSize: 12, background: 'var(--admin-ink)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                 Publish
               </button>
             )}
@@ -394,7 +394,7 @@ export default function JournalEditorPage() {
               fontSize: 'clamp(32px, 5vw, 48px)',
               fontWeight: 300,
               lineHeight: 1.2,
-              color: 'var(--dark)',
+              color: 'var(--admin-ink)',
               outline: 'none',
               marginBottom: 20,
               letterSpacing: '0.5px',
@@ -415,7 +415,7 @@ export default function JournalEditorPage() {
               lineHeight: 1.6,
               outline: 'none',
               marginBottom: 40,
-              borderBottom: '1px solid var(--border)',
+              borderBottom: '1px solid var(--admin-line)',
               paddingBottom: 24,
             }}
             data-placeholder="A line or two about what this is…"
@@ -425,7 +425,7 @@ export default function JournalEditorPage() {
           {editor && (
             <div style={{
               display: 'flex', gap: 4, marginBottom: 16, flexWrap: 'wrap',
-              padding: '8px 12px', background: 'white', border: '1px solid var(--border)',
+              padding: '8px 12px', background: 'white', border: '1px solid var(--admin-line)',
               position: 'sticky', top: 57, zIndex: 50,
             }}>
               {[
@@ -434,38 +434,38 @@ export default function JournalEditorPage() {
                 { label: 'U', title: 'Underline', action: () => editor.chain().focus().toggleUnderline().run(), active: editor.isActive('underline'), style: { textDecoration: 'underline' } },
               ].map(({ label, title, action, active, style }) => (
                 <button key={label} onClick={action} title={title} style={{
-                  padding: '4px 10px', fontSize: 13, border: '1px solid var(--border)',
-                  background: active ? 'var(--dark)' : 'white', color: active ? 'white' : 'var(--dark)',
+                  padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)',
+                  background: active ? 'var(--admin-ink)' : 'white', color: active ? 'white' : 'var(--admin-ink)',
                   cursor: 'pointer', fontFamily: 'inherit', ...style,
                 }}>
                   {label}
                 </button>
               ))}
-              <span style={{ width: 1, background: 'var(--border)', margin: '2px 4px' }} />
+              <span style={{ width: 1, background: 'var(--admin-line)', margin: '2px 4px' }} />
               {[
                 { label: 'H2', action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), active: editor.isActive('heading', { level: 2 }) },
                 { label: 'H3', action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(), active: editor.isActive('heading', { level: 3 }) },
               ].map(({ label, action, active }) => (
                 <button key={label} onClick={action} style={{
-                  padding: '4px 10px', fontSize: 12, border: '1px solid var(--border)',
-                  background: active ? 'var(--dark)' : 'white', color: active ? 'white' : 'var(--dark)',
+                  padding: '4px 10px', fontSize: 12, border: '1px solid var(--admin-line)',
+                  background: active ? 'var(--admin-ink)' : 'white', color: active ? 'white' : 'var(--admin-ink)',
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}>
                   {label}
                 </button>
               ))}
-              <span style={{ width: 1, background: 'var(--border)', margin: '2px 4px' }} />
-              <button onClick={() => editor.chain().focus().toggleBlockquote().run()} title="Blockquote" style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--border)', background: editor.isActive('blockquote') ? 'var(--dark)' : 'white', color: editor.isActive('blockquote') ? 'white' : 'var(--dark)', cursor: 'pointer' }}>&ldquo;</button>
-              <button onClick={() => editor.chain().focus().toggleBulletList().run()} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--border)', background: editor.isActive('bulletList') ? 'var(--dark)' : 'white', color: editor.isActive('bulletList') ? 'white' : 'var(--dark)', cursor: 'pointer' }}>•</button>
-              <button onClick={() => editor.chain().focus().toggleOrderedList().run()} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--border)', background: editor.isActive('orderedList') ? 'var(--dark)' : 'white', color: editor.isActive('orderedList') ? 'white' : 'var(--dark)', cursor: 'pointer' }}>1.</button>
+              <span style={{ width: 1, background: 'var(--admin-line)', margin: '2px 4px' }} />
+              <button onClick={() => editor.chain().focus().toggleBlockquote().run()} title="Blockquote" style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)', background: editor.isActive('blockquote') ? 'var(--admin-ink)' : 'white', color: editor.isActive('blockquote') ? 'white' : 'var(--admin-ink)', cursor: 'pointer' }}>&ldquo;</button>
+              <button onClick={() => editor.chain().focus().toggleBulletList().run()} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)', background: editor.isActive('bulletList') ? 'var(--admin-ink)' : 'white', color: editor.isActive('bulletList') ? 'white' : 'var(--admin-ink)', cursor: 'pointer' }}>•</button>
+              <button onClick={() => editor.chain().focus().toggleOrderedList().run()} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)', background: editor.isActive('orderedList') ? 'var(--admin-ink)' : 'white', color: editor.isActive('orderedList') ? 'white' : 'var(--admin-ink)', cursor: 'pointer' }}>1.</button>
               <button onClick={() => {
                 const url = window.prompt('URL:');
                 if (url) editor.chain().focus().setLink({ href: url }).run();
-              }} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--border)', background: editor.isActive('link') ? 'var(--dark)' : 'white', color: editor.isActive('link') ? 'white' : 'var(--dark)', cursor: 'pointer' }}>🔗</button>
-              <button onClick={() => editor.chain().focus().setHorizontalRule().run()} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--border)', background: 'white', color: 'var(--muted)', cursor: 'pointer' }}>—</button>
+              }} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)', background: editor.isActive('link') ? 'var(--admin-ink)' : 'white', color: editor.isActive('link') ? 'white' : 'var(--admin-ink)', cursor: 'pointer' }}>🔗</button>
+              <button onClick={() => editor.chain().focus().setHorizontalRule().run()} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)', background: 'white', color: 'var(--admin-ink-muted)', cursor: 'pointer' }}>—</button>
               <>
                 <input ref={inlineImageRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleInlineImageUpload} />
-                <button onClick={() => inlineImageRef.current?.click()} title="Insert image" style={{ padding: '4px 10px', fontSize: 12, border: '1px solid var(--border)', background: 'white', color: 'var(--muted)', cursor: 'pointer' }}>
+                <button onClick={() => inlineImageRef.current?.click()} title="Insert image" style={{ padding: '4px 10px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', color: 'var(--admin-ink-muted)', cursor: 'pointer' }}>
                   + Image
                 </button>
               </>
@@ -495,16 +495,16 @@ export default function JournalEditorPage() {
 
           {/* Word count */}
           {editor && (
-            <div style={{ marginTop: 24, textAlign: 'right', fontSize: 11, color: 'var(--muted)', letterSpacing: '0.3px' }}>
+            <div style={{ marginTop: 24, textAlign: 'right', fontSize: 11, color: 'var(--admin-ink-muted)', letterSpacing: '0.3px' }}>
               {wordCount} words · {readTime} min read
             </div>
           )}
 
           {/* Optional details (SEO) */}
-          <div style={{ marginTop: 48, borderTop: '1px solid var(--border)', paddingTop: 24 }}>
+          <div style={{ marginTop: 48, borderTop: '1px solid var(--admin-line)', paddingTop: 24 }}>
             <button onClick={() => setSeoOpen(o => !o)} style={{
               background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-              fontSize: 12, color: 'var(--muted)', letterSpacing: '0.8px', textTransform: 'uppercase', padding: 0,
+              fontSize: 12, color: 'var(--admin-ink-muted)', letterSpacing: '0.8px', textTransform: 'uppercase', padding: 0,
             }}>
               {seoOpen ? '▾' : '▸'} Optional details
             </button>
@@ -519,17 +519,17 @@ export default function JournalEditorPage() {
                   { label: 'Author', key: 'author', placeholder: 'Sabreen' },
                 ].map(({ label, key, placeholder }) => (
                   <div key={key}>
-                    <label style={{ fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--muted)', display: 'block', marginBottom: 4 }}>{label}</label>
+                    <label style={{ fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', display: 'block', marginBottom: 4 }}>{label}</label>
                     <input
                       value={(seoForm as Record<string, string>)[key]}
                       onChange={e => setSeoForm(f => ({ ...f, [key]: e.target.value }))}
                       placeholder={placeholder}
-                      style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }}
                     />
                   </div>
                 ))}
                 {article.readingTimeMinutes && (
-                  <p style={{ fontSize: 12, color: 'var(--muted)' }}>Reading time: ~{article.readingTimeMinutes} min (auto-calculated)</p>
+                  <p style={{ fontSize: 12, color: 'var(--admin-ink-muted)' }}>Reading time: ~{article.readingTimeMinutes} min (auto-calculated)</p>
                 )}
               </div>
             )}

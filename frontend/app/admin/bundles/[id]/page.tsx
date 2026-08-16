@@ -427,7 +427,7 @@ export default function AdminBundleEditPage({ params }: { params: Promise<{ id: 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {categoryOptions.length === 0 && <span className={styles.hint}>No categories yet.</span>}
               {categoryOptions.map(cat => (
-                <label key={cat.slug} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--dark)', cursor: 'pointer' }}>
+                <label key={cat.slug} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--admin-ink)', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={form.categories.includes(cat.slug)}

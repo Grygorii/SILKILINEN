@@ -18,13 +18,13 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 28px;
   font-weight: 400;
-  color: var(--dark);
+  color: var(--admin-ink);
   margin-bottom: 6px;
 }
 
 .headerLeft p {
   font-size: 13px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   line-height: 1.6;
   max-width: 640px;
 }
@@ -35,8 +35,8 @@
   font-family: inherit;
   letter-spacing: 0.06em;
   cursor: pointer;
-  border: 1px solid var(--dark);
-  background: var(--dark);
+  border: 1px solid var(--admin-ink);
+  background: var(--admin-ink);
   color: white;
   transition: opacity 0.15s;
   white-space: nowrap;
@@ -52,7 +52,7 @@
   font-size: 10px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   margin-bottom: 14px;
 }
 
@@ -67,7 +67,7 @@
 
 .agentCard {
   background: white;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   padding: 18px 20px;
   display: flex;
   flex-direction: column;
@@ -89,13 +89,13 @@
 .agentName {
   font-size: 13px;
   font-weight: 500;
-  color: var(--dark);
+  color: var(--admin-ink);
   letter-spacing: 0.02em;
 }
 
 .agentDesc {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   line-height: 1.55;
   flex: 1;
 }
@@ -109,7 +109,7 @@
 
 .agentMeta {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   letter-spacing: 0.02em;
 }
 
@@ -122,11 +122,11 @@
   cursor: pointer;
   border: none;
   background: none;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   transition: color 0.15s;
 }
 
-.runBtn:hover { color: var(--dark); text-decoration: underline; text-underline-offset: 3px; }
+.runBtn:hover { color: var(--admin-ink); text-decoration: underline; text-underline-offset: 3px; }
 .runBtn:disabled { opacity: 0.5; cursor: default; text-decoration: none; }
 
 /* Toggle pill */
@@ -136,9 +136,9 @@
   width: 34px;
   height: 18px;
   flex-shrink: 0;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   border-radius: 999px;
-  background: var(--cream);
+  background: var(--admin-bg);
   cursor: pointer;
   padding: 0;
   transition: background 0.2s, border-color 0.2s;
@@ -151,13 +151,13 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--muted);
+  background: var(--admin-ink-muted);
   transition: transform 0.2s, background 0.2s;
 }
 
 .toggleOn {
-  background: var(--dark);
-  border-color: var(--dark);
+  background: var(--admin-ink);
+  border-color: var(--admin-ink);
 }
 
 .toggleOn .knob {
@@ -181,7 +181,7 @@
   font-size: 10px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 .liveDot {
@@ -204,7 +204,7 @@
   margin: 0;
   padding: 0;
   background: white;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
 }
 
 .feedRow {
@@ -213,7 +213,7 @@
   align-items: flex-start;
   gap: 12px;
   padding: 16px 20px 16px 46px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--admin-line);
   transition: background 0.15s;
 }
 
@@ -228,7 +228,7 @@
   top: 0;
   bottom: 0;
   width: 1px;
-  background: var(--border);
+  background: var(--admin-line);
 }
 
 .feedRow:first-child::before { top: 22px; }
@@ -250,7 +250,7 @@
 
 .dotGold  { background: var(--admin-warning); }
 .dotError { background: var(--admin-danger); }
-.dotMuted { background: var(--muted); }
+.dotMuted { background: var(--admin-ink-muted); }
 
 .feedRowApproval { background: var(--admin-warning-soft); }
 .feedRowApproval:hover { background: var(--admin-warning-soft); }
@@ -272,9 +272,9 @@
   font-size: 10px;
   letter-spacing: 1.2px;
   text-transform: uppercase;
-  color: var(--muted);
-  background: var(--cream);
-  border: 1px solid var(--border);
+  color: var(--admin-ink-muted);
+  background: var(--admin-bg);
+  border: 1px solid var(--admin-line);
   padding: 1px 7px;
   border-radius: 2px;
   white-space: nowrap;
@@ -283,13 +283,13 @@
 .feedTitle {
   font-size: 13px;
   font-weight: 500;
-  color: var(--dark);
+  color: var(--admin-ink);
   line-height: 1.5;
 }
 
 .feedDetail {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   line-height: 1.55;
   margin-top: 4px;
 }
@@ -297,14 +297,14 @@
 .feedTime {
   display: block;
   font-size: 11px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   margin-top: 6px;
   letter-spacing: 0.02em;
 }
 
 .reviewLink {
   font-size: 12px;
-  color: var(--dark);
+  color: var(--admin-ink);
   text-decoration: none;
   letter-spacing: 0.03em;
   white-space: nowrap;
@@ -313,22 +313,22 @@
   transition: border-color 0.15s;
 }
 
-.reviewLink:hover { border-bottom-color: var(--dark); }
+.reviewLink:hover { border-bottom-color: var(--admin-ink); }
 
 .empty {
   background: white;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   padding: 48px 24px;
   text-align: center;
   font-size: 13px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 /* ── Loading skeleton ───────────────────────────────────── */
 
 .skelCard {
   background: white;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   padding: 18px 20px;
   display: flex;
   flex-direction: column;
@@ -337,7 +337,7 @@
 
 .skelFeed {
   background: white;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   padding: 20px 24px;
   display: flex;
   flex-direction: column;
@@ -360,8 +360,8 @@
 /* ── North Star banner ──────────────────────────────────── */
 
 .northStar {
-  background: linear-gradient(180deg, var(--admin-surface) 0%, var(--cream) 100%);
-  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--admin-surface) 0%, var(--admin-bg) 100%);
+  border: 1px solid var(--admin-line);
   padding: 26px 30px;
   margin-bottom: 22px;
 }
@@ -377,7 +377,7 @@
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   margin-bottom: 8px;
 }
 
@@ -385,13 +385,13 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 24px;
   font-weight: 400;
-  color: var(--dark);
+  color: var(--admin-ink);
   margin-bottom: 6px;
 }
 
 .northStarHint {
   font-size: 13px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   line-height: 1.6;
   margin-bottom: 18px;
   max-width: 520px;
@@ -401,14 +401,14 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 26px;
   font-weight: 400;
-  color: var(--dark);
+  color: var(--admin-ink);
   line-height: 1.25;
   margin: 4px 0 18px;
 }
 
 .northStarNote {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   line-height: 1.6;
   margin-top: 14px;
   font-style: italic;
@@ -416,7 +416,7 @@
 
 .brainRetryText {
   font-size: 13px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   margin-right: 12px;
 }
 
@@ -431,8 +431,8 @@
 .progressTrack {
   flex: 1;
   height: 8px;
-  background: var(--cream);
-  border: 1px solid var(--border);
+  background: var(--admin-bg);
+  border: 1px solid var(--admin-line);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -446,7 +446,7 @@
 
 .progressNums {
   font-size: 12px;
-  color: var(--dark);
+  color: var(--admin-ink);
   letter-spacing: 0.02em;
   white-space: nowrap;
   flex-shrink: 0;
@@ -466,9 +466,9 @@
   padding: 9px 12px;
   font-size: 13px;
   font-family: inherit;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   background: white;
-  color: var(--dark);
+  color: var(--admin-ink);
 }
 
 .nsInput { width: 120px; }
@@ -482,8 +482,8 @@
   font-family: inherit;
   letter-spacing: 0.06em;
   cursor: pointer;
-  border: 1px solid var(--dark);
-  background: var(--dark);
+  border: 1px solid var(--admin-ink);
+  background: var(--admin-ink);
   color: white;
   transition: opacity 0.15s;
   white-space: nowrap;
@@ -508,12 +508,12 @@
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
 }
 
 .briefDate {
   font-size: 13px;
-  color: var(--dark);
+  color: var(--admin-ink);
   margin-top: 4px;
   letter-spacing: 0.02em;
 }
@@ -524,8 +524,8 @@
   font-family: inherit;
   letter-spacing: 0.06em;
   cursor: pointer;
-  border: 1px solid var(--dark);
-  background: var(--dark);
+  border: 1px solid var(--admin-ink);
+  background: var(--admin-ink);
   color: white;
   transition: opacity 0.15s;
   white-space: nowrap;
@@ -537,17 +537,17 @@
 
 .briefEmpty {
   background: white;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   padding: 44px 28px;
   text-align: center;
   font-size: 13px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   line-height: 1.6;
 }
 
 .briefDoc {
   background: white;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   padding: 38px 44px;
 }
 
@@ -555,41 +555,41 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 28px;
   font-weight: 500;
-  color: var(--dark);
+  color: var(--admin-ink);
   line-height: 1.3;
   margin-bottom: 30px;
 }
 
 .passage {
   padding: 22px 0;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--admin-line);
 }
 
 .passageLabel {
   font-size: 10px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   margin-bottom: 8px;
 }
 
 .passageText {
   font-size: 14px;
-  color: var(--dark);
+  color: var(--admin-ink);
   line-height: 1.7;
 }
 
 .briefBlock {
   padding-top: 26px;
   margin-top: 4px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--admin-line);
 }
 
 .briefBlockLabel {
   font-size: 10px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   margin-bottom: 16px;
 }
 
@@ -614,9 +614,9 @@
   font-size: 10px;
   letter-spacing: 1.2px;
   text-transform: uppercase;
-  color: var(--muted);
-  background: var(--cream);
-  border: 1px solid var(--border);
+  color: var(--admin-ink-muted);
+  background: var(--admin-bg);
+  border: 1px solid var(--admin-line);
   padding: 3px 8px;
   border-radius: 2px;
   white-space: nowrap;
@@ -634,13 +634,13 @@
 .moveTitle {
   font-size: 13px;
   font-weight: 500;
-  color: var(--dark);
+  color: var(--admin-ink);
   line-height: 1.5;
 }
 
 .moveWhy {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   line-height: 1.55;
 }
 
@@ -657,7 +657,7 @@
 
 .founderItem {
   font-size: 13px;
-  color: var(--dark);
+  color: var(--admin-ink);
   line-height: 1.6;
   padding-left: 16px;
   border-left: 2px solid var(--admin-warning);
@@ -673,7 +673,7 @@
 
 .ideaCard {
   background: var(--admin-surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-line);
   padding: 16px 18px;
   display: flex;
   flex-direction: column;
@@ -693,7 +693,7 @@
 .ideaTitle {
   font-size: 13px;
   font-weight: 500;
-  color: var(--dark);
+  color: var(--admin-ink);
   line-height: 1.45;
 }
 
@@ -701,9 +701,9 @@
   font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--muted);
-  background: var(--cream);
-  border: 1px solid var(--border);
+  color: var(--admin-ink-muted);
+  background: var(--admin-bg);
+  border: 1px solid var(--admin-line);
   padding: 2px 7px;
   border-radius: 2px;
   white-space: nowrap;
@@ -712,7 +712,7 @@
 
 .ideaWhy {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--admin-ink-muted);
   line-height: 1.55;
 }
 
