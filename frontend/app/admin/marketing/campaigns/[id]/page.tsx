@@ -128,7 +128,7 @@ export default function CampaignDetailPage() {
 
   const { stats } = camp;
 
-  const inputStyle: React.CSSProperties = { padding: '9px 12px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, color: 'var(--admin-ink)', background: 'white', outline: 'none' };
+  const inputStyle: React.CSSProperties = { padding: '9px 12px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, color: 'var(--admin-ink)', background: 'var(--admin-surface)', outline: 'none' };
   const sectionTitle: React.CSSProperties = { fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 14, display: 'block' };
 
   const utmBase = `https://www.silkilinen.com?utm_source=${camp.channel}&utm_medium=paid&utm_campaign=${camp.slug}`;
@@ -169,7 +169,7 @@ export default function CampaignDetailPage() {
             ['Avg order', stats.averageOrderValue !== null ? fmt(stats.averageOrderValue) : '—'],
             ['Cost/order', stats.costPerOrder !== null ? fmt(stats.costPerOrder) : '—'],
           ].map(([label, val]) => (
-            <div key={label as string} style={{ background: 'white', padding: '16px 18px' }}>
+            <div key={label as string} style={{ background: 'var(--admin-surface)', padding: '16px 18px' }}>
               <div style={{ fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 6 }}>{label}</div>
               <div style={{ fontSize: 20, fontFamily: "'Cormorant Garamond', Georgia, serif" }}>{val}</div>
             </div>
@@ -185,7 +185,7 @@ export default function CampaignDetailPage() {
         {/* Two-col: spend log + creatives */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 32 }}>
           {/* Spend log */}
-          <div style={{ background: 'white', border: '1px solid var(--admin-line)', padding: 20 }}>
+          <div style={{ background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: 20 }}>
             <span style={sectionTitle}>Spend log · total {fmt(camp.spend)}</span>
             {camp.spendUpdates.length === 0
               ? <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', marginBottom: 16 }}>No spend recorded yet.</p>
@@ -201,14 +201,14 @@ export default function CampaignDetailPage() {
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <input style={{ ...inputStyle, flex: '0 0 100px' }} type="number" step="0.01" min="0" placeholder="€ amount" value={spendAmt} onChange={e => setSpendAmt(e.target.value)} />
               <input style={{ ...inputStyle, flex: 1, minWidth: 80 }} placeholder="Note (optional)" value={spendNote} onChange={e => setSpendNote(e.target.value)} />
-              <button onClick={addSpend} disabled={addingSpend} style={{ ...inputStyle, cursor: 'pointer', background: 'var(--admin-ink)', color: 'white', border: '1px solid var(--admin-ink)', whiteSpace: 'nowrap' }}>
+              <button onClick={addSpend} disabled={addingSpend} style={{ ...inputStyle, cursor: 'pointer', background: 'var(--admin-ink)', color: 'var(--admin-surface)', border: '1px solid var(--admin-ink)', whiteSpace: 'nowrap' }}>
                 {addingSpend ? '…' : 'Add'}
               </button>
             </div>
           </div>
 
           {/* Creatives */}
-          <div style={{ background: 'white', border: '1px solid var(--admin-line)', padding: 20 }}>
+          <div style={{ background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: 20 }}>
             <span style={sectionTitle}>Creatives</span>
             {camp.creatives.length === 0
               ? <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', marginBottom: 16 }}>No creatives added yet.</p>
@@ -229,7 +229,7 @@ export default function CampaignDetailPage() {
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <input style={{ ...inputStyle, flex: 1, minWidth: 100 }} placeholder="Creative name" value={crName} onChange={e => setCrName(e.target.value)} />
               <input style={{ ...inputStyle, flex: 1, minWidth: 100 }} placeholder="utm_content value" value={crContent} onChange={e => setCrContent(e.target.value)} />
-              <button onClick={addCreative} disabled={addingCr} style={{ ...inputStyle, cursor: 'pointer', background: 'var(--admin-ink)', color: 'white', border: '1px solid var(--admin-ink)' }}>
+              <button onClick={addCreative} disabled={addingCr} style={{ ...inputStyle, cursor: 'pointer', background: 'var(--admin-ink)', color: 'var(--admin-surface)', border: '1px solid var(--admin-ink)' }}>
                 {addingCr ? '…' : 'Add'}
               </button>
             </div>

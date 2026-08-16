@@ -47,9 +47,13 @@ const eslintConfig = defineConfig([
     files: ['app/admin/**/*.tsx', 'app/admin/**/*.ts'],
     rules: {
       'no-restricted-syntax': ['error', {
-        selector: "Literal[value=/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/]",
+        // Hex AND colour keywords. The first version of this rule caught only
+        // hex, so 145 uses of literal 'white' walked straight through it —
+        // including one inside the shared Card, which is why the workspace
+        // palette never reached the component meant to define it.
+        selector: "Literal[value=/^(?:#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})|white|black|red|green|blue|orange|yellow|purple|grey|gray)$/]",
         message:
-          "Don't hardcode hex in the admin — use the --color-* tokens from globals.css " +
+          "Don't hardcode hex in the admin — use the --admin-*/--color-* tokens from globals.css " +
           "(--color-ink, --color-line, --color-success, --color-danger, --color-gold, …). " +
           "If a third-party widget genuinely needs a literal, disable this rule on that line with a reason.",
       }],

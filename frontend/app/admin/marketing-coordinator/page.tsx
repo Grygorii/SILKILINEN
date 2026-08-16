@@ -101,7 +101,7 @@ export default function MarketingCoordinatorPage() {
         </p>
 
         {/* Brief */}
-        <div style={{ background: 'white', border, padding: '20px 22px', marginBottom: 24 }}>
+        <div style={{ background: 'var(--admin-surface)', border, padding: '20px 22px', marginBottom: 24 }}>
           <textarea
             value={goal}
             onChange={e => setGoal(e.target.value)}
@@ -117,11 +117,11 @@ export default function MarketingCoordinatorPage() {
               style={{ flex: 1, minWidth: 220, padding: '9px 12px', border, fontFamily: 'inherit', fontSize: 13, color: dark }}
             />
             <button onClick={coordinate} disabled={busy} style={{
-              padding: '10px 22px', background: dark, color: 'white', border: 'none',
+              padding: '10px 22px', background: dark, color: 'var(--admin-surface)', border: 'none',
               cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1, fontFamily: 'inherit', fontSize: 13, letterSpacing: '0.5px',
             }}>{busy ? 'Coordinating… (~30s)' : 'Coordinate'}</button>
             <button onClick={runWeekly} disabled={weekly} title="Generate the autonomous weekly plan now (also runs on a weekly cron)" style={{
-              padding: '10px 18px', background: 'white', color: dark, border, cursor: weekly ? 'default' : 'pointer',
+              padding: '10px 18px', background: 'var(--admin-surface)', color: dark, border, cursor: weekly ? 'default' : 'pointer',
               opacity: weekly ? 0.6 : 1, fontFamily: 'inherit', fontSize: 13,
             }}>{weekly ? 'Running…' : '↻ Weekly plan'}</button>
           </div>
@@ -136,7 +136,7 @@ export default function MarketingCoordinatorPage() {
             <div style={{ display: 'grid', gap: 8 }}>
               {history.map(h => (
                 <button key={h._id} onClick={() => setPlan(h)} style={{
-                  textAlign: 'left', background: 'white', border, padding: '12px 16px', cursor: 'pointer', fontFamily: 'inherit',
+                  textAlign: 'left', background: 'var(--admin-surface)', border, padding: '12px 16px', cursor: 'pointer', fontFamily: 'inherit',
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                     <span style={{ fontSize: 14, color: dark }}>{h.objective || h.goal}</span>
@@ -156,7 +156,7 @@ export default function MarketingCoordinatorPage() {
 
 function PlanView({ plan, onToggle }: { plan: Plan; onToggle: (p: string, t: string, d: boolean) => void }) {
   return (
-    <div style={{ background: 'white', border, padding: '24px 26px' }}>
+    <div style={{ background: 'var(--admin-surface)', border, padding: '24px 26px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
         <h2 style={{ fontFamily: serif, fontSize: 22, fontWeight: 400, color: dark, margin: 0, lineHeight: 1.3 }}>{plan.objective}</h2>
         <span style={{ fontSize: 11, color: muted, whiteSpace: 'nowrap' }}>{plan.mode === 'weekly' ? 'Weekly plan' : 'Brief'}</span>

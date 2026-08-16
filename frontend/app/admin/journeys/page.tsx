@@ -28,7 +28,7 @@ const serif = "'Cormorant Garamond', Georgia, serif";
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: 'white', border, padding: '20px 22px' }}>
+    <div style={{ background: 'var(--admin-surface)', border, padding: '20px 22px' }}>
       <h2 style={{ fontFamily: serif, fontSize: 18, fontWeight: 500, color: dark, margin: '0 0 14px' }}>{title}</h2>
       {children}
     </div>
@@ -73,7 +73,7 @@ export default function JourneysPage() {
             {[7, 30, 90].map(d => (
               <button key={d} onClick={() => setDays(d)} style={{
                 padding: '6px 14px', fontSize: 12, border, cursor: 'pointer', fontFamily: 'inherit',
-                background: days === d ? dark : 'white', color: days === d ? 'white' : muted,
+                background: days === d ? dark : 'var(--admin-surface)', color: days === d ? 'var(--admin-surface)' : muted,
               }}>{d}d</button>
             ))}
           </div>

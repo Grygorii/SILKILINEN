@@ -233,13 +233,13 @@ export default function SocialComposerPage() {
                 <option value="posted">Posted</option>
               </select>
               <button onClick={() => { setShowExport(true); setExportPlatformKey(activePlatformKey); }} style={{
-                padding: '7px 16px', background: 'var(--admin-ink)', color: 'white', border: 'none',
+                padding: '7px 16px', background: 'var(--admin-ink)', color: 'var(--admin-surface)', border: 'none',
                 cursor: 'pointer', fontFamily: 'inherit', fontSize: 12,
               }}>
                 Export &amp; track →
               </button>
               <button onClick={deletePost} disabled={deleting} style={{
-                padding: '7px 10px', background: 'white', color: 'var(--admin-danger)', border: '1px solid var(--admin-danger-soft)',
+                padding: '7px 10px', background: 'var(--admin-surface)', color: 'var(--admin-danger)', border: '1px solid var(--admin-danger-soft)',
                 cursor: 'pointer', fontFamily: 'inherit', fontSize: 11,
               }}>
                 Delete
@@ -268,11 +268,11 @@ export default function SocialComposerPage() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={img.url} alt={img.altText || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   {post.primaryImageIndex === i && (
-                    <span style={{ position: 'absolute', top: 3, left: 3, fontSize: 8, background: 'rgba(0,0,0,0.6)', color: 'white', padding: '1px 4px', letterSpacing: '0.5px' }}>MAIN</span>
+                    <span style={{ position: 'absolute', top: 3, left: 3, fontSize: 8, background: 'rgba(0,0,0,0.6)', color: 'var(--admin-surface)', padding: '1px 4px', letterSpacing: '0.5px' }}>MAIN</span>
                   )}
                   <button onClick={() => deleteImage(i)} style={{
                     position: 'absolute', top: 3, right: 3, width: 20, height: 20, border: 'none',
-                    background: 'rgba(0,0,0,0.6)', color: 'white', cursor: 'pointer', fontSize: 12,
+                    background: 'rgba(0,0,0,0.6)', color: 'var(--admin-surface)', cursor: 'pointer', fontSize: 12,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
                   }}>×</button>
                 </div>
@@ -341,12 +341,12 @@ export default function SocialComposerPage() {
                     <button key={p.key} onClick={() => setActivePlatformKey(p.key)} style={{
                       display: 'flex', alignItems: 'center', gap: 5,
                       padding: '5px 12px', border: `1px solid ${isActive ? p.brandColor || 'var(--admin-ink)' : 'var(--admin-line)'}`,
-                      background: isActive ? (p.brandColor || 'var(--admin-ink)') : 'white',
-                      color: isActive ? 'white' : isEnabled ? 'var(--admin-ink)' : 'var(--admin-ink-muted)',
+                      background: isActive ? (p.brandColor || 'var(--admin-ink)') : 'var(--admin-surface)',
+                      color: isActive ? 'var(--admin-surface)' : isEnabled ? 'var(--admin-ink)' : 'var(--admin-ink-muted)',
                       cursor: 'pointer', fontFamily: 'inherit', fontSize: 12,
                       opacity: isEnabled ? 1 : 0.5,
                     }}>
-                      <PlatformIcon icon={p.icon} color={isActive ? 'white' : (p.brandColor || 'var(--admin-ink-muted)')} />
+                      <PlatformIcon icon={p.icon} color={isActive ? 'var(--admin-surface)' : (p.brandColor || 'var(--admin-ink-muted)')} />
                       {p.displayName}
                     </button>
                   );
@@ -394,7 +394,7 @@ export default function SocialComposerPage() {
                         style={{
                           width: '100%', padding: '10px 12px', border: '1px solid var(--admin-line)',
                           fontFamily: 'inherit', fontSize: 13, lineHeight: 1.6, resize: 'vertical',
-                          boxSizing: 'border-box', outline: 'none', background: 'white',
+                          boxSizing: 'border-box', outline: 'none', background: 'var(--admin-surface)',
                         }}
                       />
                       {activePlatform.captionMaxChars > 0 && (
@@ -419,7 +419,7 @@ export default function SocialComposerPage() {
                             placeholder={hashtags || '#silkilinen #silk'}
                             style={{
                               width: '100%', padding: '8px 12px', border: '1px solid var(--admin-line)',
-                              fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box', outline: 'none', background: 'white',
+                              fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box', outline: 'none', background: 'var(--admin-surface)',
                             }}
                           />
                           {activePlatform.hashtagsRecommended > 0 && (
@@ -438,7 +438,7 @@ export default function SocialComposerPage() {
           {post.status !== 'draft' && enabledVariations.length > 0 && (
             <div style={{ marginTop: 28 }}>
               <p style={{ fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 10 }}>Posting checklist</p>
-              <div style={{ background: 'white', border: '1px solid var(--admin-line)', padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {enabledVariations.map(v => {
                   const platform = platforms.find(p => p.key === v.platformKey);
                   const isPosted = postedToKeys.has(v.platformKey);
@@ -481,8 +481,8 @@ export default function SocialComposerPage() {
               {platforms.filter(p => variations[p.key]?.enabled !== false).map(p => (
                 <button key={p.key} onClick={() => setActivePlatformKey(p.key)} style={{
                   padding: '3px 8px', fontSize: 10, border: `1px solid ${activePlatformKey === p.key ? p.brandColor || 'var(--admin-ink)' : 'var(--admin-line)'}`,
-                  background: activePlatformKey === p.key ? (p.brandColor || 'var(--admin-ink)') : 'white',
-                  color: activePlatformKey === p.key ? 'white' : 'var(--admin-ink-muted)',
+                  background: activePlatformKey === p.key ? (p.brandColor || 'var(--admin-ink)') : 'var(--admin-surface)',
+                  color: activePlatformKey === p.key ? 'var(--admin-surface)' : 'var(--admin-ink-muted)',
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}>
                   {p.displayName}
@@ -493,7 +493,7 @@ export default function SocialComposerPage() {
 
           {/* Phone mockup */}
           <div style={{
-            background: 'white', border: '1px solid var(--admin-line)',
+            background: 'var(--admin-surface)', border: '1px solid var(--admin-line)',
             borderRadius: 8, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
           }}>
             {/* Platform header bar */}
@@ -560,7 +560,7 @@ export default function SocialComposerPage() {
       {showExport && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={e => { if (e.target === e.currentTarget) setShowExport(false); }}>
-          <div style={{ background: 'white', padding: '32px 36px', width: 560, maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ background: 'var(--admin-surface)', padding: '32px 36px', width: 560, maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 24, fontWeight: 400, margin: '0 0 20px' }}>Export &amp; track</h2>
 
             {/* Platform picker */}
@@ -571,11 +571,11 @@ export default function SocialComposerPage() {
                   <button key={v.platformKey} onClick={() => setExportPlatformKey(v.platformKey)} style={{
                     display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px',
                     border: `1px solid ${exportPlatformKey === v.platformKey ? (p?.brandColor || 'var(--admin-ink)') : 'var(--admin-line)'}`,
-                    background: exportPlatformKey === v.platformKey ? (p?.brandColor || 'var(--admin-ink)') : 'white',
-                    color: exportPlatformKey === v.platformKey ? 'white' : 'var(--admin-ink)',
+                    background: exportPlatformKey === v.platformKey ? (p?.brandColor || 'var(--admin-ink)') : 'var(--admin-surface)',
+                    color: exportPlatformKey === v.platformKey ? 'var(--admin-surface)' : 'var(--admin-ink)',
                     cursor: 'pointer', fontFamily: 'inherit', fontSize: 12,
                   }}>
-                    {p && <PlatformIcon icon={p.icon} color={exportPlatformKey === v.platformKey ? 'white' : (p.brandColor || 'var(--admin-ink-muted)')} />}
+                    {p && <PlatformIcon icon={p.icon} color={exportPlatformKey === v.platformKey ? 'var(--admin-surface)' : (p.brandColor || 'var(--admin-ink-muted)')} />}
                     {p?.displayName || v.platformKey}
                     {postedToKeys.has(v.platformKey) && <span style={{ fontSize: 10 }}>✓</span>}
                   </button>
@@ -610,7 +610,7 @@ export default function SocialComposerPage() {
                       setTimeout(() => setCopied(false), 2000);
                     }} style={{
                       position: 'absolute', top: 8, right: 8, padding: '4px 10px', fontSize: 10,
-                      border: '1px solid var(--admin-line)', background: copied ? 'var(--admin-success-soft)' : 'white',
+                      border: '1px solid var(--admin-line)', background: copied ? 'var(--admin-success-soft)' : 'var(--admin-surface)',
                       color: copied ? 'var(--color-success)' : 'var(--admin-ink-muted)', cursor: 'pointer', fontFamily: 'inherit',
                     }}>
                       {copied ? 'Copied ✓' : 'Copy'}
@@ -627,7 +627,7 @@ export default function SocialComposerPage() {
                           return (
                             <a key={i} href={cloudUrl} download target="_blank" rel="noopener noreferrer" style={{
                               padding: '7px 14px', border: '1px solid var(--admin-line)', fontSize: 11,
-                              textDecoration: 'none', color: 'var(--admin-ink)', background: spec.isDefault ? 'var(--admin-bg)' : 'white',
+                              textDecoration: 'none', color: 'var(--admin-ink)', background: spec.isDefault ? 'var(--admin-bg)' : 'var(--admin-surface)',
                             }}>
                               ↓ {spec.label} ({spec.pixelWidth}×{spec.pixelHeight})
                             </a>
@@ -644,7 +644,7 @@ export default function SocialComposerPage() {
                       padding: '10px 20px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
                       border: '1px solid var(--admin-line)',
                       background: isPosted ? 'var(--admin-success-soft)' : 'var(--admin-ink)',
-                      color: isPosted ? 'var(--color-success)' : 'white',
+                      color: isPosted ? 'var(--color-success)' : 'var(--admin-surface)',
                     }}>
                       {isPosted ? `✓ Posted to ${platform?.displayName} — unmark?` : `Mark as posted to ${platform?.displayName}`}
                     </button>
@@ -655,7 +655,7 @@ export default function SocialComposerPage() {
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24 }}>
               <button onClick={() => setShowExport(false)} style={{
-                padding: '10px 24px', border: '1px solid var(--admin-line)', background: 'white',
+                padding: '10px 24px', border: '1px solid var(--admin-line)', background: 'var(--admin-surface)',
                 cursor: 'pointer', fontFamily: 'inherit', fontSize: 13,
               }}>Close</button>
             </div>

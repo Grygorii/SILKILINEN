@@ -19,7 +19,7 @@ type Stats = {
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div style={{ background: 'white', border: '1px solid var(--admin-line)', padding: '18px 22px' }}>
+    <div style={{ background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: '18px 22px' }}>
       <p style={{ fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', margin: '0 0 6px' }}>{label}</p>
       <p style={{ fontSize: 26, fontWeight: 600, color: 'var(--admin-ink)', margin: 0 }}>{value}</p>
       {sub && <p style={{ fontSize: 12, color: 'var(--admin-ink-muted)', marginTop: 4 }}>{sub}</p>}
@@ -87,7 +87,7 @@ export default function CustomersFounderPage() {
             </h1>
             <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', margin: 0 }}>{total} people who love Silkilinen</p>
           </div>
-          <button onClick={recompute} disabled={recomputing} style={{ padding: '8px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--admin-ink)' }}>
+          <button onClick={recompute} disabled={recomputing} style={{ padding: '8px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--admin-ink)' }}>
             {recomputing ? 'Refreshing…' : 'Refresh segments'}
           </button>
         </div>
@@ -98,7 +98,7 @@ export default function CustomersFounderPage() {
             const pct = total > 0 ? Math.round((seg.count / total) * 100) : 0;
             return (
               <Link key={seg.slug} href={`/admin/customers?segment=${seg.slug}`} style={{ textDecoration: 'none' }}>
-                <div style={{ background: 'white', border: `1px solid var(--admin-line)`, borderLeft: `4px solid ${SEGMENT_COLORS[seg.slug] || 'var(--admin-line)'}`, padding: '14px 16px' }}>
+                <div style={{ background: 'var(--admin-surface)', border: `1px solid var(--admin-line)`, borderLeft: `4px solid ${SEGMENT_COLORS[seg.slug] || 'var(--admin-line)'}`, padding: '14px 16px' }}>
                   <p style={{ fontSize: 22, fontWeight: 600, color: SEGMENT_COLORS[seg.slug] || 'var(--admin-ink)', margin: '0 0 4px' }}>{seg.count}</p>
                   <p style={{ fontSize: 13, color: 'var(--admin-ink)', margin: '0 0 2px', fontWeight: 500 }}>{seg.label}</p>
                   <p style={{ fontSize: 11, color: 'var(--admin-ink-muted)', margin: 0 }}>{pct}% of all · {seg.description}</p>
@@ -110,7 +110,7 @@ export default function CustomersFounderPage() {
 
         {/* Repeat rate highlight */}
         {stats && (
-          <div style={{ background: 'white', border: '1px solid var(--admin-line)', padding: '20px 24px', marginBottom: 24 }}>
+          <div style={{ background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: '20px 24px', marginBottom: 24 }}>
             <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 8px', color: 'var(--admin-ink)' }}>Repeat purchase rate</p>
             <p style={{ fontSize: 32, fontWeight: 700, color: stats.repeatRate >= 30 ? 'var(--color-success)' : stats.repeatRate >= 15 ? 'var(--admin-warning)' : 'var(--admin-danger)', margin: '0 0 6px' }}>
               {stats.repeatRate}%
@@ -127,7 +127,7 @@ export default function CustomersFounderPage() {
 
         {/* Quick actions */}
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <Link href="/admin/customers/new" style={{ padding: '10px 18px', background: 'var(--admin-ink)', color: 'white', textDecoration: 'none', fontSize: 13 }}>
+          <Link href="/admin/customers/new" style={{ padding: '10px 18px', background: 'var(--admin-ink)', color: 'var(--admin-surface)', textDecoration: 'none', fontSize: 13 }}>
             + Add customer manually
           </Link>
           <button

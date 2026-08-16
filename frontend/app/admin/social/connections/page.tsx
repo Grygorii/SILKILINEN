@@ -166,7 +166,7 @@ export default function SocialConnectionsPage() {
             </p>
           </div>
           <button onClick={() => setShowAddModal(true)} style={{
-            padding: '10px 18px', background: 'var(--admin-ink)', color: 'white', border: 'none',
+            padding: '10px 18px', background: 'var(--admin-ink)', color: 'var(--admin-surface)', border: 'none',
             cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, letterSpacing: '0.5px',
           }}>
             + Add platform
@@ -179,7 +179,7 @@ export default function SocialConnectionsPage() {
           <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {platforms.map(p => (
               <div key={p.key} style={{
-                background: 'white', border: '1px solid var(--admin-line)',
+                background: 'var(--admin-surface)', border: '1px solid var(--admin-line)',
                 padding: '18px 20px', opacity: p.isActive ? 1 : 0.55,
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
@@ -213,7 +213,7 @@ export default function SocialConnectionsPage() {
                     disabled={saving === p.key}
                     style={{
                       padding: '8px 18px', border: '1px solid var(--admin-line)',
-                      background: saved[p.key] ? 'var(--admin-success-soft)' : 'white',
+                      background: saved[p.key] ? 'var(--admin-success-soft)' : 'var(--admin-surface)',
                       color: saved[p.key] ? 'var(--color-success)' : 'var(--admin-ink)',
                       cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, transition: 'all 0.2s',
                     }}
@@ -236,7 +236,7 @@ export default function SocialConnectionsPage() {
         {showAddModal && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             onClick={e => { if (e.target === e.currentTarget) setShowAddModal(false); }}>
-            <div style={{ background: 'white', padding: 32, width: 480, maxWidth: '95vw' }}>
+            <div style={{ background: 'var(--admin-surface)', padding: 32, width: 480, maxWidth: '95vw' }}>
               <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 22, fontWeight: 400, margin: '0 0 20px' }}>Add platform</h2>
               <form onSubmit={addPlatform} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
@@ -277,8 +277,8 @@ export default function SocialConnectionsPage() {
                 </div>
                 {addError && <p style={{ fontSize: 12, color: 'var(--admin-danger)', margin: 0 }}>{addError}</p>}
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
-                  <button type="button" onClick={() => setShowAddModal(false)} style={{ padding: '10px 20px', border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Cancel</button>
-                  <button type="submit" disabled={adding} style={{ padding: '10px 24px', background: 'var(--admin-ink)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
+                  <button type="button" onClick={() => setShowAddModal(false)} style={{ padding: '10px 20px', border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Cancel</button>
+                  <button type="submit" disabled={adding} style={{ padding: '10px 24px', background: 'var(--admin-ink)', color: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
                     {adding ? 'Adding…' : 'Add platform'}
                   </button>
                 </div>

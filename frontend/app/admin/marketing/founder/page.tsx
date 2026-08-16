@@ -31,7 +31,7 @@ export default function FounderPage() {
   }, []);
 
   const card = (label: string, value: string, sub?: string) => (
-    <div style={{ background: 'white', border: '1px solid var(--admin-line)', padding: '20px 22px' }}>
+    <div style={{ background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: '20px 22px' }}>
       <div style={{ fontSize: 10, letterSpacing: '1.4px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 8 }}>{label}</div>
       <div style={{ fontSize: 26, fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 400, color: 'var(--admin-ink)' }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: 'var(--admin-ink-muted)', marginTop: 4 }}>{sub}</div>}
@@ -63,7 +63,7 @@ export default function FounderPage() {
             </div>
 
             {data.founderBullets.length > 0 && (
-              <div style={{ background: 'white', border: '1px solid var(--admin-line)', padding: '22px 24px', marginBottom: 28 }}>
+              <div style={{ background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: '22px 24px', marginBottom: 28 }}>
                 <div style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 16 }}>What's happening</div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {data.founderBullets.map((b, i) => (

@@ -94,7 +94,7 @@ export default function CompetitorsPage() {
         {/* Sort */}
         <div style={{ display: 'flex', gap: 8, margin: '0 0 14px' }}>
           {(['count', 'price'] as const).map(s => (
-            <button key={s} onClick={() => setSort(s)} style={{ padding: '6px 12px', fontSize: 12, background: sort === s ? dark : 'white', color: sort === s ? 'var(--color-bg)' : dark, border, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button key={s} onClick={() => setSort(s)} style={{ padding: '6px 12px', fontSize: 12, background: sort === s ? dark : 'var(--admin-surface)', color: sort === s ? 'var(--color-bg)' : dark, border, cursor: 'pointer', fontFamily: 'inherit' }}>
               {s === 'count' ? 'Biggest catalogue' : 'Highest avg price'}
             </button>
           ))}
@@ -109,7 +109,7 @@ export default function CompetitorsPage() {
           ) : (
             <div style={{ display: 'grid', gap: 10 }}>
               {sorted.map(p => (
-                <div key={p.domain} style={{ border, background: 'white', padding: '14px 16px' }}>
+                <div key={p.domain} style={{ border, background: 'var(--admin-surface)', padding: '14px 16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
                       <a href={`https://${p.domain}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 15.5, color: dark, fontWeight: 500, textDecoration: 'none' }}>{p.name || p.domain}</a>

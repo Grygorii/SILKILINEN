@@ -8,7 +8,7 @@ export default function MetricCard({
   sub?: string;
 }) {
   return (
-    <div style={{ background: 'white', border: '1px solid var(--admin-line)', padding: 24 }}>
+    <div style={{ background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: 24 }}>
       <p style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 12 }}>
         {label}
       </p>

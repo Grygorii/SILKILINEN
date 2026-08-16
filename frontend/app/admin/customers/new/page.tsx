@@ -60,7 +60,7 @@ export default function NewCustomerPage() {
         <Link href="/admin/customers" style={{ fontSize: 12, color: 'var(--admin-ink-muted)', textDecoration: 'none' }}>← Customers</Link>
         <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--admin-ink)', margin: '12px 0 24px' }}>New customer</h1>
 
-        <form onSubmit={submit} style={{ background: 'white', border: '1px solid var(--admin-line)', padding: '24px 28px' }}>
+        <form onSubmit={submit} style={{ background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: '24px 28px' }}>
           {error && <p style={{ color: 'var(--color-danger)', fontSize: 13, marginBottom: 16 }}>{error}</p>}
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
@@ -98,7 +98,7 @@ export default function NewCustomerPage() {
           </label>
 
           <div style={{ display: 'flex', gap: 10 }}>
-            <button type="submit" disabled={saving} style={{ padding: '10px 22px', background: 'var(--admin-ink)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
+            <button type="submit" disabled={saving} style={{ padding: '10px 22px', background: 'var(--admin-ink)', color: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
               {saving ? 'Saving…' : 'Create customer'}
             </button>
             <Link href="/admin/customers" style={{ padding: '10px 18px', border: '1px solid var(--admin-line)', color: 'var(--admin-ink)', textDecoration: 'none', fontSize: 13 }}>

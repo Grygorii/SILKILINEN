@@ -262,7 +262,7 @@ export default function JournalEditorPage() {
         {/* Sticky top bar */}
         <div style={{
           position: 'sticky', top: 0, zIndex: 100,
-          background: 'white', borderBottom: '1px solid var(--admin-line)',
+          background: 'var(--admin-surface)', borderBottom: '1px solid var(--admin-line)',
           padding: '10px 24px', display: 'flex', alignItems: 'center', gap: 16,
         }}>
           <Link href="/admin/journal" style={{ fontSize: 12, color: 'var(--admin-ink-muted)', textDecoration: 'none', flexShrink: 0 }}>
@@ -280,21 +280,21 @@ export default function JournalEditorPage() {
 
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <button onClick={refreshWithAI} disabled={refreshing} title="Improve & expand this article toward its search query — loads a rewrite for you to review (does not save until you do)"
-              style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-warning)', background: 'white', color: 'var(--admin-warning)', cursor: refreshing ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+              style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-warning)', background: 'var(--admin-surface)', color: 'var(--admin-warning)', cursor: refreshing ? 'default' : 'pointer', fontFamily: 'inherit' }}>
               {refreshing ? 'Refreshing…' : '✦ Refresh with AI'}
             </button>
-            <button onClick={() => save('draft')} style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={() => save('draft')} style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer', fontFamily: 'inherit' }}>
               Save draft
             </button>
-            <button onClick={openPreview} style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={openPreview} style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer', fontFamily: 'inherit' }}>
               Preview ↗
             </button>
             {article.status === 'published' ? (
-              <button onClick={unpublish} style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--color-danger)' }}>
+              <button onClick={unpublish} style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--color-danger)' }}>
                 Unpublish
               </button>
             ) : (
-              <button onClick={publish} style={{ padding: '7px 14px', fontSize: 12, background: 'var(--admin-ink)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button onClick={publish} style={{ padding: '7px 14px', fontSize: 12, background: 'var(--admin-ink)', color: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                 Publish
               </button>
             )}
@@ -376,7 +376,7 @@ export default function JournalEditorPage() {
                 setArticle(a => a ? { ...a, heroImage: { url: '', alt: '', caption: '' } } : a);
               }} style={{
                 position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.5)',
-                color: 'white', border: 'none', padding: '4px 10px', cursor: 'pointer', fontSize: 12,
+                color: 'var(--admin-surface)', border: 'none', padding: '4px 10px', cursor: 'pointer', fontSize: 12,
               }}>
                 Remove
               </button>
@@ -425,7 +425,7 @@ export default function JournalEditorPage() {
           {editor && (
             <div style={{
               display: 'flex', gap: 4, marginBottom: 16, flexWrap: 'wrap',
-              padding: '8px 12px', background: 'white', border: '1px solid var(--admin-line)',
+              padding: '8px 12px', background: 'var(--admin-surface)', border: '1px solid var(--admin-line)',
               position: 'sticky', top: 57, zIndex: 50,
             }}>
               {[
@@ -435,7 +435,7 @@ export default function JournalEditorPage() {
               ].map(({ label, title, action, active, style }) => (
                 <button key={label} onClick={action} title={title} style={{
                   padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)',
-                  background: active ? 'var(--admin-ink)' : 'white', color: active ? 'white' : 'var(--admin-ink)',
+                  background: active ? 'var(--admin-ink)' : 'var(--admin-surface)', color: active ? 'var(--admin-surface)' : 'var(--admin-ink)',
                   cursor: 'pointer', fontFamily: 'inherit', ...style,
                 }}>
                   {label}
@@ -448,24 +448,24 @@ export default function JournalEditorPage() {
               ].map(({ label, action, active }) => (
                 <button key={label} onClick={action} style={{
                   padding: '4px 10px', fontSize: 12, border: '1px solid var(--admin-line)',
-                  background: active ? 'var(--admin-ink)' : 'white', color: active ? 'white' : 'var(--admin-ink)',
+                  background: active ? 'var(--admin-ink)' : 'var(--admin-surface)', color: active ? 'var(--admin-surface)' : 'var(--admin-ink)',
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}>
                   {label}
                 </button>
               ))}
               <span style={{ width: 1, background: 'var(--admin-line)', margin: '2px 4px' }} />
-              <button onClick={() => editor.chain().focus().toggleBlockquote().run()} title="Blockquote" style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)', background: editor.isActive('blockquote') ? 'var(--admin-ink)' : 'white', color: editor.isActive('blockquote') ? 'white' : 'var(--admin-ink)', cursor: 'pointer' }}>&ldquo;</button>
-              <button onClick={() => editor.chain().focus().toggleBulletList().run()} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)', background: editor.isActive('bulletList') ? 'var(--admin-ink)' : 'white', color: editor.isActive('bulletList') ? 'white' : 'var(--admin-ink)', cursor: 'pointer' }}>•</button>
-              <button onClick={() => editor.chain().focus().toggleOrderedList().run()} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)', background: editor.isActive('orderedList') ? 'var(--admin-ink)' : 'white', color: editor.isActive('orderedList') ? 'white' : 'var(--admin-ink)', cursor: 'pointer' }}>1.</button>
+              <button onClick={() => editor.chain().focus().toggleBlockquote().run()} title="Blockquote" style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)', background: editor.isActive('blockquote') ? 'var(--admin-ink)' : 'var(--admin-surface)', color: editor.isActive('blockquote') ? 'var(--admin-surface)' : 'var(--admin-ink)', cursor: 'pointer' }}>&ldquo;</button>
+              <button onClick={() => editor.chain().focus().toggleBulletList().run()} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)', background: editor.isActive('bulletList') ? 'var(--admin-ink)' : 'var(--admin-surface)', color: editor.isActive('bulletList') ? 'var(--admin-surface)' : 'var(--admin-ink)', cursor: 'pointer' }}>•</button>
+              <button onClick={() => editor.chain().focus().toggleOrderedList().run()} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)', background: editor.isActive('orderedList') ? 'var(--admin-ink)' : 'var(--admin-surface)', color: editor.isActive('orderedList') ? 'var(--admin-surface)' : 'var(--admin-ink)', cursor: 'pointer' }}>1.</button>
               <button onClick={() => {
                 const url = window.prompt('URL:');
                 if (url) editor.chain().focus().setLink({ href: url }).run();
-              }} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)', background: editor.isActive('link') ? 'var(--admin-ink)' : 'white', color: editor.isActive('link') ? 'white' : 'var(--admin-ink)', cursor: 'pointer' }}>🔗</button>
-              <button onClick={() => editor.chain().focus().setHorizontalRule().run()} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)', background: 'white', color: 'var(--admin-ink-muted)', cursor: 'pointer' }}>—</button>
+              }} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)', background: editor.isActive('link') ? 'var(--admin-ink)' : 'var(--admin-surface)', color: editor.isActive('link') ? 'var(--admin-surface)' : 'var(--admin-ink)', cursor: 'pointer' }}>🔗</button>
+              <button onClick={() => editor.chain().focus().setHorizontalRule().run()} style={{ padding: '4px 10px', fontSize: 13, border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', color: 'var(--admin-ink-muted)', cursor: 'pointer' }}>—</button>
               <>
                 <input ref={inlineImageRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleInlineImageUpload} />
-                <button onClick={() => inlineImageRef.current?.click()} title="Insert image" style={{ padding: '4px 10px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', color: 'var(--admin-ink-muted)', cursor: 'pointer' }}>
+                <button onClick={() => inlineImageRef.current?.click()} title="Insert image" style={{ padding: '4px 10px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', color: 'var(--admin-ink-muted)', cursor: 'pointer' }}>
                   + Image
                 </button>
               </>

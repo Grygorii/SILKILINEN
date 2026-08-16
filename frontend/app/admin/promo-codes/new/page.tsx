@@ -10,7 +10,7 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', border: '1px solid var(--admin-line)',
   fontFamily: 'inherit', fontSize: 13, color: 'var(--admin-ink)',
-  background: 'white', boxSizing: 'border-box', outline: 'none',
+  background: 'var(--admin-surface)', boxSizing: 'border-box', outline: 'none',
 };
 const labelStyle: React.CSSProperties = {
   display: 'block', fontSize: 11, letterSpacing: '1px',
@@ -20,7 +20,7 @@ const hintStyle: React.CSSProperties = { fontSize: 11, color: 'var(--admin-ink-m
 const radioGroupStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 8 };
 const radioLabelStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer' };
 const sectionStyle: React.CSSProperties = {
-  background: 'white', border: '1px solid var(--admin-line)', padding: '22px 24px', marginBottom: 16,
+  background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: '22px 24px', marginBottom: 16,
 };
 const sectionTitleStyle: React.CSSProperties = {
   fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)',
@@ -227,7 +227,7 @@ export default function NewPromoCodePage() {
             padding: '11px 28px', fontSize: 13, fontFamily: 'inherit',
             cursor: saving ? 'default' : 'pointer',
             border: '1px solid var(--admin-ink)', background: 'var(--admin-ink)',
-            color: 'white', letterSpacing: '0.04em', opacity: saving ? 0.6 : 1,
+            color: 'var(--admin-surface)', letterSpacing: '0.04em', opacity: saving ? 0.6 : 1,
           }}>
             {saving ? 'Creating…' : 'Create promo code'}
           </button>

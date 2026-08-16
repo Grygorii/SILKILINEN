@@ -104,13 +104,13 @@ export default function PinStudioPage() {
         {/* Source tabs */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
           {TABS.map(t => (
-            <button key={t.key} onClick={() => { setTab(t.key); setPins([]); }} style={{ padding: '8px 16px', fontSize: 13, background: tab === t.key ? dark : 'white', color: tab === t.key ? 'var(--color-bg)' : dark, border, cursor: 'pointer', fontFamily: 'inherit' }}>{t.label}</button>
+            <button key={t.key} onClick={() => { setTab(t.key); setPins([]); }} style={{ padding: '8px 16px', fontSize: 13, background: tab === t.key ? dark : 'var(--admin-surface)', color: tab === t.key ? 'var(--color-bg)' : dark, border, cursor: 'pointer', fontFamily: 'inherit' }}>{t.label}</button>
           ))}
         </div>
         <p style={{ fontSize: 12, color: muted, margin: '0 0 14px' }}>{TABS.find(t => t.key === tab)?.hint}</p>
 
         <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-          <select value={selected} onChange={e => setSelected(e.target.value)} style={{ flex: 1, minWidth: 300, padding: '10px 12px', border, background: 'white', fontFamily: 'inherit', fontSize: 14, color: dark }}>
+          <select value={selected} onChange={e => setSelected(e.target.value)} style={{ flex: 1, minWidth: 300, padding: '10px 12px', border, background: 'var(--admin-surface)', fontFamily: 'inherit', fontSize: 14, color: dark }}>
             {items.length === 0 && <option value="">Nothing here yet</option>}
             {items.map(i => <option key={i.id} value={i.id}>{i.label}{i.note ? ` · ${i.note}` : ''}</option>)}
           </select>
@@ -125,7 +125,7 @@ export default function PinStudioPage() {
             <p style={{ fontSize: 12.5, color: muted, margin: '4px 0 16px' }}>3 pins for <strong style={{ color: dark }}>{sourceTitle}</strong>. Feed each image prompt to your image tool, drop the hook on, then paste the rest into Pinterest.</p>
             <div style={{ display: 'grid', gap: 16 }}>
               {pins.map((p, i) => (
-                <div key={i} style={{ border, background: 'white', padding: '18px 20px' }}>
+                <div key={i} style={{ border, background: 'var(--admin-surface)', padding: '18px 20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
                     <span style={{ fontFamily: serif, fontSize: 18, color: dark }}>Pin {i + 1}</span>
                     {p.angle && <span style={{ fontSize: 11, letterSpacing: '0.5px', textTransform: 'uppercase', color: muted, border, padding: '2px 8px' }}>{p.angle}</span>}

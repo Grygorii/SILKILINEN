@@ -132,7 +132,7 @@ export default function MemoryPage() {
         )}
 
         {/* Teach it */}
-        <div style={{ background: 'white', border, padding: '16px 18px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ background: 'var(--admin-surface)', border, padding: '16px 18px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <select value={kind} onChange={e => setKind(e.target.value as 'decision' | 'fact')} style={{ padding: '9px 10px', border, fontFamily: 'inherit', fontSize: 13 }}>
             <option value="decision">Decision to honour</option>
             <option value="fact">Verified fact</option>
@@ -140,7 +140,7 @@ export default function MemoryPage() {
           <input value={text} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === 'Enter' && teach()}
             placeholder="Teach Archivarius — e.g. “Origin is mixed; never claim made-in-Ireland”"
             style={{ flex: 1, minWidth: 260, padding: '9px 12px', border, fontFamily: 'inherit', fontSize: 13.5, color: dark }} />
-          <button onClick={teach} style={{ padding: '9px 18px', background: dark, color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Remember</button>
+          <button onClick={teach} style={{ padding: '9px 18px', background: dark, color: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Remember</button>
         </div>
 
         {/* The strongest memory */}
@@ -149,7 +149,7 @@ export default function MemoryPage() {
             {stats.top.map(e => {
               const k = KIND[e.kind];
               return (
-                <div key={e._id} style={{ border, borderLeft: `3px solid ${k.color}`, padding: '10px 14px', background: 'white' }}>
+                <div key={e._id} style={{ border, borderLeft: `3px solid ${k.color}`, padding: '10px 14px', background: 'var(--admin-surface)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                     <span style={{ fontSize: 13.5, color: dark }}>{e.text}</span>
                     <span style={{ fontSize: 10, color: k.color, background: k.bg, padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap', height: 'fit-content' }}>{k.label}</span>
@@ -172,10 +172,10 @@ export default function MemoryPage() {
             Curate the sources the agents learn from — paste a link (we distil it into principles) or add a book with your key takeaways. Tagged references flow into the relevant agents&rsquo; reasoning.
           </p>
 
-          <div style={{ background: 'white', border, padding: '16px 18px', marginBottom: 20 }}>
+          <div style={{ background: 'var(--admin-surface)', border, padding: '16px 18px', marginBottom: 20 }}>
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
               {(['link', 'book'] as const).map(m => (
-                <button key={m} onClick={() => setRefMode(m)} style={{ padding: '7px 16px', border, background: refMode === m ? dark : 'white', color: refMode === m ? 'white' : muted, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, textTransform: 'capitalize' }}>{m}</button>
+                <button key={m} onClick={() => setRefMode(m)} style={{ padding: '7px 16px', border, background: refMode === m ? dark : 'var(--admin-surface)', color: refMode === m ? 'var(--admin-surface)' : muted, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, textTransform: 'capitalize' }}>{m}</button>
               ))}
             </div>
 
@@ -184,7 +184,7 @@ export default function MemoryPage() {
                 <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
                   <input value={url} onChange={e => setUrl(e.target.value)} placeholder="Paste a URL — e.g. the Google SEO Starter Guide"
                     style={{ flex: 1, minWidth: 260, padding: '9px 12px', border, fontFamily: 'inherit', fontSize: 13.5, color: dark }} />
-                  <button onClick={summarize} disabled={summarizing || !url.trim()} style={{ padding: '9px 16px', background: 'var(--admin-warning)', color: 'white', border: 'none', cursor: summarizing || !url.trim() ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 13, opacity: summarizing || !url.trim() ? 0.6 : 1 }}>{summarizing ? 'Distilling…' : '✦ Distil with AI'}</button>
+                  <button onClick={summarize} disabled={summarizing || !url.trim()} style={{ padding: '9px 16px', background: 'var(--admin-warning)', color: 'var(--admin-surface)', border: 'none', cursor: summarizing || !url.trim() ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 13, opacity: summarizing || !url.trim() ? 0.6 : 1 }}>{summarizing ? 'Distilling…' : '✦ Distil with AI'}</button>
                 </div>
                 <input value={refTitle} onChange={e => setRefTitle(e.target.value)} placeholder="Source name (auto-filled)"
                   style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', border, fontFamily: 'inherit', fontSize: 13.5, color: dark, marginBottom: 10 }} />
@@ -205,14 +205,14 @@ export default function MemoryPage() {
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
               <input value={refTags} onChange={e => setRefTags(e.target.value)} placeholder="Tags (comma separated): seo, content, imagery…"
                 style={{ flex: 1, minWidth: 200, padding: '9px 12px', border, fontFamily: 'inherit', fontSize: 13, color: dark }} />
-              <button onClick={saveRef} disabled={savingRef} style={{ padding: '9px 20px', background: dark, color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>{savingRef ? 'Saving…' : 'Add to library'}</button>
+              <button onClick={saveRef} disabled={savingRef} style={{ padding: '9px 20px', background: dark, color: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>{savingRef ? 'Saving…' : 'Add to library'}</button>
             </div>
           </div>
 
           {refs.length > 0 ? (
             <div style={{ display: 'grid', gap: 8 }}>
               {refs.map(r => (
-                <div key={r._id} style={{ border, borderLeft: '3px solid var(--admin-warning)', padding: '12px 14px', background: 'white' }}>
+                <div key={r._id} style={{ border, borderLeft: '3px solid var(--admin-warning)', padding: '12px 14px', background: 'var(--admin-surface)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline' }}>
                     <span style={{ fontSize: 14, color: dark, fontWeight: 500 }}>
                       {r.title || (r.refType === 'book' ? 'Book' : 'Link')}

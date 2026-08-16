@@ -172,7 +172,7 @@ export default function CustomerDetailPage() {
     } catch { toast('Network error', 'error'); }
   }
 
-  const card: React.CSSProperties = { background: 'white', border: '1px solid var(--admin-line)', padding: '20px 24px', marginBottom: 16 };
+  const card: React.CSSProperties = { background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: '20px 24px', marginBottom: 16 };
   const label: React.CSSProperties = { fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 4 };
   const val: React.CSSProperties = { fontSize: 14, color: 'var(--admin-ink)' };
   const thStyle: React.CSSProperties = { textAlign: 'left', padding: '8px 12px', fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', fontWeight: 400, borderBottom: '1px solid var(--admin-line)' };
@@ -206,10 +206,10 @@ export default function CustomerDetailPage() {
             <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', margin: '4px 0 0' }}>{customer.email}</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <a href={`mailto:${customer.email}`} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', color: 'var(--admin-ink)', textDecoration: 'none' }}>Email customer</a>
-            <button onClick={() => { navigator.clipboard.writeText(customer.email); toast('Email copied.'); }} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>Copy email</button>
-            <button onClick={gdprExport} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>Export data</button>
-            <button onClick={gdprDelete} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--color-danger)', color: 'var(--color-danger)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>GDPR delete</button>
+            <a href={`mailto:${customer.email}`} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', color: 'var(--admin-ink)', textDecoration: 'none' }}>Email customer</a>
+            <button onClick={() => { navigator.clipboard.writeText(customer.email); toast('Email copied.'); }} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer', fontFamily: 'inherit' }}>Copy email</button>
+            <button onClick={gdprExport} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer', fontFamily: 'inherit' }}>Export data</button>
+            <button onClick={gdprDelete} style={{ padding: '7px 12px', fontSize: 12, border: '1px solid var(--color-danger)', color: 'var(--color-danger)', background: 'var(--admin-surface)', cursor: 'pointer', fontFamily: 'inherit' }}>GDPR delete</button>
           </div>
         </div>
 
@@ -217,7 +217,7 @@ export default function CustomerDetailPage() {
         {customer.segments?.length > 0 && (
           <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
             {customer.segments.map(s => (
-              <span key={s} style={{ padding: '3px 10px', fontSize: 10, borderRadius: 2, letterSpacing: '0.8px', textTransform: 'uppercase', background: SEGMENT_COLORS[s] || 'var(--admin-line)', color: 'white' }}>
+              <span key={s} style={{ padding: '3px 10px', fontSize: 10, borderRadius: 2, letterSpacing: '0.8px', textTransform: 'uppercase', background: SEGMENT_COLORS[s] || 'var(--admin-line)', color: 'var(--admin-surface)' }}>
                 {s}
               </span>
             ))}
@@ -232,7 +232,7 @@ export default function CustomerDetailPage() {
             { label: 'Avg order value', value: orders.length > 0 ? fmtMoney(totalSpend / orders.length) : '—' },
             { label: 'Customer since', value: fmtDate(customer.createdAt) },
           ].map(({ label: l, value }) => (
-            <div key={l} style={{ background: 'white', border: '1px solid var(--admin-line)', padding: '14px 18px' }}>
+            <div key={l} style={{ background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: '14px 18px' }}>
               <p style={label}>{l}</p>
               <p style={{ ...val, fontWeight: 600 }}>{value}</p>
             </div>
@@ -244,7 +244,7 @@ export default function CustomerDetailPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <p style={{ fontWeight: 600, fontSize: 14, margin: 0 }}>Profile</p>
             {!editing && (
-              <button onClick={() => setEditing(true)} style={{ fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Edit</button>
+              <button onClick={() => setEditing(true)} style={{ fontSize: 12, border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Edit</button>
             )}
           </div>
           {editing ? (
@@ -268,8 +268,8 @@ export default function CustomerDetailPage() {
                 </select>
               </div>
               <div style={{ gridColumn: '1/-1', display: 'flex', gap: 8, marginTop: 4 }}>
-                <button onClick={saveEdit} style={{ padding: '8px 18px', background: 'var(--admin-ink)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Save</button>
-                <button onClick={() => setEditing(false)} style={{ padding: '8px 18px', border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Cancel</button>
+                <button onClick={saveEdit} style={{ padding: '8px 18px', background: 'var(--admin-ink)', color: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Save</button>
+                <button onClick={() => setEditing(false)} style={{ padding: '8px 18px', border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Cancel</button>
               </div>
             </div>
           ) : (
@@ -317,14 +317,14 @@ export default function CustomerDetailPage() {
         {/* Abandoned-cart nudge (#7) */}
         {abandonedCart && (
           <div style={{ ...card, background: 'var(--admin-warning-soft)', borderColor: 'var(--admin-warning-soft)', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, background: 'var(--admin-warning)', color: 'white', padding: '3px 8px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Abandoned cart</span>
+            <span style={{ fontSize: 11, background: 'var(--admin-warning)', color: 'var(--admin-surface)', padding: '3px 8px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Abandoned cart</span>
             <span style={{ fontSize: 13, color: 'var(--admin-ink)' }}>
               €{abandonedCart.total.toFixed(2)} pending since {new Date(abandonedCart.createdAt).toLocaleDateString('en-IE', { day: 'numeric', month: 'short' })}
             </span>
             {recoverySent ? (
               <span style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--color-success)' }}>✓ Recovery email sent</span>
             ) : (
-              <button onClick={sendCartRecovery} style={{ marginLeft: 'auto', padding: '7px 16px', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer', border: 'none', background: 'var(--admin-ink)', color: 'white' }}>
+              <button onClick={sendCartRecovery} style={{ marginLeft: 'auto', padding: '7px 16px', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer', border: 'none', background: 'var(--admin-ink)', color: 'var(--admin-surface)' }}>
                 Send recovery email
               </button>
             )}
@@ -373,7 +373,7 @@ export default function CustomerDetailPage() {
             <input value={noteInput} onChange={e => setNoteInput(e.target.value)} placeholder="Add a note…"
               onKeyDown={e => e.key === 'Enter' && addNote()}
               style={{ flex: 1, padding: '7px 10px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13 }} />
-            <button onClick={addNote} disabled={savingNote} style={{ padding: '7px 14px', background: 'var(--admin-ink)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
+            <button onClick={addNote} disabled={savingNote} style={{ padding: '7px 14px', background: 'var(--admin-ink)', color: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
               Add
             </button>
           </div>
@@ -398,7 +398,7 @@ export default function CustomerDetailPage() {
         <div style={card}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <p style={{ fontWeight: 600, fontSize: 14, margin: 0 }}>Personal promo code</p>
-            <button onClick={() => { setGenPromo(g => !g); setGeneratedPromo(null); }} style={{ fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={() => { setGenPromo(g => !g); setGeneratedPromo(null); }} style={{ fontSize: 12, border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
               {genPromo ? 'Cancel' : '+ Generate code'}
             </button>
           </div>
@@ -441,7 +441,7 @@ export default function CustomerDetailPage() {
                   style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, boxSizing: 'border-box' }} />
               </div>
               <div style={{ gridColumn: '1/-1' }}>
-                <button onClick={generatePromo} style={{ padding: '8px 18px', background: 'var(--admin-info)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
+                <button onClick={generatePromo} style={{ padding: '8px 18px', background: 'var(--admin-info)', color: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
                   Generate &amp; save
                 </button>
               </div>

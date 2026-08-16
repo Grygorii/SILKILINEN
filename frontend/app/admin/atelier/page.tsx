@@ -108,7 +108,7 @@ export default function AtelierPage() {
             </p>
           </div>
           <button onClick={runReview} disabled={busy} style={{
-            padding: '11px 22px', background: dark, color: 'white', border: 'none',
+            padding: '11px 22px', background: dark, color: 'var(--admin-surface)', border: 'none',
             cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1, fontFamily: 'inherit', fontSize: 13, letterSpacing: '0.5px', whiteSpace: 'nowrap',
           }}>{busy ? 'Walking the house… (1–3 min)' : '✦ Review the whole house'}</button>
         </div>
@@ -155,7 +155,7 @@ export default function AtelierPage() {
             <h2 style={{ fontFamily: serif, fontSize: 18, color: dark, marginBottom: 10 }}>Past walk-throughs</h2>
             <div style={{ display: 'grid', gap: 8 }}>
               {history.map(h => (
-                <button key={h._id} onClick={() => setReview(h)} style={{ textAlign: 'left', background: 'white', border, padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                <button key={h._id} onClick={() => setReview(h)} style={{ textAlign: 'left', background: 'var(--admin-surface)', border, padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                   <span style={{ fontSize: 13, color: dark }}>{h.verdict || 'House review'}</span>
                   <span style={{ fontSize: 12, color: muted, whiteSpace: 'nowrap' }}>{h.wowScore ? `${h.wowScore}/10 · ` : ''}{timeAgo(h.createdAt)}</span>
                 </button>
@@ -171,7 +171,7 @@ export default function AtelierPage() {
 function ReviewView({ review }: { review: Review }) {
   const score = review.wowScore;
   return (
-    <div style={{ background: 'white', border, padding: '24px 26px', marginTop: 22 }}>
+    <div style={{ background: 'var(--admin-surface)', border, padding: '24px 26px', marginTop: 22 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
         {score > 0 && (
           <div style={{ textAlign: 'center', flexShrink: 0 }}>

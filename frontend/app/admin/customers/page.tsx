@@ -157,10 +157,10 @@ export default function CustomersPage() {
             <Link href="/admin/customers/founder" style={{ padding: '8px 14px', fontSize: 12, border: '1px solid var(--admin-line)', color: 'var(--admin-ink)', textDecoration: 'none' }}>
               Founder view
             </Link>
-            <button onClick={exportCsv} style={{ padding: '8px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', color: 'var(--admin-ink)', fontFamily: 'inherit' }}>
+            <button onClick={exportCsv} style={{ padding: '8px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer', color: 'var(--admin-ink)', fontFamily: 'inherit' }}>
               Export CSV
             </button>
-            <Link href="/admin/customers/new" style={{ padding: '8px 16px', fontSize: 12, background: 'var(--admin-ink)', color: 'white', textDecoration: 'none' }}>
+            <Link href="/admin/customers/new" style={{ padding: '8px 16px', fontSize: 12, background: 'var(--admin-ink)', color: 'var(--admin-surface)', textDecoration: 'none' }}>
               + New customer
             </Link>
           </div>
@@ -173,7 +173,7 @@ export default function CustomersPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <button onClick={() => { setSegmentFilter(''); setPage(1); }} style={{
                 textAlign: 'left', padding: '6px 10px', fontSize: 12, border: '1px solid var(--admin-line)',
-                background: !segmentFilter ? 'var(--admin-ink)' : 'white', color: !segmentFilter ? 'white' : 'var(--admin-ink)',
+                background: !segmentFilter ? 'var(--admin-ink)' : 'var(--admin-surface)', color: !segmentFilter ? 'var(--admin-surface)' : 'var(--admin-ink)',
                 cursor: 'pointer', fontFamily: 'inherit',
               }}>
                 All customers
@@ -181,8 +181,8 @@ export default function CustomersPage() {
               {segments.map(seg => (
                 <button key={seg.slug} onClick={() => { setSegmentFilter(seg.slug); setPage(1); }} style={{
                   textAlign: 'left', padding: '6px 10px', fontSize: 12, border: '1px solid var(--admin-line)',
-                  background: segmentFilter === seg.slug ? seg.color : 'white',
-                  color: segmentFilter === seg.slug ? 'white' : 'var(--admin-ink)',
+                  background: segmentFilter === seg.slug ? seg.color : 'var(--admin-surface)',
+                  color: segmentFilter === seg.slug ? 'var(--admin-surface)' : 'var(--admin-ink)',
                   cursor: 'pointer', fontFamily: 'inherit', display: 'flex', justifyContent: 'space-between',
                 }}>
                   <span>{seg.label}</span>
@@ -192,7 +192,7 @@ export default function CustomersPage() {
             </div>
             <button onClick={recompute} disabled={recomputing} style={{
               marginTop: 12, width: '100%', padding: '6px 10px', fontSize: 11, border: '1px solid var(--admin-line)',
-              background: 'white', color: 'var(--admin-ink-muted)', cursor: 'pointer', fontFamily: 'inherit',
+              background: 'var(--admin-surface)', color: 'var(--admin-ink-muted)', cursor: 'pointer', fontFamily: 'inherit',
             }}>
               {recomputing ? 'Recomputing…' : 'Recompute now'}
             </button>
@@ -206,9 +206,9 @@ export default function CustomersPage() {
                 value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1); }}
                 placeholder="Search name or email…"
-                style={{ padding: '6px 12px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, color: 'var(--admin-ink)', background: 'white', outline: 'none', flex: 1, minWidth: 200 }}
+                style={{ padding: '6px 12px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, color: 'var(--admin-ink)', background: 'var(--admin-surface)', outline: 'none', flex: 1, minWidth: 200 }}
               />
-              <select value={consentFilter} onChange={e => { setConsentFilter(e.target.value); setPage(1); }} style={{ padding: '6px 10px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, color: 'var(--admin-ink)', background: 'white' }}>
+              <select value={consentFilter} onChange={e => { setConsentFilter(e.target.value); setPage(1); }} style={{ padding: '6px 10px', border: '1px solid var(--admin-line)', fontFamily: 'inherit', fontSize: 13, color: 'var(--admin-ink)', background: 'var(--admin-surface)' }}>
                 <option value="">All consent</option>
                 <option value="yes">Marketing opt-in</option>
               </select>
@@ -218,25 +218,25 @@ export default function CustomersPage() {
             {loading ? (
               <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>Loading customers…</p>
             ) : error ? (
-              <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', border: '1px solid var(--admin-line)' }}>
+              <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--admin-surface)', border: '1px solid var(--admin-line)' }}>
                 <p style={{ fontSize: 14, color: 'var(--admin-ink-muted)' }}>Couldn&apos;t load customers.{' '}
                   <button onClick={load} style={{ cursor: 'pointer', textDecoration: 'underline', background: 'none', border: 'none', font: 'inherit', color: 'inherit' }}>Retry</button>
                 </p>
               </div>
             ) : customers.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', border: '1px solid var(--admin-line)' }}>
+              <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--admin-surface)', border: '1px solid var(--admin-line)' }}>
                 <p style={{ fontSize: 14, color: 'var(--admin-ink-muted)', margin: 0 }}>
                   {hasFilters ? 'No customers match' : 'No customers yet'}
                 </p>
                 {hasFilters && (
-                  <button onClick={clearFilters} style={{ marginTop: 12, padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', color: 'var(--admin-ink)', fontFamily: 'inherit' }}>
+                  <button onClick={clearFilters} style={{ marginTop: 12, padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer', color: 'var(--admin-ink)', fontFamily: 'inherit' }}>
                     Clear filters
                   </button>
                 )}
               </div>
             ) : (
               <>
-                <div style={{ overflowX: 'auto', background: 'white', border: '1px solid var(--admin-line)' }}>
+                <div style={{ overflowX: 'auto', background: 'var(--admin-surface)', border: '1px solid var(--admin-line)' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead>
                       <tr>
@@ -265,7 +265,7 @@ export default function CustomersPage() {
                               {(c.segments || []).map(s => (
                                 <span key={s} style={{
                                   fontSize: 10, padding: '2px 8px', borderRadius: 9, letterSpacing: '0.6px',
-                                  textTransform: 'uppercase', background: segColor(s), color: 'white',
+                                  textTransform: 'uppercase', background: segColor(s), color: 'var(--admin-surface)',
                                 }}>
                                   {s}
                                 </span>
@@ -294,9 +294,9 @@ export default function CustomersPage() {
                 {/* Pagination */}
                 {total > 50 && (
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 16 }}>
-                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '6px 12px', border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12 }}>← Prev</button>
+                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '6px 12px', border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12 }}>← Prev</button>
                     <span style={{ padding: '6px 12px', fontSize: 12, color: 'var(--admin-ink-muted)' }}>Page {page}</span>
-                    <button onClick={() => setPage(p => p + 1)} disabled={customers.length < 50} style={{ padding: '6px 12px', border: '1px solid var(--admin-line)', background: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12 }}>Next →</button>
+                    <button onClick={() => setPage(p => p + 1)} disabled={customers.length < 50} style={{ padding: '6px 12px', border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12 }}>Next →</button>
                   </div>
                 )}
               </>

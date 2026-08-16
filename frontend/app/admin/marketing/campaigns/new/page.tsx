@@ -16,7 +16,7 @@ const field: React.CSSProperties = {
   fontFamily: 'inherit',
   fontSize: 13,
   color: 'var(--admin-ink)',
-  background: 'white',
+  background: 'var(--admin-surface)',
   boxSizing: 'border-box',
   outline: 'none',
 };
@@ -125,7 +125,7 @@ export default function NewCampaignPage() {
 
           <button type="submit" disabled={saving} style={{
             padding: '11px 28px', fontSize: 13, fontFamily: 'inherit', cursor: saving ? 'default' : 'pointer',
-            border: '1px solid var(--admin-ink)', background: 'var(--admin-ink)', color: 'white', letterSpacing: '0.04em',
+            border: '1px solid var(--admin-ink)', background: 'var(--admin-ink)', color: 'var(--admin-surface)', letterSpacing: '0.04em',
             opacity: saving ? 0.6 : 1,
           }}>
             {saving ? 'Creating…' : 'Create campaign'}

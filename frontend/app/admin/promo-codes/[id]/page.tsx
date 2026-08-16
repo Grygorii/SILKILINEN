@@ -33,14 +33,14 @@ function resolveStatus(c: PromoCode): string {
 
 const inputStyle: React.CSSProperties = {
   padding: '9px 12px', border: '1px solid var(--admin-line)', fontFamily: 'inherit',
-  fontSize: 13, color: 'var(--admin-ink)', background: 'white', outline: 'none',
+  fontSize: 13, color: 'var(--admin-ink)', background: 'var(--admin-surface)', outline: 'none',
 };
 const labelStyle: React.CSSProperties = {
   display: 'block', fontSize: 11, letterSpacing: '1px',
   textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 6,
 };
 const sectionStyle: React.CSSProperties = {
-  background: 'white', border: '1px solid var(--admin-line)', padding: '20px 24px', marginBottom: 16,
+  background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: '20px 24px', marginBottom: 16,
 };
 const sectionTitleStyle: React.CSSProperties = {
   fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)',
@@ -162,7 +162,7 @@ export default function PromoCodeDetailPage() {
               </span>
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <button onClick={() => setEditing(e => !e)} style={{ ...inputStyle, cursor: 'pointer', background: editing ? 'var(--admin-ink)' : 'white', color: editing ? 'white' : 'var(--admin-ink)' }}>
+              <button onClick={() => setEditing(e => !e)} style={{ ...inputStyle, cursor: 'pointer', background: editing ? 'var(--admin-ink)' : 'var(--admin-surface)', color: editing ? 'var(--admin-surface)' : 'var(--admin-ink)' }}>
                 {editing ? 'Cancel edit' : 'Edit'}
               </button>
               <button onClick={toggleStatus} style={{ ...inputStyle, cursor: 'pointer' }}>
@@ -184,7 +184,7 @@ export default function PromoCodeDetailPage() {
             ['Revenue', `€${promo.performance.totalRevenue.toFixed(2)}`],
             ['Avg order', promo.performance.avgOrderValue !== null ? `€${promo.performance.avgOrderValue.toFixed(2)}` : '—'],
           ].map(([label, val]) => (
-            <div key={label} style={{ background: 'white', padding: '16px 18px' }}>
+            <div key={label} style={{ background: 'var(--admin-surface)', padding: '16px 18px' }}>
               <div style={{ fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 6 }}>{label}</div>
               <div style={{ fontSize: 20, fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 400 }}>{val}</div>
             </div>
@@ -262,7 +262,7 @@ export default function PromoCodeDetailPage() {
               padding: '10px 24px', fontSize: 13, fontFamily: 'inherit',
               cursor: saving ? 'default' : 'pointer',
               border: '1px solid var(--admin-ink)', background: 'var(--admin-ink)',
-              color: 'white', letterSpacing: '0.04em', opacity: saving ? 0.6 : 1,
+              color: 'var(--admin-surface)', letterSpacing: '0.04em', opacity: saving ? 0.6 : 1,
             }}>
               {saving ? 'Saving…' : 'Save changes'}
             </button>

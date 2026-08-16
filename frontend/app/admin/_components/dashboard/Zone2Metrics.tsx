@@ -46,7 +46,7 @@ function MetricBlock({
   comparison?: Comparison;
 }) {
   return (
-    <div style={{ background: 'white', border: '1px solid var(--border)', padding: 20, flex: 1 }}>
+    <div style={{ background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: 20, flex: 1 }}>
       <p style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 10 }}>
         {label}
       </p>

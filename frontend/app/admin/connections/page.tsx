@@ -42,7 +42,7 @@ export default function ConnectionsPage() {
               Every pipe feeding the house — what&rsquo;s on, what&rsquo;s off, and what to add to grow.
             </p>
           </div>
-          <button onClick={() => load(true)} disabled={loading} style={{ padding: '9px 16px', background: 'white', color: dark, border, cursor: loading ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
+          <button onClick={() => load(true)} disabled={loading} style={{ padding: '9px 16px', background: 'var(--admin-surface)', color: dark, border, cursor: loading ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
             {loading ? 'Checking…' : '↻ Refresh'}
           </button>
         </div>
@@ -65,7 +65,7 @@ export default function ConnectionsPage() {
                 <h2 style={{ fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: muted, margin: '0 0 10px' }}>{g.category}</h2>
                 <div style={{ display: 'grid', gap: 8 }}>
                   {g.sources.map(src => (
-                    <div key={src.name} style={{ background: 'white', border, borderLeft: `3px solid ${DOT[src.status]}`, padding: '12px 14px' }}>
+                    <div key={src.name} style={{ background: 'var(--admin-surface)', border, borderLeft: `3px solid ${DOT[src.status]}`, padding: '12px 14px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
                         <span style={{ fontSize: 14.5, color: dark, fontWeight: 500 }}>{src.name}</span>
                         <span style={{ fontSize: 11, color: DOT[src.status], whiteSpace: 'nowrap' }}>● {LABEL[src.status]}</span>

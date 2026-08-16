@@ -159,7 +159,7 @@ export default function AbandonedCartsPage() {
                 <button
                   onClick={() => resendRecovery(order._id)}
                   disabled={resending === order._id}
-                  style={{ marginLeft: 'auto', padding: '5px 12px', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', border: '1px solid var(--admin-ink)', background: 'white', color: 'var(--admin-ink)' }}
+                  style={{ marginLeft: 'auto', padding: '5px 12px', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', border: '1px solid var(--admin-ink)', background: 'var(--admin-surface)', color: 'var(--admin-ink)' }}
                 >
                   {resending === order._id ? 'Sending…' : 'Send recovery email'}
                 </button>

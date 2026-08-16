@@ -19,7 +19,7 @@ const field: React.CSSProperties = {
   fontFamily: 'inherit',
   fontSize: 13,
   color: 'var(--admin-ink)',
-  background: 'white',
+  background: 'var(--admin-surface)',
   boxSizing: 'border-box',
   outline: 'none',
 };
@@ -156,8 +156,8 @@ export default function UtmBuilderPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <button onClick={copy} style={{
               padding: '9px 22px', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer',
-              border: '1px solid var(--admin-ink)', background: copied ? 'var(--admin-ink)' : 'white',
-              color: copied ? 'white' : 'var(--admin-ink)', letterSpacing: '0.04em', transition: 'all 0.15s',
+              border: '1px solid var(--admin-ink)', background: copied ? 'var(--admin-ink)' : 'var(--admin-surface)',
+              color: copied ? 'var(--admin-surface)' : 'var(--admin-ink)', letterSpacing: '0.04em', transition: 'all 0.15s',
             }}>
               {copied ? 'Copied!' : 'Copy link'}
             </button>
@@ -167,7 +167,7 @@ export default function UtmBuilderPage() {
               style={{
                 padding: '9px 22px', fontSize: 13, fontFamily: 'inherit',
                 cursor: form.campaign.trim() ? 'pointer' : 'default',
-                border: '1px solid var(--admin-ink)', background: 'var(--admin-ink)', color: 'white',
+                border: '1px solid var(--admin-ink)', background: 'var(--admin-ink)', color: 'var(--admin-surface)',
                 letterSpacing: '0.04em', opacity: form.campaign.trim() ? 1 : 0.4,
               }}
             >
@@ -177,7 +177,7 @@ export default function UtmBuilderPage() {
           </div>
         </div>
 
-        <div style={{ marginTop: 24, background: 'white', border: '1px solid var(--admin-line)', padding: '14px 18px', fontSize: 12, color: 'var(--admin-ink-muted)', lineHeight: 1.7 }}>
+        <div style={{ marginTop: 24, background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: '14px 18px', fontSize: 12, color: 'var(--admin-ink-muted)', lineHeight: 1.7 }}>
           <strong style={{ color: 'var(--admin-ink)', fontSize: 11, letterSpacing: '0.8px', textTransform: 'uppercase' }}>Tips</strong><br />
           The <strong>campaign slug</strong> must exactly match the slug in your campaign record for attribution to work.<br />
           Use <strong>utm_content</strong> to track which creative drove each order.<br />

@@ -80,13 +80,13 @@ export default function SocialIndexPage() {
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             <Link href="/admin/social/connections" style={{
-              padding: '10px 16px', background: 'white', color: 'var(--admin-ink)', border: '1px solid var(--admin-line)',
+              padding: '10px 16px', background: 'var(--admin-surface)', color: 'var(--admin-ink)', border: '1px solid var(--admin-line)',
               textDecoration: 'none', fontSize: 12, letterSpacing: '0.5px', fontFamily: 'inherit',
             }}>
               Connections
             </Link>
             <button onClick={() => setCreating(c => !c)} style={{
-              padding: '10px 20px', background: 'var(--admin-ink)', color: 'white', border: 'none',
+              padding: '10px 20px', background: 'var(--admin-ink)', color: 'var(--admin-surface)', border: 'none',
               cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, letterSpacing: '0.5px',
             }}>
               {creating ? 'Cancel' : '+ New post'}
@@ -96,7 +96,7 @@ export default function SocialIndexPage() {
 
         {/* Quick-create */}
         {creating && (
-          <form onSubmit={createPost} style={{ display: 'flex', gap: 10, marginBottom: 28, padding: '20px 24px', background: 'white', border: '1px solid var(--admin-line)' }}>
+          <form onSubmit={createPost} style={{ display: 'flex', gap: 10, marginBottom: 28, padding: '20px 24px', background: 'var(--admin-surface)', border: '1px solid var(--admin-line)' }}>
             <input
               autoFocus
               value={newTitle}
@@ -104,7 +104,7 @@ export default function SocialIndexPage() {
               placeholder="Post title (optional — helps you find it later)…"
               style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--admin-line)', fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, color: 'var(--admin-ink)' }}
             />
-            <button type="submit" style={{ padding: '10px 20px', background: 'var(--admin-ink)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
+            <button type="submit" style={{ padding: '10px 20px', background: 'var(--admin-ink)', color: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
               Create &amp; open
             </button>
           </form>
@@ -116,8 +116,8 @@ export default function SocialIndexPage() {
             <button key={f} onClick={() => setFilter(f)} style={{
               padding: '6px 16px', fontSize: 12, border: '1px solid var(--admin-line)', cursor: 'pointer',
               fontFamily: 'inherit', textTransform: 'capitalize', letterSpacing: '0.3px',
-              background: filter === f ? 'var(--admin-ink)' : 'white',
-              color: filter === f ? 'white' : 'var(--admin-ink-muted)',
+              background: filter === f ? 'var(--admin-ink)' : 'var(--admin-surface)',
+              color: filter === f ? 'var(--admin-surface)' : 'var(--admin-ink-muted)',
             }}>
               {f === 'all' ? `All (${posts.length})` : `${f.charAt(0).toUpperCase() + f.slice(1)} (${f === 'draft' ? drafts.filter(p=>p.status==='draft').length : f === 'ready' ? drafts.filter(p=>p.status==='ready').length : posted.length})`}
             </button>
@@ -127,14 +127,14 @@ export default function SocialIndexPage() {
         {loading ? (
           <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>Loading…</p>
         ) : visible.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 20px', background: 'white', border: '1px solid var(--admin-line)' }}>
+          <div style={{ textAlign: 'center', padding: '80px 20px', background: 'var(--admin-surface)', border: '1px solid var(--admin-line)' }}>
             <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, color: 'var(--admin-ink-muted)' }}>
               {filter === 'all'
                 ? 'No posts yet. Create one to start composing.'
                 : `No ${filter} posts.`}
             </p>
             {filter === 'all' && (
-              <button onClick={() => setCreating(true)} style={{ marginTop: 20, padding: '10px 24px', background: 'var(--admin-ink)', color: 'white', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
+              <button onClick={() => setCreating(true)} style={{ marginTop: 20, padding: '10px 24px', background: 'var(--admin-ink)', color: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>
                 Create first post
               </button>
             )}
@@ -149,7 +149,7 @@ export default function SocialIndexPage() {
               return (
                 <Link key={post._id} href={`/admin/social/${post._id}`} style={{ textDecoration: 'none' }}>
                   <div style={{
-                    background: 'white', border: '1px solid var(--admin-line)', overflow: 'hidden',
+                    background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', overflow: 'hidden',
                     cursor: 'pointer', transition: 'box-shadow 0.15s',
                   }}
                     onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)')}

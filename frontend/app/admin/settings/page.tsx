@@ -221,7 +221,7 @@ export default function SettingsPage() {
             <Link key={tool.href} href={tool.href} style={{ textDecoration: 'none' }}>
               <div style={{
                 border: '1px solid var(--admin-line)',
-                background: 'white',
+                background: 'var(--admin-surface)',
                 padding: '18px 20px',
                 transition: 'box-shadow 0.2s',
               }}>
