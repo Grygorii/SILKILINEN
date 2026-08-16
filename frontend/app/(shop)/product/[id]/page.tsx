@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { categoryLabel } from '@/lib/categoryLabel';
 import { apiJson } from '@/lib/apiFetch';
 import { permanentRedirect, notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -272,13 +273,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   };
 
   // Visible trail mirroring the JSON-LD above (Home / Shop / Category / Product).
-  const categoryLabel = product.category
-    ? String(product.category).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-    : null;
+  //
+  // Ask for the label rather than prettifying the slug. A slug is an
+  // identifier, not a name: `lounge` is the category "Loungewear", and the
+  // breadcrumb said "Lounge" to every customer who reached this page.
+  const categoryLabelText = await categoryLabel(product.category);
   const crumbs = [
     { label: 'Home', href: '/' },
     { label: 'Shop', href: '/shop' },
-    ...(product.category ? [{ label: categoryLabel as string, href: `/shop?category=${product.category}` }] : []),
+    ...(product.category ? [{ label: categoryLabelText as string, href: `/shop?category=${product.category}` }] : []),
     { label: product.name },
   ];
 
