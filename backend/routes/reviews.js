@@ -26,8 +26,21 @@ const submitRateLimit = rateLimit({
 router.get('/', async function(req, res) {
   try {
     const { sort = 'recent', page, limit, productId } = req.query;
-    // Storefront shows 4★ and up only — lower ratings stay in admin moderation.
-    const filter = { status: 'approved', starRating: { $gte: 4 } };
+    // Every APPROVED review, at any rating.
+    //
+    // This used to filter to 4★ and up, which is a different thing from
+    // moderation: rejecting spam is legitimate, hiding a genuine 3★ is
+    // selective presentation. Three reasons it had to change, in increasing
+    // order of seriousness:
+    //   - Trust. A wall of nothing but 5★ reads as fake, and shoppers convert
+    //     BETTER on a mix that includes criticism, because it proves the rest.
+    //   - Google. Review snippet policy forbids showing an aggregate built from
+    //     a filtered subset; the penalty is losing rich results entirely.
+    //   - Law. For an Irish trader selling into the EU/UK, presenting reviews
+    //     without disclosing that negative ones are suppressed is a listed
+    //     unfair practice under the Omnibus Directive and the UK's DMCC.
+    // Moderation still applies — pending, rejected and spam never appear.
+    const filter = { status: 'approved' };
     if (productId) filter.productId = productId;
 
     if (!page && !limit && sort === 'recent' && !productId) {
@@ -66,8 +79,11 @@ router.get('/', async function(req, res) {
 router.get('/summary', async function(req, res) {
   try {
     const { productId } = req.query;
-    // Match the storefront list: only 4★+ count toward the shown average.
-    const filter = { status: 'approved', starRating: { $gte: 4 } };
+    // The average must describe ALL approved reviews. Computing it from 4★+
+    // only meant the number could never fall below 4.0 whatever customers
+    // actually said — and this figure feeds aggregateRating in the product
+    // JSON-LD, so it was being asserted to Google as fact.
+    const filter = { status: 'approved' };
     if (productId) filter.productId = productId;
 
     const all = await Review.find(filter).select('starRating');
