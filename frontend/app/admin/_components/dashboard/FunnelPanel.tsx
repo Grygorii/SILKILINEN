@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Card from '../Card';
 
 // Where visitors drop, and the screen that addresses each drop.
 //
@@ -71,39 +72,34 @@ export default function FunnelPanel() {
 
   const top = data?.stages?.[0]?.count || 0;
 
-  return (
-    <section
-      style={{
-        background: 'var(--admin-surface)',
-        border: '1px solid var(--admin-line)',
-        padding: 20,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
-        <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--admin-ink)', margin: 0 }}>
-          Where people drop
-        </h2>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {[7, 14, 30].map(d => (
-            <button
-              key={d}
-              onClick={() => setDays(d)}
-              style={{
-                background: d === days ? 'var(--admin-ink)' : 'transparent',
-                color: d === days ? 'var(--admin-surface)' : 'var(--admin-ink-muted)',
-                border: '1px solid var(--admin-line)',
-                fontSize: 11,
-                padding: '3px 9px',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
-            >
-              {d}d
-            </button>
-          ))}
-        </div>
-      </div>
+  const rangeToggle = (
+    <div style={{ display: 'flex', gap: 4 }}>
+      {[7, 14, 30].map(d => (
+        <button
+          key={d}
+          onClick={() => setDays(d)}
+          aria-pressed={d === days}
+          style={{
+            background: d === days ? 'var(--admin-ink)' : 'transparent',
+            color: d === days ? 'var(--admin-surface)' : 'var(--admin-ink-muted)',
+            border: '1px solid var(--admin-line)',
+            fontSize: 11,
+            padding: '3px 9px',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          {d}d
+        </button>
+      ))}
+    </div>
+  );
 
+  return (
+    // Uses the shared Card rather than hand-rolling another box. This panel was
+    // written with its own inline shell first — the same reflex that left the
+    // admin with 63 pages and no shared surface.
+    <Card title="Where people drop" action={rangeToggle} style={{ padding: 20 }}>
       {loading ? (
         <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>Reading the clickstream…</p>
       ) : !data?.hasData ? (
@@ -234,6 +230,6 @@ export default function FunnelPanel() {
           </p>
         </>
       )}
-    </section>
+    </Card>
   );
 }
