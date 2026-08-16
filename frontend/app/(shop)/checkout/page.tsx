@@ -103,9 +103,18 @@ function PaymentForm({
   function handleEmailBlur() {
     if (email.trim() && !isValidEmail(email)) {
       setEmailError('Please enter a valid email address (e.g. you@example.com).');
-    } else {
-      setEmailError('');
+      return;
     }
+    setEmailError('');
+    // Persist the email the MOMENT it is valid, not at submit.
+    //
+    // onBeforeSubmit only ran inside handleSubmit, so a shopper's address
+    // reached the cart only if they clicked Pay — and someone who clicks Pay
+    // does not need recovering. The customers abandoned-cart email exists for
+    // are precisely the ones who typed their address and then stopped, and they
+    // were the ones we never captured. Fire-and-forget: this must never delay
+    // or block the payment form.
+    if (isValidEmail(email)) onBeforeSubmit(email.trim()).catch(() => {});
   }
 
   async function handleSubmit(e: React.FormEvent) {
