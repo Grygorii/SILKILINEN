@@ -23,10 +23,20 @@ type Stage = {
   fix: { label: string; href: string } | null;
 };
 
+type Segment = { segment: string; of: number; lost: number; rate: number; bestSegment: string; bestRate: number };
+type LeakyProduct = { name: string; viewed: number; added: number; lost: number; rate: number };
+type Diagnosis = {
+  device: Segment | null;
+  source: Segment | null;
+  products: LeakyProduct[];
+  minSegment: number;
+} | null;
+
 type Funnel = {
   days: number;
   stages: Stage[];
   biggestLeak: Stage | null;
+  diagnosis: Diagnosis;
   overallConversion: number;
   hasData: boolean;
 };
@@ -112,6 +122,34 @@ export default function FunnelPanel() {
               {data.biggestLeak.why && (
                 <p style={{ fontSize: 12.5, color: 'var(--admin-ink-muted)', margin: '4px 0 0' }}>
                   {data.biggestLeak.why}
+                </p>
+              )}
+              {/* The specific thing, when the data can support naming it.
+                  Every line here is gated server-side on a minimum sample, so
+                  silence means "not enough data", never "no problem". */}
+              {data.diagnosis?.device && (
+                <p style={{ fontSize: 12.5, color: 'var(--admin-ink)', margin: '6px 0 0' }}>
+                  <strong>{data.diagnosis.device.segment}</strong> converts at{' '}
+                  {data.diagnosis.device.rate}% here, against {data.diagnosis.device.bestRate}% on{' '}
+                  {data.diagnosis.device.bestSegment} — {data.diagnosis.device.lost} lost.
+                </p>
+              )}
+              {data.diagnosis?.source && (
+                <p style={{ fontSize: 12.5, color: 'var(--admin-ink)', margin: '4px 0 0' }}>
+                  Traffic from <strong>{data.diagnosis.source.segment}</strong> converts at{' '}
+                  {data.diagnosis.source.rate}%, against {data.diagnosis.source.bestRate}% from{' '}
+                  {data.diagnosis.source.bestSegment}.
+                </p>
+              )}
+              {!!data.diagnosis?.products?.length && (
+                <p style={{ fontSize: 12.5, color: 'var(--admin-ink)', margin: '4px 0 0' }}>
+                  Losing most viewers:{' '}
+                  {data.diagnosis.products.map((p, i) => (
+                    <span key={p.name}>
+                      {i > 0 && ', '}
+                      <strong>{p.name}</strong> ({p.added}/{p.viewed} added)
+                    </span>
+                  ))}
                 </p>
               )}
               {data.biggestLeak.fix && (
