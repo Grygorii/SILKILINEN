@@ -6,6 +6,9 @@ const { requireAuth } = require('../middleware/auth');
 const { emailBlastLimit } = require('../middleware/rateLimiters');
 const Customer = require('../models/Customer');
 const Order = require('../models/Order');
+// Erasure must reach every store that holds the address, not only Customer.
+const Cart = require('../models/Cart');
+const Newsletter = require('../models/Newsletter');
 const PromoCode = require('../models/PromoCode');
 const Segment = require('../models/Segment');
 const { recomputeAll, ensureSegmentDocs } = require('../services/segments');
@@ -286,7 +289,36 @@ router.delete('/:id/gdpr', async (req, res) => {
       },
     });
 
-    res.json({ success: true, anonEmail });
+    // Erasure has to reach every store holding the address, not just the
+    // customer record. Until now it did not, and the two most visible
+    // consequences were the worst kind: abandoned-cart recovery and the
+    // back-in-stock waitlist would have gone on emailing someone who had
+    // formally asked to be deleted.
+    //
+    // Orders are deliberately NOT anonymised here. Their customerEmail is part
+    // of the financial record we are legally required to retain, which is a
+    // recognised basis for keeping it; nothing marketing-facing reads from it.
+    const purge = { email: customer.email };
+    const [carts, subs, waitlist] = await Promise.all([
+      // Unsubscribe as well as blank the address, so a cart that somehow keeps
+      // an address cannot re-enter the recovery sequence.
+      Cart.updateMany(purge, { $set: { email: null, recoveryUnsubscribed: true } }).catch(() => ({ modifiedCount: 0 })),
+      Newsletter.deleteMany(purge).catch(() => ({ deletedCount: 0 })),
+      require('../models/StockNotification').deleteMany(purge).catch(() => ({ deletedCount: 0 })),
+    ]);
+
+    res.json({
+      success: true,
+      anonEmail,
+      // Reported back so the founder can evidence what was erased if asked —
+      // "we deleted them" is not an answer to a supervisory authority.
+      purged: {
+        carts: carts.modifiedCount ?? 0,
+        newsletter: subs.deletedCount ?? 0,
+        stockWaitlist: waitlist.deletedCount ?? 0,
+        ordersRetained: 'financial record, retained under legal obligation',
+      },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
