@@ -91,7 +91,10 @@ async function checkMerchantFeed() {
     if (count === 0) {
       return { ...base, status: 'warning', detail: 'Reachable but 0 items', advice: 'No sellable products in the feed — check product status/stock.' };
     }
-    return { ...base, status: 'healthy', detail: `${count} items` };
+    // itemCount is read by the Merchant Center tile: its own total is what
+    // GOOGLE holds, and the two silently disagreeing is the failure that
+    // matters most here.
+    return { ...base, status: 'healthy', detail: `${count} items`, itemCount: count };
   } catch (err) {
     return { ...base, status: 'warning', detail: `Could not fetch: ${err.message}` };
   }
@@ -170,7 +173,7 @@ async function checkCatalogue() {
 // Live Merchant Center verdict — the exact reason products are disapproved,
 // straight from Google. Inert (info) until the service account + MERCHANT_ID
 // are configured in Railway, so it never breaks the panel during setup.
-async function checkMerchantLive() {
+async function checkMerchantLive(feedItemCount = null) {
   const base = { name: 'merchant_live', label: 'Merchant Center — live status' };
   if (!merchantConfigured()) {
     return {
@@ -212,6 +215,20 @@ async function checkMerchantLive() {
     // adult-content flags…) can still hold a product back from Shopping ads /
     // full distribution. Surface those as a WARNING, not a false "all good" —
     // and never as critical, since the products are live.
+    // Google's `total` is what Merchant Center actually HOLDS. The feed's item
+    // count is what we currently publish. When those diverge materially, Google
+    // is working from an older fetch — and every tile can read "healthy" while
+    // most of the catalogue is invisible to Shopping. Nothing was comparing
+    // them, so a stale feed looked exactly like a healthy one.
+    if (feedItemCount != null && total > 0 && feedItemCount > total * 1.25) {
+      return {
+        ...base,
+        status: 'warning',
+        detail: `Google holds ${total} items, the feed publishes ${feedItemCount}. ${approved}/${total} of what Google has is approved.`,
+        advice: 'Merchant Center is working from an older fetch. Check Merchant Center → Products → Feeds for the last fetch time and schedule, then re-fetch. The feed emits one item per VARIANT, so the counts are expected to differ from the product count — but not by this much.',
+      };
+    }
+
     const limiting = issues.filter(i => i.servability === 'disapproved' || i.servability === 'demoted');
     if (limiting.length) {
       const affected = limiting.reduce((s, i) => s + (i.count || 0), 0);
@@ -251,13 +268,21 @@ async function checkSerp() {
 }
 
 async function runChecks() {
+  // The feed check runs FIRST so its item count can be handed to the Merchant
+  // Center check. Those two are the pair that has to be compared: one is what
+  // we publish, the other is what Google holds, and until now nothing noticed
+  // when they disagreed. Everything else still runs in parallel.
+  const feedCheck = await checkMerchantFeed().catch(err => ({
+    name: 'merchant_feed', label: 'Merchant feed', status: 'warning', detail: err.message,
+  }));
+
   const results = await Promise.allSettled([
     checkApexRedirect(),
     checkSitemap(),
-    checkMerchantFeed(),
+    Promise.resolve(feedCheck),
     checkHomepageCanonical(),
     checkCatalogue(),
-    checkMerchantLive(),
+    checkMerchantLive(feedCheck.itemCount ?? null),
     checkSerp(),
   ]);
 
