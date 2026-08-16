@@ -219,9 +219,22 @@ router.get('/', async function(req, res) {
       // regex-special string; escaping prevents both operator injection and a
       // ReDoS via a crafted pattern against the unindexed description field.
       const safe = String(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Search the words customers actually type, not just the two fields we
+      // happened to start with. "sky blue", "pyjamas", "linen" and "medium" are
+      // all real queries that returned an empty page while the product sat in
+      // the catalogue — a naming mismatch reported as a gap in the range.
+      //
+      // category/colours/sizes are matched too because a shopper searches by
+      // the thing, its colour, or their size, and none of those words are
+      // guaranteed to appear in the product's name or prose.
       filter.$or = [
         { name: { $regex: safe, $options: 'i' } },
         { description: { $regex: safe, $options: 'i' } },
+        { category: { $regex: safe, $options: 'i' } },
+        { colours: { $regex: safe, $options: 'i' } },
+        { colorName: { $regex: safe, $options: 'i' } },
+        { sizes: { $regex: safe, $options: 'i' } },
+        { materialComposition: { $regex: safe, $options: 'i' } },
       ];
     }
     let query = Product.find(filter).select(isSlim ? SLIM_PROJECTION : PUBLIC_PROJECTION).lean();
