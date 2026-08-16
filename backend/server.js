@@ -86,6 +86,9 @@ const app = express();
 // Trust Railway's reverse proxy so express-rate-limit can read X-Forwarded-For.
 // Integer 1 = trust exactly one proxy hop; avoids IP spoofing via forged headers.
 app.set('trust proxy', 1);
+// Same reasoning as poweredByHeader on the frontend: X-Powered-By names the
+// stack for anyone probing for known CVEs.
+app.disable('x-powered-by');
 
 app.use(helmet({
   // Stronger HSTS — Lighthouse Best-Practices flagged the default as weak.

@@ -54,6 +54,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Don't advertise the framework. X-Powered-By tells a scanner exactly which
+  // stack to try known CVEs against, and buys us nothing.
+  poweredByHeader: false,
   images: {
     // Global custom loader so next/image routes through Cloudinary's transforms.
     // Configured here (not as a per-<Image loader> prop) because a function prop

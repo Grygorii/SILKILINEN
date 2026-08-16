@@ -38,8 +38,12 @@ const globalLimit = rateLimit({
   max: 300,
   standardHeaders: true,
   legacyHeaders: false,
-  // Health checks are what tells us the box is alive; never throttle them.
-  skip: req => req.path === '/api/health' || req.path === '/health',
+  // No skip list. Railway's liveness probe is GET / — outside /api, so this
+  // limiter never sees it. An earlier version skipped '/api/health' and
+  // '/health', neither of which exists: dead conditions that READ as protection
+  // and would have hidden a real problem if the probe ever moved under /api.
+  // The one health endpoint that does exist, /api/admin/health, is an
+  // authenticated dashboard panel and should be limited like anything else.
   message: { error: 'Too many requests. Please slow down.' },
 });
 
