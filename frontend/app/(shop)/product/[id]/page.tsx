@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { permanentRedirect } from 'next/navigation';
+import { permanentRedirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
 import ProductOptions from '@/components/ProductOptions';
@@ -65,7 +65,9 @@ export async function generateMetadata(
   const { id } = await params;
   const locale = await getLocale();
   const product = await getProduct(id, locale);
-  if (!product) return { title: 'Product Not Found' };
+  // Never let a missing product be indexed, even for the brief window before
+  // notFound() renders.
+  if (!product) return { title: 'Product not found', robots: { index: false, follow: true } };
 
   // Title template in app/layout.tsx appends " | Silkilinen", so the
   // per-page title shouldn't include the brand. metaTitle from the admin
@@ -165,16 +167,14 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   // shippingDetails — these used to be a drifting copy in the frontend.
   const shippingDetails = product ? await shippingDetailsFor(Number(product.price) || 0) : [];
 
-  if (!product) {
-    return (
-      <main className={styles.page}>
-        <div className={styles.notFound}>
-          <p>This product could not be found.</p>
-          <a href="/shop" className={styles.back}>← Back to shop</a>
-        </div>
-      </main>
-    );
-  }
+  // A real 404, not a page that says "not found" with a 200.
+  //
+  // Rendering this inline was a SOFT 404: Google receives a successful
+  // response, indexes it as a legitimate page, and the shop accumulates
+  // indexed URLs whose only content is an apology. notFound() returns a true
+  // 404 and renders app/not-found.tsx, which is already branded and offers a
+  // way back into the collection.
+  if (!product) notFound();
 
   const total = product.totalStock ?? product.stockLevel ?? null;
   const outOfStock = total === 0;
