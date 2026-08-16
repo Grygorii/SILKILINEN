@@ -734,4 +734,44 @@ async function sendAdvisorDigest({ recommendations = [], generatedAt } = {}) {
   });
 }
 
-module.exports = { sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail, sendDropAHint, sendCartRecoveryEmail, sendWinbackReminder, sendReviewRequest, sendAdvisorDigest };
+// Back in stock. Deliberately plain and short: the customer asked for exactly
+// this one thing, so the email's whole job is to say the piece is available and
+// get out of the way. No cross-sell — that would read as a newsletter and blunt
+// the one message they opted in for.
+async function sendBackInStock({ email, product, size, colour }) {
+  if (!process.env.RESEND_API_KEY || !email || !product) return false;
+
+  const variant = [colour, size].filter(Boolean).join(' / ');
+  const url = `${SITE_URL}/product/${product.slug || product._id}`;
+  const img = product.images?.[0]?.url || product.image || '';
+
+  try {
+    await getResend().emails.send({
+      from: FROM,
+      to: email,
+      subject: `Back in stock: ${product.name}`,
+      html: `
+        <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#2A2218;background:#FAF8F4">
+          <p style="font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#6B6358;margin:0 0 24px">SILKILINEN</p>
+          ${img ? `<img src="${esc(img)}" alt="${esc(product.name)}" style="width:100%;max-width:472px;display:block;margin:0 0 24px" />` : ''}
+          <h1 style="font-size:28px;font-weight:300;margin:0 0 12px;line-height:1.2">It&rsquo;s back.</h1>
+          <p style="font-size:15px;line-height:1.6;color:#6B6358;margin:0 0 8px">
+            ${esc(product.name)}${variant ? ` &mdash; ${esc(variant)}` : ''} is available again.
+          </p>
+          <p style="font-size:13px;line-height:1.6;color:#6B6358;margin:0 0 28px">
+            Our pieces are made in small runs, so it may not stay long.
+          </p>
+          <a href="${url}" style="display:inline-block;padding:15px 32px;background:#2A2218;color:#FAF8F4;text-decoration:none;font-size:12px;letter-spacing:2.5px;text-transform:uppercase">View the piece</a>
+          <p style="font-size:11px;color:#6B6358;margin:32px 0 0">
+            You asked to be told when this returned. This is the only email you&rsquo;ll get about it.
+          </p>
+        </div>`,
+    });
+    return true;
+  } catch (err) {
+    console.error('[email] back-in-stock failed:', err.message);
+    return false;
+  }
+}
+
+module.exports = { sendBackInStock, sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail, sendDropAHint, sendCartRecoveryEmail, sendWinbackReminder, sendReviewRequest, sendAdvisorDigest };

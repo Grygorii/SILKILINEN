@@ -233,6 +233,7 @@ app.use('/api/admin/atelier', require('./routes/adminAtelier'));
 app.use('/api/admin/memory', require('./routes/adminMemory'));
 app.use('/api/admin/connections', require('./routes/adminConnections'));
 app.use('/api/cart-recovery', cartRecoveryRouter);
+app.use('/api/stock-notify', require('./routes/stockNotify'));
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(function() {
@@ -359,7 +360,12 @@ const server = app.listen(PORT, function() {
 
   // Cart recovery cron — runs every hour. First run after 5 min to allow DB to settle.
   cartRecoveryStartTimeout = setTimeout(function() {
-    const run = () => withCronLock('cartRecovery', LOCK_TTL, processCartRecovery)
+    // Back-in-stock notices ride the same tick: both ask "has the world changed
+    // since we last looked?" and neither is urgent to the minute.
+    const runStock = () => withCronLock('stockNotify', LOCK_TTL,
+      require('./services/stockNotify').processStockNotifications)
+      .catch(err => console.error('[stockNotify] run failed:', err.message));
+    const run = () => (runStock(), withCronLock('cartRecovery', LOCK_TTL, processCartRecovery))
       .catch(err => console.error('[cart-recovery]', err));
     run();
     cartRecoveryInterval = setInterval(run, 60 * 60 * 1000);

@@ -149,6 +149,28 @@ async function buildRecommendations() {
       'Check whether we already sell it under a different name — a synonym in the product title fixes it without new stock.'));
   }
 
+  // ── People waiting on a restock ──
+  // Named demand with an email attached: the strongest signal in the shop,
+  // because the sale is already agreed and only the stock is missing.
+  const waiting = await require('../models/StockNotification').aggregate([
+    { $match: { notifiedAt: null } },
+    { $group: { _id: '$product', people: { $sum: 1 } } },
+    { $sort: { people: -1 } },
+    { $limit: 3 },
+  ]).catch(() => []);
+  if (waiting.length) {
+    const names = await Product.find({ _id: { $in: waiting.map(w => w._id) } })
+      .select('_id name').lean().catch(() => []);
+    const byId = Object.fromEntries(names.map(p => [String(p._id), p.name]));
+    const top = waiting[0];
+    const label = byId[String(top._id)];
+    if (label) {
+      recs.push(rec('high', 'Demand', `${top.people} waiting for "${label}" to return`,
+        'They left an email for this exact piece — the sale is agreed, only the stock is missing. They are emailed automatically the hour it goes back in stock.',
+        'Restock it, or set the stock level if it has already arrived.'));
+    }
+  }
+
   recs.sort((a, b) => ORDER[a.priority] - ORDER[b.priority]);
   return recs;
 }

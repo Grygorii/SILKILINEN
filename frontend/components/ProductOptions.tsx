@@ -72,9 +72,39 @@ export default function ProductOptions({ colours, colourHexMap, sizes, productNa
     ctaVariant = 'primary';
   }
 
+  // ── Back-in-stock waitlist ──
+  const [notifyOpen, setNotifyOpen] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState('');
+  const [notifyState, setNotifyState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
+
+  async function joinWaitlist(e: React.FormEvent) {
+    e.preventDefault();
+    if (notifyState === 'sending') return;
+    setNotifyState('sending');
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/stock-notify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId,
+          email: notifyEmail.trim(),
+          size: selectedSize || '',
+          colour: selectedColour || '',
+        }),
+      });
+      setNotifyState(res.ok ? 'done' : 'error');
+    } catch {
+      setNotifyState('error');
+    }
+  }
+
   function handleAdd() {
     if (outOfStock) {
-      window.location.href = `mailto:hello@silkilinen.com?subject=Notify me: ${encodeURIComponent(productName)}`;
+      // Was a mailto: link — which on a desktop without a configured mail
+      // client does nothing at all, and when it did work sent the request into
+      // an inbox where nobody was notified on restock. A customer naming the
+      // exact piece they want is the clearest buying signal the shop gets.
+      setNotifyOpen(true);
       return;
     }
     if (!canAdd || addState !== 'idle') return;
@@ -170,6 +200,64 @@ export default function ProductOptions({ colours, colourHexMap, sizes, productNa
           {ctaLabel}
         </Button>
       </div>
+
+      {/* Back-in-stock waitlist — replaces the mailto: that quietly did nothing.
+          Rendered inline rather than as a modal: the customer already told us
+          what they want by clicking, so asking for one field in place is the
+          shortest path between intent and a captured lead. */}
+      {outOfStock && notifyOpen && (
+        <div style={{ marginTop: 16 }}>
+          {notifyState === 'done' ? (
+            <p style={{ fontSize: 13, color: 'var(--color-success)', margin: 0 }}>
+              We&rsquo;ll email you the moment it&rsquo;s back.
+            </p>
+          ) : (
+            <form onSubmit={joinWaitlist} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <label htmlFor="notifyEmail" className="srOnly">Email address for restock notice</label>
+              <input
+                id="notifyEmail"
+                name="notifyEmail"
+                type="email"
+                required
+                autoComplete="email"
+                value={notifyEmail}
+                onChange={e => setNotifyEmail(e.target.value)}
+                placeholder="you@example.com"
+                style={{
+                  flex: '1 1 200px',
+                  padding: '12px 14px',
+                  border: '1px solid var(--color-line)',
+                  background: 'var(--color-bg)',
+                  fontFamily: 'inherit',
+                  fontSize: 14,
+                }}
+              />
+              <button
+                type="submit"
+                disabled={notifyState === 'sending'}
+                style={{
+                  padding: '12px 24px',
+                  background: 'var(--color-ink)',
+                  color: 'var(--color-bg)',
+                  border: 'none',
+                  fontFamily: 'inherit',
+                  fontSize: 11,
+                  letterSpacing: 2,
+                  textTransform: 'uppercase',
+                  cursor: notifyState === 'sending' ? 'default' : 'pointer',
+                }}
+              >
+                {notifyState === 'sending' ? 'Adding…' : 'Notify me'}
+              </button>
+              {notifyState === 'error' && (
+                <p style={{ fontSize: 12, color: 'var(--color-danger)', width: '100%', margin: 0 }}>
+                  That didn&rsquo;t go through. Please try again.
+                </p>
+              )}
+            </form>
+          )}
+        </div>
+      )}
 
       {/* UK shoppers: ships from within the UK, so no customs at the door. */}
       <UKShipBadge />
