@@ -184,12 +184,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   // field so the badge doesn't suddenly disappear from existing recent
   // products. Accept the legacy `isNew` value too for products migrated
   // from the original bad-field-name shipping.
-  const manualFlag = product.isNewArrival ?? product.isNew;
-  const showNew = typeof manualFlag === 'boolean'
-    ? manualFlag
-    : (product.createdAt
-        ? Date.now() - new Date(product.createdAt).getTime() < 30 * 86_400_000
-        : false);
+  // Same rule as ProductCard: the manual flag, and nothing else.
+  //
+  // This used to fall back to "created within 30 days" via Date.now(), which
+  // was wrong twice over. It disagreed with the card — a product with no flag
+  // showed NEW on its own page and not in the grid it sits in — and it made the
+  // render impure: the page is cached with revalidate 120, so the badge froze
+  // at whatever Date.now() said when the snapshot was taken and then lied for
+  // as long as the cache held.
+  const showNew = Boolean(product.isNewArrival ?? product.isNew);
 
   const galleryImages = product.images?.length > 0
     ? product.images
