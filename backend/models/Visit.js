@@ -29,6 +29,17 @@ const visitSchema = new mongoose.Schema({
 });
 
 // TTL index — purge visits older than 90 days automatically
+// The funnel counts DISTINCT sessions in a date range, and now does it for the
+// dashboard panel, the agents' brief, the analyst's tool and the advisor. This
+// compound index lets that group run straight off the index instead of loading
+// every visit document in the window. Event already had {type, createdAt};
+// Visit only had the TTL index, which orders by date but carries no sessionId.
+visitSchema.index({ createdAt: 1, sessionId: 1 });
+
+// Segment breakdowns (worst-converting device / source) filter the same range.
+visitSchema.index({ createdAt: 1, device: 1 });
+visitSchema.index({ createdAt: 1, source: 1 });
+
 visitSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 90 });
 
 module.exports = mongoose.model('Visit', visitSchema);

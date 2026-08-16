@@ -134,6 +134,19 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
 - **Bottom-edge clearance:** `--cookie-bar-h` (globals.css) — the consent bar is fixed to
   `bottom:0`; anything else pinned there (ContactWidget, FloatingCartBar) adds this to its
   own offset. 0 when the bar is hidden. Never hardcode the bar's height.
+- **CSV cells:** `backend/utils/csv.js` (`csvCell`/`csvRow`). Five routes hand-rolled
+  quote-doubling and none neutralised formula injection — exported names/phones come
+  from checkout, so `=HYPERLINK(...)` in a name executes when the founder opens the
+  export. Never build a CSV cell inline.
+- **Fixed-header clearance:** `--announcement-h` + `--nav-h` (globals.css); `.shopContent`
+  is their sum. The layouts set `data-bar="on|off"` because the announcement bar is
+  conditional (absent when the CMS is unreachable) — a single hardcoded total left a gap.
+- **Funnel:** `backend/services/funnel.js` — `getFunnel()` is the ONE funnel (60s memo,
+  5 callers: dashboard panel, clickstream brief, analyst tool, advisor, agents).
+  `clickstream.js` delegates to it; it used to run a second, slightly different one.
+  Gates: `MIN_SEGMENT` 8 sessions to name a segment, `SHIFT_POINTS` 10 to report a
+  week-over-week move. **Silence means "not enough data", never "no problem"** — say so
+  in any surface that renders it, or agents read absence as health.
 - **Style Finder question count:** `lib/styleFinder.ts`. The homepage band can't import
   `QUESTIONS` (bundle cost), so `StyleFinder.tsx` asserts `QUESTIONS.length` against it in
   dev. Add a question → update `QUESTION_COUNT`.
@@ -151,6 +164,21 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   `notFound()` + noindex (see `shop/page.tsx`). Meta descriptions run through `clampMeta`.
 - Product JSON-LD on PDP (offers EUR-canonical, aggregateRating from product-linked reviews).
   Organization + WebSite JSON-LD in `app/layout.tsx`. Cloudinary preconnect in `<head>`.
+
+## Guards (build fails if broken)
+- `no-restricted-syntax` — hand-built `/product/` URLs (whole repo, error); hex + colour
+  keywords under `app/admin` (error; `Zone2Metrics.tsx` exempt for Recharts).
+  **ESLint flat config REPLACES a rule's options rather than merging them** — a block that
+  declares one selector silently disables the others for those files, and one severity
+  applies to the whole rule. Restate every selector in each block.
+- `jsx-a11y/label-has-associated-control` — error on `app/(shop)`/`components`
+  (`assert:'either'`, so a label wrapping its input counts); warn elsewhere (admin has ~130).
+- Error boundaries: `(shop)/error.tsx`, `admin/error.tsx`, `global-error.tsx` (root layout
+  failures — ships its own html/body and literal colours; there is no layout left).
+- Rate limits: global 300/min on `/api` (`middleware/rateLimiters.js` `globalLimit`),
+  checkout 20/5min, AI 20/hr. Health checks skipped.
+- `process.on('unhandledRejection'|'uncaughtException')` in `server.js` — log before dying,
+  or a repeating fault looks like random Railway restarts.
 
 ## Conventions
 - **Admin colour:** `--admin-*` tokens (globals.css) — its own quieter workspace
