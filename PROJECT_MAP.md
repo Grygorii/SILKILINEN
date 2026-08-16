@@ -162,6 +162,26 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
 - **Advisor ranking:** priority band first, then named-cause categories (Demand,
   Conversion) ahead of housekeeping; the weekly digest takes the top 3 and states how
   many it held back. Tests in `tests/advisorRank.test.js`.
+- **Order status:** `STATUS_TRANSITIONS` in `routes/orders.js` — the enum only ever
+  validated that a status EXISTS. Illegal moves 409 with the valid next steps; `force`
+  allows a genuine correction and stamps it into `statusHistory`. Tests in
+  `tests/orderTransitions.test.js`.
+- **Discounts:** `PromoCode.value` is `min: 0` AND clamped again in `services/discounts.js`
+  (percent ≤100, fixed ≤subtotal, never negative). A negative value made
+  `subtotal - discountAmount` LARGER than the cart — a typo became an overcharge.
+- **Reviews:** the storefront shows every APPROVED review at any rating, and the average
+  is computed from all of them. Filtering to 4★+ made the average incapable of dropping
+  below 4.0 while feeding `aggregateRating` to Google — against their snippet policy and
+  the EU Omnibus/UK DMCC rules on selective presentation. Moderate spam, never ratings.
+- **Sold-out products:** `DETAIL_FILTER` (products.js) allows `sold_out` so the PAGE
+  survives; `PUBLIC_FILTER` keeps listings buyable-only. `Product.pre('save')` flips
+  status at zero stock, so filtering detail on `active` 404'd the shop's best pieces
+  while `sitemap.ts` still listed them, and made the back-in-stock waitlist unreachable.
+- **Cart persistence:** the localStorage writer waits on a `hydrated` ref — effects run in
+  declaration order after one commit, so the writer fired with the EMPTY initial cart
+  before the reader's update landed and overwrote a real saved basket.
+- **NEW badge:** the manual `isNewArrival` flag only, on BOTH card and PDP. A time-based
+  fallback on an ISR-cached page freezes at snapshot time and then lies.
 - **Style Finder question count:** `lib/styleFinder.ts`. The homepage band can't import
   `QUESTIONS` (bundle cost), so `StyleFinder.tsx` asserts `QUESTIONS.length` against it in
   dev. Add a question → update `QUESTION_COUNT`.
