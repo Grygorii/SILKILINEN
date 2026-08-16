@@ -46,17 +46,28 @@ const eslintConfig = defineConfig([
     // in Conventions; this makes it enforceable in the admin too.
     files: ['app/admin/**/*.tsx', 'app/admin/**/*.ts'],
     rules: {
-      'no-restricted-syntax': ['error', {
-        // Hex AND colour keywords. The first version of this rule caught only
-        // hex, so 145 uses of literal 'white' walked straight through it —
-        // including one inside the shared Card, which is why the workspace
-        // palette never reached the component meant to define it.
-        selector: "Literal[value=/^(?:#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})|white|black|red|green|blue|orange|yellow|purple|grey|gray)$/]",
-        message:
-          "Don't hardcode hex in the admin — use the --admin-*/--color-* tokens from globals.css " +
-          "(--color-ink, --color-line, --color-success, --color-danger, --color-gold, …). " +
-          "If a third-party widget genuinely needs a literal, disable this rule on that line with a reason.",
-      }],
+      // Restates the product-URL selector: flat config REPLACES a rule's
+      // options, so declaring only the colour one switched the URL guard off
+      // for the whole admin. The inline eslint-disable comments on the admin's
+      // preview links started reporting as "unused directive" — that warning was
+      // the guard announcing it had stopped running.
+      'no-restricted-syntax': ['error',
+        {
+          selector: "TemplateLiteral > TemplateElement[value.raw=/\\/product\\/$/]",
+          message: "Don't hand-build product URLs — use productPath/productHref from '@/lib/urls' so links are always canonical (slug, not ObjectId).",
+        },
+        {
+          // Hex AND colour keywords. The first version of this rule caught only
+          // hex, so 145 uses of literal 'white' walked straight through it —
+          // including one inside the shared Card, which is why the workspace
+          // palette never reached the component meant to define it.
+          selector: "Literal[value=/^(?:#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})|white|black|red|green|blue|orange|yellow|purple|grey|gray)$/]",
+          message:
+            "Don't hardcode hex in the admin — use the --admin-*/--color-* tokens from globals.css " +
+            "(--color-ink, --color-line, --color-success, --color-danger, --color-gold, …). " +
+            "If a third-party widget genuinely needs a literal, disable this rule on that line with a reason.",
+        },
+      ],
     },
   },
   {
@@ -77,13 +88,23 @@ const eslintConfig = defineConfig([
     files: ['app/(shop)/**/*.tsx', 'components/**/*.tsx'],
     ignores: ['app/(shop)/**/opengraph-image.tsx', 'app/(shop)/**/twitter-image.tsx'],
     rules: {
-      'no-restricted-syntax': ['warn', {
-        selector: "Literal[value=/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/]",
-        message:
-          "Don't hardcode hex on the storefront — use the brand tokens in globals.css " +
-          "(--color-ink, --color-bg, --color-line, --color-accent, --color-success, …). " +
-          "Image-generation routes (Satori) are exempt: var() does not resolve there.",
-      }],
+      // Flat config REPLACES a rule's options rather than merging them, so the
+      // product-URL selector has to be restated here. Declaring only the colour
+      // selector silently switched the URL guard off for exactly the files it
+      // was written to protect.
+      'no-restricted-syntax': ['warn',
+        {
+          selector: "TemplateLiteral > TemplateElement[value.raw=/\\/product\\/$/]",
+          message: "Don't hand-build product URLs — use productPath/productHref from '@/lib/urls' so links are always canonical (slug, not ObjectId).",
+        },
+        {
+          selector: "Literal[value=/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/]",
+          message:
+            "Don't hardcode hex on the storefront — use the brand tokens in globals.css " +
+            "(--color-ink, --color-bg, --color-line, --color-accent, --color-success, …). " +
+            "Image-generation routes (Satori) are exempt: var() does not resolve there.",
+        },
+      ],
     },
   },
   globalIgnores([
