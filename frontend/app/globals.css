@@ -168,16 +168,31 @@ body {
   padding-top: 0;
 }
 
-/* Used by shop layout to clear the fixed header (announcement bar + nav) */
-.shopContent {
-  padding-top: 120px; /* 38px announcement + ~80px nav */
+/* Fixed-header clearance — ONE owner.
+   The offset was three hardcoded totals (120/114/106px) that silently baked in
+   the announcement bar's height. The bar is now conditional: when the CMS is
+   unreachable it is not rendered at all, and those totals would have left a
+   dead gap at the top of every page. Split into its two parts so the bar's
+   contribution can go to zero. `data-bar="off"` is set by the layout that
+   knows whether the bar rendered. */
+:root {
+  --announcement-h: 38px;
+  --nav-h: 82px;
 }
-
 @media (max-width: 767px) {
-  .shopContent { padding-top: 114px; } /* 38px bar + 76px nav */
+  :root { --announcement-h: 38px; --nav-h: 76px; }
 }
 @media (max-width: 600px) {
-  .shopContent { padding-top: 106px; } /* 30px bar + 76px nav */
+  :root { --announcement-h: 30px; --nav-h: 76px; }
+}
+
+.shopContent {
+  padding-top: calc(var(--announcement-h) + var(--nav-h));
+}
+
+[data-bar='off'] .shopContent,
+.shopContent[data-bar='off'] {
+  --announcement-h: 0px;
 }
 
 /* Prevent iOS Safari from zooming in on input focus */
@@ -208,4 +223,18 @@ body {
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+}
+
+/* Skeleton shimmer for route-level loading states (app/(shop)/loading.tsx).
+   A quiet opacity pulse rather than a sweeping gradient — the storefront is
+   calm, and a travelling highlight reads as a progress bar, which promises a
+   completion time we can't honour. Suppressed under reduced-motion, where the
+   skeleton simply sits still and still reserves the layout. */
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [aria-busy='true'] * { animation: none !important; }
 }

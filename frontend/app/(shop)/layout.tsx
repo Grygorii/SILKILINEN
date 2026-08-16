@@ -22,7 +22,7 @@ export default async function ShopLayout({
   return (
     <InlineEditProvider>
       <SiteHeader messages={messages} />
-      <div className="shopContent">
+      <div className="shopContent" data-bar={messages && messages.length > 0 ? 'on' : 'off'}>
         <SiteBreadcrumbs />
         {children}
       </div>

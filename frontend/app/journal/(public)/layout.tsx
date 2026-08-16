@@ -24,7 +24,7 @@ export default async function JournalPublicLayout({
   return (
     <>
       <SiteHeader messages={messages} />
-      <div className="shopContent">
+      <div className="shopContent" data-bar={messages && messages.length > 0 ? 'on' : 'off'}>
         {children}
       </div>
       <Footer />
