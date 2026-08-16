@@ -23,7 +23,7 @@ async function buildRecommendations() {
   const recs = [];
 
   const products = await Product.find({ status: { $in: ['active', 'sold_out'] } })
-    .select('_id metaTitle metaDescription description images image')
+    .select('_id name metaTitle metaDescription description images image colorName colours')
     .lean();
   const activeCount = products.length;
 
@@ -32,6 +32,21 @@ async function buildRecommendations() {
   const noImage = products.filter(p => !hasImage(p)).length;
   const thinDesc = products.filter(p => !p.description || p.description.trim().length < 20).length;
   const noMeta = products.filter(p => !p.metaTitle || !p.metaDescription).length;
+
+  // ── Google Shopping feed completeness ──
+  // Google requires `color` on apparel. The feed derives one from colorName,
+  // colours[], or a colour word in the title (see frontend feed route) — so a
+  // product only fails when all three are empty. Those items stay approved for
+  // FREE listings and are excluded from paid Shopping ads, which is a silent
+  // ceiling: nothing is broken, the reach is just capped.
+  const noColour = products.filter(p =>
+    !p.colorName && !(Array.isArray(p.colours) && p.colours.length));
+  if (noColour.length) {
+    const names = noColour.slice(0, 4).map(p => p.name).filter(Boolean).join(', ');
+    recs.push(rec('medium', 'Fixes', `${noColour.length} product${noColour.length > 1 ? 's have' : ' has'} no colour set`,
+      `Google requires a colour on apparel. These stay eligible for free listings but are held out of Shopping ads.${names ? ` Starts with: ${names}.` : ''}`,
+      'Open each in Products → set Colour (or add a variant colour). The feed picks it up on the next crawl.'));
+  }
 
   if (noImage > 0) {
     recs.push(rec('high', 'Fixes', `${noImage} product${noImage > 1 ? 's' : ''} missing an image`,
