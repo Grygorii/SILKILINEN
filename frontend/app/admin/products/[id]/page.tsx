@@ -160,6 +160,17 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const { id } = use(params);
 
   const [form, setForm] = useState<Form>(EMPTY_FORM);
+  // Naming guidance comes from the backend so the rule has ONE owner — the
+  // cleanup script, this form and any importer all read utils/productName.js.
+  const [nameHint, setNameHint] = useState<{ ok: boolean; suggestion: string; reasons: string[] } | null>(null);
+
+  async function checkProductName(name: string) {
+    if (!name.trim()) { setNameHint(null); return; }
+    try {
+      const res = await fetch(`${API}/api/admin/products/name-check?name=${encodeURIComponent(name)}`, { credentials: 'include' });
+      setNameHint(res.ok ? await res.json() : null);
+    } catch { setNameHint(null); }
+  }
   const [images, setImages] = useState<ProductImage[]>([]);
   const [cropFiles, setCropFiles] = useState<File[] | null>(null);
   const [cropSlot, setCropSlot] = useState<string | undefined>(undefined);
@@ -763,9 +774,40 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                 className={`${styles.input} ${invalidFields.has('name') ? styles.fieldError : ''}`}
                 value={form.name}
                 onChange={e => { setField('name', e.target.value); setInvalidFields(p => { const n = new Set(p); n.delete('name'); return n; }); }}
-                onBlur={() => { if (!form.slug && form.name) setField('slug', slugify(form.name)); }}
-                placeholder="e.g. Bastet Silk Shorts"
+                onBlur={() => {
+                  if (!form.slug && form.name) setField('slug', slugify(form.name));
+                  checkProductName(form.name);
+                }}
+                placeholder="e.g. Silk kimono robe in Garnet"
               />
+              {/* The house convention, shown where the name is written rather
+                  than discovered in a cleanup months later. Advisory: it offers
+                  the corrected form and a button to take it, and never blocks
+                  the save — some products will legitimately need a shape the
+                  rule has not seen. */}
+              {nameHint && !nameHint.ok && (
+                <div style={{ marginTop: 6, fontSize: 12.5, color: 'var(--admin-ink-muted)' }}>
+                  {nameHint.reasons.map(r => <div key={r}>{r}</div>)}
+                  {nameHint.suggestion && (
+                    <button
+                      type="button"
+                      onClick={() => { setField('name', nameHint.suggestion); setNameHint(null); }}
+                      style={{
+                        marginTop: 4,
+                        background: 'var(--admin-surface)',
+                        border: '1px solid var(--admin-line)',
+                        color: 'var(--admin-ink)',
+                        fontFamily: 'inherit',
+                        fontSize: 12.5,
+                        padding: '4px 10px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Use &ldquo;{nameHint.suggestion}&rdquo;
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
             <div className={styles.fg}>
               <label className={styles.label}>

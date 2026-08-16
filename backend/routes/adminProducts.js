@@ -281,6 +281,19 @@ router.get('/:id/preview-token', async function(req, res) {
 });
 
 // GET /api/admin/products/:id — single product, any status
+// GET /api/admin/products/name-check?name=... — the house naming convention.
+//
+// Declared BEFORE /:id, or Express would read "name-check" as a product id.
+// The rule lives in utils/productName.js and is served from here rather than
+// reimplemented in the form, so the admin, the cleanup script and any future
+// importer cannot drift apart on what a correct name looks like.
+router.get('/name-check', function(req, res) {
+  const { checkName } = require('../utils/productName');
+  res.json(checkName(String(req.query.name || ''), {
+    colorName: req.query.colorName ? String(req.query.colorName) : '',
+  }));
+});
+
 router.get('/:id', async function(req, res) {
   try {
     const product = await Product.findById(req.params.id);
@@ -362,7 +375,14 @@ router.put('/:id', async function(req, res) {
     if (product.status === 'active') {
       require('../services/indexNow').pingIndexNow(`/product/${product.slug || product._id}`);
     }
-    res.json(product);
+    // Advisory only — returned alongside the saved product so the admin can show
+    // the house naming convention at the moment a name is written, rather than
+    // letting the catalogue drift and cleaning it up months later. The save is
+    // never blocked: a genuinely new kind of product will need a shape the rule
+    // has not seen, and a hard check would either stop real work or train people
+    // to write nonsense that satisfies it.
+    const nameCheck = require('../utils/productName').checkName(product.name, product);
+    res.json({ ...product.toObject(), nameCheck });
   } catch (err) {
     if (err.name === 'ValidationError') {
       const fields = Object.entries(err.errors).map(([field, e]) => ({
