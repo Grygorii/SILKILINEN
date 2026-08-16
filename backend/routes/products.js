@@ -159,6 +159,7 @@ function csvToProducts(records, platform) {
 // was leaking imageless products onto the homepage as cream placeholders.
 // Require images.0.url to be a non-empty string so the public listings only
 // show products that actually render.
+// Listings: buyable stock only.
 const PUBLIC_FILTER = {
   status: 'active',
   'images.0.url': { $type: 'string', $ne: '' },
@@ -167,6 +168,25 @@ const PUBLIC_FILTER = {
 
 // Fields the storefront must never receive — internal margin/cost data and the
 // admin who last edited. Applied to every public product read.
+// A product PAGE must still exist when the piece sells out.
+//
+// Product.pre('save') flips status to 'sold_out' the moment stock reaches zero,
+// and the detail route filtered on status 'active' — so a sold-out piece 404'd
+// while sitemap.ts still listed its URL for Google. Selling out therefore
+// destroyed the accumulated ranking of the shop's BEST pieces, and the URL had
+// to be earned again from scratch on restock.
+//
+// It also made the whole out-of-stock experience unreachable: the PDP's
+// "Out of stock" badge and the back-in-stock waitlist live on a page that
+// could not render. Listings keep showing buyable stock only; checkout already
+// accepts sold_out and refuses it in availabilityError, so nothing can be
+// bought from here.
+const DETAIL_FILTER = {
+  status: { $in: ['active', 'sold_out'] },
+  'images.0.url': { $type: 'string', $ne: '' },
+  price: { $gt: 0 },
+};
+
 const PUBLIC_PROJECTION = '-costPrice -costing -lastUpdatedBy';
 
 // ── Routes ─────────────────────────────────────────────────────────────────────
@@ -368,7 +388,10 @@ router.post('/:id/drop-hint', lightRateLimit, async function(req, res) {
 
 router.get('/related/:id', async function(req, res) {
   try {
-    const product = await Product.findOne({ ...PUBLIC_FILTER, _id: req.params.id }).select(PUBLIC_PROJECTION);
+    // The ANCHOR may be sold out — its page still renders, so it still needs
+    // suggestions. The related products themselves stay on PUBLIC_FILTER:
+    // recommending more things nobody can buy helps no one.
+    const product = await Product.findOne({ ...DETAIL_FILTER, _id: req.params.id }).select(PUBLIC_PROJECTION);
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
     let related = await Product.find({
@@ -424,10 +447,10 @@ router.get('/:id', async function(req, res) {
     const param = req.params.id;
     const byId = /^[0-9a-fA-F]{24}$/.test(param);
     let product = byId
-      ? await Product.findOne({ ...PUBLIC_FILTER, _id: param }).select(PUBLIC_PROJECTION)
-      : await Product.findOne({ ...PUBLIC_FILTER, slug: param }).select(PUBLIC_PROJECTION);
+      ? await Product.findOne({ ...DETAIL_FILTER, _id: param }).select(PUBLIC_PROJECTION)
+      : await Product.findOne({ ...DETAIL_FILTER, slug: param }).select(PUBLIC_PROJECTION);
     if (!product && !byId) {
-      product = await Product.findOne({ ...PUBLIC_FILTER, previousSlugs: param }).select(PUBLIC_PROJECTION);
+      product = await Product.findOne({ ...DETAIL_FILTER, previousSlugs: param }).select(PUBLIC_PROJECTION);
     }
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
