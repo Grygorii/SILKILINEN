@@ -54,12 +54,25 @@ async function validateDiscount(codeStr, subtotal, customerEmail) {
   }
 
   // Calculate discount (appliesTo: 'all' is the only mode for now — specific_products needs cart items)
+  //
+  // Clamped in BOTH directions, defensively, because the value comes from a
+  // human typing into the admin and the schema only started bounding it now —
+  // existing rows may already hold anything.
+  //
+  // A negative value is the dangerous one: subtotal - (-10) INCREASES the
+  // total, so a mistyped code would silently overcharge a customer rather than
+  // fail. Over 100% is merely a free order, which is embarrassing rather than
+  // harmful, but neither should reach the charge.
   let discountAmount = 0;
+  const value = Number(promo.value) || 0;
   if (promo.type === 'percentage') {
-    discountAmount = Math.round(subtotal * (promo.value / 100) * 100) / 100;
+    const pct = Math.min(Math.max(value, 0), 100);
+    discountAmount = Math.round(subtotal * (pct / 100) * 100) / 100;
   } else {
-    discountAmount = Math.min(promo.value, subtotal);
+    discountAmount = Math.min(Math.max(value, 0), subtotal);
   }
+  // Never exceed the cart: the caller subtracts this from the subtotal.
+  discountAmount = Math.min(Math.max(discountAmount, 0), subtotal);
 
   return {
     valid: true,

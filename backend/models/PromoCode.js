@@ -3,7 +3,11 @@ const mongoose = require('mongoose');
 const promoCodeSchema = new mongoose.Schema({
   code: { type: String, required: true, unique: true, uppercase: true, trim: true },
   type: { type: String, enum: ['percentage', 'fixed'], required: true },
-  value: { type: Number, required: true },
+  // Bounded at the model so a typo cannot become a charge. A negative value
+  // would make the order total LARGER than the cart (subtotal - -10), which
+  // overcharges rather than fails; services/discounts.js clamps again for rows
+  // written before this existed.
+  value: { type: Number, required: true, min: [0, 'Discount value cannot be negative'] },
   minOrderValue: { type: Number, default: 0 },
   maxUses: { type: Number, default: null },
   maxUsesPerCustomer: { type: Number, default: 1 },
