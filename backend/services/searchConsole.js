@@ -211,6 +211,38 @@ async function getQueryOpportunities(days = 28) {
   })).sort((a, b) => b.impressions - a.impressions);
 }
 
+// Every query the site appears for, as lowercase strings — for CHECKING whether
+// a query exists, not for ranking opportunities.
+//
+// getQueryOpportunities above caps at 25 rows because it feeds "what should we
+// write about", where the top handful is the point. Using that same list to
+// answer "is this query real?" was wrong in a way that got louder as the site
+// grew: any query outside the top 25 — which is most of the long tail, and
+// exactly what Hermes targets — came back absent, and the plan was stamped
+// "this query isn't in current Search Console" for queries plainly in it.
+//
+// `truncated` is the important half. Absence from a list that hit its row limit
+// is not evidence of absence, so a caller must not conclude anything from it.
+async function getQueryStrings(days = 28, limit = 1000) {
+  try {
+    const body = {
+      startDate: dateStr(days + 2),
+      endDate: dateStr(2),
+      dimensions: ['query'],
+      rowLimit: limit,
+    };
+    const data = await apiPost(`sites/${siteSegment()}/searchAnalytics/query`, body);
+    const rows = data?.rows || [];
+    return {
+      queries: rows.map(r => String(r.keys?.[0] || '').toLowerCase()).filter(Boolean),
+      truncated: rows.length >= limit,
+    };
+  } catch {
+    // Unreachable/unconfigured is not "the query does not exist" — say nothing.
+    return { queries: [], truncated: true };
+  }
+}
+
 // Query × PAGE pairs — which queries each page of the site ranks for. Powers
 // cannibalisation detection (two pages competing for one query) and per-page
 // outcome tracking. Returns [] on any failure.
@@ -309,6 +341,7 @@ module.exports = {
   getCountryBreakdown,
   getPrimaryMarket,
   getQueryOpportunities,
+  getQueryStrings,
   getQueryPagePairs,
   inspectUrl,
 };

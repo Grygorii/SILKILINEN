@@ -25,6 +25,7 @@ const { isConnected, getSearchPerformance, getQueryOpportunities, getQueryPagePa
 const { serpConfigured, serpAnalysis, detectCannibalisation } = require('../seoIntel');
 const { addLearning, playbookPromptBlock } = require('../playbook');
 const { EDITABLE_PATHS } = require('../pageSeo');
+const { findProductByRef } = require('../../utils/productRef');
 
 const client = require('../aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
@@ -255,7 +256,7 @@ async function run() {
     }];
   }
 
-  const mapped = plays.map(p => {
+  const mapped = await Promise.all(plays.map(async p => {
     const high = String(p.leverage).toLowerCase() === 'high';
     const kind = String(p.kind || '').toLowerCase() === 'content' ? 'content' : 'meta';
     const entityType = ['product', 'category', 'collection', 'page'].includes(String(p.entityType || '').toLowerCase())
@@ -264,6 +265,21 @@ async function run() {
     const intent = ['informational', 'commercial', 'transactional'].includes(String(p.intent || '').toLowerCase())
       ? String(p.intent).toLowerCase() : '';
     const pos = p.position != null ? ` (pos ${p.position}${p.impressions != null ? `, ${p.impressions} imp` : ''})` : '';
+
+    // Resolve the product NOW and store its id alongside the name.
+    //
+    // The model is handed the live catalogue and told to answer with an exact
+    // product name, which is the only thing it can reliably produce — but a name
+    // is a poor key for something read back weeks later. renameProducts.js
+    // rewrote every name in the catalogue in one pass, and every play written
+    // before it became "couldn't match a product named …" while the product sat
+    // there under its new name. An id cannot go stale that way.
+    let entityId = null;
+    if (entityType === 'product' && entityRef) {
+      const hit = await findProductByRef(entityRef).catch(() => null);
+      if (hit) entityId = String(hit._id);
+    }
+
     return {
       type: 'seo',
       title: `Hermes: ${String(p.target || entityRef).slice(0, 80)}`,
@@ -272,13 +288,13 @@ async function run() {
       status: high ? 'needs_approval' : 'info',
       // Structured so the Rebuild SEO pipeline can execute the plan.
       meta: {
-        kind, entityType, entityRef, intent,
+        kind, entityType, entityRef, entityId, intent,
         target: p.target || '', action: p.action || '',
         position: p.position ?? null, impressions: p.impressions ?? null,
         leverage: high ? 'high' : 'low',
       },
     };
-  });
+  }));
 
   // Strategic flags the pipeline can't auto-apply but the founder must see —
   // surfaced as their own blocks (kind 'content', so Rebuild flags them).

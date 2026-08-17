@@ -13,9 +13,10 @@ const CEOBrief = require('../models/CEOBrief');
 const { getNorthStar, setNorthStar, northStarStatus, generateBrief, runChiefIfDue, METRICS } = require('../services/chiefOfStaff');
 const { unleashDaVinci, latestComposition } = require('../services/davinci');
 const { runSelfTest } = require('../services/selfTest');
-const { getQueryOpportunities } = require('../services/searchConsole');
+const { getQueryOpportunities, getQueryStrings } = require('../services/searchConsole');
 const { generatePageCopy, AIServiceError } = require('../services/aiText');
 const { EDITABLE_PATHS } = require('../services/pageSeo');
+const { findProductByRef } = require('../utils/productRef');
 
 // Da Vinci runs the orchestra — its own tight limit so it can't be hammered.
 const davinciLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false });
@@ -55,26 +56,36 @@ router.get('/hermes-plan', async function(req, res) {
 
     // The Clerks' check, applied to Hermes' plan before you execute it:
     // Reasoning — is the cited query actually in current Search Console?
-    // (live GSC queries, lowercased). Fails soft: thin signal → skip the check.
-    const liveOpps = await getQueryOpportunities(28).catch(() => []);
-    const liveQueries = (liveOpps || []).map(o => String(o.query || '').toLowerCase());
+    //
+    // This read the TOP 25 opportunities and treated absence from them as absence
+    // from Search Console. Those are different questions: 25 rows is the head of
+    // the list, and Hermes is pointed at the long tail, so real queries were
+    // routinely stamped "isn't in current Search Console". Now the full query list,
+    // and if it came back truncated (or unreadable) the check is SKIPPED — absence
+    // from a list that hit its row limit is not evidence of absence.
+    const { queries: liveQueries, truncated } = await getQueryStrings(28)
+      .catch(() => ({ queries: [], truncated: true }));
+    const canVerifyQueries = liveQueries.length > 0 && !truncated;
 
     const seen = new Set();
     const plan = [];
     for (const a of actions) {
       const m = a.meta || {};
       if (!m.entityRef) continue;
-      const key = `${m.entityType}:${String(m.entityRef).toLowerCase().trim()}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
 
       const warnings = [];
       let entityId = null, slug = null, label = m.entityRef;
       if (m.entityType === 'product') {
-        const p = await Product.findOne({ name: new RegExp(`^${escapeRx(m.entityRef)}$`, 'i') })
-          .select('name status totalStock inStock').lean();
+        // Resolved through utils/productRef: the recorded id first, then the name,
+        // then the rename trail. Matching on the name alone meant that renaming
+        // the catalogue invalidated every plan written before it, and the panel
+        // reported a live product as missing.
+        const p = await findProductByRef(m.entityRef, m.entityId);
         if (p) {
-          entityId = String(p._id); label = p.name;
+          entityId = String(p._id);
+          // The CURRENT name, so a plan written against an old one shows the
+          // product the founder will actually open.
+          label = p.name;
           // Logic check: don't optimise a sold-out or inactive product.
           const stocked = p.inStock ?? ((p.totalStock || 0) > 0);
           if (p.status && p.status !== 'active') warnings.push('product is not active');
@@ -92,12 +103,22 @@ router.get('/hermes-plan', async function(req, res) {
         if (EDITABLE_PATHS.includes(m.entityRef)) { entityId = m.entityRef; label = m.entityRef; }
       }
 
+      // Dedupe on what the ref RESOLVED to, falling back to the raw ref. Keying
+      // on the ref alone let one product appear twice under two names — a play
+      // written before the catalogue was renamed and one written after are the
+      // same job, and the panel listed both, one of them as unmatched.
+      const key = `${m.entityType}:${entityId || String(m.entityRef).toLowerCase().trim()}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
       // Logic check: did the entity actually resolve?
-      if (m.entityType !== 'page' && entityId == null) warnings.push(`couldn't match a ${m.entityType} named "${m.entityRef}"`);
+      if (m.entityType !== 'page' && entityId == null) {
+        warnings.push(`couldn't match a ${m.entityType} named "${m.entityRef}" — it may have been renamed or removed since this play was written`);
+      }
       else if (m.entityType === 'page' && entityId == null) warnings.push(`"${m.entityRef}" is not an editable page`);
       // Reasoning check: is the cited query really in current Search Console?
       const t = String(m.target || '').toLowerCase().trim();
-      if (t && liveQueries.length && !liveQueries.some(q => q === t || q.includes(t) || t.includes(q))) {
+      if (t && canVerifyQueries && !liveQueries.some(q => q === t || q.includes(t) || t.includes(q))) {
         warnings.push('this query isn’t in current Search Console — verify before acting');
       }
 
