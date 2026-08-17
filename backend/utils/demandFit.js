@@ -64,11 +64,19 @@ function classifyDemand(q, matches = []) {
   const product = { name: best.name, stock, status: best.status || 'active' };
 
   if (stock <= 0) {
+    // People who left an email for this exact piece are the strongest signal the
+    // shop can receive — a named person, naming the product, agreeing to buy.
+    // Searches say "someone looked"; a waitlist says "someone decided".
+    const waiting = Number(best.waiting) || 0;
     return {
-      ...base, kind: 'restock', product,
-      headline: `"${best.name}" is out of stock and ${impressions} people searched for it`,
-      why: `The demand is proven and the sale is impossible. Ranking work on this query pays for nothing until there is something to sell.`,
-      action: `Restock "${best.name}", or set its stock if it has already arrived. Anyone on the waitlist is emailed automatically within the hour.`,
+      ...base, kind: 'restock', product: { ...product, waiting },
+      headline: waiting > 0
+        ? `"${best.name}" is out of stock, ${impressions} people searched for it, and ${waiting} left an email waiting`
+        : `"${best.name}" is out of stock and ${impressions} people searched for it`,
+      why: waiting > 0
+        ? `The demand is proven twice over: ${impressions} searches, and ${waiting} ${waiting === 1 ? 'person who' : 'people who'} asked to be told the moment it returns. Those ${waiting === 1 ? 'is a sale' : 'are sales'} already agreed, waiting only on stock.`
+        : `The demand is proven and the sale is impossible. Ranking work on this query pays for nothing until there is something to sell.`,
+      action: `Restock "${best.name}", or set its stock if it has already arrived. ${waiting > 0 ? `The ${waiting} waiting ${waiting === 1 ? 'person is' : 'people are'} emailed automatically within the hour.` : 'Anyone who joins the waitlist is emailed automatically within the hour.'}`,
     };
   }
 

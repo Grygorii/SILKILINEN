@@ -14,6 +14,7 @@
 // really just search misses (the bug Wave 7 fixed).
 
 const Product = require('../models/Product');
+const StockNotification = require('../models/StockNotification');
 const { buildSearchFilter } = require('../utils/productSearch');
 const { classifyDemand, rankProposals } = require('../utils/demandFit');
 const gsc = require('./searchConsole');
@@ -42,12 +43,25 @@ async function findOpportunities({ days = 28 } = {}) {
     // letting a null filter select the whole catalogue.
     const matches = filter
       ? await Product.find({ status: { $in: ['active', 'sold_out'] }, ...filter })
-          .select('name totalStock inStock status slug')
+          .select('_id name totalStock inStock status slug')
           .limit(3)
           .lean()
           .catch(() => [])
       : [];
-    const proposal = classifyDemand(q, matches);
+    // Attach the waitlist to an out-of-stock match. This is the shop's strongest
+    // signal — a named person who asked to be told the moment it returns — and it
+    // sat in its own table, reachable only by the hourly restock sweep. A
+    // "restock this" proposal that cannot see it is arguing from searches alone
+    // when it could be arguing from agreed sales.
+    const enriched = await Promise.all(matches.map(async m => {
+      const stock = Number(m.totalStock) || 0;
+      if (stock > 0) return m;
+      const waiting = await StockNotification.countDocuments({ product: m._id, notifiedAt: null })
+        .catch(() => 0);
+      return { ...m, waiting };
+    }));
+
+    const proposal = classifyDemand(q, enriched);
     if (proposal) proposals.push(proposal);
   }
 

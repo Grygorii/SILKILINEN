@@ -152,3 +152,35 @@ describe('merging proposals that are the same job', () => {
     expect(rankProposals([gap('silk pyjama set', 22), gap('linen robe', 5)])).toHaveLength(2);
   });
 });
+
+// A waitlist entry is the strongest signal the shop can receive: a named person,
+// naming the product, agreeing to buy. It lived in its own table, reachable only
+// by the hourly restock sweep, so a "restock this" proposal argued from searches
+// alone when it could argue from sales already agreed.
+describe('restock proposals count the people waiting', () => {
+  const outOfStock = (waiting) => [{ name: 'Silk bikini briefs in Black', totalStock: 0, status: 'active', waiting }];
+
+  it('names the waitlist when there is one', () => {
+    const p = classifyDemand(q({ impressions: 8 }), outOfStock(3));
+    expect(p.kind).toBe('restock');
+    expect(p.headline).toMatch(/3 left an email waiting/);
+    expect(p.why).toMatch(/proven twice over/);
+    expect(p.product.waiting).toBe(3);
+  });
+
+  it('reads naturally for a single person', () => {
+    const p = classifyDemand(q(), outOfStock(1));
+    expect(p.headline).toMatch(/1 left an email waiting/);
+    expect(p.why).toMatch(/person who/);
+    expect(p.action).toMatch(/person is/);
+  });
+
+  it('falls back to the search-only wording with an empty waitlist', () => {
+    for (const waiting of [0, undefined, null]) {
+      const p = classifyDemand(q(), outOfStock(waiting));
+      expect(p.headline).not.toMatch(/waiting/);
+      expect(p.action).toMatch(/Anyone who joins/);
+      expect(p.product.waiting).toBe(0);
+    }
+  });
+});
