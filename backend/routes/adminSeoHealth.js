@@ -339,11 +339,22 @@ async function checkAnalyticsAgreement() {
     return { ...base, status: 'info', detail: `Could not read Vercel Analytics: ${traffic.error}` };
   }
 
-  // Our own number, over the same window and the same population: distinct
-  // sessions, which is what the funnel's first stage counts.
-  const Visit = require('../models/Visit');
-  const since = new Date(Date.now() - DAYS * 24 * 60 * 60 * 1000);
-  const ours = (await Visit.distinct('sessionId', { createdAt: { $gte: since } }).catch(() => [])).length;
+  // Our own number comes from the FUNNEL, which already owns "how many sessions"
+  // — it is the number the founder sees, the advisor reasons about and the agents
+  // quote. Counting sessions a second time here was the duplicated truth this
+  // codebase keeps paying for: the check would have compared Vercel against a
+  // figure nobody else uses, and could have declared the trackers in agreement
+  // while the funnel on screen said something different.
+  //
+  // It also avoids a Visit.distinct('sessionId') over the window, which returns
+  // every id in one array and is capped by the 16MB BSON limit — fine today,
+  // broken silently at scale, and the exact reason funnel.js counts with a
+  // $group/$count aggregation instead.
+  const funnel = await require('../services/funnel').getFunnel(DAYS).catch(() => null);
+  if (!funnel) {
+    return { ...base, status: 'info', detail: 'Could not read our own visitor count to compare against' };
+  }
+  const ours = funnel.stages?.[0]?.count ?? 0;
 
   // What the gap MEANS is the service's call, and pinned by tests — the
   // thresholds are a judgement, not a detail.
