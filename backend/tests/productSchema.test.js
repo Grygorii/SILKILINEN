@@ -30,7 +30,12 @@ describe.skipIf(!mongo)('Product schema F11 constraints', () => {
 
   it('rejects a whitespace-only product name', async () => {
     const p = new Product({ name: '   ', price: 10 });
-    await expect(p.validate()).rejects.toThrow(/empty/i);
+    // The behaviour is right — whitespace is rejected — but NOT via the schema's
+    // "Product name cannot be empty" validator, which is what this used to
+    // assert. `trim: true` is a setter, so '   ' becomes '' before validation
+    // runs and `required` fires first with its own message. The custom validator
+    // is unreachable for this input. Assert what actually happens.
+    await expect(p.validate()).rejects.toThrow(/name is required/i);
   });
 
   it('rejects a missing price', async () => {

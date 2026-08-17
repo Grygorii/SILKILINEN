@@ -137,11 +137,32 @@ export default function AiVisibilityPanel() {
           </div>
 
           {run.byProvider && Object.keys(run.byProvider).length > 0 && (
-            <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginTop: 12, fontSize: 12.5, color: muted }}>
-              {Object.entries(run.byProvider).map(([k, v]) => (
-                <span key={k}>{PROVIDER_LABEL[k] || k}: <strong style={{ color: dark }}>{v.mentions}</strong>/{v.queries} named · {v.citations} cited</span>
-              ))}
-              <span style={{ marginLeft: 'auto' }}>{timeAgo(run.runAt)}</span>
+            /* One row per provider, in columns. These are figures meant to be
+               compared against each other — as a wrapping line of prose they sat
+               at a different position per provider, so "is Gemini naming us more
+               than ChatGPT?" could not be answered by looking. */
+            <div style={{ marginTop: 12, overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', fontWeight: 400, color: muted, fontSize: 10.5, letterSpacing: '0.5px', textTransform: 'uppercase', padding: '0 0 5px', borderBottom: border, width: '100%' }}>Assistant</th>
+                    <th style={{ textAlign: 'right', fontWeight: 400, color: muted, fontSize: 10.5, letterSpacing: '0.5px', textTransform: 'uppercase', padding: '0 0 5px 18px', borderBottom: border, whiteSpace: 'nowrap' }}>Named</th>
+                    <th style={{ textAlign: 'right', fontWeight: 400, color: muted, fontSize: 10.5, letterSpacing: '0.5px', textTransform: 'uppercase', padding: '0 0 5px 18px', borderBottom: border, whiteSpace: 'nowrap' }}>Answers</th>
+                    <th style={{ textAlign: 'right', fontWeight: 400, color: muted, fontSize: 10.5, letterSpacing: '0.5px', textTransform: 'uppercase', padding: '0 0 5px 18px', borderBottom: border, whiteSpace: 'nowrap' }}>Cited</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(run.byProvider).map(([k, v]) => (
+                    <tr key={k}>
+                      <td style={{ padding: '6px 0', borderBottom: border, color: dark }}>{PROVIDER_LABEL[k] || k}</td>
+                      <td style={{ padding: '6px 0 6px 18px', borderBottom: border, color: dark, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{v.mentions}</td>
+                      <td style={{ padding: '6px 0 6px 18px', borderBottom: border, color: muted, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{v.queries}</td>
+                      <td style={{ padding: '6px 0 6px 18px', borderBottom: border, color: muted, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{v.citations}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p style={{ margin: '6px 0 0', fontSize: 11.5, color: muted }}>{timeAgo(run.runAt)}</p>
             </div>
           )}
 

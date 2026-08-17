@@ -53,12 +53,33 @@ async function post(path, body) {
     };
     let statusCode = 200;
     const cookies = {};
+    const headers = {};
     const res = {
       statusCode,
+      // Express reaches past the res methods a route calls: application.handle
+      // hands unmatched requests to finalhandler, which uses the raw
+      // ServerResponse surface. Without these the suite died with
+      // "res.setHeader is not a function" before any assertion ran — invisible
+      // locally, because the mongod binary cannot be downloaded here and the
+      // whole suite skips. CI was the first place it ever executed.
+      headersSent: false,
+      setHeader(name, value) { headers[String(name).toLowerCase()] = value; return this; },
+      getHeader(name) { return headers[String(name).toLowerCase()]; },
+      removeHeader(name) { delete headers[String(name).toLowerCase()]; },
+      getHeaderNames() { return Object.keys(headers); },
+      writeHead(code, hdrs) {
+        this.statusCode = code; statusCode = code;
+        if (hdrs) for (const [k, v] of Object.entries(hdrs)) this.setHeader(k, v);
+        return this;
+      },
+      end(payload) {
+        this.headersSent = true;
+        resolve({ status: this.statusCode, body: payload, cookies, headers });
+      },
       status(code) { this.statusCode = code; statusCode = code; return this; },
       cookie(name, value) { cookies[name] = value; return this; },
-      json(payload) { resolve({ status: this.statusCode, body: payload, cookies }); },
-      send(payload) { resolve({ status: this.statusCode, body: payload, cookies }); },
+      json(payload) { this.headersSent = true; resolve({ status: this.statusCode, body: payload, cookies, headers }); },
+      send(payload) { this.headersSent = true; resolve({ status: this.statusCode, body: payload, cookies, headers }); },
     };
     app(req, res, err => err && reject(err));
   });
