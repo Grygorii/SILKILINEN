@@ -34,7 +34,7 @@ async function gatherContext() {
   const [perf, opps, products, categories, collections, demand, competitor, countries] = await Promise.all([
     getSearchPerformance(28).catch(() => null),
     getQueryOpportunities(28).catch(() => []),
-    Product.find({ status: 'active' }).select('name slug category metaTitle metaDescription').lean().catch(() => []),
+    Product.find({ status: 'active' }).select('name slug previousSlugs category metaTitle metaDescription').lean().catch(() => []),
     Category.find({ status: 'active' }).select('slug label metaTitle metaDescription').lean().catch(() => []),
     Collection.find({ status: 'active' }).select('slug name metaTitle metaDescription').lean().catch(() => []),
     // OUTWARD intel from the other agents — read through the chain, not invented.
@@ -144,7 +144,6 @@ async function run() {
 
   // Senior analyses the on-page-only Hermes was missing — all fail soft.
   const pairs = await getQueryPagePairs(28).catch(() => []);
-  const cannibal = detectCannibalisation(pairs);
 
   // Resolve a GSC URL path to a human name. Google frequently indexes the
   // /product/<ObjectId> (and sometimes /product/<slug>) form, which is
@@ -160,6 +159,47 @@ async function run() {
     const m = path.match(/^\/product\/([^/?#]+)/);
     return (m && productByKey.get(m[1])) || path;
   };
+
+  // Which page a URL Google remembers actually IS today. Built from live data —
+  // a product's own previousSlugs and the active category list — rather than a
+  // hardcoded list of what was renamed, so it keeps working after the next
+  // rename without anyone updating it.
+  //
+  // Search Console keeps reporting a URL for weeks after it starts redirecting,
+  // so without this a rename looks exactly like cannibalisation: the old URL and
+  // the new one are counted as two pages competing for the same query.
+  const currentPathBySlug = new Map();   // any slug a product has ever had -> its path today
+  for (const pr of products) {
+    if (!pr.slug) continue;
+    const path = `/product/${pr.slug}`;
+    currentPathBySlug.set(pr.slug, path);
+    if (pr._id) currentPathBySlug.set(String(pr._id), path);
+    for (const old of pr.previousSlugs || []) currentPathBySlug.set(old, path);
+  }
+  const liveCategorySlugs = new Set(categories.map(c => c.slug));
+  const canonicalPage = (page) => {
+    const path = String(page || '').replace(/^https?:\/\/[^/]+/, '') || '/';
+
+    const prod = path.match(/^\/product\/([^/?#]+)/);
+    if (prod) {
+      // A slug we have never heard of is a deleted product: it is not a page, so
+      // it cannot be competing with one.
+      return currentPathBySlug.get(prod[1]) || null;
+    }
+
+    // A category view whose slug is not an active category was merged away and
+    // now 301s (see RETIRED_CATEGORIES in the shop route). Drop it.
+    const cat = path.match(/^\/shop\?category=([^&#]+)/);
+    if (cat) {
+      const slug = decodeURIComponent(cat[1]);
+      return liveCategorySlugs.has(slug) ? `/shop?category=${slug}` : null;
+    }
+
+    return path;
+  };
+
+  // Detected only now that a URL can be resolved to the page it is today.
+  const cannibal = detectCannibalisation(pairs, { canonical: canonicalPage });
   // Current best position per query — from the full query×page set (far wider
   // than the top-15 opportunities), so outcome tracking can actually measure.
   const currentPositions = new Map();

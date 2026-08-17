@@ -55,17 +55,45 @@ async function serpAnalysis(query, geo = 'ie') {
 // Cannibalisation: queries for which two or more of the site's OWN pages rank
 // with real impressions — they split signals and suppress each other. Needs the
 // site's own host (GSC_SITE_URL) so we only compare internal pages.
-function detectCannibalisation(pairs, { minImpressions = 2 } = {}) {
+// `canonical(page)` maps a URL Google reports to the page it actually IS today,
+// or returns null for a URL that is no longer a page at all. Without it, every
+// URL Search Console remembers counts as a separate competitor — and Google
+// remembers old URLs for weeks after a redirect.
+//
+// That produced pure noise after the catalogue was renamed and the categories
+// merged. One product reported as three competing pages: its old /product/<slug>
+// (301 → the new slug), its current URL, and /shop?category=pillowcases (a
+// category merged into `home`, also 301). Nothing was competing with anything —
+// it was one product page and one dead URL — but the plan said "consolidate to
+// one strong page", which is at best wasted work and at worst an invitation to
+// delete or noindex a page that is already correct.
+//
+// Redirects resolve themselves as Google recrawls, so the honest answer is to
+// say nothing rather than to invent a content problem out of a URL change.
+function detectCannibalisation(pairs, { minImpressions = 2, canonical = null } = {}) {
   const byQuery = new Map();
   for (const r of pairs || []) {
     if ((r.impressions || 0) < minImpressions) continue;
+    // Resolve to today's page. A dropped URL still contributed impressions, but
+    // it is not a page anyone can consolidate.
+    const key = canonical ? canonical(r.page) : r.page;
+    if (!key) continue;
     const list = byQuery.get(r.query) || [];
-    list.push({ page: r.page, position: r.position, impressions: r.impressions });
+    // `page` keeps the ORIGINAL URL for display; `key` is what identity means.
+    list.push({ page: r.page, key, position: r.position, impressions: r.impressions });
     byQuery.set(r.query, list);
   }
   const out = [];
   for (const [query, pages] of byQuery) {
-    const distinct = [...new Map(pages.map(p => [p.page, p])).values()];
+    // Deduped on the canonical key, so an old URL and its replacement collapse
+    // into the single page they are. Keep the best-ranking of the pair for
+    // display — that is the one Google currently favours.
+    const bestByKey = new Map();
+    for (const p of pages) {
+      const prev = bestByKey.get(p.key);
+      if (!prev || p.position < prev.position) bestByKey.set(p.key, p);
+    }
+    const distinct = [...bestByKey.values()];
     if (distinct.length >= 2) {
       distinct.sort((a, b) => a.position - b.position);
       out.push({ query, pages: distinct.slice(0, 4) });
