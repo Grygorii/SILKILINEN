@@ -94,6 +94,37 @@ async function checkMerchantFeed() {
     // itemCount is read by the Merchant Center tile: its own total is what
     // GOOGLE holds, and the two silently disagreeing is the failure that
     // matters most here.
+    // Remember the count and compare with the last look. Google emailed about
+    // active items falling 24 -> 14 hours after the catalogue was re-slugged;
+    // nothing on our side had noticed, because every check only ever asked
+    // "is the feed reachable RIGHT NOW". A feed can be perfectly healthy and
+    // still have lost a third of its items since yesterday.
+    const SystemState = require('../models/SystemState');
+    const KEY = 'merchantFeedLastCount';
+    let drop = null;
+    try {
+      const prev = await SystemState.findOne({ key: KEY }).lean();
+      const before = Number(prev?.value?.count);
+      if (Number.isFinite(before) && before > 0 && count < before * 0.8) {
+        drop = { before, after: count, pct: Math.round((1 - count / before) * 100) };
+      }
+      await SystemState.findOneAndUpdate(
+        { key: KEY },
+        { $set: { key: KEY, value: { count, at: new Date().toISOString() } } },
+        { upsert: true },
+      );
+    } catch { /* history is a nice-to-have; never fail the check over it */ }
+
+    if (drop) {
+      return {
+        ...base,
+        status: 'warning',
+        detail: `${count} items — down ${drop.pct}% from ${drop.before} since the last check`,
+        advice: 'A fall this size usually follows a catalogue change: renamed products, re-slugged URLs, or items going out of stock. Check Merchant Center → Diagnostics. If URLs changed, the dip recovers as Google re-verifies each new landing page.',
+        itemCount: count,
+      };
+    }
+
     return { ...base, status: 'healthy', detail: `${count} items`, itemCount: count };
   } catch (err) {
     return { ...base, status: 'warning', detail: `Could not fetch: ${err.message}` };

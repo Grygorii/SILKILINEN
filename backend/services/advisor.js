@@ -23,7 +23,7 @@ async function buildRecommendations() {
   const recs = [];
 
   const products = await Product.find({ status: { $in: ['active', 'sold_out'] } })
-    .select('_id name metaTitle metaDescription description images image colorName colours')
+    .select('_id name category metaTitle metaDescription description images image colorName colours')
     .lean();
   const activeCount = products.length;
 

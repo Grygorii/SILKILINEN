@@ -162,7 +162,12 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
         setStatusNote('');
         setStatusMsg('Status updated');
       } else {
-        setStatusMsg(data.error || 'Failed');
+        // The backend 409s an impossible transition and says WHAT IS possible
+        // ("Valid next steps: shipped, cancelled, refunded"). Showing only
+        // data.error threw that away and left the founder with a refusal and
+        // no next move — the transition guard was built to prevent a mis-click,
+        // not to become a dead end.
+        setStatusMsg([data.error, data.hint].filter(Boolean).join(' ') || 'Failed');
       }
     } catch {
       setStatusMsg('Failed');
