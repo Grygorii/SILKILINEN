@@ -3,7 +3,7 @@ const router = express.Router();
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const Bundle = require('../models/Bundle');
-const { calculateShipping } = require('../services/shipping');
+const { computeTotals } = require('../services/orderTotals');
 const { validateDiscount } = require('../services/discounts');
 const { cartRateLimit } = require('../middleware/rateLimits');
 
@@ -12,11 +12,30 @@ const { cartRateLimit } = require('../middleware/rateLimits');
 // unbounded Cart-document creation via GET /:sessionId.
 router.use(cartRateLimit);
 
-// Helper — compute cart totals
+// Helper — compute cart totals.
+//
+// Uses services/orderTotals.js, the same arithmetic checkout charges, so the
+// number in the cart and the number at checkout cannot come from two different
+// implementations of the same rules. This was the fourth copy, and the only one
+// that passed an UNCLAMPED `subtotal - discountAmount` into calculateShipping —
+// a discount larger than the cart handed it a negative subtotal. Both forms
+// happen to yield "shipping not free", so nothing was visibly wrong; it was one
+// edit away from being wrong.
+//
+// KNOWN DIVERGENCE, deliberately left: the cart applies only `cart.discountAmount`
+// and knows nothing about collection-wide sales, which checkout computes from the
+// products in the basket. So a basket holding a discounted-collection product can
+// show a higher total here than at checkout. Fixing that means loading products
+// and collections on every cart read, which is a real change to a hot path and
+// wants its own decision — not a side effect of a de-duplication.
 function summarise(cart) {
   const subtotal = cart.items.reduce((s, i) => s + i.price * i.quantity, 0);
-  const shipping = calculateShipping(cart.shippingCountry, subtotal - (cart.discountAmount || 0));
-  const total = Math.max(0, subtotal - (cart.discountAmount || 0)) + shipping.cost;
+  const { shipping, total } = computeTotals({
+    subtotal,
+    discountCode: cart.discountCode || null,
+    discountAmount: cart.discountAmount || 0,
+    country: cart.shippingCountry,
+  });
   return { subtotal, shipping, total };
 }
 

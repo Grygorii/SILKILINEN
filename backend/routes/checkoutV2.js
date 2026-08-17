@@ -694,11 +694,19 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
       const discountCode = meta.discountCode || null;
       const discountAmount = meta.discountAmount ? parseFloat(meta.discountAmount) : (discountCode && cart ? (cart.discountAmount || 0) : 0);
       const country = meta.shippingCountry || 'IE';
-      const shippingCost = meta.shippingCost ? parseFloat(meta.shippingCost) : calculateShipping(country, Math.max(0, subtotal - discountAmount)).cost;
-      const shipping = { cost: shippingCost, label: calculateShipping(country, Math.max(0, subtotal - discountAmount)).label };
+      // Third copy of the same arithmetic, now through the one owner. The
+      // metadata still WINS where present: it records what was actually charged,
+      // and this order document is the financial record — it must describe the
+      // charge, not a fresh opinion about what the charge should have been. The
+      // computed values are the fallback for an intent whose metadata is thin.
+      // (`Math.max(0, subtotal - discountAmount)` appeared three times in these
+      // four lines, and calculateShipping was called twice for one answer.)
+      const fallback = computeTotals({ subtotal, discountCode, discountAmount, country });
+      const shippingCost = meta.shippingCost ? parseFloat(meta.shippingCost) : fallback.shipping.cost;
+      const shipping = { cost: shippingCost, label: fallback.shipping.label };
       // Order economics stay EUR-canonical (so all reporting stays single-currency);
       // record the charge currency + the amount actually charged separately.
-      const total = Math.max(0, subtotal - discountAmount) + shippingCost;
+      const total = fallback.discountedSubtotal + shippingCost;
       const displayCurrency = normaliseCurrency(meta.displayCurrency);
       const exchangeRate = parseFloat(meta.exchangeRate) || 1;
       const chargedTotal = intent.amount / 100;
