@@ -9,7 +9,9 @@
 // orders and Search Console. Fail-soft: returns zeros if Event is empty.
 
 const Event = require('../models/Event');
+const Product = require('../models/Product');
 const { getFunnel } = require('./funnel');
+const { buildSearchFilter } = require('../utils/productSearch');
 
 async function getClickstreamSignals(days = 14) {
   const since = new Date(Date.now() - days * 86400000);
@@ -50,7 +52,27 @@ async function getClickstreamSignals(days = 14) {
   const totalSessions = byKey.sessions || 0;
   const topSearches = searches.map(s => ({ term: s._id, count: s.n }));
   const topClicked = clicks.map(c => ({ name: c._id, count: c.n }));
-  const unmetSearches = misses.map(m => ({ term: m._id, count: m.n, people: m.people }));
+  // A zero-result search is only unmet DEMAND if the term still finds nothing
+  // today. Two things make a recorded miss stale:
+  //   • the search rule itself changed — until utils/productSearch.js required
+  //     each word separately, "sky blue robe" found nothing while the shop sold
+  //     exactly that, so every such query was logged as a gap in the range;
+  //   • the product may simply have been stocked since.
+  // Either way, recommending we stock something already on the shelf is the
+  // advice that costs the most credibility, so each term is re-run against the
+  // live catalogue with the SAME rule the storefront uses.
+  const unmetSearches = await Promise.all(misses.map(async m => {
+    const filter = buildSearchFilter(m._id);
+    const nowFinds = filter
+      ? await Product.countDocuments({ status: 'active', ...filter }).catch(() => 0)
+      : 0;
+    return { term: m._id, count: m.n, people: m.people, nowFinds };
+  }));
+
+  // Split rather than discard. A term that now resolves is not noise — it is
+  // evidence the search was losing sales, and it says which words were failing.
+  const stillUnmet = unmetSearches.filter(u => !u.nowFinds);
+  const nowFindable = unmetSearches.filter(u => u.nowFinds > 0);
 
   return {
     days,
@@ -67,7 +89,12 @@ async function getClickstreamSignals(days = 14) {
     full,
     topSearches,
     topClicked,
-    unmetSearches,
+    // unmetSearches keeps its name and its meaning: demand we have NOT met.
+    // Callers that treat it as "stock this" stay correct without changing.
+    unmetSearches: stillUnmet,
+    // Searches that failed when they were made but resolve now — a conversion
+    // loss that already happened, not a range gap.
+    nowFindable,
     hasData: totalSessions > 0 || topSearches.length > 0 || topClicked.length > 0,
   };
 }
@@ -115,7 +142,10 @@ function clickstreamPromptLine(cs) {
   parts.push(`On-site SEARCHES (real demand, what visitors typed): ${searches}.`);
   parts.push(`Most-CLICKED products (interest): ${clicked}.`);
   if (cs.unmetSearches?.length) {
-    parts.push(`SEARCHED BUT FOUND NOTHING (demand we did not meet): ${cs.unmetSearches.map(u => `"${u.term}" (${u.people} ${u.people === 1 ? 'person' : 'people'})`).join(', ')}. Check whether we sell it under a different name before treating it as a gap in the range.`);
+    parts.push(`SEARCHED BUT FOUND NOTHING, and still finds nothing today (demand we did not meet): ${cs.unmetSearches.map(u => `"${u.term}" (${u.people} ${u.people === 1 ? 'person' : 'people'})`).join(', ')}. Each was re-run against the live catalogue, so these are real gaps rather than search misses.`);
+  }
+  if (cs.nowFindable?.length) {
+    parts.push(`SEARCHES THAT FAILED THEN AND WORK NOW: ${cs.nowFindable.map(u => `"${u.term}" (${u.people} ${u.people === 1 ? 'person' : 'people'}, now ${u.nowFinds} result${u.nowFinds === 1 ? '' : 's'})`).join(', ')}. Do NOT treat these as demand to stock — the product was there and the search failed to surface it. They are evidence of sales already lost to search, not of a missing range.`);
   }
   // Anything absent above was withheld by a sample gate, not by absence of a
   // problem — say so, or an agent will read silence as "all fine".

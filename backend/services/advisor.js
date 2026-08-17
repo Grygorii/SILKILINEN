@@ -245,8 +245,19 @@ async function buildRecommendations() {
     const top = cs.unmetSearches[0];
     const rest = cs.unmetSearches.slice(1, 4).map(u => `"${u.term}"`).join(', ');
     recs.push(rec('high', 'Demand', `${top.people} searched "${top.term}" and found nothing`,
-      `Searches that return an empty page are the clearest demand signal we get.${rest ? ` Also unmet: ${rest}.` : ''}`,
-      'Check whether we already sell it under a different name — a synonym in the product title fixes it without new stock.'));
+      `Searches that return an empty page are the clearest demand signal we get. Re-checked against the catalogue just now, so this is a real gap and not the search failing.${rest ? ` Also unmet: ${rest}.` : ''}`,
+      'Either stock it, or add the word to a product that is effectively it — a synonym in the title fixes a naming mismatch without new stock.'));
+  }
+
+  // Searches that failed when they were made and work today. Different problem,
+  // different action: nothing to stock, but sales were lost to the search box
+  // while the product sat on the shelf.
+  if (cs?.nowFindable?.length) {
+    const top = cs.nowFindable[0];
+    const people = cs.nowFindable.reduce((n, u) => n + u.people, 0);
+    recs.push(rec('medium', 'Conversion', `${people} searched for something we DO sell and were shown an empty page`,
+      `"${top.term}" now returns ${top.nowFinds} product${top.nowFinds === 1 ? '' : 's'} but returned none when they searched. The product was on the shelf; the search box lost the sale.`,
+      'Nothing to stock. Worth checking the wording those searches used appears in the product title or colour name, so the next person finds it first time.'));
   }
 
   // ── People waiting on a restock ──
