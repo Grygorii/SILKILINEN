@@ -23,7 +23,11 @@ type PerfData = {
     topQueries: Row[];
     topPages: Row[];
   } | null;
-  countries?: { country: string; clicks: number; impressions: number; position: number }[];
+  // Ranked and banded by the backend (utils/marketInsight): the market to act on
+  // is first, and anything under the impressions floor is 'watch' — shown, but
+  // never dressed up as a win.
+  countries?: { code?: string; country?: string; name?: string; clicks: number; impressions: number; position: number; share?: number; band?: 'lever' | 'foothold' | 'watch' }[];
+  marketHeadline?: string | null;
 };
 
 const COUNTRY: Record<string, string> = {
@@ -157,13 +161,31 @@ export default function SearchPerformancePanel() {
               {data.countries && data.countries.length > 0 && (
                 <div style={{ marginTop: 16 }}>
                   <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--admin-ink-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>By country — where Google shows the shop</p>
+                  {/* The conclusion, before the table. Ten equal tiles made the
+                      biggest market look like a failure and a single impression
+                      look like a win. */}
+                  {data.marketHeadline && (
+                    <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--admin-ink)', maxWidth: 760 }}>{data.marketHeadline}</p>
+                  )}
                   <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                    {data.countries.slice(0, 10).map((c, i) => (
-                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--admin-line)', flex: '1 1 220px', minWidth: 200 }}>
-                        <span style={{ color: 'var(--admin-ink)' }}>{countryName(c.country)}</span>
-                        <span style={{ color: 'var(--admin-ink-muted)', whiteSpace: 'nowrap', marginLeft: 12 }}>{c.clicks} clk · {c.impressions} imp · pos {c.position}</span>
-                      </div>
-                    ))}
+                    {data.countries.slice(0, 10).map((c, i) => {
+                      const band = c.band ?? 'watch';
+                      const tone = band === 'lever' ? 'var(--admin-warning)'
+                        : band === 'foothold' ? 'var(--admin-success)'
+                        : 'var(--admin-ink-muted)';
+                      const note = band === 'lever' ? 'work this one'
+                        : band === 'foothold' ? 'ranks well'
+                        : 'too small to judge';
+                      return (
+                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--admin-line)', flex: '1 1 220px', minWidth: 200, opacity: band === 'watch' ? 0.6 : 1 }}>
+                          <span style={{ color: 'var(--admin-ink)' }}>
+                            {c.name ?? countryName(c.country ?? '')}
+                            <span style={{ color: tone, fontSize: 11, marginLeft: 6 }}>· {note}</span>
+                          </span>
+                          <span style={{ color: 'var(--admin-ink-muted)', whiteSpace: 'nowrap', marginLeft: 12 }}>{c.clicks} clk · {c.impressions} imp · pos {c.position}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

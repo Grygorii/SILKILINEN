@@ -16,6 +16,7 @@ const JournalArticle = require('../models/JournalArticle');
 const SiteAudit = require('../models/SiteAudit');
 const Category = require('../models/Category');
 const { misfiledCategory } = require('../utils/categoryFit');
+const { rankMarkets } = require('../utils/marketInsight');
 const { isConfigured: merchantConfigured } = require('./merchantCenter');
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -211,6 +212,27 @@ async function buildRecommendations() {
     const traffic = await require('./vercelAnalytics').getTrafficCached({ days: 14 })
       .catch(() => ({ configured: false }));
     recs.push(trafficRec(traffic));
+  }
+
+  // ── The market to work on ──
+  // Search Console knows which country Google already shows the shop in, and how
+  // well it ranks there. Nothing acted on it: the dashboard rendered ten equal
+  // country tiles, so the single most valuable fact — one market carrying most of
+  // the impressions from page two — was left for the founder to spot. It reaches
+  // the weekly digest from here, which is the only surface that arrives unprompted.
+  const gsc = require('./searchConsole');
+  if (await gsc.isConnected().catch(() => false)) {
+    const [countries, perf] = await Promise.all([
+      gsc.getCountryBreakdown(28).catch(() => []),
+      gsc.getSearchPerformance(28).catch(() => null),
+    ]);
+    const ranked = rankMarkets(countries, { totalImpressions: perf?.totals?.impressions ?? null });
+    if (ranked.lever) {
+      const m = ranked.lever;
+      recs.push(rec('high', 'Demand', `${m.name} is your biggest search market and it sits on page two`,
+        `${m.impressions} impressions there (${m.share}% ${ranked.basis === 'all' ? 'of everything Google shows the shop' : 'of country-attributed traffic'}) at average position ${m.position}, for ${m.clicks} click${m.clicks === 1 ? '' : 's'}. Google already believes the shop answers these searches; almost nobody scrolls to position ${Math.round(m.position)}. The demand is proven — only the ranking is missing.`,
+        `Work ${m.name} specifically for one quarter rather than spreading effort: content and internal links aimed at what that market searches for. Moving these impressions onto page one is worth more than any number of meta rewrites elsewhere.`));
+    }
   }
 
   if (funnel?.hasData) {

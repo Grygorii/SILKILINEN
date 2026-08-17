@@ -71,7 +71,16 @@ router.get('/performance', requireAuth, async (req, res) => {
       gsc.getSearchPerformance().catch(() => null),
       gsc.getCountryBreakdown().catch(() => []),
     ]);
-    res.json({ configured: true, connected: true, sitemaps, performance, countries });
+    // The panel used to render ten identical country tiles and leave the
+    // reasoning to the reader. Ranked here so the market to act on is first, and
+    // so a one-impression market cannot pose as the best one.
+    const { rankMarkets, marketHeadline } = require('../utils/marketInsight');
+    const ranked = rankMarkets(countries, { totalImpressions: performance?.totals?.impressions ?? null });
+    res.json({
+      configured: true, connected: true, sitemaps, performance,
+      countries: ranked.markets,
+      marketHeadline: marketHeadline(ranked),
+    });
   } catch (err) {
     console.error('[gsc] performance', err);
     res.status(500).json({ error: 'Internal server error' });

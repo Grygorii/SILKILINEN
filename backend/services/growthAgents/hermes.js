@@ -26,6 +26,7 @@ const { serpConfigured, serpAnalysis, detectCannibalisation } = require('../seoI
 const { addLearning, playbookPromptBlock } = require('../playbook');
 const { EDITABLE_PATHS } = require('../pageSeo');
 const { findProductByRef } = require('../../utils/productRef');
+const { rankMarkets, marketHeadline, MIN_IMPRESSIONS: marketMin } = require('../../utils/marketInsight');
 
 const client = require('../aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
@@ -200,6 +201,9 @@ async function run() {
 
   // Detected only now that a URL can be resolved to the page it is today.
   const cannibal = detectCannibalisation(pairs, { canonical: canonicalPage });
+
+  const rankedMarkets = rankMarkets(countries, { totalImpressions: perf?.totals?.impressions ?? null });
+  const marketHeadlineLine = marketHeadline(rankedMarkets);
   // Current best position per query — from the full query×page set (far wider
   // than the top-15 opportunities), so outcome tracking can actually measure.
   const currentPositions = new Map();
@@ -229,8 +233,15 @@ async function run() {
     `TOP PAGES (where impressions/clicks land — read these for "seen but not clicked"):`,
     (perf.topPages || []).length ? perf.topPages.map(p => `- ${pageLabel(p.key)} — ${p.impressions} imp, ${p.clicks} clk`).join('\n') : '- none yet',
     ``,
-    `GEOGRAPHIC PICTURE (which countries Google shows the shop in — ISO codes; SILKILINEN ships worldwide, so reason about market footholds):`,
-    countries.length ? countries.map(c => `- ${String(c.country).toUpperCase()} — ${c.impressions} imp, ${c.clicks} clk, avg pos ${c.position}`).join('\n') : '- no geographic data yet',
+    // Classified before it reaches the model. Handed the raw table, an LLM reads
+    // "Malta, position 2" as the best market and says so — it is one impression.
+    // The bands encode the sample gate, so the model reasons about markets that
+    // can carry a decision instead of re-deriving that from ten rows.
+    `GEOGRAPHIC PICTURE (SILKILINEN ships worldwide). LEVER = enough impressions to matter but ranked past page one — proven demand, missing rank, the highest-value work. FOOTHOLD = ranks well already, so the limit is how many people search. WATCH = under ${marketMin} impressions: too small to conclude anything from, and NEVER to be called a strong market:`,
+    rankedMarkets.markets.length
+      ? rankedMarkets.markets.map(m => `- [${m.band.toUpperCase()}] ${m.name} — ${m.impressions} imp (${m.share}% ${rankedMarkets.basis === 'all' ? 'of all impressions' : 'of country-attributed traffic'}), ${m.clicks} clk, avg pos ${m.position}`).join('\n')
+      : '- no geographic data yet',
+    marketHeadlineLine ? `THE MARKET THAT MATTERS: ${marketHeadlineLine}` : '',
     ``,
     `PRODUCTS (entityType "product" — use the exact name as entityRef): ${products.map(p => p.name).slice(0, 30).join(', ') || 'none'}.`,
     `CATEGORIES (entityType "category" — use the slug as entityRef): ${categories.map(c => `${c.slug} (${c.label})`).join(', ') || 'none'}.`,
