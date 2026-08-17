@@ -169,18 +169,24 @@ export default function SearchPerformancePanel() {
                   )}
                   <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                     {data.countries.slice(0, 10).map((c, i) => {
-                      const band = c.band ?? 'watch';
+                      // An OLDER backend returns countries with no band at all.
+                      // Defaulting those to 'watch' would label every market
+                      // "too small to judge" — a confident falsehood produced by
+                      // a deploy-timing skew, since Vercel and Railway ship
+                      // independently. No band means no verdict, not a bad one.
+                      const band = c.band;
                       const tone = band === 'lever' ? 'var(--admin-warning)'
                         : band === 'foothold' ? 'var(--admin-success)'
                         : 'var(--admin-ink-muted)';
                       const note = band === 'lever' ? 'work this one'
                         : band === 'foothold' ? 'ranks well'
-                        : 'too small to judge';
+                        : band === 'watch' ? 'too small to judge'
+                        : '';
                       return (
                         <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--admin-line)', flex: '1 1 220px', minWidth: 200, opacity: band === 'watch' ? 0.6 : 1 }}>
                           <span style={{ color: 'var(--admin-ink)' }}>
                             {c.name ?? countryName(c.country ?? '')}
-                            <span style={{ color: tone, fontSize: 11, marginLeft: 6 }}>· {note}</span>
+                            {note && <span style={{ color: tone, fontSize: 11, marginLeft: 6 }}>· {note}</span>}
                           </span>
                           <span style={{ color: 'var(--admin-ink-muted)', whiteSpace: 'nowrap', marginLeft: 12 }}>{c.clicks} clk · {c.impressions} imp · pos {c.position}</span>
                         </div>

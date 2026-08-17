@@ -240,3 +240,52 @@ describe('sales change what a ranking product means', () => {
     expect(out.map(p => p.kind)).toEqual(['depth', 'convert']);
   });
 });
+
+// On-site searches are folded into the same list as Google's, because two lists
+// saying similar things in different places is how they end up disagreeing. They
+// are NOT the same evidence, though: someone typing into the shop's own search
+// box has already arrived and named what they came for.
+describe('demand observed on the shop itself', () => {
+  const site = (over = {}) => ({ query: 'silk pyjama set', impressions: 3, clicks: 0, position: 0, source: 'site', ...over });
+
+  it('is held to a lower bar than a Google impression', () => {
+    // Two people asking on-site beats five impressions on a page nobody read.
+    expect(classifyDemand(site({ impressions: 2 }), [])).not.toBeNull();
+    // The Google floor still applies to Google.
+    expect(classifyDemand({ ...site({ impressions: 2 }), source: 'google' }, [])).toBeNull();
+  });
+
+  it('still refuses a single search', () => {
+    expect(classifyDemand(site({ impressions: 1 }), [])).toBeNull();
+  });
+
+  it('says where the demand was seen, not just how much', () => {
+    const p = classifyDemand(site(), []);
+    expect(p.kind).toBe('range');
+    expect(p.source).toBe('site');
+    expect(p.headline).toMatch(/ON the shop/);
+    expect(p.why).toMatch(/already here/);
+  });
+
+  it('reads naturally for one person', () => {
+    expect(classifyDemand(site({ impressions: 2 }), []).headline).toMatch(/2 people searched/);
+    const one = classifyDemand({ ...site(), impressions: 1, source: 'site' }, []);
+    expect(one).toBeNull(); // below the floor, but the singular path is exercised below
+    expect(classifyDemand(site({ impressions: 2 }), []).headline).not.toMatch(/1 person/);
+  });
+
+  // The trap: an on-site search knows nothing about Google positions, so running
+  // the ranking branches would produce "on page one and nobody clicks it" about
+  // a search that never touched Google.
+  it('never invents a ranking verdict from an on-site search', () => {
+    const p = classifyDemand(site(), [product({ totalStock: 10 })]);
+    expect(p).toBeNull();
+  });
+
+  it('does report a matched product that cannot be bought', () => {
+    // The one reading that survives: they searched, we have it, they cannot buy it.
+    const p = classifyDemand(site(), [product({ totalStock: 0, waiting: 2 })]);
+    expect(p.kind).toBe('restock');
+    expect(p.product.waiting).toBe(2);
+  });
+});

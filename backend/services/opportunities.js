@@ -30,12 +30,12 @@ const MAX_PROPOSALS = 8;
  *   read the same on a dashboard.
  */
 async function findOpportunities({ days = 28 } = {}) {
-  if (!(await gsc.isConnected().catch(() => false))) {
-    return { connected: false, proposals: [], queriesChecked: 0 };
-  }
-
-  const queries = await gsc.getQueryOpportunities(days).catch(() => []);
-  if (!queries.length) return { connected: true, proposals: [], queriesChecked: 0 };
+  // Search Console is OPTIONAL here. The shop's own search box is first-party
+  // demand and does not depend on Google being connected — returning early on a
+  // missing GSC connection would have thrown away the stronger of the two
+  // signals because the weaker one was unavailable.
+  const connected = await gsc.isConnected().catch(() => false);
+  const queries = connected ? await gsc.getQueryOpportunities(days).catch(() => []) : [];
 
   // Units sold per product, and whether the shop sells ANYTHING.
   //
@@ -57,8 +57,24 @@ async function findOpportunities({ days = 28 } = {}) {
   const soldById = new Map(salesRows.map(r => [String(r._id), Number(r.units) || 0]));
   const shopSells = salesRows.length > 0;
 
+  // On-site zero-result searches, folded into the SAME list. They were surfaced
+  // in their own advisor line, saying a similar thing in a different place —
+  // which is how two lists end up disagreeing about what to do. clickstream
+  // already re-verifies each one against the live catalogue (unmetSearches means
+  // "found nothing then AND now"), so these arrive pre-checked.
+  const cs = await require('./clickstream').getClickstreamSignals(days).catch(() => null);
+  const siteSearches = (cs?.unmetSearches || []).map(u => ({
+    query: u.term,
+    // `people`, not raw searches: one person retrying four times is one person
+    // wanting something, and counting the retries would inflate the evidence.
+    impressions: u.people,
+    clicks: 0,
+    position: 0,
+    source: 'site',
+  }));
+
   const proposals = [];
-  for (const q of queries) {
+  for (const q of [...queries, ...siteSearches]) {
     const filter = buildSearchFilter(q.query);
     // A blank query cannot be matched; treat it as unmatchable rather than
     // letting a null filter select the whole catalogue.
@@ -88,8 +104,10 @@ async function findOpportunities({ days = 28 } = {}) {
   }
 
   return {
-    connected: true,
-    queriesChecked: queries.length,
+    // Reported so the panel can distinguish "Google is not connected" from
+    // "nothing to act on" — they are different states and must not read alike.
+    connected,
+    queriesChecked: queries.length + siteSearches.length,
     proposals: rankProposals(proposals).slice(0, MAX_PROPOSALS),
   };
 }

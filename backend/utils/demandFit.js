@@ -34,8 +34,13 @@
 // and when the sample is too thin to carry a decision. A weekly list that always
 // finds five things to do is a list nobody reads.
 
-// Below this a query is one person's curiosity, not demand.
+// Below this a Google query is one person's curiosity, not demand.
 const MIN_IMPRESSIONS = 5;
+// On-site searches are held to a LOWER bar on purpose. Someone typing into the
+// shop's own search box has already arrived, chosen to look, and told us the
+// exact words — two of those is a stronger signal than five Google impressions,
+// which only mean the shop appeared somewhere on a results page nobody read.
+const MIN_SITE_SEARCHES = 2;
 // Google's first page; past it, click-through collapses toward zero.
 const PAGE_ONE = 10;
 // "Nearly gone" for a boutique that stocks in small runs.
@@ -51,19 +56,35 @@ function classifyDemand(q, matches = [], { shopSells = false } = {}) {
   const impressions = Number(q?.impressions) || 0;
   const clicks = Number(q?.clicks) || 0;
   const position = Number(q?.position) || 0;
-  if (!query || impressions < MIN_IMPRESSIONS) return null;
+  // Where the demand was observed. A Google impression and someone typing into
+  // the shop's own search box are both "a search", and they are not remotely the
+  // same evidence — so they get different floors and different wording.
+  const source = q?.source === 'site' ? 'site' : 'google';
+  if (!query) return null;
+  if (impressions < (source === 'site' ? MIN_SITE_SEARCHES : MIN_IMPRESSIONS)) return null;
 
-  const base = { query, impressions, clicks, position };
+  const base = { query, impressions, clicks, position, source };
   const best = matches && matches.length ? matches[0] : null;
 
   if (!best) {
     return {
       ...base, kind: 'range', product: null,
-      headline: `${impressions} searches for "${query}" and nothing in the shop matches`,
-      why: `Google is showing the shop for this and finding nothing to offer. Either the range has a gap here, or we sell it under a word nobody searches for.`,
-      action: `Search "${query}" in Products. If something IS effectively this, put those words in its title or colour name — that is free. If not, it is a stocking decision with ${impressions} searches of evidence behind it.`,
+      headline: source === 'site'
+        ? `${impressions} ${impressions === 1 ? 'person' : 'people'} searched "${query}" ON the shop and were shown an empty page`
+        : `${impressions} searches for "${query}" and nothing in the shop matches`,
+      why: source === 'site'
+        ? `They were already here and told us exactly what they came for, and we had nothing to show them. That is the least ambiguous demand signal the shop can produce — no guessing about intent, no ranking in the way.`
+        : `Google is showing the shop for this and finding nothing to offer. Either the range has a gap here, or we sell it under a word nobody searches for.`,
+      action: `Search "${query}" in Products. If something IS effectively this, put those words in its title or colour name — that is free. If not, it is a stocking decision with ${impressions} ${source === 'site' ? 'people asking for it by name' : 'searches of evidence behind it'}.`,
     };
   }
+
+  // An on-site search that DID match something can only be usefully read one
+  // way: the product exists but cannot be bought. Everything else the Google
+  // branches below reason about — position, click-through — is meaningless here,
+  // and running it would produce sentences like "on page one and nobody clicks
+  // it" about a search that never touched Google.
+  if (source === 'site' && (Number(best.totalStock) || 0) > 0) return null;
 
   const stock = Number(best.totalStock) || 0;
   const product = { name: best.name, stock, status: best.status || 'active' };

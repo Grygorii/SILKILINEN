@@ -14,6 +14,7 @@ type Proposal = {
   impressions: number;
   clicks: number;
   position: number;
+  source?: 'site' | 'google';
   product: { name: string; stock: number; status: string; waiting?: number; sold?: number } | null;
   headline: string;
   why: string;
@@ -78,7 +79,11 @@ export default function OpportunitiesPanel() {
 
   // Search Console not connected is NOT "no opportunities" — saying nothing
   // would read as a clean bill of health on a shop nobody has looked at.
-  if (!data?.connected) {
+  //
+  // But the shop's OWN search box is first-party demand and does not need Google
+  // at all, so a disconnected Search Console with real proposals still shows
+  // them; only a disconnected AND empty list falls back to the setup message.
+  if (!data?.connected && !(data?.proposals?.length)) {
     return (
       <div className={styles.wrap}>
         <p className={styles.label}>Opportunities</p>
@@ -99,6 +104,7 @@ export default function OpportunitiesPanel() {
         <p className={styles.label}>Opportunities — demand, matched to the shelf</p>
         <span className={styles.checked}>
           {data.queriesChecked} quer{data.queriesChecked === 1 ? 'y' : 'ies'} checked · last 28 days
+          {!data.connected && ' · Search Console not connected, showing on-site searches only'}
         </span>
       </div>
 
@@ -119,6 +125,12 @@ export default function OpportunitiesPanel() {
                 <div className={styles.top}>
                   <span className={`${styles.kind} ${kindTone}`}>{KIND_LABEL[p.kind] ?? p.kind}</span>
                   <span className={styles.headline}>{p.headline}</span>
+                  {/* Where the demand was seen. A Google impression and someone
+                      typing into the shop's own search box are different
+                      evidence, and the card should not blur them. */}
+                  {p.source && (
+                    <span className={styles.checked}>{p.source === 'site' ? 'on-site search' : 'Google'}</span>
+                  )}
                 </div>
                 <p className={styles.why}>{p.why}</p>
                 <p className={styles.action}>{p.action}</p>
