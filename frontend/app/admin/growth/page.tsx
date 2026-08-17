@@ -6,6 +6,7 @@ import AdminErrorBanner from '@/components/AdminErrorBanner';
 import AdminModal from '@/components/AdminModal';
 import { toast } from '@/lib/adminToast';
 import styles from './page.module.css';
+import OpportunitiesPanel from './OpportunitiesPanel';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -456,6 +457,12 @@ export default function GrowthEnginePage() {
           </>
         ) : !error && (
           <>
+            {/* What the data says to do next, before the roster of who could do
+                it. The agents were the first thing on this page and the
+                opportunities were nowhere — which is the wrong way round: the
+                team is the means, the work is the point. */}
+            <OpportunitiesPanel />
+
             {/* Agents */}
             <p className={styles.sectionLabel}>The team</p>
             <div className={styles.agentsGrid}>

@@ -1,0 +1,136 @@
+/* Opportunities — the Growth Engine's "here is the data, here is what to try".
+   Colour comes only from the --admin-* tokens: the admin palette is a closed
+   status set and an ESLint rule fails the build on a hex literal under
+   app/admin. */
+
+.wrap {
+  margin-bottom: 40px;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--admin-ink-muted);
+}
+
+.checked {
+  font-size: 11px;
+  color: var(--admin-ink-muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  background: white;
+  border: 1px solid var(--admin-line);
+  /* A left edge carries the urgency, so the row is scannable without reading:
+     restock and range are money now, the rest is presentation. */
+  border-left: 3px solid var(--admin-line);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cardUrgent { border-left-color: var(--admin-danger); }
+.cardSoon   { border-left-color: var(--admin-warning); }
+.cardLater  { border-left-color: var(--admin-info); }
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.kind {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.kindUrgent { background: var(--admin-danger-soft);  color: var(--admin-danger); }
+.kindSoon   { background: var(--admin-warning-soft); color: var(--admin-warning); }
+.kindLater  { background: var(--admin-info-soft);    color: var(--admin-info); }
+
+.headline {
+  font-size: 14px;
+  color: var(--admin-ink);
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.why {
+  font-size: 13px;
+  color: var(--admin-ink-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* The instruction is the point of the card — set apart so it is never mistaken
+   for more commentary. */
+.action {
+  font-size: 13px;
+  color: var(--admin-ink);
+  line-height: 1.55;
+  margin: 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--admin-line);
+}
+
+/* The evidence. Small, but present: "buy more stock" without the numbers behind
+   it is an opinion. */
+.figures {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--admin-ink-muted);
+  margin-top: 2px;
+}
+
+.figure strong {
+  color: var(--admin-ink);
+  font-weight: 500;
+}
+
+.quiet {
+  background: white;
+  border: 1px solid var(--admin-line);
+  padding: 18px 20px;
+  font-size: 13px;
+  color: var(--admin-ink-muted);
+  line-height: 1.6;
+}
+
+.skel {
+  background: white;
+  border: 1px solid var(--admin-line);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skelLine {
+  height: 10px;
+  background: var(--admin-bg);
+  border-radius: 2px;
+}
