@@ -205,6 +205,7 @@ app.use('/api/admin/seo-base', require('./routes/adminSeoBase'));
 app.use('/api/admin/ai-visibility', require('./routes/adminAiVisibility'));
 app.use('/api/admin/translations', require('./routes/adminTranslations'));
 app.use('/api/admin/advisor', adminAdvisorRoutes);
+app.use('/api/admin/vercel-analytics', require('./routes/adminVercelAnalytics'));
 app.use('/api/admin/google/search-console', adminGoogleOAuthRoutes);
 app.use('/api/admin/dashboard', adminDashboardRoutes);
 app.use('/api/track', trackRoutes);

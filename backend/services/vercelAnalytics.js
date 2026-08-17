@@ -1,0 +1,161 @@
+'use strict';
+
+// Vercel Web Analytics reader (read-only).
+//
+// The <Analytics/> component was added to the storefront, which sends data TO
+// Vercel — and nothing here could read it back, so the numbers lived in a
+// dashboard the agents cannot see. This closes that loop: the admin, the health
+// panel and the advisor can all ask "how many people actually arrived".
+//
+// Why it is worth having alongside our own clickstream, which is richer: it is
+// an INDEPENDENT count of the same population. Our beacon is JavaScript we
+// wrote, posting to our own API — ad blockers, a bad deploy or a thrown
+// exception silence it, and a silent tracker is indistinguishable from an empty
+// shop. Two counts that should agree are a guard; one count is a guess.
+//
+// Inert until VERCEL_API_TOKEN + VERCEL_PROJECT_ID are set (VERCEL_TEAM_ID too,
+// for a project owned by a team — which this one is).
+//
+// API: https://vercel.com/docs/analytics/web-analytics-api
+//   GET /v1/query/web-analytics/visits/count      -> { data: { pageviews, visitors } }
+//   GET /v1/query/web-analytics/visits/aggregate  -> { data: [ { <dim>, count, visitors } ] }
+// Production traffic only, and only since Web Analytics was switched on.
+
+const API_BASE = 'https://api.vercel.com/v1/query/web-analytics';
+const TIMEOUT_MS = 6000;
+const TTL_MS = 15 * 60 * 1000; // traffic moves slowly; 15min is plenty
+const RETRY_MS = 60 * 1000;    // never hammer a failing provider
+
+let cache = { data: null, at: 0 };
+let lastAttemptAt = 0;
+
+function isConfigured() {
+  return Boolean(process.env.VERCEL_API_TOKEN && process.env.VERCEL_PROJECT_ID);
+}
+
+function qs(params) {
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null && v !== '') p.set(k, String(v));
+  }
+  if (process.env.VERCEL_TEAM_ID) p.set('teamId', process.env.VERCEL_TEAM_ID);
+  p.set('projectId', process.env.VERCEL_PROJECT_ID);
+  return p.toString();
+}
+
+/**
+ * One API call. Returns the parsed body, or throws an Error carrying `notEnabled`
+ * so the caller can tell "switched off" from "broken" — see classify() below.
+ *
+ * @param {Function} [fetchImpl] injected in tests; defaults to global fetch
+ */
+async function call(path, params, fetchImpl = fetch) {
+  const res = await fetchImpl(`${API_BASE}${path}?${qs(params)}`, {
+    headers: { Authorization: `Bearer ${process.env.VERCEL_API_TOKEN}` },
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+
+  if (!res.ok) {
+    let code = '';
+    let message = '';
+    try {
+      const body = await res.json();
+      code = body?.error?.code || '';
+      message = body?.error?.message || '';
+    } catch { /* a non-JSON error body is still an error */ }
+
+    // The observed response for a project that has never had Web Analytics
+    // enabled is 404 {"error":{"code":"not_found","message":"Web Analytics not
+    // found."}} — NOT an empty dataset. Reporting that as "0 visitors" would be
+    // the worst possible lie: it reads as "nobody came" when it means "we never
+    // started counting".
+    const err = new Error(message || `HTTP ${res.status}`);
+    err.notEnabled = res.status === 404 && code === 'not_found';
+    err.status = res.status;
+    throw err;
+  }
+
+  return res.json();
+}
+
+function dayString(d) {
+  return new Date(d).toISOString().slice(0, 10);
+}
+
+/**
+ * Traffic for the last `days` days.
+ *
+ * Never throws and never invents a number. Every outcome is named, because the
+ * whole point of this reader is that the founder can tell them apart:
+ *   { configured: false }                     — no token set; nothing to say
+ *   { configured: true, enabled: false }      — installed but never switched on
+ *   { configured: true, enabled: true, ... }  — real figures
+ *   { configured: true, error }                — the call failed; say so
+ */
+async function getTraffic({ days = 14, fetchImpl = fetch } = {}) {
+  if (!isConfigured()) return { configured: false };
+
+  const until = new Date();
+  const since = new Date(until.getTime() - days * 24 * 60 * 60 * 1000);
+  const range = { since: dayString(since), until: dayString(until) };
+
+  try {
+    const [count, paths, referrers, devices] = await Promise.all([
+      call('/visits/count', range, fetchImpl),
+      call('/visits/aggregate', { ...range, by: 'requestPath', limit: 10 }, fetchImpl),
+      call('/visits/aggregate', { ...range, by: 'referrerHostname', limit: 10 }, fetchImpl),
+      call('/visits/aggregate', { ...range, by: 'deviceType', limit: 5 }, fetchImpl),
+    ]);
+
+    const rows = (res, key) => (Array.isArray(res?.data) ? res.data : [])
+      .map(r => ({ label: String(r?.[key] ?? r?.value ?? ''), count: Number(r?.count) || 0, visitors: Number(r?.visitors) || 0 }))
+      .filter(r => r.label);
+
+    return {
+      configured: true,
+      enabled: true,
+      days,
+      pageviews: Number(count?.data?.pageviews) || 0,
+      visitors: Number(count?.data?.visitors) || 0,
+      topPaths: rows(paths, 'requestPath'),
+      topReferrers: rows(referrers, 'referrerHostname'),
+      devices: rows(devices, 'deviceType'),
+    };
+  } catch (err) {
+    if (err.notEnabled) {
+      return {
+        configured: true,
+        enabled: false,
+        detail: 'Web Analytics has never been enabled for this Vercel project, so nothing has been recorded.',
+        fix: 'Vercel dashboard → the silkilinen project → Analytics → Enable. The storefront already sends the events; only the switch is missing.',
+      };
+    }
+    return { configured: true, error: err.message };
+  }
+}
+
+/**
+ * Cached wrapper — the dashboard, health panel and advisor all want this and
+ * must not each spend an API round trip. Keeps a STALE cache when the provider
+ * fails (the rates service learned this lesson the hard way) and backs off so a
+ * failing API cannot add six seconds to every admin page load.
+ */
+async function getTrafficCached(opts = {}) {
+  const now = Date.now();
+  if (cache.data && now - cache.at < TTL_MS) return cache.data;
+  if (now - lastAttemptAt < RETRY_MS && cache.data) return cache.data;
+
+  lastAttemptAt = now;
+  const data = await getTraffic(opts);
+  // Only cache an answer worth repeating. An error is not worth serving for
+  // 15 minutes; "not enabled" is, since it cannot change without a human.
+  if (!data.error) cache = { data, at: now };
+  return data;
+}
+
+function _resetCache() {
+  cache = { data: null, at: 0 };
+  lastAttemptAt = 0;
+}
+
+module.exports = { isConfigured, getTraffic, getTrafficCached, _resetCache };
