@@ -72,15 +72,23 @@ describe('vercel analytics reader', () => {
     expect(out.devices).toHaveLength(2);
   });
 
-  it('reports "never enabled" as its own state, NOT as zero traffic', async () => {
+  // Observed live: the Vercel dashboard showed 7 visitors and 23 page views for
+  // this project while this exact call 404'd, on a Hobby plan. The first version
+  // of this file called that "never enabled" and sent the founder to switch on
+  // something already running — the exact failure this service exists to prevent.
+  it('reports a 404 as UNREADABLE, never as "not enabled" or zero traffic', async () => {
     const out = await getTraffic({ fetchImpl: router({
       count: notFound, paths: notFound, referrers: notFound, devices: notFound,
     }) });
-    expect(out).toMatchObject({ configured: true, enabled: false });
-    // The dangerous confusion: a zero that reads as "nobody came".
+    expect(out).toMatchObject({ configured: true, readable: false });
+    // Must NOT claim anything about whether collection is switched on.
+    expect(out.enabled).toBeUndefined();
+    // And must never imply an empty shop.
     expect(out.visitors).toBeUndefined();
     expect(out.pageviews).toBeUndefined();
-    expect(out.fix).toMatch(/Analytics/);
+    // The advice has to allow for the dashboard being full of data.
+    expect(out.detail).toMatch(/cannot READ/);
+    expect(out.fix).toMatch(/If the dashboard has data/);
   });
 
   it('reports a genuine failure as an error, not as "not enabled"', async () => {

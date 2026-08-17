@@ -40,10 +40,12 @@ function trafficRec(traffic) {
       'Open Health → "Visitor counts agree" for the check, then verify /api/track/visit is reachable from the storefront and that lib/track.ts is not throwing.');
   }
   // With Vercel also at zero this is corroborated; with Vercel unread it is a
-  // single unverifiable source, and the advice says which.
+  // single unverifiable source, and the advice says which. "Unread" covers a
+  // missing token AND a token that cannot reach the API — we must not tell the
+  // founder to enable something that may already be running.
   const corroborated = traffic?.enabled
     ? ' Vercel Analytics counted none either, so this is real and not a tracking fault.'
-    : ' Only our own tracker says so — enable Vercel Analytics for a second opinion before trusting it.';
+    : ' Only our own tracker says so — a second opinion from Vercel Analytics would confirm it, but we cannot read that from here.';
   return rec('high', 'Demand', 'No visitors in the last 14 days',
     `Nothing below this matters until someone arrives: meta descriptions, reviews and photography cannot convert an empty room.${corroborated}`,
     'Pick ONE channel and give it a fortnight — Instagram to an existing audience, or the Journal plus Search Console for search. Both are already wired up; the shop is waiting on distribution, not features.');

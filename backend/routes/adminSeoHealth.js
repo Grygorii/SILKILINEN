@@ -327,11 +327,11 @@ async function checkAnalyticsAgreement() {
       advice: 'Set VERCEL_API_TOKEN + VERCEL_PROJECT_ID in Railway (see backend/.env.example). Until then the funnel has a single, unverifiable source.',
     };
   }
-  if (traffic.enabled === false) {
+  if (traffic.readable === false) {
     return {
       ...base,
-      status: 'warning',
-      detail: 'Vercel Analytics has never been enabled for the project — it has recorded nothing',
+      status: 'info',
+      detail: 'Vercel Analytics cannot be read with this token, so our visitor count has nothing to be checked against',
       advice: traffic.fix,
     };
   }

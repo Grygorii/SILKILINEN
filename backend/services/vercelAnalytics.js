@@ -64,13 +64,18 @@ async function call(path, params, fetchImpl = fetch) {
       message = body?.error?.message || '';
     } catch { /* a non-JSON error body is still an error */ }
 
-    // The observed response for a project that has never had Web Analytics
-    // enabled is 404 {"error":{"code":"not_found","message":"Web Analytics not
-    // found."}} — NOT an empty dataset. Reporting that as "0 visitors" would be
-    // the worst possible lie: it reads as "nobody came" when it means "we never
-    // started counting".
+    // 404 {"error":{"code":"not_found","message":"Web Analytics not found."}}
+    // means this token cannot READ the analytics — it does NOT mean the project
+    // has none. Observed live: the Vercel dashboard showed 7 visitors and 23
+    // page views for this project while this exact call 404'd, on a Hobby plan.
+    // The first version of this file asserted "never been enabled" and sent the
+    // founder to switch on something already running — the precise failure this
+    // service exists to prevent, committed by the service itself.
+    //
+    // Whatever the cause (plan-gated API access being the likeliest), the honest
+    // statement is the same: we cannot read it from here. Never "0 visitors".
     const err = new Error(message || `HTTP ${res.status}`);
-    err.notEnabled = res.status === 404 && code === 'not_found';
+    err.unreadable = res.status === 404 && code === 'not_found';
     err.status = res.status;
     throw err;
   }
@@ -122,12 +127,15 @@ async function getTraffic({ days = 14, fetchImpl = fetch } = {}) {
       devices: rows(devices, 'deviceType'),
     };
   } catch (err) {
-    if (err.notEnabled) {
+    if (err.unreadable) {
       return {
         configured: true,
-        enabled: false,
-        detail: 'Web Analytics has never been enabled for this Vercel project, so nothing has been recorded.',
-        fix: 'Vercel dashboard → the silkilinen project → Analytics → Enable. The storefront already sends the events; only the switch is missing.',
+        // Deliberately NOT `enabled: false`. We know nothing about whether it is
+        // enabled — only that this token cannot read it. The dashboard may be
+        // full of data, and it was when this was last checked.
+        readable: false,
+        detail: 'Vercel returned "Web Analytics not found" for this token. That means we cannot READ the figures — not that none exist; the Vercel dashboard may well be showing traffic.',
+        fix: 'Check Vercel → the silkilinen project → Analytics. If the dashboard has data, this is API access rather than collection — the Web Analytics API is not available on every plan. If the dashboard is empty too, enable it there; the storefront already sends the events.',
       };
     }
     return { configured: true, error: err.message };
