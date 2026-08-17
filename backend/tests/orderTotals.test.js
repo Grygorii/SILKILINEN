@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import pkg from '../services/orderTotals.js';
 import shippingPkg from '../services/shipping.js';
+import checkoutPkg from '../routes/checkoutV2.js';
 
 // The most consequential arithmetic in the shop: these are the numbers a customer
 // is shown at /quote and then charged at /create-intent. It had NO tests, because
@@ -12,6 +13,7 @@ import shippingPkg from '../services/shipping.js';
 // could drift from the totals charged. Both now call this.
 const { computeTotals } = pkg;
 const { calculateShipping } = shippingPkg;
+const { bestCollectionDiscount } = checkoutPkg;
 
 // Read the real threshold rather than hardcoding 150: services/shipping.js is the
 // ONE source for rates, and a test that repeats the number is a second source.
@@ -107,5 +109,38 @@ describe('order totals', () => {
     const copy = { ...args };
     computeTotals(args);
     expect(args).toEqual(copy);
+  });
+});
+
+// The rule that picks WHICH sale a product gets. It used to run a
+// Collection.find() per cart line, awaited inside the item loop, so it could not
+// be tested without a database and cost one round trip per basket item on the two
+// endpoints in front of "Continue to payment". Now pure, given a preloaded map.
+describe('best collection discount', () => {
+  const map = new Map([['a', 10], ['b', 25], ['c', 0]]);
+
+  it('gives the customer the biggest sale when a product sits in several', () => {
+    expect(bestCollectionDiscount(['a', 'b'], map)).toBe(25);
+    expect(bestCollectionDiscount(['b', 'a'], map)).toBe(25); // order must not matter
+  });
+
+  it('ignores collections that are not on sale or not loaded', () => {
+    // The map holds only ACTIVE, discounted collections, so an id that is missing
+    // is an archived or full-price collection and must contribute nothing.
+    expect(bestCollectionDiscount(['c'], map)).toBe(0);
+    expect(bestCollectionDiscount(['unknown'], map)).toBe(0);
+    expect(bestCollectionDiscount(['unknown', 'a'], map)).toBe(10);
+  });
+
+  it('returns 0 for a product in no collections', () => {
+    expect(bestCollectionDiscount([], map)).toBe(0);
+    expect(bestCollectionDiscount(undefined, map)).toBe(0);
+    expect(bestCollectionDiscount(null, map)).toBe(0);
+  });
+
+  it('matches ObjectId values by string, not identity', () => {
+    // product.collections holds ObjectIds; the map is keyed by String(_id).
+    const oid = { toString: () => 'b' };
+    expect(bestCollectionDiscount([oid], map)).toBe(25);
   });
 });

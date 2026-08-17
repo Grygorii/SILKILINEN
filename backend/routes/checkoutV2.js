@@ -13,13 +13,25 @@ const Bundle = require('../models/Bundle');
 const Collection = require('../models/Collection');
 const { normalise: normaliseCurrency, getRates, SUPPORTED: CURRENCIES } = require('../services/exchangeRates');
 
-// The biggest active collection-discount % a product qualifies for (a product can
-// sit in several collections; the customer gets the best). 0 if none.
-async function activeCollectionDiscount(collectionIds) {
+// Every active collection that is on sale, as id -> discountPercent.
+//
+// Loaded ONCE per priced order. This used to be a Collection.find() per cart
+// LINE, awaited inside the item loop — a five-item basket meant five sequential
+// round trips, on the two endpoints that sit directly in front of the customer's
+// "Continue to payment". A boutique has a handful of collections, so fetching all
+// the discounted ones costs one query regardless of basket size.
+async function discountedCollectionMap() {
+  const cols = await Collection.find({ status: 'active', discountPercent: { $gt: 0 } })
+    .select('_id discountPercent').lean().catch(() => []);
+  return new Map(cols.map(c => [String(c._id), c.discountPercent || 0]));
+}
+
+// The biggest discount a product qualifies for (a product can sit in several
+// collections; the customer gets the best). 0 if none. Pure, so the rule that
+// picks the best sale is testable without a database.
+function bestCollectionDiscount(collectionIds, pctById) {
   if (!Array.isArray(collectionIds) || collectionIds.length === 0) return 0;
-  const cols = await Collection.find({ _id: { $in: collectionIds }, status: 'active', discountPercent: { $gt: 0 } })
-    .select('discountPercent').lean().catch(() => []);
-  return cols.reduce((max, c) => Math.max(max, c.discountPercent || 0), 0);
+  return collectionIds.reduce((max, id) => Math.max(max, pctById.get(String(id)) || 0), 0);
 }
 
 // Stripe caps each metadata VALUE at 500 chars. The order line-items are
@@ -199,6 +211,8 @@ async function priceOrder(body) {
     // tampered cart can't underpay.
     const validatedItems = [];
     let collectionDiscountAmount = 0; // order-level sale from any discounted collections
+    // One query for the whole basket, before the loop — see discountedCollectionMap.
+    const saleByCollection = await discountedCollectionMap();
     for (const item of sourceItems) {
       // Quantity is the one client value we act on — guard it before it reaches
       // any price arithmetic. A negative/fractional/huge qty would otherwise
@@ -267,7 +281,7 @@ async function priceOrder(body) {
         });
         // Tally any collection-wide sale as an ORDER-LEVEL discount (line items
         // stay at full price, so order records remain consistent).
-        const colPct = await activeCollectionDiscount(product.collections);
+        const colPct = bestCollectionDiscount(product.collections, saleByCollection);
         if (colPct > 0) collectionDiscountAmount += product.price * quantity * (colPct / 100);
       }
     }
@@ -873,4 +887,7 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
   res.json({ received: true });
 });
 
-module.exports = { checkoutRouter, webhookRouter };
+// bestCollectionDiscount is exported for tests only: it decides which sale a
+// product gets, which is money, and it was previously unreachable from a test
+// because it did its own database call.
+module.exports = { checkoutRouter, webhookRouter, bestCollectionDiscount };
