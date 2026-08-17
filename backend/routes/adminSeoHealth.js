@@ -350,7 +350,13 @@ async function checkAnalyticsAgreement({ force = false } = {}) {
   // every id in one array and is capped by the 16MB BSON limit — fine today,
   // broken silently at scale, and the exact reason funnel.js counts with a
   // $group/$count aggregation instead.
-  const funnel = await require('../services/funnel').getFunnel(DAYS).catch(() => null);
+  // Two windows: the comparison window, and a short recent one so a fix that
+  // has started working is visible today rather than in a fortnight.
+  const RECENT_DAYS = 2;
+  const [funnel, recentFunnel] = await Promise.all([
+    require('../services/funnel').getFunnel(DAYS).catch(() => null),
+    require('../services/funnel').getFunnel(RECENT_DAYS).catch(() => null),
+  ]);
   if (!funnel) {
     return { ...base, status: 'info', detail: 'Could not read our own visitor count to compare against' };
   }
@@ -358,7 +364,16 @@ async function checkAnalyticsAgreement({ force = false } = {}) {
 
   // What the gap MEANS is the service's call, and pinned by tests — the
   // thresholds are a judgement, not a detail.
-  return { ...base, ...agreementVerdict({ ours, theirs: traffic.visitors, days: DAYS }) };
+  return {
+    ...base,
+    ...agreementVerdict({
+      ours,
+      theirs: traffic.visitors,
+      days: DAYS,
+      recentOurs: recentFunnel?.stages?.[0]?.count ?? null,
+      recentDays: RECENT_DAYS,
+    }),
+  };
 }
 
 async function runChecks({ force = false } = {}) {

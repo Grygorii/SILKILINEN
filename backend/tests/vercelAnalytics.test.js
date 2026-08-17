@@ -196,3 +196,29 @@ describe('tracker agreement verdict', () => {
     expect(v(25, 100).status).toBe('warning');
   });
 });
+
+// A tracking fix cannot retro-fill history, so with a 14-day window the moment
+// after fixing the beacon looks identical to never having fixed it. Leaving it
+// CRITICAL for a fortnight trains the founder to ignore the guard that just
+// caught a real bug.
+describe('recovery after a tracking fix', () => {
+  const { agreementVerdict } = pkg;
+
+  it('downgrades to a warning once recording has resumed', () => {
+    const out = agreementVerdict({ ours: 0, theirs: 8, days: 14, recentOurs: 3, recentDays: 2 });
+    expect(out.status).toBe('warning');
+    expect(out.detail).toMatch(/Recording has resumed/);
+    expect(out.advice).toMatch(/history, not a live fault/);
+  });
+
+  it('stays critical while nothing is being recorded now', () => {
+    for (const recent of [0, null, undefined]) {
+      const out = agreementVerdict({ ours: 0, theirs: 8, days: 14, recentOurs: recent });
+      expect(out.status).toBe('critical');
+    }
+  });
+
+  it('does not fire when the full window already agrees', () => {
+    expect(agreementVerdict({ ours: 90, theirs: 100, days: 14, recentOurs: 5 }).status).toBe('healthy');
+  });
+});

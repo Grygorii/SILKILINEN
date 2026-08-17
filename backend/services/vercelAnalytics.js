@@ -185,7 +185,20 @@ const AGREEMENT = {
  * @param {number} theirs visitors Vercel recorded over the same window
  * @returns {{status: string, detail: string, advice?: string}}
  */
-function agreementVerdict({ ours, theirs, days }) {
+function agreementVerdict({ ours, theirs, days, recentOurs = null, recentDays = 2 }) {
+  // A tracking fix cannot retro-fill history. With a 14-day window, the moment
+  // after fixing the beacon looks identical to never having fixed it, and the
+  // check stays CRITICAL for a fortnight — which trains the founder to ignore
+  // the one guard that just caught a real bug. A short recent window is how
+  // recovery becomes visible on the same day it happens.
+  if (ours === 0 && theirs > 0 && Number(recentOurs) > 0) {
+    return {
+      status: 'warning',
+      detail: `Recording has resumed: ${recentOurs} visitor${recentOurs === 1 ? '' : 's'} in the last ${recentDays} days, but none across the full ${days} while Vercel counted ${theirs}`,
+      advice: `The gap is history, not a live fault — this window still holds the days before tracking was fixed, and it cannot be back-filled. It clears on its own as the ${days}-day window rolls forward. If it returns to zero for a day, that is a real fault again.`,
+    };
+  }
+
   if (ours === 0 && theirs === 0) {
     return {
       status: 'info',
