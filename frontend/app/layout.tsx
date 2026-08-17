@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import AnalyticsLoader from "@/components/AnalyticsLoader";
-import { Analytics } from "@vercel/analytics/next";
+import VercelAnalytics from "@/components/VercelAnalytics";
 import EventTracker from "@/components/EventTracker";
 import UTMCapture from "@/components/UTMCapture";
 import GoogleAuthProvider from "@/components/GoogleAuthProvider";
@@ -256,8 +256,11 @@ export default async function RootLayout({
 
                         It also fills the gap the funnel work left: the panel
                         can say where visitors drop, but nothing was recording
-                        how many arrived or where from. */}
-                    <Analytics />
+                        how many arrived or where from.
+
+                        Wrapped so admin traffic is dropped before it is sent —
+                        see components/VercelAnalytics. */}
+                    <VercelAnalytics />
                     <AnalyticsLoader />
                     <EventTracker />
                     <UTMCapture />
