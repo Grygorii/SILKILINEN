@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import styles from './page.module.css';
 import Image from 'next/image';
-import PageTracker from '@/components/PageTracker';
 import ReviewsCarousel, { type ReviewData } from '@/components/ReviewsCarousel';
 import NewArrivals from '@/components/NewArrivals';
 import StyleFinderBand from '@/components/StyleFinderBand';
@@ -171,7 +170,6 @@ export default async function Home() {
       <NewsletterBand />
 
       <InstagramGrid />
-      <PageTracker page="home" />
     </main>
   );
 }

@@ -201,7 +201,7 @@ function agreementVerdict({ ours, theirs, days }) {
     return {
       status: 'critical',
       detail: `Vercel counted ${theirs} visitors in ${days} days and our own tracker counted none`,
-      advice: 'Our beacon is broken, not the shop. The funnel, the advisor and every agent read OUR number, so they are all currently reporting an empty shop. Check /api/track/visit is reachable from the storefront and that lib/track.ts is not throwing.',
+      advice: 'Our beacon is under-counting, not the shop. The funnel, the advisor and every agent read OUR number, so they are all describing less traffic than exists. First check that every storefront route is actually tracked — this fired once because the visit beacon was mounted on only two pages and /shop recorded nothing. Then check /api/track/visit is reachable and that lib/track.ts is not throwing.',
     };
   }
 

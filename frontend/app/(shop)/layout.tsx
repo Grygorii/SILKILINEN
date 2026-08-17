@@ -9,6 +9,7 @@ import MetaPixel from "@/components/MetaPixel";
 import PinterestTag from "@/components/PinterestTag";
 import SiteBreadcrumbs from "@/components/SiteBreadcrumbs";
 import UKShippingNotice from "@/components/UKShippingNotice";
+import RouteTracker from "@/components/RouteTracker";
 import { InlineEditProvider } from "@/components/inline/InlineEdit";
 import { getBannerMessages } from "@/lib/bannerMessages";
 
@@ -21,6 +22,9 @@ export default async function ShopLayout({
 
   return (
     <InlineEditProvider>
+      {/* Every storefront route is recorded, rather than only the two pages
+          someone remembered to add a tracker to. */}
+      <RouteTracker />
       <SiteHeader messages={messages} />
       <div className="shopContent" data-bar={messages && messages.length > 0 ? 'on' : 'off'}>
         <SiteBreadcrumbs />

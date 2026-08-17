@@ -162,7 +162,8 @@ describe('tracker agreement verdict', () => {
     const out = v(0, 40);
     expect(out.status).toBe('critical');
     // Must name the consequence, not just the discrepancy.
-    expect(out.advice).toMatch(/empty shop/);
+    // Names the cause that actually bit: routes with no tracker mounted.
+    expect(out.advice).toMatch(/every storefront route is actually tracked/);
   });
 
   it('reports two zeroes as agreement on nothing, never as a fault', () => {
