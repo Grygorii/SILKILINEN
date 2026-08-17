@@ -154,6 +154,45 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   `models/StockNotification` + `routes/stockNotify.js` + `services/stockNotify.js`
   (hourly sweep, claims the row BEFORE sending). Checkout email persists on BLUR, not at
   submit, or cart recovery can only reach people who already paid.
+- **Product search:** `backend/utils/productSearch.js` — `buildSearchFilter(q)` is the ONE
+  rule (fields, escaping, word handling), called by `routes/products.js` and imported by
+  `tests/productSearch.test.js` (it used to mirror a copy, which is how the bug below
+  survived a test file whose stated job was pinning it). EVERY WORD must match but each
+  may match a DIFFERENT field: the old filter regexed the whole phrase per field, so
+  "sky blue robe" returned an empty page for a robe whose `colorName` is Sky Blue — and
+  that empty page then reached the advisor as unmet demand. Blank/whitespace `q` returns
+  `null` (Mongo rejects `{$and:[]}`); a single word behaves as before.
+- **Unmet demand is re-verified:** `clickstream.js` re-runs every recorded zero-result
+  search against the live catalogue with `buildSearchFilter`, splitting `unmetSearches`
+  (found nothing then AND now — real gaps) from `nowFindable` (failed then, works now).
+  Without it the advisor recommends stocking products already on the shelf, because a
+  logged miss outlives whatever caused it. `nowFindable` is Conversion, not Demand — sales
+  lost to the search box, nothing to stock — and the agent brief says so explicitly, since
+  an LLM handed "searched but found nothing" will recommend buying stock every time.
+- **Analytics exclusion:** `frontend/lib/analyticsExclude.ts` — `isExcludedFromAnalytics(
+  pathname, search)` is the ONE rule for what is the founder working rather than a
+  customer shopping, read by BOTH trackers (`lib/track.ts` and `components/
+  VercelAnalytics.tsx`). They had drifted: Vercel dropped the preview surfaces and our own
+  beacon did not, so founder previews polluted the clickstream that feeds the funnel and
+  advisor. Covers `/admin`, `/journal/preview`, `/preview/`, and **`?edit=1`** (InlineEdit
+  turns the real storefront into a work surface — the path looks like shopping). Strips a
+  leading locale, reading `LOCALES`, so `/de/...` can't reopen the hole.
+- **Two visitor counts, one guard:** `backend/services/vercelAnalytics.js` reads Vercel Web
+  Analytics (`/v1/query/web-analytics/...`, env-gated on `VERCEL_API_TOKEN` +
+  `VERCEL_PROJECT_ID`, cached 15min, stale-on-failure, error NOT cached). Route
+  `/api/admin/vercel-analytics`. It names four states and never collapses them —
+  unconfigured / `enabled:false` / figures / error — because "Web Analytics was never
+  switched on" returning `0 visitors` reads as a dead shop. ⚠️ **Web Analytics is not
+  enabled on the Vercel project** (API 404s `not_found`), so it has recorded nothing.
+  `agreementVerdict()` compares it with our own `Visit` count (thresholds `AGREEMENT`,
+  `MIN_SAMPLE` 20): ours silent while Vercel sees people is CRITICAL, since the funnel,
+  advisor and every agent read ours. Surfaced as the `analytics_agreement` health check.
+- **"Nobody is visiting" is a recommendation:** `advisor.js` `trafficRec(traffic)` — with
+  no traffic every other item is polish, so the list used to lead with meta descriptions
+  for a shop nobody had opened. Vercel's independent count decides between "no visitors"
+  (Demand — pick one channel) and "no visitor TRACKING" (Fixes — never mentions channels,
+  asserted by test, since sending the founder to buy distribution for traffic they already
+  have is the worse error).
 - **Funnel self-check:** `findBlindSpots()` flags a stage whose event has NEVER been
   recorded while the previous stage has traffic — an uninstrumented stage is
   indistinguishable from "nobody got there", and both `search` and `add_to_cart`'s
@@ -194,9 +233,20 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   three times. Deliberately conservative: silent on garments with no entry, on ones that
   fit two categories, on a product with no category, and — via `knownSlugs` — on a move
   into a category the shop no longer has. Ambiguous garment words (`shirt`, `shorts`) are
-  absent on purpose. Live slugs are the SIX consolidated ones (`robes`/`sleepwear`/
-  `lingerie`/`lounge`/`home`/`scarves`); `config/categories.js` still lists the nine
-  pre-merge slugs and its first entry is `Product.category`'s default.
+  absent on purpose. Acted on by `scripts/refileCategories.js` (plan file → edit →
+  `--apply`, same discipline as `renameProducts.js`); it re-reads live categories on apply
+  and skips a row whose product was refiled by hand in between. Slugs are NOT touched —
+  category isn't in the product URL, so refiling costs no ranking and needs no redirect.
+- **Canonical categories:** `config/categories.js` lists the SIX consolidated slugs
+  (`robes`/`sleepwear`/`lingerie`/`lounge`/`home`/`scarves`) — it had kept the nine
+  pre-merge ones, so `migrateCategories.js` called live categories non-canonical and
+  merged-away ones canonical. `Product.category`'s default is the NAMED `DEFAULT_CATEGORY`,
+  never `SLUGS[0]`: a positional default meant reordering the list for display silently
+  changed the category of every product created afterwards, in three customer-facing places
+  at once. Retired slugs are deliberately absent — they 301 via `RETIRED_CATEGORIES` in the
+  shop route. `tests/categoryConfig.test.js` guards it, including that every category
+  `GARMENT_CATEGORY` targets actually exists (a merge landing on one side only is what
+  broke it). Still open: whether a product should default to a category at all.
 - **GDPR erasure:** `DELETE /api/admin/customers/:id/gdpr` must purge every store holding
   the address — Customer (anonymise), Cart (blank + unsubscribe), Newsletter and
   StockNotification (delete). Orders are RETAINED (financial record). Miss one and cart
