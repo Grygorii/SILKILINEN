@@ -21,6 +21,33 @@ const { isConfigured: merchantConfigured } = require('./merchantCenter');
 const DAY = 24 * 60 * 60 * 1000;
 const rec = (priority, category, title, why, action) => ({ priority, category, title, why, action });
 
+/**
+ * What to say when OUR tracker recorded nobody in the window.
+ *
+ * "No visitors" and "no visitor TRACKING" demand opposite actions and look
+ * identical from our side alone, so Vercel's independent count decides which one
+ * this is. Telling the founder to go and find traffic they already have is the
+ * worse of the two errors: it sends them spending on distribution to fix a
+ * JavaScript fault.
+ *
+ * @param {object} traffic a reading from services/vercelAnalytics.getTraffic
+ */
+function trafficRec(traffic) {
+  if (traffic?.enabled && traffic.visitors > 0) {
+    return rec('high', 'Fixes', `Vercel counted ${traffic.visitors} visitors and our own tracker counted none`,
+      'People are arriving; we are failing to record them. The funnel, this list and every agent read OUR count, so they are all describing an empty shop — and any conversion work would be aimed at numbers that are not real.',
+      'Open Health → "Visitor counts agree" for the check, then verify /api/track/visit is reachable from the storefront and that lib/track.ts is not throwing.');
+  }
+  // With Vercel also at zero this is corroborated; with Vercel unread it is a
+  // single unverifiable source, and the advice says which.
+  const corroborated = traffic?.enabled
+    ? ' Vercel Analytics counted none either, so this is real and not a tracking fault.'
+    : ' Only our own tracker says so — enable Vercel Analytics for a second opinion before trusting it.';
+  return rec('high', 'Demand', 'No visitors in the last 14 days',
+    `Nothing below this matters until someone arrives: meta descriptions, reviews and photography cannot convert an empty room.${corroborated}`,
+    'Pick ONE channel and give it a fortnight — Instagram to an existing audience, or the Journal plus Search Console for search. Both are already wired up; the shop is waiting on distribution, not features.');
+}
+
 async function buildRecommendations() {
   const recs = [];
 
@@ -170,6 +197,22 @@ async function buildRecommendations() {
   // in services/funnel.js; if the gates withheld it, nothing is added — an
   // advisor that invents urgency from four sessions trains you to ignore it.
   const funnel = await require('./funnel').getFunnel(14).catch(() => null);
+
+  // ── Is anybody actually arriving? ──
+  // The advisor had no answer to the first question a shop with no sales should
+  // ask. With no traffic, every other item on this list is polish: better meta
+  // descriptions and more reviews cannot sell to nobody, but they LOOK like
+  // progress, and the list would happily lead with them for months.
+  //
+  // Two counts are consulted, because "no visitors" and "no visitor TRACKING"
+  // demand opposite actions and look identical from our side alone — telling the
+  // founder to go find traffic they already have is the worse of the two errors.
+  if (!funnel?.hasData) {
+    const traffic = await require('./vercelAnalytics').getTrafficCached({ days: 14 })
+      .catch(() => ({ configured: false }));
+    recs.push(trafficRec(traffic));
+  }
+
   if (funnel?.hasData) {
     const shift = funnel.biggestShift;
     if (shift && shift.direction === 'down') {
@@ -245,4 +288,4 @@ async function buildRecommendations() {
   return recs;
 }
 
-module.exports = { buildRecommendations };
+module.exports = { buildRecommendations, trafficRec };

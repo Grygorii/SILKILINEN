@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import advisorPkg from '../services/advisor.js';
 
 // Mirrors the sort in services/advisor.js. Ranking is the whole value of the
 // list: sixteen items sorted only by priority is still a list nobody works
@@ -45,5 +46,43 @@ describe('advisor ranking', () => {
       r('medium', 'Conversion', 'c1'), r('high', 'Conversion', 'c2'),
     ];
     expect(rank(recs).slice(0, 3).map(x => x.title)).toEqual(['d1', 'c2', 'f1']);
+  });
+});
+
+// The traffic verdict decides between two opposite actions from one symptom
+// (our tracker saw nobody), so it is pinned here rather than left to a harness.
+describe('traffic recommendation', () => {
+  const { trafficRec } = advisorPkg;
+
+  it('blames the tracker, not the shop, when Vercel saw people', () => {
+    const r = trafficRec({ configured: true, enabled: true, visitors: 143 });
+    expect(r.priority).toBe('high');
+    expect(r.title).toMatch(/143 visitors/);
+    // Must NOT send the founder off to find traffic they already have.
+    expect(r.action).not.toMatch(/Instagram|channel/);
+    expect(r.action).toMatch(/track\/visit/);
+  });
+
+  it('calls it a real traffic problem when Vercel agrees there was nobody', () => {
+    const r = trafficRec({ configured: true, enabled: true, visitors: 0 });
+    expect(r.category).toBe('Demand');
+    expect(r.why).toMatch(/not a tracking fault/);
+    expect(r.action).toMatch(/ONE channel/);
+  });
+
+  it('flags the single unverified source when Vercel cannot be read', () => {
+    for (const t of [{ configured: false }, { configured: true, enabled: false }, undefined]) {
+      const r = trafficRec(t);
+      expect(r.category).toBe('Demand');
+      expect(r.why).toMatch(/second opinion/);
+    }
+  });
+
+  it('ranks ahead of housekeeping — an empty room outranks meta descriptions', () => {
+    const out = rank([
+      r('medium', 'SEO', 'meta'),
+      trafficRec({ configured: true, enabled: true, visitors: 0 }),
+    ]);
+    expect(out[0].title).toMatch(/No visitors/);
   });
 });
