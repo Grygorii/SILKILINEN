@@ -186,6 +186,17 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   sentence case, no brand prefix. The admin form calls `/api/admin/products/name-check`
   (never blocks, just suggests); `scripts/renameProducts.js` writes a plan file you edit
   before `--apply`, and re-cuts the slug in the same pass (`previousSlugs` 301s the old URL).
+- **Category fit:** `backend/utils/categoryFit.js` — `misfiledCategory(name, category,
+  knownSlugs)` is the ONE garment→category rule, called by `advisor.js` and pinned by
+  `tests/categoryFit.test.js` (which imports it — it used to define its own copy, so it
+  passed while no such rule existed in production at all). A category is repeated in the
+  breadcrumb, the shop filter and the feed's `product_type`, so one wrong value is wrong
+  three times. Deliberately conservative: silent on garments with no entry, on ones that
+  fit two categories, on a product with no category, and — via `knownSlugs` — on a move
+  into a category the shop no longer has. Ambiguous garment words (`shirt`, `shorts`) are
+  absent on purpose. Live slugs are the SIX consolidated ones (`robes`/`sleepwear`/
+  `lingerie`/`lounge`/`home`/`scarves`); `config/categories.js` still lists the nine
+  pre-merge slugs and its first entry is `Product.category`'s default.
 - **GDPR erasure:** `DELETE /api/admin/customers/:id/gdpr` must purge every store holding
   the address — Customer (anonymise), Cart (blank + unsubscribe), Newsletter and
   StockNotification (delete). Orders are RETAINED (financial record). Miss one and cart

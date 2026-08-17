@@ -1,24 +1,17 @@
 import { describe, it, expect } from 'vitest';
+import pkg from '../utils/categoryFit.js';
 
-// Mirrors the misfiled-category rule in services/advisor.js. The category is
-// repeated in three customer-facing places — the breadcrumb, the shop filter
-// and g:product_type in the Shopping feed — so one wrong value is wrong three
-// times, confidently. The rule must be conservative: a false flag sends the
-// founder to "fix" something already correct.
-const GARMENT_CATEGORY = {
-  nightshirt: ['sleepwear'], pyjama: ['sleepwear'], 'slip dress': ['sleepwear', 'lingerie'],
-  robe: ['robes'], kimono: ['robes'],
-  brief: ['lingerie'], knicker: ['lingerie'], bikini: ['lingerie'],
-  pillowcase: ['home'], eyemask: ['home'], 'eye mask': ['home'],
-  scarf: ['scarves'],
-};
-function misfiled(name, category) {
-  const n = String(name).toLowerCase();
-  const c = String(category).toLowerCase();
-  if (!c) return false;
-  const hit = Object.entries(GARMENT_CATEGORY).find(([w]) => n.includes(w));
-  return Boolean(hit && !hit[1].includes(c));
-}
+// Pins the REAL rule from utils/categoryFit.js, the one services/advisor.js
+// calls — not a copy of it. This file used to define its own private version of
+// `misfiled`, so it passed while no such rule existed in production at all.
+//
+// The category is repeated in three customer-facing places — the breadcrumb, the
+// shop filter and g:product_type in the Shopping feed — so one wrong value is
+// wrong three times, confidently. The rule must be conservative: a false flag
+// sends the founder to "fix" something already correct.
+const { misfiledCategory } = pkg;
+
+const misfiled = (name, category, known) => Boolean(misfiledCategory(name, category, known));
 
 describe('misfiled category detection', () => {
   it('flags the real case: a nightshirt in Loungewear', () => {
@@ -45,5 +38,27 @@ describe('misfiled category detection', () => {
 
   it('never flags a product with no category rather than guessing', () => {
     expect(misfiled('Silk nightshirt in Copper', '')).toBe(false);
+    expect(misfiled('Silk nightshirt in Copper', undefined)).toBe(false);
+  });
+
+  it('names where the product should go, so the advice is actionable', () => {
+    expect(misfiledCategory('Silk nightshirt in Sunset Copper', 'lounge'))
+      .toEqual({ garment: 'nightshirt', expected: ['sleepwear'] });
+  });
+
+  it('stays quiet when the category it would suggest does not exist', () => {
+    // The nine original categories were merged into six once already. Advising a
+    // move to "sleepwear" in a shop that has no sleepwear is unfollowable.
+    const known = ['robes', 'lingerie', 'lounge', 'home', 'scarves'];
+    expect(misfiled('Silk nightshirt in Sunset Copper', 'lounge', known)).toBe(false);
+    // …but still flags it once the target is live.
+    expect(misfiled('Silk nightshirt in Sunset Copper', 'lounge', [...known, 'sleepwear'])).toBe(true);
+  });
+
+  it('offers only the target categories that actually exist', () => {
+    const known = ['robes', 'lingerie', 'lounge', 'home', 'scarves'];
+    // A slip dress can be sleepwear or lingerie; only lingerie is live here.
+    expect(misfiledCategory('Silk slip dress in Garnet', 'lounge', known))
+      .toEqual({ garment: 'slip dress', expected: ['lingerie'] });
   });
 });

@@ -14,6 +14,8 @@ const Product = require('../models/Product');
 const Review = require('../models/Review');
 const JournalArticle = require('../models/JournalArticle');
 const SiteAudit = require('../models/SiteAudit');
+const Category = require('../models/Category');
+const { misfiledCategory } = require('../utils/categoryFit');
 const { isConfigured: merchantConfigured } = require('./merchantCenter');
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -62,6 +64,46 @@ async function buildRecommendations() {
     recs.push(rec('medium', 'SEO', `${noMeta} of ${activeCount} products missing meta title/description`,
       'Meta tags are what shows in Google results — better copy lifts click-through.',
       'Fill metaTitle (≤70 chars) and metaDescription (≤165) in the product editor.'));
+  }
+
+  // ── Category assignments ──
+  // The category a product sits in is repeated in the breadcrumb, the shop
+  // filter and the Shopping feed's product_type, so a wrong one is wrong in
+  // three customer-facing places at once and none of them looks broken. The rule
+  // lives in utils/categoryFit.js; both checks below read the LIVE category list
+  // rather than a hardcoded one, because these slugs have been merged before.
+  const categories = await Category.find().select('slug label status').lean().catch(() => []);
+  const liveSlugs = categories.map(c => c.slug);
+  const labelOf = slug => categories.find(c => c.slug === slug)?.label || slug;
+
+  const misfiled = products
+    .map(p => {
+      const verdict = misfiledCategory(p.name, p.category, liveSlugs);
+      return verdict ? { name: p.name, from: p.category, to: verdict.expected[0] } : null;
+    })
+    .filter(Boolean);
+  if (misfiled.length) {
+    const examples = misfiled.slice(0, 3)
+      .map(m => `"${m.name}" is in ${labelOf(m.from)}, not ${labelOf(m.to)}`)
+      .join('; ');
+    recs.push(rec('medium', 'Fixes', `${misfiled.length} product${misfiled.length > 1 ? 's are' : ' is'} filed under the wrong category`,
+      `The category shows in the breadcrumb, the shop filter and the Shopping feed's product_type, so each one is wrong in three places at once. ${examples}.`,
+      'Open each in Products → set Category. The breadcrumb and feed follow on the next crawl.'));
+  }
+
+  // Archived categories holding nothing. Not a customer-facing leak — hence low
+  // — but they clutter every category picker and their displayOrder values
+  // collide with the live ones. Count EVERY product, not just the active ones
+  // above: a category holding three drafts is not empty.
+  const perCategory = await Product.aggregate([
+    { $group: { _id: '$category', count: { $sum: 1 } } },
+  ]).catch(() => []);
+  const countOf = Object.fromEntries(perCategory.map(c => [c._id, c.count]));
+  const archivedEmpty = categories.filter(c => c.status === 'archived' && !countOf[c.slug]);
+  if (archivedEmpty.length) {
+    recs.push(rec('low', 'Fixes', `${archivedEmpty.length} archived categor${archivedEmpty.length > 1 ? 'ies hold' : 'y holds'} no products`,
+      `An archived category still clutters the category picker, and its display order collides with the live ones: ${archivedEmpty.map(c => c.label).join(', ')}.`,
+      'Delete in Categories. The slugs that were merged away still 301 to their new parent from the shop route, so no search ranking is lost.'));
   }
 
   // ── Reviews (conversion + rich snippets) ──
