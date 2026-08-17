@@ -45,20 +45,24 @@ async function serpAnalysis(query, geo = 'ie') {
       displayLink: i.displayLink || '',
     }));
 
-    // A Programmable Search Engine defaults to searching ONLY the sites it was
-    // created from. Point it at silkilinen.com and every query returns five of
-    // our own pages — so the agents read "we hold positions 1 to 5 for
-    // everything" and recommend nothing, confidently. That is worse than having
-    // no SERP at all, because absence is visible and a wrong answer is not.
+    // A Programmable Search Engine searches only the sites it was configured
+    // with. The one wired up here holds ~40 curated sites — silkilinen.com plus
+    // competitors (La Perla, Eberjey, Lunya, Olivia von Halle…) — which is a
+    // useful asset but is NOT a Google results page: it can never show the
+    // Wikipedia entry, the magazine guide or the marketplace listing that
+    // actually occupies page one.
     //
-    // The whole point of this call is seeing who we are up against, so a result
-    // set containing only us is a CONFIGURATION fault, reported as one.
+    // The specific failure this catches is a result set consisting only of our
+    // own pages. The agents read that as holding positions 1 to 5 for the query
+    // and stop recommending work, confidently — worse than having no SERP,
+    // because absence is visible in the panel and a flattering wrong answer is
+    // not. Results are cleared so nothing downstream can read them as rankings.
     const ours = results.filter(r => /silkilinen\.com$/i.test(String(r.displayLink || '')));
     if (results.length > 0 && ours.length === results.length) {
       return {
         configured: true,
         results: [],
-        error: 'The search engine is restricted to silkilinen.com, so it only ever returns our own pages — there is no competitive picture to read. Turn on "Search the entire web" in Programmable Search Engine (Setup → Basics → Sites to search), or create an engine that searches the whole web.',
+        error: 'Every result was one of our own pages, so there is no competitive picture to read. The configured search engine is restricted to a site list rather than the whole web — point GOOGLE_CSE_ID at an engine created with "Search the entire web" if you want Hermes to judge the real page one.',
         siteRestricted: true,
       };
     }
