@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const Product = require('../models/Product');
 const Review = require('../models/Review');
 const { pickProductFields } = require('../utils/productFields');
+const { buildSearchFilter } = require('../utils/productSearch');
 const { upload } = require('../utils/cloudinary');
 const { requireAuth } = require('../middleware/auth');
 const { sendDropAHint } = require('../services/email');
@@ -252,27 +253,13 @@ router.get('/', async function(req, res) {
     // Storefront "New Arrivals" — admin-flagged products only.
     if (isNew === 'true') filter.isNewArrival = true;
     if (q) {
-      // Coerce + escape: a query value can arrive as an object ({$ne:…}) or a
-      // regex-special string; escaping prevents both operator injection and a
-      // ReDoS via a crafted pattern against the unindexed description field.
-      const safe = String(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      // Search the words customers actually type, not just the two fields we
-      // happened to start with. "sky blue", "pyjamas", "linen" and "medium" are
-      // all real queries that returned an empty page while the product sat in
-      // the catalogue — a naming mismatch reported as a gap in the range.
-      //
-      // category/colours/sizes are matched too because a shopper searches by
-      // the thing, its colour, or their size, and none of those words are
-      // guaranteed to appear in the product's name or prose.
-      filter.$or = [
-        { name: { $regex: safe, $options: 'i' } },
-        { description: { $regex: safe, $options: 'i' } },
-        { category: { $regex: safe, $options: 'i' } },
-        { colours: { $regex: safe, $options: 'i' } },
-        { colorName: { $regex: safe, $options: 'i' } },
-        { sizes: { $regex: safe, $options: 'i' } },
-        { materialComposition: { $regex: safe, $options: 'i' } },
-      ];
+      // The rule (which fields, how words combine, the escaping) lives in
+      // utils/productSearch.js — one owner, and the tests import it rather than
+      // mirroring it. Multi-word queries require every word to match, each
+      // possibly in a different field, so "sky blue robe" finds the robe whose
+      // colorName is Sky Blue.
+      const search = buildSearchFilter(q);
+      if (search) Object.assign(filter, search);
     }
     // `full=true` is the escape hatch for any caller that genuinely needs the
     // whole document; listings get the card projection.
