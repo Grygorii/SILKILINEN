@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Schema.Types;
 const { SLOT_KEYS } = require('../config/imageSlots');
-const { SLUGS: CATEGORY_SLUGS } = require('../config/categories');
+const { DEFAULT_CATEGORY } = require('../config/categories');
 const { slugify } = require('../utils/slug');
 
 const variantSchema = new mongoose.Schema({
@@ -81,7 +81,7 @@ const productSchema = new mongoose.Schema({
   // app deploy. Slug validity is enforced at write time by
   // routes/adminProducts.js validateForSave(), not at the schema level —
   // schema kept permissive so legacy/migration data keeps loading.
-  category: { type: String, required: false, trim: true, default: CATEGORY_SLUGS[0] },
+  category: { type: String, required: false, trim: true, default: DEFAULT_CATEGORY },
   description: { type: String, trim: true },
   tags: [String],
 
