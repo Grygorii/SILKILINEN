@@ -44,6 +44,25 @@ async function serpAnalysis(query, geo = 'ie') {
       link: i.link || '',
       displayLink: i.displayLink || '',
     }));
+
+    // A Programmable Search Engine defaults to searching ONLY the sites it was
+    // created from. Point it at silkilinen.com and every query returns five of
+    // our own pages — so the agents read "we hold positions 1 to 5 for
+    // everything" and recommend nothing, confidently. That is worse than having
+    // no SERP at all, because absence is visible and a wrong answer is not.
+    //
+    // The whole point of this call is seeing who we are up against, so a result
+    // set containing only us is a CONFIGURATION fault, reported as one.
+    const ours = results.filter(r => /silkilinen\.com$/i.test(String(r.displayLink || '')));
+    if (results.length > 0 && ours.length === results.length) {
+      return {
+        configured: true,
+        results: [],
+        error: 'The search engine is restricted to silkilinen.com, so it only ever returns our own pages — there is no competitive picture to read. Turn on "Search the entire web" in Programmable Search Engine (Setup → Basics → Sites to search), or create an engine that searches the whole web.',
+        siteRestricted: true,
+      };
+    }
+
     return { configured: true, results };
   } catch (err) {
     return { configured: true, results: [], error: err.message };
