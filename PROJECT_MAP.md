@@ -183,6 +183,33 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   "sky blue robe" returned an empty page for a robe whose `colorName` is Sky Blue — and
   that empty page then reached the advisor as unmet demand. Blank/whitespace `q` returns
   `null` (Mongo rejects `{$and:[]}`); a single word behaves as before.
+- **Opportunities (the Growth Engine's list):** `services/opportunities.js` fetches,
+  `utils/demandFit.js` decides. Every real query is joined to the shelf and becomes ONE
+  of six proposals, because identical numbers demand opposite actions: `restock` (matched,
+  out of stock — outranks everything, and counts the `StockNotification` waitlist),
+  `range` (nothing matches — stock it, or we name it wrong), `depth` (ranks, nearly out,
+  AND selling), `convert` (clicked, in stock, never sold — the page kills the sale),
+  `rank` (past page one), `title` (page one, no clicks). Silent on a query that is simply
+  working, and on anything under the floor. Matching uses `buildSearchFilter` — the SAME
+  rule the storefront search box uses — or the list invents range gaps out of search
+  misses. Surfaced at `/api/admin/growth/opportunities`, in `OpportunitiesPanel` (leads
+  the Growth Engine page), and the top 3 enter the advisor, which is what carries them
+  into the weekly digest.
+  ⚠️ `convert` is gated on `shopSells`: with no orders at all EVERY product has sold
+  nothing, and firing on all of them would bury the real problem (nobody is arriving)
+  under a dozen false diagnoses. Default is the safe reading.
+- **Two demand sources, one list:** on-site searches (`clickstream.unmetSearches`) are
+  folded in alongside Google's, tagged `source:'site'`, and held to a LOWER floor
+  (`MIN_SITE_SEARCHES` 2 vs `MIN_IMPRESSIONS` 5) — someone typing in the shop's own box
+  has already arrived and named what they want, where an impression only means the shop
+  appeared on a page nobody read. A site search that MATCHES a live in-stock product says
+  nothing (position/CTR are meaningless off-Google, and running those branches produced
+  "on page one and nobody clicks it" about a search that never touched Google).
+  Search Console is OPTIONAL — first-party demand must not depend on Google being wired up.
+- **Deploy skew is a real state:** Vercel and Railway deploy independently from master, so
+  the frontend is routinely newer than the API. A panel must degrade to NO verdict, never
+  to a wrong one — the country row defaulting a missing `band` to `watch` would have
+  labelled every market "too small to judge" purely from deploy timing.
 - **Unmet demand is re-verified:** `clickstream.js` re-runs every recorded zero-result
   search against the live catalogue with `buildSearchFilter`, splitting `unmetSearches`
   (found nothing then AND now — real gaps) from `nowFindable` (failed then, works now).
@@ -221,7 +248,9 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   in `props` makes it invisible to every aggregation.
 - **Advisor ranking:** priority band first, then named-cause categories (Demand,
   Conversion) ahead of housekeeping; the weekly digest takes the top 3 and states how
-  many it held back. Tests in `tests/advisorRank.test.js`.
+  many it held back. `AdvisorPanel` shows the top 5 and COUNTS the rest behind a toggle —
+  it used to render all ~15, so the ranking bought nothing, and a silently truncated list
+  is indistinguishable from a genuinely short one. Tests in `tests/advisorRank.test.js`.
 - **Order status:** `STATUS_TRANSITIONS` in `routes/orders.js` — the enum only ever
   validated that a status EXISTS. Illegal moves 409 with the valid next steps; `force`
   allows a genuine correction and stamps it into `statusHistory`. Tests in
