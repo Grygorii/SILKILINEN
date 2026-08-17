@@ -15,6 +15,7 @@
 
 const Product = require('../models/Product');
 const StockNotification = require('../models/StockNotification');
+const Order = require('../models/Order');
 const { buildSearchFilter } = require('../utils/productSearch');
 const { classifyDemand, rankProposals } = require('../utils/demandFit');
 const gsc = require('./searchConsole');
@@ -36,6 +37,26 @@ async function findOpportunities({ days = 28 } = {}) {
   const queries = await gsc.getQueryOpportunities(days).catch(() => []);
   if (!queries.length) return { connected: true, proposals: [], queriesChecked: 0 };
 
+  // Units sold per product, and whether the shop sells ANYTHING.
+  //
+  // Without this, "ranks well and sells" and "ranks well and has never sold"
+  // were the same row to the rule, and it called both of them fine. They are
+  // opposite situations: one wants more stock, the other wants a better page.
+  //
+  // The shop-wide flag is the guard. With no orders at all, every product has
+  // sold nothing — blaming each product page for that would bury the real
+  // problem (nobody is arriving) under a dozen false diagnoses.
+  const SOLD_STATUSES = ['paid', 'processing', 'shipped', 'delivered'];
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const salesRows = await Order.aggregate([
+    { $match: { status: { $in: SOLD_STATUSES }, createdAt: { $gte: since } } },
+    { $unwind: '$items' },
+    { $match: { 'items.productId': { $ne: null } } },
+    { $group: { _id: '$items.productId', units: { $sum: '$items.quantity' } } },
+  ]).catch(() => []);
+  const soldById = new Map(salesRows.map(r => [String(r._id), Number(r.units) || 0]));
+  const shopSells = salesRows.length > 0;
+
   const proposals = [];
   for (const q of queries) {
     const filter = buildSearchFilter(q.query);
@@ -54,14 +75,15 @@ async function findOpportunities({ days = 28 } = {}) {
     // "restock this" proposal that cannot see it is arguing from searches alone
     // when it could be arguing from agreed sales.
     const enriched = await Promise.all(matches.map(async m => {
+      const sold = soldById.get(String(m._id)) || 0;
       const stock = Number(m.totalStock) || 0;
-      if (stock > 0) return m;
+      if (stock > 0) return { ...m, sold };
       const waiting = await StockNotification.countDocuments({ product: m._id, notifiedAt: null })
         .catch(() => 0);
-      return { ...m, waiting };
+      return { ...m, sold, waiting };
     }));
 
-    const proposal = classifyDemand(q, enriched);
+    const proposal = classifyDemand(q, enriched, { shopSells });
     if (proposal) proposals.push(proposal);
   }
 

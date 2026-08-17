@@ -184,3 +184,59 @@ describe('restock proposals count the people waiting', () => {
     }
   });
 });
+
+// Orders joined in. "Ranks well and sells" and "ranks well and has never sold"
+// were the same row to the rule, and it called both fine — they are opposite
+// situations: one wants more stock, the other wants a better page.
+describe('sales change what a ranking product means', () => {
+  const clicked = (over = {}) => q({ position: 4, clicks: 3, ...over });
+  const stocked = (over = {}) => [product({ totalStock: 10, ...over })];
+
+  it('flags a clicked, in-stock product that has never sold', () => {
+    const p = classifyDemand(clicked(), stocked({ sold: 0 }), { shopSells: true });
+    expect(p.kind).toBe('convert');
+    expect(p.why).toMatch(/not a traffic problem/);
+    expect(p.action).toMatch(/photography first/);
+  });
+
+  it('stays silent when the same product does sell', () => {
+    expect(classifyDemand(clicked(), stocked({ sold: 4 }), { shopSells: true })).toBeNull();
+  });
+
+  // The guard that matters most. In a shop with no orders at all, EVERY product
+  // has sold nothing; diagnosing each product page would bury the real problem —
+  // nobody is arriving — under a dozen confident false findings.
+  it('never blames the page when the shop has sold nothing at all', () => {
+    expect(classifyDemand(clicked(), stocked({ sold: 0 }), { shopSells: false })).toBeNull();
+    // And defaults to that safer reading when nobody says.
+    expect(classifyDemand(clicked(), stocked({ sold: 0 }))).toBeNull();
+  });
+
+  it('does not call it a conversion problem when nobody has clicked', () => {
+    // No clicks is a title problem, not a page problem — the shopper never
+    // arrived to be disappointed.
+    const p = classifyDemand(q({ position: 4, clicks: 0 }), stocked({ sold: 0 }), { shopSells: true });
+    expect(p.kind).toBe('title');
+  });
+
+  it('prefers the conversion problem over buying more of something that never sells', () => {
+    // Low stock AND no sales: ordering depth here would spend money restocking a
+    // product the page cannot sell.
+    const p = classifyDemand(clicked(), [product({ totalStock: 2, sold: 0 })], { shopSells: true });
+    expect(p.kind).toBe('convert');
+  });
+
+  it('still asks for depth when the nearly-empty product is selling', () => {
+    const p = classifyDemand(clicked(), [product({ totalStock: 2, sold: 6 })], { shopSells: true });
+    expect(p.kind).toBe('depth');
+    expect(p.why).toMatch(/6 sold/);
+  });
+
+  it('ranks a reorder above a diagnosis', () => {
+    const out = rankProposals([
+      { kind: 'convert', query: 'a', impressions: 50 },
+      { kind: 'depth', query: 'b', impressions: 10 },
+    ]);
+    expect(out.map(p => p.kind)).toEqual(['depth', 'convert']);
+  });
+});

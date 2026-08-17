@@ -24,6 +24,11 @@
 //             the query; almost nobody scrolls that far.
 //   title   — matching product, page one, impressions, no clicks. The listing is
 //             seen and not chosen: that is the title's job.
+//   convert — matching product, page one, CLICKED, in stock, and never sold. The
+//             search work is finished and the page is where the sale dies. Only
+//             claimed when the shop sells anything at all, since in a shop with
+//             no orders every product has sold nothing and the real problem is
+//             upstream.
 //
 // Deliberately silent when a query is simply working (page one, getting clicks),
 // and when the sample is too thin to carry a decision. A weekly list that always
@@ -41,7 +46,7 @@ const LOW_STOCK = 3;
  * @param {Array}  matches products matching the query (name, totalStock, status)
  * @returns {object|null}  a proposal, or null when there is nothing worth saying
  */
-function classifyDemand(q, matches = []) {
+function classifyDemand(q, matches = [], { shopSells = false } = {}) {
   const query = String(q?.query || '').trim();
   const impressions = Number(q?.impressions) || 0;
   const clicks = Number(q?.clicks) || 0;
@@ -98,16 +103,37 @@ function classifyDemand(q, matches = []) {
     };
   }
 
+  // Everything below this point is about a product that ranks on page one, is
+  // being clicked, and is in stock. Whether that is a success or a problem
+  // depends entirely on whether it SELLS — and until orders were joined in, both
+  // looked identical and the rule called them both fine.
+  const sold = Number(best.sold) || 0;
+
+  // Traffic arriving at a page that never converts. Gated on the shop having
+  // sales AT ALL: in a shop with no orders yet, every product has sold nothing,
+  // and blaming each product page for that would bury the real problem (nobody
+  // is arriving) under a dozen false diagnoses.
+  if (shopSells && sold === 0 && clicks > 0) {
+    return {
+      ...base, kind: 'convert', product: { ...product, sold },
+      headline: `"${best.name}" ranks for "${query}", gets clicked, and has never sold`,
+      why: `${clicks} click${clicks === 1 ? '' : 's'} from search at position ${position}, in stock, and no orders. Other products here do sell, so this is not a traffic problem — people arrive at this page and leave.`,
+      action: `Open "${best.name}" and compare it with something that does sell: photography first, then price framing, then whether it has any reviews. The search work on this one is already done.`,
+    };
+  }
+
   if (stock <= LOW_STOCK) {
     return {
-      ...base, kind: 'depth', product,
+      ...base, kind: 'depth', product: { ...product, sold },
       headline: `"${best.name}" ranks for "${query}" and is down to ${stock}`,
-      why: `This is the good problem: a page that works, about to be unable to serve the demand it earned. A stock-out here also costs the ranking it took weeks to get.`,
+      why: sold > 0
+        ? `The good problem: ${sold} sold and a page that works, about to be unable to serve the demand it earned. A stock-out also costs the ranking it took weeks to get.`
+        : `A page that works, about to run out. A stock-out costs the ranking it took weeks to get.`,
       action: `Order more depth in "${best.name}" — and its best-selling size first.`,
     };
   }
 
-  // Ranks on page one, earns clicks, in stock: nothing useful to say.
+  // Ranks on page one, earns clicks, in stock, and selling: nothing to say.
   return null;
 }
 
@@ -115,7 +141,10 @@ function classifyDemand(q, matches = []) {
  * Most consequential first. Restock and range gaps outrank presentation work:
  * one is a sale that cannot happen, the other is a sale we never knew to offer.
  */
-const KIND_ORDER = { restock: 0, range: 1, depth: 2, rank: 3, title: 4 };
+// `convert` sits below depth: depth is a reorder decision with proven sales
+// behind it, convert is a diagnosis that costs an afternoon. Both are real; the
+// cheaper one first.
+const KIND_ORDER = { restock: 0, range: 1, depth: 2, convert: 3, rank: 4, title: 5 };
 
 function rankProposals(proposals = []) {
   // Merge proposals that are the same job. Several queries routinely land on one

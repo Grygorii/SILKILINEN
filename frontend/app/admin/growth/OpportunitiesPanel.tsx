@@ -5,7 +5,7 @@ import styles from './OpportunitiesPanel.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-type Kind = 'restock' | 'range' | 'depth' | 'rank' | 'title';
+type Kind = 'restock' | 'range' | 'depth' | 'convert' | 'rank' | 'title';
 
 type Proposal = {
   kind: Kind;
@@ -14,7 +14,7 @@ type Proposal = {
   impressions: number;
   clicks: number;
   position: number;
-  product: { name: string; stock: number; status: string } | null;
+  product: { name: string; stock: number; status: string; waiting?: number; sold?: number } | null;
   headline: string;
   why: string;
   action: string;
@@ -29,6 +29,7 @@ const TONE: Record<Kind, 'urgent' | 'soon' | 'later'> = {
   restock: 'urgent',
   range: 'urgent',
   depth: 'soon',
+  convert: 'soon',
   rank: 'later',
   title: 'later',
 };
@@ -39,6 +40,7 @@ const KIND_LABEL: Record<Kind, string> = {
   restock: 'Restock',
   range: 'Consider stocking',
   depth: 'Buy depth',
+  convert: 'Fix the page',
   rank: 'Ranking work',
   title: 'Rewrite title',
 };
@@ -127,6 +129,12 @@ export default function OpportunitiesPanel() {
                   <span className={styles.figure}><strong>{p.clicks}</strong> click{p.clicks === 1 ? '' : 's'}</span>
                   {p.position > 0 && <span className={styles.figure}>position <strong>{p.position}</strong></span>}
                   {p.product && <span className={styles.figure}><strong>{p.product.stock}</strong> in stock</span>}
+                  {typeof p.product?.sold === 'number' && (
+                    <span className={styles.figure}><strong>{p.product.sold}</strong> sold (28d)</span>
+                  )}
+                  {typeof p.product?.waiting === 'number' && p.product.waiting > 0 && (
+                    <span className={styles.figure}><strong>{p.product.waiting}</strong> on the waitlist</span>
+                  )}
                 </div>
               </div>
             );
