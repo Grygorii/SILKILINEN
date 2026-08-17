@@ -275,7 +275,17 @@ export async function GET() {
     status: 200,
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'public, max-age=0, s-maxage=600, stale-while-revalidate=86400',
+      // stale-while-revalidate was 86400 — a full DAY. A product feed whose
+      // links can change must never be served that stale: after the catalogue
+      // was renamed and re-slugged, Google could still have fetched a feed
+      // carrying yesterday's URLs, every one of which now 301s. Merchant Center
+      // treats a redirecting g:link as a problem, and the account saw active
+      // items drop 24 -> 14 in that window.
+      //
+      // One hour keeps the CDN doing its job while bounding how wrong the feed
+      // can be after a change. The 503-on-empty guard below is the other half:
+      // never publish a feed we are not sure of.
+      'Cache-Control': 'public, max-age=0, s-maxage=600, stale-while-revalidate=3600',
     },
   });
 }

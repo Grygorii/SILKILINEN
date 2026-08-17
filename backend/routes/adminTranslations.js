@@ -20,11 +20,43 @@ router.use(requireAuth);
 // GET / — coverage summary: how much of the catalogue is translated per locale.
 router.get('/', async (req, res) => {
   try {
-    const [products, categories, collections, byLocale] = await Promise.all([
-      Product.countDocuments({ status: { $in: ['active', 'sold_out'] } }),
-      Category.countDocuments({ status: 'active' }),
-      Collection.countDocuments({ status: 'active' }),
-      Translation.aggregate([{ $group: { _id: { locale: '$locale', type: '$resourceType' }, n: { $sum: 1 } } }]),
+    // Count translations only for resources that STILL COUNT toward the total.
+    //
+    // The denominator was active-only while the numerator was every translation
+    // row ever written, including resources since archived. Six archived
+    // categories had been translated before archiving, so the panel read
+    // "Categories 12/6" and the overall coverage showed 118% — a progress bar
+    // past full, which tells the founder nothing except that the number is
+    // wrong. Restricting the numerator to live ids makes both halves describe
+    // the same set.
+    const [liveProducts, liveCategories, liveCollections] = await Promise.all([
+      Product.find({ status: { $in: ['active', 'sold_out'] } }).select('_id').lean(),
+      Category.find({ status: 'active' }).select('_id').lean(),
+      Collection.find({ status: 'active' }).select('_id').lean(),
+    ]);
+    const liveIds = {
+      product: liveProducts.map(d => String(d._id)),
+      category: liveCategories.map(d => String(d._id)),
+      collection: liveCollections.map(d => String(d._id)),
+    };
+    const products = liveIds.product.length;
+    const categories = liveIds.category.length;
+    const collections = liveIds.collection.length;
+
+    const byLocale = await Translation.aggregate([
+      {
+        $match: {
+          $or: Object.entries(liveIds).map(([type, ids]) => ({
+            resourceType: type,
+            // Stored as ObjectId or string depending on writer; match both.
+            $expr: { $in: [{ $toString: '$resourceId' }, ids] },
+          })),
+        },
+      },
+      // DISTINCT resource per locale/type: a resource with several translated
+      // FIELDS is still one translated resource, and counting rows inflated it.
+      { $group: { _id: { locale: '$locale', type: '$resourceType', rid: { $toString: '$resourceId' } } } },
+      { $group: { _id: { locale: '$_id.locale', type: '$_id.type' }, n: { $sum: 1 } } },
     ]);
     const translated = {};
     for (const row of byLocale) {

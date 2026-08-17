@@ -104,7 +104,13 @@ export default function TranslationsPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginTop: 24 }}>
               {locales.map(([code, meta]) => {
                 const done = localeTotal(code);
-                const pct = totalSources ? Math.round((done / totalSources) * 100) : 0;
+                // Clamped. The backend used to count translations for archived
+                // resources against a live-only denominator, so this rendered
+                // 118% with a progress bar past full. That is fixed at source,
+                // but a coverage figure is a share of a whole and can never
+                // exceed it — a bar that overflows should be impossible here,
+                // not merely unlikely.
+                const pct = totalSources ? Math.min(100, Math.round((done / totalSources) * 100)) : 0;
                 return (
                   <div key={code} style={{ border, background: 'var(--admin-surface)', padding: '16px 18px' }}>
                     <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
