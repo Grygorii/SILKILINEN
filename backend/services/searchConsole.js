@@ -165,18 +165,54 @@ function dateStr(daysAgo) {
   return new Date(Date.now() - daysAgo * 86400000).toISOString().slice(0, 10);
 }
 
+// A metric's movement, with position's inverted direction handled ONCE.
+//
+// Lower is better for position and worse for everything else, which is the kind
+// of asymmetry that gets inverted somewhere in a template and then quietly lies
+// on a dashboard. `better` is the only thing a caller should colour on.
+function describeChange(now, was, { metric = 'count' } = {}) {
+  // Reject null/undefined BEFORE coercing: Number(null) is 0, so a missing
+  // current figure would otherwise be reported as a 100% collapse — the panel
+  // would announce that all traffic was lost because a field failed to arrive.
+  if (now == null || was == null) return null;
+  const a = Number(now), b = Number(was);
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b === 0) return null; // no baseline: say nothing
+  const delta = a - b;
+  const pct = Math.round((delta / b) * 100);
+  return {
+    delta: Math.round(delta * 100) / 100,
+    pct,
+    better: metric === 'position' ? delta < 0 : delta > 0,
+    flat: Math.abs(pct) < 5, // ordinary noise, not a move
+  };
+}
+
 async function getSearchPerformance(days = 28) {
   const startDate = dateStr(days + 2);
   const endDate = dateStr(2);
   const base = { startDate, endDate };
+  // The window immediately before this one, same length — so the panel can say
+  // whether a number is a CHANGE rather than only a level. 718 impressions means
+  // nothing on its own; 718 after 300 and 718 after 1200 are opposite situations.
+  const prevBase = { startDate: dateStr(days * 2 + 2), endDate: startDate };
 
-  const [totals, byQuery, byPage] = await Promise.all([
+  const [totals, byQuery, byPage, prevTotals] = await Promise.all([
     apiPost(`sites/${siteSegment()}/searchAnalytics/query`, base),
     apiPost(`sites/${siteSegment()}/searchAnalytics/query`, { ...base, dimensions: ['query'], rowLimit: 5 }),
     apiPost(`sites/${siteSegment()}/searchAnalytics/query`, { ...base, dimensions: ['page'], rowLimit: 5 }),
+    // Fails soft on its own: a missing baseline must not cost the live figures.
+    apiPost(`sites/${siteSegment()}/searchAnalytics/query`, prevBase).catch(() => null),
   ]);
 
   const t = totals?.rows?.[0] || { clicks: 0, impressions: 0, ctr: 0, position: 0 };
+  const p = prevTotals?.rows?.[0] || null;
+  const previous = p ? {
+    clicks: Math.round(p.clicks || 0),
+    impressions: Math.round(p.impressions || 0),
+    ctr: p.ctr || 0,
+    position: p.position || 0,
+  } : null;
+
   return {
     range: { startDate, endDate, days },
     totals: {
@@ -185,6 +221,13 @@ async function getSearchPerformance(days = 28) {
       ctr: t.ctr || 0,
       position: t.position || 0,
     },
+    previous,
+    change: previous ? {
+      clicks: describeChange(t.clicks, previous.clicks),
+      impressions: describeChange(t.impressions, previous.impressions),
+      ctr: describeChange(t.ctr, previous.ctr),
+      position: describeChange(t.position, previous.position, { metric: 'position' }),
+    } : null,
     topQueries: (byQuery?.rows || []).map(r => ({ key: r.keys[0], clicks: Math.round(r.clicks || 0), impressions: Math.round(r.impressions || 0) })),
     topPages: (byPage?.rows || []).map(r => ({ key: r.keys[0], clicks: Math.round(r.clicks || 0), impressions: Math.round(r.impressions || 0) })),
   };
@@ -342,6 +385,7 @@ module.exports = {
   getPrimaryMarket,
   getQueryOpportunities,
   getQueryStrings,
+  describeChange,
   getQueryPagePairs,
   inspectUrl,
 };

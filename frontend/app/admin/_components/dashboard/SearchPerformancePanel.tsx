@@ -6,6 +6,10 @@ import styles from '../../page.module.css';
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 type Totals = { clicks: number; impressions: number; ctr: number; position: number };
+// `better` already accounts for position being inverted (lower is better), so
+// the colour here never has to know which metric it is rendering.
+type Change = { delta: number; pct: number; better: boolean; flat: boolean } | null;
+type Changes = { clicks: Change; impressions: Change; ctr: Change; position: Change } | null;
 type Row = { key: string; clicks: number; impressions: number };
 type PerfData = {
   configured: boolean;
@@ -14,6 +18,8 @@ type PerfData = {
   performance?: {
     range: { startDate: string; endDate: string; days: number };
     totals: Totals;
+    previous?: Totals | null;
+    change?: Changes;
     topQueries: Row[];
     topPages: Row[];
   } | null;
@@ -28,11 +34,24 @@ const COUNTRY: Record<string, string> = {
 };
 const countryName = (c: string) => COUNTRY[String(c || '').toLowerCase()] || String(c || '').toUpperCase();
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, change }: { label: string; value: string; change?: Change }) {
+  // A level with nothing to compare it against cannot be read: 718 impressions
+  // after 300 and after 1200 are opposite situations. A move under 5% is shown
+  // as flat rather than dressed up as a trend.
+  const arrow = !change ? null : change.flat ? '·' : change.better ? '▲' : '▼';
+  const colour = !change || change.flat
+    ? 'var(--admin-ink-muted)'
+    : change.better ? 'var(--admin-success)' : 'var(--admin-danger)';
   return (
     <div style={{ flex: 1, minWidth: 110, border: '1px solid var(--admin-line)', padding: '12px 14px' }}>
       <p style={{ margin: 0, fontSize: 22, fontFamily: 'Georgia, serif', color: 'var(--admin-ink)' }}>{value}</p>
       <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--admin-ink-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</p>
+      {change && (
+        <p style={{ margin: '4px 0 0', fontSize: 11, color: colour }}>
+          {arrow} {change.flat ? 'flat' : `${change.pct > 0 ? '+' : ''}${change.pct}%`}
+          <span style={{ color: 'var(--admin-ink-muted)' }}> vs previous 28d</span>
+        </p>
+      )}
     </div>
   );
 }
@@ -102,10 +121,10 @@ export default function SearchPerformancePanel() {
           {data.performance ? (
             <>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
-                <Stat label="Clicks" value={data.performance.totals.clicks.toLocaleString()} />
-                <Stat label="Impressions" value={data.performance.totals.impressions.toLocaleString()} />
-                <Stat label="CTR" value={`${(data.performance.totals.ctr * 100).toFixed(1)}%`} />
-                <Stat label="Avg position" value={data.performance.totals.position.toFixed(1)} />
+                <Stat label="Clicks" value={data.performance.totals.clicks.toLocaleString()} change={data.performance.change?.clicks} />
+                <Stat label="Impressions" value={data.performance.totals.impressions.toLocaleString()} change={data.performance.change?.impressions} />
+                <Stat label="CTR" value={`${(data.performance.totals.ctr * 100).toFixed(1)}%`} change={data.performance.change?.ctr} />
+                <Stat label="Avg position" value={data.performance.totals.position.toFixed(1)} change={data.performance.change?.position} />
               </div>
 
               <p className={styles.healthCheckDetail} style={{ marginTop: -6, marginBottom: 16, fontSize: 12 }}>
