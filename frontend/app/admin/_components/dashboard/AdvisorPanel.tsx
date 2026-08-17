@@ -34,11 +34,16 @@ function PriorityBadge({ priority }: { priority: string }) {
 // The Advisor: a short, prioritised "what to do next to grow" list, derived
 // from the live catalogue, reviews, journal and last audit. Sits at the top of
 // the dashboard so there's always a clear next action.
+// Enough to be a morning's work, few enough to be read. The digest takes three;
+// the panel can hold a couple more because it is being looked at deliberately.
+const TOP_N = 5;
+
 export default function AdvisorPanel() {
   const [data, setData] = useState<AdvisorData | null>(null);
   const [loading, setLoading] = useState(false);
   const [emailing, setEmailing] = useState(false);
   const [emailMsg, setEmailMsg] = useState('');
+  const [expanded, setExpanded] = useState(false);
 
   const fetchAdvisor = useCallback(async (force = false) => {
     setLoading(true);
@@ -66,6 +71,15 @@ export default function AdvisorPanel() {
 
   useEffect(() => { fetchAdvisor(); }, [fetchAdvisor]);
 
+  // The advisor already ranks: priority band first, then named-cause categories
+  // ahead of housekeeping. This panel rendered ALL of it, so the ranking bought
+  // nothing — a list of fifteen is a list nobody works through, which is the
+  // exact reasoning behind the weekly digest taking only the top three. Same
+  // discipline here, with the remainder one click away rather than gone.
+  const recs = data?.recommendations ?? [];
+  const shown = expanded ? recs : recs.slice(0, TOP_N);
+  const held = recs.length - shown.length;
+
   return (
     <div className={styles.section}>
       <div className={styles.healthHeader}>
@@ -91,7 +105,7 @@ export default function AdvisorPanel() {
 
       {data && data.recommendations.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
-          {data.recommendations.map((r, i) => (
+          {shown.map((r, i) => (
             <div key={i} className={styles.healthCheck}>
               <div className={styles.healthCheckTop} style={{ gap: 8 }}>
                 <p className={styles.healthCheckLabel} style={{ margin: 0 }}>{r.title}</p>
@@ -104,6 +118,21 @@ export default function AdvisorPanel() {
               <p className={styles.healthCheckDetail} style={{ marginTop: 6, fontStyle: 'italic' }}>→ {r.action}</p>
             </div>
           ))}
+
+          {/* Say what is being withheld, and let it be opened. Hiding the count
+              would be the same mistake as showing all fifteen: the founder
+              cannot tell a short list from a truncated one. */}
+          {held > 0 && (
+            <button
+              className={styles.healthRefreshBtn}
+              style={{ alignSelf: 'flex-start' }}
+              onClick={() => setExpanded(x => !x)}
+            >
+              {expanded
+                ? `Show fewer — the top ${TOP_N} are what matter`
+                : `Show ${held} more (ranked below these)`}
+            </button>
+          )}
         </div>
       )}
     </div>
