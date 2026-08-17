@@ -1,0 +1,74 @@
+/* The country breakdown, as a table.
+   It was a flex-wrap row of ten tiles, so a market name and its verdict wrapped
+   onto three lines ("United Kingdom / · work / this one") and the figures landed
+   at a different horizontal position in every tile — which is the one thing
+   numbers must never do, because comparing them is the entire purpose.
+   Colour is --admin-* tokens only; a hex under app/admin fails the build. */
+
+.wrap {
+  width: 100%;
+  overflow-x: auto; /* narrow screens scroll the table, never the page */
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  text-align: left;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--admin-ink-muted);
+  font-weight: 400;
+  padding: 0 0 6px;
+  border-bottom: 1px solid var(--admin-line);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--admin-line);
+  color: var(--admin-ink);
+  white-space: nowrap;
+}
+
+/* Every figure column: right-aligned and tabular, so digits line up down the
+   column and a bigger number is visibly bigger. */
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  padding-left: 18px !important;
+}
+
+.market {
+  width: 100%; /* absorbs the slack so the number columns stay tight together */
+}
+
+/* Markets below the sample floor are shown but recede — present for
+   completeness, never competing for attention with the ones that carry a
+   decision. */
+.muted td { opacity: 0.55; }
+
+.verdict {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.lever    { background: var(--admin-warning-soft); color: var(--admin-warning); }
+.foothold { background: var(--admin-success-soft); color: var(--admin-success); }
+.watch    { color: var(--admin-ink-muted); }
+
+.headline {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--admin-ink);
+  max-width: 820px;
+}

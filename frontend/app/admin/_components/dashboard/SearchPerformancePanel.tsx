@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import market from './MarketTable.module.css';
 import styles from '../../page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -161,37 +162,53 @@ export default function SearchPerformancePanel() {
               {data.countries && data.countries.length > 0 && (
                 <div style={{ marginTop: 16 }}>
                   <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--admin-ink-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>By country — where Google shows the shop</p>
-                  {/* The conclusion, before the table. Ten equal tiles made the
-                      biggest market look like a failure and a single impression
-                      look like a win. */}
-                  {data.marketHeadline && (
-                    <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--admin-ink)', maxWidth: 760 }}>{data.marketHeadline}</p>
-                  )}
-                  <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                    {data.countries.slice(0, 10).map((c, i) => {
-                      // An OLDER backend returns countries with no band at all.
-                      // Defaulting those to 'watch' would label every market
-                      // "too small to judge" — a confident falsehood produced by
-                      // a deploy-timing skew, since Vercel and Railway ship
-                      // independently. No band means no verdict, not a bad one.
-                      const band = c.band;
-                      const tone = band === 'lever' ? 'var(--admin-warning)'
-                        : band === 'foothold' ? 'var(--admin-success)'
-                        : 'var(--admin-ink-muted)';
-                      const note = band === 'lever' ? 'work this one'
-                        : band === 'foothold' ? 'ranks well'
-                        : band === 'watch' ? 'too small to judge'
-                        : '';
-                      return (
-                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--admin-line)', flex: '1 1 220px', minWidth: 200, opacity: band === 'watch' ? 0.6 : 1 }}>
-                          <span style={{ color: 'var(--admin-ink)' }}>
-                            {c.name ?? countryName(c.country ?? '')}
-                            {note && <span style={{ color: tone, fontSize: 11, marginLeft: 6 }}>· {note}</span>}
-                          </span>
-                          <span style={{ color: 'var(--admin-ink-muted)', whiteSpace: 'nowrap', marginLeft: 12 }}>{c.clicks} clk · {c.impressions} imp · pos {c.position}</span>
-                        </div>
-                      );
-                    })}
+
+                  {/* The conclusion, before the table. */}
+                  {data.marketHeadline && <p className={market.headline}>{data.marketHeadline}</p>}
+
+                  {/* A table, because these are numbers to compare. As wrapped
+                      tiles, a market's figures sat at a different horizontal
+                      position in every row and long verdicts broke across three
+                      lines. */}
+                  <div className={market.wrap}>
+                    <table className={market.table}>
+                      <thead>
+                        <tr>
+                          <th className={market.market}>Market</th>
+                          <th>Verdict</th>
+                          <th className={market.num}>Clicks</th>
+                          <th className={market.num}>Impressions</th>
+                          <th className={market.num}>Share</th>
+                          <th className={market.num}>Avg position</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.countries.slice(0, 12).map((c, i) => {
+                          // An OLDER backend returns no band at all. Defaulting
+                          // to 'watch' would label every market "too small to
+                          // judge" from deploy timing alone — Vercel and Railway
+                          // ship independently. No band means no verdict.
+                          const band = c.band;
+                          const cls = band === 'lever' ? market.lever
+                            : band === 'foothold' ? market.foothold
+                            : market.watch;
+                          const label = band === 'lever' ? 'work this one'
+                            : band === 'foothold' ? 'ranks well'
+                            : band === 'watch' ? 'too small to judge'
+                            : '';
+                          return (
+                            <tr key={i} className={band === 'watch' ? market.muted : undefined}>
+                              <td className={market.market}>{c.name ?? countryName(c.country ?? '')}</td>
+                              <td>{label && <span className={`${market.verdict} ${cls}`}>{label}</span>}</td>
+                              <td className={market.num}>{c.clicks}</td>
+                              <td className={market.num}>{c.impressions}</td>
+                              <td className={market.num}>{typeof c.share === 'number' ? `${c.share}%` : '—'}</td>
+                              <td className={market.num}>{c.position}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               )}
