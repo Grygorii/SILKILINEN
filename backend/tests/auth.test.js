@@ -14,6 +14,16 @@ const mongo = await tryStartMongo();
 
 let app;
 
+// Each TEST gets its own client IP.
+//
+// loginLimiter allows 5 attempts per 15 minutes keyed by req.ip, and every
+// request here claimed to come from 127.0.0.1 — so the suite shared one bucket,
+// spent it partway through, and later tests got 429 instead of the behaviour
+// they were asserting. The failure moved with test ORDER, which is the worst
+// kind: it looks like the code and it is the harness. Requests within one test
+// still share an IP, so a genuine rate-limit test remains possible.
+let clientIp = 0;
+
 // The hooks are top-level (both suites below share them) so each one returns
 // early when there is no MongoDB: a top-level hook still runs even when every
 // test in the file is skipped.
@@ -34,6 +44,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   if (!mongo) return;
+  clientIp++;
   await User.deleteMany({});
 });
 
@@ -47,8 +58,9 @@ async function post(path, body) {
       url: path,
       body,
       headers: { 'content-type': 'application/json' },
-      ip: '127.0.0.1',
-      socket: { remoteAddress: '127.0.0.1' },
+      // A real-looking address: express-rate-limit validates the shape.
+      ip: `10.0.0.${clientIp % 250 + 1}`,
+      socket: { remoteAddress: `10.0.0.${clientIp % 250 + 1}` },
       get(name) { return this.headers[name.toLowerCase()]; },
     };
     let statusCode = 200;
