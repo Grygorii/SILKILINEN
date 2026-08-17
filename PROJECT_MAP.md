@@ -22,6 +22,27 @@ or change an invariant, update the relevant line here in the same commit.
 
 ## Money path (CRITICAL — change with care)
 - `backend/routes/checkoutV2.js` mounted at `/api/v2/checkout`. Webhook at `/api/webhook`.
+- **`computeTotals()` in `backend/services/orderTotals.js` is the ONE order arithmetic**
+  (sale-vs-code, the non-negative clamp, shipping on the DISCOUNTED subtotal, tax reported
+  but NOT added since EU prices are VAT-inclusive). It was written FOUR times — `priceOrder`,
+  the intent-update path, the webhook that writes the Order document, and `routes/cart.js`
+  — so the totals SHOWN could drift from the totals CHARGED, which is the one drift this
+  file cannot afford. All four now call it; `tests/orderTotals.test.js` pins the invariants
+  that cost money if inverted (a winning sale must NOT consume a single-use code; a code
+  wins an exact tie; a discount can never raise the total, even if negative; a discount
+  dropping the order under the free-shipping threshold reinstates the fee). In the webhook
+  the Stripe METADATA still wins where present — that document is the financial record and
+  must describe the charge, not recompute an opinion of it.
+  ⚠️ Known divergence: `cart.js` applies only `cart.discountAmount` and knows nothing about
+  collection sales, so a basket holding a discounted-collection product can show a HIGHER
+  total in the cart than at checkout. Customer's favour today; fixing it means loading
+  products + collections on every cart read.
+- **Collection sales:** `discountedCollectionMap()` loads every active discounted collection
+  ONCE per priced order; `bestCollectionDiscount(ids, map)` is the pure per-product rule
+  (biggest wins; a product can sit in several). It used to be one `Collection.find()` per
+  cart LINE, awaited in the loop, on the two endpoints in front of "Continue to payment".
+  The map is keyed by `String(_id)` — `product.collections` holds ObjectIds, so an identity
+  lookup silently returns 0 and stops applying every sale in the shop.
 - **`priceOrder(body)` is the ONE pricer.** `/quote` returns `orderSummaryOf(priced)` with
   NO Stripe call; `/create-intent` calls the same function then creates the intent. The
   totals shown can never drift from the totals charged. Checkout **quotes on load and
