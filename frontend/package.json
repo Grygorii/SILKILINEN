@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "lint:invariants": "node scripts/lint-invariants.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

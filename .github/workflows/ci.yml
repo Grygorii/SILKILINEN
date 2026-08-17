@@ -1,0 +1,100 @@
+name: CI
+
+# Every guard in this repo ran only when someone remembered. The ESLint rules
+# that fail the build on a hand-built /product/ URL or a hex literal under
+# app/admin, the 131 backend tests, the storefront tests, the type checker —
+# all of it was manual, in a codebase whose entire design is "one owner + a
+# guard". A guard nothing runs is a comment.
+#
+# Deliberately not a deploy pipeline: Vercel and Railway already deploy from
+# master on their own. This only answers "would this change break something we
+# already know how to check".
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  # Lets a red run be re-tried without an empty commit.
+  workflow_dispatch:
+
+# A second push to the same branch makes the first run irrelevant — cancel it
+# rather than queueing minutes behind work nobody is waiting for.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Matches the engines field in backend/package.json (>=20 <25).
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      # `npm ci` and not `npm install`: it installs exactly the lockfile and
+      # fails if the lockfile and package.json disagree, which is itself worth
+      # knowing about.
+      - run: npm ci
+        working-directory: backend
+      - run: npm test
+        working-directory: backend
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+
+      - name: Tests
+        run: npm test
+        working-directory: frontend
+
+      # Separate steps so the log says which one failed without anyone opening it.
+      - name: Typecheck
+        run: npx tsc --noEmit
+        working-directory: frontend
+
+      # BLOCKING: the two bespoke invariants (canonical /product/ URLs, admin
+      # colour tokens). Both were written after the drift they prevent reached
+      # production, and neither was enforced anywhere — Next 16 does not run
+      # eslint during `next build`.
+      - name: Invariants
+        run: npm run lint:invariants
+        working-directory: frontend
+
+      # NOT blocking, deliberately. The full lint reports 113 errors that all
+      # predate this workflow — 78 react-hooks/set-state-in-effect across admin
+      # pages, plus unescaped entities and html links. Blocking on them would
+      # mean a refactor nobody asked for and would make every PR red on arrival;
+      # hiding them would lose the only place they are visible. So they are
+      # printed and the step passes. Flip continue-on-error off once the backlog
+      # is cleared.
+      - name: Lint (advisory — see step summary)
+        run: npm run lint
+        working-directory: frontend
+        continue-on-error: true
+
+      # Last because it is the slowest, and because a type error or a lint
+      # failure is a faster, clearer answer to the same question. This is also
+      # the only step that would catch a Next-specific build failure — the shop
+      # has already shipped one (a client/server boundary that only broke on
+      # Vercel), and nothing here could have caught it before.
+      - name: Build
+        run: npm run build
+        working-directory: frontend
+        env:
+          # The build fetches the catalogue for the sitemap and the feed. Point
+          # it at the real API so a build-time fetch failure is caught here
+          # rather than on Vercel; lib/apiFetch.ts times out in 4s and the
+          # storefront is written to survive an empty catalogue, so an outage
+          # slows this step rather than failing it.
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'https://silkilinen-production.up.railway.app' }}
