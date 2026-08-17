@@ -270,8 +270,9 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
 ## SEO invariants
 - **URLs have ONE owner: `frontend/lib/urls.ts`** (`productPath`/`productHref`,
   collection/category equivalents). Never hand-build `/product/${…}` — an ESLint
-  `no-restricted-syntax` rule fails the build if you do (admin-only preview links
-  are explicitly exempted inline). Root cause it fixes: links were built in six
+  `no-restricted-syntax` rule fails CI if you do, via `npm run lint:invariants` and NOT
+  via `next build` (admin-only preview links are explicitly exempted inline). Pinned by
+  `frontend/tests/urls.test.ts`: the rule guarded callers while nothing checked the owner. Root cause it fixes: links were built in six
   places three different ways, and the PDP colour swatches used the raw ObjectId,
   so Google indexed `/product/<ObjectId>` alongside the slug URL — two URLs for one
   page. The API now serves each `colorVariants[]` sibling's slug so swatches are
@@ -281,7 +282,18 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
 - Product JSON-LD on PDP (offers EUR-canonical, aggregateRating from product-linked reviews).
   Organization + WebSite JSON-LD in `app/layout.tsx`. Cloudinary preconnect in `<head>`.
 
-## Guards (build fails if broken)
+## Guards — what actually enforces them
+**`next build` does NOT run ESLint** (Next 16 dropped it), so every rule below was
+advisory for as long as it existed, and this section used to be headed "build fails if
+broken". What enforces them now is **`.github/workflows/ci.yml`** (push to master + every
+PR): backend `npm test`, frontend `npm test`, `tsc --noEmit`, `npm run lint:invariants`
+(BLOCKING), the full lint (ADVISORY), then `next build`.
+- **`npm run lint:invariants`** (`frontend/scripts/lint-invariants.mjs`) is the blocking
+  one, and covers `no-restricted-syntax` only — the two rules that are invariants rather
+  than style. The full `npm run lint` reports **113 pre-existing errors** (78
+  `react-hooks/set-state-in-effect` across admin pages, 16 unescaped entities, 13 html
+  links) so it cannot block without a refactor nobody asked for. Clear that backlog →
+  delete the script and make `npm run lint` blocking.
 - `no-restricted-syntax` — hand-built `/product/` URLs (whole repo, error); hex + colour
   keywords under `app/admin` (error; `Zone2Metrics.tsx` exempt for Recharts).
   **ESLint flat config REPLACES a rule's options rather than merging them** — a block that
@@ -310,5 +322,11 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   (+ `-soft`/`-bright`). Don't write `var(--tok, #hex)` fallbacks (the token is always defined).
 - Match existing style; surgical diffs (see root CLAUDE.md). Fail-loud in agents, fail-soft per item.
 - Prefer live DB data over hardcoded lists. Keep the EUR path untouched when touching currency.
-- Lint note: `react-hooks/set-state-in-effect` warnings on `useEffect(()=>{load()})` are
-  pre-existing across admin pages — not your regressions.
+- Lint note: `react-hooks/set-state-in-effect` on `useEffect(()=>{load()})` is pre-existing
+  across admin pages — not your regressions. They are **errors, not warnings** (78 of
+  them), which is why the full lint is advisory in CI; see the Guards section.
+- **Tests:** `backend/` 131 pure + 14 that need MongoDB (`tests/mongo.js` SKIPS them, loudly
+  on stderr, when the mongod binary can't be downloaded — set `MONGODB_TEST_URI` to run
+  them; a supplied-but-broken URI FAILS rather than skipping). `frontend/` has vitest too
+  (`npm test`, config `vitest.config.mts`, node env, no jsdom — the risky parts are pure
+  functions in `lib/`). Both run in CI.
