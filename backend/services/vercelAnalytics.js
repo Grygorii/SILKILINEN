@@ -150,8 +150,15 @@ async function getTraffic({ days = 14, fetchImpl = fetch } = {}) {
  */
 async function getTrafficCached(opts = {}) {
   const now = Date.now();
-  if (cache.data && now - cache.at < TTL_MS) return cache.data;
-  if (now - lastAttemptAt < RETRY_MS && cache.data) return cache.data;
+  // `force` is the founder pressing Refresh. Without it, the health panel's own
+  // force-refresh bypassed ITS cache and then read a reading up to 15 minutes
+  // old — so someone who had just set VERCEL_API_TOKEN would press Refresh, see
+  // the same "cannot be read" as before, and reasonably conclude it had not
+  // worked. A refresh button that does not refresh is worse than no button.
+  if (!opts.force) {
+    if (cache.data && now - cache.at < TTL_MS) return cache.data;
+    if (now - lastAttemptAt < RETRY_MS && cache.data) return cache.data;
+  }
 
   lastAttemptAt = now;
   const data = await getTraffic(opts);

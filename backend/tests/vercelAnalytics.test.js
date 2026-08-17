@@ -127,6 +127,20 @@ describe('vercel analytics reader', () => {
     expect(calls).toBe(4); // four for the first read, none for the second
   });
 
+  it('re-reads when the founder presses Refresh', async () => {
+    // The health panel's force-refresh bypassed only ITS cache, so a founder who
+    // had just set VERCEL_API_TOKEN pressed Refresh, got the same 15-minute-old
+    // answer, and would reasonably conclude the token had not worked.
+    let calls = 0;
+    const counting = async url => { calls++; return allOk(url); };
+    await getTrafficCached({ fetchImpl: counting });
+    expect(calls).toBe(4);
+    await getTrafficCached({ fetchImpl: counting });          // cached
+    expect(calls).toBe(4);
+    await getTrafficCached({ fetchImpl: counting, force: true }); // re-read
+    expect(calls).toBe(8);
+  });
+
   it('does not cache an error — a blip must not persist for 15 minutes', async () => {
     const out1 = await getTrafficCached({ fetchImpl: async () => { throw new Error('blip'); } });
     expect(out1.error).toBe('blip');

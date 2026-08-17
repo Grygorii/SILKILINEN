@@ -313,11 +313,11 @@ async function checkSerp() {
 // wrong? It lives in this panel because this is where the shop's other
 // two-systems-disagree check already lives (what the feed publishes vs what
 // Google holds) — same failure shape, same place to look.
-async function checkAnalyticsAgreement() {
+async function checkAnalyticsAgreement({ force = false } = {}) {
   const base = { name: 'analytics_agreement', label: 'Visitor counts agree' };
   const DAYS = 14;
 
-  const traffic = await getTrafficCached({ days: DAYS }).catch(err => ({ configured: true, error: err.message }));
+  const traffic = await getTrafficCached({ days: DAYS, force }).catch(err => ({ configured: true, error: err.message }));
 
   if (!traffic.configured) {
     return {
@@ -361,7 +361,7 @@ async function checkAnalyticsAgreement() {
   return { ...base, ...agreementVerdict({ ours, theirs: traffic.visitors, days: DAYS }) };
 }
 
-async function runChecks() {
+async function runChecks({ force = false } = {}) {
   // The feed check runs FIRST so its item count can be handed to the Merchant
   // Center check. Those two are the pair that has to be compared: one is what
   // we publish, the other is what Google holds, and until now nothing noticed
@@ -378,7 +378,7 @@ async function runChecks() {
     checkCatalogue(),
     checkMerchantLive(feedCheck.itemCount ?? null),
     checkSerp(),
-    checkAnalyticsAgreement(),
+    checkAnalyticsAgreement({ force }),
   ]);
 
   const checks = results.flatMap(r =>
@@ -400,7 +400,7 @@ router.get('/', requireAuth, async (req, res) => {
     return res.json({ ...cache, cached: true });
   }
   try {
-    const result = await runChecks();
+    const result = await runChecks({ force });
     cache = result;
     cacheAt = now;
     res.json({ ...result, cached: false });
