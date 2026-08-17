@@ -127,3 +127,49 @@ describe('vercel analytics reader', () => {
     expect(out2.enabled).toBe(true);
   });
 });
+
+// The thresholds are a judgement about when a gap is worth reporting, so they
+// are pinned here rather than left as numbers in a route. The asymmetry is the
+// point: everything that makes a decision reads OUR number, so ours being
+// silent is critical while ours being merely different is a warning.
+describe('tracker agreement verdict', () => {
+  const { agreementVerdict } = pkg;
+  const v = (ours, theirs) => agreementVerdict({ ours, theirs, days: 14 });
+
+  it('is critical when ours is silent and Vercel saw people', () => {
+    const out = v(0, 40);
+    expect(out.status).toBe('critical');
+    // Must name the consequence, not just the discrepancy.
+    expect(out.advice).toMatch(/empty shop/);
+  });
+
+  it('reports two zeroes as agreement on nothing, never as a fault', () => {
+    const out = v(0, 0);
+    expect(out.status).toBe('info');
+    expect(out.detail).toMatch(/agree, but on nothing/);
+  });
+
+  it('is healthy when the two are close', () => {
+    expect(v(100, 90).status).toBe('healthy');
+    expect(v(90, 100).status).toBe('healthy');
+  });
+
+  it('warns when ours loses half the traffic Vercel sees', () => {
+    const out = v(30, 100);
+    expect(out.status).toBe('warning');
+    expect(out.advice).toMatch(/ad blockers/);
+  });
+
+  it('warns the other way too, and blames bots rather than blockers', () => {
+    const out = v(300, 100);
+    expect(out.status).toBe('warning');
+    expect(out.advice).toMatch(/bot traffic/);
+  });
+
+  it('stays quiet on a small sample, where variance looks like a fault', () => {
+    // 5 vs 20 is a 4x gap, but 20 visitors is too few to accuse anything.
+    expect(v(5, 20).status).toBe('healthy');
+    // The same ratio with a real sample does get reported.
+    expect(v(25, 100).status).toBe('warning');
+  });
+});

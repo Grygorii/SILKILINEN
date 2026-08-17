@@ -153,9 +153,63 @@ async function getTrafficCached(opts = {}) {
   return data;
 }
 
+// ── Do our two counts of the same people agree? ──
+//
+// Exact agreement is not the goal and never happens: the two systems count
+// sessions differently, Vercel drops more bots, and ad blockers hit them
+// unequally. Only a gap big enough to change a decision is worth a word, so the
+// thresholds are deliberately wide and named here rather than buried in a route.
+const AGREEMENT = {
+  MIN_SAMPLE: 20, // below this, ordinary variance looks like a fault
+  LOW: 0.5,       // ours < half of theirs
+  HIGH: 2,        // ours > double theirs
+};
+
+/**
+ * @param {number} ours   distinct sessions our own beacon recorded
+ * @param {number} theirs visitors Vercel recorded over the same window
+ * @returns {{status: string, detail: string, advice?: string}}
+ */
+function agreementVerdict({ ours, theirs, days }) {
+  if (ours === 0 && theirs === 0) {
+    return {
+      status: 'info',
+      detail: `Neither tracker saw a visitor in ${days} days — they agree, but on nothing`,
+      advice: 'Two trackers reporting zero is consistent, so this is most likely real: the shop needs traffic, not a fix here.',
+    };
+  }
+
+  // The asymmetric case that matters most. Everything that makes decisions reads
+  // OUR number, so if ours is silent while Vercel sees people, the funnel, the
+  // advisor and every agent are confidently describing an empty shop.
+  if (ours === 0 && theirs > 0) {
+    return {
+      status: 'critical',
+      detail: `Vercel counted ${theirs} visitors in ${days} days and our own tracker counted none`,
+      advice: 'Our beacon is broken, not the shop. The funnel, the advisor and every agent read OUR number, so they are all currently reporting an empty shop. Check /api/track/visit is reachable from the storefront and that lib/track.ts is not throwing.',
+    };
+  }
+
+  const ratio = theirs > 0 ? ours / theirs : Infinity;
+  if (theirs > AGREEMENT.MIN_SAMPLE && (ratio < AGREEMENT.LOW || ratio > AGREEMENT.HIGH)) {
+    return {
+      status: 'warning',
+      detail: `Our tracker counted ${ours} visitors, Vercel counted ${theirs} (${days} days)`,
+      advice: ratio < AGREEMENT.LOW
+        ? 'Ours is losing roughly half the traffic Vercel sees — usually ad blockers, or the beacon failing on a route. Everything downstream (funnel, advisor) is reading the low number.'
+        : 'Ours is counting far more than Vercel — likely bot traffic our filter misses, or sessions being split. Both inflate the top of the funnel and depress every conversion rate below it.',
+    };
+  }
+
+  return {
+    status: 'healthy',
+    detail: `${ours} visitors ours · ${theirs} Vercel (${days} days) — close enough to trust`,
+  };
+}
+
 function _resetCache() {
   cache = { data: null, at: 0 };
   lastAttemptAt = 0;
 }
 
-module.exports = { isConfigured, getTraffic, getTrafficCached, _resetCache };
+module.exports = { isConfigured, getTraffic, getTrafficCached, agreementVerdict, AGREEMENT, _resetCache };

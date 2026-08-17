@@ -3,6 +3,7 @@ const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const Product = require('../models/Product');
 const { isConfigured: merchantConfigured, getProductIssues } = require('../services/merchantCenter');
+const { getTrafficCached, agreementVerdict } = require('../services/vercelAnalytics');
 
 // Honest SEO / Merchant health. The existing /api/admin/health checks
 // infrastructure (DB, Stripe, Cloudinary…) — it is green whenever the
@@ -298,6 +299,57 @@ async function checkSerp() {
   }
 }
 
+// Do our two trackers agree about how many people came?
+//
+// The shop counts visitors twice: our own beacon (lib/track.ts -> Visit, which
+// feeds the funnel, the advisor and every agent) and Vercel Analytics. Only our
+// beacon drives decisions, and it is the more fragile of the two — it is our own
+// JavaScript posting to our own API, so an ad blocker, a bad deploy or one
+// thrown exception silences it. A silenced beacon looks exactly like a quiet
+// shop, and the funnel would report "nobody arrived" with total confidence.
+//
+// Vercel's count is the second opinion that makes the first one checkable. This
+// check exists to answer one question: if they disagree badly, which one is
+// wrong? It lives in this panel because this is where the shop's other
+// two-systems-disagree check already lives (what the feed publishes vs what
+// Google holds) — same failure shape, same place to look.
+async function checkAnalyticsAgreement() {
+  const base = { name: 'analytics_agreement', label: 'Visitor counts agree' };
+  const DAYS = 14;
+
+  const traffic = await getTrafficCached({ days: DAYS }).catch(err => ({ configured: true, error: err.message }));
+
+  if (!traffic.configured) {
+    return {
+      ...base,
+      status: 'info',
+      detail: 'Vercel Analytics is not connected, so our own visitor count has nothing to be checked against',
+      advice: 'Set VERCEL_API_TOKEN + VERCEL_PROJECT_ID in Railway (see backend/.env.example). Until then the funnel has a single, unverifiable source.',
+    };
+  }
+  if (traffic.enabled === false) {
+    return {
+      ...base,
+      status: 'warning',
+      detail: 'Vercel Analytics has never been enabled for the project — it has recorded nothing',
+      advice: traffic.fix,
+    };
+  }
+  if (traffic.error) {
+    return { ...base, status: 'info', detail: `Could not read Vercel Analytics: ${traffic.error}` };
+  }
+
+  // Our own number, over the same window and the same population: distinct
+  // sessions, which is what the funnel's first stage counts.
+  const Visit = require('../models/Visit');
+  const since = new Date(Date.now() - DAYS * 24 * 60 * 60 * 1000);
+  const ours = (await Visit.distinct('sessionId', { createdAt: { $gte: since } }).catch(() => [])).length;
+
+  // What the gap MEANS is the service's call, and pinned by tests — the
+  // thresholds are a judgement, not a detail.
+  return { ...base, ...agreementVerdict({ ours, theirs: traffic.visitors, days: DAYS }) };
+}
+
 async function runChecks() {
   // The feed check runs FIRST so its item count can be handed to the Merchant
   // Center check. Those two are the pair that has to be compared: one is what
@@ -315,6 +367,7 @@ async function runChecks() {
     checkCatalogue(),
     checkMerchantLive(feedCheck.itemCount ?? null),
     checkSerp(),
+    checkAnalyticsAgreement(),
   ]);
 
   const checks = results.flatMap(r =>
