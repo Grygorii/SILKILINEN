@@ -49,6 +49,7 @@ const { calculateShipping, getTierForCountry } = require('../services/shipping')
 const { validateDiscount, redeemDiscount } = require('../services/discounts');
 const { availabilityError, decrementStockForOrder } = require('../services/inventory');
 const { calculateTax } = require('../services/tax');
+const { computeTotals } = require('../services/orderTotals');
 const { sendOrderConfirmation, sendAdminOrderNotification } = require('../services/email');
 
 // 20 intent operations per 5 minutes per IP. Generous enough for normal
@@ -292,17 +293,19 @@ async function priceOrder(body) {
       }
     }
 
-    // Collection sale vs promo code: not stacked — the customer gets the better
-    // of the two, and a winning sale doesn't consume a single-use code.
-    if (collectionDiscountAmount > discountAmount) {
-      discountAmount = collectionDiscountAmount;
-      discountCode = null;
-    }
-
-    const discountedSubtotal = Math.max(0, subtotal - discountAmount);
-    const shipping = calculateShipping(country, discountedSubtotal);
-    const tax = calculateTax(discountedSubtotal, country);
-    const total = discountedSubtotal + shipping.cost;
+    // The arithmetic — sale-vs-code, the non-negative clamp, shipping on the
+    // discounted subtotal, and tax reported but not charged — lives in
+    // services/orderTotals.js so it can be tested without a database. Same
+    // operations in the same order; this is where the numbers shown and the
+    // numbers charged are decided, so it is the one part that must be pinned.
+    const totals = computeTotals({
+      subtotal, collectionDiscountAmount, discountCode, discountAmount, country,
+    });
+    // The sale can win and drop the code, so these two are reassigned from the
+    // result rather than kept as computed above.
+    discountCode = totals.discountCode;
+    discountAmount = totals.discountAmount;
+    const { discountedSubtotal, shipping, tax, total } = totals;
 
     // Multi-currency: charge in the shopper's currency. EUR stays canonical for
     // the order + all reporting; we convert ONLY the Stripe charge and the
@@ -474,18 +477,19 @@ checkoutRouter.post('/update-intent', checkoutRateLimit, async (req, res) => {
       }
     }
 
-    // Collection sale (computed once at create-intent, carried in metadata) vs the
-    // promo code — better of the two, never both.
+    // Same arithmetic as priceOrder, through the same owner. This block used to
+    // be a hand-copied second implementation — sale-vs-code, the clamp, shipping
+    // on the discounted subtotal — so any change to the rules had to be made
+    // twice, and the totals SHOWN at quote could silently stop matching the
+    // totals CHARGED here. That is the one drift this file cannot afford.
     const collectionDiscountAmount = meta.collectionDiscountAmount ? parseFloat(meta.collectionDiscountAmount) : 0;
-    if (collectionDiscountAmount > discountAmount) {
-      discountAmount = collectionDiscountAmount;
-      discountCodeResult = null;
-    }
-
-    const discountedSubtotal = Math.max(0, subtotal - discountAmount);
-    const ship = calculateShipping(country, discountedSubtotal);
-    const total = discountedSubtotal + ship.cost;
-    const tax = calculateTax(discountedSubtotal, country);
+    const totals = computeTotals({
+      subtotal, collectionDiscountAmount, discountCode: discountCodeResult, discountAmount, country,
+    });
+    discountCodeResult = totals.discountCode;
+    discountAmount = totals.discountAmount;
+    const { discountedSubtotal, tax, total } = totals;
+    const ship = totals.shipping;
 
     // Charge currency is fixed for the life of the intent — reuse the rate
     // stored at creation so the amount can't drift if market rates move.
