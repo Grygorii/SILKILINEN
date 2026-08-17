@@ -1,3 +1,5 @@
+import { isExcludedFromAnalytics } from './analyticsExclude';
+
 const SESSION_KEY = 'silkilinen_sid';
 
 export function getSessionId(): string {
@@ -60,7 +62,8 @@ function detectDevice(): 'mobile' | 'tablet' | 'desktop' {
 export function trackVisit({ page, productId }: { page: string; productId?: string }) {
   try {
     if (typeof window === 'undefined') return;
-    if (window.location.pathname.startsWith('/admin')) return;
+    // Same rule Vercel Analytics uses — see lib/analyticsExclude.ts.
+    if (isExcludedFromAnalytics(window.location.pathname, window.location.search)) return;
 
     const sessionId = getSessionId();
     const referrer  = document.referrer || null;
@@ -105,7 +108,8 @@ export function trackClientEvent(
 ) {
   try {
     if (typeof window === 'undefined') return;
-    if (window.location.pathname.startsWith('/admin')) return; // never track the admin
+    // Same rule Vercel Analytics uses — see lib/analyticsExclude.ts.
+    if (isExcludedFromAnalytics(window.location.pathname, window.location.search)) return;
 
     const body = JSON.stringify({
       sessionId: getSessionId(),

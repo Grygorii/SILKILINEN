@@ -1,6 +1,7 @@
 'use client';
 
 import { Analytics } from '@vercel/analytics/next';
+import { isExcludedFromAnalytics } from '@/lib/analyticsExclude';
 
 // Vercel Analytics, filtered to the STOREFRONT.
 //
@@ -9,10 +10,10 @@ import { Analytics } from '@vercel/analytics/next';
 // of the "visitors". Those numbers then feed decisions about where customers
 // drop, which is the one place a polluted figure does real damage.
 //
-// lib/track.ts already refuses to record anything under /admin (twice, in
-// trackVisit and trackClientEvent). This makes the second tracker agree with
-// the first: two systems counting different populations is worse than either
-// one alone, because the disagreement is invisible until someone compares them.
+// What to exclude is NOT decided here: lib/analyticsExclude.ts owns it, and our
+// own beacon (lib/track.ts) reads the same rule, so the two trackers cannot
+// drift into counting different populations. They already had — this file
+// dropped the preview surfaces and track.ts did not.
 //
 // Returning null from beforeSend drops the event entirely — nothing is sent,
 // so admin URLs never reach Vercel at all rather than being filtered later in
@@ -22,12 +23,8 @@ export default function VercelAnalytics() {
     <Analytics
       beforeSend={event => {
         try {
-          const path = new URL(event.url).pathname;
-          // Admin, its login, and the preview/edit surfaces the founder uses —
-          // all of them are work, not shopping.
-          if (path.startsWith('/admin')) return null;
-          if (path.startsWith('/journal/preview')) return null;
-          if (path.includes('/preview/')) return null;
+          const { pathname, search } = new URL(event.url);
+          if (isExcludedFromAnalytics(pathname, search)) return null;
         } catch {
           // An unparseable URL is not a reason to lose a real pageview.
         }
