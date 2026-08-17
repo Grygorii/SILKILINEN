@@ -1,19 +1,25 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import express from 'express';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
 const User = require('../models/User.js');
 const authRouter = require('../routes/auth.js');
+const { tryStartMongo } = require('./mongo.js');
 
-let mongod;
+// Resolved before the suites are declared so an unavailable binary SKIPS them
+// rather than failing them — see tests/mongo.js for why that matters.
+const mongo = await tryStartMongo();
+
 let app;
 
+// The hooks are top-level (both suites below share them) so each one returns
+// early when there is no MongoDB: a top-level hook still runs even when every
+// test in the file is skipped.
 beforeAll(async () => {
-  mongod = await MongoMemoryServer.create({ binary: { version: '7.0.14' } });
-  await mongoose.connect(mongod.getUri());
+  if (!mongo) return;
+  await mongoose.connect(mongo.uri);
 
   app = express();
   app.use(express.json());
@@ -21,11 +27,13 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  if (!mongo) return;
   await mongoose.disconnect();
-  if (mongod) await mongod.stop();
+  await mongo.stop();
 });
 
 beforeEach(async () => {
+  if (!mongo) return;
   await User.deleteMany({});
 });
 
@@ -56,7 +64,7 @@ async function post(path, body) {
   });
 }
 
-describe('POST /api/auth/login', () => {
+describe.skipIf(!mongo)('POST /api/auth/login', () => {
   it('rejects unknown email with 401', async () => {
     const res = await post('/api/auth/login', { email: 'nobody@example.com', password: 'whatever' });
     expect(res.status).toBe(401);
@@ -97,7 +105,7 @@ describe('POST /api/auth/login', () => {
   });
 });
 
-describe('POST /api/auth/redeem-bootstrap', () => {
+describe.skipIf(!mongo)('POST /api/auth/redeem-bootstrap', () => {
   it('rejects an unknown nonce with 401', async () => {
     const res = await post('/api/auth/redeem-bootstrap', { bootstrap: 'definitely-not-issued' });
     expect(res.status).toBe(401);

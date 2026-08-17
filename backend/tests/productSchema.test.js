@@ -1,29 +1,28 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import { createRequire } from 'module';
 
 // Source is CJS; require it from ESM via createRequire.
 const require = createRequire(import.meta.url);
 const Product = require('../models/Product.js');
+const { tryStartMongo } = require('./mongo.js');
 
-let mongod;
+// Resolved before the suite is declared so an unavailable binary SKIPS these
+// rather than failing them — see tests/mongo.js for why that distinction matters.
+const mongo = await tryStartMongo();
 
-beforeAll(async () => {
-  // Pin to a Mongo version with prebuilt binaries on all supported Ubuntu
-  // images. mongodb-memory-server's auto-selected version sometimes picks a
-  // build that doesn't exist for the current platform (e.g. ubuntu2404 +
-  // mongo 8.2.x). 7.0.x covers everything we use.
-  mongod = await MongoMemoryServer.create({ binary: { version: '7.0.14' } });
-  await mongoose.connect(mongod.getUri());
-});
+describe.skipIf(!mongo)('Product schema F11 constraints', () => {
+  // Hooks live INSIDE the suite: a top-level beforeAll still runs when every
+  // test in the file is skipped, and would then dereference a null mongo.
+  beforeAll(async () => {
+    await mongoose.connect(mongo.uri);
+  });
 
-afterAll(async () => {
-  await mongoose.disconnect();
-  if (mongod) await mongod.stop();
-});
+  afterAll(async () => {
+    await mongoose.disconnect();
+    await mongo.stop();
+  });
 
-describe('Product schema F11 constraints', () => {
   it('rejects an empty product name', async () => {
     const p = new Product({ name: '', price: 10 });
     await expect(p.validate()).rejects.toThrow(/name/i);
