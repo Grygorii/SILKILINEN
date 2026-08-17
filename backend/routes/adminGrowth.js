@@ -45,6 +45,19 @@ router.get('/', async function(req, res) {
 
 function escapeRx(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
+// GET /api/admin/growth/opportunities — search demand joined to the shelf.
+// Each item carries its own numbers and one instruction; the judgement lives in
+// utils/demandFit.js so the panel, the advisor and the digest cannot disagree
+// about what a query means.
+router.get('/opportunities', async function(req, res) {
+  try {
+    res.json(await require('../services/opportunities').findOpportunities({ days: 28 }));
+  } catch (err) {
+    console.error('[growth] opportunities:', err.message);
+    res.status(500).json({ error: 'Could not build the opportunity list.' });
+  }
+});
+
 // GET /api/admin/growth/hermes-plan — Hermes' latest plays resolved into an
 // executable chain for the Rebuild SEO pipeline. Dedupes by entity and resolves
 // each ref to a real product/category/collection id so the pipeline can act.

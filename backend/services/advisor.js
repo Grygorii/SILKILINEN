@@ -257,6 +257,22 @@ async function buildRecommendations() {
     }
   }
 
+  // ── Opportunities: search demand, joined to the shelf ──
+  // The single biggest gap between "we have data" and "the admin serves me".
+  // Search Console knew what people search for and the catalogue knew what
+  // exists and how much is left; nothing put the two together, so every week the
+  // founder did that join by hand or not at all. Each proposal carries its own
+  // numbers, because "buy more stock" without the impressions behind it is just
+  // an opinion.
+  const opportunities = await require('./opportunities').findOpportunities({ days: 28 })
+    .catch(() => ({ connected: false, proposals: [] }));
+  for (const p of opportunities.proposals.slice(0, 3)) {
+    // Restock and range gaps are money now; presentation work is money later.
+    const priority = p.kind === 'restock' || p.kind === 'range' ? 'high' : 'medium';
+    const category = p.kind === 'rank' || p.kind === 'title' ? 'Conversion' : 'Demand';
+    recs.push(rec(priority, category, p.headline, p.why, p.action));
+  }
+
   // ── Demand we did not meet ──
   // A zero-result search is a customer who told us exactly what they wanted and
   // left with nothing. It reaches the weekly digest because it decays: knowing
