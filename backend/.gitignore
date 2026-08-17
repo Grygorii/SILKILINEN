@@ -1,3 +1,7 @@
 node_modules
 .env
 backend/.env
+# Plan files written by the review-then-apply scripts (renameProducts,
+# refileCategories). Generated on the Railway shell against live data and meant
+# to be read and edited there, not carried in the repo.
+scripts/*-plan.json
