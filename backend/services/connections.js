@@ -22,7 +22,7 @@ async function getConnections() {
     (() => { const k = process.env.INDEXNOW_KEY || 'dc1dfa43baff3a057f22f080ab65acfc'; return fetch(`${SITE}/${k}.txt`, { signal: AbortSignal.timeout(8000) }).then(r => r.ok).catch(() => false); })(),
   ]);
   const merchant = require('./merchantCenter').isConfigured();
-  const serp = require('./seoIntel').serpConfigured();
+  const serpState = require('./seoIntel').serpStatus();
   const env = process.env;
 
   const groups = [
@@ -33,7 +33,13 @@ async function getConnections() {
     ] },
     { category: 'Search & discovery', sources: [
       live('Google Search Console', gsc, 'Real search demand & rankings — the SEO brain’s fuel.', 'Connect via Admin → SEO (Google OAuth).'),
-      live('Live SERP (Custom Search)', serp, 'See who actually ranks for your queries.', 'Set GOOGLE_CSE_KEY + GOOGLE_CSE_ID in Railway.'),
+      // Three states, not two. "Credentials set but the engine only searches a
+      // curated site list" is neither live nor missing — reporting it as LIVE
+      // is what let a competitor list pass for Google's page one.
+      live('Live SERP (Custom Search)', serpState.state === 'web',
+        'See who actually ranks for your queries.',
+        serpState.advice,
+        serpState.state === 'sites' ? serpState.detail : ''),
       live('IndexNow', indexnowOk, 'Instant Bing/Yandex indexing the moment you publish.', 'Confirm the key file is reachable.'),
       live('Sitemap', sitemapOk, 'The map crawlers follow to find every page.', 'Sitemap route is failing — check the frontend build.'),
       opp('Bing Webmaster Tools', 'A second engine — and it powers Copilot/ChatGPT search.', 'Import from Google Search Console at bing.com/webmasters.'),

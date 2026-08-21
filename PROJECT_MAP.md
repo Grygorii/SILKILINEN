@@ -122,6 +122,20 @@ or change an invariant, update the relevant line here in the same commit.
   enforces it after assembling both lists — `kind:'content'` plays whose `target`
   matches a surfaced cannibalisation block are held and reported on that block;
   `kind:'meta'` plays pass (they sharpen an existing page, adding no URL).
+- **Search-engine scope is DECLARED, not guessed:** `services/seoIntel.js`
+  `serpStatus()` is the ONE description of what `GOOGLE_CSE_ID` points at, read
+  by the health check and Connections. A Programmable Search Engine searches only
+  its site list unless created with "Search the entire web" — two instruments,
+  one API, and the API never says which. Ours is a curated ~40-site set
+  (silkilinen.com + La Perla, Eberjey, Lunya, Olivia von Halle) and Google no
+  longer offers the whole-web option on new engines for this account, so this is
+  permanent. `serpAnalysis()` therefore returns NOTHING unless
+  `GOOGLE_CSE_SCOPE=web` is explicitly set (default `sites`); an all-ours result
+  set is refused as a backstop for a wrong declaration. `curatedSearch()` keeps
+  the site list available to anything wanting competitors rather than rankings.
+  Read as a SERP, five boutiques look like a soft page one and Hermes calls a
+  fight winnable that John Lewis owns — wrong, confident and invisible, where no
+  SERP is a visible gap Hermes reasons through openly.
 
 ## One-owner invariants (the anti-drift rules)
 The recurring bug in this codebase is **duplicated truth** — the same fact copied

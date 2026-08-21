@@ -280,19 +280,31 @@ async function checkMerchantLive(feedItemCount = null) {
   }
 }
 
-// Live SERP (Google Custom Search) — verifies the key actually works AND that
-// the engine searches the whole web (no results usually means "Search the
-// entire web" is still off). Powers Hermes' SERP analysis.
+// Live SERP (Google Custom Search).
+//
+// Reports what the configured engine IS, not merely whether a call succeeded.
+// The distinction that matters: an engine restricted to a site list answers
+// every query happily and cannot ever show page one. This panel used to call
+// that "Connected — Hermes can analyse the SERP", which is how a curated
+// competitor list came to be read as Google's results.
 async function checkSerp() {
   const base = { name: 'serp', label: 'Live SERP (Custom Search)' };
-  const { serpConfigured, serpAnalysis } = require('../services/seoIntel');
-  if (!serpConfigured()) {
-    return { ...base, status: 'info', detail: 'Not connected', advice: 'Set GOOGLE_CSE_KEY + GOOGLE_CSE_ID in Railway so Hermes can read the live Google SERP.' };
-  }
+  const { serpStatus, serpAnalysis } = require('../services/seoIntel');
+  const st = serpStatus();
+
+  if (st.state === 'none') return { ...base, status: 'info', detail: st.detail, advice: st.advice };
+  // Credentials fine, instrument wrong. Nothing is broken and nothing is
+  // actionable, so this is information rather than a warning nobody can clear.
+  if (st.state === 'sites') return { ...base, status: 'info', detail: st.detail, advice: st.advice };
+
   try {
     const r = await serpAnalysis('silk robe');
-    if (r.error) return { ...base, status: 'warning', detail: `Configured but the API errored: ${r.error}`, advice: 'Check the API key and that the Custom Search API is enabled in Google Cloud.' };
-    if (!r.results.length) return { ...base, status: 'warning', detail: 'Configured but returned no results', advice: 'In your Programmable Search Engine settings, turn ON "Search the entire web".' };
+    if (r.error) {
+      return { ...base, status: 'warning', detail: `Configured but the API errored: ${r.error}`, advice: r.siteRestricted
+        ? 'GOOGLE_CSE_SCOPE=web is set, but the engine is returning only our own pages — point GOOGLE_CSE_ID at a whole-web engine or unset the scope.'
+        : 'Check the API key and that the Custom Search API is enabled in Google Cloud.' };
+    }
+    if (!r.results.length) return { ...base, status: 'warning', detail: 'Configured but returned no results', advice: 'The engine answered with nothing for a common query — confirm GOOGLE_CSE_ID points at a live whole-web engine.' };
     return { ...base, status: 'healthy', detail: `Connected — ${r.results.length} live results for a test query. Hermes can analyse the SERP.` };
   } catch (err) {
     return { ...base, status: 'warning', detail: `Check failed: ${err.message}` };

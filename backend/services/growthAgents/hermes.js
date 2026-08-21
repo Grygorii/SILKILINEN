@@ -260,7 +260,11 @@ async function run() {
       : 'CANNIBALISATION: none detected.',
     serp.length
       ? `LIVE SERP for your striking-distance queries (judge realistically — can a meta tweak win, or are you out-gunned by deeper content?):\n${serp.map(s => `- "${s.query}": ${s.configured ? (s.results.map(r => `[${r.displayLink}] ${r.title}`).join(' | ') || 'no results returned') : 'SERP API not configured'}`).join('\n')}`
-      : (serpConfigured() ? '' : 'LIVE SERP: not configured — reason about likely intent/format from your own knowledge (founder can set GOOGLE_CSE_KEY + GOOGLE_CSE_ID to feed real SERPs).'),
+      // No SERP is a state Hermes must reason THROUGH, not around. The old
+      // copy sent the founder to set two variables that are already set — the
+      // engine simply cannot search the whole web — so it read as a fixable
+      // gap forever.
+      : (serpConfigured() ? '' : 'LIVE SERP: unavailable — no whole-web search engine is connected, so you cannot see who holds page one. Reason about likely intent and format from your own knowledge, and say plainly in the issue when a play depends on an assumption about the competition rather than on observed results.'),
     notIndexed.length
       ? `NOT INDEXED — these key pages are NOT confirmed in Google's index, so meta/content tweaks cannot rank them until fixed: ${notIndexed.map(i => i.url).join(', ')}.`
       : '',
