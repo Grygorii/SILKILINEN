@@ -35,11 +35,14 @@ async function getConnections() {
       live('Google Search Console', gsc, 'Real search demand & rankings — the SEO brain’s fuel.', 'Connect via Admin → SEO (Google OAuth).'),
       // Three states, not two. "Credentials set but the engine only searches a
       // curated site list" is neither live nor missing — reporting it as LIVE
-      // is what let a competitor list pass for Google's page one.
-      live('Live SERP (Custom Search)', serpState.state === 'web',
-        'See who actually ranks for your queries.',
-        serpState.advice,
-        serpState.state === 'sites' ? serpState.detail : ''),
+      // is what let a competitor list pass for Google's page one. It shows as
+      // OFF, which is true (there is no live SERP), with the explanation as a
+      // NOTE rather than an action: nothing here is fixable, and an amber
+      // "→ do this" that nobody can act on is how a panel trains you to skim.
+      serpState.state === 'sites'
+        ? { name: 'Live SERP (Custom Search)', status: 'off', why: 'See who actually ranks for your queries.', action: '', note: `${serpState.detail}. ${serpState.advice}` }
+        : live('Live SERP (Custom Search)', serpState.state === 'web',
+          'See who actually ranks for your queries.', serpState.advice),
       live('IndexNow', indexnowOk, 'Instant Bing/Yandex indexing the moment you publish.', 'Confirm the key file is reachable.'),
       live('Sitemap', sitemapOk, 'The map crawlers follow to find every page.', 'Sitemap route is failing — check the frontend build.'),
       opp('Bing Webmaster Tools', 'A second engine — and it powers Copilot/ChatGPT search.', 'Import from Google Search Console at bing.com/webmasters.'),
