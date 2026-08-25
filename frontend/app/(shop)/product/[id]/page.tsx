@@ -18,6 +18,7 @@ import Breadcrumbs from '@/components/Breadcrumbs';
 import { ProductSelectionProvider } from '@/components/ProductSelectionContext';
 import { AccordionGroup, AccordionItem } from '@/components/ui/Accordion';
 import FabricCare from '@/components/FabricCare';
+import QualityMarks from '@/components/QualityMarks';
 import { mommeReading, hasFabricDetail } from '@/lib/fabricCare';
 import { shippingDetailsFor, merchantReturnPolicy } from '@/lib/shippingSchema';
 import { clampMeta } from '@/lib/clampMeta';
@@ -369,6 +370,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                   <Price eur={Number(product.compareAtPrice)} className={styles.priceCompare} />
                 )}
               </p>
+
+              {/* The value answer at the moment the price is read. The same
+                  facts live in the Fabric & care panel below, but a customer
+                  deciding whether €168 is reasonable decides here, not three
+                  sections down behind a closed accordion. */}
+              <QualityMarks composition={product.materialComposition} momme={product.momme} />
 
               <StockBadge product={product} />
 

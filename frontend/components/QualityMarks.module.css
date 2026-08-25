@@ -1,0 +1,27 @@
+/* Brand tokens only. Quiet by design — this sits directly under the price and
+   must not compete with it; it is the footnote that justifies the number. */
+
+.marks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  margin: 8px 0 0;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.mark {
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.sep {
+  /* Padding on the separator rather than a gap on the row, so a mark that
+     wraps to a second line does not start with a stray dot. */
+  padding: 0 8px;
+  color: var(--color-line);
+}

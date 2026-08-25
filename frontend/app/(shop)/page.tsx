@@ -2,9 +2,11 @@ import type { Metadata } from 'next';
 import styles from './page.module.css';
 import Image from 'next/image';
 import ReviewsCarousel, { type ReviewData } from '@/components/ReviewsCarousel';
+import { curateReviews } from '@/lib/reviewCuration';
 import NewArrivals from '@/components/NewArrivals';
 import StyleFinderBand from '@/components/StyleFinderBand';
 import ReassuranceRow from '@/components/ReassuranceRow';
+import QualityBand from '@/components/QualityBand';
 import CategoryTiles from '@/components/CategoryTiles';
 import FeaturedCollections from '@/components/FeaturedCollections';
 import StorySection from '@/components/StorySection';
@@ -45,16 +47,26 @@ export async function generateMetadata(): Promise<Metadata> {
 // were serialised into the homepage HTML for a decorative strip. The true
 // average/count still come from /summary below, so the social proof stays honest.
 const CAROUSEL_REVIEWS = 12;
+// Read a wider slice than we show, so curateReviews has something to choose
+// between. Twelve of twelve is not a selection. Still far short of the ~107
+// approved reviews the unpaginated branch would return, which is the payload
+// problem this limit was introduced to fix.
+const REVIEW_POOL = 40;
 
 async function getReviews(): Promise<ReviewData[]> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reviews?limit=${CAROUSEL_REVIEWS}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reviews?limit=${REVIEW_POOL}`, {
       next: { revalidate: 3600 },
     });
     if (!res.ok) return [];
     const data = await res.json();
     // The paginated branch returns { reviews, ... }; the legacy one an array.
-    return Array.isArray(data) ? data : (data.reviews ?? []);
+    const all: ReviewData[] = Array.isArray(data) ? data : (data.reviews ?? []);
+    // Most specific first, RATING-BLIND. The average and count shown beside the
+    // carousel come from /summary over every approved review, so what leads the
+    // strip cannot move the number a customer reads — which is what keeps this
+    // curation and not selective presentation.
+    return curateReviews(all, CAROUSEL_REVIEWS);
   } catch {
     return [];
   }
@@ -138,6 +150,13 @@ export default async function Home() {
           quiz pattern), in the brand's calm voice. The band owns its own
           scroll-reveal ribbon + animated CTA (client component). */}
       <StyleFinderBand />
+
+      {/* Why the price is the price. Sits ABOVE ReassuranceRow because the two
+          answer different questions and this is the earlier one: product trust
+          ("is it worth it") comes before service trust ("is it safe to buy").
+          On the warm surface so two icon-ish rows in sequence don't read as one
+          repeated section. */}
+      <QualityBand />
 
       <ReassuranceRow />
 
