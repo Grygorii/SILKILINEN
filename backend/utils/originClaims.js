@@ -44,6 +44,10 @@ const ALLOWED = [
   // Where the brand is from
   /an?\s+irish\s+silk\s*(?:&|and)\s*linen\s+brand/gi,
   /\ban\s+irish\s+brand\b/gi,
+  // "house", "label", "brand" name the BUSINESS, not the fibre — an Irish
+  // silk house is an Irish company that works in silk, which is exactly what
+  // this one is. Only "Irish silk" attached to the PRODUCT is the claim.
+  /an?\s+(?:independent\s+)?irish\s+(?:silk|linen)(?:\s*(?:&|and)\s*(?:silk|linen))?\s+(?:house|brand|label)/gi,
   /\birish[-\s]founded\b/gi,
   /\bbased\s+in\s+donegal\b/gi,
   /\bborn\s+in\s+donegal\b/gi,
@@ -91,7 +95,10 @@ const BANNED = [
   },
   {
     id: 'small-batch',
-    re: /\bsmall\s+(?:batch|batches|runs?)\b/i,
+    // Hyphenated is the commoner form in marketing copy — "small-batch
+    // production" — and an earlier version of this pattern allowed only
+    // whitespace, so the phrase walked past the guard on its first real test.
+    re: /\bsmall[-\s]+(?:batch|batches|runs?)\b/i,
     why: 'A production claim we cannot keep across suppliers. "Small, considered collections" says the true thing — we control the range, not the factory.',
   },
 ];

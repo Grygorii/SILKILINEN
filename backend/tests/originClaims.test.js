@@ -88,6 +88,23 @@ describe('the rule', () => {
     expect(isOriginSafe('Irish craftsmanship in every seam')).toBe(false);
   });
 
+  // Both found by running an outside consultant's proposed homepage copy
+  // through the guard. The hyphen gap is the more embarrassing: the phrase
+  // walked past on its first contact with real marketing prose.
+  it('catches "small-batch" hyphenated, which is how marketing copy writes it', () => {
+    expect(isOriginSafe('Small-batch production')).toBe(false);
+    expect(isOriginSafe('made in small batches')).toBe(false);
+    expect(isOriginSafe('small runs')).toBe(false);
+  });
+
+  it('allows "an Irish silk house", which names the business not the fibre', () => {
+    // "House" works like "fashion house" — it is the company. Only "Irish silk"
+    // attached to the PRODUCT is the forbidden claim.
+    expect(isOriginSafe('An independent Irish silk house born on the Atlantic coast')).toBe(true);
+    expect(isOriginSafe('an Irish silk & linen house')).toBe(true);
+    expect(isOriginSafe('Our Irish silk is woven for longevity')).toBe(false);
+  });
+
   it('catches claims about how, not just where', () => {
     expect(isOriginSafe('Handmade silk robes')).toBe(false);
     expect(isOriginSafe('hand-finished edges')).toBe(false);
