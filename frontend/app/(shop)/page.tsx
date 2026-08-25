@@ -72,8 +72,16 @@ async function getReviews(): Promise<ReviewData[]> {
   }
 }
 
-// Brand-wide average + count (all 4★+ reviews), independent of how many the
-// carousel displays — so "4.9 from 107+ reviews" stays accurate.
+// Brand-wide average + count over EVERY approved review at any rating —
+// independent of how many the carousel displays, so the headline figure stays
+// accurate however the strip is curated.
+//
+// This comment used to say "all 4★+ reviews", describing a filter that was
+// deliberately removed: computing the average from 4★+ only made it incapable
+// of falling below 4.0 whatever customers actually said, while that same figure
+// feeds aggregateRating in the product JSON-LD and is therefore asserted to
+// Google as fact. /api/reviews/summary has been correct for a while; the
+// comment was still advertising the bug, which is how someone "restores" it.
 async function getReviewSummary(): Promise<{ average: number; count: number }> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reviews/summary`, {
