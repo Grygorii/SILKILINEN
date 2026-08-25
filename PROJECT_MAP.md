@@ -98,7 +98,7 @@ or change an invariant, update the relevant line here in the same commit.
   = per-page overview that deep-links into it. The **announcement bar** text is `banner_message_1..4`
   (section `banner`); if absent in DB, `components/AnnouncementBar.tsx` falls back to hardcoded
   defaults. Seed/restore with `backend/scripts/seedSiteContent.js` (idempotent).
-- **components/** — incl. `inline/InlineEdit.tsx` (WYSIWYG `?edit=1`), `Price.tsx`,
+- **components/** — incl. `inline/InlineEdit.tsx` (WYSIWYG `?edit=1`), `Price.tsx`, `FabricCare.tsx`,
   `ProductReviews.tsx`, `Navbar`, `CurrencySwitcher`, `SiteBreadcrumbs`.
 - **context/** — Cart, Currency, Wishlist, Customer, CookieConsent (nested in `app/layout.tsx`).
 - **lib/** — `clampMeta` (≤160 meta desc), `cloudinaryLoader` (f_auto,q_auto transforms),
@@ -285,6 +285,20 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   before the reader's update landed and overwrote a real saved basket.
 - **NEW badge:** the manual `isNewArrival` flag only, on BOTH card and PDP. A time-based
   fallback on an ISR-cached page freezes at snapshot time and then lies.
+- **Fabric & care (PDP):** `frontend/lib/fabricCare.ts` — `careSteps()`, `mommeReading()`,
+  `hasFabricDetail()`; rendered by `components/FabricCare.tsx` inside the "Fabric & care"
+  accordion, with the momme on the CLOSED row via `AccordionItem meta`. **Momme is never
+  invented** — it is a per-product measurement that also feeds the Merchant `material`
+  field, so an empty field shows no weight rather than a plausible default; a weight
+  written into `materialComposition` is read only where a number sits against the unit
+  (`19mm`/`momme`), because a bare first-number grab reads "95% Silk 5% Elastane" as 95
+  momme. Care free text is split per instruction and **no instruction is ever dropped** —
+  an unclassified phrase gets a neutral marker, since a lost "do not tumble dry" ruins the
+  garment. Icons are ISO 3758 CATEGORY markers, not claims: "Iron on low" and "Do not
+  iron" share a glyph and the text says which, so nothing has to parse negation. A general
+  silk/linen care list stands in when the founder wrote none, gated on the composition
+  naming a fabric and flagged `general` so the page says whose instruction it is.
+  Pinned by `tests/fabricCare.test.ts`.
 - **Product names:** `backend/utils/productName.js` — `Silk [garment] in [Colour]`,
   sentence case, no brand prefix. The admin form calls `/api/admin/products/name-check`
   (never blocks, just suggests); `scripts/renameProducts.js` writes a plan file you edit

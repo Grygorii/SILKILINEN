@@ -16,7 +16,9 @@ import Price from '@/components/Price';
 import ProductViewTracker from '@/components/ProductViewTracker';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import { ProductSelectionProvider } from '@/components/ProductSelectionContext';
-import { AccordionGroup, AccordionItem, AccordionSubLabel } from '@/components/ui/Accordion';
+import { AccordionGroup, AccordionItem } from '@/components/ui/Accordion';
+import FabricCare from '@/components/FabricCare';
+import { mommeReading, hasFabricDetail } from '@/lib/fabricCare';
 import { shippingDetailsFor, merchantReturnPolicy } from '@/lib/shippingSchema';
 import { clampMeta } from '@/lib/clampMeta';
 import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, localeHref, type PageLocale } from '@/lib/i18n-server';
@@ -180,6 +182,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const total = product.totalStock ?? product.stockLevel ?? null;
   const outOfStock = total === 0;
   const materialSub = getMaterialSub(product.materialComposition);
+  // Asked before the row is drawn, by the same rule the panel uses to decide
+  // whether to render: an accordion labelled "Fabric & care" that opens onto
+  // nothing is worse than no row at all.
+  const hasFabric = hasFabricDetail(product);
+  const weight = mommeReading(product.momme, product.materialComposition);
+  const fabricMeta = weight ? `${weight.value} momme` : undefined;
   // Design-system v1: manual isNewArrival flag set in admin. Fall back to
   // the 30-day-since-createdAt heuristic for products that pre-date the
   // field so the badge doesn't suddenly disappear from existing recent
@@ -426,27 +434,16 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                       ))}
                     </AccordionItem>
                   )}
-                  {(product.materialComposition || product.careInstructions || product.momme) && (
-                    <AccordionItem label="Material & care">
-                      {product.materialComposition && (
-                        <>
-                          <AccordionSubLabel>Composition</AccordionSubLabel>
-                          <p>{product.materialComposition}</p>
-                        </>
-                      )}
-                      {product.momme && (
-                        <>
-                          <AccordionSubLabel>Weight</AccordionSubLabel>
-                          <p>{product.momme} momme</p>
-                          <p className={styles.mommeNote}>Momme (mm) measures silk weight — the higher the momme, the more substantial, durable and opaque the silk.</p>
-                        </>
-                      )}
-                      {product.careInstructions && (
-                        <>
-                          <AccordionSubLabel>Care</AccordionSubLabel>
-                          <p>{product.careInstructions}</p>
-                        </>
-                      )}
+                  {hasFabric && (
+                    // The momme rides on the closed row: it is the number a
+                    // premium silk buyer looks for, and it used to be two
+                    // clicks and a paragraph away.
+                    <AccordionItem label="Fabric & care" meta={fabricMeta}>
+                      <FabricCare
+                        composition={product.materialComposition}
+                        momme={product.momme}
+                        care={product.careInstructions}
+                      />
                     </AccordionItem>
                   )}
                   <AccordionItem label="Delivery & returns">

@@ -72,3 +72,11 @@
   color: var(--color-ink-muted);
 }
 .sub:first-child { margin-top: 0; }
+
+/* Quiet teaser on a closed row (e.g. "22 momme"). Muted and normal-cased so it
+   reads as a value beside the label, not as a second label. */
+.meta {
+  margin-left: var(--s-3);
+  letter-spacing: 1.5px;
+  color: var(--color-ink-muted);
+}

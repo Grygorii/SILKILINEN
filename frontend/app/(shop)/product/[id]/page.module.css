@@ -247,12 +247,6 @@
 /* "momme" glossary — the silk-weight unit is jargon to a first-time visitor.
    A brief inline note explains it (visible on touch too, unlike a hover-only
    tooltip). */
-.mommeNote {
-  margin-top: 4px;
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.5;
-}
 
 /* Description paragraphs. The founder writes the story with blank-line breaks;
    JSX collapsed them, so it rendered as one block. Each paragraph is its own

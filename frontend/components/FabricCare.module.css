@@ -1,0 +1,134 @@
+/* Brand tokens only — no literal colours on the storefront. */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.block > * + * { margin-top: var(--s-2); }
+
+/* Matches the accordion's own sub-label so this reads as part of the panel. */
+.label {
+  margin: 0;
+  font-family: 'Jost', sans-serif;
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.value {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+/* ── Weight ── */
+
+.momme {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  margin: 0;
+}
+
+/* The one figure on this panel worth a moment. Tabular so it does not shift
+   between products in a colour-variant switch. */
+.mommeValue {
+  font-size: 32px;
+  font-weight: 300;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
+
+.mommeUnit {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--color-ink-muted);
+}
+
+.mommeBand {
+  margin-left: auto;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--color-gold);
+}
+
+.scale {
+  position: relative;
+  height: 12px;
+  margin-top: var(--s-3);
+}
+
+.scaleLine {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: var(--stroke);
+  background: var(--color-line);
+}
+
+.scaleMark {
+  position: absolute;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-ink);
+  /* Centred on its own position rather than offset from the left edge, so the
+     marker sits ON the value at both ends of the bar instead of hanging off. */
+  transform: translate(-50%, -50%);
+}
+
+.scaleEnds {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Jost', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.note {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--color-ink-muted);
+}
+
+/* ── Care ── */
+
+.care {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.careStep {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-2) 0;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.5;
+}
+
+.careStep + .careStep { border-top: var(--stroke) solid var(--color-line); }
+
+.glyph {
+  display: inline-flex;
+  flex: 0 0 16px;
+  /* Optically centred against the first line of a 15px/1.5 step. */
+  margin-top: 2px;
+  color: var(--color-ink-muted);
+}

@@ -14,10 +14,18 @@ export function AccordionGroup({ children }: { children: React.ReactNode }) {
 
 export function AccordionItem({
   label,
+  meta,
   defaultOpen = false,
   children,
 }: {
   label: string;
+  /**
+   * Optional quiet value shown on the CLOSED row, for a panel whose headline
+   * fact is worth reading without opening it — the silk weight, say. It is a
+   * teaser, never the only place a fact appears: everything shown here is also
+   * inside the panel, so collapsing the row loses nothing.
+   */
+  meta?: string;
   defaultOpen?: boolean;
   children: React.ReactNode;
 }) {
@@ -33,7 +41,10 @@ export function AccordionItem({
         onClick={() => setOpen(o => !o)}
         className={styles.row}
       >
-        <span>{label}</span>
+        <span>
+          {label}
+          {meta && <span className={styles.meta}>{meta}</span>}
+        </span>
         <span className={`${styles.chev} ${open ? styles.chevOpen : ''}`} aria-hidden="true">
           <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1">
             <path d="M3 5l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
