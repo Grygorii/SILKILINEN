@@ -46,7 +46,7 @@ const ENTRIES = [
     refSource: 'David Ogilvy',
     tags: ['content', 'marketing', 'email', 'copywriting'],
     text: [
-      'Sell the benefit, and prove it with SPECIFICS — concrete facts ("22-momme mulberry silk, hand-finished in Donegal") outsell vague adjectives ("luxurious", "premium").',
+      'Sell the benefit, and prove it with SPECIFICS — concrete facts ("22-momme mulberry silk, bias-cut, French seams") outsell vague adjectives ("luxurious", "premium").',
       'The headline does most of the work; make it about the reader\'s desire or problem, and if it does not pull her into the next line, the rest is wasted.',
       'Long copy sells when every line earns its place — give a considered buyer the full story, but never pad.',
       'Write the way you speak: clear, warm, specific; avoid superlatives, generalisations and clichés.',

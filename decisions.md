@@ -128,6 +128,23 @@ Date: 2026-06-02
 
 ---
 
+# 0009 — The origin rule becomes code (enforces 0008)
+Date: 2026-08-25
+
+**Chose:** `backend/utils/originClaims.js` is the ONE definition of a forbidden origin claim, with `tests/originClaims.test.js` scanning human-authored customer copy across BOTH packages on every CI run, plus `scripts/auditCopyClaims.js` to find the same claims in the live database.
+**Over:** Leaving 0008 as prose in `brand.md`, `SILKILINEN.md` and `project-instructions.md`, and trusting the next writer to have read it.
+**Because:** 0008 was decided in June, implemented in June, and by August the claims were back — five product descriptions in `seed.js` said "Made in Ireland", `fixBridalEdit.js` (written afterwards) put it into a live collection description, the About page said "We produce in small runs", and `seedLibrary.js` was teaching every AI agent that `"22-momme mulberry silk, hand-finished in Donegal"` is model copy. Nothing failed, because there was nothing to fail: prose does not run in CI. The guard found three of those five on its first execution, including one nobody had read closely enough to notice.
+**Reusable for:** Any rule that is a business or legal constraint rather than a type — brand claims, regulated wording, accessibility copy. If it only exists in a markdown file, assume it will decay.
+**Code:** `backend/utils/originClaims.js` (rule), `backend/tests/originClaims.test.js` (unit + repo scan), `backend/scripts/auditCopyClaims.js` (live DB, read-only). `scripts/auditOrigin.js` now reads the shared rule instead of its own regex.
+**Watch out:**
+  - **The scan covers CODE, not the database.** The live site's copy is in MongoDB, and that is where the claims the founder can still see actually live. `auditCopyClaims.js` reports them; a human rewrites them. `fixOriginContent.js` has still never been run.
+  - **False positives are the real threat to this guard**, not false negatives. "An Irish silk & linen brand" contains "Irish silk"; "We make every effort to display colours accurately" is not a factory claim. Both are pinned as tests, because a guard that cries wolf gets deleted rather than fixed.
+  - **Comments are not copy** — the scan strips them, so a migration may quote the claim it removes. A banned phrase in a real string is still caught.
+  - The scan asserts it found >50 files. A path-based guard whose glob matches nothing passes forever.
+  - **AI-authored copy is guarded separately**, inside eight agent system prompts. The scan deliberately skips `backend/services` — a prompt that says NEVER SAY "made in Ireland" contains the string it forbids.
+
+---
+
 # [next] — Title
 Date: YYYY-MM-DD
 

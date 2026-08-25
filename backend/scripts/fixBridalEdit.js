@@ -27,7 +27,10 @@ const APPLY = process.argv.includes('--apply');
 
 const NAME = 'The Bridal Edit';
 // One human sentence. Says what it is and who it is for, and stops.
-const DESCRIPTION = 'Silk for the morning of — robes, slips and eye masks, made in Ireland and chosen to photograph as softly as they wear.';
+// No origin claim: this script writes straight into the live Collection, and
+// the sentence it replaced asserted "made in Ireland" for a set drawn from a
+// mixed-origin range (ADR 0008). Guarded now by tests/originClaims.test.js.
+const DESCRIPTION = 'Silk for the morning of — robes, slips and eye masks, chosen to photograph as softly as they wear.';
 
 async function main() {
   if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is not set');

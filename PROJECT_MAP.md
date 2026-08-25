@@ -156,6 +156,19 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   `https://www.silkilinen.com/...` in a canonical silently breaks the `/de|/fr|/it|/es`
   versions (it did: `/de/shop?new=true` was canonicalising to the English URL).
 - **Colour:** brand tokens only (see Conventions) — never hardcode hex on the storefront.
+- **Origin claims:** `backend/utils/originClaims.js` — `findOriginClaims(text)` is the ONE
+  rule for what may be said about where things are made (ADR 0008/0009). Origin is MIXED
+  and per-product, so a blanket "Made in Ireland" is a false REGULATED claim, not just
+  off-brand. Brand-level truth ("An Irish silk & linen brand, based in Donegal") is
+  scrubbed by an ALLOWED list before the banned patterns run, or the one sentence the
+  brand is supposed to use trips the "Irish silk" rule. `tests/originClaims.test.js`
+  scans human-authored copy in `frontend/app/(shop)`, `frontend/components`,
+  `backend/scripts` and `seed.js` on every CI run — `backend/services` is skipped because
+  the agent prompts quote the phrases in order to forbid them. Comments are stripped
+  (`{code:true}`): a comment cannot reach a customer. ⚠️ The scan covers CODE ONLY; the
+  live copy is in MongoDB — `scripts/auditCopyClaims.js` reports those, read-only, and a
+  human rewrites each. Prose alone already failed once: 0008 was implemented in June and
+  the claims were back by August.
 - **Banner/announcement copy:** the CMS (`banner_message_1..4`); code defaults are a
   fallback only.
 - **Slugs:** normalised in the MODEL's `pre('save')` (`utils/slug.js` `slugify`), never

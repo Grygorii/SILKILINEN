@@ -39,7 +39,7 @@ const products = [
     name: 'Bastet Silk Robe',
     price: 299,
     category: 'robes',
-    description: 'Kimono silk robe inspired by Bastet. 19 momme silk, kimono-style sleeves, waist tie closure. Made in Ireland.',
+    description: 'Kimono silk robe inspired by Bastet. 19 momme silk, kimono-style sleeves, waist tie closure.',
     colours: ['Emerald Green'],
     sizes: ['One Size']
   },
@@ -55,7 +55,7 @@ const products = [
     name: 'Mila Silk Shirt',
     price: 159,
     category: 'shirts',
-    description: '19 momme silk shirt with buttoned cuffs and button fastenings along front. Made in Ireland.',
+    description: '19 momme silk shirt with buttoned cuffs and button fastenings along front.',
     colours: ['Champagne Beige', 'Wine Red', 'Sienna Copper', 'Sky Blue'],
     sizes: ['XS', 'S', 'M', 'L', 'XL']
   },
@@ -63,7 +63,7 @@ const products = [
     name: 'Voyage de Souvenirs Silk Scarf',
     price: 69,
     category: 'scarves',
-    description: 'Luxurious 100% silk scarf 88x88cm. Hand-rolled edges. A celebration of travel and memories, crafted in Ireland.',
+    description: 'Luxurious 100% silk scarf 88x88cm. Hand-rolled edges. A celebration of travel and memories.',
     colours: ['Multicolour'],
     sizes: []
   },
@@ -71,7 +71,7 @@ const products = [
     name: 'Nekhbet Silk Scarf',
     price: 69,
     category: 'scarves',
-    description: 'Heritage collection silk scarf inspired by Nekhbet. Hand-rolled edges, 88x88cm. Made in Ireland.',
+    description: 'Heritage collection silk scarf inspired by Nekhbet. Hand-rolled edges, 88x88cm.',
     colours: ['Black'],
     sizes: []
   },
@@ -79,7 +79,7 @@ const products = [
     name: 'Bastet Silk Scarf',
     price: 69,
     category: 'scarves',
-    description: 'Heritage collection silk scarf inspired by Bastet. Hand-rolled edges, 88x88cm. Made in Ireland.',
+    description: 'Heritage collection silk scarf inspired by Bastet. Hand-rolled edges, 88x88cm.',
     colours: ['Black'],
     sizes: []
   },

@@ -23,9 +23,23 @@ require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const mongoose = require('mongoose');
 const Product = require('../models/Product');
 
-// Values that are NOT a verified per-product origin: empty, or a legacy
-// blanket claim that the old default/copy injected.
-const SUSPECT = /^\s*$|donegal|ireland|irish|handmade|made by hand|hand-?(made|finished|sewn)/i;
+const { findOriginClaims } = require('../utils/originClaims');
+
+// Values that are NOT a verified per-product origin: empty, or a legacy blanket
+// claim that the old default/copy injected. The claim half is NOT re-described
+// here — it reads utils/originClaims.js, the same rule the storefront copy scan
+// uses. This file used to carry its own regex, which is how a shop ends up with
+// two definitions of "false origin claim" that quietly disagree.
+const isBlank = v => !String(v || '').trim();
+
+// This script asks a STRICTER question than the copy scan does. The scan asks
+// "is this claim forbidden?"; the audit asks "has a human verified this?" — so
+// a bare "Ireland" or "Donegal" is suspect here even though it trips no banned
+// pattern, because the legacy default was Irish and every Irish-sounding value
+// in the database arrived by migration rather than by someone checking.
+// Conflating the two questions is how an unverified value passes as clean.
+const HOMELAND = /donegal|ireland|irish/i;
+const isSuspect = v => isBlank(v) || HOMELAND.test(v) || findOriginClaims(v).length > 0;
 
 async function run() {
   if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI not set');
@@ -41,7 +55,7 @@ async function run() {
   for (const p of products) {
     const sku = p.variants?.[0]?.sku || '';
     const row = { name: p.name, sku, status: p.status, origin: p.origin || '(empty)' };
-    if (SUSPECT.test(p.origin || '')) needs.push(row);
+    if (isSuspect(p.origin || '')) needs.push(row);
     else verified.push(row);
   }
 

@@ -47,7 +47,7 @@ const CONTENT = [
   { key: 'about_story_image_1', type: 'image', section: 'about', label: 'About — Story Image 1', order: 2, value: '' },
   { key: 'about_story_image_2', type: 'image', section: 'about', label: 'About — Story Image 2', order: 3, value: '' },
   { key: 'about_story_text', type: 'richtext', section: 'about', label: 'About — Story Text', order: 4,
-    value: 'SILKILINEN began with a simple belief: that the garments closest to your skin should be made from the finest natural fibres.\n\nWe source Mulberry silk and European linen — chosen for their breathability, longevity, and the quiet luxury they bring to everyday moments.\n\nWe\'re an Irish brand based in Donegal, and we share a commitment to slow, considered work. We work in small batches, never rushing the process, so that what reaches you is exactly what we intended — something you\'ll reach for again and again.' },
+    value: 'SILKILINEN began with a simple belief: that the garments closest to your skin should be made from the finest natural fibres.\n\nWe source Mulberry silk and European linen — chosen for their breathability, longevity, and the quiet luxury they bring to everyday moments.\n\nWe\'re an Irish brand based in Donegal, and we share a commitment to slow, considered work. We keep our collections small and considered, never rushing the process, so that what reaches you is exactly what we intended — something you\'ll reach for again and again.' },
 
   // ── Instagram Grid ───────────────────────────────────
   { key: 'instagram_image_1', type: 'image', section: 'instagram', label: 'Instagram Image 1', order: 1, value: '' },

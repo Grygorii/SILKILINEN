@@ -14,6 +14,7 @@ Origin is a regulated consumer claim. Treat every "made in" line as a fact to ve
 - **Brand-level copy** (banner, footer, story, emails, SEO) must be true for the ENTIRE range: *"An Irish silk & linen brand, based in Donegal."* Never imply the range is Irish-made or hand-made-in-Donegal.
 - **Per-product origin** lives in the `Product.origin` field and states where THAT piece is actually made ("Made by hand in Donegal" / "Made in India"). Empty = unverified; show nothing.
 - **Allowed because true:** "based in Donegal", "Irish brand", "born in Donegal", "we ship from Donegal".
+- **Enforced in code:** `backend/utils/originClaims.js` + `backend/tests/originClaims.test.js` (CI). This section is the intent; that file is the rule. Live-DB copy is NOT covered by CI — run `scripts/auditCopyClaims.js`.
 - **Banned as blanket claims:** "Handmade in Ireland", "Made in Donegal" (on everything), "crafted/cut/sewn by hand in Donegal", "designed in Donegal" (unverified) — and do NOT swap one blanket false claim for a softer one.
 
 (Supersedes the old "Donegal in depth, Ireland on the surface" layering rule — ADR 0005, now reversed by ADR 0008.)

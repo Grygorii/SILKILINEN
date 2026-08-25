@@ -26,7 +26,7 @@ async function getFaqs(): Promise<Faq[]> {
 const FALLBACK_FAQS = [
   {
     q: 'What materials do you use?',
-    a: 'We use 100% mulberry silk and premium linen in all our pieces. Our silk is OEKO-TEX certified, free from harmful substances, and sourced from responsible suppliers. Each piece is made in small batches to maintain quality.',
+    a: 'We use 100% mulberry silk and premium linen in all our pieces. Our silk is OEKO-TEX certified, free from harmful substances, and sourced from responsible suppliers.',
   },
   {
     q: 'How do I find my size?',
@@ -58,7 +58,7 @@ const FALLBACK_FAQS = [
   },
   {
     q: 'Is your silk ethically sourced?',
-    a: 'We work only with certified suppliers who meet OEKO-TEX Standard 100 requirements. Our production runs in small batches to minimise waste. We are committed to transparency and are happy to answer any questions about our supply chain.',
+    a: 'We work only with certified suppliers who meet OEKO-TEX Standard 100 requirements. We keep our collections small to minimise waste. We are committed to transparency and are happy to answer any questions about our supply chain.',
   },
   {
     q: 'Do you have an Etsy shop?',
