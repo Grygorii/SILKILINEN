@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { apiJson } from '@/lib/apiFetch';
 import { notFound, permanentRedirect } from 'next/navigation';
-import { collectionHref } from '@/lib/urls';
+import { collectionHref, productPath } from '@/lib/urls';
+import { safeJsonLd } from '@/lib/safeJsonLd';
 import CollectionSet from './CollectionSet';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Image from 'next/image';
@@ -12,6 +13,13 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 
 type CollectionProduct = {
   _id: string;
+  // Served by /api/collections/:slug and declared on CollectionSet's own
+  // SetProduct, so the visible links were always canonical — this type simply
+  // never mentioned it. Declared here so the JSON-LD below resolves the same
+  // URL the grid links to; a structured-data list pointing at
+  // /product/<ObjectId> while the page links to the slug would hand Google two
+  // URLs for one page, which is the duplicate lib/urls.ts exists to prevent.
+  slug?: string;
   name: string;
   price: number;
   category: string;
@@ -84,8 +92,35 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
     permanentRedirect(collectionHref(collection, locale));
   }
 
+  // ItemList structured data. The PDP has had Product JSON-LD for a while, but
+  // a collection page told Google nothing about what it contained — so a page
+  // whose entire job is grouping products was legible to a crawler only as
+  // prose plus links.
+  //
+  // Every URL goes through productPath, the one owner, so the list cannot drift
+  // to /product/<ObjectId> and describe a set of pages that are not the
+  // canonical ones. Absolute, because a crawler reading the JSON has no base.
+  const itemListLd = collection.products.length ? {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: collection.name,
+    numberOfItems: collection.products.length,
+    itemListElement: collection.products.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: p.name,
+      url: localeUrl(locale, productPath({ slug: p.slug, _id: p._id })),
+    })),
+  } : null;
+
   return (
     <main className={styles.page}>
+      {itemListLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListLd) }}
+        />
+      )}
       <Breadcrumbs
         items={[{ label: 'Home', href: '/' }, { label: 'Shop', href: '/shop' }, { label: collection.name }]}
         withSchema

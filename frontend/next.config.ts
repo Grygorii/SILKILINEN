@@ -90,6 +90,18 @@ const nextConfig: NextConfig = {
       // as a 404 (the cookie banner used to link there); 301 forwards the
       // already-crawled URL and any external links to the real page.
       { source: '/privacy', destination: '/privacy-policy', permanent: true },
+      // Bridal is an acquisition channel with its own vocabulary — Pinterest
+      // boards, an Instagram bio, a supplier listing, a card handed to a
+      // planner — and none of those want to carry
+      // /collections/the-bridal-edit. This is a short, sayable entry point
+      // that 301s to the collection.
+      //
+      // A REDIRECT and not a second page, deliberately: two URLs serving the
+      // same products is the exact failure the URL invariant exists for
+      // (Google indexed /product/<ObjectId> alongside the slug and split the
+      // ranking signal). The collection page stays the one indexable URL, and
+      // this forwards every link and share into it.
+      { source: '/bridal', destination: '/collections/the-bridal-edit', permanent: true },
       // Canonicalise to the www host. All metadata, sitemap, robots and
       // JSON-LD declare https://www.silkilinen.com, but the bare apex was
       // serving requests directly (GSC reported a 5xx on
