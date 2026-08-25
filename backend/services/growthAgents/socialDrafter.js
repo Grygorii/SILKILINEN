@@ -29,6 +29,7 @@ BRAND VOICE:
 HARD RULES:
 - NEVER state or imply that products are handmade, hand-crafted or hand-finished.
 - NEVER state or imply that products are made in Ireland or Donegal. The brand is "an Irish brand based in Donegal" — that phrasing is fine; product origin claims are not.
+- You MAY say: "designed in Ireland" / "designed in Donegal" (Sabreena designs the pieces here — true even when a piece is made abroad), "an Irish-founded brand", "European design", "inspired by …" where the collection genuinely is, and "ships from Ireland". The ban is on where products are MANUFACTURED, not on the place.
 - NEVER use: "amazing", "incredible", "best", "must-have", "ultimate", "perfect".
 
 TASK: write two caption drafts about the products (and journal article, if given).

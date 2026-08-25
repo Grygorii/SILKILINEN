@@ -20,17 +20,40 @@
 // lives in `Product.origin`. "An Irish silk & linen brand, based in Donegal" is
 // correct. "Irish silk" is not.
 
-// Phrases that are true of the brand regardless of any supplier, so they are
-// removed from the text BEFORE the banned patterns run. Without this step
-// "an Irish silk & linen brand" trips the "Irish silk" rule, and a guard that
-// cries wolf on the one sentence the brand is supposed to use gets switched off.
+// Phrases that are TRUE and are meant to be used. They are removed from the
+// text BEFORE the banned patterns run, for two reasons.
+//
+// One: without it, "an Irish silk & linen brand" trips the "Irish silk" rule,
+// and a guard that cries wolf on the one sentence the brand is supposed to use
+// gets switched off rather than fixed.
+//
+// Two, and more important: this list is the POSITIVE half of the rule. The ban
+// is on the idea that the range is MANUFACTURED in Ireland — not on the words
+// Ireland or Donegal, which describe things that are simply true. SILKILINEN is
+// Irish-founded, Sabreena designs the pieces in Donegal, and orders ship from
+// Ireland; all three stay sayable however the making is sourced. Several of
+// these would pass anyway by matching no ban, but passing by accident is not
+// the same as being allowed: listed here, they cannot be caught by a later
+// tightening of the manufacture patterns, and the list doubles as the answer to
+// "what CAN we say?".
+//
+// The line runs between DESIGN and MAKING. "Designed in Donegal" is allowed;
+// add "and crafted" and it becomes a manufacture claim about a mixed-origin
+// range, which is the thing ADR 0008 forbids.
 const ALLOWED = [
+  // Where the brand is from
   /an?\s+irish\s+silk\s*(?:&|and)\s*linen\s+brand/gi,
   /\ban\s+irish\s+brand\b/gi,
   /\birish[-\s]founded\b/gi,
   /\bbased\s+in\s+donegal\b/gi,
   /\bborn\s+in\s+donegal\b/gi,
   /\bfounded\s+in\s+(?:ireland|donegal)\b/gi,
+  // Where the design happens — verified: Sabreena designs in Donegal, and that
+  // remains true of a piece manufactured abroad. brand.md called this
+  // "unverified" until the founders confirmed it in August 2026.
+  /\bdesigned\s+in\s+(?:ireland|donegal)\b/gi,
+  /\beuropean\s+design\b/gi,
+  // Where it ships from
   /\bship(?:s|ped|ping)?\s+from\s+(?:donegal|ireland)\b/gi,
 ];
 

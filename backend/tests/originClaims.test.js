@@ -15,6 +15,44 @@ const { findOriginClaims, isOriginSafe } = pkg;
 // three markdown files, and prose does not run in CI. That is what this file
 // changes.
 
+// The rule bans an IDEA, not a place. "Ireland" and "Donegal" are not dirty
+// words — the brand is Irish-founded, Sabreena designs the pieces in Donegal,
+// and orders ship from Ireland. All three stay true however the making is
+// sourced, and all three are meant to be USED. What is forbidden is the claim
+// that the range is manufactured there.
+//
+// This block is the positive half of the rule, pinned so that tightening a
+// manufacture pattern later cannot quietly take a true sentence with it.
+describe('what the brand may say', () => {
+  const TRUE_OF_THE_BRAND = [
+    'Founded in Ireland',
+    'An Irish-founded brand',
+    'Designed in Ireland',
+    'Designed in Donegal',
+    'Designed in Ireland, inspired by the Atlantic coast',
+    'European design',
+    'Shipped from Ireland',
+    'We ship from Donegal, Ireland worldwide',
+    'An Irish silk & linen brand, based in Donegal',
+    'Born in Donegal, worn across the world',
+    'Inspired by the cliffs of Slieve League',
+  ];
+
+  it.each(TRUE_OF_THE_BRAND)('allows "%s"', phrase => {
+    expect(findOriginClaims(phrase)).toEqual([]);
+  });
+
+  // The line runs between DESIGN and MAKING, and it is one word wide.
+  it('draws the line at making, not at the place', () => {
+    expect(isOriginSafe('Designed in Donegal')).toBe(true);
+    expect(isOriginSafe('Designed and crafted in Donegal')).toBe(false);
+    expect(isOriginSafe('Designed in Donegal, made in Ireland')).toBe(false);
+    // Design in Ireland is compatible with making anywhere, which is the whole
+    // point of keeping it sayable.
+    expect(isOriginSafe('Designed in Donegal, made by our partners in Suzhou')).toBe(true);
+  });
+});
+
 describe('the rule', () => {
   it('allows what is true of the brand however it sources', () => {
     for (const ok of [

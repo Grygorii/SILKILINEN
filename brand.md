@@ -13,9 +13,17 @@ This file is **facts only**. Strategic positioning is in `brand-open-questions.m
 Origin is a regulated consumer claim. Treat every "made in" line as a fact to verify, never copy to polish.
 - **Brand-level copy** (banner, footer, story, emails, SEO) must be true for the ENTIRE range: *"An Irish silk & linen brand, based in Donegal."* Never imply the range is Irish-made or hand-made-in-Donegal.
 - **Per-product origin** lives in the `Product.origin` field and states where THAT piece is actually made ("Made by hand in Donegal" / "Made in India"). Empty = unverified; show nothing.
-- **Allowed because true:** "based in Donegal", "Irish brand", "born in Donegal", "we ship from Donegal".
-- **Enforced in code:** `backend/utils/originClaims.js` + `backend/tests/originClaims.test.js` (CI). This section is the intent; that file is the rule. Live-DB copy is NOT covered by CI — run `scripts/auditCopyClaims.js`.
-- **Banned as blanket claims:** "Handmade in Ireland", "Made in Donegal" (on everything), "crafted/cut/sewn by hand in Donegal", "designed in Donegal" (unverified) — and do NOT swap one blanket false claim for a softer one.
+- **The ban is on MANUFACTURE, not on the place.** "Ireland" and "Donegal" are not
+  words to avoid — they describe things that are simply true and are meant to be USED.
+  The line runs between DESIGN and MAKING, and it is one word wide: "designed in
+  Donegal" is true; "designed *and crafted* in Donegal" is a manufacture claim.
+- **Allowed because true — use these:** "Founded in Ireland" / "An Irish-founded brand";
+  "based in Donegal"; "born in Donegal"; **"Designed in Ireland" / "Designed in Donegal"**
+  (Sabreena designs here — true even when a piece is made abroad); "European design";
+  "Inspired by …" where the collection genuinely is; "we ship from Donegal".
+- **Enforced in code:** `backend/utils/originClaims.js` + `backend/tests/originClaims.test.js` (CI). This section is the intent; that file is the rule — its ALLOWED list is the positive half and is pinned by test. Live-DB copy is NOT covered by CI — run `scripts/auditCopyClaims.js`.
+- **Banned as blanket claims:** "Handmade in Ireland", "Made in Donegal" (on everything), "crafted/cut/sewn by hand in Donegal", "Irish silk/linen" (of the product), "we produce / our production", "small batches" — and do NOT swap one blanket false claim for a softer one.
+- **Changed 2026-08-25:** "designed in Donegal" was previously listed here as banned-because-unverified. The founders confirmed Sabreena designs the pieces in Ireland, so it moves to allowed. The verified fact changed, not the rule.
 
 (Supersedes the old "Donegal in depth, Ireland on the surface" layering rule — ADR 0005, now reversed by ADR 0008.)
 

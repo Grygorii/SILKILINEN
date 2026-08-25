@@ -57,7 +57,11 @@ export default async function AboutPage() {
             { title: 'Natural fibres only', body: 'Every piece is made from Mulberry silk or European linen — nothing synthetic, nothing treated with harsh chemicals.' },
             { title: 'Small collections', body: 'We keep each collection small and considered, so nothing is wasted and every piece earns its place.' },
             { title: 'OEKO-TEX certified', body: 'Our silks are certified safe for skin contact, free from harmful substances.' },
-            { title: 'Made with care', body: 'An Irish brand based in Donegal, committed to natural fibres and considered design.' },
+            // "Designed in Ireland" is the specific, verified version of what this
+            // card used to say vaguely. Sabreena designs the pieces in Donegal, and
+            // that stays true of a piece manufactured abroad — which is exactly why
+            // it is the claim worth making instead of one about a factory.
+            { title: 'Designed in Ireland', body: 'Every piece is drawn and specified in Donegal by Sabreena — an Irish-founded brand, shipping worldwide.' },
           ].map(v => (
             <div key={v.title} className={styles.valueCard}>
               <h3 className={styles.valueTitle}>{v.title}</h3>

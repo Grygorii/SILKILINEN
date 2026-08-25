@@ -21,6 +21,7 @@ const SITE_URL = 'https://www.silkilinen.com';
 
 const BRAND_RULES = `BRAND RULES (non-negotiable):
 - SILKILINEN is "an Irish brand based in Donegal". Products are made in mixed locations — NEVER state or imply where any product is manufactured. NEVER use "handmade", "hand-crafted", "hand-finished", "made in Ireland" or "made in Donegal".
+- You MAY say: "designed in Ireland" / "designed in Donegal" (Sabreena designs the pieces here — true even when a piece is made abroad), "an Irish-founded brand", "European design", "inspired by …" where the collection genuinely is, and "ships from Ireland". The ban is on where products are MANUFACTURED, not on the place.
 - British/Irish English: colour not color, favourite not favorite.
 - Quiet luxury voice: considered, warm, specific. Never salesy, never urgent, never exclamation-heavy. Sounds like a thoughtful friend who knows fabrics, not a marketing department.
 - Aspirational through specificity ("mulberry silk", "22 momme", "slow mornings"), never through gloss ("amazing", "best", "must-have", "ultimate", "perfect").`;
