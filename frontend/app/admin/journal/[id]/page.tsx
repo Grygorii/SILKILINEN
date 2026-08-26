@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import layout from '../../_components/AdminPage.module.css';
 import AdminLayout from '@/components/AdminLayout';
 import UploadHint from '@/components/UploadHint';
 import { UPLOAD_SPECS } from '@/lib/uploadSpecs';
@@ -278,7 +279,7 @@ export default function JournalEditorPage() {
             </span>
           </div>
 
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+          <div className={layout.headerActions}>
             <button onClick={refreshWithAI} disabled={refreshing} title="Improve & expand this article toward its search query — loads a rewrite for you to review (does not save until you do)"
               style={{ padding: '7px 14px', fontSize: 12, border: '1px solid var(--admin-warning)', background: 'var(--admin-surface)', color: 'var(--admin-warning)', cursor: refreshing ? 'default' : 'pointer', fontFamily: 'inherit' }}>
               {refreshing ? 'Refreshing…' : '✦ Refresh with AI'}

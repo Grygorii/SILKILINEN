@@ -1,0 +1,151 @@
+/* Shared responsive scaffolding for admin pages.
+ *
+ * Nearly every admin page is styled with inline `style={{}}` objects, and an
+ * inline style cannot carry a media query. So the layouts were desktop-only by
+ * construction, not by choice: a fixed 180px sidebar beside a table, and a
+ * header row that puts the title and four buttons on one line. On a phone the
+ * buttons wrapped two words deep and the table was squeezed into the ~140px
+ * left over, clipping the email column off the right edge.
+ *
+ * These classes carry ONLY layout. Colour, type and spacing stay inline on the
+ * elements, so adopting them is a small diff per page and nothing has to move
+ * to a token system it does not already use.
+ *
+ * Breakpoints match app/admin/page.module.css: 900px for structure, 480px for
+ * the smallest phones.
+ */
+
+/* ── Page header: title left, actions right, stacking when there is no room ── */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.headerActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .headerActions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Below this the buttons wrap mid-word ("Founder / view", "+ New /
+     customer"), which reads as broken rather than dense. One per row, each
+     tall enough to be a real touch target. */
+  .headerActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .headerActions > * {
+    text-align: center;
+    padding: 11px 10px !important;
+    white-space: nowrap;
+  }
+  /* A lone primary action (or an odd one out) takes the full width rather than
+     sitting half-empty beside a gap. */
+  .headerActions > *:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ── Sidebar + main: side by side on desktop, stacked on a phone ── */
+
+.twoCol {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.sidebar {
+  width: 180px;
+  flex-shrink: 0;
+}
+
+/* min-width:0 is what actually lets an overflow-x table inside a flex child
+   scroll instead of forcing the row wider than the screen. */
+.main {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .twoCol {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .sidebar {
+    width: 100%;
+  }
+}
+
+/* ── Filter/segment lists ── */
+
+/* Vertical on desktop; on a phone a stack of eight full-width segment buttons
+   pushes the actual data off the screen, so they become a horizontal strip
+   that scrolls. */
+@media (max-width: 900px) {
+  .segmentList {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 6px !important;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .segmentList > * {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
+
+/* ── Tables ── */
+
+/* The container that scrolls. Its own scrollbar, so the page never moves
+   sideways — the rule the storefront already follows for wide content. */
+.tableScroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Page shell ── */
+
+/* 28px of side padding is 16% of a 360px screen. Tighter on a phone so the
+   content, not the margin, gets the width. */
+.page {
+  padding: 24px 28px;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 16px 14px;
+  }
+}
+
+/* Same shell at a roomier desktop rhythm, for the pages that were designed
+   with it. Only the phone padding is shared — the desktop value is what each
+   page already had, so adopting this is never a desktop change. */
+.pageRoomy {
+  padding: 32px 40px;
+}
+
+@media (max-width: 640px) {
+  .pageRoomy {
+    padding: 16px 14px;
+  }
+}

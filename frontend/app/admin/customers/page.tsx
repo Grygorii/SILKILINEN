@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import layout from '../_components/AdminPage.module.css';
 import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
 import { toast } from '@/lib/adminToast';
@@ -141,14 +142,14 @@ export default function CustomersPage() {
 
   return (
     <AdminLayout>
-      <div style={{ padding: '24px 28px', maxWidth: 1200 }}>
+      <div className={layout.page} style={{ maxWidth: 1200 }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+        <div className={layout.header}>
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--admin-ink)', margin: 0 }}>Customers</h1>
             <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', marginTop: 4 }}>{total} total</p>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className={layout.headerActions}>
             {segmentFilter === 'at-risk' && (
               <button onClick={sendWinback} disabled={winbackSending} style={{ padding: '8px 14px', fontSize: 12, border: '1px solid var(--admin-danger)', background: 'var(--admin-danger-soft)', cursor: 'pointer', color: 'var(--admin-danger)', fontFamily: 'inherit' }}>
                 {winbackSending ? 'Sending…' : 'Send win-back reminder'}
@@ -166,11 +167,11 @@ export default function CustomersPage() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 20 }}>
+        <div className={layout.twoCol}>
           {/* Segment sidebar */}
-          <div style={{ width: 180, flexShrink: 0 }}>
+          <div className={layout.sidebar}>
             <p style={{ fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 8 }}>Segments</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div className={layout.segmentList} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <button onClick={() => { setSegmentFilter(''); setPage(1); }} style={{
                 textAlign: 'left', padding: '6px 10px', fontSize: 12, border: '1px solid var(--admin-line)',
                 background: !segmentFilter ? 'var(--admin-ink)' : 'var(--admin-surface)', color: !segmentFilter ? 'var(--admin-surface)' : 'var(--admin-ink)',
@@ -199,7 +200,7 @@ export default function CustomersPage() {
           </div>
 
           {/* Main content */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className={layout.main}>
             {/* Filters */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
               <input
@@ -236,8 +237,12 @@ export default function CustomersPage() {
               </div>
             ) : (
               <>
-                <div style={{ overflowX: 'auto', background: 'var(--admin-surface)', border: '1px solid var(--admin-line)' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <div className={layout.tableScroll} style={{ background: 'var(--admin-surface)', border: '1px solid var(--admin-line)' }}>
+                  {/* minWidth, not just width:100% — inside an overflow-x
+                      container a 100%-width table SQUEEZES to the viewport
+                      instead of scrolling, which is what clipped the email
+                      column on a phone rather than letting it scroll into view. */}
+                  <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead>
                       <tr>
                         {['Customer', 'Segments', 'Orders', 'Spend', 'Last order', 'Consent', ''].map(h => (

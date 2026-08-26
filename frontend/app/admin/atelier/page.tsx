@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import layout from '../_components/AdminPage.module.css';
 import AdminLayout from '@/components/AdminLayout';
 import { toast } from '@/lib/adminToast';
 
@@ -99,8 +100,8 @@ export default function AtelierPage() {
 
   return (
     <AdminLayout>
-      <div style={{ padding: '32px 40px', maxWidth: 980 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+      <div className={layout.pageRoomy} style={{ maxWidth: 980 }}>
+        <div className={layout.header}>
           <div>
             <h1 style={{ fontFamily: serif, fontSize: 28, fontWeight: 300, color: dark, margin: 0, letterSpacing: '1px' }}>The Atelier</h1>
             <p style={{ fontSize: 13, color: muted, marginTop: 6, fontStyle: 'italic' }}>
