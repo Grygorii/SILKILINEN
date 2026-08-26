@@ -1,16 +1,24 @@
 .hero {
   position: relative;
-  height: 100vh;
-  /* svh, not vh or dvh. On a phone `100vh` is the LARGE viewport — the height
-     the page WOULD have once the URL bar has scrolled away — so on first paint,
-     with the bar still showing, the bottom of the hero is below the fold. The
-     hero bottom-aligns its content on mobile, which means the headline, the
-     subtitle and "Explore the collection" were the part hanging off-screen: the
-     one screen every visitor sees was the one screen missing its CTA.
-     `dvh` would fit, then resize the hero every time the bar hides or shows.
-     `svh` is the stable smallest height, so the whole hero is in view on load
-     and never moves. The plain `vh` line above stays as the fallback. */
-  height: 100svh;
+  /* The VISIBLE area, not the viewport.
+     The site header is fixed, so .shopContent carries a padding-top of
+     --announcement-h + --nav-h — 114px on a phone — and the hero sits inside
+     it. At a full 100svh the hero's bottom edge therefore landed 114px BELOW
+     the fold, and since the hero bottom-aligns its content on mobile, "Shop the
+     collection" was cut off by the bottom of the screen with the contact bubble
+     sitting over what remained. The one button on the first screen of the site,
+     off the first screen of the site.
+     Both tokens are read here rather than restated: --announcement-h drops to
+     0 on .shopContent[data-bar='off'] when the CMS has no banner, and being
+     used at the point of declaration this picks that up. */
+  height: calc(100vh - var(--announcement-h) - var(--nav-h));
+  /* svh, not vh or dvh — the second half of the same fix. `100vh` on a phone is
+     the LARGE viewport, the height the page would have once the URL bar has
+     scrolled away, so it overshoots again on first paint. `dvh` fits but
+     resizes the hero every time that bar hides or shows. `svh` is the stable
+     smallest height. The vh line above is the fallback for anything that does
+     not know the unit. */
+  height: calc(100svh - var(--announcement-h) - var(--nav-h));
   /* Warm editorial fallback when no CMS image is set OR while the
      priority hero <img> is still streaming in on slow connections. */
   background-color: var(--color-line);

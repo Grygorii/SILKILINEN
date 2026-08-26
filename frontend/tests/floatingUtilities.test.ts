@@ -94,3 +94,29 @@ describe('bottom-edge clearance tokens', () => {
     expect(block, 'a literal size on .trigger').not.toMatch(/(?:width|height)\s*:\s*\d/);
   });
 });
+
+// ── The hero fits the screen it is on ─────────────────────────────────────
+//
+// The site header is FIXED, so .shopContent carries a padding-top of
+// --announcement-h + --nav-h and everything inside it starts that far down. A
+// hero sized to the full viewport therefore hangs exactly that far below the
+// fold — 114px on a phone — and since the hero bottom-aligns its content, the
+// part that goes missing is the call to action. Twice now: once as plain `vh`
+// against the URL bar, and once as `svh` against the header.
+//
+// Cheap to get wrong, invisible in a diff, and it costs the only button on the
+// first screen a visitor ever sees.
+describe('homepage hero height', () => {
+  const css = readFileSync(join(ROOT, 'app', '(shop)', 'page.module.css'), 'utf8');
+  const hero = css.slice(css.indexOf('.hero {'), css.indexOf('}', css.indexOf('.hero {')));
+
+  it('measures from the small viewport, not the large one', () => {
+    expect(hero).toMatch(/height:\s*calc\(100svh/);
+  });
+
+  it('subtracts the fixed header rather than assuming the page starts at the top', () => {
+    for (const token of ['--announcement-h', '--nav-h']) {
+      expect(hero, `${token} is not subtracted from the hero height`).toContain(token);
+    }
+  });
+});

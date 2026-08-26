@@ -218,7 +218,9 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   from checkout, so `=HYPERLINK(...)` in a name executes when the founder opens the
   export. Never build a CSV cell inline.
 - **Fixed-header clearance:** `--announcement-h` + `--nav-h` (globals.css); `.shopContent`
-  is their sum. The layouts set `data-bar="on|off"` because the announcement bar is
+  is their sum. ⚠️ Anything sized to the VIEWPORT inside `.shopContent` must subtract them
+  — the homepage hero was `100svh` and so hung 114px below the fold on a phone, cutting off
+  the one CTA on the first screen of the site. Pinned by `tests/floatingUtilities.test.ts`. The layouts set `data-bar="on|off"` because the announcement bar is
   conditional (absent when the CMS is unreachable) — a single hardcoded total left a gap.
 - **Funnel:** `backend/services/funnel.js` — `getFunnel()` is the ONE funnel (60s memo,
   5 callers: dashboard panel, clickstream brief, analyst tool, advisor, agents).
