@@ -111,19 +111,6 @@ export async function generateMetadata(
   };
 }
 
-// Lowercase to match the ProductCard caption voice — keeps the brand
-// language consistent between the shop grid card and the PDP subtitle.
-function getMaterialSub(mat?: string): string {
-  if (!mat) return '';
-  const m = mat.toLowerCase();
-  if (m.includes('mulberry silk')) return 'in mulberry silk';
-  if (m.includes('silk satin')) return 'in silk satin';
-  if (m.includes('silk') && m.includes('linen')) return 'in silk & linen';
-  if (m.includes('silk')) return 'in pure silk';
-  if (m.includes('linen')) return 'in pure linen';
-  return '';
-}
-
 // The description is stored with blank-line paragraph breaks (the admin editor
 // is a textarea), but JSX collapses newlines — so multi-paragraph copy rendered
 // as one run-on block. That, not a missing animation, is why the story read as a
@@ -183,7 +170,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   const total = product.totalStock ?? product.stockLevel ?? null;
   const outOfStock = total === 0;
-  const materialSub = getMaterialSub(product.materialComposition);
   // Asked before the row is drawn, by the same rule the panel uses to decide
   // whether to render: an accordion labelled "Fabric & care" that opens onto
   // nothing is worse than no row at all.
@@ -339,7 +325,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                   the link added noise above the title. */}
               {showNew && <span className={styles.newTag}>NEW</span>}
               <h1 className={styles.productName}>{product.name}</h1>
-              {materialSub && <p className={styles.materialSub}>{materialSub}</p>}
               {product.fitNote && <p className={styles.fitNote}>{product.fitNote}</p>}
 
               {/* Colour variant cubes — links to sibling colour products */}

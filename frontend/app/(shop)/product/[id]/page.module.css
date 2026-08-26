@@ -76,12 +76,6 @@
 
 /* ── Material subtitle ────────────────────────────── */
 
-.materialSub {
-  font-size: 16px;
-  font-style: italic;
-  color: var(--muted);
-  margin-bottom: 20px;
-}
 
 /* Fit guidance — visible (not hidden in an accordion) so it answers the
    buyer's "will it fit?" question up front. */
