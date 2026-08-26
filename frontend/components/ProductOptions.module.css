@@ -190,3 +190,8 @@
   line-height: 1.6;
   color: var(--color-ink-muted);
 }
+
+/* Waitlist form, revealed under the CTA when the piece is sold out. */
+.notifyWrap {
+  margin-top: var(--s-4, 16px);
+}

@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useProductSelection } from './ProductSelectionContext';
 import Button from '@/components/ui/Button';
 import { OptionPill, OptionPillGroup } from '@/components/ui/OptionPill';
 import { ColourSwatchGroup, type Swatch } from '@/components/ui/ColourSwatch';
 import Price from './Price';
+import { maxOrderable, stockBySize, type VariantLike } from '@/lib/variantStock';
 import styles from './QuickAddSheet.module.css';
 
 type Props = {
@@ -19,6 +20,8 @@ type Props = {
   productId: string;
   price: number;
   stock?: number | null;
+  /** Per-size stock rows — see lib/variantStock.ts. */
+  sizeVariants?: VariantLike[] | null;
   image?: string;
 };
 
@@ -27,12 +30,21 @@ type Props = {
 // away. Shares ProductSelectionContext with the inline picker, so selections
 // stay in sync.
 export default function QuickAddSheet({
-  open, onClose, colours, colourHexMap, sizes, productName, productId, price, stock, image,
+  open, onClose, colours, colourHexMap, sizes, productName, productId, price, stock, sizeVariants, image,
 }: Props) {
   const { selectedColour, setSelectedColour, selectedSize, setSelectedSize, qty, setQty } = useProductSelection();
   const { addToCart } = useCart();
 
-  const maxQty = Math.min(stock ?? 10, 10);
+  // Same ceiling as the desktop panel, from the same rule. This sheet held its
+  // own copy of `Math.min(stock ?? 10, 10)`, so fixing the panel alone would
+  // have left the mobile path — the one most people use — still offering ten of
+  // a size with one in stock.
+  const bySize = useMemo(() => stockBySize(sizeVariants), [sizeVariants]);
+  const maxQty = maxOrderable(bySize, selectedSize, stock);
+
+  useEffect(() => {
+    if (maxQty > 0 && qty > maxQty) setQty(maxQty);
+  }, [maxQty, qty, setQty]);
   const needsColour = colours.length > 0 && !selectedColour;
   const needsSize = sizes.length > 0 && !selectedSize;
   const canAdd = !needsColour && !needsSize;

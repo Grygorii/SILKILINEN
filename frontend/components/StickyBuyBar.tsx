@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useProductSelection } from './ProductSelectionContext';
 import Button from '@/components/ui/Button';
 import QuickAddSheet from './QuickAddSheet';
+import NotifyWhenBack from './NotifyWhenBack';
+import type { VariantLike } from '@/lib/variantStock';
 import Price from './Price';
 import styles from './StickyBuyBar.module.css';
 
@@ -16,11 +18,13 @@ type Props = {
   image?: string;
   colours: string[];
   sizes: string[];
+  sizeVariants?: VariantLike[] | null;
 };
 
-export default function StickyBuyBar({ productId, productName, price, outOfStock, stock, image, colours, sizes }: Props) {
+export default function StickyBuyBar({ productId, productName, price, outOfStock, stock, image, colours, sizes, sizeVariants }: Props) {
   const { selectedColour, selectedSize } = useProductSelection();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [notifyOpen, setNotifyOpen] = useState(false);
 
   // Tag the body while this bar is mounted so global mobile fixed-bottom
   // elements (e.g. ContactWidget chat bubble) can lift themselves clear
@@ -35,10 +39,17 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
 
   // Tapping the bar opens the quick-add sheet (colour + size + quantity), so a
   // size-required product is actionable and any product can have its quantity
-  // chosen. Out-of-stock still routes to the notify mailto.
+  // chosen.
+  //
+  // Sold out used to send the visitor to a mailto:, which ProductOptions had
+  // already replaced on desktop and explained why: with no mail client
+  // configured it does nothing at all, and when it does open, the message
+  // arrives in an inbox nobody watches for restocks. The waitlist existed, the
+  // API existed, and the mobile CTA — the only CTA a phone shows — still could
+  // not reach either. It opens the same form now.
   function handleTap() {
     if (outOfStock) {
-      window.location.href = `mailto:hello@silkilinen.com?subject=Notify me: ${encodeURIComponent(productName)}`;
+      setNotifyOpen(v => !v);
       return;
     }
     setSheetOpen(true);
@@ -65,13 +76,26 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
 
   return (
     <>
+      {/* Sits directly on top of the bar rather than in a sheet of its own: the
+          customer has already said what they want by tapping, and one field
+          does not need a modal. */}
+      {outOfStock && notifyOpen && (
+        <div className={styles.notifyPanel}>
+          <NotifyWhenBack productId={productId} />
+        </div>
+      )}
+
       <div className={styles.bar}>
         <div className={styles.info}>
           <span className={styles.name}>{productName}</span>
           <Price eur={Number(price)} className={styles.price} />
         </div>
         <div className={styles.btnWrap}>
-          <Button variant={variant} onClick={handleTap}>
+          <Button
+            variant={variant}
+            onClick={handleTap}
+            aria-expanded={outOfStock ? notifyOpen : undefined}
+          >
             {label}
           </Button>
         </div>
@@ -86,6 +110,7 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
         productId={productId}
         price={price}
         stock={stock}
+        sizeVariants={sizeVariants}
         image={image}
       />
     </>

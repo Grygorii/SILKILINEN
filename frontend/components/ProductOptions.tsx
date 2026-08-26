@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { productHref } from '@/lib/urls';
 import type { PageLocale } from '@/lib/i18n';
@@ -10,6 +10,8 @@ import DropAHint from './DropAHint';
 import { Gift } from '@/components/icons';
 import Button from '@/components/ui/Button';
 import UKShipBadge from '@/components/UKShipBadge';
+import NotifyWhenBack from './NotifyWhenBack';
+import { maxOrderable, stockBySize, type VariantLike } from '@/lib/variantStock';
 import { OptionPill, OptionPillGroup } from '@/components/ui/OptionPill';
 import { ColourSwatchGroup, type Swatch } from '@/components/ui/ColourSwatch';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -39,6 +41,11 @@ type Props = {
   /** Sizes with stock. null means the piece has no variant-level tracking, in
    *  which case every size stays selectable. */
   availableSizes?: string[] | null;
+  /** Per-SIZE stock rows. Named sizeVariants, not variants: `colorVariants`
+   *  above are sibling PRODUCTS, and this file already binds `variants` to
+   *  those. Two different things called variants in one component is how the
+   *  colour duplication started. */
+  sizeVariants?: VariantLike[] | null;
   /** Free-text fit guidance from the founder, e.g. "Relaxed fit. Size down if
    *  between sizes." Rendered here rather than under the product title: it is
    *  an input to the size decision, and it was unreadable up there — a
@@ -48,7 +55,7 @@ type Props = {
   image?: string;
 };
 
-export default function ProductOptions({ colours, colourHexMap, colorName, colorVariants, locale, sizes, availableSizes = null, fitNote, productName, productId, price, outOfStock, stock, image }: Props) {
+export default function ProductOptions({ colours, colourHexMap, colorName, colorVariants, locale, sizes, availableSizes = null, sizeVariants, fitNote, productName, productId, price, outOfStock, stock, image }: Props) {
   const { selectedColour, setSelectedColour, selectedSize, setSelectedSize, qty, setQty } = useProductSelection();
   const { format } = useCurrency();
   const freeShippingThreshold = useFreeShippingThreshold();
@@ -56,7 +63,17 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
   const [hintOpen, setHintOpen] = useState(false);
   const { addToCart } = useCart();
 
-  const maxQty = Math.min(stock ?? 10, 10);
+  // The ceiling for the size actually chosen. Nothing downstream re-checks it:
+  // checkoutV2 takes the payment and decrements stock afterwards, fail-soft, so
+  // this is the only guard against an order the shop cannot fill.
+  const bySize = useMemo(() => stockBySize(sizeVariants), [sizeVariants]);
+  const maxQty = maxOrderable(bySize, selectedSize, stock);
+
+  // Switching to a smaller size must bring the quantity down with it, or a
+  // basket built as "5 × Large" silently becomes "5 × Medium" with one in stock.
+  useEffect(() => {
+    if (maxQty > 0 && qty > maxQty) setQty(maxQty);
+  }, [maxQty, qty, setQty]);
 
   const needsColour = colours.length > 0 && !selectedColour;
   const needsSize = sizes.length > 0 && !selectedSize;
@@ -93,29 +110,7 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
 
   // ── Back-in-stock waitlist ──
   const [notifyOpen, setNotifyOpen] = useState(false);
-  const [notifyEmail, setNotifyEmail] = useState('');
-  const [notifyState, setNotifyState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
 
-  async function joinWaitlist(e: React.FormEvent) {
-    e.preventDefault();
-    if (notifyState === 'sending') return;
-    setNotifyState('sending');
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/stock-notify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId,
-          email: notifyEmail.trim(),
-          size: selectedSize || '',
-          colour: selectedColour || '',
-        }),
-      });
-      setNotifyState(res.ok ? 'done' : 'error');
-    } catch {
-      setNotifyState('error');
-    }
-  }
 
   function handleAdd() {
     if (outOfStock) {
@@ -326,58 +321,12 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
       {/* Back-in-stock waitlist — replaces the mailto: that quietly did nothing.
           Rendered inline rather than as a modal: the customer already told us
           what they want by clicking, so asking for one field in place is the
-          shortest path between intent and a captured lead. */}
+          shortest path between intent and a captured lead.
+          The form itself lives in NotifyWhenBack, because the mobile sticky bar
+          needs the same one and had been left on the old mailto. */}
       {outOfStock && notifyOpen && (
-        <div style={{ marginTop: 16 }}>
-          {notifyState === 'done' ? (
-            <p style={{ fontSize: 13, color: 'var(--color-success)', margin: 0 }}>
-              We&rsquo;ll email you the moment it&rsquo;s back.
-            </p>
-          ) : (
-            <form onSubmit={joinWaitlist} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <label htmlFor="notifyEmail" className="srOnly">Email address for restock notice</label>
-              <input
-                id="notifyEmail"
-                name="notifyEmail"
-                type="email"
-                required
-                autoComplete="email"
-                value={notifyEmail}
-                onChange={e => setNotifyEmail(e.target.value)}
-                placeholder="you@example.com"
-                style={{
-                  flex: '1 1 200px',
-                  padding: '12px 14px',
-                  border: '1px solid var(--color-line)',
-                  background: 'var(--color-bg)',
-                  fontFamily: 'inherit',
-                  fontSize: 14,
-                }}
-              />
-              <button
-                type="submit"
-                disabled={notifyState === 'sending'}
-                style={{
-                  padding: '12px 24px',
-                  background: 'var(--color-ink)',
-                  color: 'var(--color-bg)',
-                  border: 'none',
-                  fontFamily: 'inherit',
-                  fontSize: 11,
-                  letterSpacing: 2,
-                  textTransform: 'uppercase',
-                  cursor: notifyState === 'sending' ? 'default' : 'pointer',
-                }}
-              >
-                {notifyState === 'sending' ? 'Adding…' : 'Notify me'}
-              </button>
-              {notifyState === 'error' && (
-                <p style={{ fontSize: 12, color: 'var(--color-danger)', width: '100%', margin: 0 }}>
-                  That didn&rsquo;t go through. Please try again.
-                </p>
-              )}
-            </form>
-          )}
+        <div className={styles.notifyWrap}>
+          <NotifyWhenBack productId={productId} />
         </div>
       )}
 

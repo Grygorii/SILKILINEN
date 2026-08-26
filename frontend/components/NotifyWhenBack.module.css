@@ -1,0 +1,54 @@
+/* Faithful port of the styles this form carried inline inside ProductOptions,
+   moved into a module because it is now shared by two call sites and inline
+   style objects cannot carry a media query or a hover. */
+
+.form {
+  display: flex;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.input {
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: var(--stroke) solid var(--color-line);
+  background: var(--color-bg);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--color-ink);
+}
+
+.input:focus-visible {
+  outline: var(--stroke) solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.submit {
+  padding: 12px 24px;
+  min-height: 44px;
+  background: var(--color-ink);
+  color: var(--color-bg);
+  border: none;
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: var(--track-utility);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity var(--t-fast) var(--ease);
+}
+
+.submit:disabled { cursor: default; opacity: 0.6; }
+
+.done {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-success);
+}
+
+.error {
+  width: 100%;
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-danger);
+}

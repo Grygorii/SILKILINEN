@@ -362,6 +362,21 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   survives; `PUBLIC_FILTER` keeps listings buyable-only. `Product.pre('save')` flips
   status at zero stock, so filtering detail on `active` 404'd the shop's best pieces
   while `sitemap.ts` still listed them, and made the back-in-stock waitlist unreachable.
+- **Quantity ceiling:** `frontend/lib/variantStock.ts` — `maxOrderable(stockBySize(variants),
+  selectedSize, total)`. The stepper capped at `Math.min(stock ?? 10, 10)` where `stock` is
+  the product TOTAL, so a robe with 9 Large and 1 Medium offered five Mediums. ⚠️ Nothing
+  downstream catches it: `checkoutV2` never checks availability before charging and
+  decrements AFTER the order commits, fail-soft, so this cap is the ONLY guard against an
+  unfillable order. Held by BOTH `ProductOptions` and `QuickAddSheet` (each had its own
+  copy of the arithmetic), and each clamps `qty` down when the size changes — otherwise a
+  basket built as 5×L silently becomes 5×M. No variant rows means stock is UNTRACKED, not
+  sold out, so those keep the total-based cap. **Still open:** a server-side stock check
+  before the payment intent; a frontend cap is advisory only.
+- **Back-in-stock waitlist form:** `components/NotifyWhenBack.tsx` is the ONE owner, used
+  by the desktop panel AND the mobile `StickyBuyBar`. The form was inline in
+  `ProductOptions`, so the sticky bar — the only CTA a phone shows — still fired the
+  `mailto:` the waitlist was built to replace (dead without a mail client; unwatched inbox
+  when it works). The shop's clearest buying signal was captured on desktop, dropped on mobile.
 - **Cart persistence:** the localStorage writer waits on a `hydrated` ref — effects run in
   declaration order after one commit, so the writer fired with the EMPTY initial cart
   before the reader's update landed and overwrote a real saved basket.

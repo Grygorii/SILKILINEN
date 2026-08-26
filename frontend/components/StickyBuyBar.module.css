@@ -58,3 +58,25 @@
   height: 48px;
   font-size: 11px;
 }
+
+/* Waitlist panel, above the bar. Fixed like the bar itself and offset by the
+   bar's own published height (--sticky-buy-h, owned by globals.css) so it can
+   never overlap it — the same clearance contract everything else at this edge
+   reads. Hidden on desktop with the bar. */
+.notifyPanel {
+  position: fixed;
+  bottom: var(--sticky-buy-h, 0px);
+  left: 0;
+  right: 0;
+  z-index: 41;
+  padding: 14px 16px;
+  background: var(--warm-white);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.04);
+}
+
+@media (min-width: 901px) {
+  .notifyPanel {
+    display: none;
+  }
+}

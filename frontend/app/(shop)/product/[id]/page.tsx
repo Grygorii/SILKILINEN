@@ -372,6 +372,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 // already exposed this for its "shop the set" pickers; the
                 // product page did not.
                 fitNote={product.fitNote}
+                // Per-size stock, so the quantity ceiling follows the size the
+                // customer picked rather than the product's total.
+                sizeVariants={product.variants}
                 availableSizes={
                   Array.isArray(product.variants) && product.variants.length
                     ? [...new Set<string>(
@@ -468,6 +471,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             image={galleryImages[0]?.url}
             colours={product.colours ?? []}
             sizes={product.sizes ?? []}
+            sizeVariants={product.variants}
           />
         </ProductSelectionProvider>
       </main>
