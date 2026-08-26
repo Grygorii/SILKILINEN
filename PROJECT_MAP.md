@@ -306,6 +306,22 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   is computed from all of them. Filtering to 4★+ made the average incapable of dropping
   below 4.0 while feeding `aggregateRating` to Google — against their snippet policy and
   the EU Omnibus/UK DMCC rules on selective presentation. Moderate spam, never ratings.
+  **`GET /api/reviews/summary` is the ONE aggregate** (average/count/distribution over
+  approved reviews; `?productId` scopes it). Read by the homepage strip, the Organization
+  JSON-LD in `app/layout.tsx`, `ProductReviews` and `/reviews` — which used to compute its
+  own from the list endpoint and agreed only because `/api/reviews` with no query params
+  falls into an UNPAGINATED branch (`!page && !limit && sort==='recent' && !productId`).
+  Add a default limit and that page's headline silently becomes the mean of the ten most
+  recent while the structured data keeps asserting the real figure.
+  `frontend/tests/reviewAggregate.test.ts` fails on any storefront file deriving an
+  average from `starRating`. Homepage strip shows `MAX_REVIEWS` (3, owned by
+  `ReviewsCarousel`, imported by the caller) as a static row — the marquee duplicated its
+  own contents to have something to scroll and showed 1-2-3-1-2-3 at that length.
+- **Card colour line:** `frontend/lib/productColour.ts` `cardColour()` — prints the colour
+  under the product name ONLY when the name doesn't already contain it. The canonical name
+  is `Silk [garment] in [Colour]` (`utils/productName.js`), so an unconditional colour line
+  restates it; the catalogue is mid-rename, so both cases are live. Silent on a record
+  holding several colours (one line would misdescribe the rest) and on placeholders.
 - **Sold-out products:** `DETAIL_FILTER` (products.js) allows `sold_out` so the PAGE
   survives; `PUBLIC_FILTER` keeps listings buyable-only. `Product.pre('save')` flips
   status at zero stock, so filtering detail on `active` 404'd the shop's best pieces

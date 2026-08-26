@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard, { type ProductCardData } from './ProductCard';
 import styles from './NewArrivals.module.css';
@@ -108,10 +109,21 @@ export default function NewArrivalsCarousel({ products }: { products: ProductCar
       className={`${styles.section} ${armed ? styles.armed : ''} ${revealed ? styles.revealed : ''}`}
       aria-labelledby="new-arrivals-heading"
     >
-      {/* Visually hidden: the design starts with products (no visible title),
-          but the outline still needs an h2 here — without it the homepage
-          skipped h1 -> h3, breaking heading navigation for screen readers. */}
-      <h2 id="new-arrivals-heading" className="srOnly">New Arrivals</h2>
+      {/* This h2 was srOnly, on the reasoning that the design "starts with
+          products (no visible title)". The stylesheet disagreed: it carries a
+          .header rule — and only inside the mobile media query, so even that
+          was half of something — for a header no component ever rendered. §9
+          asks for the heading and the link, and a homepage band of four
+          photographs with no words above it leaves a first-time visitor to
+          guess whether they are looking at new pieces, bestsellers or the
+          whole shop.
+
+          The link says "new arrivals" rather than the spec's "View all silk"
+          because it goes to the new-arrivals-only view, not the catalogue. */}
+      <div className={styles.header}>
+        <h2 id="new-arrivals-heading" className={styles.title}>New arrivals</h2>
+        <Link href="/shop?new=true" className={styles.viewAll}>View all new arrivals →</Link>
+      </div>
 
       <div className={styles.viewport}>
         <button

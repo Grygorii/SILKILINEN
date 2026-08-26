@@ -8,6 +8,7 @@ import { isValidImageUrl, cloudinaryUrl, cloudinarySrcSet } from '@/lib/imageUti
 import ProductImage from './products/ProductImage';
 import { productPath } from '@/lib/urls';
 import { fibreLabel, mommeReading } from '@/lib/fabricCare';
+import { cardColour } from '@/lib/productColour';
 import Price from './Price';
 import styles from './ProductCard.module.css';
 
@@ -19,6 +20,9 @@ export type ProductCardData = {
   name: string;
   price: number;
   materialComposition?: string;
+  /** Display colour, e.g. "Sky Blue". Already in CARD_PROJECTION; the card
+   *  simply never read it. */
+  colorName?: string;
   /** Silk weight, served by the card projection. Absent on most products. */
   momme?: string;
   createdAt?: string;
@@ -88,6 +92,10 @@ export default function ProductCard({ product, showHeart = true, priority = fals
     setTimeout(() => setAnimating(false), 300);
   }
 
+  // §9 puts the colour on its own line. It is printed only when the product
+  // NAME does not already contain it — see lib/productColour.ts.
+  const colour = cardColour(product);
+
   const weight = mommeReading(product.momme, product.materialComposition);
   const specLine = [fibreLabel(product.materialComposition), weight ? `${weight.value} momme` : null]
     .filter(Boolean).join(' · ') || null;
@@ -151,6 +159,7 @@ export default function ProductCard({ product, showHeart = true, priority = fals
             comparing a grid of silk decides which page to open. Both are read
             from the record — a product with neither shows nothing rather than
             a padded row, and the momme is never inferred. */}
+        {colour && <p className={styles.colour}>{colour}</p>}
         {specLine && <p className={styles.spec}>{specLine}</p>}
         {product.ratingCount ? (
           <div className={styles.rating} aria-label={`Rated ${product.ratingAverage} out of 5 from ${product.ratingCount} reviews`}>
