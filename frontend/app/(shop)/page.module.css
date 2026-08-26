@@ -125,16 +125,22 @@
 /* ── Reviews section ──────────────────────────────── */
 
 .reviews {
+  /* One measure for the heading, the cards and the link below them. */
+  --reviews-measure: 1150px;
   padding: 80px 0 60px;
   overflow: hidden;
 }
 
+/* The heading, the three cards and the footer link share one measure so they
+   line up on a wide screen. The strip used to be a full-bleed marquee, which
+   had no left edge to align to; a row of three does. */
 .reviewsHeader {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  max-width: var(--reviews-measure);
+  margin: 0 auto 40px;
   padding: 0 6%;
-  margin-bottom: 40px;
 }
 
 .reviewsTitle {
@@ -156,8 +162,9 @@
 }
 
 .reviewsFooter {
+  max-width: var(--reviews-measure);
+  margin: 36px auto 0;
   text-align: center;
-  margin-top: 36px;
 }
 
 .reviewsLink {

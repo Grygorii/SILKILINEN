@@ -5,6 +5,26 @@ import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
+// The brand aggregate has ONE owner: GET /api/reviews/summary, which averages
+// every APPROVED review at any rating. The homepage reads it, the Organization
+// JSON-LD in app/layout.tsx reads it, ProductReviews reads it — and this page
+// used to compute its own from whatever the list endpoint happened to return.
+//
+// Today those two agree by luck: /api/reviews with no query params falls into
+// an unpaginated branch and hands back every review, so the local mean matched.
+// The luck is one line deep. That branch is guarded by
+// `!page && !limit && sort === 'recent' && !productId`, so adding a default
+// limit for payload size — with several hundred review bodies going over the
+// wire on every visit, someone will — silently turns this page's headline into
+// "Based on 10 reviews" and its average into the mean of the ten most recent,
+// while the homepage and the structured data keep asserting the real figure.
+//
+// That divergence is not cosmetic. The same average feeds aggregateRating,
+// which is a claim made to Google and, for reviews shown to EU/UK shoppers, a
+// regulated statement about what customers said. A page that computes its own
+// is a second answer waiting to be different from the first.
+type Summary = { average: number; count: number; distribution: Record<string, number> };
+
 type Review = {
   _id: string;
   reviewer: string;
@@ -33,21 +53,29 @@ function firstName(name: string) {
 
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch(`${API}/api/reviews`)
-      .then(r => r.json())
-      .then(data => { setReviews(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => setLoading(false));
+    // The bodies and the figures come from different endpoints on purpose: the
+    // list can be sliced without the headline going wrong.
+    Promise.all([
+      fetch(`${API}/api/reviews`).then(r => r.json()).catch(() => []),
+      fetch(`${API}/api/reviews/summary`).then(r => r.json()).catch(() => null),
+    ])
+      .then(([list, sum]) => {
+        setReviews(Array.isArray(list) ? list : []);
+        if (sum && typeof sum.average === 'number' && typeof sum.count === 'number') {
+          setSummary({ average: sum.average, count: sum.count, distribution: sum.distribution ?? {} });
+        }
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  const total = reviews.length;
-  const avg = total ? reviews.reduce((s, r) => s + r.starRating, 0) / total : 0;
-
-  const dist: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  reviews.forEach(r => { dist[r.starRating] = (dist[r.starRating] || 0) + 1; });
+  const total = summary?.count ?? 0;
+  const avg = summary?.average ?? 0;
+  const dist = summary?.distribution ?? {};
 
   const visible = filter ? reviews.filter(r => r.starRating === filter) : reviews;
 
@@ -68,7 +96,7 @@ export default function ReviewsPage() {
 
               <div className={styles.distBlock}>
                 {[5, 4, 3, 2, 1].map(star => {
-                  const count = dist[star] || 0;
+                  const count = dist[String(star)] || 0;
                   const pct = total ? (count / total) * 100 : 0;
                   return (
                     <button

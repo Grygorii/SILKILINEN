@@ -2,34 +2,27 @@
   width: 100%;
 }
 
-/* ── Desktop infinite scroll ─────────────────────── */
+/* ── Desktop: a row of three ─────────────────────────
+   Was a marquee. Three cards fit on any desktop width, so there is nothing to
+   scroll — and motion on a block of testimonials asks the reader to keep up
+   with copy they are trying to read. Equal columns rather than fixed 300px
+   cards, so three reviews of different lengths still line up. */
 
-.desktopTrack {
-  overflow: hidden;
-  display: block;
-}
-
-.track {
-  display: flex;
+.desktopRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-  width: max-content;
-  animation: scroll linear infinite;
-}
-
-.trackPaused {
-  animation-play-state: paused;
-}
-
-@keyframes scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  /* Set by the section that hosts the strip, so the heading above and the
+     link below share the same left and right edge. Falls back for any other
+     caller. */
+  max-width: var(--reviews-measure, 1150px);
+  margin: 0 auto;
+  padding: 0 6%;
 }
 
 /* ── Card ────────────────────────────────────────── */
 
 .card {
-  width: 300px;
-  flex-shrink: 0;
   background: var(--cream);
   border: 1px solid var(--border);
   padding: 28px 24px;
@@ -124,7 +117,7 @@
 }
 
 @media (max-width: 640px) {
-  .desktopTrack {
+  .desktopRow {
     display: none;
   }
 

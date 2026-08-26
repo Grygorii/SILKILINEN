@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import styles from './page.module.css';
 import Image from 'next/image';
-import ReviewsCarousel, { type ReviewData } from '@/components/ReviewsCarousel';
+import ReviewsCarousel, { MAX_REVIEWS, type ReviewData } from '@/components/ReviewsCarousel';
 import { curateReviews } from '@/lib/reviewCuration';
 import NewArrivals from '@/components/NewArrivals';
 import StyleFinderBand from '@/components/StyleFinderBand';
@@ -46,7 +46,8 @@ export async function generateMetadata(): Promise<Metadata> {
 // the carousel then doubles for the infinite scroll, so hundreds of review cards
 // were serialised into the homepage HTML for a decorative strip. The true
 // average/count still come from /summary below, so the social proof stays honest.
-const CAROUSEL_REVIEWS = 12;
+// How many the strip shows is the carousel's business — see MAX_REVIEWS there.
+// Curation picks exactly that many out of the pool.
 // Read a wider slice than we show, so curateReviews has something to choose
 // between. Twelve of twelve is not a selection. Still far short of the ~107
 // approved reviews the unpaginated branch would return, which is the payload
@@ -66,7 +67,7 @@ async function getReviews(): Promise<ReviewData[]> {
     // carousel come from /summary over every approved review, so what leads the
     // strip cannot move the number a customer reads — which is what keeps this
     // curation and not selective presentation.
-    return curateReviews(all, CAROUSEL_REVIEWS);
+    return curateReviews(all, MAX_REVIEWS);
   } catch {
     return [];
   }
@@ -186,7 +187,7 @@ export default async function Home() {
             {summary.count > 0 && (
               <p className={styles.reviewsSummary}>
                 <span className={styles.avgStar}>★</span>
-                {avg.toFixed(1)} from {summary.count}+ reviews
+                {avg.toFixed(1)} from {summary.count} reviews
               </p>
             )}
           </div>

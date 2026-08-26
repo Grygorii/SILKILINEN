@@ -40,35 +40,49 @@ function Card({ review }: { review: ReviewData }) {
   );
 }
 
+/**
+ * §16: show at most three.
+ *
+ * Twelve reviews in an auto-scrolling marquee is wallpaper. Nobody reads past
+ * the second card, and a phone visitor was being asked to swipe twelve times to
+ * see the end of a strip that loops anyway. Three specific reviews — quality,
+ * comfort, fit, colour, packaging — are an argument; twelve are decoration.
+ *
+ * The cap lives HERE rather than in the caller's slice, and the caller imports
+ * it to size its own curation. Two numbers meaning "how many reviews" in two
+ * files is how a component ends up rendering four.
+ */
+export const MAX_REVIEWS = 3;
+
 type Props = { reviews: ReviewData[] };
 
-export default function ReviewsCarousel({ reviews }: Props) {
-  const [paused, setPaused] = useState(false);
+export default function ReviewsCarousel({ reviews: incoming }: Props) {
   const [mobileIndex, setMobileIndex] = useState(0);
   const touchStartX = useRef(0);
 
+  const reviews = incoming.slice(0, MAX_REVIEWS);
   if (reviews.length === 0) return null;
 
-  const duration = Math.max(30, reviews.length * 4);
-  const doubled = [...reviews, ...reviews];
+  // The index survives a shorter list: if the caller ever passes fewer reviews
+  // than the last render, a stale index would read past the end.
+  const index = Math.min(mobileIndex, reviews.length - 1);
 
   function prevCard() { setMobileIndex(i => (i - 1 + reviews.length) % reviews.length); }
   function nextCard() { setMobileIndex(i => (i + 1) % reviews.length); }
 
+  const pad = (n: number) => String(n).padStart(2, '0');
+
   return (
     <div className={styles.root}>
-      {/* ── Desktop infinite scroll ── */}
-      <div
-        className={styles.desktopTrack}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-      >
-        <div
-          className={`${styles.track} ${paused ? styles.trackPaused : ''}`}
-          style={{ animationDuration: `${duration}s` }}
-        >
-          {doubled.map((r, i) => <Card key={i} review={r} />)}
-        </div>
+      {/* ── Desktop: three, standing still ──
+          This was an infinite marquee, which only worked because there were
+          twelve cards to fill it. At three the track duplicates its own
+          contents to have something to scroll, so a wide screen showed
+          1-2-3-1-2-3 side by side — the same three reviews, visibly repeating,
+          which reads as a shop with three reviews trying to look like six.
+          Three cards fit a row. A row does not need to move. */}
+      <div className={styles.desktopRow}>
+        {reviews.map((r, i) => <Card key={i} review={r} />)}
       </div>
 
       {/* ── Mobile single-card swipe ── */}
@@ -80,11 +94,13 @@ export default function ReviewsCarousel({ reviews }: Props) {
           if (Math.abs(diff) > 40) diff > 0 ? nextCard() : prevCard();
         }}
       >
-        <Card review={reviews[mobileIndex]} />
+        <Card review={reviews[index]} />
         <div className={styles.mobileNav}>
-          <button className={styles.arrow} onClick={prevCard} aria-label="Previous review">‹</button>
-          <span className={styles.mobileCount}>{mobileIndex + 1} / {reviews.length}</span>
-          <button className={styles.arrow} onClick={nextCard} aria-label="Next review">›</button>
+          <button className={styles.arrow} onClick={prevCard} aria-label="Previous review">←</button>
+          {/* 01 / 03, not 1 / 12. Zero-padded so the counter keeps its width
+              between cards instead of nudging the arrows as the digit changes. */}
+          <span className={styles.mobileCount}>{pad(index + 1)} / {pad(reviews.length)}</span>
+          <button className={styles.arrow} onClick={nextCard} aria-label="Next review">→</button>
         </div>
       </div>
     </div>
