@@ -33,7 +33,7 @@ export default function WishlistPage() {
           <p className={styles.muted}>Loading…</p>
         ) : items.length === 0 ? (
           <div className={styles.empty}>
-            <p>Your wishlist is empty.</p>
+            <p>Your favourites will live here.</p>
             <Link href="/shop" className={styles.shopLink}>Browse the collection →</Link>
           </div>
         ) : (

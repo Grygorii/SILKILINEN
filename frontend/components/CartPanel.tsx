@@ -175,10 +175,16 @@ export default function CartPanel({ isOpen, onClose }: Props) {
         <div className={styles.items}>
           {cart.length === 0 ? (
             <div className={styles.empty}>
-              <p className={styles.emptyTitle}>Your cart is empty.</p>
-              <p className={styles.emptySub}>When you add silk, it&apos;ll live here until you check out.</p>
+              <p className={styles.emptyTitle}>Your silk awaits.</p>
+              <p className={styles.emptySub}>Nothing here yet — when you add a piece, it&apos;ll live here until you check out.</p>
               <div className={styles.shopBtnWrap}>
-                <Button variant="secondary" onClick={onClose}>Explore the collection</Button>
+                {/* This used to call onClose alone: the label promised the
+                    collection and the button only dismissed the drawer, so
+                    from any page that is not the shop it was a dead end
+                    wearing a call to action. */}
+                <Button variant="secondary" onClick={() => { onClose(); router.push('/shop'); }}>
+                  Explore the collection
+                </Button>
               </div>
             </div>
           ) : (
