@@ -50,7 +50,7 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 16px;
   font-weight: 400;
-  letter-spacing: 3px;
+  letter-spacing: var(--track-utility);
   color: var(--dark);
 }
 
@@ -117,7 +117,7 @@
   justify-content: space-between;
   padding: 14px 0;
   font-size: 12px;
-  letter-spacing: 2.5px;
+  letter-spacing: var(--track-utility);
   font-weight: 400;
   color: var(--dark);
   text-decoration: none;
@@ -148,7 +148,7 @@
 
 .navLinkFeatured {
   color: var(--dark);
-  letter-spacing: 2.5px;
+  letter-spacing: var(--track-utility);
 }
 
 .navArrow {
@@ -175,7 +175,7 @@
   justify-content: space-between;
   padding: 14px 0;
   font-size: 12px;
-  letter-spacing: 2.5px;
+  letter-spacing: var(--track-utility);
   color: var(--dark);
   text-decoration: none;
   border-bottom: 1px solid var(--border);

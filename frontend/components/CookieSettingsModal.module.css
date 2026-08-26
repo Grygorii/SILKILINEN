@@ -24,7 +24,7 @@
 
 .title {
   font-size: 11px;
-  letter-spacing: 3px;
+  letter-spacing: var(--track-utility);
   font-weight: 400;
   color: var(--dark);
 }

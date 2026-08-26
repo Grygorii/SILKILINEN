@@ -33,7 +33,7 @@
   position: relative;
   font-family: 'Jost', sans-serif;
   font-size: 10px;
-  letter-spacing: 4px;
+  letter-spacing: var(--track-utility);
   text-transform: uppercase;
   color: var(--muted);
   margin-bottom: 20px;

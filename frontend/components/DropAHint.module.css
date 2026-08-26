@@ -125,7 +125,7 @@
   color: var(--warm-white);
   border: none;
   font-size: 12px;
-  letter-spacing: 2.5px;
+  letter-spacing: var(--track-utility);
   text-transform: uppercase;
   font-family: inherit;
   cursor: pointer;

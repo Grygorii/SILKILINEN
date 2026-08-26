@@ -38,7 +38,7 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 17px;
   font-weight: 400;
-  letter-spacing: 3px;
+  letter-spacing: var(--track-utility);
   color: var(--color-surface);
   margin-bottom: 3px;
 }
@@ -152,7 +152,7 @@
   text-align: center;
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 15px;
-  letter-spacing: 3px;
+  letter-spacing: var(--track-utility);
   color: var(--color-surface);
 }
 

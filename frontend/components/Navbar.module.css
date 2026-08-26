@@ -63,7 +63,7 @@
 
 .logoSub {
   font-size: 10px;
-  letter-spacing: 4px;
+  letter-spacing: var(--track-utility);
   padding-right: 4px;
   text-transform: uppercase;
   color: var(--muted);

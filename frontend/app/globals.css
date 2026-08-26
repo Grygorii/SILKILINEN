@@ -25,7 +25,7 @@ button:active:not(:disabled) {
 
 /* Keyboard focus ring — visible only during keyboard navigation */
 *:focus-visible {
-  outline: 2px solid var(--dark);
+  outline: 2px solid var(--color-focus);
   outline-offset: 3px;
   border-radius: 2px;
 }
@@ -69,6 +69,11 @@ img {
   --color-ink-muted:    #6B6358;  /* meta, labels — darkened to meet WCAG AA (~5.6:1 on cream) */
   --color-ink:          #2A2218;  /* text, primary fill */
   --color-accent:       #C4A882;  /* rose-gold, used sparingly */
+  /* The focus ring. A named role rather than a reuse of --color-ink, because
+     it is the one colour whose job is to be SEEN rather than to be quiet — if
+     the ink ever softens for aesthetic reasons, the focus ring must not follow
+     it down. */
+  --color-focus:        #2A2218;
 
   /* Semantic accents — formalised from the scattered greens/reds/golds the
      storefront used ad hoc, so status colour is one token, not a dozen shades. */
@@ -99,6 +104,33 @@ img {
   --s-6: 32px;
   --s-7: 48px;
   --s-8: 64px;
+  /* Editorial steps. The scale stopped at 64px, so every section that wanted
+     real air hardcoded 80/96/120 — the whitespace the design language depends
+     on was the one thing not in the system. */
+  --s-9:  80px;
+  --s-10: 96px;
+  --s-11: 120px;
+  /* The 40px step the 8px system implies and the 4px scale skips. */
+  --s-40: 40px;
+
+  /* ── Letter spacing ───────────────────────────────────────────────────
+     In EM, and that is the whole point.
+
+     There were 428 hardcoded px tracking values against 13 in em, and px
+     tracking is font-size-dependent: the same `letter-spacing: var(--track-utility)` is 0.30em
+     on a 10px label and 0.07em on a 42px heading. So one value meant two
+     completely different designs, and the small text — the utility labels the
+     site uses everywhere — came out at two to three times the intended
+     tracking while the headings looked correct. Nothing was inconsistent in
+     the CSS; the unit was.
+
+     These are the ceilings, not suggestions: utility 0.08–0.12em, buttons
+     0.04–0.08em, headings tight-to-normal, body normal. Tune the whole site's
+     tracking from these four lines. */
+  --track-utility: 0.1em;   /* small uppercase labels  */
+  --track-button:  0.06em;  /* button text             */
+  --track-heading: normal;  /* display serif           */
+  --track-body:    normal;  /* prose                   */
 
   /* Stroke + radius (locked, ends current drift) */
   --stroke: 1px;

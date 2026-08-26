@@ -18,7 +18,7 @@
 
 .header p {
   font-size: 13px;
-  letter-spacing: 3px;
+  letter-spacing: var(--track-utility);
   text-transform: uppercase;
   color: var(--muted);
 }

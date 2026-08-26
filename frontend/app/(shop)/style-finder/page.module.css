@@ -50,7 +50,7 @@
   padding: 16px 56px;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
-  letter-spacing: 2.5px;
+  letter-spacing: var(--track-utility);
   text-transform: uppercase;
   cursor: pointer;
   transition: background 300ms cubic-bezier(.2, .6, .2, 1),
@@ -180,7 +180,7 @@
 .kicker {
   font-family: 'Jost', sans-serif;
   font-size: 11px;
-  letter-spacing: 3px;
+  letter-spacing: var(--track-utility);
   text-transform: uppercase;
   color: var(--muted);
   margin-bottom: 36px;
@@ -442,7 +442,7 @@
 .editKicker {
   font-family: 'Jost', sans-serif;
   font-size: 11px;
-  letter-spacing: 3px;
+  letter-spacing: var(--track-utility);
   text-transform: uppercase;
   color: var(--muted);
   margin-bottom: 14px;

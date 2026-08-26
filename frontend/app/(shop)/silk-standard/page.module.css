@@ -15,7 +15,7 @@
 .eyebrow {
   font-family: 'Jost', sans-serif;
   font-size: 11px;
-  letter-spacing: 2.5px;
+  letter-spacing: var(--track-utility);
   text-transform: uppercase;
   color: var(--color-ink-muted);
   margin: 0 0 var(--s-3);
@@ -53,7 +53,7 @@
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   font-weight: 400;
-  letter-spacing: 2.5px;
+  letter-spacing: var(--track-utility);
   text-transform: uppercase;
   color: var(--color-ink);
   margin: 0 0 var(--s-4);
@@ -108,7 +108,7 @@
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   font-weight: 400;
-  letter-spacing: 2.5px;
+  letter-spacing: var(--track-utility);
   text-transform: uppercase;
   color: var(--color-ink);
   margin: 0 0 var(--s-5);
@@ -161,7 +161,7 @@
   color: var(--color-bg);
   font-family: 'Jost', sans-serif;
   font-size: 11px;
-  letter-spacing: 2.5px;
+  letter-spacing: var(--track-utility);
   text-transform: uppercase;
   text-decoration: none;
   transition: opacity var(--t-slow) var(--ease);
