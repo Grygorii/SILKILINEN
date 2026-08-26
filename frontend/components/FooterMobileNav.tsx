@@ -3,26 +3,13 @@
 import { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useCookieConsent } from '@/context/CookieConsentContext';
+import { footerSections } from '@/lib/footerNav';
 import styles from './Footer.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-type Section = { id: string; title: string; links: { label: string; href: string }[]; hasCookieLink?: boolean };
 
-const INFO_LINKS = [
-  { label: 'About us', href: '/about' },
-  { label: 'Reviews', href: '/reviews' },
-  { label: 'Shipping', href: '/shipping' },
-  { label: 'Size guide', href: '/size-guide' },
-  { label: 'Care guide', href: '/care-guide' },
-  { label: 'Contact', href: '/contact' },
-];
 
-const LEGAL_LINKS = [
-  { label: 'Privacy policy', href: '/privacy-policy' },
-  { label: 'Terms & conditions', href: '/terms' },
-  { label: 'Returns & refunds', href: '/returns' },
-];
 
 function CookieAccordionItem() {
   const { openBanner } = useCookieConsent();
@@ -47,19 +34,8 @@ export default function FooterMobileNav() {
   }, []);
 
   // Shop links track the live categories; INFO/LEGAL are static pages.
-  const SECTIONS: Section[] = [
-    {
-      id: 'shop',
-      title: 'SHOP',
-      links: [
-        { label: 'New arrivals', href: '/shop?new=true' },
-        { label: 'All products', href: '/shop' },
-        ...cats.map(c => ({ label: c.label, href: `/shop?category=${c.slug}` })),
-      ],
-    },
-    { id: 'info', title: 'INFO', links: INFO_LINKS },
-    { id: 'legal', title: 'LEGAL', links: LEGAL_LINKS, hasCookieLink: true },
-  ];
+  // One owner, shared with the desktop footer — see lib/footerNav.ts.
+  const SECTIONS = footerSections(cats);
 
   function toggle(id: string) {
     setOpen(prev => {

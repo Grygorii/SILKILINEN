@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import styles from './Footer.module.css';
+import { footerSections } from '@/lib/footerNav';
 import CookiePreferencesLink from './CookiePreferencesLink';
 import FooterCurrency from './FooterCurrency';
 import FooterMobileNav from './FooterMobileNav';
@@ -83,31 +84,15 @@ export default async function Footer() {
           </p>
           {socialRow}
         </div>
-        <div className={styles.col}>
-          <h4>Shop</h4>
-          <a href="/shop?new=true">New arrivals</a>
-          <a href="/shop">All products</a>
-          {shopCategories.map(c => (
-            <a key={c.slug} href={`/shop?category=${c.slug}`}>{c.label}</a>
-          ))}
-        </div>
-        <div className={styles.col}>
-          <h4>Info</h4>
-          <a href="/about">About us</a>
-          <a href="/reviews">Reviews</a>
-          <a href="/shipping">Shipping</a>
-          <a href="/size-guide">Size guide</a>
-          <a href="/care-guide">Care guide</a>
-          <a href="/silk-standard">The Silk Standard</a>
-          <a href="/contact">Contact</a>
-        </div>
-        <div className={styles.col}>
-          <h4>Legal</h4>
-          <a href="/privacy-policy">Privacy policy</a>
-          <a href="/terms">Terms &amp; conditions</a>
-          <a href="/returns">Returns &amp; refunds</a>
-          <CookiePreferencesLink />
-        </div>
+        {footerSections(shopCategories).map(section => (
+          <div key={section.id} className={styles.col}>
+            <h4>{section.title}</h4>
+            {section.links.map(l => (
+              <a key={l.href} href={l.href}>{l.label}</a>
+            ))}
+            {section.hasCookieLink && <CookiePreferencesLink />}
+          </div>
+        ))}
       </div>
 
       {/* Mobile brand — hidden on desktop */}
