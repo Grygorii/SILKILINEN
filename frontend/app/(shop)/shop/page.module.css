@@ -35,3 +35,58 @@
   .page { padding: 48px 4% 64px; }
   .title { font-size: 22px; }
 }
+
+/* ── Category guide (§21) ──
+   Below the grid, deliberately. Products first: a wall of prose between a
+   visitor and the thing they came to see is what makes a category page read
+   as a landing page rather than a shelf. */
+.guide {
+  max-width: 680px;
+  margin: var(--s-9) auto 0;
+  padding: var(--s-7) 6% 0;
+  border-top: var(--stroke) solid var(--color-line);
+}
+
+.guideHeading {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: var(--track-utility);
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+  margin: 0 0 var(--s-5);
+}
+
+.guidePara {
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--color-ink);
+  margin: 0 0 var(--s-4);
+}
+
+.guideLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-5);
+  margin: var(--s-5) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guideLinks a {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: var(--track-utility);
+  text-transform: uppercase;
+  color: var(--color-ink);
+  text-decoration: none;
+  border-bottom: var(--stroke) solid var(--color-line);
+  padding-bottom: 3px;
+}
+.guideLinks a:hover { border-color: var(--color-ink); }
+
+@media (max-width: 640px) {
+  .guide { margin-top: var(--s-7); padding-top: var(--s-6); }
+  .guidePara { font-size: 15px; }
+}

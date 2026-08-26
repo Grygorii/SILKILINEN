@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
+import { categoryContent, GUIDE_LINKS } from '@/lib/categoryContent';
 import { apiList, apiListResult } from '@/lib/apiFetch';
 import SearchTracker from '@/components/SearchTracker';
 import { notFound, permanentRedirect } from 'next/navigation';
@@ -13,7 +15,7 @@ type Cat = { slug: string; label: string; description?: string; metaTitle?: stri
 
 // The storefront's source of truth for which categories exist is the DB, not a
 // hardcoded list — so renaming or adding a category in admin "just works" on
-// the shop page. CATEGORY_COPY (below) is only an optional rich-copy override
+// the shop page. lib/categoryContent.ts is the optional rich-copy override
 // for SEO; a category is valid as long as it exists here.
 async function getCategoryList(locale: PageLocale = 'en'): Promise<Cat[]> {
   const q = apiLocaleQuery(locale);
@@ -46,7 +48,7 @@ export async function generateMetadata({
     // metaTitle is empty until the founder generates+approves, so existing
     // hardcoded categories (robes, pyjamas…) are unchanged until then.
     const dbCat = (await getCategoryList(locale)).find(x => x.slug === category);
-    const c = CATEGORY_COPY[category];
+    const c = categoryContent(category);
     // Only an existing category WITH products is a real, indexable page.
     if (dbCat && dbCat.count > 0) {
       const path = `/shop?category=${category}`;
@@ -54,7 +56,7 @@ export async function generateMetadata({
         title: dbCat?.metaTitle || c?.title || dbCat?.label || 'Shop',
         description: clampMeta(
           dbCat?.metaDescription ||
-          c?.description ||
+          c?.intro ||
           dbCat?.description ||
           `Shop ${dbCat?.label || 'silk'} at Silkilinen — pure silk and linen, shipped worldwide from Donegal.`),
         // Self-referencing canonical per locale + hreflang across all languages.
@@ -95,44 +97,6 @@ const RETIRED_CATEGORIES: Record<string, string> = {
   pyjamas: 'sleepwear',
 };
 
-const CATEGORY_COPY: Record<string, { title: string; description: string }> = {
-  robes: {
-    title: 'Silk Robes',
-    description: 'Discover our collection of pure silk robes, crafted in butter-soft mulberry silk. Effortlessly elegant for morning rituals and quiet evenings at home.',
-  },
-  pyjamas: {
-    title: 'Pyjama Sets',
-    description: 'Pure silk pyjamas that feel as beautiful as they look. Tailored for rest, designed to be seen.',
-  },
-  'sleep-dresses': {
-    title: 'Sleep Dresses',
-    description: 'Fluid, graceful silk sleep dresses that move with you. From slip dresses to bias-cut silhouettes — each piece a study in understated luxury.',
-  },
-  lingerie: {
-    title: 'Lingerie',
-    description: 'Delicate silk intimates, finished with refined details. The quiet luxury of silk against skin.',
-  },
-  shorts: {
-    title: 'Lounge Shorts',
-    description: 'Pure silk shorts for lounging in style. Relaxed fit, refined feel.',
-  },
-  shirts: {
-    title: 'Lounge Shirts',
-    description: 'Silk shirts that carry the quiet authority of natural luxury. Worn in, worn well.',
-  },
-  pillowcases: {
-    title: 'Silk Pillowcases',
-    description: 'Sleep on pure silk. Gentler on hair and skin, cooler through the night.',
-  },
-  'eye-masks': {
-    title: 'Silk Eye Masks',
-    description: 'Block out the world in pure silk. Weighted comfort, zero compromise.',
-  },
-  scarves: {
-    title: 'Silk Scarves',
-    description: 'Pure silk scarves — worn a hundred ways, remembered for one.',
-  },
-};
 
 async function getProducts(category?: string, q?: string, newOnly?: boolean, locale: PageLocale = 'en') {
   const params = new URLSearchParams();
@@ -187,9 +151,9 @@ export default async function ShopPage({
   }
 
   const { items: products, reachable } = await getProducts(category, q, newOnly, locale);
-  const copy = category ? CATEGORY_COPY[category] : null;
+  const copy = categoryContent(category);
   const heading = copy?.title ?? dbCat?.label ?? (newOnly ? 'New Arrivals' : (q ? `Search: "${q}"` : 'The Collection'));
-  const description = copy?.description ?? (dbCat?.description || null) ?? (newOnly ? 'Our latest pieces — fresh off the atelier table.' : null);
+  const description = copy?.intro ?? (dbCat?.description || null) ?? (newOnly ? 'Our latest pieces — fresh off the atelier table.' : null);
 
   return (
     <main className={styles.page}>
@@ -204,6 +168,26 @@ export default async function ShopPage({
       </div>
       {category && <BundleStrip category={category} />}
       <ProductGrid products={products} currentCategory={category ?? 'all'} reachable={reachable} />
+
+      {/* §21: the short introduction goes above the grid and the substantial
+          content BELOW it. Products first — a wall of SEO prose between a
+          visitor and the thing they came to look at is the pattern that makes
+          category pages feel like landing pages. */}
+      {copy && (
+        <section className={styles.guide} aria-labelledby="category-guide">
+          <h2 id="category-guide" className={styles.guideHeading}>
+            Choosing {copy.title.toLowerCase()}
+          </h2>
+          {copy.guide.body.map((para, i) => (
+            <p key={i} className={styles.guidePara}>{para}</p>
+          ))}
+          <ul className={styles.guideLinks}>
+            {GUIDE_LINKS.map(l => (
+              <li key={l.href}><Link href={l.href}>{l.label} →</Link></li>
+            ))}
+          </ul>
+        </section>
+      )}
     </main>
   );
 }
