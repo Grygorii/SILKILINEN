@@ -181,7 +181,17 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   shipped. Repair: `scripts/fixCollectionSlugs.js` (dry-run default, `--apply`).
 - **Bottom-edge clearance:** `--cookie-bar-h` (globals.css) — the consent bar is fixed to
   `bottom:0`; anything else pinned there (ContactWidget, FloatingCartBar) adds this to its
-  own offset. 0 when the bar is hidden. Never hardcode the bar's height.
+  own offset. 0 when the bar is hidden. Never hardcode the bar's height. Same contract:
+  `--sticky-buy-h` (the PDP buy bar) and `--contact-widget-h` (`-inset` + `-size`, the
+  contact bubble). The bubble is the odd one — a fixed CORNER, not a bar — so it covers
+  what the PAGE puts in that corner: the mobile hero bottom-aligns its CTA and cleared it
+  with a hand-measured 56px against a 74px footprint. The hero now reads the token and
+  adds `--cookie-bar-h` **at the point of use**: a custom property is substituted where
+  it is DECLARED, so folding a body-level token into a `:root` one silently freezes it.
+  `frontend/tests/floatingUtilities.test.ts` asserts every declared clearance token has a
+  reader outside globals.css — declared-but-unread is what `--sticky-buy-h` was for months.
+  Mobile hero height is `100svh` (not `vh`, which is the URL-bar-hidden height and put the
+  CTA below the fold on load; not `dvh`, which resizes the hero as the bar moves).
 - **CSV cells:** `backend/utils/csv.js` (`csvCell`/`csvRow`). Five routes hand-rolled
   quote-doubling and none neutralised formula injection — exported names/phones come
   from checkout, so `=HYPERLINK(...)` in a name executes when the founder opens the

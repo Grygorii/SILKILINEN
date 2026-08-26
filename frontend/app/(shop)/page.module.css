@@ -1,6 +1,16 @@
 .hero {
   position: relative;
   height: 100vh;
+  /* svh, not vh or dvh. On a phone `100vh` is the LARGE viewport — the height
+     the page WOULD have once the URL bar has scrolled away — so on first paint,
+     with the bar still showing, the bottom of the hero is below the fold. The
+     hero bottom-aligns its content on mobile, which means the headline, the
+     subtitle and "Explore the collection" were the part hanging off-screen: the
+     one screen every visitor sees was the one screen missing its CTA.
+     `dvh` would fit, then resize the hero every time the bar hides or shows.
+     `svh` is the stable smallest height, so the whole hero is in view on load
+     and never moves. The plain `vh` line above stays as the fallback. */
+  height: 100svh;
   /* Warm editorial fallback when no CMS image is set OR while the
      priority hero <img> is still streaming in on slow connections. */
   background-color: var(--color-line);
@@ -163,7 +173,13 @@
   .hero {
     padding: 0 5%;
     align-items: flex-end;
-    padding-bottom: 56px;
+    /* Clears the contact bubble, which is fixed in this same bottom-left
+       corner. 56px did not: the bubble's top edge is 74px up, so it sat over
+       the CTA. Read the footprint rather than restating it — if the bubble
+       ever changes size, this follows. The consent bar lifts the bubble while
+       it's up, so the hero has to lift by the same amount or the collision
+       comes straight back on a first visit — which is every visitor once. */
+    padding-bottom: calc(var(--contact-widget-h) + var(--cookie-bar-h, 0px) + var(--s-3));
   }
 
   /* Mobile: content sits at bottom, scrim rises from below */

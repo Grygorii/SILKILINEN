@@ -194,6 +194,23 @@ img {
      Never hardcode the bar's height elsewhere — read this. */
   --cookie-bar-h: 0px;
   --sticky-buy-h: 0px;
+
+  /* ── Contact bubble footprint — ONE owner ─────────────────────────────
+     The two above describe FIXED BARS, which span the width, so page content
+     clears them simply by ending above the fold. The contact bubble is the
+     other shape: a fixed CORNER, which sits over whatever the page itself has
+     put in that corner. Only one thing ever does — the mobile hero, which
+     bottom-aligns its CTA — and it had no way to know how tall the bubble is.
+     So the size and its inset are declared here and read by both: the widget
+     positions itself from them, the hero clears itself by their sum.
+     Never write 28px or 46px into either file again.
+     Deliberately does NOT fold in --cookie-bar-h / --sticky-buy-h: a custom
+     property that references another is substituted where it is DECLARED, so a
+     token defined here would freeze those at their :root values and miss the
+     body-level override entirely. Callers add them at the point of use. */
+  --contact-widget-inset: 28px;
+  --contact-widget-size: 46px;
+  --contact-widget-h: calc(var(--contact-widget-inset) + var(--contact-widget-size));
 }
 
 :root[data-cookie-banner='true'] { --cookie-bar-h: 68px; }
