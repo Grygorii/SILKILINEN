@@ -10,6 +10,7 @@ import ProductGallery from '@/components/ProductGallery';
 import { safeJsonLd } from '@/lib/safeJsonLd';
 import PageTracker from '@/components/PageTracker';
 import CrossSell from '@/components/CrossSell';
+import ShopTheLook from '@/components/ShopTheLook';
 import RecentlyViewed from '@/components/RecentlyViewed';
 import ProductReviews from '@/components/ProductReviews';
 import Price from '@/components/Price';
@@ -481,6 +482,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       </main>
 
       <ProductReviews productId={product._id} productName={product.name} />
+
+      {/* The look comes BEFORE "you might also like": one is a second piece to
+          add, the other is a set of alternatives to choose between. Showing
+          alternatives first invites the customer off this page before they have
+          been offered the pair. */}
+      <ShopTheLook product={product} />
 
       <CrossSell productId={id} />
       <RecentlyViewed excludeId={id} />

@@ -1,0 +1,113 @@
+/* Brand tokens only. Two pieces side by side with one action beneath. */
+
+.section {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--s-7) 6%;
+  border-top: var(--stroke) solid var(--color-line);
+}
+
+.heading {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+  text-align: center;
+  margin: 0 0 var(--s-5);
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-5);
+  align-items: start;
+}
+
+.piece {
+  text-align: center;
+}
+
+.imgWrap {
+  display: block;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: var(--color-surface-warm);
+}
+
+.img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.name {
+  margin: var(--s-3) 0 2px;
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.4;
+  color: var(--color-ink);
+}
+
+.nameLink {
+  color: inherit;
+  text-decoration: none;
+}
+.nameLink:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.price {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-ink-muted);
+}
+
+.action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-5);
+  margin-top: var(--s-5);
+  flex-wrap: wrap;
+}
+
+.total {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  margin: 0;
+  font-size: 16px;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.totalLabel {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.cta {
+  padding: 14px 30px;
+  background: var(--color-ink);
+  color: var(--color-bg);
+  border: 0;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity var(--t-slow) var(--ease);
+}
+.cta:hover { opacity: 0.85; }
+.cta:disabled { opacity: 0.5; cursor: default; }
+
+@media (max-width: 560px) {
+  .action {
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+  .cta { width: 100%; }
+}
