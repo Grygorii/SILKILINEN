@@ -59,7 +59,7 @@ const Expense = require('../models/Expense');
 const Customer = require('../models/Customer');
 const { calculateShipping, getTierForCountry } = require('../services/shipping');
 const { validateDiscount, redeemDiscount } = require('../services/discounts');
-const { availabilityError, decrementStockForOrder } = require('../services/inventory');
+const { decrementStockForOrder, basketChecker } = require('../services/inventory');
 const { calculateTax } = require('../services/tax');
 const { computeTotals } = require('../services/orderTotals');
 const { sendOrderConfirmation, sendAdminOrderNotification } = require('../services/email');
@@ -211,6 +211,11 @@ async function priceOrder(body) {
     // tampered cart can't underpay.
     const validatedItems = [];
     let collectionDiscountAmount = 0; // order-level sale from any discounted collections
+
+    // One checker for the whole basket — it remembers what earlier lines have
+    // already claimed, so a quantity split across two lines can't slip past a
+    // per-line check. See services/inventory.js.
+    const checkStock = basketChecker();
     // One query for the whole basket, before the loop — see discountedCollectionMap.
     const saleByCollection = await discountedCollectionMap();
     for (const item of sourceItems) {
@@ -225,7 +230,10 @@ async function priceOrder(body) {
         const bundle = await Bundle.findOne({
           _id: item.bundleId,
           status: 'active',
-        }).populate({ path: 'products.productId', select: 'name price status' });
+          // variants + totalStock so the children can be availability-checked.
+          // They are decremented on sale like any other line and were never
+          // checked, so a bundle could be sold with its contents out of stock.
+        }).populate({ path: 'products.productId', select: 'name price status variants totalStock' });
         if (!bundle) {
           return { status: 400, error: {
             error: `"${item.name || 'Bundle'}" is no longer available`,
@@ -239,6 +247,19 @@ async function priceOrder(body) {
         if (children.length === 0) {
           return { status: 400, error: { error: `Bundle "${bundle.name}" has no products` } };
         }
+        // Every child, at the units this bundle line needs of it. One of each:
+        // bundleProductSchema has no quantity field, which is also why
+        // includedProducts below is built with quantity 1.
+        for (const child of children) {
+          const childErr = checkStock(child, { quantity });
+          if (childErr) {
+            return { status: 409, error: {
+              error: `${childErr} — needed for "${bundle.name}"`,
+              unavailable: { bundleId: String(item.bundleId || ''), name: item.name || bundle.name },
+            } };
+          }
+        }
+
         const pricing = Bundle.computePricing(children, bundle.discountPercent);
         validatedItems.push({
           productId: null,
@@ -263,7 +284,7 @@ async function priceOrder(body) {
           } };
         }
         // Don't sell sold-out items, and don't sell more than a variant has.
-        const availErr = availabilityError(product, { colour: item.colour, size: item.size, quantity });
+        const availErr = checkStock(product, { colour: item.colour, size: item.size, quantity });
         if (availErr) {
           return { status: 409, error: {
             error: availErr,

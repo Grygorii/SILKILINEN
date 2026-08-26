@@ -370,8 +370,25 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   unfillable order. Held by BOTH `ProductOptions` and `QuickAddSheet` (each had its own
   copy of the arithmetic), and each clamps `qty` down when the size changes — otherwise a
   basket built as 5×L silently becomes 5×M. No variant rows means stock is UNTRACKED, not
-  sold out, so those keep the total-based cap. **Still open:** a server-side stock check
-  before the payment intent; a frontend cap is advisory only.
+  sold out, so those keep the total-based cap. The server check below is the real guard.
+- **Availability (server):** `backend/services/inventory.js`. `availabilityError()` runs
+  inside `priceOrder`, so BOTH `/quote` and `/create-intent` check before any charge.
+  ⚠️ It only ever refuses what it can PROVE is unfillable — a guard that blocks a real
+  order is worse than the oversell, because the decrement afterwards is fail-soft
+  (post-commit, clamps at zero, logs) and nothing rejects or refunds. Four holes, all
+  failing toward allowing the sale: an unmatched variant skipped the check entirely (so a
+  withdrawn size sold, and the decrement skipped it too); a line missing its colour matched
+  no row on a product whose rows all share one colour; a variantless piece tracked by
+  `totalStock` was never examined; and bundle CHILDREN were never checked though they are
+  decremented like any other line. `matchVariant` is now tiered (exact → size alone →
+  colour alone → sole row) and falls back to `trackedTotal` when it still can't pin a row.
+  **`basketChecker()` is the per-order checker** — `availabilityError` judges ONE line, so
+  1+1 against a stock of 1 passed twice; it is keyed on the RESOLVED variant, since
+  `{colour:'Sky Blue',size:'M'}` and `{colour:'',size:'M'}` are the same garment. The cart
+  UI merges identical lines but checkout also accepts `items` straight from the client.
+  Pinned by `tests/inventory.test.js` — including the ALLOW cases, which are the ones that
+  cost sales if someone tightens this later. Bundles are one of each child
+  (`bundleProductSchema` has no quantity field).
 - **Back-in-stock waitlist form:** `components/NotifyWhenBack.tsx` is the ONE owner, used
   by the desktop panel AND the mobile `StickyBuyBar`. The form was inline in
   `ProductOptions`, so the sticky bar — the only CTA a phone shows — still fired the
