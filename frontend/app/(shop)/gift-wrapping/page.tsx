@@ -1,9 +1,10 @@
 import styles from '../legal.module.css';
+import { SITE } from '@/lib/i18n';
 
 export const metadata = {
   title: 'Gift Wrapping',
   description: 'Every SILKILINEN order arrives gift-ready — wrapped in a tissue-lined box with silk ribbon, at no extra cost.',
-  alternates: { canonical: 'https://www.silkilinen.com/gift-wrapping' },
+  alternates: { canonical: `${SITE}/gift-wrapping` },
 };
 
 export default function GiftWrappingPage() {

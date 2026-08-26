@@ -17,6 +17,7 @@ import InstagramGrid from '@/components/InstagramGrid';
 import { EditableText, EditableImage } from '@/components/inline/InlineEdit';
 import { getContent, val } from '@/lib/content';
 import { getPageMeta } from '@/lib/pageSeo';
+import { SITE } from '@/lib/i18n';
 
 // Derive a still poster frame from a Cloudinary hero video, so the slow-connection
 // fallback is an actual frame of the video itself (not a mismatched separate photo).
@@ -35,7 +36,7 @@ function videoPosterFrame(videoUrl: string): string {
 export async function generateMetadata(): Promise<Metadata> {
   const o = await getPageMeta('/');
   return {
-    alternates: { canonical: 'https://www.silkilinen.com' },
+    alternates: { canonical: SITE },
     ...(o?.metaTitle ? { title: { absolute: o.metaTitle } } : {}),
     ...(o?.metaDescription ? { description: o.metaDescription } : {}),
   };

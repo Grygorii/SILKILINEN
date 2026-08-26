@@ -105,3 +105,41 @@ describe('shop URLs', () => {
     expect(categoryPath(null)).toBe('/shop');
   });
 });
+
+// ── The domain is written once ─────────────────────────────────────────────
+//
+// lib/brand.ts holds the origin; lib/i18n re-exports it as SITE, and sitemap,
+// robots, the feed, breadcrumbs and the root layout all read it. Sixteen
+// storefront pages wrote it out longhand instead — every static content page's
+// canonical, plus the journal's canonicals, og:url and JSON-LD.
+//
+// Nothing was visibly broken, which is why it survived: the literal and the
+// constant say the same thing today. They stop saying the same thing the moment
+// the domain moves or a preview deploy renders, and a canonical is the one tag
+// where being quietly wrong is invisible until the traffic goes.
+//
+// Storefront only. Admin writes absolute production URLs on purpose — "copy
+// link", "open live page" — where the point is to leave the current origin.
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { sourceFiles, stripComments } from './helpers/source';
+
+const ROOT = join(__dirname, '..');
+const OWNER = join(ROOT, 'lib', 'brand.ts');
+
+describe('site origin', () => {
+  const FILES = ['app', 'lib', 'components']
+    .flatMap(d => sourceFiles(join(ROOT, d), { skipDirs: ['admin'] }))
+    .filter(f => f !== OWNER);
+
+  it('scans a real set of files', () => {
+    expect(FILES.length).toBeGreaterThan(50);
+  });
+
+  it('is never written out longhand outside lib/brand.ts', () => {
+    const offenders = FILES
+      .filter(f => /https:\/\/(?:www\.)?silkilinen\.com/.test(stripComments(readFileSync(f, 'utf8'))))
+      .map(f => f.slice(ROOT.length + 1));
+    expect(offenders, 'these hardcode the domain instead of reading SITE').toEqual([]);
+  });
+});

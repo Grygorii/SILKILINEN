@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import StyleFinder, { type SFProduct } from './StyleFinder';
+import { SITE } from '@/lib/i18n';
 
 export const metadata: Metadata = {
   title: 'Silk Style Finder',
   description:
     'A few quiet questions, and we will gather your silk edit — the pieces made for the way you rest, lounge and dress.',
-  alternates: { canonical: 'https://www.silkilinen.com/style-finder' },
+  alternates: { canonical: `${SITE}/style-finder` },
 };
 
 // Load the catalogue on the SERVER and hand it to the quiz. The quiz used to

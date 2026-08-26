@@ -64,20 +64,12 @@ describe('UK shipping copy', () => {
 // banner, on the product page and at checkout reads as three separate half-
 // remembered claims rather than one policy, and "no customs" without a reason
 // is exactly the kind of assurance a shopper discounts.
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { sourceFiles, stripComments } from './helpers/source';
 
 const ROOT = join(__dirname, '..');
 
-function sourceFiles(dir: string, out: string[] = []): string[] {
-  for (const e of readdirSync(dir, { withFileTypes: true })) {
-    if (e.name === 'node_modules' || e.name === '.next' || e.name.startsWith('.')) continue;
-    const p = join(dir, e.name);
-    if (e.isDirectory()) sourceFiles(p, out);
-    else if (/\.tsx?$/.test(e.name)) out.push(p);
-  }
-  return out;
-}
 
 const SURFACES = [
   ...sourceFiles(join(ROOT, 'app', '(shop)')),
@@ -88,17 +80,6 @@ const SURFACES = [
 // Any wording that promises a UK customer no charge at the border.
 const CLAIM = /no customs|no import dut|customs[- ]free|no duties/i;
 
-// Comments are stripped before the scan, on the same reasoning
-// backend/utils/originClaims.js uses for the origin rule: a comment cannot
-// reach a customer, so holding one to customer-facing wording would fail CI
-// over an accurate note about the code.
-function stripComments(src: string): string {
-  return src
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .split('\n')
-    .filter(line => !/^\s*(\/\/|\*)/.test(line))
-    .join('\n');
-}
 
 describe('UK customs claim', () => {
   it('scans a real set of files', () => {

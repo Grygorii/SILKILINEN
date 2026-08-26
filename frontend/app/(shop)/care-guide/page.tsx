@@ -1,8 +1,9 @@
 import styles from './page.module.css';
 import PrintButton from './PrintButton';
+import { SITE } from '@/lib/i18n';
 
 export const metadata = {
-  alternates: { canonical: 'https://www.silkilinen.com/care-guide' },
+  alternates: { canonical: `${SITE}/care-guide` },
   title: 'Silk & Linen Care Guide',
   description: 'How to wash, dry, press and store mulberry silk and European linen so it lasts for years — SILKILINEN’s downloadable care guide.',
 };

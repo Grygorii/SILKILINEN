@@ -1,7 +1,8 @@
 import styles from '../legal.module.css';
+import { SITE } from '@/lib/i18n';
 
 export const metadata = {
-  alternates: { canonical: 'https://www.silkilinen.com/terms' },
+  alternates: { canonical: `${SITE}/terms` },
   title: 'Terms & Conditions',
   description: 'Terms and conditions for purchasing from SILKILINEN, governed by Irish law.',
 };

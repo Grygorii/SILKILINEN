@@ -152,6 +152,14 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   var entirely, so a staging deploy would have linked to production.
 - **Site origin (frontend):** `lib/brand.ts` (`brand.url`) is the ONLY place the domain is written.
   `lib/i18n.ts` re-exports it as `SITE`; sitemap/robots/feed/Breadcrumbs/layout read it.
+  It had been written out longhand in **16 more places** — every static content page's
+  canonical plus the journal's canonicals, og:url and JSON-LD — which is invisible until
+  the domain moves or a preview deploy renders. `tests/urls.test.ts` scans for it
+  (comments stripped; `app/admin` exempt, where absolute production URLs are the point).
+  ⚠️ Static pages are **not translated** — `getContent`/`getPageMeta` take no locale, so
+  `/de/about` serves the English text. Canonicalising those to the English URL is
+  CORRECT; adding `hreflangAlternates` there would ask Google to index four duplicates
+  of every page. Only genuinely localised routes (shop, product) get hreflang.
   For anything locale-aware use `localeUrl(locale, path)` — a literal
   `https://www.silkilinen.com/...` in a canonical silently breaks the `/de|/fr|/it|/es`
   versions (it did: `/de/shop?new=true` was canonicalising to the English URL).

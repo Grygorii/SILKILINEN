@@ -1,7 +1,8 @@
 import styles from '../legal.module.css';
+import { SITE } from '@/lib/i18n';
 
 export const metadata = {
-  alternates: { canonical: 'https://www.silkilinen.com/returns' },
+  alternates: { canonical: `${SITE}/returns` },
   title: 'Returns & Refunds',
   description: '14-day returns policy for SILKILINEN. Free returns, full refunds, easy process.',
 };

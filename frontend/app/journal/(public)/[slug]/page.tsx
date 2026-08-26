@@ -6,6 +6,7 @@ import { safeJsonLd } from '@/lib/safeJsonLd';
 import { isValidImageUrl } from '@/lib/imageUtils';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import styles from './page.module.css';
+import { SITE } from '@/lib/i18n';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -33,10 +34,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     // version ourselves so we don't end up with "X | Silkilinen Journal | Silkilinen".
     title: { absolute: article.metaTitle || `${article.title} | Silkilinen Journal` },
     description: article.metaDescription || article.excerpt,
-    alternates: { canonical: `https://www.silkilinen.com/journal/${slug}` },
+    alternates: { canonical: `${SITE}/journal/${slug}` },
     openGraph: {
       type: 'article',
-      url: `https://www.silkilinen.com/journal/${slug}`,
+      url: `${SITE}/journal/${slug}`,
       title: article.metaTitle || article.title,
       description: article.metaDescription || article.excerpt,
       images: isValidImageUrl(article.heroImage?.url) ? [{ url: article.heroImage.url }] : [],
@@ -66,9 +67,9 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
     publisher: {
       '@type': 'Organization',
       name: 'Silkilinen',
-      logo: { '@type': 'ImageObject', url: 'https://www.silkilinen.com/og-default.jpg' },
+      logo: { '@type': 'ImageObject', url: `${SITE}/og-default.jpg` },
     },
-    mainEntityOfPage: { '@type': 'WebPage', '@id': `https://www.silkilinen.com/journal/${slug}` },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE}/journal/${slug}` },
   };
 
   return (

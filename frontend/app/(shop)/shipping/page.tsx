@@ -1,7 +1,8 @@
 import styles from './page.module.css';
+import { SITE } from '@/lib/i18n';
 
 export const metadata = {
-  alternates: { canonical: 'https://www.silkilinen.com/shipping' },
+  alternates: { canonical: `${SITE}/shipping` },
   title: 'Shipping',
   description: 'Shipping rates, delivery times, and free shipping thresholds for SILKILINEN. Ships worldwide from Donegal, Ireland.',
 };

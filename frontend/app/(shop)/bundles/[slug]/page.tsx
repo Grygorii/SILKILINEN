@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import BundlePageClient from './BundlePageClient';
+import { SITE } from '@/lib/i18n';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -51,11 +52,11 @@ export async function generateMetadata(
   return {
     title,
     description,
-    alternates: { canonical: `https://www.silkilinen.com/bundles/${slug}` },
+    alternates: { canonical: `${SITE}/bundles/${slug}` },
     openGraph: {
       title,
       description,
-      url: `https://www.silkilinen.com/bundles/${slug}`,
+      url: `${SITE}/bundles/${slug}`,
       siteName: 'Silkilinen',
     },
   };

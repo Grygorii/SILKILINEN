@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import styles from './page.module.css';
 import { getSiteSettings } from '@/lib/settings';
+import { SITE } from '@/lib/i18n';
 
 export const metadata: Metadata = {
   title: 'FAQ',
   description: 'Answers to common questions about SILKILINEN silk and linen products — materials, sizing, care, shipping, and returns.',
-  alternates: { canonical: 'https://www.silkilinen.com/faq' },
+  alternates: { canonical: `${SITE}/faq` },
 };
 
 type Faq = { q: string; a: string };

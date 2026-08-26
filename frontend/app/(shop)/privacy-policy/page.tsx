@@ -1,7 +1,8 @@
 import styles from '../legal.module.css';
+import { SITE } from '@/lib/i18n';
 
 export const metadata = {
-  alternates: { canonical: 'https://www.silkilinen.com/privacy-policy' },
+  alternates: { canonical: `${SITE}/privacy-policy` },
   title: 'Privacy Policy',
   description: 'How SILKILINEN collects, uses, and protects your personal data under GDPR.',
 };
@@ -20,7 +21,7 @@ export default function PrivacyPolicyPage() {
           <p>
             SILKILINEN is an online retailer of silk and linen intimates, operated from Donegal, Ireland.
             We are the data controller for the personal information collected through this website
-            (<a href="https://www.silkilinen.com">silkilinen.com</a>).
+            (<a href={SITE}>silkilinen.com</a>).
           </p>
           <p>Contact: <a href="mailto:hello@silkilinen.com">hello@silkilinen.com</a></p>
         </section>

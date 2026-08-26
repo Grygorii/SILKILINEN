@@ -5,13 +5,14 @@ import { getPageMeta } from '@/lib/pageSeo';
 import { clampMeta } from '@/lib/clampMeta';
 import { isValidImageUrl } from '@/lib/imageUtils';
 import ArticleImage from '@/components/ArticleImage';
+import { SITE } from '@/lib/i18n';
 
 export async function generateMetadata(): Promise<Metadata> {
   const o = await getPageMeta('/journal');
   return {
     title: o?.metaTitle ? { absolute: o.metaTitle } : 'Journal',
     description: clampMeta(o?.metaDescription || 'Stories about silk, linen, and slow living from Donegal.'),
-    alternates: { canonical: 'https://www.silkilinen.com/journal' },
+    alternates: { canonical: `${SITE}/journal` },
   };
 }
 
