@@ -69,6 +69,35 @@
   margin-left: auto;
 }
 
+/* Sibling colour products. Not swatches: these are LINKS to other products,
+   so they are styled as the outlined chips they were on the page before the
+   block moved here, rather than as another set of selectable squares. Saying
+   "this is a different page" with a different shape is the point. */
+.variantRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2, 8px);
+  margin-top: var(--s-3, 12px);
+}
+
+.variantLink {
+  display: inline-block;
+  padding: 8px 14px;
+  background: var(--color-bg);
+  border: var(--stroke, 1px) solid var(--color-line);
+  border-radius: var(--radius-control, 2px);
+  color: var(--color-ink);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-decoration: none;
+  transition: border-color var(--t-fast, 120ms) var(--ease, ease), background var(--t-fast, 120ms) var(--ease, ease);
+}
+
+.variantLink:hover {
+  border-color: var(--color-ink);
+  background: var(--color-surface);
+}
+
 /* Quantity stepper — not part of the four-primitive set, retained
    from previous markup with token-aligned styling. */
 .stepper {

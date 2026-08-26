@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { categoryLabel } from '@/lib/categoryLabel';
 import { apiJson } from '@/lib/apiFetch';
 import { permanentRedirect, notFound } from 'next/navigation';
-import Link from 'next/link';
 import styles from './page.module.css';
 import ProductOptions from '@/components/ProductOptions';
 import StickyBuyBar from '@/components/StickyBuyBar';
@@ -326,27 +325,28 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               {showNew && <span className={styles.newTag}>NEW</span>}
               <h1 className={styles.productName}>{product.name}</h1>
 
-              {/* Colour variant cubes — links to sibling colour products */}
-              {(product.colorName || (product.colorVariants && product.colorVariants.length > 0)) && (
-                <div className={styles.colourCubes}>
-                  <p className={styles.colourLabel}>COLOUR</p>
-                  <div className={styles.cubeRow}>
-                    <span className={styles.cubeActive}>
-                      {product.colorName || product.colours?.[0] || 'One Colour'}
-                    </span>
-                    {product.colorVariants?.map((v: { productId: string; colorName: string; slug?: string }) => (
-                      <Link
-                        key={v.productId}
-                        // Canonical by construction — the API now serves each
-                        // sibling's slug, and productHref always prefers it.
-                        href={productHref({ slug: v.slug, _id: v.productId }, locale)}
-                        className={styles.cubeLink}
-                      >
-                        {v.colorName}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
+              {/* §22 puts the rating directly under the name, and it was the
+                  one line of the order that had no implementation at all. The
+                  figures were already being fetched — they feed aggregateRating
+                  in the JSON-LD below — so this page has been telling Google
+                  "4.9 from 23 reviews" while showing the customer nothing.
+
+                  Same source as the structured data (/api/reviews/summary,
+                  scoped by product), so the two cannot disagree. Silent when a
+                  piece has no reviews rather than printing an empty five stars,
+                  which reads as a rating of zero. */}
+              {productReviews && (
+                <a href="#product-reviews" className={styles.ratingLine}>
+                  <span className={styles.ratingStars} aria-hidden="true">
+                    {'★'.repeat(Math.round(productReviews.summary.average))}
+                    {'☆'.repeat(5 - Math.round(productReviews.summary.average))}
+                  </span>
+                  <span className={styles.ratingValue}>{productReviews.summary.average.toFixed(1)}</span>
+                  <span className={styles.ratingSep} aria-hidden="true">·</span>
+                  <span className={styles.ratingCount}>
+                    {productReviews.summary.count} {productReviews.summary.count === 1 ? 'review' : 'reviews'}
+                  </span>
+                </a>
               )}
 
               <p className={styles.price}>
@@ -384,6 +384,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                     : null
                 }
                 colours={product.colours ?? []}
+                // Colour lives in ONE place on this page now — see the block in
+                // ProductOptions. It used to be stated here as well, under its
+                // own COLOUR heading, above the price.
+                colorName={product.colorName}
+                colorVariants={product.colorVariants}
+                locale={locale}
                 colourHexMap={
                   // Build a name→hex map from the product's own colorName/Hex
                   // (single-colour case) plus any sibling colorVariants that
@@ -466,7 +472,10 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         </ProductSelectionProvider>
       </main>
 
-      <ProductReviews productId={product._id} productName={product.name} />
+      {/* The rating line under the product name links here. */}
+      <div id="product-reviews">
+        <ProductReviews productId={product._id} productName={product.name} />
+      </div>
 
       {/* The look comes BEFORE "you might also like": one is a second piece to
           add, the other is a set of alternatives to choose between. Showing

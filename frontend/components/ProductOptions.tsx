@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { productHref } from '@/lib/urls';
+import type { PageLocale } from '@/lib/i18n';
 import { useCart } from '@/context/CartContext';
 import { useProductSelection } from './ProductSelectionContext';
 import DropAHint from './DropAHint';
@@ -20,6 +23,13 @@ type Props = {
   // If absent, the swatch falls back to the warm-beige placeholder
   // with the colour name centred — the layout never collapses.
   colourHexMap?: Record<string, string>;
+  /** The piece's own display colour, e.g. "Sky Blue". */
+  colorName?: string | null;
+  /** Sibling products that are the same garment in another colour. Choosing
+   *  one is NAVIGATION, not a selection — they are separate products with
+   *  separate stock, prices and URLs. */
+  colorVariants?: { productId: string; colorName: string; slug?: string }[] | null;
+  locale?: PageLocale;
   sizes: string[];
   productName: string;
   productId: string;
@@ -38,7 +48,7 @@ type Props = {
   image?: string;
 };
 
-export default function ProductOptions({ colours, colourHexMap, sizes, availableSizes = null, fitNote, productName, productId, price, outOfStock, stock, image }: Props) {
+export default function ProductOptions({ colours, colourHexMap, colorName, colorVariants, locale, sizes, availableSizes = null, fitNote, productName, productId, price, outOfStock, stock, image }: Props) {
   const { selectedColour, setSelectedColour, selectedSize, setSelectedSize, qty, setQty } = useProductSelection();
   const { format } = useCurrency();
   const freeShippingThreshold = useFreeShippingThreshold();
@@ -134,16 +144,62 @@ export default function ProductOptions({ colours, colourHexMap, sizes, available
     hex: colourHexMap?.[name.toLowerCase()] ?? null,
   }));
 
+  // What to print when there is nothing to choose between: the explicit
+  // display colour, else the record's only colour.
+  const colourLabel = (colorName ?? '').trim() || (colours.length === 1 ? colours[0] : '');
+  const variants = colorVariants ?? [];
+
   return (
     <div className={styles.root} data-product-options>
-      {/* Colour — design-system v1 labelled swatch */}
-      {colours.length > 0 && (
+      {/* ── Colour ──
+          Colour used to be stated TWICE on this page: a "COLOUR" cube row up
+          under the product name, and this labelled swatch group down here. Two
+          blocks, same heading, ~200px apart, and in the ordinary case the
+          second one was a picker offering exactly one option — the same fault
+          as the single-size pill, which had already been fixed for size and
+          not for colour.
+
+          They exist because there are two different things called colour. The
+          record's own `colours` array is a CHOICE that goes into the cart line.
+          `colorVariants` are separate PRODUCTS — same garment, another colour,
+          own stock and own URL — so picking one is navigation. Both are real;
+          neither needed its own heading.
+
+          One block now, and it sits after the material rather than above the
+          price, which is the order §22 asks for. */}
+      {(colourLabel || swatches.length > 1 || variants.length > 0) && (
         <div className={styles.picker}>
-          <ColourSwatchGroup
-            swatches={swatches}
-            selectedName={selectedColour || undefined}
-            onSelect={setSelectedColour}
-          />
+          {swatches.length > 1 ? (
+            <ColourSwatchGroup
+              swatches={swatches}
+              selectedName={selectedColour || undefined}
+              onSelect={setSelectedColour}
+            />
+          ) : colourLabel && (
+            // One colour is a fact about the garment, not a decision. Same row
+            // shape as size and fit, so the three read as one list.
+            <p className={styles.factRow}>
+              <span className={styles.pickerLabel}>Colour</span>
+              <span className={styles.factSep} aria-hidden="true">·</span>
+              <span className={styles.factValue}>{colourLabel}</span>
+            </p>
+          )}
+
+          {variants.length > 0 && (
+            <div className={styles.variantRow}>
+              {variants.map(v => (
+                <Link
+                  key={v.productId}
+                  // Canonical by construction — the API serves each sibling's
+                  // slug and productHref always prefers it over the ObjectId.
+                  href={productHref({ slug: v.slug, _id: v.productId }, locale)}
+                  className={styles.variantLink}
+                >
+                  {v.colorName}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -340,7 +396,17 @@ export default function ProductOptions({ colours, colourHexMap, sizes, available
         <li>Free shipping over {format(freeShippingThreshold)}</li>
         <li>14-day returns</li>
         <li>Secure checkout</li>
-        <li>From Donegal with love</li>
+        {/* §29's fourth line. It read "From Donegal with love" — the only item
+            in a list of operational promises that was a slogan rather than
+            something a customer can hold the shop to, and the only one that
+            hints at where the piece was made in a list about how it is sent.
+            Gift-ready packaging is a claim the shop already makes on
+            /gift-wrapping, in the FAQ, in the accordion below and in the
+            homepage reassurance row: tissue-lined box and ribbon, included.
+            §22's "gift wrapping available" is the wrong wording for it —
+            "available" implies an extra to select, and there is nothing to
+            select because every order gets it. */}
+        <li>Gift-ready packaging</li>
       </ul>
 
       {/* Drop a Hint — quiet uppercase link with a hairline gift glyph,

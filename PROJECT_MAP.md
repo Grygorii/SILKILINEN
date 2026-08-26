@@ -317,6 +317,21 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   average from `starRating`. Homepage strip shows `MAX_REVIEWS` (3, owned by
   `ReviewsCarousel`, imported by the caller) as a static row — the marquee duplicated its
   own contents to have something to scroll and showed 1-2-3-1-2-3 at that length.
+- **PDP right rail order (§22):** name, rating, price, material, colour, size, add to bag.
+  **Colour has ONE owner: `ProductOptions`.** It was stated twice — a `COLOUR` cube row
+  above the price in `product/[id]/page.tsx` AND the labelled swatch group inside
+  ProductOptions — because there are two different things called colour: the record's
+  `colours` array is a CHOICE that goes in the cart line, `colorVariants` are separate
+  PRODUCTS (own stock, own URL) so picking one is NAVIGATION. Both are real; neither
+  needed its own heading. Now one block: swatches only when `colours.length > 1`, else a
+  `Colour · <name>` fact row (same shape as size and fit — a picker with one option is
+  not a choice), plus outlined links to the siblings. The rating line reads the SAME
+  `/api/reviews/summary?productId=` the JSON-LD does, so the page cannot show one figure
+  and assert another; silent at zero reviews rather than printing empty stars.
+  ⚠️ The trust row must stay honourable: `UKShipBadge` already tells GB visitors "Ships
+  from the UK", so a "Shipped from Ireland" line would contradict it two lines apart.
+  "Gift-ready packaging" is safe — `/gift-wrapping`, the FAQ and `ReassuranceRow` all
+  state it is included at no cost.
 - **Card colour line:** `frontend/lib/productColour.ts` `cardColour()` — prints the colour
   under the product name ONLY when the name doesn't already contain it. The canonical name
   is `Silk [garment] in [Colour]` (`utils/productName.js`), so an unconditional colour line
