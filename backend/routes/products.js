@@ -230,7 +230,11 @@ const SLIM_PROJECTION = 'name price slug status updatedAt isNewArrival';
 // dropped here renders as undefined rather than failing loudly.
 const CARD_PROJECTION = [
   '_id', 'name', 'slug', 'price', 'compareAtPrice', 'category', 'status',
-  'images', 'image', 'sizes', 'colours', 'colorName', 'materialComposition',
+  // `momme` joins the card projection so the grid can state the silk weight
+  // beside the fibre. It is the one spec a premium silk buyer scans for, and
+  // the card had the composition but not the number that makes it mean
+  // something.
+  'images', 'image', 'sizes', 'colours', 'colorName', 'materialComposition', 'momme',
   'isNewArrival', 'isNew', 'totalStock', 'inStock', 'createdAt',
   'ratingAverage', 'ratingCount',
 ].join(' ');

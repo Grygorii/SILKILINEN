@@ -1,0 +1,179 @@
+/* Brand tokens only. Reading page: one column, generous measure, no cards. */
+
+.page {
+  background: var(--color-bg);
+  padding-bottom: var(--s-8);
+}
+
+.header {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--s-8) 6% var(--s-7);
+  text-align: center;
+}
+
+.eyebrow {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+  margin: 0 0 var(--s-3);
+}
+
+.header h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 42px;
+  font-weight: 300;
+  line-height: 1.15;
+  color: var(--color-ink);
+  margin: 0 0 var(--s-5);
+}
+
+.intro {
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--color-ink-muted);
+  margin: 0;
+}
+
+.inner {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 6%;
+}
+
+.pillar {
+  padding: var(--s-6) 0;
+  border-top: var(--stroke) solid var(--color-line);
+}
+
+.pillar h2 {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  margin: 0 0 var(--s-4);
+}
+
+.pillar p {
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--color-ink);
+  margin: 0 0 var(--s-4);
+}
+.pillar p:last-child { margin-bottom: 0; }
+
+/* The one figure on the page that comes from the catalogue rather than from
+   the copy. Set apart so it reads as a measurement, not a boast. */
+.figure {
+  padding: var(--s-4) var(--s-5);
+  background: var(--color-surface-warm);
+  font-size: 16px;
+}
+
+.figureNote {
+  display: block;
+  margin-top: var(--s-2);
+  font-size: 13px;
+  color: var(--color-ink-muted);
+  line-height: 1.7;
+}
+
+.caution {
+  font-size: 14px !important;
+  color: var(--color-ink-muted) !important;
+  border-left: 2px solid var(--color-line);
+  padding-left: var(--s-4);
+}
+
+.link {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── FAQ ── */
+
+.faq {
+  padding: var(--s-6) 0;
+  border-top: var(--stroke) solid var(--color-line);
+}
+
+.faq h2 {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  margin: 0 0 var(--s-5);
+}
+
+.faq dl { margin: 0; }
+
+.qa + .qa {
+  margin-top: var(--s-5);
+  padding-top: var(--s-5);
+  border-top: var(--stroke) solid var(--color-line);
+}
+
+.qa dt {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 21px;
+  font-weight: 400;
+  color: var(--color-ink);
+  margin-bottom: var(--s-3);
+}
+
+.qa dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--color-ink-muted);
+}
+
+/* ── Close ── */
+
+.close {
+  padding: var(--s-7) 0 0;
+  border-top: var(--stroke) solid var(--color-line);
+  text-align: center;
+}
+
+.close p {
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--color-ink-muted);
+  margin: 0 0 var(--s-5);
+}
+
+.cta {
+  display: inline-block;
+  padding: 14px 32px;
+  background: var(--color-ink);
+  color: var(--color-bg);
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: opacity var(--t-slow) var(--ease);
+}
+.cta:hover { opacity: 0.8; }
+
+@media (max-width: 640px) {
+  .header {
+    padding: var(--s-7) 6% var(--s-6);
+    text-align: left;
+  }
+  .header h1 { font-size: 32px; }
+  .pillar p, .intro { font-size: 15px; }
+  .close { text-align: left; }
+}

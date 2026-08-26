@@ -1,4 +1,4 @@
-import { mommeReading } from '@/lib/fabricCare';
+import { mommeReading, fibreLabel } from '@/lib/fabricCare';
 import styles from './QualityMarks.module.css';
 
 // The one-line answer to "why does this cost this", placed where the question
@@ -29,11 +29,9 @@ export default function QualityMarks({
   const weight = mommeReading(momme, composition);
 
   // Trimmed short: this is a mark, not the composition paragraph. The full
-  // string is in the Fabric & care panel below.
-  const fibre = /mulberry/i.test(composition || '') ? 'Pure Mulberry silk'
-    : /silk/i.test(composition || '') ? 'Pure silk'
-    : /linen/i.test(composition || '') ? 'Pure linen'
-    : null;
+  // string is in the Fabric & care panel below. Shared with ProductCard, so the
+  // grid and the page cannot describe the same garment two different ways.
+  const fibre = fibreLabel(composition);
 
   const marks = [
     fibre,

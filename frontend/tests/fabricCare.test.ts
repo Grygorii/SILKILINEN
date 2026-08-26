@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { careSteps, mommeReading, hasFabricDetail } from '@/lib/fabricCare';
+import { careSteps, mommeReading, hasFabricDetail, fibreLabel } from '@/lib/fabricCare';
 
 // Two rules with expensive wrong answers: a care instruction that silently
 // disappears, and a momme weight that was never measured.
@@ -136,5 +136,28 @@ describe('momme written into the composition', () => {
 
   it('lets the momme field win when both are filled', () => {
     expect(mommeReading('22', '100% Silk 19mm Momme')?.value).toBe(22);
+  });
+});
+
+// Read by both the product card and the PDP's price-side marks. If they
+// disagreed, the grid and the page would describe the same garment two
+// different ways.
+describe('fibre label', () => {
+  it('names the fibre a buyer is paying for', () => {
+    expect(fibreLabel('100% Mulberry Silk')).toBe('Pure Mulberry silk');
+    expect(fibreLabel('100% Silk')).toBe('Pure silk');
+    expect(fibreLabel('Washed European Linen')).toBe('Pure linen');
+    expect(fibreLabel('55% Silk 45% Linen')).toBe('Silk & linen');
+  });
+
+  it('prefers the more specific claim when both words appear', () => {
+    // Mulberry is the one worth saying; "silk and linen" would lose it.
+    expect(fibreLabel('100% Mulberry Silk')).toBe('Pure Mulberry silk');
+  });
+
+  it('says nothing rather than echoing an unrecognised composition', () => {
+    expect(fibreLabel('Recycled blend')).toBeNull();
+    expect(fibreLabel('')).toBeNull();
+    expect(fibreLabel(null)).toBeNull();
   });
 });

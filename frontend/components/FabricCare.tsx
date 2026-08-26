@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { careSteps, mommeReading, hasFabricDetail, type CareIcon } from '@/lib/fabricCare';
 import styles from './FabricCare.module.css';
 
@@ -77,6 +78,11 @@ export default function FabricCare({
             <span>Heavyweight</span>
           </div>
           <p className={styles.note}>{weight.note}</p>
+          {/* The number is stated here; what it means in general is one page
+              away, rather than repeated on every product. */}
+          <p className={styles.note}>
+            <Link href="/silk-standard" className={styles.link}>How silk weight is measured →</Link>
+          </p>
         </section>
       )}
 

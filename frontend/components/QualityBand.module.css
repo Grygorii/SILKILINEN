@@ -94,3 +94,22 @@
     border-top: 0;
   }
 }
+
+/* One way onward, to the page that explains the numbers this band asserts. */
+.more {
+  margin: 40px 0 0;
+  text-align: center;
+}
+
+.moreLink {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  text-decoration: none;
+  border-bottom: var(--stroke) solid var(--color-line);
+  padding-bottom: 4px;
+  transition: border-color var(--t-slow) var(--ease);
+}
+.moreLink:hover { border-color: var(--color-ink); }

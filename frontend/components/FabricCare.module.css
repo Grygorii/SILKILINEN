@@ -132,3 +132,9 @@
   margin-top: 2px;
   color: var(--color-ink-muted);
 }
+
+.link {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

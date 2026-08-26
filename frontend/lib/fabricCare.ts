@@ -193,3 +193,25 @@ export function hasFabricDetail(p: {
     || careSteps(p.careInstructions, p.materialComposition).steps.length,
   );
 }
+
+/**
+ * The fibre as a card-length label — "Pure Mulberry silk", not the full
+ * composition string.
+ *
+ * One owner, because it is now read in two places that must agree: the product
+ * card and the price-side marks on the PDP. A customer who sees "Pure silk" on
+ * the grid and "Pure Mulberry silk" on the page has been told two things about
+ * the same garment.
+ *
+ * Returns null for a composition naming no fibre we recognise — the card then
+ * shows nothing rather than echoing an unparsed string into a one-line slot.
+ */
+export function fibreLabel(composition?: string | null): string | null {
+  const m = String(composition || '').toLowerCase();
+  if (!m.trim()) return null;
+  if (m.includes('mulberry')) return 'Pure Mulberry silk';
+  if (m.includes('silk') && m.includes('linen')) return 'Silk & linen';
+  if (m.includes('silk')) return 'Pure silk';
+  if (m.includes('linen')) return 'Pure linen';
+  return null;
+}

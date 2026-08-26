@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import styles from './QualityBand.module.css';
 
 // "Why SILKILINEN" — the quality band the homepage did not have.
@@ -49,6 +50,9 @@ export default function QualityBand() {
           </li>
         ))}
       </ul>
+      <p className={styles.more}>
+        <Link href="/silk-standard" className={styles.moreLink}>What makes silk worth it →</Link>
+      </p>
     </section>
   );
 }

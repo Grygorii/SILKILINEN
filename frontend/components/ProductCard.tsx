@@ -7,6 +7,7 @@ import { useWishlist } from '@/context/WishlistContext';
 import { isValidImageUrl, cloudinaryUrl, cloudinarySrcSet } from '@/lib/imageUtils';
 import ProductImage from './products/ProductImage';
 import { productPath } from '@/lib/urls';
+import { fibreLabel, mommeReading } from '@/lib/fabricCare';
 import Price from './Price';
 import styles from './ProductCard.module.css';
 
@@ -18,6 +19,8 @@ export type ProductCardData = {
   name: string;
   price: number;
   materialComposition?: string;
+  /** Silk weight, served by the card projection. Absent on most products. */
+  momme?: string;
   createdAt?: string;
   isNewArrival?: boolean;
   /** Legacy flag name — accepted as a fallback for un-migrated products. */
@@ -85,6 +88,10 @@ export default function ProductCard({ product, showHeart = true, priority = fals
     setTimeout(() => setAnimating(false), 300);
   }
 
+  const weight = mommeReading(product.momme, product.materialComposition);
+  const specLine = [fibreLabel(product.materialComposition), weight ? `${weight.value} momme` : null]
+    .filter(Boolean).join(' · ') || null;
+
   return (
     <div className={`${styles.card} ${playSheen ? styles.sheenPlay : ''}`} data-track="card_click" data-track-product={product._id} data-track-name={product.name}>
       <div className={styles.cardImg}>
@@ -140,6 +147,11 @@ export default function ProductCard({ product, showHeart = true, priority = fals
         <Link href={productPath(product)} className={styles.nameLink}>
           <h3 className={styles.cardName} title={product.name}>{product.name}</h3>
         </Link>
+        {/* The spec line §G asks for: fibre and weight, where a customer
+            comparing a grid of silk decides which page to open. Both are read
+            from the record — a product with neither shows nothing rather than
+            a padded row, and the momme is never inferred. */}
+        {specLine && <p className={styles.spec}>{specLine}</p>}
         {product.ratingCount ? (
           <div className={styles.rating} aria-label={`Rated ${product.ratingAverage} out of 5 from ${product.ratingCount} reviews`}>
             {[1, 2, 3, 4, 5].map(n => (
