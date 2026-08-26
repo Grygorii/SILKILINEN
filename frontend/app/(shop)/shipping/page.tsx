@@ -1,5 +1,6 @@
 import styles from './page.module.css';
 import { SITE } from '@/lib/i18n';
+import { FALLBACK_TIERS, type ShippingTier } from '@/lib/shippingFallback';
 
 export const metadata = {
   alternates: { canonical: `${SITE}/shipping` },
@@ -7,35 +8,30 @@ export const metadata = {
   description: 'Shipping rates, delivery times, and free shipping thresholds for SILKILINEN. Ships worldwide from Donegal, Ireland.',
 };
 
-type Tier = { label: string; cost: number; freeThreshold: number; deliveryMin: number; deliveryMax: number };
-
-// Fallback mirrors the current live defaults, so the page renders correctly
-// even if the rates API is briefly unreachable.
-const FALLBACK: Tier[] = [
-  { label: 'Ireland', cost: 4.99, freeThreshold: 150, deliveryMin: 3, deliveryMax: 5 },
-  { label: 'United Kingdom', cost: 14.99, freeThreshold: 150, deliveryMin: 3, deliveryMax: 5 },
-  { label: 'Europe', cost: 9.99, freeThreshold: 150, deliveryMin: 5, deliveryMax: 10 },
-  { label: 'US / Canada / Australia', cost: 14.99, freeThreshold: 150, deliveryMin: 7, deliveryMax: 14 },
-  { label: 'Worldwide', cost: 19.99, freeThreshold: 150, deliveryMin: 10, deliveryMax: 21 },
-];
 
 // Region display name + any editorial suffix the page has always shown.
 const DISPLAY: Record<string, string> = { Worldwide: 'Rest of world' };
 const DELIVERY_NOTE: Record<string, string> = { 'United Kingdom': ' (from Derry, no customs)' };
 
-async function getRates(): Promise<Tier[]> {
+// `live` distinguishes the two outcomes. The old version returned the fallback
+// on failure and told nobody, so a stale rate was presented with exactly the
+// confidence of a current one — on the page whose whole job is telling a
+// customer what they will be charged.
+async function getRates(): Promise<{ tiers: ShippingTier[]; live: boolean }> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/shipping`, { next: { revalidate: 300 } });
-    if (!res.ok) return FALLBACK;
+    if (!res.ok) return { tiers: FALLBACK_TIERS, live: false };
     const data = await res.json();
-    return Array.isArray(data.tiers) && data.tiers.length ? data.tiers : FALLBACK;
+    return Array.isArray(data.tiers) && data.tiers.length
+      ? { tiers: data.tiers, live: true }
+      : { tiers: FALLBACK_TIERS, live: false };
   } catch {
-    return FALLBACK;
+    return { tiers: FALLBACK_TIERS, live: false };
   }
 }
 
 export default async function ShippingPage() {
-  const tiers = await getRates();
+  const { tiers, live } = await getRates();
   return (
     <main className={styles.page}>
       <div className={styles.inner}>
@@ -88,6 +84,16 @@ export default async function ShippingPage() {
           <p className={styles.note}>
             Delivery times are estimates and may vary during busy periods.
           </p>
+          {/* Only when the live rates could not be loaded. Saying so costs one
+              quiet line; not saying so means a figure that may be out of date
+              is presented with exactly the confidence of a current one, on the
+              page whose entire job is telling a customer what they will pay. */}
+          {!live && (
+            <p className={styles.note}>
+              These figures are indicative — we couldn’t load our current rates just now.
+              The exact cost for your address is always shown at checkout before you pay.
+            </p>
+          )}
         </section>
 
         <section className={styles.section}>

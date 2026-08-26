@@ -145,6 +145,12 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   `lib/shippingSchema.ts` (Product JSON-LD) and `lib/useFreeShipping.ts` (cart bar,
   PDP copy). Never hardcode `150`. It had drifted: JSON-LD told Google free shipping
   at €250/€200/€300 while checkout gave it at €150 — a merchant-listing mismatch.
+  ⚠️ ONE mirror survives: `frontend/lib/shippingFallback.ts`, rendered only when `/api/shipping`
+  is unreachable (a page with no rates is worse than last-known figures). Two things keep it
+  honest — `backend/tests/shippingFallback.test.js` compares it to the backend DEFAULTS every
+  CI run, and the page states the figures are indicative when it falls back, because live
+  rates are defaults + admin overrides so an edited rate makes the mirror stale by
+  construction and no test can catch that.
 - **Site origin (backend):** `backend/config/site.js` — `SITE_URL` / `siteUrl(path)`.
   Env-driven (`FRONTEND_URL`), normalised: trailing slash stripped and apex→www so
   nothing links through the 301. It was written 14 times in two forms; customer
