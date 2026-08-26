@@ -1,0 +1,46 @@
+/* Sits opposite the category row. Quiet: choosing an order is a small act, and
+   it must not compete with the categories, which are the real navigation. */
+.root {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+.label {
+  font-family: 'Jost', sans-serif;
+  font-size: 10px;
+  letter-spacing: var(--track-utility);
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.link {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--color-ink-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  /* 44px tap target without a 44px-tall row on desktop. */
+  padding: 12px 0;
+  transition: color var(--t-fast) var(--ease);
+}
+
+.link:hover { color: var(--color-ink); }
+
+.active {
+  color: var(--color-ink);
+  border-bottom: var(--stroke) solid var(--color-ink);
+}
+
+@media (max-width: 768px) {
+  /* Scrolls like the category row above it rather than wrapping to a second
+     line — two wrapped control rows push the first product off the screen. */
+  .root {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .root::-webkit-scrollbar { display: none; }
+}

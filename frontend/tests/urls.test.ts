@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { productPath, productHref, collectionPath, categoryPath, categoryHref } from '@/lib/urls';
+import { productPath, productHref, collectionPath, categoryPath, categoryHref, shopPath } from '@/lib/urls';
 
 // lib/urls.ts is the single source of truth for storefront URLs, and an ESLint
 // rule fails the build on a hand-built /product/ link — but nothing checked that
@@ -67,6 +67,41 @@ describe('collection and category paths', () => {
 
   it('sends an empty category to the unfiltered shop', () => {
     expect(categoryPath('')).toBe('/shop');
+    expect(categoryPath(null)).toBe('/shop');
+  });
+});
+
+describe('shop URLs', () => {
+  it('is /shop when there is nothing to say', () => {
+    expect(shopPath()).toBe('/shop');
+    expect(shopPath({ category: '', q: '   ', sort: null })).toBe('/shop');
+  });
+
+  it('omits the default sort rather than writing it out', () => {
+    // /shop and /shop?sort=featured are the same page. Two spellings are two
+    // index entries and two cache keys.
+    expect(shopPath({ sort: 'featured' })).toBe('/shop');
+  });
+
+  it('keeps the other parameters when one changes', () => {
+    // The fault this exists for: a sort link that drops ?category drops the
+    // shopper back into the full catalogue.
+    expect(shopPath({ category: 'robes', sort: 'price-asc' }))
+      .toBe('/shop?category=robes&sort=price-asc');
+  });
+
+  it('writes the parameters in a fixed order', () => {
+    const a = shopPath({ sort: 'newest', category: 'robes' });
+    const b = shopPath({ category: 'robes', sort: 'newest' });
+    expect(a).toBe(b);
+  });
+
+  it('escapes with %20, matching the canonicals already indexed', () => {
+    expect(shopPath({ category: 'a b' })).toBe('/shop?category=a%20b');
+  });
+
+  it('still backs categoryPath', () => {
+    expect(categoryPath('robes')).toBe('/shop?category=robes');
     expect(categoryPath(null)).toBe('/shop');
   });
 });

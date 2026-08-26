@@ -34,10 +34,49 @@ export function collectionHref(c: { slug?: string | null } | null | undefined, l
   return localeHref(locale, collectionPath(c));
 }
 
+/**
+ * A shop listing URL with any combination of its parameters.
+ *
+ * Written once because the shop's controls have to PRESERVE each other: a sort
+ * link that drops ?category lands the shopper back in the full catalogue, and
+ * a category link that drops ?sort silently reorders the grid under them. Both
+ * are the kind of fault nobody reports — the page just feels unreliable.
+ *
+ * Order is fixed (category, q, new, sort) so the same view always produces the
+ * same string. Two spellings of one URL are two entries in Google's index and
+ * two cache keys.
+ *
+ * Blank and default values are omitted rather than written as empty params:
+ * /shop is the canonical form of /shop?category=&sort=featured.
+ */
+export type ShopParams = {
+  category?: string | null;
+  q?: string | null;
+  /** New arrivals view. */
+  isNew?: boolean;
+  /** Omit or pass 'featured' for the shop's own order. */
+  sort?: string | null;
+};
+
+export function shopPath(params: ShopParams = {}): string {
+  const parts: string[] = [];
+  const category = params.category && String(params.category).trim();
+  const q = params.q && String(params.q).trim();
+  const sort = params.sort && String(params.sort).trim();
+  // encodeURIComponent, NOT URLSearchParams: the latter encodes a space as `+`
+  // and this function backs categoryPath, whose output goes into canonical
+  // tags. `%20` and `+` decode the same but are different URL STRINGS, so
+  // switching would fork every canonical Google has already indexed.
+  if (category) parts.push(`category=${encodeURIComponent(category)}`);
+  if (q) parts.push(`q=${encodeURIComponent(q)}`);
+  if (params.isNew) parts.push('new=true');
+  if (sort && sort !== 'featured') parts.push(`sort=${encodeURIComponent(sort)}`);
+  return parts.length ? `/shop?${parts.join('&')}` : '/shop';
+}
+
 /** Canonical path for a category listing. */
 export function categoryPath(slug?: string | null): string {
-  const s = slug && String(slug).trim();
-  return s ? `/shop?category=${encodeURIComponent(s)}` : '/shop';
+  return shopPath({ category: slug });
 }
 
 export function categoryHref(slug: string | null | undefined, locale: PageLocale = 'en'): string {

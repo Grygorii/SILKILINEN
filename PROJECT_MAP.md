@@ -219,6 +219,27 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   `models/StockNotification` + `routes/stockNotify.js` + `services/stockNotify.js`
   (hourly sweep, claims the row BEFORE sending). Checkout email persists on BLUR, not at
   submit, or cart recovery can only reach people who already paid.
+- **Shop listing order:** `backend/utils/productSort.js` `sortSpec(value)` is the ONE
+  whitelist (`featured`/`newest`/`price-asc`/`price-desc`, plus legacy `-createdAt` which
+  `NewArrivals` still links with). The route held a single `if (sort === '-createdAt')`,
+  so every other value fell through to Mongo's NATURAL order — "price low to high" would
+  have returned insertion order and looked like it worked. Unknown values fall back rather
+  than 400 (a hand-edited URL should still return the shop) and never reach Mongo's sort
+  spec. `components/SortLinks.tsx` owns the LABELS; `tests/productSort.test.js` asserts
+  every key it offers exists in the whitelist, since a missing one fails silently.
+- **Shop URLs:** `frontend/lib/urls.ts` `shopPath({category,q,isNew,sort})` — one builder,
+  fixed param order, defaults omitted (`/shop`, never `/shop?sort=featured`). Controls must
+  PRESERVE each other: a sort link dropping `?category` lands the shopper back in the full
+  catalogue. Uses `encodeURIComponent`, NOT `URLSearchParams` — the latter writes a space
+  as `+`, and this backs `categoryPath`, whose output goes into canonicals already indexed.
+  Sorted URLs canonicalise to the unsorted page because `generateMetadata` builds the
+  canonical from category/q/new and ignores `sort`.
+- **`ProductGrid` is a SERVER component.** It used to fetch `/api/categories` in an effect
+  and navigate with `router.push`: the page already had the list (so a category view
+  fetched it twice), `/shop` rendered the row only after hydration (layout shift), buttons
+  gave the six category pages no crawlable link from the shop, and the pushed path had no
+  locale — so every filter on `/de/shop` dropped the visitor into the English shop.
+  Categories now arrive as a prop; the row is anchors from `categoryHref`.
 - **Product search:** `backend/utils/productSearch.js` — `buildSearchFilter(q)` is the ONE
   rule (fields, escaping, word handling), called by `routes/products.js` and imported by
   `tests/productSearch.test.js` (it used to mirror a copy, which is how the bug below

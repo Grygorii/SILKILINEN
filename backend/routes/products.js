@@ -7,6 +7,7 @@ const Product = require('../models/Product');
 const Review = require('../models/Review');
 const { pickProductFields } = require('../utils/productFields');
 const { buildSearchFilter } = require('../utils/productSearch');
+const { sortSpec } = require('../utils/productSort');
 const { upload } = require('../utils/cloudinary');
 const { requireAuth } = require('../middleware/auth');
 const { sendDropAHint } = require('../services/email');
@@ -270,7 +271,10 @@ router.get('/', async function(req, res) {
     const projection = isSlim ? SLIM_PROJECTION
       : (req.query.full === 'true' ? PUBLIC_PROJECTION : CARD_PROJECTION);
     let query = Product.find(filter).select(projection).lean();
-    if (sort === '-createdAt') query = query.sort({ createdAt: -1 });
+    // Whitelisted — see utils/productSort.js. Anything unrecognised falls back
+    // to the shop's own order rather than reaching Mongo's sort spec.
+    const spec = sortSpec(sort);
+    if (spec) query = query.sort(spec);
     // Always bound the result: honour an explicit ?limit (capped), else apply
     // the safety ceiling so the response can never grow with the whole catalogue.
     const lim = limit ? Math.min(Math.max(1, parseInt(limit, 10) || 0), MAX_LIMIT) : MAX_LIMIT;

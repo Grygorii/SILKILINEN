@@ -90,3 +90,20 @@
   .guide { margin-top: var(--s-7); padding-top: var(--s-6); }
   .guidePara { font-size: 15px; }
 }
+
+/* Top controls. Right-aligned so the category row keeps the left edge — the
+   categories are navigation, the sort is an adjustment to what navigation
+   already chose. */
+.controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--s-3);
+}
+
+@media (max-width: 768px) {
+  /* Full width and left-aligned on a phone, where right-aligning a scrollable
+     row hides its first item off the left edge. */
+  .controls {
+    justify-content: flex-start;
+  }
+}

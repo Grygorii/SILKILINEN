@@ -1,67 +1,80 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import ProductCard, { type ProductCardData } from './ProductCard';
+import { categoryHref } from '@/lib/urls';
+import type { PageLocale } from '@/lib/i18n';
 import styles from './ProductGrid.module.css';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
-
-type Category = { slug: string; label: string; count: number };
+export type GridCategory = { slug: string; label: string; count: number };
 
 type Product = ProductCardData & {
   category?: string;
   description?: string;
 };
 
+/**
+ * The shop grid and the category row above it.
+ *
+ * ── Why this is no longer a client component ──
+ *
+ * It used to fetch /api/categories itself in an effect and navigate with
+ * router.push. Four things were wrong with that, and only one of them looked
+ * like a bug:
+ *
+ *   1. The page ALREADY had the list. shop/page.tsx fetches it to validate the
+ *      slug and 404 on a dead one — so a visit to /shop?category=robes made the
+ *      same request twice, once on the server and once in the browser.
+ *   2. On /shop with no category the server skipped the fetch entirely, so the
+ *      row arrived only after hydration: the grid rendered, then a row of
+ *      filters appeared above it and pushed everything down.
+ *   3. Buttons are not links. The category pages had no crawlable path from the
+ *      shop — the one page that should link to all six of them — and a shopper
+ *      could not open a category in a new tab.
+ *   4. router.push('/shop?category=…') has no locale, so on /de/shop every
+ *      filter dropped the visitor into the English shop.
+ *
+ * Categories now arrive as a prop and the row is anchors built by categoryHref,
+ * which is the single owner of storefront URLs and knows about locales. Nothing
+ * here needs the browser any more, so it renders on the server and ships no JS.
+ */
 export default function ProductGrid({
   products,
+  categories = [],
   currentCategory = 'all',
   reachable = true,
+  locale = 'en',
 }: {
   products: Product[];
+  /** Live categories that have products. Empty renders no row. */
+  categories?: GridCategory[];
   currentCategory?: string;
   /** false when the product API could not be reached, so an outage is not
    *  reported to the customer as an empty catalogue. */
   reachable?: boolean;
+  locale?: PageLocale;
 }) {
-  const router = useRouter();
-  const [categories, setCategories] = useState<Category[]>([]);
-
-  useEffect(() => {
-    fetch(`${API}/api/categories`)
-      .then(r => r.ok ? r.json() : [])
-      .then((data: Category[]) => setCategories(data.filter(c => c.count > 0)))
-      .catch(() => {});
-  }, []);
-
-  function selectCategory(slug: string) {
-    if (slug === 'all') {
-      router.push('/shop');
-    } else {
-      router.push(`/shop?category=${slug}`);
-    }
-  }
-
   return (
     <div>
-      <div className={styles.filters}>
-        <button
-          className={`${styles.filterBtn} ${currentCategory === 'all' ? styles.active : ''}`}
-          onClick={() => selectCategory('all')}
-        >
-          All
-        </button>
-        {categories.map(cat => (
-          <button
-            key={cat.slug}
-            className={`${styles.filterBtn} ${currentCategory === cat.slug ? styles.active : ''}`}
-            onClick={() => selectCategory(cat.slug)}
+      {categories.length > 0 && (
+        <nav className={styles.filters} aria-label="Product categories">
+          <Link
+            href={categoryHref(null, locale)}
+            className={`${styles.filterBtn} ${currentCategory === 'all' ? styles.active : ''}`}
+            aria-current={currentCategory === 'all' ? 'page' : undefined}
           >
-            {cat.label.toUpperCase()}
-          </button>
-        ))}
-      </div>
+            All
+          </Link>
+          {categories.map(cat => (
+            <Link
+              key={cat.slug}
+              href={categoryHref(cat.slug, locale)}
+              className={`${styles.filterBtn} ${currentCategory === cat.slug ? styles.active : ''}`}
+              aria-current={currentCategory === cat.slug ? 'page' : undefined}
+            >
+              {cat.label.toUpperCase()}
+            </Link>
+          ))}
+        </nav>
+      )}
 
       {products.length === 0 ? (
         <div className={styles.emptyState}>
@@ -70,15 +83,12 @@ export default function ProductGrid({
               during an outage is a lie that costs the visit. */}
           <p className={styles.emptyStateText}>
             {reachable === false
-              ? 'We couldn\u2019t load the collection just now. Please refresh in a moment.'
+              ? 'We couldn’t load the collection just now. Please refresh in a moment.'
               : 'No products in this category yet — check back soon.'}
           </p>
-          <button
-            className={styles.emptyStateBtn}
-            onClick={() => selectCategory('all')}
-          >
+          <Link className={styles.emptyStateBtn} href={categoryHref(null, locale)}>
             Browse all products
-          </button>
+          </Link>
         </div>
       ) : (
         <div className={styles.grid}>

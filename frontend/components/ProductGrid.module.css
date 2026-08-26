@@ -26,9 +26,13 @@
   .filters::-webkit-scrollbar { display: none; }
 }
 
+/* These two were <button>s and are now <a>s (see the component's note on why).
+   Anchors bring a default underline and, in the empty state, would otherwise
+   collapse to inline sizing — so both need saying explicitly. */
 .filterBtn {
   background: none;
   border: none;
+  text-decoration: none;
   padding: 6px 0;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
@@ -67,6 +71,10 @@
 }
 
 .emptyStateBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
   background: none;
   border: var(--stroke) solid var(--color-ink);
   padding: 13px 28px;

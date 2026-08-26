@@ -8,6 +8,7 @@ import { clampMeta } from '@/lib/clampMeta';
 import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, type PageLocale } from '@/lib/i18n-server';
 import { categoryHref } from '@/lib/urls';
 import ProductGrid from '@/components/ProductGrid';
+import SortLinks from '@/components/SortLinks';
 import BundleStrip from '@/components/BundleStrip';
 import styles from './page.module.css';
 
@@ -98,13 +99,18 @@ const RETIRED_CATEGORIES: Record<string, string> = {
 };
 
 
-async function getProducts(category?: string, q?: string, newOnly?: boolean, locale: PageLocale = 'en') {
+async function getProducts(category?: string, q?: string, newOnly?: boolean, locale: PageLocale = 'en', sort?: string) {
   const params = new URLSearchParams();
   if (category) params.set('category', category);
   if (q) params.set('q', q);
   if (newOnly) {
     params.set('isNew', 'true');
     params.set('sort', '-createdAt');
+  } else if (sort && sort !== 'featured') {
+    // Validated server-side by utils/productSort.js, which falls back to the
+    // shop's own order rather than erroring — so a hand-edited URL still
+    // returns the shop.
+    params.set('sort', sort);
   }
   if (locale !== 'en') params.set('locale', locale);
   const qs = params.toString();
@@ -120,16 +126,19 @@ async function getProducts(category?: string, q?: string, newOnly?: boolean, loc
 export default async function ShopPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; q?: string; new?: string }>;
+  searchParams: Promise<{ category?: string; q?: string; new?: string; sort?: string }>;
 }) {
-  const { category, q, new: newParam } = await searchParams;
+  const { category, q, new: newParam, sort } = await searchParams;
   const newOnly = newParam === 'true' && !category;
   const locale = await getLocale();
 
   // Validate against the live categories, not a hardcoded list. A category that
   // doesn't exist OR has no products isn't a real, browsable page — return a
   // proper 404 so it's not accessible and Google doesn't index a thin/empty grid.
-  const liveCats = category ? await getCategoryList(locale) : [];
+  // Always fetched, not only when validating a slug. The grid needs this list
+  // for its category row, and it used to fetch its own copy in the browser —
+  // so /shop?category=x asked for it twice and /shop rendered the row late.
+  const liveCats = await getCategoryList(locale);
   const dbCat = category ? liveCats.find(c => c.slug === category) : null;
 
   // …unless it's a slug we deliberately merged away: send it to its new parent
@@ -150,7 +159,7 @@ export default async function ShopPage({
     notFound();
   }
 
-  const { items: products, reachable } = await getProducts(category, q, newOnly, locale);
+  const { items: products, reachable } = await getProducts(category, q, newOnly, locale, sort);
   const copy = categoryContent(category);
   const heading = copy?.title ?? dbCat?.label ?? (newOnly ? 'New Arrivals' : (q ? `Search: "${q}"` : 'The Collection'));
   const description = copy?.intro ?? (dbCat?.description || null) ?? (newOnly ? 'Our latest pieces — fresh off the atelier table.' : null);
@@ -167,7 +176,25 @@ export default async function ShopPage({
         )}
       </div>
       {category && <BundleStrip category={category} />}
-      <ProductGrid products={products} currentCategory={category ?? 'all'} reachable={reachable} />
+      {/* §20's "top controls". Sorting is offered only where there is a grid
+          to sort — on an empty result it is four links that change nothing.
+          Not offered on New Arrivals either: that view IS an order, and a
+          "sort by newest" control inside it invites a contradiction. */}
+      {products.length > 1 && !newOnly && (
+        <div className={styles.controls}>
+          <SortLinks current={sort} params={{ category, q }} locale={locale} />
+        </div>
+      )}
+
+      <ProductGrid
+        products={products}
+        // Only categories holding something: a filter that leads to an empty
+        // grid is a dead end, and shop/page.tsx 404s those slugs anyway.
+        categories={liveCats.filter(c => c.count > 0)}
+        currentCategory={category ?? 'all'}
+        reachable={reachable}
+        locale={locale}
+      />
 
       {/* §21: the short introduction goes above the grid and the substantial
           content BELOW it. Products first — a wall of SEO prose between a
