@@ -226,7 +226,7 @@ export default function Navbar() {
                           Hi, {customer.firstName || customer.email}
                         </div>
                         <a href="/account" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>My account</a>
-                        <a href="/account/orders" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>Orders</a>
+                        <Link href="/account/orders" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>Orders</Link>
                         <a href="/wishlist" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>
                           Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ''}
                         </a>

@@ -12,7 +12,7 @@ export default function ReturnsPage() {
       <div className={styles.inner}>
         <header className={styles.header}>
           <h1>Returns &amp; Refunds</h1>
-          <p>We want you to love every piece. If something isn't right, we make it easy to return.</p>
+          <p>We want you to love every piece. If something isn’t right, we make it easy to return.</p>
         </header>
 
         <div className={styles.highlight}>
@@ -67,7 +67,7 @@ export default function ReturnsPage() {
         <section className={styles.section}>
           <h2>Return shipping costs</h2>
           <p>
-            Return shipping is at the customer's expense unless the item is faulty, damaged in transit,
+            Return shipping is at the customer’s expense unless the item is faulty, damaged in transit,
             or we sent the wrong product. We recommend using a tracked service as we cannot be
             responsible for returns lost in transit.
           </p>

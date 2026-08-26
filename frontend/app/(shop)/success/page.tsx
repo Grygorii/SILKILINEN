@@ -24,7 +24,7 @@ export default function SuccessPage() {
           </svg>
         </div>
         <h1>Order confirmed.</h1>
-        <p>You'll receive a confirmation email shortly.</p>
+        <p>You’ll receive a confirmation email shortly.</p>
         <a href="/shop" className={styles.btn}>Back to the collection</a>
       </div>
       {/* Google Customer Reviews opt-in — reads the Stripe params Stripe

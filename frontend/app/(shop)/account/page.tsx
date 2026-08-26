@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useCustomer } from '@/context/CustomerContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -39,12 +40,12 @@ export default function AccountPage() {
       </div>
 
       <div className={styles.cardGrid}>
-        <a href="/account/orders" className={styles.card}>
+        <Link href="/account/orders" className={styles.card}>
           <span className={styles.cardIcon}><Package size={24} /></span>
           <span className={styles.cardTitle}>Your orders</span>
           <span className={styles.cardMeta}>{orderCount === null ? '…' : orderCount === 0 ? 'No orders yet' : `${orderCount} order${orderCount === 1 ? '' : 's'}`}</span>
           <span className={styles.cardArrow}>View all →</span>
-        </a>
+        </Link>
         <a href="/account/wishlist" className={styles.card}>
           <span className={styles.cardIcon}><Wishlist size={24} /></span>
           <span className={styles.cardTitle}>Wishlist</span>

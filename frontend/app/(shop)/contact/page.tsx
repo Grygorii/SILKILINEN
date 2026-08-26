@@ -16,7 +16,7 @@ export default function ContactPage() {
     <main className={styles.page}>
       <div className={styles.header}>
         <h1>Get in touch.</h1>
-        <p>We'd love to hear from you.</p>
+        <p>We’d love to hear from you.</p>
       </div>
       <div className={styles.inner}>
         <div className={styles.info}>

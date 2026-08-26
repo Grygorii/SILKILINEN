@@ -42,6 +42,18 @@ export default async function PreviewPage({
         <div className={styles.expired}>
           <p className={styles.expiredTitle}>No preview token</p>
           <p className={styles.expiredBody}>This preview link is missing its token. Generate a new preview from the admin panel.</p>
+          {/* Deliberately a raw anchor, not Link: this crosses out of the
+              storefront layout into the admin shell, and a full document load
+              is the honest boundary — admin re-runs its own auth on a fresh
+              request. Converting it was considered and left alone rather than
+              changed on a guess. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          {/* Deliberately a raw anchor, not Link: this crosses out of the
+              storefront layout into the admin shell, and a full document load
+              is the honest boundary — admin re-runs its own auth on a fresh
+              request. Converting it was considered and left alone rather than
+              changed on a guess. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/admin/products" className={styles.back}>← Back to admin</a>
         </div>
       </main>
@@ -56,6 +68,18 @@ export default async function PreviewPage({
         <div className={styles.expired}>
           <p className={styles.expiredTitle}>Preview link expired</p>
           <p className={styles.expiredBody}>{error || 'This preview link has expired or is invalid.'} Generate a new preview from the admin panel.</p>
+          {/* Deliberately a raw anchor, not Link: this crosses out of the
+              storefront layout into the admin shell, and a full document load
+              is the honest boundary — admin re-runs its own auth on a fresh
+              request. Converting it was considered and left alone rather than
+              changed on a guess. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          {/* Deliberately a raw anchor, not Link: this crosses out of the
+              storefront layout into the admin shell, and a full document load
+              is the honest boundary — admin re-runs its own auth on a fresh
+              request. Converting it was considered and left alone rather than
+              changed on a guess. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/admin/products" className={styles.back}>← Back to admin</a>
         </div>
       </main>

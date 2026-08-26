@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { orderMoney } from '@/lib/orderMoney';
@@ -72,7 +73,7 @@ export default function OrderDetailPage() {
 
   return (
     <>
-      <a href="/account/orders" className={styles.back}>← Back to orders</a>
+      <Link href="/account/orders" className={styles.back}>← Back to orders</Link>
 
       {loading && <p className={styles.loading}>Loading…</p>}
       {!loading && !order && <p className={styles.emptyState}>Order not found.</p>}

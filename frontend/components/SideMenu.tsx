@@ -265,11 +265,11 @@ export default function SideMenu({ isOpen, onClose }: Props) {
                 <span>Wishlist</span>
                 {wishlistCount > 0 && <span className={styles.accountBadge}>{wishlistCount}</span>}
               </a>
-              <a href="/account/orders" className={styles.accountItem} onClick={onClose}>
+              <Link href="/account/orders" className={styles.accountItem} onClick={onClose}>
                 <Package size={13} strokeWidth={1.5} />
                 <span>Orders</span>
                 <span className={styles.navArrow}>→</span>
-              </a>
+              </Link>
               <button
                 className={styles.accountSignOut}
                 onClick={async () => { await signOut(); onClose(); window.location.href = '/'; }}
