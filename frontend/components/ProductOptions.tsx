@@ -148,20 +148,28 @@ export default function ProductOptions({ colours, colourHexMap, sizes, available
           full-width dark bar sitting directly above ADD TO BAG. Two identical
           slabs, one of which must not be pressed: people click the wrong one.
           Say it in a line of text instead. */}
+      {/* One line, not three. The previous fix correctly stopped rendering a
+          single size as a pressable pill; it still kept the label row, the
+          chart link and the value on separate lines, so a fact about the
+          garment occupied as much of the page as a decision.
+          This matches the shape the COLOUR row already uses — "COLOUR ·
+          Emerald Green" — so size reads as the same kind of statement rather
+          than as a picker with one option. */}
       {sizes.length === 1 && (
         <div className={styles.picker}>
-          <p className={styles.sizeRow}>
-            <span className={styles.pickerLabel}>SIZE</span>
+          <p className={styles.factRow}>
+            <span className={styles.pickerLabel}>Size</span>
+            <span className={styles.factSep} aria-hidden="true">·</span>
+            <span className={styles.factValue}>{sizes[0]}</span>
             <a
               href="/size-guide"
               target="_blank"
               rel="noopener noreferrer"
               className={styles.sizeGuideLink}
             >
-              SIZING CHART
+              Sizing chart
             </a>
           </p>
-          <p style={{ fontSize: 14, color: 'var(--color-ink)', margin: 0 }}>{sizes[0]}</p>
         </div>
       )}
 
@@ -201,9 +209,15 @@ export default function ProductOptions({ colours, colourHexMap, sizes, available
 
       {/* Quantity stepper — keep existing styling for now; not in
           the four-primitive set defined by v1 */}
+      {/* Quantity is optional; size and colour are required. Giving all three
+          the same visual rank put an untouched control directly above ADD TO
+          BAG — §27's "quantity must not compete with Add to Bag".
+          NOT removed: bridesmaid robes and eye masks for a wedding party are a
+          real multi-buy, and the Bridal Edit depends on it. Demoted to one
+          row, the same shape as the size fact above it. */}
       {!outOfStock && (
-        <div className={styles.stepper}>
-          <p className={styles.stepperLabel}>QUANTITY</p>
+        <div className={`${styles.stepper} ${styles.factRow}`}>
+          <span className={styles.pickerLabel}>Quantity</span>
           <div className={styles.stepperControls}>
             <button
               className={styles.stepperBtn}

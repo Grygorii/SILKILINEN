@@ -43,21 +43,43 @@
 }
 .sizeGuideLink:hover { color: var(--color-ink); }
 
+/* A statement about the garment, not a choice to make: label · value, with
+   any footnote pushed to the right. Shared by the single-size row and the
+   quantity stepper so both read as the same kind of line — which is what
+   stops an optional control from looking like a required decision. */
+.factRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2, 8px);
+  margin: 0;
+  min-height: 44px;
+}
+
+.factSep {
+  color: var(--color-line-control);
+}
+
+.factValue {
+  font-size: 14px;
+  color: var(--color-ink);
+}
+
+/* The footnote sits at the far end of the row rather than under the label. */
+.factRow .sizeGuideLink {
+  margin-left: auto;
+}
+
 /* Quantity stepper — not part of the four-primitive set, retained
    from previous markup with token-aligned styling. */
 .stepper {
   margin-bottom: var(--s-5, 24px);
 }
 
-.stepperLabel {
-  font-family: 'Jost', sans-serif;
-  font-weight: 400;
-  font-size: 11px;
-  letter-spacing: var(--track-utility);
-  text-transform: uppercase;
-  color: var(--color-ink);
-  margin-bottom: var(--s-3, 12px);
+/* The stepper is the row's right-hand element now, like the chart link. */
+.stepper .stepperControls {
+  margin-left: auto;
 }
+
 
 .stepperControls {
   display: flex;
