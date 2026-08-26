@@ -193,9 +193,21 @@ img {
      0 whenever the bar isn't showing, so it's inert the rest of the time.
      Never hardcode the bar's height elsewhere — read this. */
   --cookie-bar-h: 0px;
+  --sticky-buy-h: 0px;
 }
 
 :root[data-cookie-banner='true'] { --cookie-bar-h: 68px; }
+
+/* Sticky Add to Bag clearance, same contract as the cookie bar above.
+   StickyBuyBar already tags the body with .has-sticky-buy-bar, and its comment
+   says the flag exists so "global mobile fixed-bottom elements (e.g.
+   ContactWidget chat bubble) can lift themselves clear of the buy bar". The
+   flag was set. Nothing ever read it — the CSS half of the mechanism was never
+   written, so the bubble sat on the buy bar and, one step up the page, on the
+   size control.
+   This is that missing half, on the existing flag rather than a second one.
+   12px + a 48px button + 12px, plus the home-indicator inset. */
+body.has-sticky-buy-bar { --sticky-buy-h: calc(72px + env(safe-area-inset-bottom)); }
 
 @media (max-width: 600px) {
   /* Stacked layout on phones, so the bar is taller. */
