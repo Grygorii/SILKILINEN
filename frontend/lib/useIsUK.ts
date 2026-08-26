@@ -13,13 +13,23 @@ function fetchIsUK(): Promise<boolean | null> {
   if (!inflight) {
     inflight = fetch('/api/geo')
       .then(r => (r.ok ? r.json() : null))
-      .then(d => { cached = d ? d.country === 'GB' : null; return cached; })
+      // A RESPONSE with no country is not "not the UK" — it is no answer. The
+      // header is absent on any deploy that is not behind Vercel's edge, and
+      // some proxies strip it, and this line used to turn all of those into a
+      // confident `false`. That is the worst of the three values: `null` at
+      // least lets a caller decide how to fail.
+      .then(d => { cached = d && d.country ? d.country === 'GB' : null; return cached; })
       .catch(() => { cached = null; return null; });
   }
   return inflight;
 }
 
-// Returns null while unknown, then true/false. Treat null as "not UK" for gating.
+// Returns null while unknown, then true/false.
+//
+// null means "we do not know" — not yet fetched, the request failed, or the
+// deploy serves no geo header. How to treat that is the CALLER's decision and
+// it is not the same everywhere: see shouldShowUkShipping in lib/ukShipping.ts,
+// where a passive reassurance line fails open and an interrupting card does not.
 export function useIsUK(): boolean | null {
   const [isUK, setIsUK] = useState<boolean | null>(cached ?? null);
   useEffect(() => {

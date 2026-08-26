@@ -381,7 +381,7 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
         </div>
       )}
 
-      {/* UK shoppers: ships from within the UK, so no customs at the door. */}
+      {/* UK shoppers: dispatched from Derry, so nothing to pay at the border. */}
       <UKShipBadge />
 
       {/* Trust row — the reassurance a considered buyer wants right at the

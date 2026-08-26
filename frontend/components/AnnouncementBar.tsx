@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { sanitizeBannerHtml } from '@/lib/sanitizeInline';
-import { useIsUK } from '@/lib/useIsUK';
+import { UK_SHIPPING, useUkShipping } from '@/lib/ukShipping';
 import styles from './AnnouncementBar.module.css';
 
 // Shown first in the rotation for UK (GB) visitors — the Etsy campaign angle.
-const UK_MESSAGE = 'UK orders ship from within the UK — <strong>no customs or duties</strong>';
+// The line itself lives in lib/ukShipping.ts, which owns every wording of this
+// claim; this file used to hold a fourth copy of it.
 
 const INTERVAL = 5000;
 
@@ -15,15 +16,15 @@ const INTERVAL = 5000;
 // can't quietly stand in for the CMS and contradict it, which is exactly how a
 // removed "free shipping over €150" line kept reappearing on slow requests.
 export default function AnnouncementBar({ messages }: { messages: string[] }) {
-  const isUK = useIsUK();
+  const showUk = useUkShipping();
   const base = messages;
   // UK visitors see the no-customs line first, then the usual rotation.
-  const msgs = isUK ? [UK_MESSAGE, ...base] : base;
+  const msgs = showUk ? [UK_SHIPPING.banner, ...base] : base;
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
 
   // When geo resolves to GB, jump to the UK line so it's seen straight away.
-  useEffect(() => { if (isUK) setIndex(0); }, [isUK]);
+  useEffect(() => { if (showUk) setIndex(0); }, [showUk]);
 
   useEffect(() => {
     if (msgs.length <= 1) return;

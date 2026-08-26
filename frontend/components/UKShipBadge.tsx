@@ -1,18 +1,17 @@
 'use client';
 
 import { Check } from 'lucide-react';
-import { useIsUK } from '@/lib/useIsUK';
+import { UK_SHIPPING, useUkShipping } from '@/lib/ukShipping';
 import styles from './UKShipBadge.module.css';
 
-// Small reassurance line shown only to UK (GB) visitors at the decision moments
-// (product page, checkout): their order ships from within the UK, so no customs.
+// The reassurance line at the decision moments — product page, cart, checkout.
+// The copy and the show/hide rule both live in lib/ukShipping.ts.
 export default function UKShipBadge({ className }: { className?: string }) {
-  const isUK = useIsUK();
-  if (isUK !== true) return null;
+  if (!useUkShipping()) return null;
   return (
     <p className={`${styles.badge}${className ? ` ${className}` : ''}`}>
       <Check size={14} strokeWidth={2} aria-hidden="true" />
-      Ships from the UK — no customs or duties
+      {UK_SHIPPING.badge}
     </p>
   );
 }

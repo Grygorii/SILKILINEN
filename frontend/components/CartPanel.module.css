@@ -422,3 +422,19 @@
     height: 70px;
   }
 }
+
+/* UK reassurance, between the totals and CHECKOUT. Centred over the button it
+   sits above rather than left-aligned with the totals, so it reads as part of
+   the decision rather than as another line of arithmetic.
+   A wrapper rather than a className on the badge: the badge is inline-flex, so
+   centring it is the PARENT's job, and overriding a component's own single
+   class from another module would come down to bundle order. */
+.ukBadgeRow {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+/* No badge, no gap. */
+.ukBadgeRow:empty {
+  display: none;
+}

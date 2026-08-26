@@ -390,6 +390,24 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   the address — Customer (anonymise), Cart (blank + unsubscribe), Newsletter and
   StockNotification (delete). Orders are RETAINED (financial record). Miss one and cart
   recovery or the restock sweep keeps emailing someone who asked to be deleted.
+- **UK shipping claim:** `frontend/lib/ukShipping.ts` — the copy AND the show/hide rule.
+  Dispatch is **Derry for UK orders, Donegal for everywhere else**, so every line is
+  scoped (`UK orders ship from Derry…`): unscoped, it is a false claim about the shop.
+  It was written five ways (banner, notice card, badge, two `/shipping` paragraphs) and
+  only the two on `/shipping` — the page nobody opens — named the town, which is the
+  detail that makes the promise checkable rather than a brand asking to be believed.
+  `shouldShowUkShipping(isUK, decided)` **fails OPEN**: `useIsUK()` returns null for
+  "unknown", and unknown covers a failed `/api/geo`, a stripped header, and any deploy
+  not behind Vercel's edge — the old `isUK === true` gate hid the answer to "will I pay
+  customs?" from the customer asking it. Scoped copy is what makes that safe. `useUkShipping()`
+  adds a 1.2s grace so a working lookup wins the race and non-UK visitors see no flash.
+  ⚠️ Asymmetric on purpose: badge + banner fail open, `UKShippingNotice` stays strictly
+  `isUK === true` — fail open on a whisper, never on a dialog that must be dismissed.
+  Also fixed at source: `/api/geo` returning `{country:null}` used to classify as `false`
+  (a confident "not the UK"), not null. Surfaces: announcement bar, PDP, **cart drawer**
+  (added — "Shipping: calculated at checkout" is where the customs fear lands), checkout.
+  `tests/ukShipping.test.ts` pins the gate and fails any file promising no customs without
+  naming Derry (comments stripped, same reasoning as `originClaims`).
 - **Marketing email:** every marketing message needs an opt-out (GDPR Art. 21, PECR).
   `utils/unsubscribeSign.js` signs the link; pass a `scope` so a link minted for one
   purpose can't be replayed against another. Transactional mail is exempt.

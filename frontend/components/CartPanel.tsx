@@ -7,6 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import ProductImage from './products/ProductImage';
 import Button from './ui/Button';
+import UKShipBadge from './UKShipBadge';
 import styles from './CartPanel.module.css';
 import { useFreeShippingThreshold } from '@/lib/useFreeShipping';
 
@@ -288,6 +289,12 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                 <span>{format(subtotal)}</span>
               </div>
             </div>
+
+            {/* "Shipping — calculated at checkout" is the line a UK shopper
+                reads as "and customs on top of that". The reassurance existed
+                on the product page and at checkout, and not at the one moment
+                between them where an unpriced shipping row is staring back. */}
+            <div className={styles.ukBadgeRow}><UKShipBadge /></div>
 
             <Button onClick={() => { onClose(); router.push('/checkout'); }}>
               CHECKOUT
