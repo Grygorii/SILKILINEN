@@ -11,6 +11,7 @@
 // gender/age_group come from the new product fields (default unisex/adult).
 
 import { productPath } from '@/lib/urls';
+import { feedTitle } from '@/lib/feedTitle';
 import { apiList } from '@/lib/apiFetch';
 import { brand } from '@/lib/brand';
 
@@ -34,6 +35,8 @@ type Product = {
   sizes?: string[];
   colorName?: string;
   materialComposition?: string;
+  /** Silk weight, served by the card projection this route already reads. */
+  momme?: string;
   gender?: string;
   ageGroup?: string;
   variants?: Variant[];
@@ -178,7 +181,10 @@ function buildItem(
   const lines = [
     `      <g:id>${xml(opts.id)}</g:id>`,
     opts.groupId ? `      <g:item_group_id>${xml(opts.groupId)}</g:item_group_id>` : '',
-    `      <g:title>${xml(cleanText(p.name, 150))}</g:title>`,
+    // Not p.name directly: feedTitle appends the momme where one is
+    // recorded, which is an attribute people search and which no other feed
+    // field carries (g:material takes the fibre, not the weight).
+    `      <g:title>${xml(cleanText(feedTitle(p.name, p.momme, p.materialComposition), 150))}</g:title>`,
     `      <g:description>${xml(cleanText(p.description || p.name, 4900))}</g:description>`,
     `      <g:link>${xml(link)}</g:link>`,
     mainImage ? `      <g:image_link>${xml(mainImage)}</g:image_link>` : '',
