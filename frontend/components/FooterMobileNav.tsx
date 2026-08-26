@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useCookieConsent } from '@/context/CookieConsentContext';
-import { footerSections } from '@/lib/footerNav';
+import { siteSections } from '@/lib/siteNav';
 import styles from './Footer.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -35,7 +35,7 @@ export default function FooterMobileNav() {
 
   // Shop links track the live categories; INFO/LEGAL are static pages.
   // One owner, shared with the desktop footer — see lib/footerNav.ts.
-  const SECTIONS = footerSections(cats);
+  const SECTIONS = siteSections(cats);
 
   function toggle(id: string) {
     setOpen(prev => {

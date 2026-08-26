@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import styles from './Footer.module.css';
-import { footerSections } from '@/lib/footerNav';
+import { siteSections } from '@/lib/siteNav';
 import CookiePreferencesLink from './CookiePreferencesLink';
 import FooterCurrency from './FooterCurrency';
 import FooterMobileNav from './FooterMobileNav';
@@ -84,7 +84,7 @@ export default async function Footer() {
           </p>
           {socialRow}
         </div>
-        {footerSections(shopCategories).map(section => (
+        {siteSections(shopCategories).map(section => (
           <div key={section.id} className={styles.col}>
             <h4>{section.title}</h4>
             {section.links.map(l => (

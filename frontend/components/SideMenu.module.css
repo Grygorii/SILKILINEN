@@ -295,3 +295,34 @@
   .accountSection { padding: 0 20px; }
   .footer { padding: 0 20px 28px; }
 }
+
+/* ── Discover / Help / About groups ──
+   Secondary to the category list above: smaller, quieter, but still real
+   touch targets. §6 asks for 44px minimum and these are the links most likely
+   to be reached one-handed on a phone. */
+.subNav {
+  padding: var(--s-5) 6% 0;
+  border-top: var(--stroke) solid var(--color-line);
+  margin-top: var(--s-5);
+}
+
+.subNavTitle {
+  margin: 0 0 var(--s-2);
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: var(--track-utility);
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.subNavLink {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.subNavLink:hover { text-decoration: underline; text-underline-offset: 3px; }

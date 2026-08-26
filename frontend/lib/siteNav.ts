@@ -1,10 +1,17 @@
-// The footer's navigation, once.
+// The site's secondary navigation, once.
 //
-// It existed twice: Footer.tsx held the desktop columns inline and
-// FooterMobileNav.tsx held its own INFO_LINKS and LEGAL_LINKS arrays for the
-// mobile accordion. Two independent copies of the same navigation, which means
-// the phone and the desktop could — and did — offer different links to the same
-// visitor, and any restructure lands on one of them.
+// It existed twice, then three times. Footer.tsx held the desktop columns
+// inline, FooterMobileNav.tsx kept its own INFO_LINKS and LEGAL_LINKS arrays,
+// and the hamburger drawer had neither — it offered SHOP, the categories and
+// ABOUT, so the Silk Standard, Style Finder, Journal, size guide, care guide,
+// shipping, returns and contact were unreachable from mobile navigation
+// entirely. On a phone the drawer IS the navigation, and half the site was not
+// in it.
+//
+// One list, three renderings: desktop columns, a mobile accordion, and the
+// drawer. Named for the site rather than the footer now that the drawer reads
+// it too — a name that describes only its first caller is how the second
+// caller ends up writing its own copy.
 //
 // The shape follows the UI brief's §19: Shop · Discover · Help · About. The old
 // "Info" column carried About, Help and Discover together in a list of seven,
@@ -30,7 +37,7 @@ export type ShopCategory = { slug: string; label: string };
  *        shape of the catalogue rather than a hardcoded list that goes stale
  *        the first time a category is merged
  */
-export function footerSections(categories: ShopCategory[] = []): FooterSection[] {
+export function siteSections(categories: ShopCategory[] = []): FooterSection[] {
   return [
     {
       id: 'shop',

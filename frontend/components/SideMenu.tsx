@@ -6,6 +6,7 @@ import { X, Heart, Package, LogOut } from 'lucide-react';
 import { useCustomer } from '@/context/CustomerContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { isValidSocialUrl } from '@/lib/socialUrl';
+import { siteSections } from '@/lib/siteNav';
 import styles from './SideMenu.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -247,10 +248,26 @@ export default function SideMenu({ isOpen, onClose }: Props) {
             ))
           )}
 
-          <Link href="/about" className={styles.navLink} onClick={onClose}>
-            <span>ABOUT</span>
+          <Link href="/bridal" className={styles.navLink} onClick={onClose}>
+            <span>BRIDAL</span>
           </Link>
         </nav>
+
+        {/* Discover and Help, from the same list the footer renders.
+            The drawer used to end at the categories and ABOUT, which meant the
+            Silk Standard, Style Finder, Journal, size guide, care guide,
+            shipping, returns and contact could not be reached from mobile
+            navigation at all. On a phone this drawer IS the navigation. */}
+        {siteSections().filter(s => s.id !== 'shop').map(section => (
+          <div key={section.id} className={styles.subNav}>
+            <p className={styles.subNavTitle}>{section.title}</p>
+            {section.links.map(l => (
+              <Link key={l.href} href={l.href} className={styles.subNavLink} onClick={onClose}>
+                {l.label}
+              </Link>
+            ))}
+          </div>
+        ))}
 
         {/* Account section */}
         <div className={styles.accountSection}>
