@@ -325,7 +325,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                   the link added noise above the title. */}
               {showNew && <span className={styles.newTag}>NEW</span>}
               <h1 className={styles.productName}>{product.name}</h1>
-              {product.fitNote && <p className={styles.fitNote}>{product.fitNote}</p>}
 
               {/* Colour variant cubes — links to sibling colour products */}
               {(product.colorName || (product.colorVariants && product.colorVariants.length > 0)) && (
@@ -372,6 +371,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 // place you want to tell someone no. The collections route
                 // already exposed this for its "shop the set" pickers; the
                 // product page did not.
+                fitNote={product.fitNote}
                 availableSizes={
                   Array.isArray(product.variants) && product.variants.length
                     ? [...new Set<string>(

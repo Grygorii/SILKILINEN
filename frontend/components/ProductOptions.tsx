@@ -29,10 +29,16 @@ type Props = {
   /** Sizes with stock. null means the piece has no variant-level tracking, in
    *  which case every size stays selectable. */
   availableSizes?: string[] | null;
+  /** Free-text fit guidance from the founder, e.g. "Relaxed fit. Size down if
+   *  between sizes." Rendered here rather than under the product title: it is
+   *  an input to the size decision, and it was unreadable up there — a
+   *  two-word note in muted type directly beneath the h1 reads as part of the
+   *  name, not as a statement about the cut. */
+  fitNote?: string | null;
   image?: string;
 };
 
-export default function ProductOptions({ colours, colourHexMap, sizes, availableSizes = null, productName, productId, price, outOfStock, stock, image }: Props) {
+export default function ProductOptions({ colours, colourHexMap, sizes, availableSizes = null, fitNote, productName, productId, price, outOfStock, stock, image }: Props) {
   const { selectedColour, setSelectedColour, selectedSize, setSelectedSize, qty, setQty } = useProductSelection();
   const { format } = useCurrency();
   const freeShippingThreshold = useFreeShippingThreshold();
@@ -138,6 +144,20 @@ export default function ProductOptions({ colours, colourHexMap, sizes, available
             selectedName={selectedColour || undefined}
             onSelect={setSelectedColour}
           />
+        </div>
+      )}
+
+      {/* Fit — read BEFORE the size is chosen, which is the only moment
+          "size down if between sizes" can still change anything. Labelled for
+          the same reason it moved: the field holds anything from two words to
+          three sentences, and an unlabelled fragment is just a fragment. */}
+      {fitNote && fitNote.trim() && (
+        <div className={styles.picker}>
+          <p className={`${styles.factRow} ${styles.fitRow}`}>
+            <span className={styles.pickerLabel}>Fit</span>
+            <span className={styles.factSep} aria-hidden="true">·</span>
+            <span className={styles.fitValue}>{fitNote.trim()}</span>
+          </p>
         </div>
       )}
 

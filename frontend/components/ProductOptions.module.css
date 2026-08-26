@@ -144,3 +144,20 @@
 }
 
 .hintBtn:hover { color: var(--color-ink); }
+
+/* The fit note is prose, not a value: it may run to three sentences, so it
+   wraps under its own label rather than stretching the row. min-height is
+   dropped because a two-word note in a 44px row leaves a hole under it —
+   the 44px floor exists for the rows that hold a CONTROL. */
+.fitRow {
+  align-items: baseline;
+  min-height: 0;
+  margin-bottom: 0;
+}
+
+.fitValue {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-ink-muted);
+}
