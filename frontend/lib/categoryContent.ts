@@ -141,3 +141,15 @@ export const GUIDE_LINKS = [
   { label: 'How to care for silk', href: '/care-guide' },
   { label: 'From the journal', href: '/journal' },
 ];
+
+/**
+ * Which categories the care guide sends a reader to, in the order it names
+ * them. The reciprocal of GUIDE_LINKS above: that sends category readers to the
+ * education pages, this sends education readers back to the shelves.
+ *
+ * Here rather than in the page so it sits under the same canonical-slug test as
+ * the copy map. A typo would not throw — the page filters these against the
+ * live category list, so a wrong slug simply renders one link fewer, and a
+ * quietly shorter row is not something anyone notices.
+ */
+export const CARE_GUIDE_CATEGORIES = ['robes', 'sleepwear', 'home'];

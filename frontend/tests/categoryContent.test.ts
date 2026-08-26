@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CATEGORY_CONTENT, categoryContent, GUIDE_LINKS } from '@/lib/categoryContent';
+import { CATEGORY_CONTENT, categoryContent, GUIDE_LINKS, CARE_GUIDE_CATEGORIES } from '@/lib/categoryContent';
 
 // The canonical six (backend/config/categories.js). Stated here rather than
 // imported because the frontend cannot reach the backend module, which is
@@ -64,5 +64,23 @@ describe('category content', () => {
     expect(categoryContent(' Robes ')).not.toBeNull();
     expect(categoryContent('')).toBeNull();
     expect(categoryContent(null)).toBeNull();
+  });
+});
+
+describe('care guide onward links', () => {
+  it('points only at categories that exist', () => {
+    // The page filters these against the live list, so a retired or misspelt
+    // slug renders nothing at all rather than erroring — one link fewer in a
+    // row, which is exactly the kind of silent shortfall nobody reports.
+    for (const slug of CARE_GUIDE_CATEGORIES) {
+      expect(CANONICAL, slug).toContain(slug);
+    }
+  });
+
+  it('names the categories the guide is actually about', () => {
+    // Silk robes, sleepwear and bedding are what the instructions describe.
+    // Scarves and lingerie have their own care notes elsewhere; sending a
+    // reader of a washing guide to them would be filler.
+    expect(CARE_GUIDE_CATEGORIES.length).toBeGreaterThanOrEqual(2);
   });
 });

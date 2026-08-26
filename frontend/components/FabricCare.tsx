@@ -103,6 +103,15 @@ export default function FabricCare({
             // premium buyer is entitled to know we are distinguishing.
             <p className={styles.note}>General guidance for this fabric. Any garment-specific instruction is on the care label.</p>
           )}
+          {/* The way onward. The momme note above already sends the curious to
+              the Silk Standard; care had no equivalent, though this panel is
+              where a customer reads care instructions at the moment they are
+              deciding whether the upkeep is worth it. Every other education
+              surface — the Silk Standard, the category guides, the footer —
+              linked to /care-guide. The product page did not. */}
+          <p className={styles.note}>
+            <Link href="/care-guide" className={styles.link}>How to wash and store silk →</Link>
+          </p>
         </section>
       )}
     </div>

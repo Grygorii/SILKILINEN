@@ -1,3 +1,7 @@
+import Link from 'next/link';
+import { categoryPath } from '@/lib/urls';
+import { CARE_GUIDE_CATEGORIES } from '@/lib/categoryContent';
+import { apiList } from '@/lib/apiFetch';
 import styles from './page.module.css';
 import PrintButton from './PrintButton';
 import { SITE } from '@/lib/i18n';
@@ -8,7 +12,23 @@ export const metadata = {
   description: 'How to wash, dry, press and store mulberry silk and European linen so it lasts for years — SILKILINEN’s downloadable care guide.',
 };
 
-export default function CareGuidePage() {
+// Filtered against the LIVE list before rendering: the shop 404s a category
+// with no products in it — deliberately, to keep thin pages out of the index —
+// so a fixed link here would become a broken link on an education page the
+// moment a shelf emptied. Silent if the API is unreachable; a missing row of
+// links is a smaller failure than a row of dead ones.
+type Cat = { slug: string; label: string; count: number };
+
+async function getOnwardCategories(): Promise<Cat[]> {
+  const all = await apiList<Cat>(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
+    next: { revalidate: 300 },
+  });
+  const live = new Map(all.filter(c => c.count > 0).map(c => [c.slug, c]));
+  return CARE_GUIDE_CATEGORIES.map(slug => live.get(slug)).filter((c): c is Cat => Boolean(c));
+}
+
+export default async function CareGuidePage() {
+  const onward = await getOnwardCategories();
   return (
     <main className={styles.page}>
       <div className={`${styles.inner} ${styles.printable}`}>
@@ -91,6 +111,27 @@ export default function CareGuidePage() {
           Cared for gently, these are pieces to keep for years — quietly becoming more yours
           with every season.
         </p>
+
+        {/* §49 asks this page to link to products, and it linked nowhere at all
+            — a dead end at the exact moment a reader has just been told the
+            upkeep is manageable. Deliberately kept off the printed sheet
+            (styles.noPrint): a page of URLs is not what someone wants folded in
+            a drawer next to the washing machine.
+
+            Categories, not individual pieces: a care page outlives any product
+            that happens to be in stock the week it was written, and a link to a
+            sold-out robe is a worse dead end than none. Built through the URL
+            owner, from the live category list — see getOnwardCategories. */}
+        <nav className={`${styles.onward} ${styles.noPrint}`} aria-label="Continue browsing">
+          <p className={styles.onwardLabel}>The pieces this was written for</p>
+          <ul className={styles.onwardList}>
+            {onward.map(c => (
+              <li key={c.slug}><Link href={categoryPath(c.slug)}>{c.label} →</Link></li>
+            ))}
+            <li><Link href="/silk-standard">What makes silk worth it →</Link></li>
+          </ul>
+        </nav>
+
         <p className={styles.wordmark}>SILKILINEN</p>
       </div>
     </main>

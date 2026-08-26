@@ -154,8 +154,50 @@
   }
   .page { background: var(--color-bg); padding: 0; }
   .actions { display: none !important; }
+  /* Links are useless on paper — this sheet is for the drawer by the washing
+     machine, and a printed list of URLs is just clutter on it. */
+  .noPrint { display: none !important; }
   .header h1 { font-size: 30px; }
   .section { break-inside: avoid; border-top-color: #ddd; }
   .steps li { break-inside: avoid; }
   .closing { margin-top: 28px; }
 }
+
+
+/* ── Where to go next ──────────────────────────────────────────────────────
+   Quiet. The reader came for instructions and got them; this is an offer, not
+   a sales pitch at the end of an education page. */
+.onward {
+  margin-top: var(--s-8, 56px);
+  padding-top: var(--s-5, 24px);
+  border-top: var(--stroke) solid var(--color-line);
+}
+
+.onwardLabel {
+  margin: 0 0 var(--s-3, 12px);
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: var(--track-utility);
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.onwardList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2, 8px) var(--s-5, 24px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.onwardList a {
+  font-size: 14px;
+  color: var(--color-ink);
+  text-decoration: none;
+  border-bottom: var(--stroke) solid var(--color-line);
+  padding-bottom: 2px;
+  transition: border-color var(--t-fast) var(--ease);
+}
+
+.onwardList a:hover { border-color: var(--color-ink); }
