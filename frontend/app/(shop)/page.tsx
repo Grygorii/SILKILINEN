@@ -112,8 +112,13 @@ export default async function Home() {
   const heroVideo = val(content, 'homepage_hero_video');
   // The bad-internet still: a frame of the video when one is set, else the photo.
   const heroStill = (heroVideo && videoPosterFrame(heroVideo)) || heroImage;
-  const heroTitle = val(content, 'homepage_hero_title', 'Pure silk, pure comfort.');
-  const heroSubtitle = val(content, 'homepage_hero_subtitle', 'Pure silk & linen intimates');
+  // The hero said "pure" three times across two lines and answered only "what
+  // is this", never "why this one". These two say the thing no competitor can
+  // copy — and say it within the origin rule: designed, founded, shipped, never
+  // made or crafted. Both halves are checkable: `findOriginClaims` passes them,
+  // and the worldwide claim is the WORLDWIDE fallback tier in shipping.js.
+  const heroTitle = val(content, 'homepage_hero_title', 'Silk, designed in Ireland.');
+  const heroSubtitle = val(content, 'homepage_hero_subtitle', 'Founded in Donegal. Shipped worldwide.');
   const heroCta = val(content, 'homepage_hero_cta', 'Explore the collection');
 
   return (

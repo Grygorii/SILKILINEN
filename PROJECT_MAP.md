@@ -171,6 +171,13 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   the claims were back by August.
 - **Banner/announcement copy:** the CMS (`banner_message_1..4`); code defaults are a
   fallback only.
+- **CMS copy has THREE writers and no owner:** `seedSiteContent.js` (fresh DB only — it
+  skips existing keys, so editing it changes nothing live), `fixOriginContent.js` (the ONLY
+  one that rewrites live values; run it on the Railway shell), and the component's own
+  `val(content, key, default)` fallback (renders when the API is down). The frontend can't
+  require the backend, so there is no single owner — `tests/siteCopySync.test.js` asserts
+  the three agree instead. `fixOriginContent.js` claimed in a comment to mirror the seed
+  and was missing `homepage_hero_title` outright.
 - **Slugs:** normalised in the MODEL's `pre('save')` (`utils/slug.js` `slugify`), never
   trusted from `req.body`. `Product`/`Collection` slugify + keep `previousSlugs` (old URL
   301s; public routes fall back to it, storefront `permanentRedirect`s to canonical).

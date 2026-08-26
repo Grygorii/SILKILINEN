@@ -17,9 +17,9 @@ const CONTENT = [
   { key: 'homepage_hero_image', type: 'image', section: 'homepage', label: 'Hero Image', order: 1, value: '/hero.png' },
   { key: 'homepage_hero_video', type: 'video', section: 'homepage', label: 'Hero Video (optional)', order: 1.5, value: '' },
   { key: 'homepage_hero_title', type: 'text', section: 'homepage', label: 'Hero Title', order: 2,
-    value: 'Pure silk, pure comfort.' },
+    value: 'Silk, designed in Ireland.' },
   { key: 'homepage_hero_subtitle', type: 'text', section: 'homepage', label: 'Hero Subtitle', order: 3,
-    value: 'Pure silk & linen intimates' },
+    value: 'Founded in Donegal. Shipped worldwide.' },
   { key: 'homepage_hero_cta', type: 'text', section: 'homepage', label: 'Hero Button Text', order: 4,
     value: 'Explore the collection' },
 

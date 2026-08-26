@@ -23,7 +23,8 @@ const SiteContent = require('../models/SiteContent');
 // defaults in seedSiteContent.js so seed and live stay in sync.
 const FIXES = {
   banner_message_3: 'An Irish silk & linen brand, based in Donegal',
-  homepage_hero_subtitle: 'Pure silk & linen intimates',
+  homepage_hero_title: 'Silk, designed in Ireland.',
+  homepage_hero_subtitle: 'Founded in Donegal. Shipped worldwide.',
   homepage_story_title: 'Born in Donegal, worn across the world',
   homepage_story_text:
     'SILKILINEN began with a simple belief: that the garments closest to your skin should be made from the finest natural fibres. We source Mulberry silk and European linen — chosen for their breathability, longevity, and the quiet luxury they bring to everyday moments.\n\nWe\'re an Irish brand based in Donegal, and we share a commitment to slow, considered work.',
