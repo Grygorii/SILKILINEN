@@ -179,6 +179,15 @@
   align-items: center;
   gap: 12px;
   width: 100%;
+  /* Containing block for the suggestions panel, which hangs below the bar. */
+  position: relative;
+}
+
+/* The suggestions wrapper exists only to carry the id the combobox points at.
+   display:contents keeps it out of the flex row, so an empty panel does not
+   add a phantom 12px gap beside the close button. */
+.searchSuggestWrap {
+  display: contents;
 }
 
 .searchForm {

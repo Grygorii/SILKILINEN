@@ -1,0 +1,119 @@
+/* Brand tokens only. Sits under the nav search input, inside the same bar. */
+
+.panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  background: var(--color-surface);
+  border-top: var(--stroke) solid var(--color-line);
+  box-shadow: 0 12px 28px rgb(0 0 0 / 8%);
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) 6%;
+  text-decoration: none;
+  color: var(--color-ink);
+  transition: background var(--t-slow) var(--ease);
+}
+
+/* One highlight style for hover AND keyboard, so arrowing down looks like
+   pointing — two different affordances for the same state reads as a bug. */
+.rowActive,
+.row:focus-visible {
+  background: var(--color-surface-warm);
+  outline: none;
+}
+
+.thumb,
+.thumbEmpty {
+  width: 40px;
+  height: 52px;
+  flex: 0 0 40px;
+  object-fit: cover;
+  background: var(--color-surface-warm);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 300;
+  /* One line: a wrapped name turns a six-row list into a wall. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  font-size: 12px;
+  color: var(--color-ink-muted);
+}
+
+.soldOut {
+  font-family: 'Jost', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.viewAll,
+.allLink {
+  display: block;
+  width: 100%;
+  padding: var(--s-4) 6%;
+  background: transparent;
+  border: 0;
+  border-top: var(--stroke) solid var(--color-line);
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  text-align: left;
+  cursor: pointer;
+}
+.viewAll:hover { background: var(--color-surface-warm); }
+
+.empty {
+  margin: 0;
+  padding: var(--s-5) 6%;
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--color-ink-muted);
+}
+
+.allLink {
+  display: inline;
+  width: auto;
+  padding: 0;
+  border: 0;
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: inherit;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

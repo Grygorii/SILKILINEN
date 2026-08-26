@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Search, User, ShoppingBag, Menu, X, Heart } from 'lucide-react';
+import SearchSuggestions from './SearchSuggestions';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCustomer } from '@/context/CustomerContext';
@@ -34,6 +35,9 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  // Controlled so the suggestions can see what is being typed. The ref stays
+  // for focus management.
+  const [searchQuery, setSearchQuery] = useState('');
   const [scrolled, setScrolled] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -100,11 +104,21 @@ export default function Navbar() {
 
   function handleSearch(e: { preventDefault(): void }) {
     e.preventDefault();
-    const q = searchRef.current?.value.trim();
-    if (q) {
-      router.push(`/shop?q=${encodeURIComponent(q)}`);
-      setSearchOpen(false);
-    }
+    submitSearch();
+  }
+
+  function submitSearch() {
+    const q = searchQuery.trim();
+    if (!q) return;
+    router.push(`/shop?q=${encodeURIComponent(q)}`);
+    closeSearch();
+  }
+
+  function closeSearch() {
+    setSearchOpen(false);
+    // Clear on close, or reopening the bar shows stale suggestions for a query
+    // the visitor has already moved on from.
+    setSearchQuery('');
   }
 
   return (
@@ -120,11 +134,25 @@ export default function Navbar() {
                 type="search"
                 placeholder="Search silk, linen, robes..."
                 autoComplete="off"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Escape') closeSearch(); }}
+                role="combobox"
+                aria-expanded={searchQuery.trim().length >= 2}
+                aria-controls="search-suggestions"
+                aria-autocomplete="list"
               />
             </form>
-            <button className={styles.iconBtn} onClick={() => setSearchOpen(false)} aria-label="Close search">
+            <button className={styles.iconBtn} onClick={closeSearch} aria-label="Close search">
               <X size={20} strokeWidth={1.5} />
             </button>
+            <div id="search-suggestions" className={styles.searchSuggestWrap}>
+              <SearchSuggestions
+                query={searchQuery}
+                onNavigate={closeSearch}
+                onSubmitAll={submitSearch}
+              />
+            </div>
           </div>
         ) : (
           <>
