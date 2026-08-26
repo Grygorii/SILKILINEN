@@ -359,14 +359,29 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   `colours` array is a CHOICE that goes in the cart line, `colorVariants` are separate
   PRODUCTS (own stock, own URL) so picking one is NAVIGATION. Both are real; neither
   needed its own heading. Now one block: swatches only when `colours.length > 1`, else a
-  `Colour · <name>` fact row (same shape as size and fit — a picker with one option is
-  not a choice), plus outlined links to the siblings. The rating line reads the SAME
+  `Colour` row in the DETAILS GRID, plus outlined links to the siblings.
+  **`frontend/lib/productDetails.ts` `detailRows()` is the fact-vs-choice rule**: a
+  CHOICE (2+ colours, 2+ sizes) gets its own control; a FACT (the only colour, the only
+  size, the fit note) gets a row in `dl.details`. Getting that wrong cost this page twice —
+  a single size rendered as a pill became a second full-width dark bar above ADD TO BAG,
+  and colour was shown as a swatch group AND a row 200px apart. ⚠️ Fixing those rows ONE
+  AT A TIME then produced the opposite fault: on a one-size one-colour piece all three
+  degrade to facts at once, so the panel became four identical 44px label-and-value bars
+  with nothing to decide in any of them — a form with nothing to fill in. They are one
+  two-column grid now, rows as tall as their text; only Quantity keeps a control's height. The rating line reads the SAME
   `/api/reviews/summary?productId=` the JSON-LD does, so the page cannot show one figure
   and assert another; silent at zero reviews rather than printing empty stars.
   ⚠️ The trust row must stay honourable: `UKShipBadge` already tells GB visitors "Ships
   from the UK", so a "Shipped from Ireland" line would contradict it two lines apart.
   "Gift-ready packaging" is safe — `/gift-wrapping`, the FAQ and `ReassuranceRow` all
   state it is included at no cost.
+- **Sticky buy bar visibility:** shows only while the real CTA is OFF screen
+  (`IntersectionObserver` on `[data-add-to-bag]`, threshold 0.35). It used to show from
+  load, so a short panel put ADD TO BAG on screen twice at once with the chat bubble
+  between them — two identical primary actions is a "which is the real one?" moment on the
+  one element the page exists to get pressed, and it spent ~90px of a phone restating a
+  button already in view. `has-sticky-buy-bar` is set only while it is SHOWING, so
+  `--sticky-buy-h` describes what is actually on screen.
 - **Card colour line:** `frontend/lib/productColour.ts` `cardColour()` — prints the colour
   under the product name ONLY when the name doesn't already contain it. The canonical name
   is `Silk [garment] in [Colour]` (`utils/productName.js`), so an unconditional colour line

@@ -80,3 +80,19 @@
     display: none;
   }
 }
+
+/* Out of the way while the real Add to Bag is on screen. Translated rather than
+   display:none so it slides back rather than snapping, and inert while hidden
+   so nothing behind it can be tabbed to by mistake. */
+.barHidden {
+  transform: translateY(110%);
+  pointer-events: none;
+}
+
+.bar {
+  transition: transform var(--t-slow, 320ms) var(--ease, ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar { transition: none; }
+}

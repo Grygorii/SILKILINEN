@@ -14,14 +14,18 @@
   color: var(--color-ink-muted);
 }
 
+/* A mark never breaks mid-phrase: "DESIGNED IN" / "IRELAND" across two lines
+   reads as a mistake rather than as a wrap. */
 .mark {
   display: inline-flex;
   align-items: baseline;
+  white-space: nowrap;
 }
 
+/* Padding rather than a row gap so the dot hugs both marks evenly. Being a
+   sibling of the marks, a wrap now leaves it at the END of the line it belongs
+   to instead of carrying it down to open the next one. */
 .sep {
-  /* Padding on the separator rather than a gap on the row, so a mark that
-     wraps to a second line does not start with a stray dot. */
   padding: 0 8px;
   color: var(--color-line);
 }

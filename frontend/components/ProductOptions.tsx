@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { Fragment, useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { productHref } from '@/lib/urls';
 import type { PageLocale } from '@/lib/i18n';
@@ -12,6 +12,7 @@ import Button from '@/components/ui/Button';
 import UKShipBadge from '@/components/UKShipBadge';
 import NotifyWhenBack from './NotifyWhenBack';
 import { maxOrderable, stockBySize, type VariantLike } from '@/lib/variantStock';
+import { detailRows } from '@/lib/productDetails';
 import { OptionPill, OptionPillGroup } from '@/components/ui/OptionPill';
 import { ColourSwatchGroup, type Swatch } from '@/components/ui/ColourSwatch';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -139,99 +140,35 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
     hex: colourHexMap?.[name.toLowerCase()] ?? null,
   }));
 
-  // What to print when there is nothing to choose between: the explicit
-  // display colour, else the record's only colour.
-  const colourLabel = (colorName ?? '').trim() || (colours.length === 1 ? colours[0] : '');
   const variants = colorVariants ?? [];
 
-  return (
-    <div className={styles.root} data-product-options>
-      {/* ── Colour ──
-          Colour used to be stated TWICE on this page: a "COLOUR" cube row up
-          under the product name, and this labelled swatch group down here. Two
-          blocks, same heading, ~200px apart, and in the ordinary case the
-          second one was a picker offering exactly one option — the same fault
-          as the single-size pill, which had already been fixed for size and
-          not for colour.
+  const variantLinks = variants.length > 0 ? (
+    <div className={styles.variantRow}>
+      {variants.map(v => (
+        <Link
+          key={v.productId}
+          // Canonical by construction — the API serves each sibling's slug and
+          // productHref always prefers it over the ObjectId.
+          href={productHref({ slug: v.slug, _id: v.productId }, locale)}
+          className={styles.variantLink}
+        >
+          {v.colorName}
+        </Link>
+      ))}
+    </div>
+  ) : null;
 
-          They exist because there are two different things called colour. The
-          record's own `colours` array is a CHOICE that goes into the cart line.
-          `colorVariants` are separate PRODUCTS — same garment, another colour,
-          own stock and own URL — so picking one is navigation. Both are real;
-          neither needed its own heading.
-
-          One block now, and it sits after the material rather than above the
-          price, which is the order §22 asks for. */}
-      {(colourLabel || swatches.length > 1 || variants.length > 0) && (
-        <div className={styles.picker}>
-          {swatches.length > 1 ? (
-            <ColourSwatchGroup
-              swatches={swatches}
-              selectedName={selectedColour || undefined}
-              onSelect={setSelectedColour}
-            />
-          ) : colourLabel && (
-            // One colour is a fact about the garment, not a decision. Same row
-            // shape as size and fit, so the three read as one list.
-            <p className={styles.factRow}>
-              <span className={styles.pickerLabel}>Colour</span>
-              <span className={styles.factSep} aria-hidden="true">·</span>
-              <span className={styles.factValue}>{colourLabel}</span>
-            </p>
-          )}
-
-          {variants.length > 0 && (
-            <div className={styles.variantRow}>
-              {variants.map(v => (
-                <Link
-                  key={v.productId}
-                  // Canonical by construction — the API serves each sibling's
-                  // slug and productHref always prefers it over the ObjectId.
-                  href={productHref({ slug: v.slug, _id: v.productId }, locale)}
-                  className={styles.variantLink}
-                >
-                  {v.colorName}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Fit — read BEFORE the size is chosen, which is the only moment
-          "size down if between sizes" can still change anything. Labelled for
-          the same reason it moved: the field holds anything from two words to
-          three sentences, and an unlabelled fragment is just a fragment. */}
-      {fitNote && fitNote.trim() && (
-        <div className={styles.picker}>
-          <p className={`${styles.factRow} ${styles.fitRow}`}>
-            <span className={styles.pickerLabel}>Fit</span>
-            <span className={styles.factSep} aria-hidden="true">·</span>
-            <span className={styles.fitValue}>{fitNote.trim()}</span>
-          </p>
-        </div>
-      )}
-
-      {/* Size — design-system v1 OptionPill grid + sizing chart footnote */}
-      {/* One size is not a CHOICE — it is a fact about the garment.
-          Rendered as a pill it stretched to the full row (auto-fit + 1fr with a
-          single column), auto-selected to solid ink, and became a second
-          full-width dark bar sitting directly above ADD TO BAG. Two identical
-          slabs, one of which must not be pressed: people click the wrong one.
-          Say it in a line of text instead. */}
-      {/* One line, not three. The previous fix correctly stopped rendering a
-          single size as a pressable pill; it still kept the label row, the
-          chart link and the value on separate lines, so a fact about the
-          garment occupied as much of the page as a decision.
-          This matches the shape the COLOUR row already uses — "COLOUR ·
-          Emerald Green" — so size reads as the same kind of statement rather
-          than as a picker with one option. */}
-      {sizes.length === 1 && (
-        <div className={styles.picker}>
-          <p className={styles.factRow}>
-            <span className={styles.pickerLabel}>Size</span>
-            <span className={styles.factSep} aria-hidden="true">·</span>
-            <span className={styles.factValue}>{sizes[0]}</span>
+  // The facts, in §22's order — the rule lives in lib/productDetails.ts so that
+  // "a choice never appears as a fact, and nothing is stated twice" is pinned
+  // rather than re-derived. The sizing-chart link is attached here because it
+  // is markup, not part of the rule.
+  const details = detailRows({ colours, colorName, fitNote, sizes }).map(row => (
+    row.key === 'size'
+      ? {
+          ...row,
+          // The chart belongs beside a size the customer cannot change:
+          // "one size" is exactly when she wants to know what one size means.
+          aside: (
             <a
               href="/size-guide"
               target="_blank"
@@ -240,10 +177,71 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
             >
               Sizing chart
             </a>
-          </p>
+          ),
+        }
+      : row
+  )) as { key: string; label: string; value: string; aside?: React.ReactNode }[];
+
+  return (
+    <div className={styles.root} data-product-options>
+      {/* ── Colour: a real choice keeps its own block ──
+          Colour used to be stated TWICE on this page — a "COLOUR" cube row up
+          under the product name AND a labelled swatch group down here. Two
+          different things are called colour: the record's `colours` array is a
+          CHOICE that goes in the cart line, while `colorVariants` are separate
+          PRODUCTS with their own stock and URL, so picking one is navigation.
+          Both are real; neither needed its own heading.
+
+          More than one colour is a decision and gets swatches. Exactly one is a
+          FACT, and facts belong in the details grid below. */}
+      {swatches.length > 1 && (
+        <div className={styles.picker}>
+          <ColourSwatchGroup
+            swatches={swatches}
+            selectedName={selectedColour || undefined}
+            onSelect={setSelectedColour}
+          />
+          {variantLinks}
         </div>
       )}
 
+      {/* ── The details grid: everything that is NOT a decision ──
+          These were three separate rows — COLOUR, FIT, SIZE — each padded to a
+          44px control height with 24px between them, because each was fixed on
+          its own and each fix was right on its own. On a one-size, one-colour
+          piece they all degrade to facts at once, and the result was four
+          identical label-and-value bars stacked in a column with nothing to
+          choose in any of them: a form with nothing to fill in, spending ~200px
+          and four separate glances to say three short things.
+
+          One grid instead. Labels align to one column and values to another, so
+          the eye reads down rather than hopping; rows are as tall as their text
+          rather than as tall as a button. The "·" separators are gone — once
+          the columns line up, the dot only adds a mark to a page that needed
+          fewer of them. */}
+      {details.length > 0 && (
+        <dl className={styles.details}>
+          {details.map(d => (
+            <Fragment key={d.key}>
+              <dt className={styles.detailLabel}>{d.label}</dt>
+              <dd className={styles.detailValue}>
+                <span>{d.value}</span>
+                {d.aside}
+              </dd>
+            </Fragment>
+          ))}
+        </dl>
+      )}
+
+      {/* Sibling colour products, when there was no swatch block to carry them. */}
+      {swatches.length <= 1 && variantLinks}
+
+      {/* Size — a genuine choice: the OptionPill grid, with the chart footnote.
+          A SINGLE size is not a choice and is not rendered here; it is a row in
+          the details grid above. Rendered as a pill it stretched to the full
+          row and auto-selected to solid ink, becoming a second full-width dark
+          bar directly above ADD TO BAG — two identical slabs, one of which must
+          not be pressed. */}
       {sizes.length > 1 && (
         <div className={styles.picker}>
           <p className={styles.sizeRow}>
@@ -287,8 +285,8 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
           real multi-buy, and the Bridal Edit depends on it. Demoted to one
           row, the same shape as the size fact above it. */}
       {!outOfStock && (
-        <div className={`${styles.stepper} ${styles.factRow}`}>
-          <span className={styles.pickerLabel}>Quantity</span>
+        <div className={styles.stepper}>
+          <span className={styles.detailLabel}>Quantity</span>
           <div className={styles.stepperControls}>
             <button
               className={styles.stepperBtn}
@@ -308,7 +306,9 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
       )}
 
       {/* CTA */}
-      <div className={styles.ctaWrap}>
+      {/* Tagged so StickyBuyBar can tell whether the real button is on screen
+          — see the observer there. */}
+      <div className={styles.ctaWrap} data-add-to-bag>
         <Button
           variant={ctaVariant}
           onClick={handleAdd}

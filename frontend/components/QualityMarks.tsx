@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { mommeReading, fibreLabel } from '@/lib/fabricCare';
 import styles from './QualityMarks.module.css';
 
@@ -46,10 +47,17 @@ export default function QualityMarks({
   return (
     <p className={styles.marks}>
       {marks.map((m, i) => (
-        <span key={m} className={styles.mark}>
+        <Fragment key={m}>
+          {/* The separator is a SIBLING of the marks, not the first child of
+              one. Inside the span it travelled with the mark when the row
+              wrapped, so a three-mark line on a phone broke as
+              "… 19 MOMME" / "· DESIGNED IN IRELAND" — an orphaned dot opening
+              the second line. The stylesheet claimed to have solved this by
+              padding the separator instead of gapping the row; that was the
+              right idea applied to the wrong element. */}
           {i > 0 && <span className={styles.sep} aria-hidden="true">·</span>}
-          {m}
-        </span>
+          <span className={styles.mark}>{m}</span>
+        </Fragment>
       ))}
     </p>
   );

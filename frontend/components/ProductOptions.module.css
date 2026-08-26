@@ -43,29 +43,50 @@
 }
 .sizeGuideLink:hover { color: var(--color-ink); }
 
-/* A statement about the garment, not a choice to make: label · value, with
-   any footnote pushed to the right. Shared by the single-size row and the
-   quantity stepper so both read as the same kind of line — which is what
-   stops an optional control from looking like a required decision. */
-.factRow {
+/* ── Details grid ──
+   Every fact about the garment, in two aligned columns.
+
+   What this replaces: three separate rows, each a flex line with a 44px
+   min-height — the height of a CONTROL. Three facts and a quantity stepper all
+   wearing the same bar shape read as a form; on a one-size, one-colour piece
+   the whole column was four bars with nothing to decide in any of them.
+
+   `auto` rather than a fixed label column: the labels set their own width and
+   every value starts at the same x. That single alignment is most of what makes
+   a specification look considered rather than assembled. */
+.details {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: var(--s-5, 24px);
+  row-gap: var(--s-3, 12px);
+  align-items: baseline;
+  margin: 0 0 var(--s-6, 28px);
+}
+
+.detailLabel {
+  font-family: 'Jost', sans-serif;
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: var(--track-utility);
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+  /* Baseline-aligned against a 14px value; the cap heights differ enough that
+     without this the label rides high. */
+  line-height: 1.5;
+}
+
+.detailValue {
   display: flex;
-  align-items: center;
-  gap: var(--s-2, 8px);
+  align-items: baseline;
+  gap: var(--s-3, 12px);
   margin: 0;
-  min-height: 44px;
-}
-
-.factSep {
-  color: var(--color-line-control);
-}
-
-.factValue {
   font-size: 14px;
+  line-height: 1.5;
   color: var(--color-ink);
 }
 
-/* The footnote sits at the far end of the row rather than under the label. */
-.factRow .sizeGuideLink {
+/* Any footnote — the sizing chart — sits at the far end of its row. */
+.detailValue .sizeGuideLink {
   margin-left: auto;
 }
 
@@ -104,7 +125,15 @@
   margin-bottom: var(--s-5, 24px);
 }
 
-/* The stepper is the row's right-hand element now, like the chart link. */
+/* Quantity is the one CONTROL among the facts above, so it keeps a control's
+   shape: label left, stepper right, on a row tall enough to touch. */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3, 12px);
+  min-height: 44px;
+}
+
 .stepper .stepperControls {
   margin-left: auto;
 }
@@ -174,22 +203,6 @@
 
 .hintBtn:hover { color: var(--color-ink); }
 
-/* The fit note is prose, not a value: it may run to three sentences, so it
-   wraps under its own label rather than stretching the row. min-height is
-   dropped because a two-word note in a 44px row leaves a hole under it —
-   the 44px floor exists for the rows that hold a CONTROL. */
-.fitRow {
-  align-items: baseline;
-  min-height: 0;
-  margin-bottom: 0;
-}
-
-.fitValue {
-  flex: 1;
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--color-ink-muted);
-}
 
 /* Waitlist form, revealed under the CTA when the piece is sold out. */
 .notifyWrap {

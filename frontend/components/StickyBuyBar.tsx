@@ -26,13 +26,51 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
   const [sheetOpen, setSheetOpen] = useState(false);
   const [notifyOpen, setNotifyOpen] = useState(false);
 
-  // Tag the body while this bar is mounted so global mobile fixed-bottom
-  // elements (e.g. ContactWidget chat bubble) can lift themselves clear
-  // of the buy bar without taking a direct dependency on this component.
+  // ── When to be here at all ──
+  //
+  // The bar used to show from the moment the page loaded, so on a short product
+  // panel the customer saw ADD TO BAG twice at once: the real button in the
+  // page and an identical one pinned below it, with the chat bubble sitting
+  // between them. Two identical primary actions on one screen is not twice the
+  // encouragement — it is a moment of "which one is the real one", on the one
+  // element the whole page exists to get pressed. It also spent ~90px of a
+  // phone screen restating a button already in view.
+  //
+  // So it appears only while the real CTA is NOT on screen. That covers both
+  // directions: above the fold on a long page, and scrolled past it.
+  // Starts assuming the CTA IS on screen, so the bar is hidden on first paint.
+  // The other way round it appeared for one frame on every product page and
+  // then slid away — a flash of the exact control this change exists to stop
+  // showing twice.
+  const [ctaVisible, setCtaVisible] = useState(true);
   useEffect(() => {
+    // ProductOptions renders this wrapper unconditionally — out of stock it
+    // holds "Notify when available" rather than "Add to bag", but it is always
+    // there — so there is no real case where the element is missing. If it ever
+    // is, the bar simply stays hidden and the customer uses the button in the
+    // page, which is the one immediately above where the bar would have been.
+    const cta = document.querySelector('[data-add-to-bag]');
+    if (!cta) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setCtaVisible(entry.isIntersecting),
+      // A sliver counts as visible; the point is whether she can press it.
+      { threshold: 0.35 },
+    );
+    io.observe(cta);
+    return () => io.disconnect();
+  }, []);
+
+  const showBar = !ctaVisible;
+
+  // Tag the body only while the bar is actually SHOWING, so the clearance token
+  // it drives (--sticky-buy-h, read by the contact bubble) describes what is on
+  // screen. Set on mount regardless, it lifted the bubble clear of a bar that
+  // was not there.
+  useEffect(() => {
+    if (!showBar) return;
     document.body.classList.add('has-sticky-buy-bar');
     return () => { document.body.classList.remove('has-sticky-buy-bar'); };
-  }, []);
+  }, [showBar]);
 
   const needsColour = colours.length > 0 && !selectedColour;
   const needsSize = sizes.length > 0 && !selectedSize;
@@ -79,13 +117,13 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
       {/* Sits directly on top of the bar rather than in a sheet of its own: the
           customer has already said what they want by tapping, and one field
           does not need a modal. */}
-      {outOfStock && notifyOpen && (
+      {outOfStock && notifyOpen && showBar && (
         <div className={styles.notifyPanel}>
           <NotifyWhenBack productId={productId} />
         </div>
       )}
 
-      <div className={styles.bar}>
+      <div className={`${styles.bar} ${showBar ? '' : styles.barHidden}`} aria-hidden={!showBar}>
         <div className={styles.info}>
           <span className={styles.name}>{productName}</span>
           <Price eur={Number(price)} className={styles.price} />
