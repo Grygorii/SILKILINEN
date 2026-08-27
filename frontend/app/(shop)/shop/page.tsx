@@ -9,6 +9,7 @@ import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, type PageLoca
 import { categoryHref } from '@/lib/urls';
 import ProductGrid from '@/components/ProductGrid';
 import SortLinks from '@/components/SortLinks';
+import CategoryLinks from '@/components/CategoryLinks';
 import BundleStrip from '@/components/BundleStrip';
 import styles from './page.module.css';
 
@@ -176,25 +177,30 @@ export default async function ShopPage({
         )}
       </div>
       {category && <BundleStrip category={category} />}
-      {/* §20's "top controls". Sorting is offered only where there is a grid
-          to sort — on an empty result it is four links that change nothing.
-          Not offered on New Arrivals either: that view IS an order, and a
-          "sort by newest" control inside it invites a contradiction. */}
-      {products.length > 1 && !newOnly && (
-        <div className={styles.controls}>
-          <SortLinks current={sort} params={{ category, q }} locale={locale} />
-        </div>
-      )}
+      {/* §20's top controls, on ONE row. Categories take the left — they are
+          navigation — and sort sits at the right as an adjustment to what
+          navigation already chose. Stacked as two rows they cost ~124px of a
+          phone screen before the first product appeared.
 
-      <ProductGrid
-        products={products}
-        // Only categories holding something: a filter that leads to an empty
-        // grid is a dead end, and shop/page.tsx 404s those slugs anyway.
-        categories={liveCats.filter(c => c.count > 0)}
-        currentCategory={category ?? 'all'}
-        reachable={reachable}
-        locale={locale}
-      />
+          Sorting is offered only where there is a grid to sort: on an empty
+          result it is four links that change nothing. Not on New Arrivals
+          either — that view IS an order, and a "sort by newest" control inside
+          it invites a contradiction. The category row stays regardless, because
+          it is navigation rather than a control. */}
+      <div className={styles.controls}>
+        {/* Only categories holding something: a filter leading to an empty grid
+            is a dead end, and this page 404s those slugs anyway. */}
+        <CategoryLinks
+          categories={liveCats.filter(c => c.count > 0)}
+          current={category ?? 'all'}
+          locale={locale}
+        />
+        {products.length > 1 && !newOnly && (
+          <SortLinks current={sort} params={{ category, q }} locale={locale} />
+        )}
+      </div>
+
+      <ProductGrid products={products} reachable={reachable} locale={locale} />
 
       {/* §21: the short introduction goes above the grid and the substantial
           content BELOW it. Products first — a wall of SEO prose between a

@@ -25,15 +25,23 @@
   letter-spacing: 0.2px;
 }
 
+/* Tightened on small screens, where the header competes with the products
+   rather than framing them. The heading, a two-line introduction and the
+   controls were pushing the first garment most of a screen down: someone who
+   came to look at silk was reading before she saw any. The copy is unchanged —
+   it earns its place for search and it is only two sentences — it just stops
+   floating in space. */
 @media (max-width: 768px) {
-  .page { padding: 60px 5% 80px; }
+  .page { padding: 40px 5% 80px; }
   .title { font-size: 26px; }
-  .pageHeader { margin-bottom: 48px; }
+  .pageHeader { margin-bottom: 28px; }
+  .description { font-size: 14px; line-height: 1.7; }
 }
 
 @media (max-width: 480px) {
-  .page { padding: 48px 4% 64px; }
-  .title { font-size: 22px; }
+  .page { padding: 28px 4% 64px; }
+  .title { font-size: 22px; margin-bottom: 12px; }
+  .pageHeader { margin-bottom: 24px; }
 }
 
 /* ── Category guide (§21) ──
@@ -91,19 +99,25 @@
   .guidePara { font-size: 15px; }
 }
 
-/* Top controls. Right-aligned so the category row keeps the left edge — the
-   categories are navigation, the sort is an adjustment to what navigation
-   already chose. */
+/* Top controls — ONE row where there is width for it.
+   Categories take the left because they are navigation; sort sits at the right
+   because it adjusts what navigation already chose. They used to be two stacked
+   rows, each carrying its own margin, which cost about 124px of a phone screen
+   before the first product.
+   `wrap` rather than a breakpoint: on a narrow screen they fall onto two lines
+   by themselves, and the row-gap keeps that at 12px instead of the 48px the two
+   separate rows added up to. */
 .controls {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: var(--s-3);
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3) var(--s-5);
+  margin-bottom: var(--s-5);
 }
 
-@media (max-width: 768px) {
-  /* Full width and left-aligned on a phone, where right-aligning a scrollable
-     row hides its first item off the left edge. */
-  .controls {
-    justify-content: flex-start;
-  }
+/* The categories get the room; sort takes only what it needs. */
+.controls > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
 }

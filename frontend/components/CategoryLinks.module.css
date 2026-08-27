@@ -1,0 +1,51 @@
+/* Lifted from ProductGrid.module.css when the row moved out — see the note in
+   CategoryLinks.tsx. Margins are gone: the page's controls row owns the spacing
+   now, so the two control rows cannot each contribute their own gap. */
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .row::-webkit-scrollbar { display: none; }
+}
+
+/* These two were <button>s and are now <a>s (see the component's note on why).
+   Anchors bring a default underline and, in the empty state, would otherwise
+   collapse to inline sizing — so both need saying explicitly. */
+.link {
+  background: none;
+  border: none;
+  text-decoration: none;
+  padding: 6px 0;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: var(--color-ink-muted);
+  transition: color var(--t-fast) var(--ease);
+  margin-right: 16px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.link:hover { color: var(--color-ink); }
+
+.active {
+  color: var(--color-ink);
+  border-bottom: var(--stroke) solid var(--color-ink);
+}
+

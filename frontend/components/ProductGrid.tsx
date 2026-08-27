@@ -4,8 +4,6 @@ import { categoryHref } from '@/lib/urls';
 import type { PageLocale } from '@/lib/i18n';
 import styles from './ProductGrid.module.css';
 
-export type GridCategory = { slug: string; label: string; count: number };
-
 type Product = ProductCardData & {
   category?: string;
   description?: string;
@@ -32,21 +30,17 @@ type Product = ProductCardData & {
  *   4. router.push('/shop?category=…') has no locale, so on /de/shop every
  *      filter dropped the visitor into the English shop.
  *
- * Categories now arrive as a prop and the row is anchors built by categoryHref,
- * which is the single owner of storefront URLs and knows about locales. Nothing
- * here needs the browser any more, so it renders on the server and ships no JS.
+ * Nothing here needs the browser any more, so it renders on the server and
+ * ships no JS. The category row itself has since moved to CategoryLinks, so the
+ * page can sit it on one line with the sort control instead of stacking two
+ * rows of chrome above the first product.
  */
 export default function ProductGrid({
   products,
-  categories = [],
-  currentCategory = 'all',
   reachable = true,
   locale = 'en',
 }: {
   products: Product[];
-  /** Live categories that have products. Empty renders no row. */
-  categories?: GridCategory[];
-  currentCategory?: string;
   /** false when the product API could not be reached, so an outage is not
    *  reported to the customer as an empty catalogue. */
   reachable?: boolean;
@@ -54,28 +48,6 @@ export default function ProductGrid({
 }) {
   return (
     <div>
-      {categories.length > 0 && (
-        <nav className={styles.filters} aria-label="Product categories">
-          <Link
-            href={categoryHref(null, locale)}
-            className={`${styles.filterBtn} ${currentCategory === 'all' ? styles.active : ''}`}
-            aria-current={currentCategory === 'all' ? 'page' : undefined}
-          >
-            All
-          </Link>
-          {categories.map(cat => (
-            <Link
-              key={cat.slug}
-              href={categoryHref(cat.slug, locale)}
-              className={`${styles.filterBtn} ${currentCategory === cat.slug ? styles.active : ''}`}
-              aria-current={currentCategory === cat.slug ? 'page' : undefined}
-            >
-              {cat.label.toUpperCase()}
-            </Link>
-          ))}
-        </nav>
-      )}
-
       {products.length === 0 ? (
         <div className={styles.emptyState}>
           {/* An unreachable API and an empty category look identical once the
