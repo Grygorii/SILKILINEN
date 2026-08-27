@@ -1,11 +1,55 @@
 # Open items
 
-Everything **not** changed in this session, and why. Three kinds of thing:
-what needs a decision or data only you have, what I chose not to build and the
-reasoning, and what the sandbox stopped me reaching.
+Everything **not** changed, and why. Three kinds of thing: what needs a decision
+or data only you have, what I chose not to build and the reasoning, and what the
+sandbox stopped me reaching.
 
 Nothing here is a surprise from a commit message — it is the same list, in one
 place, so you can work down it.
+
+**Updated after the second pass.** Two items came off the list; see §0.
+
+---
+
+## 0. Settled since the last version
+
+### The chat bubble now waits — and so does the Google badge
+
+You asked for the chat button to appear later and not crowd the welcome space.
+Both floating widgets now wait for a sign of engagement: a scroll past the first
+screen, or twenty seconds if she has not scrolled, whichever comes first.
+
+Scroll is the real signal — someone who scrolls has decided to look, and support
+becomes help rather than interruption. The timer is the fallback, because
+someone reading the hero for half a minute without scrolling may be stuck, and
+that is exactly when a way to ask a question earns its place. Once revealed they
+stay; a widget that flickered away on scroll-up would be worse than one that
+never came.
+
+### "Is the Google button something I need?" — yes and no, and they are two things
+
+The round bag-and-star bottom-right is **Google Customer Reviews**, ours, loaded
+from `gstatic.com/shopping/merchant/merchantwidget.js`. It comes in two halves
+whose names are one word apart, and the distinction is the whole answer:
+
+| | what it does | verdict |
+|---|---|---|
+| **`GoogleCustomerReviews`** — the survey, on the order-success page | asks a buyer to rate you a few weeks after delivery. **This is what creates the seller rating.** | **Keep.** It is the half that earns the asset. |
+| **`GoogleReviewsBadge`** — the floating badge | displays the rating you have accumulated. | **Optional.** Only worth showing once there is a rating worth showing. |
+
+So: you need the survey, and it is already in the right place. The badge is
+display, and it was doing the one thing it should never do — opening the site.
+
+It was mounted in the `Footer`, which reads as harmless until you remember that
+Google's own CSS fixes the widget to a corner of the **viewport**. "In the
+footer" meant "over the hero", on every page. It is now held back with the chat
+bubble.
+
+**If you want it gone entirely**, it is one line: delete
+`<GoogleReviewsBadge />` from `components/Footer.tsx`. Nothing else breaks, and
+the survey keeps collecting ratings regardless. My recommendation is to leave it
+deferred until you have a seller rating with enough reviews behind it to be
+persuasive, then decide — a badge showing a thin rating is worse than no badge.
 
 ---
 
@@ -174,6 +218,29 @@ than the occasional oversell** — which the post-commit decrement already handl
 by clamping to zero and logging. Worth revisiting if that log ever shows it
 happening in practice.
 
+### 2.5 Converting the remaining raw `<img>` tags
+
+The lint backlog lists 33 `@next/next/no-img-element` errors. I looked at
+whether to clear them and decided against, for three reasons rather than one:
+
+- **About 25 are in admin.** No LCP concern, nobody but you sees them.
+- **Two are OpenGraph image routes.** Those render through Satori, where `<img>`
+  is the only element that works — `next/image` is not available in that
+  runtime. They are false positives and will never be fixable.
+- **The storefront ones are not the images that matter.** The hero and the
+  product cards — the actual LCP elements — already go through `next/image`.
+  What is left is secondary photography.
+
+The deciding reason is the third one combined with a limitation of mine:
+converting an `<img>` to `next/image` means choosing `fill` plus a sized wrapper,
+or supplying explicit dimensions. For CMS images of unknown size that is a
+judgement about aspect ratio, and **I cannot see the result** — egress to the
+site is blocked. Image layout is precisely where "correct in code" and "correct
+on screen" come apart.
+
+Worth doing with a browser open. Not worth doing blind across eighteen files,
+which is the same shape as the one edit I had to revert this session.
+
 ### 2.5 The admin's inline modal
 
 One dialog in `app/admin/products/[id]/page.tsx` is written inline instead of
@@ -268,8 +335,40 @@ For context on what will fail CI if someone undoes this work:
 | One review aggregate, no local averages | `frontend/tests/reviewAggregate.test.ts` |
 | UK customs claim always names Derry | `frontend/tests/ukShipping.test.ts` |
 | Domain written once | `frontend/tests/urls.test.ts` |
-| Clearance tokens have readers; hero fits the screen; reduced motion is global | `frontend/tests/floatingUtilities.test.ts` |
+| Clearance tokens have readers; hero fits the screen; reduced motion is global; floating utilities defer to the first screen | `frontend/tests/floatingUtilities.test.ts` |
 | Every `aria-modal` traps focus | `frontend/tests/focusTrap.test.ts` |
 | A choice never renders as a fact | `frontend/tests/productDetails.test.ts` |
 
 Every one was verified by breaking it deliberately and watching it fail.
+
+---
+
+## 6. Where this leaves us
+
+**The list of things I can act on without you is now empty.** Everything
+remaining is one of:
+
+- a decision only you can make (§1.1, §1.6, §1.7),
+- data only you have (§1.2, §1.3, §1.4),
+- a script only you can run (§1.5),
+- a judgement call already made and explained (§2),
+- a pre-existing backlog that is its own project (§3),
+- or blocked by the sandbox (§4).
+
+That is a real stopping point rather than a tidy one. If you would rather I kept
+going, the two largest pieces of genuine work left in the codebase are the admin
+form-label backlog (130 errors, mechanical but large) and the cart-vs-checkout
+discount divergence in §3.3 — both are days, not minutes, and neither is
+customer-visible today.
+
+**In priority order, the three that would change something for a shopper this
+week:**
+
+1. **§1.2, the blank gallery.** Three minutes in admin to tell me which of three
+   causes it is. A product page with no photograph loses the sale outright — it
+   outranks everything else on this list.
+2. **§1.1, OEKO-TEX.** One word from you. It is the first line a visitor reads
+   and the only item here where both possible answers carry a cost if I guess.
+3. **§1.5, the two read-only audits.** They change nothing and print a list. The
+   code is guarded on every CI run; the database has never been checked, and ADR
+   0008 already proved once that prose alone does not hold.
