@@ -8,7 +8,7 @@ import { clampMeta } from '@/lib/clampMeta';
 import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, type PageLocale } from '@/lib/i18n-server';
 import { categoryHref } from '@/lib/urls';
 import ProductGrid from '@/components/ProductGrid';
-import SortLinks from '@/components/SortLinks';
+import SortLinks, { MIN_PRODUCTS_TO_SORT } from '@/components/SortLinks';
 import CategoryLinks from '@/components/CategoryLinks';
 import BundleStrip from '@/components/BundleStrip';
 import styles from './page.module.css';
@@ -170,23 +170,20 @@ export default async function ShopPage({
       {/* Records the query AND how many products it returned. A zero-result
           search is the clearest demand signal the shop can produce. */}
       {q && <SearchTracker query={q} results={products.length} />}
+      {/* Heading only. The introduction moved BELOW the grid — see the guide
+          section at the foot of this file. */}
       <div className={styles.pageHeader}>
         <h1 className={styles.title}>{heading}</h1>
-        {description && (
-          <p className={styles.description}>{description}</p>
-        )}
       </div>
       {category && <BundleStrip category={category} />}
-      {/* §20's top controls, on ONE row. Categories take the left — they are
-          navigation — and sort sits at the right as an adjustment to what
-          navigation already chose. Stacked as two rows they cost ~124px of a
-          phone screen before the first product appeared.
-
-          Sorting is offered only where there is a grid to sort: on an empty
-          result it is four links that change nothing. Not on New Arrivals
-          either — that view IS an order, and a "sort by newest" control inside
-          it invites a contradiction. The category row stays regardless, because
-          it is navigation rather than a control. */}
+      {/* §20's top controls. Categories take the left — they are NAVIGATION, and
+          the only crawlable link from the shop to the six category pages, so
+          they stay however small the catalogue is. Sort sits at the right and
+          is a CONTROL, so it has to earn its row: below MIN_PRODUCTS_TO_SORT it
+          does not appear at all, because re-ordering four garments she can
+          already see whole is theatre.
+          Never on New Arrivals — that view IS an order, and a "sort by newest"
+          control inside it invites a contradiction. */}
       <div className={styles.controls}>
         {/* Only categories holding something: a filter leading to an empty grid
             is a dead end, and this page 404s those slugs anyway. */}
@@ -195,30 +192,44 @@ export default async function ShopPage({
           current={category ?? 'all'}
           locale={locale}
         />
-        {products.length > 1 && !newOnly && (
+        {products.length >= MIN_PRODUCTS_TO_SORT && !newOnly && (
           <SortLinks current={sort} params={{ category, q }} locale={locale} />
         )}
       </div>
 
       <ProductGrid products={products} reachable={reachable} locale={locale} />
 
-      {/* §21: the short introduction goes above the grid and the substantial
-          content BELOW it. Products first — a wall of SEO prose between a
-          visitor and the thing they came to look at is the pattern that makes
-          category pages feel like landing pages. */}
-      {copy && (
+      {/* §21 asked for a short introduction ABOVE the grid and the substantial
+          content below. The introduction has since moved down here to join it.
+
+          Two reasons. The founder's, which is the better one: someone who came
+          to look at silk should see silk, and on a phone the heading plus a
+          two-line introduction plus the controls put the first garment most of
+          a screen down. And a structural one: with the introduction up there
+          and the guide down here, the page said the same kind of thing in two
+          places with the products in between. One prose block, after the
+          products, reads as an essay about the category rather than as a
+          landing page defending itself before showing anything.
+
+          Nothing is lost for search. The H1 stays at the top, the copy is still
+          in the HTML, and the introduction still feeds the meta description —
+          that comes from generateMetadata, not from where the paragraph sits. */}
+      {(copy || description) && (
         <section className={styles.guide} aria-labelledby="category-guide">
           <h2 id="category-guide" className={styles.guideHeading}>
-            Choosing {copy.title.toLowerCase()}
+            {copy ? `Choosing ${copy.title.toLowerCase()}` : 'About this collection'}
           </h2>
-          {copy.guide.body.map((para, i) => (
+          {description && <p className={styles.guideLead}>{description}</p>}
+          {copy?.guide.body.map((para, i) => (
             <p key={i} className={styles.guidePara}>{para}</p>
           ))}
-          <ul className={styles.guideLinks}>
-            {GUIDE_LINKS.map(l => (
-              <li key={l.href}><Link href={l.href}>{l.label} →</Link></li>
-            ))}
-          </ul>
+          {copy && (
+            <ul className={styles.guideLinks}>
+              {GUIDE_LINKS.map(l => (
+                <li key={l.href}><Link href={l.href}>{l.label} →</Link></li>
+              ))}
+            </ul>
+          )}
         </section>
       )}
     </main>

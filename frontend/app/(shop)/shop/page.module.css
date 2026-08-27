@@ -18,24 +18,24 @@
   margin-bottom: 20px;
 }
 
-.description {
-  font-size: 15px;
-  color: var(--muted);
-  line-height: 1.85;
-  letter-spacing: 0.2px;
+/* The category introduction. It sat under the H1; it now opens the guide
+   BELOW the grid, so it reads as the first line of an essay about the category
+   rather than as a claim the page makes before showing anything. */
+.guideLead {
+  margin: 0 0 var(--s-4);
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--color-ink);
 }
 
-/* Tightened on small screens, where the header competes with the products
-   rather than framing them. The heading, a two-line introduction and the
-   controls were pushing the first garment most of a screen down: someone who
-   came to look at silk was reading before she saw any. The copy is unchanged —
-   it earns its place for search and it is only two sentences — it just stops
-   floating in space. */
+/* The header is one line now — the introduction moved below the grid — so it
+   needs framing, not a room of its own. What used to sit here was a heading, a
+   two-line introduction and two rows of controls, which put the first garment
+   most of a screen down on a phone. */
 @media (max-width: 768px) {
   .page { padding: 40px 5% 80px; }
   .title { font-size: 26px; }
   .pageHeader { margin-bottom: 28px; }
-  .description { font-size: 14px; line-height: 1.7; }
 }
 
 @media (max-width: 480px) {

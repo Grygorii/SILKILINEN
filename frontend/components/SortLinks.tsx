@@ -19,6 +19,20 @@ import styles from './SortLinks.module.css';
  * The keys must match the whitelist in backend/utils/productSort.js — that file
  * owns which orders exist, this one owns what they are called on screen.
  */
+/**
+ * Below this many products, sorting is theatre.
+ *
+ * Re-ordering four garments by price does not help anyone choose — she can see
+ * all four at once — and the control costs a row of a phone screen that could
+ * be showing a fifth. The founder's instinct was right: with a small catalogue
+ * the controls take more room than they earn.
+ *
+ * A threshold rather than a switch, so this heals itself. Nobody has to
+ * remember to turn sorting back on when the shelf fills up; the eighth product
+ * in a category does it.
+ */
+export const MIN_PRODUCTS_TO_SORT = 8;
+
 const OPTIONS: { key: string; label: string }[] = [
   { key: 'featured', label: 'Featured' },
   { key: 'newest', label: 'Newest' },

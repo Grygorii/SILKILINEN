@@ -143,3 +143,25 @@ describe('site origin', () => {
     expect(offenders, 'these hardcode the domain instead of reading SITE').toEqual([]);
   });
 });
+
+// ── Sorting has to earn its row ───────────────────────────────────────────
+//
+// Re-ordering four garments she can already see whole does not help anyone
+// choose, and the control costs a row of a phone screen that could be showing a
+// fifth product. A threshold rather than a switch, so the shop heals itself:
+// nobody has to remember to turn sorting back on when the shelf fills up.
+import { MIN_PRODUCTS_TO_SORT } from '@/components/SortLinks';
+
+describe('sort visibility threshold', () => {
+  it('is high enough that sorting means something', () => {
+    // Two products sorted by price is the same two products. The old gate was
+    // `> 1`, which is barely a gate at all.
+    expect(MIN_PRODUCTS_TO_SORT).toBeGreaterThanOrEqual(6);
+  });
+
+  it('is low enough to appear before a shopper needs to scroll for it', () => {
+    // A grid two-across on a phone shows a lot of product in a few screens; a
+    // catalogue past this point genuinely benefits from an order.
+    expect(MIN_PRODUCTS_TO_SORT).toBeLessThanOrEqual(12);
+  });
+});
