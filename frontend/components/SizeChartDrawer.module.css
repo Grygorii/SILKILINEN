@@ -1,0 +1,107 @@
+/* Bottom sheet on a phone, centred panel on a desktop. Same component either
+   way — the difference is where it comes from, not what it says. */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 25, 22, 0.45);
+  z-index: 500;
+}
+
+.panel {
+  position: fixed;
+  z-index: 501;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  /* Never taller than the screen: the table scrolls inside .body, the panel
+     itself does not grow past the viewport. */
+  max-height: 85vh;
+  max-height: 85svh;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-top: var(--stroke) solid var(--color-line);
+  animation: sheetUp 240ms var(--ease, ease);
+}
+
+@media (min-width: 768px) {
+  .panel {
+    top: 50%;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    transform: translate(-50%, -50%);
+    width: min(720px, 92vw);
+    border: var(--stroke) solid var(--color-line);
+    animation: none;
+  }
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel { animation: none; }
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+  border-bottom: var(--stroke) solid var(--color-line);
+}
+
+.title {
+  margin: 0;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: var(--track-utility);
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--color-ink-muted);
+  /* A 44px target without a 44px-looking button. */
+  padding: 12px;
+  margin: -12px;
+}
+
+.close:hover { color: var(--color-ink); }
+
+.body {
+  padding: var(--s-5);
+  overflow-y: auto;
+  /* Clears the home indicator on a phone. */
+  padding-bottom: calc(var(--s-5) + env(safe-area-inset-bottom));
+}
+
+.note {
+  margin: var(--s-4) 0 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--color-ink-muted);
+}
+
+.muted {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-ink-muted);
+}
+
+.link {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

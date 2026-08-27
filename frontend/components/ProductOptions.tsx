@@ -13,6 +13,7 @@ import UKShipBadge from '@/components/UKShipBadge';
 import NotifyWhenBack from './NotifyWhenBack';
 import { maxOrderable, stockBySize, type VariantLike } from '@/lib/variantStock';
 import { detailRows } from '@/lib/productDetails';
+import SizeChartDrawer from './SizeChartDrawer';
 import { OptionPill, OptionPillGroup } from '@/components/ui/OptionPill';
 import { ColourSwatchGroup, type Swatch } from '@/components/ui/ColourSwatch';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -168,16 +169,9 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
           ...row,
           // The chart belongs beside a size the customer cannot change:
           // "one size" is exactly when she wants to know what one size means.
-          aside: (
-            <a
-              href="/size-guide"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.sizeGuideLink}
-            >
-              Sizing chart
-            </a>
-          ),
+          // A drawer, not a new tab — checking a measurement is not a change of
+          // mind about the garment. See SizeChartDrawer.
+          aside: <SizeChartDrawer className={styles.sizeGuideLink} />,
         }
       : row
   )) as { key: string; label: string; value: string; aside?: React.ReactNode }[];
@@ -246,14 +240,7 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
         <div className={styles.picker}>
           <p className={styles.sizeRow}>
             <span className={styles.pickerLabel}>SIZE</span>
-            <a
-              href="/size-guide"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.sizeGuideLink}
-            >
-              SIZING CHART
-            </a>
+            <SizeChartDrawer className={styles.sizeGuideLink} label="Sizing chart" />
           </p>
           <OptionPillGroup ariaLabel="Size">
             {sizes.map(size => {

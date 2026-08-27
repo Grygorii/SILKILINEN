@@ -8,6 +8,7 @@ import { OptionPill, OptionPillGroup } from '@/components/ui/OptionPill';
 import { ColourSwatchGroup, type Swatch } from '@/components/ui/ColourSwatch';
 import Price from './Price';
 import { maxOrderable, stockBySize, type VariantLike } from '@/lib/variantStock';
+import SizeChartDrawer from './SizeChartDrawer';
 import styles from './QuickAddSheet.module.css';
 
 type Props = {
@@ -96,7 +97,7 @@ export default function QuickAddSheet({
           <div className={styles.section}>
             <div className={styles.rowLabel}>
               <span className={styles.label}>SIZE</span>
-              <a href="/size-guide" target="_blank" rel="noopener noreferrer" className={styles.sizeGuide}>SIZING CHART</a>
+              <SizeChartDrawer className={styles.sizeGuide} label="Sizing chart" />
             </div>
             <OptionPillGroup ariaLabel="Size">
               {sizes.map(size => (

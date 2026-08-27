@@ -1,5 +1,6 @@
 import styles from '../legal.module.css';
-import tableStyles from './page.module.css';
+import SizeChartTable from '@/components/SizeChartTable';
+import { fetchSizeRows } from '@/lib/sizeChart';
 import { getSiteSettings } from '@/lib/settings';
 import { SITE } from '@/lib/i18n';
 
@@ -9,29 +10,8 @@ export const metadata = {
   description: 'Find your perfect fit with the SILKILINEN size guide. Measurements in cm and inches for all our silk and linen pieces.',
 };
 
-type Row = { size: string; eu: string; uk: string; bustCm: string; bustIn: string; waistCm: string; waistIn: string; hipCm: string; hipIn: string };
-
-const FALLBACK_ROWS: Row[] = [
-  { size: 'XS', eu: '34', uk: '8',  bustCm: '80–84',  bustIn: '31.5–33',  waistCm: '62–66', waistIn: '24.5–26', hipCm: '88–92',   hipIn: '34.5–36' },
-  { size: 'S',  eu: '36', uk: '10', bustCm: '84–88',  bustIn: '33–34.5',  waistCm: '66–70', waistIn: '26–27.5', hipCm: '92–96',   hipIn: '36–38' },
-  { size: 'M',  eu: '38', uk: '12', bustCm: '88–92',  bustIn: '34.5–36',  waistCm: '70–74', waistIn: '27.5–29', hipCm: '96–100',  hipIn: '38–39.5' },
-  { size: 'L',  eu: '40', uk: '14', bustCm: '92–96',  bustIn: '36–38',    waistCm: '74–78', waistIn: '29–30.5', hipCm: '100–104', hipIn: '39.5–41' },
-  { size: 'XL', eu: '42', uk: '16', bustCm: '96–100', bustIn: '38–39.5',  waistCm: '78–82', waistIn: '30.5–32', hipCm: '104–108', hipIn: '41–42.5' },
-];
-
-async function getRows(): Promise<Row[]> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/size-chart`, { next: { revalidate: 300 } });
-    if (!res.ok) return FALLBACK_ROWS;
-    const data = await res.json();
-    return Array.isArray(data.rows) && data.rows.length ? data.rows : FALLBACK_ROWS;
-  } catch {
-    return FALLBACK_ROWS;
-  }
-}
-
 export default async function SizeGuidePage() {
-  const [rows, { supportEmail }] = await Promise.all([getRows(), getSiteSettings()]);
+  const [rows, { supportEmail }] = await Promise.all([fetchSizeRows(), getSiteSettings()]);
   return (
     <main className={styles.page}>
       <div className={styles.inner}>
@@ -52,38 +32,7 @@ export default async function SizeGuidePage() {
 
         <section className={styles.section}>
           <h2>Size chart</h2>
-          <div className={tableStyles.tableWrap}>
-            <table className={tableStyles.table}>
-              <thead>
-                <tr>
-                  <th>Size</th>
-                  <th>EU</th>
-                  <th>UK</th>
-                  <th>Bust (cm)</th>
-                  <th>Bust (in)</th>
-                  <th>Waist (cm)</th>
-                  <th>Waist (in)</th>
-                  <th>Hips (cm)</th>
-                  <th>Hips (in)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map(r => (
-                  <tr key={r.size}>
-                    <td><strong>{r.size}</strong></td>
-                    <td>{r.eu}</td>
-                    <td>{r.uk}</td>
-                    <td>{r.bustCm}</td>
-                    <td>{r.bustIn}</td>
-                    <td>{r.waistCm}</td>
-                    <td>{r.waistIn}</td>
-                    <td>{r.hipCm}</td>
-                    <td>{r.hipIn}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <SizeChartTable rows={rows} />
         </section>
 
         <section className={styles.section}>

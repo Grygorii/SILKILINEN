@@ -377,6 +377,19 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   from the UK", so a "Shipped from Ireland" line would contradict it two lines apart.
   "Gift-ready packaging" is safe — `/gift-wrapping`, the FAQ and `ReassuranceRow` all
   state it is included at no cost.
+- **Size chart:** `backend/services/sizeChart.js` (`DEFAULT_SIZE_CHART` + admin override,
+  served by `/api/size-chart`) is the source. `frontend/lib/sizeChart.ts` mirrors the
+  DEFAULTS so the page is never an empty table and the drawer has rows before its fetch
+  lands — guarded by `backend/tests/sizeChartFallback.test.js`, same bargain as
+  `shippingFallback`. `components/SizeChartTable.tsx` is the ONE table markup, shared by
+  `/size-guide` and the drawer (presentational, no hooks, so a server and a client
+  component can both render it). **`SizeChartDrawer`** replaces the `target="_blank"` link
+  on the PDP and in `QuickAddSheet` — §48 asks for a drawer, and on a phone a new tab is a
+  context switch away from the buy decision. Rows load on FIRST OPEN, not on mount.
+  ⚠️ §48 also asks for per-garment TABS (robes/sleepwear/lingerie/slips); not built,
+  because there is one measurement set — four tabs over one dataset is the same table
+  four times. Needs per-garment data first; the garment differences live in the page's
+  "Garment fit notes" prose meanwhile.
 - **Sticky buy bar visibility:** shows only while the real CTA is OFF screen
   (`IntersectionObserver` on `[data-add-to-bag]`, threshold 0.35). It used to show from
   load, so a short panel put ADD TO BAG on screen twice at once with the chat bubble
