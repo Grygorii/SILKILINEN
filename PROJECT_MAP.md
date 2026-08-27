@@ -243,6 +243,15 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   than 400 (a hand-edited URL should still return the shop) and never reach Mongo's sort
   spec. `components/SortLinks.tsx` owns the LABELS; `tests/productSort.test.js` asserts
   every key it offers exists in the whitelist, since a missing one fails silently.
+  ⚠️ The sort CONTROL only renders at `MIN_PRODUCTS_TO_SORT` (8) products or more —
+  re-ordering four garments a shopper can see whole is theatre, and the row costs a
+  phone screen that could show a fifth. A threshold, not a switch, so it returns by
+  itself as the catalogue grows. The CATEGORY row (`components/CategoryLinks.tsx`,
+  lifted out of `ProductGrid`) has NO such gate: it is navigation, and the only
+  crawlable link from the shop to the six category pages. Both sit in ONE `.controls`
+  row — stacked they cost ~124px above the first product. ⚠️ The category INTRO renders
+  BELOW the grid as the guide's lead paragraph, not under the H1; it still feeds the
+  meta description via `generateMetadata`, which does not care where it sits on screen.
 - **Shop URLs:** `frontend/lib/urls.ts` `shopPath({category,q,isNew,sort})` — one builder,
   fixed param order, defaults omitted (`/shop`, never `/shop?sort=featured`). Controls must
   PRESERVE each other: a sort link dropping `?category` lands the shopper back in the full
