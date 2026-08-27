@@ -511,8 +511,11 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   `tests/floatingUtilities.test.ts`. The homepage opened with BOTH fixed on it, bracketing
   the hero CTA. ⚠️ `GoogleReviewsBadge` is mounted in `Footer`, which looks harmless until
   you remember Google's own CSS fixes the widget to a corner — "in the footer" means "over
-  the hero". It is the BADGE only; the survey that actually collects seller ratings is
-  `GoogleCustomerReviews` on the order-success page and must stay.
+  the hero". ⚠️ `GoogleReviewsBadge` is now UNMOUNTED — removed from `Footer` at the
+  founder's request, kept as a file because restoring it is one line and the reason it is
+  off is temporary (a thin seller rating shown prominently is worse than no badge). It is
+  the BADGE only; the survey that actually collects the ratings is `GoogleCustomerReviews`
+  on the order-success page, still mounted, and must stay.
 - **Modal dialogs:** `frontend/lib/useFocusTrap.ts` is the ONE keyboard implementation —
   save the trigger, move focus in, cycle Tab/Shift+Tab inside, restore on close. Nine
   components declare `aria-modal="true"`; THREE had a trap (three hand-rolled copies,

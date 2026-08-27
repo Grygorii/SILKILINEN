@@ -16,6 +16,22 @@ declare global {
 /**
  * Google Customer Reviews badge — the floating seller-rating widget.
  *
+ * ⚠️ NOT CURRENTLY MOUNTED. Removed from components/Footer.tsx at the founder's
+ * request. Kept rather than deleted because bringing it back is one line, and
+ * the reason it is off is temporary: a badge is only worth showing once there
+ * is a seller rating with enough reviews behind it to persuade. A thin rating
+ * displayed prominently is worse than no badge.
+ *
+ * To restore: import it in Footer.tsx and render <GoogleReviewsBadge /> inside
+ * the <footer>. It already defers to the first screen (see useDeferredReveal),
+ * so it will not open the site the way it did before.
+ *
+ * ⚠️ This is the BADGE. Do not confuse it with GoogleCustomerReviews on the
+ * order-success page — that is the post-purchase survey, it is what actually
+ * COLLECTS the ratings, and it is still mounted and must stay. The names are
+ * one word apart and removing the wrong one would quietly stop seller ratings
+ * ever arriving.
+ *
  * Mounted in the Footer, which puts it on every storefront page; Google's own
  * CSS then fixes it to a corner, so "in the footer" means "over the hero". On
  * the homepage it sat bottom-right while the contact bubble sat bottom-left,

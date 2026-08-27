@@ -45,11 +45,19 @@ Google's own CSS fixes the widget to a corner of the **viewport**. "In the
 footer" meant "over the hero", on every page. It is now held back with the chat
 bubble.
 
-**If you want it gone entirely**, it is one line: delete
-`<GoogleReviewsBadge />` from `components/Footer.tsx`. Nothing else breaks, and
-the survey keeps collecting ratings regardless. My recommendation is to leave it
-deferred until you have a seller rating with enough reviews behind it to be
-persuasive, then decide — a badge showing a thin rating is worse than no badge.
+**Done — the badge is removed.** `<GoogleReviewsBadge />` is out of
+`components/Footer.tsx`, so nothing floats bottom-right on any page now.
+
+The component file is kept rather than deleted, with a note at the top saying it
+is deliberately unmounted and how to bring it back. That is a parked feature,
+not dead code: restoring it is one import and one line, and the reason it is off
+is temporary — put it back when you have a seller rating with enough reviews
+behind it to persuade. It already defers to the first screen, so it will not
+open the site the way it did before.
+
+**The survey is untouched and still collecting.** `GoogleCustomerReviews` on the
+order-success page is the half that earns the rating, and it stays. The two
+names are one word apart, which is why both files now say so at the top.
 
 ---
 

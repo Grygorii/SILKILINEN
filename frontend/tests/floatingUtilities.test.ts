@@ -159,6 +159,10 @@ describe('reduced motion', () => {
 // third utility is added, and the cost lands on the one screen every visitor
 // sees and nobody chose.
 describe('floating utilities defer to the first screen', () => {
+  // GoogleReviewsBadge is deliberately unmounted (removed from Footer.tsx), so
+  // it is listed here still: it keeps its deferral, and if it is ever put back
+  // it comes back deferred rather than opening the site again. Checking a file
+  // nothing renders is cheap; forgetting the rule on restore is not.
   const FLOATING = ['ContactWidget.tsx', 'GoogleReviewsBadge.tsx'];
 
   it('holds every floating utility back until the visitor engages', () => {
