@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { MessageCircle } from 'lucide-react';
 import styles from './ContactWidget.module.css';
 import { useSiteSettings } from '@/lib/useSiteSettings';
+import { useDeferredReveal } from '@/lib/useDeferredReveal';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 const BLOCKED_PATHS = ['/admin', '/checkout'];
@@ -24,6 +25,11 @@ function handleFromUrl(url: string): string {
 export default function ContactWidget() {
   const pathname = usePathname();
   const { supportEmail } = useSiteSettings();
+  // Not on the first screen. The hero is a photograph, a sentence and one
+  // button; a chat bubble parked in the corner of it is competing with the only
+  // pitch the brand gets. It appears once she has scrolled past it, or after a
+  // while if she has not — see lib/useDeferredReveal.
+  const revealed = useDeferredReveal();
   const [open, setOpen] = useState(false);
   // Instagram comes from the same social API the footer uses, so it can't drift
   // from the real link. Falls back to the known handle if the API is unreachable.
@@ -60,6 +66,9 @@ export default function ContactWidget() {
   ];
 
   if (BLOCKED_PATHS.some(p => pathname.startsWith(p))) return null;
+  // After the blocked-path check, before render: the hooks above must run on
+  // every path or their order changes between renders.
+  if (!revealed) return null;
 
   const isProductPage = pathname.startsWith('/product/');
 

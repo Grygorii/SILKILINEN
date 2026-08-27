@@ -145,3 +145,28 @@ describe('reduced motion', () => {
     expect(block).toMatch(/animation-duration:\s*0\.01ms/);
   });
 });
+
+// ── Nothing floats over the first screen ──────────────────────────────────
+//
+// The homepage opened with two fixed utilities on it: the contact bubble
+// bottom-left and the Google Customer Reviews badge bottom-right, bracketing
+// "Shop the collection" before the visitor had decided she was interested. The
+// badge is mounted in the Footer, which reads as harmless until you remember
+// that Google's own CSS fixes it to a corner — "in the footer" means "over the
+// hero".
+//
+// Both wait for a sign of engagement now. The rule is easy to forget when a
+// third utility is added, and the cost lands on the one screen every visitor
+// sees and nobody chose.
+describe('floating utilities defer to the first screen', () => {
+  const FLOATING = ['ContactWidget.tsx', 'GoogleReviewsBadge.tsx'];
+
+  it('holds every floating utility back until the visitor engages', () => {
+    const eager = FLOATING.filter(name => {
+      const src = readFileSync(join(ROOT, 'components', name), 'utf8');
+      // A CALL, not the import — deleting the call leaves the import behind.
+      return !/useDeferredReveal\s*\(/.test(src);
+    });
+    expect(eager, 'these appear on the first screen, over the hero').toEqual([]);
+  });
+});
