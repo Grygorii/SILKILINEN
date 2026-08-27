@@ -120,3 +120,28 @@ describe('homepage hero height', () => {
     }
   });
 });
+
+// ── Reduced motion is handled once, globally ──────────────────────────────
+//
+// Twenty-four stylesheets animate something; ten honoured the preference. The
+// per-file opt-in had been missed fourteen times, which is what a per-file
+// opt-in does. A visitor who has told their operating system that motion makes
+// them ill was still getting scroll reveals, shimmering skeletons and a looping
+// ribbon.
+describe('reduced motion', () => {
+  const globals = readFileSync(GLOBALS, 'utf8');
+
+  it('neutralises animation and transition for everything, not just one selector', () => {
+    const block = globals.slice(globals.indexOf('@media (prefers-reduced-motion: reduce)'));
+    expect(block).toMatch(/\*,\s*\n\s*\*::before,\s*\n\s*\*::after/);
+    expect(block).toContain('animation-duration');
+    expect(block).toContain('transition-duration');
+  });
+
+  it('uses a near-zero duration rather than none', () => {
+    // `animation: none` cancels without firing transitionend/animationend, and
+    // components that wait on those events would hang.
+    const block = globals.slice(globals.indexOf('@media (prefers-reduced-motion: reduce)'));
+    expect(block).toMatch(/animation-duration:\s*0\.01ms/);
+  });
+});

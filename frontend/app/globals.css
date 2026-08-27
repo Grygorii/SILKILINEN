@@ -311,6 +311,35 @@ body {
   50%      { opacity: 0.55; }
 }
 
+/* ── Reduced motion ────────────────────────────────────────────────────────
+   Twenty-four stylesheets animate something. Ten honoured this preference; the
+   only global rule covered `[aria-busy]`, which is loading indicators and
+   almost nothing else. So a visitor who has told their operating system that
+   motion makes them ill still got the scroll reveals, the shimmering
+   skeletons, the style-finder's looping ribbon and every hover transition on
+   the site.
+
+   A blanket, because the alternative is remembering to opt in twenty-four
+   times and the record shows that does not happen. Near-zero rather than
+   `none`: a transition that is cancelled outright never fires its transitionend,
+   and some components wait on that. At 0.01ms the state change still happens,
+   it simply does not travel.
+
+   Per-component blocks stay and still win on specificity — they do better
+   things than this can, like dropping the hero video for its still frame
+   rather than freezing it on the first pixel.
+
+   Loading indicators are NOT exempted. Their motion looks essential, but a
+   spinner is decoration around a wait: "Loading…" says the same thing without
+   moving, and a spinner is exactly the small repetitive motion this preference
+   exists to stop. The rule this replaces already took that view. */
 @media (prefers-reduced-motion: reduce) {
-  [aria-busy='true'] * { animation: none !important; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
