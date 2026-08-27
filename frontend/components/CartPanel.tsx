@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 import { useRouter } from 'next/navigation';
 import { X, Lock } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -23,7 +24,10 @@ export default function CartPanel({ isOpen, onClose }: Props) {
   const { format } = useCurrency();
   const freeShippingThreshold = useFreeShippingThreshold();
   const panelRef = useRef<HTMLDivElement>(null);
-  const prevFocusRef = useRef<HTMLElement | null>(null);
+  // Focus behaviour for the aria-modal below. This file and SideMenu each
+  // carried their own copy, identical down to the selector string and the 50ms
+  // timeout — and six other dialogs on the site had none at all.
+  useFocusTrap(panelRef, isOpen);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -102,44 +106,6 @@ export default function CartPanel({ isOpen, onClose }: Props) {
     if (isOpen) document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [isOpen, onClose]);
-
-  useEffect(() => {
-    if (isOpen) {
-      prevFocusRef.current = document.activeElement as HTMLElement;
-      const timer = setTimeout(() => {
-        const panel = panelRef.current;
-        if (!panel) return;
-        const focusable = panel.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])'
-        );
-        focusable[0]?.focus();
-      }, 50);
-      return () => clearTimeout(timer);
-    } else {
-      prevFocusRef.current?.focus();
-      prevFocusRef.current = null;
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    function trap(e: KeyboardEvent) {
-      if (e.key !== 'Tab' || !panelRef.current) return;
-      const focusable = panelRef.current.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey) {
-        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
-      } else {
-        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
-      }
-    }
-    document.addEventListener('keydown', trap);
-    return () => document.removeEventListener('keydown', trap);
-  }, [isOpen]);
 
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);

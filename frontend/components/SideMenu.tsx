@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 import Link from 'next/link';
 import { X, Heart, Package, LogOut } from 'lucide-react';
 import { useCustomer } from '@/context/CustomerContext';
@@ -32,7 +33,8 @@ export default function SideMenu({ isOpen, onClose }: Props) {
   const { count: wishlistCount } = useWishlist();
   const searchRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLElement>(null);
-  const prevFocusRef = useRef<HTMLElement | null>(null);
+  // Focus behaviour for the aria-modal below — see lib/useFocusTrap.ts.
+  useFocusTrap(panelRef, isOpen);
   const [categories, setCategories] = useState<Category[]>([]);
   const [catsLoading, setCatsLoading] = useState(true);
   const [socials, setSocials] = useState<SocialPlatform[]>([]);
@@ -73,25 +75,6 @@ export default function SideMenu({ isOpen, onClose }: Props) {
     if (isOpen) document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [isOpen, onClose]);
-
-  // Focus management: save trigger, move focus into panel, restore on close
-  useEffect(() => {
-    if (isOpen) {
-      prevFocusRef.current = document.activeElement as HTMLElement;
-      const timer = setTimeout(() => {
-        const panel = panelRef.current;
-        if (!panel) return;
-        const focusable = panel.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])'
-        );
-        focusable[0]?.focus();
-      }, 50);
-      return () => clearTimeout(timer);
-    } else {
-      prevFocusRef.current?.focus();
-      prevFocusRef.current = null;
-    }
-  }, [isOpen]);
 
   // Swipe-left to close
   useEffect(() => {
@@ -157,27 +140,6 @@ export default function SideMenu({ isOpen, onClose }: Props) {
       panel.removeEventListener('touchend', onTouchEnd);
     };
   }, [isOpen, onClose]);
-
-  // Focus trap: keep Tab cycling within the panel
-  useEffect(() => {
-    if (!isOpen) return;
-    function trap(e: KeyboardEvent) {
-      if (e.key !== 'Tab' || !panelRef.current) return;
-      const focusable = panelRef.current.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey) {
-        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
-      } else {
-        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
-      }
-    }
-    document.addEventListener('keydown', trap);
-    return () => document.removeEventListener('keydown', trap);
-  }, [isOpen]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();

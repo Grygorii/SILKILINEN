@@ -505,6 +505,17 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   (added — "Shipping: calculated at checkout" is where the customs fear lands), checkout.
   `tests/ukShipping.test.ts` pins the gate and fails any file promising no customs without
   naming Derry (comments stripped, same reasoning as `originClaims`).
+- **Modal dialogs:** `frontend/lib/useFocusTrap.ts` is the ONE keyboard implementation —
+  save the trigger, move focus in, cycle Tab/Shift+Tab inside, restore on close. Nine
+  components declare `aria-modal="true"`; THREE had a trap (three hand-rolled copies,
+  identical down to the selector string and a 50ms timeout) and SIX had none, so the
+  attribute told assistive technology the page behind was inert while Tab walked straight
+  into it. `isKeyboardReachable()` is the tested predicate (disabled / aria-hidden /
+  tabindex=-1 / no layout box); the DOM query is untestable here because vitest runs in
+  node by deliberate choice. Escape stays with each dialog — some must record a dismissal.
+  `tests/focusTrap.test.ts` fails on any `aria-modal` without a `useFocusTrap(` CALL and on
+  any re-introduced hand-rolled trap. ⚠️ One exemption, named in the test: an inline dialog
+  in `app/admin/products/[id]/page.tsx` that doesn't route through `AdminModal`.
 - **Marketing email:** every marketing message needs an opt-out (GDPR Art. 21, PECR).
   `utils/unsubscribeSign.js` signs the link; pass a `scope` so a link minted for one
   purpose can't be replayed against another. Transactional mail is exempt.

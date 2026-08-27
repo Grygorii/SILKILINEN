@@ -1,10 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 import { useCookieConsent } from '@/context/CookieConsentContext';
 import styles from './CookieSettingsModal.module.css';
 
 export default function CookieSettingsModal() {
+  const panelRef = useRef<HTMLDivElement>(null);
+  // Consent is a legal surface: it has to be operable by keyboard, and
+  // aria-modal without a trap means Tab walks into the page it is covering.
+  useFocusTrap(panelRef, true);
   const { reject, savePreferences, preferences, closeSettings } = useCookieConsent();
   const [functional, setFunctional] = useState(preferences?.functional ?? false);
   const [analytics, setAnalytics] = useState(preferences?.analytics ?? false);
@@ -12,7 +17,7 @@ export default function CookieSettingsModal() {
 
   return (
     <div className={styles.overlay} onClick={closeSettings}>
-      <div
+      <div ref={panelRef}
         className={styles.modal}
         role="dialog"
         aria-modal="true"

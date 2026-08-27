@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 import { usePathname } from 'next/navigation';
 import Button from './ui/Button';
 import styles from './EmailCapturePopup.module.css';
@@ -18,7 +19,6 @@ export default function EmailCapturePopup() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const modalRef = useRef<HTMLDivElement>(null);
-  const prevFocusRef = useRef<HTMLElement | null>(null);
 
   const isBlocked = BLOCKED_PATHS.some(p => pathname.startsWith(p));
 
@@ -63,27 +63,17 @@ export default function EmailCapturePopup() {
     };
   }, [shouldShow]);
 
-  // While open: Escape to close, trap Tab within the modal, restore focus on close.
+  // Tab trapping and focus restore are in the hook; Escape stays here because
+  // dismissing is this component's own business — it records the dismissal.
+  useFocusTrap(modalRef, visible);
+
   useEffect(() => {
     if (!visible) return;
-    prevFocusRef.current = document.activeElement as HTMLElement;
-    const modal = modalRef.current;
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') { dismiss(); return; }
-      if (e.key === 'Tab' && modal) {
-        const f = modal.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])');
-        if (f.length === 0) return;
-        const first = f[0];
-        const last = f[f.length - 1];
-        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-      }
+      if (e.key === 'Escape') dismiss();
     }
     document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      prevFocusRef.current?.focus?.();
-    };
+    return () => document.removeEventListener('keydown', onKey);
   }, [visible, dismiss]);
 
   async function handleSubmit(e: React.FormEvent) {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 import Image from 'next/image';
 import { Heart, Play, X } from 'lucide-react';
 import { useWishlist } from '@/context/WishlistContext';
@@ -56,6 +57,10 @@ export default function ProductGallery({ images, name, productId, video }: Props
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const lightboxRef = useRef<HTMLDivElement>(null);
+  // The lightbox covers the whole page; without this, Tab walked straight out
+  // of it into the product panel behind the scrim.
+  useFocusTrap(lightboxRef, lightboxOpen);
   const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
   const touchStartX = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -228,6 +233,7 @@ export default function ProductGallery({ images, name, productId, video }: Props
       {/* Lightbox — desktop, images only */}
       {lightboxOpen && item?.kind === 'image' && (
         <div
+          ref={lightboxRef}
           className={styles.lightbox}
           role="dialog"
           aria-modal="true"

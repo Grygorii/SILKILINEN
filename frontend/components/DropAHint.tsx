@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import styles from './DropAHint.module.css';
@@ -14,6 +15,9 @@ type Props = {
 };
 
 export default function DropAHint({ productId, productName, onClose }: Props) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  // Mounted only while open, so the trap is always active.
+  useFocusTrap(panelRef, true);
   const [form, setForm] = useState({
     recipientName: '',
     recipientEmail: '',
@@ -46,7 +50,7 @@ export default function DropAHint({ productId, productName, onClose }: Props) {
 
   return createPortal(
     <div className={styles.overlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className={styles.modal} role="dialog" aria-modal="true" aria-label="Drop a hint">
+      <div ref={panelRef} className={styles.modal} role="dialog" aria-modal="true" aria-label="Drop a hint">
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>Send a hint</h2>
           <button className={styles.close} onClick={onClose} aria-label="Close">

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 import Link from 'next/link';
 import SizeChartTable from './SizeChartTable';
 import { FALLBACK_SIZE_ROWS, type SizeRow } from '@/lib/sizeChart';
@@ -24,6 +25,10 @@ export default function SizeChartDrawer({ label = 'Sizing chart', className }: {
 }) {
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<SizeRow[] | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  // aria-modal below is a claim that the page behind is inert. This is what
+  // makes it true for a keyboard.
+  useFocusTrap(panelRef, open);
 
   const close = useCallback(() => setOpen(false), []);
 
@@ -65,7 +70,7 @@ export default function SizeChartDrawer({ label = 'Sizing chart', className }: {
       {open && (
         <>
           <div className={styles.backdrop} onClick={close} />
-          <div className={styles.panel} role="dialog" aria-modal="true" aria-label="Size guide">
+          <div ref={panelRef} className={styles.panel} role="dialog" aria-modal="true" aria-label="Size guide">
             <div className={styles.head}>
               <p className={styles.title}>Size guide</p>
               <button type="button" className={styles.close} onClick={close} aria-label="Close size guide">✕</button>

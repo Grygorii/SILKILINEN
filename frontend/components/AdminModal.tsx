@@ -1,12 +1,17 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 
 /**
  * Minimal admin modal — replaces the old browser prompt()/alert() flows
  * (category reassignment, product pickers, rejection reasons) with an
- * accessible inline dialog: Escape closes, backdrop click closes, focus
- * moves into the dialog on open.
+ * accessible inline dialog: Escape closes, backdrop click closes, and focus is
+ * trapped inside while it is open.
+ *
+ * The focus half used to be `ref.current?.focus()` — which moves focus in but
+ * does not keep it there, so the next Tab left the dialog for the admin page
+ * behind it while aria-modal claimed that page was inert.
  */
 export default function AdminModal({
   title,
@@ -18,14 +23,15 @@ export default function AdminModal({
   children: React.ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  // Mounted only while open, so the trap is always active. One line here covers
+  // every admin dialog, since they all render through this component.
+  useFocusTrap(ref, true);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose();
     }
     document.addEventListener('keydown', onKey);
-    // Move focus into the dialog so keyboard users land inside it.
-    ref.current?.focus();
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 

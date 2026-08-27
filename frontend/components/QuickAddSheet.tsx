@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 import { useCart } from '@/context/CartContext';
 import { useProductSelection } from './ProductSelectionContext';
 import Button from '@/components/ui/Button';
@@ -33,6 +34,10 @@ type Props = {
 export default function QuickAddSheet({
   open, onClose, colours, colourHexMap, sizes, productName, productId, price, stock, sizeVariants, image,
 }: Props) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  // Declared before the `if (!open) return null` below — a hook cannot sit
+  // after an early return.
+  useFocusTrap(panelRef, open);
   const { selectedColour, setSelectedColour, selectedSize, setSelectedSize, qty, setQty } = useProductSelection();
   const { addToCart } = useCart();
 
@@ -76,7 +81,7 @@ export default function QuickAddSheet({
 
   return (
     <div className={styles.overlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className={styles.sheet} role="dialog" aria-modal="true" aria-label={`Add ${productName} to bag`}>
+      <div ref={panelRef} className={styles.sheet} role="dialog" aria-modal="true" aria-label={`Add ${productName} to bag`}>
         <div className={styles.handle} aria-hidden="true" />
 
         <div className={styles.header}>
