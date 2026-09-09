@@ -1,30 +1,19 @@
-'use client';
+import AccountGuard from './AccountGuard';
 
-import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useCustomer } from '@/context/CustomerContext';
-import styles from './account.module.css';
-
-const PUBLIC_PATHS = ['/account/sign-in', '/account/verify'];
+// Private route: crawlable so Google can follow links back out of it, but NEVER
+// indexed. robots.txt only disallows /admin and /api, so every page under
+// /account — orders, addresses, profile, sign-in — was fully indexable. A
+// noindex META rather than a disallow, because a page blocked in robots.txt can
+// still be listed with no snippet.
+//
+// Applies to the whole subtree, which is why it belongs here rather than on
+// each page. The auth gate moved to AccountGuard so this file can be a server
+// component and declare metadata at all.
+export const metadata = {
+  title: 'Your account',
+  robots: { index: false, follow: true },
+};
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
-  const { customer, loading } = useCustomer();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const isPublic = PUBLIC_PATHS.some(p => pathname?.startsWith(p));
-
-  useEffect(() => {
-    if (!isPublic && !loading && !customer) {
-      router.replace('/account/sign-in');
-    }
-  }, [customer, loading, router, isPublic]);
-
-  // Sign-in and verify pages render without any auth check
-  if (isPublic) return <>{children}</>;
-
-  if (loading) return <div className={styles.loading}>Loading…</div>;
-  if (!customer) return null;
-
-  return <div className={styles.container}>{children}</div>;
+  return <AccountGuard>{children}</AccountGuard>;
 }

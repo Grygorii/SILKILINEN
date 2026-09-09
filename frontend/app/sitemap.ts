@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-import { productPath } from '@/lib/urls';
+import { productPath, categoryPath } from '@/lib/urls';
 import { brand } from '@/lib/brand';
 
 const BASE = brand.url;
@@ -30,6 +30,50 @@ async function getProducts(): Promise<SlimProduct[]> {
     if (!Array.isArray(products)) return [];
     // Active (incl. sold_out) only — drafts/archived stay out of the sitemap.
     return products.filter((p: SlimProduct) => !p.status || p.status === 'active' || p.status === 'sold_out');
+  } catch {
+    return [];
+  }
+}
+
+type SlimCategory = { slug?: string; count?: number };
+
+/**
+ * Category listings, which were missing from this file entirely.
+ *
+ * They are the shop's most valuable commercial-intent pages after the products
+ * themselves — each has its own title, its own introduction, a 300–600 word
+ * guide and a self-referencing canonical — and Google was left to find all six
+ * through internal links alone.
+ *
+ * Two details matter more than the addition:
+ *
+ * Only categories with products. shop/page.tsx returns a real 404 for a
+ * category whose count is zero, deliberately, to keep thin pages out of the
+ * index. Listing one here would put a 404 in the sitemap, which is precisely
+ * what fills the "Not found" bucket of the index report.
+ *
+ * Built with categoryPath, the URL owner. The canonical for these pages is
+ * `${SITE}/shop?category=<slug>` built from the same function, so sitemap and
+ * canonical are byte-identical. A sitemap URL that differs from the page's own
+ * canonical by so much as an encoded space is how "Duplicate, Google chose a
+ * different canonical" happens.
+ */
+async function getCategorySlugs(): Promise<string[]> {
+  if (!process.env.NEXT_PUBLIC_API_URL) return [];
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), PRODUCT_FETCH_TIMEOUT_MS);
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
+      next: { revalidate: 3600 },
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!Array.isArray(data)) return [];
+    return (data as SlimCategory[])
+      .filter(c => c.slug && (c.count ?? 0) > 0)
+      .map(c => c.slug as string);
   } catch {
     return [];
   }
@@ -66,6 +110,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/shipping`,          lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE}/gift-wrapping`,     lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.4 },
     { url: `${BASE}/size-guide`,        lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
+    // Both were simply missing. /care-guide is an education page that answers a
+    // real query ("how to wash silk") and links back into the shelves;
+    // /style-finder is a live route with its own copy. Neither carries a robots
+    // directive, so both were indexable and reachable only by internal link.
+    { url: `${BASE}/care-guide`,        lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE}/style-finder`,      lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
     // Priority above the other static pages: this is the education page the
     // buying-intent queries ("what is momme", "silk vs satin") should land on.
     { url: `${BASE}/silk-standard`,     lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
@@ -76,8 +126,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/faq`,               lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
   ];
 
-  const [products, journalSlugs, collectionSlugs, bundleSlugs] = await Promise.all([
+  const [products, categorySlugs, journalSlugs, collectionSlugs, bundleSlugs] = await Promise.all([
     getProducts(),
+    getCategorySlugs(),
     getSlugs('/api/journal'),
     getSlugs('/api/collections'),
     getSlugs('/api/bundles'),
@@ -91,6 +142,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: 'weekly',
     priority: 0.8,
   }));
+  const categoryPages: MetadataRoute.Sitemap = categorySlugs.map(slug => ({
+    url: `${BASE}${categoryPath(slug)}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    // Above the static pages and level with collections: these are shelves a
+    // shopper searches for by name ("silk robes"), not policy pages.
+    priority: 0.8,
+  }));
   const journalPages: MetadataRoute.Sitemap = journalSlugs.map(slug => ({
     url: `${BASE}/journal/${slug}`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6,
   }));
@@ -101,5 +160,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${BASE}/bundles/${slug}`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7,
   }));
 
-  return [...staticPages, ...productPages, ...journalPages, ...collectionPages, ...bundlePages];
+  return [...staticPages, ...categoryPages, ...productPages, ...journalPages, ...collectionPages, ...bundlePages];
 }

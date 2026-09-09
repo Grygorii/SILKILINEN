@@ -562,6 +562,19 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   so Google indexed `/product/<ObjectId>` alongside the slug URL — two URLs for one
   page. The API now serves each `colorVariants[]` sibling's slug so swatches are
   canonical at the source.
+- **Sitemap vs noindex — `frontend/app/sitemap.ts` + `tests/sitemap.test.ts`.** Two silent
+  failures, both invisible outside Search Console. `/care-guide`, `/style-finder` and ALL
+  SIX category listings were absent from the sitemap while being fully indexable — Google
+  found them by internal link alone. And `/account` (whole subtree), `/checkout`,
+  `/success`, `/wishlist`, `/cancel` carried NO robots directive: `robots.ts` disallows
+  only `/admin` and `/api`, so an order-confirmation page was as indexable as the homepage.
+  Fixed with `robots: { index: false, follow: true }` — a noindex META, not a robots.txt
+  disallow, because a disallowed page can still be listed without a snippet. `account`'s
+  layout was a client component and could not export `metadata`, so the auth gate moved to
+  `AccountGuard` and the layout became a server component. Categories are built with
+  `categoryPath` (sitemap URL byte-identical to the canonical) and filtered to
+  `count > 0`, because `shop/page.tsx` 404s an empty category and a 404 in the sitemap is
+  what fills the "Not found" bucket of the index report.
 - Self-referencing `alternates.canonical` on indexable pages. Empty/stale category slugs
   `notFound()` + noindex (see `shop/page.tsx`). Meta descriptions run through `clampMeta`.
 - Product JSON-LD on PDP (offers EUR-canonical, aggregateRating from product-linked reviews).

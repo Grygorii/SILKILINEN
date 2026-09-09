@@ -5,14 +5,12 @@
 //
 // A client component cannot export `metadata`, so the declaration lives in a
 // layout beside it.
+
 export const metadata = {
-  title: 'Order Confirmed',
-  description: 'Your SILKILINEN order has been confirmed. Thank you for your purchase.',
-  // An order-confirmation page in the index is findable by anyone and pollutes
-  // conversion tracking with visits that never bought anything.
+  title: 'Wishlist',
   robots: { index: false, follow: true },
 };
 
-export default function SuccessLayout({ children }: { children: React.ReactNode }) {
+export default function WishlistLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }

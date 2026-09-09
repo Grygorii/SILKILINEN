@@ -3,6 +3,8 @@ import styles from './page.module.css';
 export const metadata = {
   title: 'Payment Cancelled',
   description: 'Your payment was cancelled. No charge was made. Return to the shop whenever you are ready.',
+  // Nobody should arrive here from a search result.
+  robots: { index: false, follow: true },
 };
 
 export default function CancelPage() {
