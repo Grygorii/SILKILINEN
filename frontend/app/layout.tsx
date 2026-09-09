@@ -18,6 +18,7 @@ import { CookieConsentProvider } from "@/context/CookieConsentContext";
 import { isValidSocialUrl } from "@/lib/socialUrl";
 import "./globals.css";
 import { brand } from '@/lib/brand';
+import { shopPath } from '@/lib/urls';
 
 // next/font self-hosts the WOFF2 files and inlines a CSS preload, killing
 // the ~2 second render-blocking @import that PageSpeed flagged. Display
@@ -206,6 +207,19 @@ export default async function RootLayout({
       : {}),
   };
 
+  // Sitelinks searchbox. The target must carry the LITERAL {search_term_string}
+  // placeholder, and shopPath percent-encodes its arguments — correctly, since it
+  // also backs canonicals — so the placeholder is swapped in AFTER the URL is
+  // built rather than passed through it.
+  //
+  // Built from shopPath so the PARAM NAME comes from the one owner rather than
+  // being restated here. It was restated here, and it was wrong: this tag said
+  // `?search=` while the shop has always read `?q=`. Every searcher Google sent
+  // through the box would have landed on the unfiltered catalogue — a filter
+  // silently ignored is indistinguishable from a shop that has nothing to show.
+  // Google also crawled the template URL itself, so the mistake was sitting in
+  // the index report as /shop?search={search_term_string}.
+  const SEARCH_SLOT = 'SILKILINENSEARCHTERM';
   const websiteJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -213,7 +227,10 @@ export default async function RootLayout({
     url: brand.url,
     potentialAction: {
       '@type': 'SearchAction',
-      target: { '@type': 'EntryPoint', urlTemplate: `${brand.url}/shop?search={search_term_string}` },
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${brand.url}${shopPath({ q: SEARCH_SLOT })}`.replace(SEARCH_SLOT, '{search_term_string}'),
+      },
       'query-input': 'required name=search_term_string',
     },
   };

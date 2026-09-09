@@ -105,6 +105,36 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
+// ── The API host is not a website ─────────────────────────────────────────
+//
+// api.silkilinen.com is a SUBDOMAIN of silkilinen.com, so the Search Console
+// DOMAIN property covers it — which is why that property reports pages the
+// https://www.silkilinen.com URL-prefix property cannot see. Nothing here has
+// ever told a crawler anything: the frontend's robots.txt is served by Next on
+// www and says nothing about this host, and there is no <head> to put a meta
+// tag in, because JSON has no head.
+//
+// A noindex HEADER rather than a robots.txt Disallow, for the same reason the
+// storefront's private routes use a meta tag (see frontend checkout/layout.tsx):
+// a disallowed URL can still be listed with no snippet, and — the part that
+// matters for anything ALREADY indexed — Google cannot read a directive on a
+// page it is forbidden to fetch. Crawlable + noindex is what removes them.
+// Tighten to a Disallow only once Search Console shows the API URLs gone.
+//
+// /feed is exempt on purpose: it is the Pinterest product feed, which is
+// ingested rather than browsed. Never hand a robots directive to a channel
+// whose job is to pull the catalogue.
+app.use(function (req, res, next) {
+  if (!req.path.startsWith('/feed')) res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  next();
+});
+
+// Explicit rather than a 404. It ALLOWS crawling deliberately — the header
+// above is the directive, and it only works if the crawler is let in to read it.
+app.get('/robots.txt', function (req, res) {
+  res.type('text/plain').send('User-agent: *\nAllow: /\n');
+});
+
 // Request-scoped structured logging. Every request gets a unique id and a
 // JSON log line on completion with method/path/status/duration. Inside
 // handlers, req.log.{info,warn,error}() attaches the request id. Existing

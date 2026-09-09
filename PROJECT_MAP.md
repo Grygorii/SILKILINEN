@@ -575,6 +575,40 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   `categoryPath` (sitemap URL byte-identical to the canonical) and filtered to
   `count > 0`, because `shop/page.tsx` 404s an empty category and a 404 in the sitemap is
   what fills the "Not found" bucket of the index report.
+  ⚠️ The test walked `app/(shop)` ONLY, so it passed while two more indexable pages sat
+  one directory over: `/journal/preview` (an unpublished article's body at a crawlable URL
+  — a near-duplicate of the article it previews, where the sibling `(shop)/preview/[id]`
+  had always been noindexed) and `/unsubscribe` (one line of text plus a signed opt-out
+  token in the query string). Both are CLIENT components, which is the whole reason they
+  were missed twice over — a client component cannot export `metadata`, so the omission
+  has no metadata block to be absent from. The storefront is FOUR route trees
+  (`(shop)`, `journal`, `unsubscribe`, `write-review`); the test now walks all of them and
+  asserts each static route is in the sitemap XOR noindexed — never neither, never both.
+- **The API host is not a website — `backend/server.js`.** `api.silkilinen.com` is a
+  SUBDOMAIN of `silkilinen.com`, so the Search Console **domain** property
+  (`sc-domain:silkilinen.com`) covers it while the `https://www.silkilinen.com`
+  URL-prefix property cannot — which is why the two properties report different page
+  counts for the same site. Nothing on this host had ever told a crawler anything:
+  `robots.ts` is served by Next on www and has no authority here, and a JSON response
+  has no `<head>`, so the meta tag the storefront's private routes use is unavailable.
+  Now an `X-Robots-Tag: noindex, nofollow` header on everything except `/feed`.
+  ⚠️ `robots.txt` here **allows** crawling on purpose: a Disallow stops Google FETCHING
+  the URL, so it never reads the noindex and anything already indexed stays listed
+  without a snippet. Crawlable + noindex is what removes them; tighten to a Disallow
+  only once GSC shows the API URLs gone. `/feed` (the Pinterest product feed) is exempt
+  — a channel that INGESTS the catalogue must never be handed a robots directive.
+  `tests/apiNoindex.test.js` pins all four points, including the Allow.
+  (The Google Merchant feed is the other one: `frontend/app/feed/google.xml`, on www.)
+- **Sitelinks searchbox target — `app/layout.tsx`.** The WebSite JSON-LD offered Google
+  `/shop?search={search_term_string}`; the shop has always read **`?q=`**. Every searcher
+  Google sent through that box would have landed on the unfiltered catalogue with the
+  query dropped, and a filter silently ignored is indistinguishable from a shop with no
+  matches. Google also crawled the template URL itself, so it sat in the index report as a
+  literal `/shop?search={search_term_string}`. The param name now comes from `shopPath` —
+  the placeholder is substituted AFTER the URL is built, because `shopPath`
+  percent-encodes its arguments (correctly: it backs canonicals) and braces passed
+  through it would reach Google as `%7B…%7D`. `tests/urls.test.ts` fails on any
+  hand-written query string in that block.
 - Self-referencing `alternates.canonical` on indexable pages. Empty/stale category slugs
   `notFound()` + noindex (see `shop/page.tsx`). Meta descriptions run through `clampMeta`.
 - Product JSON-LD on PDP (offers EUR-canonical, aggregateRating from product-linked reviews).
