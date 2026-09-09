@@ -70,8 +70,7 @@ In the order I would do them:
 2. **The blank product gallery** (§1.2) — nobody buys silk they cannot see.
 3. **Colour copy** (new, below) — six bikini-briefs pages that differ only in a
    colour word.
-4. **`relax fet`** (§1.3) — one field.
-5. **The three unrun scripts** (§1.5) — two are read-only reports.
+4. **The three unrun scripts** (§1.5) — two are read-only reports.
 
 ### Merchant Center: the Content API shuts down (deadline already passed)
 
@@ -94,14 +93,17 @@ Migrating to the Merchant API is a real piece of work (new endpoints, new auth
 scopes, different response shapes), not a patch. Worth scheduling, not worth
 rushing, and nothing breaks for customers when it lapses.
 
-### New today: `relax fet` is on FIVE products, not one
+### ✅ RESOLVED today: `relax fet` was on FIVE products, not one
 
-Not a typo — the same string on the two eyemask variants, the bastet eyemask and
-two bikini briefs. That is the shape of `POST /:id/duplicate` copying `fitNote`
-into every clone. It renders on the PDP as `Fit: relax fet`.
+Not a typo — the same string on three eyemasks and two bikini briefs, which is
+the shape of `POST /:id/duplicate` copying `fitNote` into every clone. It
+rendered on the PDP as `Fit: relax fet`.
 
-Note an eyemask has no meaningful fit, so the honest fix is not one value for all
-five: clear it on the three eyemasks, set the two briefs to `Relaxed`.
+Fixed per garment rather than with one value, because an eyemask has no
+meaningful fit: cleared on the three eyemasks, set to `Relaxed` on the two
+briefs. ⚠️ The duplicate endpoint still copies `fitNote`, so a clone made
+tomorrow inherits whatever its source says — worth remembering the next time one
+odd value appears on several products at once.
 
 ### New today: colour siblings read as duplicates
 
@@ -221,13 +223,11 @@ like. Three possibilities, and they need different fixes:
 | URLs load but the photos are very pale | cream-on-cream photography — a shoot note, not a bug |
 | No images on the record at all | the dots come from placeholders; I would add an empty-state |
 
-### 1.3 `relax fet`
+### 1.3 `relax fet` — ✅ DONE (9 Sept)
 
-The fit note on that product. It is your data, not code. It now sits in an
-aligned details grid where it reads *worse* than when it was floating, because
-the grid draws the eye to it.
-
-Worth also capitalising to match the other values in that column — `Relaxed`.
+Written up here as "the fit note on that product", singular. It was on FIVE, all
+with identical text — see §A. Cleared on the three eyemasks, `Relaxed` on the two
+bikini briefs.
 
 ### 1.4 Momme values
 
