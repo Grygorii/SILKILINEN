@@ -85,6 +85,11 @@ or change an invariant, update the relevant line here in the same commit.
   source:'seed'), `Category`/`Collection`/`Bundle`, `Journal Article`, `SiteContent` (CMS KV),
   `MemoryEntry`, `SiteAudit`, `ExperienceReview`, `User`.
 - **scripts/** — seeds (`seed*.js`) + migrations. Run on Railway shell with `node scripts/X.js`.
+  ⚠️ The Railway shell is **EPHEMERAL** — each session is a fresh container. A plan-file
+  script (`renameProducts`, `fixProductSlugs`, `refileCategories`) must write its plan and
+  `--apply` it in the SAME shell session, or the apply finds no plan and does nothing. It
+  says so, but "No rename-plan.json found" scrolls past in a pasted block and reads as
+  success.
   Notable: `seedProductReviews.js --reset` (panties-focused, fresh dates), `seedLibrary.js`.
 - **services/** — business logic + the AI agents above.
 

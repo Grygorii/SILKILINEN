@@ -24,6 +24,10 @@
 //   node scripts/renameProducts.js            # write rename-plan.json, change nothing
 //   node scripts/renameProducts.js --apply    # apply the plan file as it stands
 //
+// ⚠️ The Railway shell is EPHEMERAL — each session is a fresh container, so the
+// plan file does not survive between sessions. Write the plan and apply it in
+// the SAME shell, or --apply finds no plan and silently does nothing.
+//
 // Anything the script cannot confidently parse is marked "review": true and is
 // SKIPPED on apply until you replace its newName by hand. A wrong guess on a
 // product name is worse than leaving it alone.

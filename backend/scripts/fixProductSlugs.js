@@ -23,6 +23,10 @@
 //   node scripts/fixProductSlugs.js            # write slug-plan.json, change nothing
 //   node scripts/fixProductSlugs.js --apply    # apply the plan file as it stands
 //
+// ⚠️ The Railway shell is EPHEMERAL — each session is a fresh container, so the
+// plan file does not survive between sessions. Write the plan and apply it in
+// the SAME shell, or --apply finds no plan and silently does nothing.
+//
 // ⚠️ Run renameProducts.js --apply FIRST if it has anything pending. Fixing a
 // slug and then renaming the product costs two redirect hops for one product.
 
