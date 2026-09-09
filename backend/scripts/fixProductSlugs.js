@@ -88,8 +88,13 @@ async function main() {
 
   if (APPLY) {
     if (!fs.existsSync(PLAN_PATH)) {
-      console.log('No slug-plan.json found. Run without --apply first, read the plan, then re-run with --apply.');
+      // Exit NON-ZERO. This message has scrolled past inside a pasted block of
+      // commands three times now, each time reading as success while the apply
+      // did nothing at all. A failing exit code stops a chained run and shows
+      // up in the shell even when the text does not.
+      console.error('No slug-plan.json found. Run without --apply first, read the plan, then re-run with --apply.');
       await mongoose.disconnect();
+      process.exitCode = 1;
       return;
     }
     const plan = JSON.parse(fs.readFileSync(PLAN_PATH, 'utf8'));
