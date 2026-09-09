@@ -73,6 +73,36 @@ In the order I would do them:
 4. **`relax fet`** (§1.3) — one field.
 5. **The three unrun scripts** (§1.5) — two are read-only reports.
 
+### Merchant Center: the Content API shuts down (deadline already passed)
+
+`backend/services/merchantCenter.js` calls
+`https://shoppingcontent.googleapis.com/content/v2.1` — the **Content API for
+Shopping**, which Merchant Center says shut down on **18 August 2026**.
+
+It still answers: the health card reads `27/27 products approved`, and that check
+throws on any non-OK response and reports `Merchant API error: …` as a warning,
+so a green card means the API really did respond today. Google has not switched
+it off for this account yet.
+
+⚠️ **Your products are NOT at risk.** They reach Google through the scheduled XML
+fetch of `frontend/app/feed/google.xml`, which has nothing to do with the Content
+API. Only our own admin *reporting* depends on it — the day Google pulls the
+plug, the Merchant card turns yellow with the HTTP error and everything else
+carries on.
+
+Migrating to the Merchant API is a real piece of work (new endpoints, new auth
+scopes, different response shapes), not a patch. Worth scheduling, not worth
+rushing, and nothing breaks for customers when it lapses.
+
+### New today: `relax fet` is on FIVE products, not one
+
+Not a typo — the same string on the two eyemask variants, the bastet eyemask and
+two bikini briefs. That is the shape of `POST /:id/duplicate` copying `fitNote`
+into every clone. It renders on the PDP as `Fit: relax fet`.
+
+Note an eyemask has no meaningful fit, so the honest fix is not one value for all
+five: clear it on the three eyemasks, set the two briefs to `Relaxed`.
+
 ### New today: colour siblings read as duplicates
 
 The catalogue is roughly seven garments in three-to-six colours: 6 bikini briefs
