@@ -7,7 +7,91 @@ sandbox stopped me reaching.
 Nothing here is a surprise from a commit message — it is the same list, in one
 place, so you can work down it.
 
-**Updated after the second pass.** Two items came off the list; see §0.
+**Updated 9 Sept** — a Search Console pass, which turned into a database repair.
+The ordered to-do list is §A; the older standing items follow from §0.
+
+---
+
+## A. Do these next (9 Sept session)
+
+### A1. Restart the Railway service ⚠️ FIRST
+
+Three indexes were dropped by hand and **nothing has rebuilt them**:
+
+| collection | index | state right now |
+|---|---|---|
+| `events` | `createdAt_1` | gone — no 90-day TTL, no index at all |
+| `visits` | `createdAt_1` | gone — same |
+| `products` | `slug_1` | gone — **nothing enforces slug uniqueness** |
+
+`server.js` calls `mongoose.connect()` with no options, so `autoIndex` defaults
+to true: a restart rebuilds every index from the schema, and the schema is now
+correct (one declaration per key). A **redeploy of master is the restart** — one
+action, not two.
+
+Until it happens the shop works fine (28 products is nothing to scan) but
+retention is off and two products could claim one URL.
+
+### A2. Verify the indexes came back right
+
+```
+node -e "require('dotenv').config();const m=require('mongoose');m.connect(process.env.MONGODB_URI).then(async()=>{for(const c of ['events','visits','products']){for(const i of await m.connection.db.collection(c).indexes()){if(i.name==='createdAt_1')console.log(c,'createdAt_1  TTL:',i.expireAfterSeconds??'MISSING');if(i.name==='slug_1')console.log(c,'slug_1  unique:',i.unique??'MISSING');}}await m.disconnect();})"
+```
+
+Want: `TTL: 7776000` twice, `unique: true` once. Any `MISSING` means the running
+deploy predates commit `2637a1f`.
+
+### A3. Search Console — press VALIDATE FIX
+
+In the **Domain** property (`silkilinen.com`, not the www one — it is the
+superset and sees the apex and the API host). Every row still says *Not started*,
+so Google is waiting to be told to re-check:
+
+| row | why it is fixed |
+|---|---|
+| Server error (5xx) | it was `silkilinen.com/product/…` on the **apex**; `next.config.ts` now 301s the apex to www |
+| Not found (404) | `/privacy` now 301s to `/privacy-policy`. `/&` and `/$` are junk URLs where 404 is the correct answer — ignore those |
+| Duplicate without user-selected canonical | both were the nightshirt URLs saying "copper"; both now 301 to a URL that describes the product |
+
+### A4. Nothing to do about the feeds
+
+Both product feeds key each item on the Mongo `_id`, not the slug, so the seven
+URL changes are a `link` update on existing items — no history lost in Merchant
+Center or Pinterest. Worth a glance in a couple of days, no action.
+
+---
+
+## B. Standing decisions, still open (unchanged from §1 below)
+
+In the order I would do them:
+
+1. **OEKO-TEX** (§1.1) — highest risk on the site, one sentence, runs above every
+   page. Yes or no, plus the certificate number if yes.
+2. **The blank product gallery** (§1.2) — nobody buys silk they cannot see.
+3. **Colour copy** (new, below) — six bikini-briefs pages that differ only in a
+   colour word.
+4. **`relax fet`** (§1.3) — one field.
+5. **The three unrun scripts** (§1.5) — two are read-only reports.
+
+### New today: colour siblings read as duplicates
+
+The catalogue is roughly seven garments in three-to-six colours: 6 bikini briefs
+at €35, 4 nightshirts at €185, 4 pillowcases, 4 slip dresses, 3 boxers, 3
+eyemasks, 3 robes. If their descriptions are the same sentences with the colour
+word swapped, Google reads six pages as six copies of one — which is what put two
+of them in "Duplicate without user-selected canonical" and two more in
+"Discovered – never crawled".
+
+No code fixes this. Each colour needs a reason to exist on its own page: how that
+shade wears, what it suits, who it is for.
+
+### New today: `/de`, `/fr`, `/it`, `/es` serve the English homepage
+
+`app/(shop)/page.tsx` never calls `getLocale()`, and `getPageMeta('/')` takes no
+locale, so `/es` renders English. Canonicalising it to `/` is therefore CORRECT
+and Google is right not to index it — but the language switcher offers Spanish
+and delivers English. A content gap, not a bug. Adding hreflang here would be the
+wrong fix: it would ask Google to index four English duplicates of the homepage.
 
 ---
 
