@@ -72,8 +72,6 @@ const customerSchema = new mongoose.Schema({
   consent: { type: String, enum: ['accepted', 'rejected', null], default: null },
 }, { timestamps: true });
 
-customerSchema.index({ email: 1 }, { unique: true });
-customerSchema.index({ googleId: 1 }, { sparse: true });
 customerSchema.index({ segments: 1 });
 customerSchema.index({ lastOrderAt: -1 });
 customerSchema.index({ totalSpend: -1 });

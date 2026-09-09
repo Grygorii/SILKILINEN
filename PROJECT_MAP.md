@@ -492,6 +492,20 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   shop route. `tests/categoryConfig.test.js` guards it, including that every category
   `GARMENT_CATEGORY` targets actually exists (a merge landing on one side only is what
   broke it). Still open: whether a product should default to a category at all.
+- **Indexes are declared ONCE:** a Mongoose path carrying `index`/`unique`/`sparse` builds
+  an index, and so does every `schema.index()` call — declare the same key both ways and
+  MongoDB refuses the second, because one key pattern can only have one index. Whichever
+  Atlas built FIRST wins, so the options in force are a deploy-order accident. It cost two
+  different things: `Product.slug`'s path said `sparse` (NOT unique) against an explicit
+  `unique+sparse` — and slug uniqueness is what stops two products claiming one URL; and
+  `Event.createdAt`/`Visit.createdAt` pair a plain `index: true` with the explicit 90-DAY
+  TTL index, so the expiry can simply never be created and the clickstream grows for ever
+  while looking exactly like a retention policy that works. Rule: one declaration per key,
+  and the side carrying the more specific options survives. `tests/modelIndexes.test.js`
+  scans every model (compound indexes starting with the same field are a DIFFERENT key
+  pattern and are left alone). ⚠️ Editing the schema does not change what Atlas already
+  built — check `db.events.getIndexes()` and drop a stale plain `{createdAt:1}` by hand,
+  or the TTL still cannot be created.
 - **GDPR erasure:** `DELETE /api/admin/customers/:id/gdpr` must purge every store holding
   the address — Customer (anonymise), Cart (blank + unsubscribe), Newsletter and
   StockNotification (delete). Orders are RETAINED (financial record). Miss one and cart

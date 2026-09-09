@@ -61,7 +61,6 @@ collectionSchema.pre('save', async function() {
   if (this.previousSlugs?.length) this.previousSlugs = this.previousSlugs.filter(s => s !== this.slug);
 });
 
-collectionSchema.index({ slug: 1 });
 collectionSchema.index({ previousSlugs: 1 });
 collectionSchema.index({ status: 1, displayOrder: 1 });
 collectionSchema.index({ isFeatured: 1, featuredOrder: 1 });
