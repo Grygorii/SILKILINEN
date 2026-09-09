@@ -165,3 +165,39 @@ describe('sort visibility threshold', () => {
     expect(MIN_PRODUCTS_TO_SORT).toBeLessThanOrEqual(12);
   });
 });
+
+// ── The sitelinks searchbox points at a parameter the shop reads ───────────
+//
+// The WebSite JSON-LD in app/layout.tsx offered Google a search target of
+// /shop?search={search_term_string}. The shop has always read `?q=`. So every
+// searcher Google sent through that box would have arrived at the unfiltered
+// catalogue with their query dropped — and a filter that is silently ignored is
+// indistinguishable from a shop that has nothing matching. Google also crawled
+// the template URL itself, which is how it surfaced in the index report as a
+// literal /shop?search={search_term_string}.
+//
+// One param name written in two places, drifting. The fix is the usual shape:
+// the tag builds its URL from shopPath, so the name has one owner.
+describe('sitelinks searchbox target', () => {
+  const layout = readFileSync(join(__dirname, '..', 'app', 'layout.tsx'), 'utf8');
+  const block = layout.slice(layout.indexOf('const websiteJsonLd'), layout.indexOf('query-input'));
+
+  it('builds the target from the URL owner rather than restating the param', () => {
+    expect(block, 'the search param is hand-written here again').toContain('shopPath(');
+  });
+
+  it('never hand-writes a query string into the template', () => {
+    expect(block).not.toMatch(/\/shop\?[a-z]+=/);
+  });
+
+  it('resolves to the parameter the shop actually reads', () => {
+    // The whole point: whatever shopPath calls it, that is what Google is told.
+    const slot = 'SILKILINENSEARCHTERM';
+    expect(shopPath({ q: slot })).toBe(`/shop?q=${slot}`);
+    // And the placeholder survives the builder intact — shopPath percent-encodes
+    // its arguments, so braces passed through it would reach Google as %7B…%7D
+    // and the searchbox would be silently malformed.
+    expect(shopPath({ q: slot }).replace(slot, '{search_term_string}'))
+      .toBe('/shop?q={search_term_string}');
+  });
+});

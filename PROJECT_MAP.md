@@ -599,6 +599,16 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   — a channel that INGESTS the catalogue must never be handed a robots directive.
   `tests/apiNoindex.test.js` pins all four points, including the Allow.
   (The Google Merchant feed is the other one: `frontend/app/feed/google.xml`, on www.)
+- **Sitelinks searchbox target — `app/layout.tsx`.** The WebSite JSON-LD offered Google
+  `/shop?search={search_term_string}`; the shop has always read **`?q=`**. Every searcher
+  Google sent through that box would have landed on the unfiltered catalogue with the
+  query dropped, and a filter silently ignored is indistinguishable from a shop with no
+  matches. Google also crawled the template URL itself, so it sat in the index report as a
+  literal `/shop?search={search_term_string}`. The param name now comes from `shopPath` —
+  the placeholder is substituted AFTER the URL is built, because `shopPath`
+  percent-encodes its arguments (correctly: it backs canonicals) and braces passed
+  through it would reach Google as `%7B…%7D`. `tests/urls.test.ts` fails on any
+  hand-written query string in that block.
 - Self-referencing `alternates.canonical` on indexable pages. Empty/stale category slugs
   `notFound()` + noindex (see `shop/page.tsx`). Meta descriptions run through `clampMeta`.
 - Product JSON-LD on PDP (offers EUR-canonical, aggregateRating from product-linked reviews).
