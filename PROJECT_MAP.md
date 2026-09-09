@@ -644,6 +644,19 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   percent-encodes its arguments (correctly: it backs canonicals) and braces passed
   through it would reach Google as `%7B…%7D`. `tests/urls.test.ts` fails on any
   hand-written query string in that block.
+- **IndexNow is Bing/Yandex, NOT Google.** `services/indexNow.js` posts to
+  `api.indexnow.org`, which distributes to Bing, Yandex, Naver and Seznam — Google does
+  not participate. Every path that changes a URL pings it (adminProducts single + bulk,
+  adminCollections, adminCategories) EXCEPT the two plan-file scripts, which exit before a
+  fire-and-forget request completes; after a bulk rename use the **Submit to IndexNow**
+  button on `/admin/seo`. For **Google** there is no push at all: the sitemap is declared
+  in `robots.txt` and Google re-fetches on its own schedule (its ping endpoint was retired
+  in 2023), so the only manual nudge is URL Inspection → Request Indexing, ~10/day.
+  ⚠️ `SearchPerformancePanel` used to say the sitemap "resubmits to Google automatically…
+  Nothing to do here" — untrue, and it hid the one useful signal: `sitemaps.submitted`
+  comes from Google's `sitemaps.list`, so it is what GOOGLE last read, and a gap against
+  the live sitemap count means Google has not been back yet (it read 50 while the live
+  sitemap listed 58 — exactly the 8 URLs added the day before).
 - Self-referencing `alternates.canonical` on indexable pages. Empty/stale category slugs
   `notFound()` + noindex (see `shop/page.tsx`). Meta descriptions run through `clampMeta`.
 - Product JSON-LD on PDP (offers EUR-canonical, aggregateRating from product-linked reviews).

@@ -219,7 +219,9 @@ export default function SearchPerformancePanel() {
 
           {data.sitemaps && (
             <p className={styles.healthCheckDetail} style={{ marginTop: 14 }}>
-              Sitemap: {data.sitemaps.submitted.toLocaleString()} URLs — updates and resubmits to Google automatically when pages change. Nothing to do here.
+              Sitemap: Google last read {data.sitemaps.submitted.toLocaleString()} URLs. It re-fetches on its own
+              schedule — a sitemap cannot be pushed to Google (the ping endpoint was retired in 2023), so a
+              number trailing the live sitemap just means Google has not been back yet.
             </p>
           )}
         </div>
