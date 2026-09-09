@@ -200,6 +200,19 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   `scripts/consolidateCategories.js`. **Never `findByIdAndUpdate` a slug** — it skips
   `pre('save')`, which is how `/collections/a%20curated%20edit%20of%20silk%20robe,…`
   shipped. Repair: `scripts/fixCollectionSlugs.js` (dry-run default, `--apply`).
+  ⚠️ **A slug is derived from the name ONLY while it is empty** (`if (!this.slug && this.name)`,
+  mirrored by the admin form's auto-fill), so the FIRST name a product is ever given owns
+  its URL and every rename afterwards drifts away in silence. `renameProducts.js` does NOT
+  cover this — it re-cuts the slug only for products it RENAMES, so a correctly-named
+  product keeps its stale URL for ever. `scripts/fixProductSlugs.js` is the other half
+  (plan file → edit → `--apply`; run renameProducts FIRST or a product costs two redirect
+  hops). It found 7 of 28 drifted, including two nightshirt URLs that BOTH said "copper"
+  for products that are Bare Champagne and Wine Red — a shopper clicking a copper link
+  landed on a wine red nightshirt, and Google reported the pair as duplicates with no
+  canonical it could pick. Collisions are judged against the FINAL state, not the live one
+  (two products swapping targets is not a clash), and a real clash is REPORTED, never
+  guessed: `pre('save')` appends `-2`, which is exactly how `silk-nightshirt-in-copper-2`
+  was created. `tests/slugDrift.test.js` pins the planner.
 - **Bottom-edge clearance:** `--cookie-bar-h` (globals.css) — the consent bar is fixed to
   `bottom:0`; anything else pinned there (ContactWidget, FloatingCartBar) adds this to its
   own offset. 0 when the bar is hidden. Never hardcode the bar's height. Same contract:
@@ -505,7 +518,10 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   scans every model (compound indexes starting with the same field are a DIFFERENT key
   pattern and are left alone). ⚠️ Editing the schema does not change what Atlas already
   built — check `db.events.getIndexes()` and drop a stale plain `{createdAt:1}` by hand,
-  or the TTL still cannot be created.
+  or the TTL still cannot be created. CONFIRMED on the live database (Sept 2026):
+  `events` and `visits` each carry a plain `createdAt_1` and NO TTL index — the 90-day
+  retention has never once run — and `products` carries `slug_1` with `sparse` but
+  WITHOUT `unique`, so nothing is stopping two products claiming one URL today.
 - **GDPR erasure:** `DELETE /api/admin/customers/:id/gdpr` must purge every store holding
   the address — Customer (anonymise), Cart (blank + unsubscribe), Newsletter and
   StockNotification (delete). Orders are RETAINED (financial record). Miss one and cart
