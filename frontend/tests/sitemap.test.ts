@@ -88,3 +88,90 @@ describe('sitemap', () => {
     expect(sitemap).toMatch(/count\s*\?\?\s*0\)\s*>\s*0/);
   });
 });
+
+// ── The same two questions, asked outside app/(shop) ──────────────────────
+//
+// Everything above walks app/(shop) and nothing else, which is why it passed
+// while two indexable pages sat one directory over:
+//
+//   /journal/preview  — renders an unpublished article's body at a crawlable
+//                       URL, a near-duplicate of the article it previews. Its
+//                       sibling app/(shop)/preview/[id] has always been
+//                       noindexed; this one was never given the directive.
+//   /unsubscribe      — a signed opt-out link from a marketing email, one line
+//                       of confirmation text and a token in the query string.
+//
+// A guard that covers one directory is not a guard against the rule being
+// broken; it is a guard against the rule being broken THERE. The storefront is
+// four route trees — (shop), journal, unsubscribe, write-review — and the two
+// that were missed are both client components, where the omission is invisible
+// because there is no metadata block to look at.
+const APP = join(ROOT, 'app');
+
+/** Static page routes anywhere under app/, excluding (shop), admin and api. */
+function outsideShopRoutes(dir = APP, segs: string[] = [], out: string[] = []): string[] {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (!e.isDirectory()) continue;
+    // Dynamic segments are covered by the sitemap's slug fetchers, not by name.
+    if (e.name.startsWith('[')) continue;
+    if (['admin', 'api', 'feed', '(shop)'].includes(e.name)) continue;
+    const child = join(dir, e.name);
+    // A route group — (public) — contributes no URL segment.
+    const next = e.name.startsWith('(') ? segs : [...segs, e.name];
+    if (existsSync(join(child, 'page.tsx')) && next.length) out.push('/' + next.join('/'));
+    outsideShopRoutes(child, next, out);
+  }
+  return out;
+}
+
+/** page.tsx plus every layout.tsx from the route's directory up to app/. */
+function robotsSourceAt(route: string): string {
+  const parts = route.split('/').filter(Boolean);
+  const files: string[] = [];
+  // Walk down from app/, collecting layouts, tolerating route groups in between.
+  const dirs: string[] = [APP];
+  for (const p of parts) {
+    const here = dirs[dirs.length - 1];
+    let next = join(here, p);
+    if (!existsSync(next)) {
+      const group = readdirSync(here, { withFileTypes: true })
+        .find(e => e.isDirectory() && e.name.startsWith('(') && existsSync(join(here, e.name, p)));
+      if (group) next = join(here, group.name, p);
+    }
+    dirs.push(next);
+  }
+  for (const d of dirs) {
+    for (const f of ['layout.tsx', 'page.tsx']) {
+      const full = join(d, f);
+      if (existsSync(full)) files.push(readFileSync(full, 'utf8'));
+    }
+  }
+  return files.join('\n');
+}
+
+describe('routes outside app/(shop)', () => {
+  const routes = outsideShopRoutes();
+
+  it('finds them', () => {
+    expect(routes).toContain('/journal');
+    expect(routes).toContain('/journal/preview');
+    expect(routes).toContain('/unsubscribe');
+    expect(routes).toContain('/write-review');
+  });
+
+  it('is either in the sitemap or noindexed — never neither', () => {
+    const orphans = routes.filter(r => {
+      const listed = sitemap.includes(`${r}\``);
+      const blocked = /robots:\s*\{[^}]*index:\s*false/.test(robotsSourceAt(r));
+      return !listed && !blocked;
+    });
+    expect(orphans, 'indexable and unadvertised: Google will find these and decide for itself').toEqual([]);
+  });
+
+  it('never both', () => {
+    const contradictory = routes.filter(
+      r => sitemap.includes(`${r}\``) && /robots:\s*\{[^}]*index:\s*false/.test(robotsSourceAt(r)),
+    );
+    expect(contradictory, 'asking Google to crawl a page that tells it not to index').toEqual([]);
+  });
+});

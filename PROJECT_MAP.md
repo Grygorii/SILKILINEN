@@ -575,6 +575,15 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   `categoryPath` (sitemap URL byte-identical to the canonical) and filtered to
   `count > 0`, because `shop/page.tsx` 404s an empty category and a 404 in the sitemap is
   what fills the "Not found" bucket of the index report.
+  ⚠️ The test walked `app/(shop)` ONLY, so it passed while two more indexable pages sat
+  one directory over: `/journal/preview` (an unpublished article's body at a crawlable URL
+  — a near-duplicate of the article it previews, where the sibling `(shop)/preview/[id]`
+  had always been noindexed) and `/unsubscribe` (one line of text plus a signed opt-out
+  token in the query string). Both are CLIENT components, which is the whole reason they
+  were missed twice over — a client component cannot export `metadata`, so the omission
+  has no metadata block to be absent from. The storefront is FOUR route trees
+  (`(shop)`, `journal`, `unsubscribe`, `write-review`); the test now walks all of them and
+  asserts each static route is in the sitemap XOR noindexed — never neither, never both.
 - Self-referencing `alternates.canonical` on indexable pages. Empty/stale category slugs
   `notFound()` + noindex (see `shop/page.tsx`). Meta descriptions run through `clampMeta`.
 - Product JSON-LD on PDP (offers EUR-canonical, aggregateRating from product-linked reviews).
