@@ -27,6 +27,12 @@
 // plan file does not survive between sessions. Write the plan and apply it in
 // the SAME shell, or --apply finds no plan and silently does nothing.
 //
+// Note: this does NOT ping IndexNow. Every other path that changes a product
+// URL does (adminProducts, adminCollections, adminCategories), but a script
+// exits the moment it disconnects, so a fire-and-forget HTTP call would be
+// killed mid-flight. After applying, click **Submit to IndexNow** on
+// /admin/seo — it resubmits the whole public surface, new URLs included.
+//
 // ⚠️ Run renameProducts.js --apply FIRST if it has anything pending. Fixing a
 // slug and then renaming the product costs two redirect hops for one product.
 
