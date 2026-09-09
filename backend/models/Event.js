@@ -23,7 +23,7 @@ const eventSchema = new mongoose.Schema({
   device:     { type: String, enum: ['mobile', 'desktop', 'tablet', 'unknown'], default: 'unknown' },
   // Stitched in later from the Visit/session when known.
   customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', sparse: true, index: true },
-  createdAt:  { type: Date, default: Date.now, index: true },
+  createdAt:  { type: Date, default: Date.now },
 });
 
 // Hot query paths: "all events of type X over time" (funnel counts) and

@@ -115,7 +115,7 @@ const productSchema = new mongoose.Schema({
 
   metaTitle: { type: String, maxlength: 70 },
   metaDescription: { type: String, maxlength: 165 },
-  slug: { type: String, sparse: true },
+  slug: { type: String },
   // Old slugs kept so changed URLs 301-redirect instead of 404ing.
   previousSlugs: { type: [String], default: [] },
   keywords: [String],
