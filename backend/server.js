@@ -231,6 +231,7 @@ app.use('/api/admin/site-audit', siteAuditRoutes);
 app.use('/api/admin/insights', insightsRoutes);
 app.use('/api/admin/health', adminHealthRoutes);
 app.use('/api/admin/seo-health', adminSeoHealthRoutes);
+app.use('/api/admin/bot-traffic', require('./routes/adminBotTraffic'));
 app.use('/api/admin/seo-base', require('./routes/adminSeoBase'));
 app.use('/api/admin/ai-visibility', require('./routes/adminAiVisibility'));
 app.use('/api/admin/translations', require('./routes/adminTranslations'));

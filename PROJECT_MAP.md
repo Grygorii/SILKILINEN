@@ -358,6 +358,25 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   nobody had opened. A rule written down in one file out of three, with no guard —
   `frontend/tests/apiProxyCsrf.test.ts` now fails on any route handler that writes to the
   backend without the header.
+- **Crawler traffic is counted, in its OWN collection:** `frontend/lib/isBot.ts`
+  `botName()` is the one owner — it decides both whether a User-Agent is a bot AND what to
+  call it, so the two answers cannot drift (`isBot()` is derived from it). The Vercel visit
+  proxy is the only hop that sees the real UA; it used to identify bots and DISCARD them —
+  right for the analytics, since Googlebot renders JS and would otherwise log as a "direct"
+  visit from a Google data centre and crush the conversion rate, but it meant crawl volume
+  existed for an instant and was never counted. It now posts them to `models/BotHit.js`
+  instead. ⚠️ **A separate collection, NOT a `Visit.isBot` flag** — `Visit` is queried from
+  29 places across 14 files (funnel, advisor, analyst, chiefOfStaff, dashboard, insights,
+  campaigns, marketing, pinStudio, checkoutV2…), so a flag would need 29 correct filters
+  and the one that forgot would silently inflate the funnel with Googlebot. Those
+  aggregations never see this data, so they stay right by construction. 90-day TTL matching
+  Visit/Event, ONE declaration per key. Read at `/api/admin/bot-traffic` (`routes/
+  adminBotTraffic.js`), rendered by `app/admin/seo/CrawlerPanel.tsx` on the SEO Overview
+  tab. Empty is reported as "not collecting yet" and never as "nobody is crawling" — the
+  same silence-vs-absence rule as the funnel. Bot EVENTS are still dropped at the proxy: a
+  crawler firing `add_to_cart` is noise, not a signal. `tests/isBot.test.ts` pins the
+  ordering (every named crawler also matches the generic `/bot|crawl|spider/` catch-all, so
+  a reorder would collapse the table into one unhelpful "Other bot" row).
 - **"Nobody is visiting" is a recommendation:** `advisor.js` `trafficRec(traffic)` — with
   no traffic every other item is polish, so the list used to lead with meta descriptions
   for a shop nobody had opened. Vercel's independent count decides between "no visitors"

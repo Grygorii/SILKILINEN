@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const Visit = require('../models/Visit');
 const Event = require('../models/Event');
+const BotHit = require('../models/BotHit');
 
 const trackLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -79,6 +80,19 @@ async function getGeoFromIpapi(ip) {
 router.post('/visit', trackLimiter, async function(req, res) {
   // Always respond 200 — tracking never breaks the customer experience
   try {
+    // Crawler traffic branches out FIRST and never touches Visit. The Vercel
+    // proxy is the one hop that sees the real User-Agent, so it names the bot
+    // and sends it here; see frontend/lib/isBot.ts and models/BotHit.js for why
+    // this is a separate collection rather than a flag on Visit.
+    if (req.body && req.body.bot) {
+      await BotHit.create({
+        bot: String(req.body.bot).slice(0, 64),
+        page: req.body.page ? String(req.body.page).slice(0, 512) : undefined,
+        userAgent: req.body.userAgent ? String(req.body.userAgent).slice(0, 512) : undefined,
+      });
+      return res.json({ ok: true });
+    }
+
     const { sessionId, page, productId, utm, referrer, device, source, geo: vercelGeo } = req.body;
     if (sessionId && page) {
       // Tier C: prefer Vercel's per-request geo headers (forwarded by

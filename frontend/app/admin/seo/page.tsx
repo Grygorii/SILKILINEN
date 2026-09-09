@@ -8,6 +8,7 @@ import SearchPerformancePanel from '../_components/dashboard/SearchPerformancePa
 import RebuildSeoModal from './RebuildSeoModal';
 import SeoBasePanel from './SeoBasePanel';
 import AiVisibilityPanel from './AiVisibilityPanel';
+import CrawlerPanel from './CrawlerPanel';
 import SubmitIndexNowButton from '@/components/SubmitIndexNowButton';
 import styles from './page.module.css';
 
@@ -161,6 +162,7 @@ export default function SeoHubPage() {
       {tab === 'overview' && (
         <div className={styles.panel}>
           <SearchPerformancePanel />
+          <CrawlerPanel />
           <SeoHealthPanel />
         </div>
       )}

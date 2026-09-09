@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isBot } from '@/lib/isBot';
+import { botName } from '@/lib/isBot';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -30,19 +30,35 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  // Drop crawler/scraper/headless traffic before it ever reaches the backend.
-  // This proxy is the one hop that sees the visitor's real User-Agent, so it's
-  // the right chokepoint — keeps Googlebot et al. out of the visit analytics
-  // (otherwise their JS-rendered page loads log as "direct" visits from
-  // Google's data centres and skew traffic + conversion).
-  if (isBot(req.headers.get('user-agent'))) {
-    return NextResponse.json({ ok: true });
-  }
-
   let body: Record<string, unknown> = {};
   try {
     body = await req.json();
   } catch {
+    return NextResponse.json({ ok: true });
+  }
+
+  // Crawler/scraper/headless traffic. This proxy is the one hop that sees the
+  // visitor's real User-Agent, so it is the right place to name it.
+  //
+  // It used to return here and throw the request away, which kept Googlebot out
+  // of the visit analytics — necessary, since their JS-rendered page loads
+  // otherwise log as "direct" visits from Google's data centres and crush the
+  // conversion rate — but it also meant crawl volume existed for one instant and
+  // was never counted. Now it is recorded to its own collection instead: bots
+  // still never enter Visit (see backend/models/BotHit.js for why that is a
+  // separate collection rather than a flag), but GPTBot reading the catalogue
+  // and Ahrefs watching the shop are both worth knowing about.
+  const ua = req.headers.get('user-agent');
+  const bot = botName(ua);
+  if (bot) {
+    try {
+      await fetch(`${API}/api/track/visit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' },
+        body: JSON.stringify({ bot, page: body.page, userAgent: ua }),
+        signal: AbortSignal.timeout(4000),
+      }).catch(() => { /* never bubbles up */ });
+    } catch { /* same */ }
     return NextResponse.json({ ok: true });
   }
 
