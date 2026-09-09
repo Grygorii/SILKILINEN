@@ -72,6 +72,12 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        // The backend's CSRF middleware requires a custom header on every
+        // write and does NOT exempt /api/track — so without this the beacon
+        // was 403'd, and the .catch() below swallowed it. Vercel counted 78
+        // visitors over 14 days while our own Visit collection stayed empty.
+        // See app/api/admin-session/route.ts, which has carried this since F8.
+        'X-CSRF-Token': '1',
         ...(xff ? { 'X-Forwarded-For': xff } : {}),
       },
       body: JSON.stringify({ ...body, geo }),

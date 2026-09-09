@@ -343,6 +343,21 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   `agreementVerdict()` compares it with our own `Visit` count (thresholds `AGREEMENT`,
   `MIN_SAMPLE` 20): ours silent while Vercel sees people is CRITICAL, since the funnel,
   advisor and every agent read ours. Surfaced as the `analytics_agreement` health check.
+  ✅ **It caught a real one (Sept 2026):** Web Analytics has since been switched on, it
+  reported 78 visitors in 14 days, and our `Visit` count was ZERO. Cause below — the check
+  did exactly its job, and without it the shop looked like it had no traffic at all.
+- **Server-to-server writes must carry a CSRF header:** `backend/middleware/csrf.js`
+  requires `X-CSRF-Token` or `X-Requested-With` on every non-safe method and exempts ONLY
+  the Stripe webhook. Three Next route handlers POST to the backend;
+  `app/api/admin-session/route.ts` had carried the header since F8 **with a comment saying
+  why**, and BOTH tracking proxies (`app/api/track/visit`, `app/api/track/event`) did not.
+  So every visit and every clickstream event was 403'd — invisibly, by construction: the
+  proxies fire-and-forget with `.catch(() => {})` and return `{ ok: true }` to the browser
+  whatever happens, so the client saw success, nothing logged, and the `Visit` collection
+  stayed empty. The funnel, the advisor and every agent read that zero and described a shop
+  nobody had opened. A rule written down in one file out of three, with no guard —
+  `frontend/tests/apiProxyCsrf.test.ts` now fails on any route handler that writes to the
+  backend without the header.
 - **"Nobody is visiting" is a recommendation:** `advisor.js` `trafficRec(traffic)` — with
   no traffic every other item is polish, so the list used to lead with meta descriptions
   for a shop nobody had opened. Vercel's independent count decides between "no visitors"
