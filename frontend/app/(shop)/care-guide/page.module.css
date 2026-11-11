@@ -142,8 +142,6 @@
 @media print {
   /* The classic "print just this element" approach — robust regardless of the
      site's nav/footer chrome, which live in the layout. */
-  body * { visibility: hidden; }
-  .printable, .printable * { visibility: visible; }
   .printable {
     position: absolute;
     left: 0;

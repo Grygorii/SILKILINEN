@@ -30,7 +30,7 @@ async function getOnwardCategories(): Promise<Cat[]> {
 export default async function CareGuidePage() {
   const onward = await getOnwardCategories();
   return (
-    <main className={styles.page}>
+    <main className={styles.page} data-print-guide>
       <div className={`${styles.inner} ${styles.printable}`}>
         <header className={styles.header}>
           <p className={styles.eyebrow}>The Care Guide</p>

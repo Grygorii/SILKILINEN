@@ -240,6 +240,14 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
 }
+
+/* The care guide is the only storefront page with a print/PDF mode. Keep the
+   global layout chrome off paper while leaving its CSS Module selectors pure
+   for both supported Next.js bundlers. */
+@media print {
+  body:has([data-print-guide]) * { visibility: hidden; }
+  [data-print-guide], [data-print-guide] * { visibility: visible; }
+}
 body {
   padding-top: 0;
 }
