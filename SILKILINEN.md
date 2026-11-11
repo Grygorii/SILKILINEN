@@ -2,6 +2,12 @@
 
 Living document. Update this file every time a change is shipped to the SILKILINEN project.
 
+## Update — 2026-11-11 — Public shipment map
+
+- Homepage includes a lightweight, mobile-first SVG showing the 11 confirmed destination countries: Ireland, United Kingdom, France, Germany, Austria, Italy, Denmark, Finland, United States, Canada and Australia.
+- Solid markers and the country list mean confirmed shipment destinations. Animated dashed routes are labelled illustrative and never expose orders, counts, cities, addresses or customer coordinates.
+- The map has no third-party map dependency, network request or client-side JavaScript and honours reduced-motion preferences.
+
 Last updated: 29 May 2026 (Connection-audit COMPLETE — all 20 ranked improvements shipped across batches 1/A/B/C/D/E/final. Latest batches: #2 promo usage report, #12b product publish toast, #17 founder pulse on dashboard, #4+#7 abandoned-cart recovery visibility, #10 category archive guard, #6 lite image picker, #14 Image Studio→product, #20 per-product campaign backlink, #19 finance anomalies on dashboard, #15 at-risk win-back reminder. #1 was already implemented; #11 skipped as redundant with the existing Zone2 week view.).
 
 ---

@@ -14,6 +14,7 @@ import HeroVideo from '@/components/HeroVideo';
 import BlogTeaser from '@/components/BlogTeaser';
 import NewsletterBand from '@/components/NewsletterBand';
 import InstagramGrid from '@/components/InstagramGrid';
+import ShippingMap from '@/components/ShippingMap';
 import { EditableText, EditableImage } from '@/components/inline/InlineEdit';
 import { getContent, val } from '@/lib/content';
 import { getPageMeta } from '@/lib/pageSeo';
@@ -180,6 +181,8 @@ export default async function Home() {
       <CategoryTiles content={content} />
 
       <StorySection content={content} />
+
+      <ShippingMap />
 
       {withMessage.length > 0 && (
         <section className={styles.reviews}>

@@ -137,6 +137,18 @@ Date: 2026-08-25
 **Reusable for:** Any rule that is a business or legal constraint rather than a type — brand claims, regulated wording, accessibility copy. If it only exists in a markdown file, assume it will decay.
 **Code:** `backend/utils/originClaims.js` (rule), `backend/tests/originClaims.test.js` (unit + repo scan), `backend/scripts/auditCopyClaims.js` (live DB, read-only). `scripts/auditOrigin.js` now reads the shared rule instead of its own regex.
 **Watch out:**
+
+---
+
+# 0010 — Shipment map uses country-level, static evidence
+Date: 2026-11-11
+
+**Chose:** A dependency-free SVG map with confirmed destination countries as solid markers and animated dashed lines explicitly labelled as illustrative.
+**Over:** Plotting individual orders from the database, using city/customer coordinates, or adding a third-party map library.
+**Because:** Country-level destinations provide honest social proof without exposing customer locations. Static SVG adds no client JavaScript, map tiles, tracking, API key or runtime dependency.
+**Reusable for:** Small commerce brands that want geographic social proof without publishing customer data.
+**Code:** `frontend/components/ShippingMap.tsx`, `frontend/components/ShippingMap.module.css`, `frontend/tests/shippingMap.test.ts`
+**Watch out:** A country may only be added after shipment evidence is confirmed. Routes never represent an individual order or actual carrier path.
   - **The scan covers CODE, not the database.** The live site's copy is in MongoDB, and that is where the claims the founder can still see actually live. `auditCopyClaims.js` reports them; a human rewrites them. `fixOriginContent.js` has still never been run.
   - **False positives are the real threat to this guard**, not false negatives. "An Irish silk & linen brand" contains "Irish silk"; "We make every effort to display colours accurately" is not a factory claim. Both are pinned as tests, because a guard that cries wolf gets deleted rather than fixed.
   - **Comments are not copy** — the scan strips them, so a migration may quote the claim it removes. A banned phrase in a real string is still caught.
