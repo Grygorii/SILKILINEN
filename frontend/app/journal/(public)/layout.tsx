@@ -1,3 +1,4 @@
+import RouteTracker from '@/components/RouteTracker';
 import SiteHeader from "@/components/SiteHeader";
 import Footer from "@/components/Footer";
 import AddedToCartToast from "@/components/AddedToCartToast";
@@ -23,6 +24,7 @@ export default async function JournalPublicLayout({
 
   return (
     <>
+      <RouteTracker />
       <SiteHeader messages={messages} />
       <div className="shopContent" data-bar={messages && messages.length > 0 ? 'on' : 'off'}>
         {children}

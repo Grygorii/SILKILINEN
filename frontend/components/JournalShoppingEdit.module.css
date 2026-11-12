@@ -1,0 +1,7 @@
+.section { border-top: 1px solid var(--color-line); margin-top: var(--s-8); padding-top: var(--s-6); }
+.eyebrow { font-size: 11px; letter-spacing: var(--track-utility); text-transform: uppercase; color: var(--color-ink-muted); margin-bottom: var(--s-3); }
+.section h2 { font: 400 36px/1.15 var(--font-cormorant),Georgia,serif; color: var(--color-ink); }
+.intro { font-size: 16px; line-height: 1.65; color: var(--color-ink-muted); margin: var(--s-4) 0 var(--s-5); }
+.grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: var(--s-4); }
+.link { display: inline-flex; align-items: center; min-height: 48px; font-size: 14px; color: var(--color-ink); text-decoration: underline; text-underline-offset: 4px; margin-top: var(--s-5); }
+@media(max-width:600px) { .grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .grid > :last-child { display: none; } }

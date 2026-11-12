@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { confirmationCredentials, confirmationRequest } from '@/lib/purchaseConfirmation';
 import { trackPurchase } from '@/lib/analytics';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -17,31 +18,29 @@ const API = process.env.NEXT_PUBLIC_API_URL;
  */
 export default function PurchaseTracking() {
   const params = useSearchParams();
-  const paymentIntent = params.get('payment_intent');
-  const clientSecret = params.get('payment_intent_client_secret');
 
   useEffect(() => {
-    if (!API || !paymentIntent || !clientSecret) return;
+    const credentials = confirmationCredentials(params);
+    if (!API || !credentials) return;
+    const { paymentIntent } = credentials;
     const dedupKey = `silkilinen:purchaseTracked:${paymentIntent}`;
-    if (sessionStorage.getItem(dedupKey)) return;
+    try { if (sessionStorage.getItem(dedupKey)) return; } catch { /* storage blocked */ }
 
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(
-          `${API}/api/v2/checkout/confirmation?payment_intent=${encodeURIComponent(paymentIntent)}&client_secret=${encodeURIComponent(clientSecret)}`,
-        );
+        const res = await confirmationRequest(API, credentials);
         if (!res.ok) return;
         const json = await res.json();
-        if (cancelled || typeof json?.value !== 'number') return;
-        sessionStorage.setItem(dedupKey, '1');
-        trackPurchase(json.orderId || paymentIntent, json.value);
+        if (cancelled || typeof json?.value !== 'number' || !Number.isFinite(json.value) || json.value < 0) return;
+        trackPurchase(json.orderId || paymentIntent, json.value, json.currency);
+        try { sessionStorage.setItem(dedupKey, '1'); } catch { /* storage blocked */ }
       } catch {
         /* conversion tracking is non-critical — never block the page */
       }
     })();
     return () => { cancelled = true; };
-  }, [paymentIntent, clientSecret]);
+  }, [params]);
 
   return null;
 }

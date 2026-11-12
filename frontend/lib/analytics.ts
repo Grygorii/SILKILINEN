@@ -15,8 +15,10 @@ function hasConsent(): boolean {
   // writes — which silently blocked every third-party event.) Per-pixel guards
   // below give the precise gating: a script's global only exists once its own
   // consent category was accepted.
-  const v = localStorage.getItem('silkilinen:cookieConsent');
-  return v === 'accepted' || v === 'customised';
+  try {
+    const v = localStorage.getItem('silkilinen:cookieConsent');
+    return v === 'accepted' || v === 'customised';
+  } catch { return false; }
 }
 
 function gtagFire(event: string, params: Record<string, unknown>) {
@@ -41,7 +43,7 @@ function pintrkFire(event: string, params: Record<string, unknown>) {
 // (marketing-consented) Pinterest tag gets addtocart/checkout conversions.
 const PINTEREST_EVENTS: Record<string, { event: string; map: (p: Record<string, unknown>) => Record<string, unknown> }> = {
   add_to_cart: { event: 'addtocart', map: p => ({ value: p.value, order_quantity: 1, currency: 'EUR' }) },
-  purchase:    { event: 'checkout',  map: p => ({ value: p.value, order_quantity: p.num_items ?? 1, currency: 'EUR', order_id: p.transaction_id, event_id: p.transaction_id }) },
+  purchase:    { event: 'checkout',  map: p => ({ value: p.value, order_quantity: p.num_items ?? 1, currency: p.currency || 'EUR', order_id: p.transaction_id, event_id: p.transaction_id }) },
 };
 
 export function trackEvent(name: string, properties: Record<string, unknown> = {}, productId?: string) {
@@ -90,8 +92,8 @@ export function trackBeginCheckout(total: number, itemCount: number) {
   });
 }
 
-export function trackPurchase(orderId: string, value: number) {
-  trackEvent('purchase', { transaction_id: orderId, currency: 'EUR', value });
+export function trackPurchase(orderId: string, value: number, currency: string = 'EUR') {
+  trackEvent('purchase', { transaction_id: orderId, currency, value });
 }
 
 export function trackNewsletterSignup() {

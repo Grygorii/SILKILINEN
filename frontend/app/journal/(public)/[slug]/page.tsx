@@ -5,6 +5,7 @@ import { sanitizeArticleHtml } from '@/lib/sanitize';
 import { safeJsonLd } from '@/lib/safeJsonLd';
 import { isValidImageUrl } from '@/lib/imageUtils';
 import Breadcrumbs from '@/components/Breadcrumbs';
+import JournalShoppingEdit from '@/components/JournalShoppingEdit';
 import styles from './page.module.css';
 import { SITE } from '@/lib/i18n';
 
@@ -19,7 +20,7 @@ type Article = {
 
 async function getArticle(slug: string): Promise<Article | null> {
   try {
-    const res = await fetch(`${API}/api/journal/slug/${slug}`, { next: { revalidate: 60 } });
+    const res = await fetch(`${API}/api/journal/slug/${slug}`, { next: { revalidate: 60 }, signal: AbortSignal.timeout(4000) });
     if (!res.ok) return null;
     return res.json();
   } catch { return null; }
@@ -121,6 +122,8 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
           className={styles.articleBody}
           dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(article.body) }}
         />
+
+        <JournalShoppingEdit slug={slug} />
 
         {/* Footer */}
         <div style={{ marginTop: 64, paddingTop: 32, borderTop: '1px solid var(--color-line)' }}>

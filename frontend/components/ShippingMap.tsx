@@ -1,90 +1,111 @@
-import type { CSSProperties } from 'react';
+'use client';
+
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
+import Link from 'next/link';
+import { CONFIRMED_DESTINATIONS, destinationsFor, journeyPath, mapView, ORIGIN, projectLocation, type ShipmentMode } from '@/lib/shippingDestinations';
 import styles from './ShippingMap.module.css';
 
-const destinations = [
-  'Ireland', 'United Kingdom', 'France', 'Germany', 'Austria', 'Italy',
-  'Denmark', 'Finland', 'United States', 'Canada', 'Australia',
-] as const;
-
-const routes = [
-  { country: 'Ireland', path: 'M478 98 Q481 96 483 102', x: 483, y: 102 },
-  { country: 'United Kingdom', path: 'M478 98 Q487 91 494 100', x: 494, y: 100 },
-  { country: 'France', path: 'M478 98 Q496 98 506 122', x: 506, y: 122 },
-  { country: 'Germany', path: 'M478 98 Q507 82 529 108', x: 529, y: 108 },
-  { country: 'Austria', path: 'M478 98 Q514 85 539 118', x: 539, y: 118 },
-  { country: 'Italy', path: 'M478 98 Q523 94 535 132', x: 535, y: 132 },
-  { country: 'Denmark', path: 'M478 98 Q505 72 528 94', x: 528, y: 94 },
-  { country: 'Finland', path: 'M478 98 Q526 48 572 72', x: 572, y: 72 },
-  { country: 'United States', path: 'M478 98 Q350 22 228 142', x: 228, y: 142 },
-  { country: 'Canada', path: 'M478 98 Q340 8 206 94', x: 206, y: 94 },
-  { country: 'Australia', path: 'M478 98 Q790 70 872 319', x: 872, y: 319 },
-] as const;
+function subscribeMotion(callback: () => void) {
+  const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+  media.addEventListener('change', callback);
+  document.addEventListener('visibilitychange', callback);
+  return () => { media.removeEventListener('change', callback); document.removeEventListener('visibilitychange', callback); };
+}
+const motionAllowed = () => document.visibilityState === 'visible' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const serverMotion = () => false;
 
 export default function ShippingMap() {
+  const id = useId();
+  const root = useRef<HTMLElement>(null);
+  const [mode,setMode] = useState<ShipmentMode>('shipped');
+  const [index,setIndex] = useState(0);
+  const [paused,setPaused] = useState(false);
+  const [visible,setVisible] = useState(false);
+  const [additional,setAdditional] = useState<string[]>([]);
+  const fetched = useRef(false);
+  const allowMotion = useSyncExternalStore(subscribeMotion,motionAllowed,serverMotion);
+  const destinations = destinationsFor(mode,additional);
+  const destination = destinations[index % destinations.length];
+  const view = mapView(destination);
+  const radius = view.startsWith('30 ') ? 5 : 1.6;
+  const running = allowMotion && visible && !paused && mode === 'shipped';
+  const [ox,oy] = projectLocation(ORIGIN.longitude,ORIGIN.latitude);
+  const [dx,dy] = projectLocation(destination.longitude,destination.latitude);
+  const path = journeyPath(destination);
+
+  useEffect(() => {
+    if (!root.current || !('IntersectionObserver' in window)) return;
+    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting),{threshold:.15});
+    observer.observe(root.current);
+    return () => observer.disconnect();
+  },[]);
+
+  useEffect(() => {
+    if (!visible || fetched.current || !process.env.NEXT_PUBLIC_API_URL) return;
+    fetched.current = true;
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/shipping/destinations`,{ signal: AbortSignal.timeout(4000) })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (Array.isArray(data?.countries)) setAdditional(data.countries.filter((c: unknown) => typeof c === 'string' && /^[A-Z]{2}$/.test(c)).slice(0,250)); })
+      .catch(() => { /* Founder-confirmed history remains available during API outages. */ });
+  },[visible]);
+
+  useEffect(() => {
+    if (!running) return;
+    const timer = window.setInterval(() => setIndex(i => (i+1)%destinations.length),6500);
+    return () => window.clearInterval(timer);
+  },[running,destinations.length]);
+
   return (
-    <section className={styles.section} aria-labelledby="shipping-map-title">
-      <div className={styles.copy}>
-        <p className={styles.eyebrow}>From Donegal, outward</p>
-        <h2 id="shipping-map-title">Where our pieces have travelled</h2>
-        <p className={styles.intro}>
-          SILKILINEN has shipped to customers across Europe and further afield.
-          Every highlighted country below is a genuine shipment destination.
-        </p>
-        <div className={styles.legend} aria-label="Map key">
-          <span><i className={styles.actualDot} aria-hidden="true" /> Actual shipment destination</span>
-          <span><i className={styles.routeLine} aria-hidden="true" /> Illustrative route</span>
+    <section ref={root} className={styles.section} aria-labelledby={`${id}-title`} data-shipping-map>
+      <div className={styles.inner}>
+        <div className={styles.copy}>
+          <p className={styles.eyebrow}>From Donegal, outward</p>
+          <h2 id={`${id}-title`}>From our world.<br /><em>To yours.</em></h2>
+          <p className={styles.intro}>Discover where our pieces have travelled, and where your own Silkilinen story could begin.</p>
+          <p className={styles.proof}><strong>{destinationsFor('shipped',additional).length}</strong> countries we have shipped to</p>
+          <div className={styles.links}>
+            <Link href="/shop" data-track="shipping_map_shop">Explore the collection <span aria-hidden="true">↗</span></Link>
+            <a href="https://silkilinen.etsy.com" target="_blank" rel="noopener noreferrer" data-track="shipping_map_etsy">Find us on Etsy <span aria-hidden="true">↗</span><span className={styles.srOnly}> (opens in a new tab)</span></a>
+          </div>
+        </div>
+        <div className={styles.atlas}>
+          <div className={styles.toolbar}>
+            <div className={styles.modes} role="group" aria-label="Shipment history or delivery availability">
+              <button type="button" aria-pressed={mode==='shipped'} onClick={() => { setMode('shipped');setIndex(0);setPaused(true); }}>Where we’ve shipped</button>
+              <button type="button" aria-pressed={mode==='available'} onClick={() => { setMode('available');setIndex(0);setPaused(true); }}>Where we deliver</button>
+            </div>
+          </div>
+          <div className={styles.mapFrame}>
+            <svg viewBox={view} className={styles.map} aria-hidden="true" focusable="false">
+              <image href="/maps/shipping-world.svg" width="1000" height="500" />
+              {destinations.map(d => { const [x,y]=projectLocation(d.longitude,d.latitude);return <circle key={d.code} cx={x} cy={y} r={radius*.65} className={mode==='shipped'?styles.actualDot:styles.availableDot} vectorEffect="non-scaling-stroke" />; })}
+              <path d={path} className={mode==='shipped'?styles.route:styles.possibleRoute} vectorEffect="non-scaling-stroke" />
+              <circle cx={ox} cy={oy} r={radius*2.7} className={styles.halo} />
+              <circle cx={ox} cy={oy} r={radius} className={styles.originDot} />
+              <circle cx={dx} cy={dy} r={radius*2.4} className={styles.destinationRing} vectorEffect="non-scaling-stroke" />
+              <circle cx={dx} cy={dy} r={radius} className={styles.originDot} />
+              {running && <circle key={destination.code} r={radius*.8} className={styles.parcel} data-journey-animation><animateMotion dur="5.5s" repeatCount="indefinite" path={path} /></circle>}
+            </svg>
+            <p className={styles.mapLegend}><span /> Donegal, Ireland</p>
+          </div>
+          <div className={styles.selection}>
+            <div className={styles.selectionHeader}>
+              <label htmlFor={`${id}-country`}>{mode==='shipped'?'A destination we’ve shipped to':'Choose your delivery country'}</label>
+              <button type="button" className={styles.motionButton} disabled={!allowMotion||mode==='available'} onClick={() => setPaused(p=>!p)} aria-label={paused?'Play journey animation':'Pause journey animation'}>{!allowMotion||mode==='available'?'Still':paused?'Play':'Pause'}</button>
+            </div>
+            <select id={`${id}-country`} value={destination.code} onFocus={() => setPaused(true)} onChange={e => { setIndex(destinations.findIndex(d=>d.code===e.target.value));setPaused(true); }}>
+              {destinations.map(d => <option key={d.code} value={d.code}>{d.name}</option>)}
+            </select>
+            <p className={styles.status}>{mode==='shipped'?'Selected shipment history — not a live parcel location.':'Available at checkout — not a claim of a past order.'}</p>
+          </div>
+        </div>
+        <div className={styles.notes}>
+          <p>{mode==='shipped'?`Includes ${CONFIRMED_DESTINATIONS.length} destinations confirmed by our founder, plus countries from website orders marked shipped or delivered.`:'Delivery destinations match the countries offered at checkout. See shipping rates and estimated delivery times before you order.'}</p>
+          <p>Routes are illustrative and do not show customer addresses or exact delivery paths.</p>
+          <details><summary>{mode==='shipped'?'All shipment destinations':'All delivery destinations'}</summary><p>{destinations.map(d=>d.name).join(' · ')}</p></details>
+          {mode==='available' && <Link href="/shipping">Shipping information →</Link>}
         </div>
       </div>
-
-      <div className={styles.mapWrap}>
-        <svg className={styles.map} viewBox="0 0 1000 440" role="img"
-          aria-labelledby="shipping-map-svg-title shipping-map-svg-description">
-          <title id="shipping-map-svg-title">Countries SILKILINEN has shipped to</title>
-          <desc id="shipping-map-svg-description">
-            A decorative world map with confirmed shipment destinations marked in Ireland,
-            the United Kingdom, France, Germany, Austria, Italy, Denmark, Finland,
-            the United States, Canada and Australia. Curved lines are illustrative only.
-          </desc>
-          <g className={styles.graticule} aria-hidden="true">
-            <path d="M40 110H960M40 220H960M40 330H960" />
-            <path d="M250 35V400M500 35V400M750 35V400" />
-          </g>
-          <g className={styles.land} aria-hidden="true">
-            <path d="M84 86 139 47 226 51 278 78 294 119 258 145 232 190 190 197 166 160 112 143 76 113Z" />
-            <path d="M250 202 282 219 302 273 286 352 260 389 244 337 220 288 225 233Z" />
-            <path d="M431 75 472 52 538 59 566 85 622 77 695 101 735 131 701 165 650 166 617 199 575 183 552 148 515 144 490 124 450 132 420 108Z" />
-            <path d="M487 151 540 158 581 204 568 286 531 340 496 309 476 241 455 198Z" />
-            <path d="M820 280 875 260 930 286 943 333 903 362 845 354 807 322Z" />
-            <path d="M905 376 926 373 937 387 916 396Z" />
-          </g>
-          <g aria-hidden="true">
-            {routes.map((route, index) => (
-              <path key={route.country} d={route.path} className={styles.route}
-                style={{ '--route-delay': `${index * 110}ms` } as CSSProperties} />
-            ))}
-          </g>
-          <g className={styles.origin} aria-label="Ships from Donegal, Ireland">
-            <circle cx="478" cy="98" r="10" /><circle cx="478" cy="98" r="4" />
-          </g>
-          <text className={styles.originLabel} x="462" y="80">DONEGAL</text>
-          <g aria-label="Confirmed shipment destinations">
-            {routes.map((route) => (
-              <g key={route.country} className={styles.destination} aria-label={route.country}>
-                <circle cx={route.x} cy={route.y} r="7" />
-                <circle cx={route.x} cy={route.y} r="2.5" />
-              </g>
-            ))}
-          </g>
-        </svg>
-      </div>
-
-      <ul className={styles.countries} aria-label="Confirmed destination countries">
-        {destinations.map((country) => <li key={country}>{country}</li>)}
-      </ul>
-      <p className={styles.disclosure}>
-        Countries reflect completed shipments. Routes are illustrative and do not show
-        individual orders, customer addresses or exact delivery paths.
-      </p>
     </section>
   );
 }

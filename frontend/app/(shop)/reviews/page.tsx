@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { reviewSourceLabel } from '@/lib/reviewSource';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -33,6 +34,7 @@ type Review = {
   dateReviewed: string;
   source: string;
   verified: boolean;
+  verifiedPurchase?: boolean;
 };
 
 function Stars({ n, size = 'md' }: { n: number; size?: 'sm' | 'md' | 'lg' }) {
@@ -136,8 +138,8 @@ export default function ReviewsPage() {
               <article key={r._id} className={styles.card}>
                 <div className={styles.cardTop}>
                   <Stars n={r.starRating} size="sm" />
-                  {r.verified && (
-                    <span className={styles.badge}>Verified Etsy purchase</span>
+                  {reviewSourceLabel(r) && (
+                    <span className={styles.badge}>{reviewSourceLabel(r)}</span>
                   )}
                 </div>
                 {r.message ? (

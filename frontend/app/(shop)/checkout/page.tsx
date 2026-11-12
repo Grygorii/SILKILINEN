@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { trackBeginCheckout, trackEvent } from '@/lib/analytics';
+import { checkoutAnalytics } from '@/lib/checkoutAttribution';
+import { rememberConfirmation } from '@/lib/purchaseConfirmation';
 import { useCustomer } from '@/context/CustomerContext';
 import { loadStripe } from '@stripe/stripe-js';
 import {
@@ -17,6 +19,7 @@ import Button from '@/components/ui/Button';
 import GoogleCheckoutSignIn from '@/components/GoogleCheckoutSignIn';
 import UKShipBadge from '@/components/UKShipBadge';
 import styles from './page.module.css';
+import { DELIVERY_COUNTRIES } from '@/lib/deliveryCountries';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -42,14 +45,7 @@ type OrderSummary = {
 };
 
 // All countries covered by our shipping tiers
-const ALLOWED_COUNTRIES = [
-  'IE',
-  'GB', 'IM', 'JE', 'GG',
-  'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR',
-  'HU', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE',
-  'US', 'CA', 'AU', 'NZ',
-  'CH', 'NO', 'IS',
-] as const;
+const ALLOWED_COUNTRIES = DELIVERY_COUNTRIES;
 
 // ── Payment + address form (must be inside <Elements>) ────────────────────────
 
@@ -358,9 +354,7 @@ export default function CheckoutPage() {
     setLoading(true);
     setIntentError('');
     try {
-      const attribution = (() => {
-        try { return JSON.parse(localStorage.getItem('attribution') || '{}'); } catch { return {}; }
-      })();
+      const { attribution, browserSessionId } = checkoutAnalytics();
 
       const res = await fetch(`${API}/api/v2/checkout/create-intent`, {
         method: 'POST',
@@ -380,6 +374,7 @@ export default function CheckoutPage() {
           discountCode: appliedCodeRef.current || undefined,
           currency,
           attribution,
+          browserSessionId,
         }),
       });
 
@@ -475,6 +470,7 @@ export default function CheckoutPage() {
   }
 
   function handleSuccess() {
+    rememberConfirmation(paymentIntentIdRef.current, clientSecretRef.current);
     clearCart();
     window.location.href = '/success';
   }

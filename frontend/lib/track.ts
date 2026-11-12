@@ -87,7 +87,7 @@ export function trackVisit({ page, productId }: { page: string; productId?: stri
         referrer,
         device:    detectDevice(),
       }),
-    });
+    }).catch(() => {});
     // Not awaited — fire and forget. Tracking never blocks the customer experience.
   } catch {
     // Silent. Tracking failure is invisible to the customer.
@@ -123,10 +123,9 @@ export function trackClientEvent(
 
     const url = '/api/track/event';
     if (navigator.sendBeacon) {
-      navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
-    } else {
-      fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true });
+      if (navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }))) return;
     }
+    fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});
   } catch {
     // Silent — tracking never affects the customer.
   }

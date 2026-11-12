@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { confirmationCredentials, confirmationRequest } from '@/lib/purchaseConfirmation';
 import Script from 'next/script';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -32,18 +33,16 @@ type Confirmation = { orderId: string; email: string; country: string; estimated
  */
 export default function GoogleCustomerReviews() {
   const params = useSearchParams();
-  const paymentIntent = params.get('payment_intent');
-  const clientSecret = params.get('payment_intent_client_secret');
   const [data, setData] = useState<Confirmation | null>(null);
 
   useEffect(() => {
-    if (!API || !paymentIntent || !clientSecret) return;
+    const credentials = confirmationCredentials(params);
+    if (!API || !credentials) return;
+
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(
-          `${API}/api/v2/checkout/confirmation?payment_intent=${encodeURIComponent(paymentIntent)}&client_secret=${encodeURIComponent(clientSecret)}`,
-        );
+        const res = await confirmationRequest(API, credentials);
         if (!res.ok) return;
         const json = await res.json();
         if (!cancelled && json?.email && json?.country) setData(json);
@@ -54,7 +53,7 @@ export default function GoogleCustomerReviews() {
     return () => {
       cancelled = true;
     };
-  }, [paymentIntent, clientSecret]);
+  }, [params]);
 
   if (!data) return null;
 

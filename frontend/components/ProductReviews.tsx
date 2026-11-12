@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Star, Check, ThumbsUp, BadgeCheck } from 'lucide-react';
 import styles from './ProductReviews.module.css';
+import { reviewSourceLabel } from '@/lib/reviewSource';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -15,6 +16,7 @@ type Review = {
   dateReviewed: string;
   helpfulCount?: number;
   verifiedPurchase?: boolean;
+  source?: string;
   reply?: string;
   repliedAt?: string;
 };
@@ -230,7 +232,7 @@ export default function ProductReviews({ productId, productName }: { productId: 
               <div className={styles.cardFoot}>
                 <span className={styles.cardName}>
                   {r.reviewer}
-                  {r.verifiedPurchase && <span className={styles.verified}><BadgeCheck size={13} strokeWidth={2} /> Verified buyer</span>}
+                  {reviewSourceLabel(r) && <span className={styles.verified}>{r.source === 'order' && r.verifiedPurchase && <BadgeCheck size={13} strokeWidth={2} />} {reviewSourceLabel(r)}</span>}
                 </span>
                 <button className={`${styles.helpful} ${voted.has(r._id) ? styles.helpfulOn : ''}`} onClick={() => markHelpful(r._id)} disabled={voted.has(r._id)}>
                   <ThumbsUp size={13} strokeWidth={1.6} /> Helpful{r.helpfulCount ? ` (${r.helpfulCount})` : ''}

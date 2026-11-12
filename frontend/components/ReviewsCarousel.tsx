@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import styles from './ReviewsCarousel.module.css';
+import { reviewSourceLabel } from '@/lib/reviewSource';
 
 export type ReviewData = {
   _id: string;
@@ -9,6 +10,8 @@ export type ReviewData = {
   message: string;
   starRating: number;
   dateReviewed: string;
+  source?: string;
+  verifiedPurchase?: boolean;
 };
 
 function Stars({ n }: { n: number }) {
@@ -32,6 +35,7 @@ function Card({ review }: { review: ReviewData }) {
     <div className={styles.card}>
       <Stars n={review.starRating} />
       <p className={styles.message}>{review.message}</p>
+      {reviewSourceLabel(review) && <p className={styles.date}>{reviewSourceLabel(review)}</p>}
       <div className={styles.meta}>
         <span className={styles.name}>{firstName(review.reviewer)}</span>
         <span className={styles.date}>{formatDate(review.dateReviewed)}</span>

@@ -27,7 +27,7 @@ export default function EventTracker() {
           props[attr.name.slice('data-track-'.length)] = attr.value;
         }
       }
-      trackClientEvent(type, props);
+      trackClientEvent(type, props, props.product || props.productId || props['product-id']);
     }
     document.addEventListener('click', onClick, { capture: true });
     return () => document.removeEventListener('click', onClick, { capture: true });
