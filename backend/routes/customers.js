@@ -5,6 +5,11 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const Customer = require('../models/Customer');
 const Order = require('../models/Order');
+const Product = require('../models/Product');
+const { OAuth2Client } = require('google-auth-library');
+const { normalizeEmail, ordersForCustomer } = require('../utils/customerIdentity');
+const { validateProfile } = require('../utils/customerValidation');
+const { CUSTOMER_ORDER_FIELDS, WISHLIST_FIELDS } = require('../utils/customerViews');
 const { requireCustomer } = require('../middleware/customerAuth');
 const { authRateLimit } = require('../middleware/rateLimits');
 const { sendMagicLink, sendWelcome } = require('../services/email');
@@ -42,26 +47,19 @@ function safeCustomer(c) {
 // POST /api/customers/request-magic-link
 router.post('/request-magic-link', authRateLimit, async function(req, res) {
   try {
-    const { email } = req.body;
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    const email = normalizeEmail(req.body.email);
+    if (!email) {
       return res.status(400).json({ error: 'Please enter a valid email address.' });
     }
 
     const token = crypto.randomBytes(32).toString('hex');
     const expiry = new Date(Date.now() + 15 * 60 * 1000);
 
-    let customer = await Customer.findOne({ email: email.toLowerCase() });
-    if (!customer) {
-      customer = await Customer.create({
-        email: email.toLowerCase(),
-        emailVerificationToken: token,
-        emailVerificationExpiry: expiry,
-      });
-    } else {
-      customer.emailVerificationToken = token;
-      customer.emailVerificationExpiry = expiry;
-      await customer.save();
-    }
+    const customer = await Customer.findOneAndUpdate(
+      { email, gdprDeletedAt: null },
+      { $set: { emailVerificationToken: token, emailVerificationExpiry: expiry }, $setOnInsert: { email } },
+      { upsert: true, returnDocument: 'after', runValidators: true },
+    );
 
     const baseUrl = SITE_URL;
     await sendMagicLink({ email: customer.email, link: `${baseUrl}/account/verify?token=${token}` });
@@ -79,22 +77,15 @@ router.post('/verify-magic-link', authRateLimit, async function(req, res) {
     const { token } = req.body;
     if (typeof token !== 'string' || !token) return res.status(400).json({ error: 'Token required' });
 
-    const customer = await Customer.findOne({
-      emailVerificationToken: token,
-      emailVerificationExpiry: { $gt: new Date() },
-    });
+    const customer = await Customer.findOneAndUpdate({
+      emailVerificationToken: token, emailVerificationExpiry: { $gt: new Date() }, gdprDeletedAt: null,
+    }, { $set: { emailVerified: true, emailVerificationToken: null, emailVerificationExpiry: null, lastLogin: new Date() } }, { returnDocument: 'before' });
     if (!customer) return res.status(410).json({ error: 'This link has expired. Please request a new one.' });
-
     const isFirstLogin = !customer.emailVerified;
     customer.emailVerified = true;
-    customer.emailVerificationToken = null;
-    customer.emailVerificationExpiry = null;
-    customer.lastLogin = new Date();
-    await customer.save();
-
-    if (isFirstLogin) {
-      await sendWelcome({ email: customer.email, firstName: customer.firstName });
-    }
+    // Consuming a valid link succeeds even when the optional welcome mail provider is down.
+    if (isFirstLogin) await sendWelcome({ email: customer.email, firstName: customer.firstName })
+      .catch(() => console.error('[CUSTOMERS] welcome mail failed after successful verification'));
 
     setCustomerCookie(res, customer);
     res.json({ success: true, customer: safeCustomer(customer), isFirstLogin });
@@ -108,41 +99,33 @@ router.post('/verify-magic-link', authRateLimit, async function(req, res) {
 router.post('/google', authRateLimit, async function(req, res) {
   try {
     const { credential } = req.body;
-    if (!credential) return res.status(400).json({ error: 'Credential required' });
-
-    const gRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
-    const payload = await gRes.json();
-    if (!gRes.ok || !payload.email) return res.status(400).json({ error: 'Invalid Google token' });
-
     const clientId = process.env.GOOGLE_CLIENT_ID;
-    if (!clientId) {
-      return res.status(503).json({ error: 'Google auth not configured' });
+    if (!clientId) return res.status(503).json({ error: 'Google auth not configured' });
+    if (typeof credential !== 'string' || !credential || credential.length > 10000) return res.status(400).json({ error: 'Credential required' });
+    let payload;
+    try {
+      const ticket = await new OAuth2Client(clientId).verifyIdToken({ idToken: credential, audience: clientId });
+      payload = ticket.getPayload();
+    } catch { return res.status(401).json({ error: 'Invalid Google token' }); }
+    const email = normalizeEmail(payload?.email);
+    if (!email || payload.email_verified !== true || !payload.sub) return res.status(401).json({ error: 'A verified email address is required' });
+    const existing = await Customer.findOne({ email, gdprDeletedAt: null });
+    // Google is not authoritative for arbitrary third-party email addresses.
+    const authoritativeEmail = email.endsWith('@gmail.com') || Boolean(payload.hd);
+    if (!authoritativeEmail && existing?.googleId !== payload.sub) {
+      return res.status(401).json({ error: 'Please use the email sign-in link to verify this address.' });
     }
-    if (payload.aud !== clientId) {
-      return res.status(401).json({ error: 'Invalid token audience' });
-    }
-    const validIssuers = ['accounts.google.com', 'https://accounts.google.com'];
-    if (!validIssuers.includes(payload.iss)) {
-      return res.status(401).json({ error: 'Invalid token issuer' });
-    }
-
-    let customer = await Customer.findOne({ email: payload.email.toLowerCase() });
-    const isFirstLogin = !customer;
-
-    if (!customer) {
-      customer = await Customer.create({
-        email: payload.email.toLowerCase(),
-        googleId: payload.sub,
-        firstName: payload.given_name || '',
-        lastName: payload.family_name || '',
-        emailVerified: true,
-      });
-      await sendWelcome({ email: customer.email, firstName: customer.firstName });
-    } else {
-      if (!customer.googleId) customer.googleId = payload.sub;
-      customer.lastLogin = new Date();
-      await customer.save();
-    }
+    if (existing?.googleId && existing.googleId !== payload.sub) return res.status(401).json({ error: 'Please use the email sign-in link.' });
+    const isFirstLogin = !existing?.emailVerified;
+    const fields = { googleId: payload.sub, emailVerified: true, lastLogin: new Date() };
+    if (!existing?.firstName) fields.firstName = payload.given_name || '';
+    if (!existing?.lastName) fields.lastName = payload.family_name || '';
+    const customer = await Customer.findOneAndUpdate(
+      { email, gdprDeletedAt: null }, { $set: fields, $setOnInsert: { email, profileSource: 'account' } },
+      { upsert: true, returnDocument: 'after', runValidators: true },
+    );
+    if (isFirstLogin) await sendWelcome({ email: customer.email, firstName: customer.firstName })
+      .catch(() => console.error('[CUSTOMERS] welcome mail failed after successful Google sign-in'));
 
     setCustomerCookie(res, customer);
     res.json({ success: true, customer: safeCustomer(customer), isFirstLogin });
@@ -160,23 +143,23 @@ router.get('/me', requireCustomer, async function(req, res) {
     res.json(safeCustomer(customer));
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' || err.name === 'CastError' ? 400 : 500)).json({ error: err.expose ? err.message : err.name === 'CastError' ? 'Invalid identifier' : 'Internal server error' });
   }
 });
 
 // PUT /api/customers/me
 router.put('/me', requireCustomer, async function(req, res) {
   try {
-    const { firstName, lastName, phone, marketingConsent, defaultShippingAddress } = req.body;
-    const customer = await Customer.findByIdAndUpdate(
-      req.customer.customerId,
-      { firstName, lastName, phone, marketingConsent, defaultShippingAddress },
-      { new: true }
+    const update = validateProfile(req.body);
+    const customer = await Customer.findOneAndUpdate(
+      { _id: req.customer.customerId, gdprDeletedAt: null, emailVerified: true },
+      { $set: update }, { returnDocument: 'after', runValidators: true },
     );
+    if (!customer) return res.status(404).json({ error: 'Not found' });
     res.json(safeCustomer(customer));
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' || err.name === 'CastError' ? 400 : 500)).json({ error: err.expose ? err.message : err.name === 'CastError' ? 'Invalid identifier' : 'Internal server error' });
   }
 });
 
@@ -197,42 +180,43 @@ router.get('/me/orders', requireCustomer, async function(req, res) {
     const customer = await Customer.findById(req.customer.customerId);
     if (!customer) return res.status(404).json({ error: 'Not found' });
     const orders = await Order.find({
-      customerEmail: customer.email,
+      ...ordersForCustomer(customer),
       status: { $nin: ['pending', 'failed'] },
-    }).sort({ createdAt: -1 });
+    }).select(CUSTOMER_ORDER_FIELDS).sort({ createdAt: -1 }).limit(200).lean();
     res.json(orders);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' || err.name === 'CastError' ? 400 : 500)).json({ error: err.expose ? err.message : err.name === 'CastError' ? 'Invalid identifier' : 'Internal server error' });
   }
 });
 
 // GET /api/customers/me/orders/:orderId
 router.get('/me/orders/:orderId', requireCustomer, async function(req, res) {
   try {
+    if (!/^[0-9a-fA-F]{24}$/.test(req.params.orderId)) return res.status(400).json({ error: 'Invalid order ID' });
     const customer = await Customer.findById(req.customer.customerId);
     if (!customer) return res.status(404).json({ error: 'Not found' });
     const order = await Order.findOne(
-      { _id: req.params.orderId, customerEmail: customer.email },
-      { internalNote: 0 },
+      { _id: req.params.orderId, ...ordersForCustomer(customer), status: { $nin: ['pending', 'failed'] } },
+      CUSTOMER_ORDER_FIELDS,
     );
     if (!order) return res.status(404).json({ error: 'Order not found' });
     res.json(order);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' || err.name === 'CastError' ? 400 : 500)).json({ error: err.expose ? err.message : err.name === 'CastError' ? 'Invalid identifier' : 'Internal server error' });
   }
 });
 
 // GET /api/customers/me/wishlist
 router.get('/me/wishlist', requireCustomer, async function(req, res) {
   try {
-    const customer = await Customer.findById(req.customer.customerId).populate('wishlist');
-    const items = (customer?.wishlist || []).filter(p => p.status !== 'draft' && p.status !== 'archived');
+    const customer = await Customer.findById(req.customer.customerId).populate({ path: 'wishlist', select: WISHLIST_FIELDS, match: { status: { $in: ['active', 'sold_out'] } } });
+    const items = (customer?.wishlist || []).filter(p => p && ['active', 'sold_out'].includes(p.status));
     res.json(items);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' || err.name === 'CastError' ? 400 : 500)).json({ error: err.expose ? err.message : err.name === 'CastError' ? 'Invalid identifier' : 'Internal server error' });
   }
 });
 
@@ -240,34 +224,27 @@ router.get('/me/wishlist', requireCustomer, async function(req, res) {
 router.post('/me/wishlist/sync', requireCustomer, async function(req, res) {
   try {
     const { ids } = req.body;
-    if (!Array.isArray(ids) || ids.length === 0) return res.json({ success: true });
-    const customer = await Customer.findById(req.customer.customerId);
-    const existing = customer.wishlist.map(id => id.toString());
-    const toAdd = ids.filter(id => !existing.includes(id));
-    if (toAdd.length > 0) {
-      customer.wishlist.push(...toAdd);
-      await customer.save();
-    }
+    if (!Array.isArray(ids) || ids.length > 100 || ids.some(id => typeof id !== 'string' || !/^[0-9a-fA-F]{24}$/.test(id))) return res.status(400).json({ error: 'At most 100 valid product IDs required' });
+    const products = await Product.find({ _id: { $in: [...new Set(ids)] }, status: { $in: ['active', 'sold_out'] } }).select('_id').lean();
+    await Customer.updateOne({ _id: req.customer.customerId, gdprDeletedAt: null }, { $addToSet: { wishlist: { $each: products.map(p => p._id) } } });
     res.json({ success: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' || err.name === 'CastError' ? 400 : 500)).json({ error: err.expose ? err.message : err.name === 'CastError' ? 'Invalid identifier' : 'Internal server error' });
   }
 });
 
 // POST /api/customers/me/wishlist/:productId
 router.post('/me/wishlist/:productId', requireCustomer, async function(req, res) {
   try {
-    const customer = await Customer.findById(req.customer.customerId);
     const id = req.params.productId;
-    if (!customer.wishlist.map(x => x.toString()).includes(id)) {
-      customer.wishlist.push(id);
-      await customer.save();
-    }
+    if (!/^[0-9a-fA-F]{24}$/.test(id)) return res.status(400).json({ error: 'Invalid product ID' });
+    if (!await Product.exists({ _id: id, status: { $in: ['active', 'sold_out'] } })) return res.status(404).json({ error: 'Product not found' });
+    await Customer.updateOne({ _id: req.customer.customerId, gdprDeletedAt: null }, { $addToSet: { wishlist: id } });
     res.json({ success: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' || err.name === 'CastError' ? 400 : 500)).json({ error: err.expose ? err.message : err.name === 'CastError' ? 'Invalid identifier' : 'Internal server error' });
   }
 });
 
@@ -280,7 +257,7 @@ router.delete('/me/wishlist/:productId', requireCustomer, async function(req, re
     res.json({ success: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' || err.name === 'CastError' ? 400 : 500)).json({ error: err.expose ? err.message : err.name === 'CastError' ? 'Invalid identifier' : 'Internal server error' });
   }
 });
 

@@ -1,6 +1,12 @@
 const express = require('express');
 const { csvCell, csvRow } = require('../utils/csv');
 const router = express.Router();
+const { normalizeEmail, escapeRegex, ordersForCustomer } = require('../utils/customerIdentity');
+const { customerOrderStats } = require('../utils/customerOrderStats');
+const { ADMIN_CUSTOMER_FIELDS, adminCustomerView } = require('../utils/customerViews');
+const { validateProfile, requireEmail } = require('../utils/customerValidation');
+const { reconcileCustomerOrders, pendingFilter } = require('../services/customerOrders');
+const { eraseCustomer } = require('../services/customerErasure');
 const crypto = require('crypto');
 const { requireAuth } = require('../middleware/auth');
 const { emailBlastLimit } = require('../middleware/rateLimiters');
@@ -15,34 +21,43 @@ const { recomputeAll, ensureSegmentDocs } = require('../services/segments');
 const { maskEmail } = require('../utils/maskEmail');
 
 router.use(requireAuth);
+router.use((req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
+router.param('id', (req, res, next, id) => {
+  if (!/^[0-9a-fA-F]{24}$/.test(id)) return res.status(400).json({ error: 'Invalid customer ID' });
+  next();
+});
 
 // ── GET /api/admin/customers — paginated list ─────────────────────────────────
 router.get('/', async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(100, parseInt(req.query.limit) || 50);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
     const skip = (page - 1) * limit;
 
     const filter = { gdprDeletedAt: null };
-    if (req.query.segment) filter.segments = req.query.segment;
-    if (req.query.search) {
-      const re = new RegExp(req.query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    if (typeof req.query.segment === 'string' && req.query.segment.length <= 80) filter.segments = req.query.segment;
+    if (typeof req.query.search === 'string' && req.query.search.trim()) {
+      const re = new RegExp(escapeRegex(req.query.search.trim().slice(0, 150)), 'i');
       filter.$or = [{ email: re }, { firstName: re }, { lastName: re }];
     }
     if (req.query.consent === 'yes') filter.marketingConsent = true;
 
     const [customers, total] = await Promise.all([
-      Customer.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      Customer.find(filter).select(ADMIN_CUSTOMER_FIELDS).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
       Customer.countDocuments(filter),
     ]);
 
     // Segment tiles for the sidebar
     const segments = await Segment.find().sort({ slug: 1 }).lean();
 
-    res.json({ customers, total, page, pages: Math.ceil(total / limit), segments });
+    const [pending, unresolved] = await Promise.all([
+      Order.countDocuments(pendingFilter),
+      Order.countDocuments({ customerSyncStatus: { $in: ['missing_email', 'invalid_customer_link'] } }),
+    ]);
+    res.json({ customers, total, page, pages: Math.ceil(total / limit), segments, reconciliation: { pending, unresolved } });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' ? 400 : err.code === 11000 ? 409 : 500)).json({ error: err.expose ? err.message : err.code === 11000 ? 'Customer already exists' : err.name === 'ValidationError' ? 'Invalid customer data' : 'Internal server error' });
   }
 });
 
@@ -50,11 +65,11 @@ router.get('/', async (req, res) => {
 router.post('/segments/recompute', async (req, res) => {
   try {
     await ensureSegmentDocs();
-    const result = await recomputeAll();
+    const result = await reconcileCustomerOrders({ limit: 100 });
     res.json({ success: true, ...result });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' ? 400 : err.code === 11000 ? 409 : 500)).json({ error: err.expose ? err.message : err.code === 11000 ? 'Customer already exists' : err.name === 'ValidationError' ? 'Invalid customer data' : 'Internal server error' });
   }
 });
 
@@ -97,68 +112,52 @@ router.post('/winback', emailBlastLimit, async (req, res) => {
     res.json({ sent, skipped, eligible: customers.length });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' ? 400 : err.code === 11000 ? 409 : 500)).json({ error: err.expose ? err.message : err.code === 11000 ? 'Customer already exists' : err.name === 'ValidationError' ? 'Invalid customer data' : 'Internal server error' });
   }
 });
 
 // ── GET /api/admin/customers/:id — full detail ────────────────────────────────
 router.get('/:id', async (req, res) => {
   try {
-    const customer = await Customer.findById(req.params.id).lean();
+    const customer = await Customer.findOne({ _id: req.params.id, gdprDeletedAt: null }).select(ADMIN_CUSTOMER_FIELDS).lean();
     if (!customer) return res.status(404).json({ error: 'Not found' });
 
-    const orders = await Order.find({ customerEmail: customer.email })
+    const orders = await Order.find(ordersForCustomer(customer))
       .sort({ createdAt: -1 }).lean();
 
-    const totalSpend = orders
-      .filter(o => ['paid', 'processing', 'shipped', 'delivered'].includes(o.status))
-      .reduce((s, o) => s + (o.total || 0), 0);
-
-    res.json({ customer, orders, totalSpend });
+    const stats = customerOrderStats(orders);
+    res.json({ customer: { ...customer, ...stats }, orders, totalSpend: stats.totalSpend });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' ? 400 : err.code === 11000 ? 409 : 500)).json({ error: err.expose ? err.message : err.code === 11000 ? 'Customer already exists' : err.name === 'ValidationError' ? 'Invalid customer data' : 'Internal server error' });
   }
 });
 
 // ── POST /api/admin/customers — manual customer creation ──────────────────────
 router.post('/', async (req, res) => {
   try {
-    const { email, firstName, lastName, phone, marketingConsent, tags, customerType } = req.body;
-    if (!email) return res.status(400).json({ error: 'Email required' });
-    const existing = await Customer.findOne({ email: email.toLowerCase() });
+    const email = requireEmail(req.body.email);
+    const fields = validateProfile(req.body, true);
+    const existing = await Customer.findOne({ email });
     if (existing) return res.status(409).json({ error: 'Customer already exists', customerId: existing._id });
-    const customer = await Customer.create({
-      email: email.toLowerCase(),
-      firstName: firstName || '',
-      lastName: lastName || '',
-      phone: phone || '',
-      marketingConsent: !!marketingConsent,
-      tags: tags || [],
-      customerType: customerType || 'retail',
-      emailVerified: true,
-    });
-    res.status(201).json(customer);
+    const customer = await Customer.create({ ...fields, email, profileSource: 'manual', emailVerified: false });
+    res.status(201).json(adminCustomerView(customer));
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' ? 400 : err.code === 11000 ? 409 : 500)).json({ error: err.expose ? err.message : err.code === 11000 ? 'Customer already exists' : err.name === 'ValidationError' ? 'Invalid customer data' : 'Internal server error' });
   }
 });
 
 // ── PUT /api/admin/customers/:id — update profile / tags / notes ──────────────
 router.put('/:id', async (req, res) => {
   try {
-    const allowed = ['firstName', 'lastName', 'phone', 'tags', 'customerType', 'internalRating', 'marketingConsent', 'consent'];
-    const update = {};
-    for (const k of allowed) {
-      if (k in req.body) update[k] = req.body[k];
-    }
-    const customer = await Customer.findByIdAndUpdate(req.params.id, { $set: update }, { new: true });
+    const update = validateProfile(req.body, true);
+    const customer = await Customer.findOneAndUpdate({ _id: req.params.id, gdprDeletedAt: null }, { $set: update }, { returnDocument: 'after', runValidators: true }).select(ADMIN_CUSTOMER_FIELDS);
     if (!customer) return res.status(404).json({ error: 'Not found' });
-    res.json(customer);
+    res.json(adminCustomerView(customer));
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' ? 400 : err.code === 11000 ? 409 : 500)).json({ error: err.expose ? err.message : err.code === 11000 ? 'Customer already exists' : err.name === 'ValidationError' ? 'Invalid customer data' : 'Internal server error' });
   }
 });
 
@@ -166,17 +165,17 @@ router.put('/:id', async (req, res) => {
 router.post('/:id/notes', async (req, res) => {
   try {
     const { body } = req.body;
-    if (!body) return res.status(400).json({ error: 'Note body required' });
-    const customer = await Customer.findByIdAndUpdate(
-      req.params.id,
-      { $push: { notes: { body } } },
-      { new: true },
+    if (typeof body !== 'string' || !body.trim() || body.length > 5000) return res.status(400).json({ error: 'Note must contain 1–5000 characters' });
+    const customer = await Customer.findOneAndUpdate(
+      { _id: req.params.id, gdprDeletedAt: null },
+      { $push: { notes: { body: body.trim() } } },
+      { returnDocument: 'after', runValidators: true },
     );
     if (!customer) return res.status(404).json({ error: 'Not found' });
     res.json(customer.notes[customer.notes.length - 1]);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' ? 400 : err.code === 11000 ? 409 : 500)).json({ error: err.expose ? err.message : err.code === 11000 ? 'Customer already exists' : err.name === 'ValidationError' ? 'Invalid customer data' : 'Internal server error' });
   }
 });
 
@@ -187,7 +186,7 @@ router.delete('/:id/notes/:noteId', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' ? 400 : err.code === 11000 ? 409 : 500)).json({ error: err.expose ? err.message : err.code === 11000 ? 'Customer already exists' : err.name === 'ValidationError' ? 'Invalid customer data' : 'Internal server error' });
   }
 });
 
@@ -223,16 +222,16 @@ router.post('/:id/promo-code', async (req, res) => {
     res.status(201).json(promo);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' ? 400 : err.code === 11000 ? 409 : 500)).json({ error: err.expose ? err.message : err.code === 11000 ? 'Customer already exists' : err.name === 'ValidationError' ? 'Invalid customer data' : 'Internal server error' });
   }
 });
 
 // ── GET /api/admin/customers/:id/gdpr-export — download PII as JSON ──────────
 router.get('/:id/gdpr-export', async (req, res) => {
   try {
-    const customer = await Customer.findById(req.params.id).lean();
+    const customer = await Customer.findOne({ _id: req.params.id, gdprDeletedAt: null }).select(ADMIN_CUSTOMER_FIELDS).lean();
     if (!customer) return res.status(404).json({ error: 'Not found' });
-    const orders = await Order.find({ customerEmail: customer.email }).lean();
+    const orders = await Order.find(ordersForCustomer(customer)).lean();
 
     const payload = {
       exportedAt: new Date().toISOString(),
@@ -259,77 +258,21 @@ router.get('/:id/gdpr-export', async (req, res) => {
     res.json(payload);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' ? 400 : err.code === 11000 ? 409 : 500)).json({ error: err.expose ? err.message : err.code === 11000 ? 'Customer already exists' : err.name === 'ValidationError' ? 'Invalid customer data' : 'Internal server error' });
   }
 });
 
 // ── DELETE /api/admin/customers/:id/gdpr — anonymise PII, preserve order history ─
 router.delete('/:id/gdpr', async (req, res) => {
-  try {
-    const customer = await Customer.findById(req.params.id);
-    if (!customer) return res.status(404).json({ error: 'Not found' });
-    if (customer.gdprDeletedAt) return res.status(409).json({ error: 'Already anonymised' });
-
-    const anonEmail = `deleted-${customer._id}@anonymised.silkilinen.com`;
-
-    await customer.updateOne({
-      $set: {
-        email: anonEmail,
-        firstName: '[Deleted]',
-        lastName: '',
-        phone: '',
-        defaultShippingAddress: null,
-        passwordHash: null,
-        googleId: null,
-        wishlist: [],
-        tags: [],
-        notes: [],
-        emailLog: [],
-        gdprDeletedAt: new Date(),
-      },
-    });
-
-    // Erasure has to reach every store holding the address, not just the
-    // customer record. Until now it did not, and the two most visible
-    // consequences were the worst kind: abandoned-cart recovery and the
-    // back-in-stock waitlist would have gone on emailing someone who had
-    // formally asked to be deleted.
-    //
-    // Orders are deliberately NOT anonymised here. Their customerEmail is part
-    // of the financial record we are legally required to retain, which is a
-    // recognised basis for keeping it; nothing marketing-facing reads from it.
-    const purge = { email: customer.email };
-    const [carts, subs, waitlist] = await Promise.all([
-      // Unsubscribe as well as blank the address, so a cart that somehow keeps
-      // an address cannot re-enter the recovery sequence.
-      Cart.updateMany(purge, { $set: { email: null, recoveryUnsubscribed: true } }).catch(() => ({ modifiedCount: 0 })),
-      Newsletter.deleteMany(purge).catch(() => ({ deletedCount: 0 })),
-      require('../models/StockNotification').deleteMany(purge).catch(() => ({ deletedCount: 0 })),
-    ]);
-
-    res.json({
-      success: true,
-      anonEmail,
-      // Reported back so the founder can evidence what was erased if asked —
-      // "we deleted them" is not an answer to a supervisory authority.
-      purged: {
-        carts: carts.modifiedCount ?? 0,
-        newsletter: subs.deletedCount ?? 0,
-        stockWaitlist: waitlist.deletedCount ?? 0,
-        ordersRetained: 'financial record, retained under legal obligation',
-      },
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+  try { res.json(await eraseCustomer(req.params.id)); }
+  catch (err) { res.status(err.status || 500).json({ error: err.status ? err.message : 'Erasure failed; no partial erasure was committed' }); }
 });
 
 // ── GET /api/admin/customers/export/csv — bulk CSV for Meta Custom Audiences ──
 router.get('/export/csv', async (req, res) => {
   try {
     const filter = { gdprDeletedAt: null, marketingConsent: true };
-    if (req.query.segment) filter.segments = req.query.segment;
+    if (typeof req.query.segment === 'string' && req.query.segment.length <= 80) filter.segments = req.query.segment;
     const customers = await Customer.find(filter).lean();
 
     const rows = ['email,firstName,lastName,phone'];
@@ -342,7 +285,7 @@ router.get('/export/csv', async (req, res) => {
     res.send(rows.join('\n'));
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || (err.name === 'ValidationError' ? 400 : err.code === 11000 ? 409 : 500)).json({ error: err.expose ? err.message : err.code === 11000 ? 'Customer already exists' : err.name === 'ValidationError' ? 'Invalid customer data' : 'Internal server error' });
   }
 });
 

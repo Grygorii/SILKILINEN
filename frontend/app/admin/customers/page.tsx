@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import layout from '../_components/AdminPage.module.css';
 import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
 import { toast } from '@/lib/adminToast';
+import { api, ApiError } from '@/lib/api';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -25,6 +26,8 @@ type Customer = {
   tags: string[];
   gdprDeletedAt: string | null;
   createdAt: string;
+  emailVerified?: boolean;
+  profileSource?: string;
 };
 
 const SEGMENT_COLORS: Record<string, string> = {
@@ -53,40 +56,59 @@ export default function CustomersPage() {
   const [segmentFilter, setSegmentFilter] = useState('');
   const [consentFilter, setConsentFilter] = useState('');
   const [recomputing, setRecomputing] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState('');
+  const [pages, setPages] = useState(0);
+  const [reconciliation, setReconciliation] = useState({ pending: 0, unresolved: 0 });
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const requestNumber = useRef(0);
+  const activeRequest = useRef<AbortController | null>(null);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search), 250);
+    return () => window.clearTimeout(timer);
+  }, [search]);
 
   const load = useCallback(async () => {
+    activeRequest.current?.abort();
+    const controller = new AbortController();
+    activeRequest.current = controller;
+    const sequence = ++requestNumber.current;
     setLoading(true);
     const params = new URLSearchParams({ page: String(page), limit: '50' });
-    if (search) params.set('search', search);
+    if (debouncedSearch) params.set('search', debouncedSearch);
     if (segmentFilter) params.set('segment', segmentFilter);
     if (consentFilter) params.set('consent', consentFilter);
-    setError(false);
+    setError('');
     try {
-      const res = await fetch(`${API}/api/admin/customers?${params}`, { credentials: 'include' });
-      if (!res.ok) throw new Error('failed');
-      const data = await res.json();
+      const data = await api.get<{ customers: Customer[]; segments: Segment[]; total: number; pages: number; reconciliation?: { pending: number; unresolved: number } }>(`/api/admin/customers?${params}`, { signal: controller.signal });
+      if (sequence !== requestNumber.current || controller.signal.aborted) return;
       setCustomers(Array.isArray(data.customers) ? data.customers : []);
       setSegments(Array.isArray(data.segments) ? data.segments : []);
       setTotal(data.total || 0);
-    } catch { setError(true); }
-    setLoading(false);
-  }, [page, search, segmentFilter, consentFilter]);
+      setPages(data.pages || 0);
+      setReconciliation(data.reconciliation || { pending: 0, unresolved: 0 });
+    } catch (err) {
+      if (controller.signal.aborted || sequence !== requestNumber.current) return;
+      setError(err instanceof ApiError && err.status === 401 ? 'Your admin session expired. Sign in again.' : 'Could not load customers. Please try again.');
+    } finally {
+      if (!controller.signal.aborted && sequence === requestNumber.current) setLoading(false);
+    }
+  }, [page, debouncedSearch, segmentFilter, consentFilter]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { void load(); return () => activeRequest.current?.abort(); }, [load]);
 
   async function recompute() {
     setRecomputing(true);
     try {
-      const res = await fetch(`${API}/api/admin/customers/segments/recompute`, { method: 'POST', credentials: 'include' });
-      if (res.ok) toast('Segments recomputed.');
-      else toast('Recompute failed.', 'error');
-    } catch {
-      toast('Network error.', 'error');
+      const data = await api.post<{ busy?: boolean; created?: number; failed?: number; remaining?: number }>('/api/admin/customers/segments/recompute');
+      if (data.busy) toast('A customer sync is already running. Refresh shortly.');
+      else if (data.failed) toast('Some customer links need another retry; saved orders are unchanged.', 'error');
+      else toast(`Customer sync complete. ${data.created || 0} new profile(s); ${data.remaining || 0} orders pending.`);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Customer sync failed.', 'error');
     } finally {
       setRecomputing(false);
+      void load();
     }
-    load();
   }
 
   async function exportCsv() {
@@ -94,7 +116,7 @@ export default function CustomersPage() {
     if (segmentFilter) params.set('segment', segmentFilter);
     const { downloadBlob } = await import('@/lib/api');
     try {
-      await downloadBlob(`/api/admin/customers/export/csv?${params}`, 'customers.csv');
+      await downloadBlob(`/api/admin/customers/export/csv?${params}`, 'customers.csv', { method: 'GET' });
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Export failed', 'error');
     }
@@ -147,7 +169,7 @@ export default function CustomersPage() {
         <div className={layout.header}>
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--admin-ink)', margin: 0 }}>Customers</h1>
-            <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', marginTop: 4 }}>{total} total</p>
+            <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', marginTop: 4 }}>{total} total · includes guest buyers</p>
           </div>
           <div className={layout.headerActions}>
             {segmentFilter === 'at-risk' && (
@@ -195,12 +217,19 @@ export default function CustomersPage() {
               marginTop: 12, width: '100%', padding: '6px 10px', fontSize: 11, border: '1px solid var(--admin-line)',
               background: 'var(--admin-surface)', color: 'var(--admin-ink-muted)', cursor: 'pointer', fontFamily: 'inherit',
             }}>
-              {recomputing ? 'Recomputing…' : 'Recompute now'}
+              {recomputing ? 'Syncing…' : 'Sync orders & segments'}
             </button>
           </div>
 
           {/* Main content */}
           <div className={layout.main}>
+            {(reconciliation.pending > 0 || reconciliation.unresolved > 0) && (
+              <p role="status" style={{ fontSize: 13, color: 'var(--admin-ink-muted)', marginBottom: 16 }}>
+                {reconciliation.pending > 0 && `${reconciliation.pending} order(s) awaiting customer sync. `}
+                {reconciliation.unresolved > 0 && `${reconciliation.unresolved} order(s) need a valid buyer email or a corrected customer link. `}
+                <Link href="/admin/orders">Review orders</Link>
+              </p>
+            )}
             {/* Filters */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
               <input
@@ -220,7 +249,7 @@ export default function CustomersPage() {
               <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)' }}>Loading customers…</p>
             ) : error ? (
               <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--admin-surface)', border: '1px solid var(--admin-line)' }}>
-                <p style={{ fontSize: 14, color: 'var(--admin-ink-muted)' }}>Couldn&apos;t load customers.{' '}
+                <p style={{ fontSize: 14, color: 'var(--admin-ink-muted)' }}>{error}{' '}
                   <button onClick={load} style={{ cursor: 'pointer', textDecoration: 'underline', background: 'none', border: 'none', font: 'inherit', color: 'inherit' }}>Retry</button>
                 </p>
               </div>
@@ -245,7 +274,7 @@ export default function CustomersPage() {
                   <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead>
                       <tr>
-                        {['Customer', 'Segments', 'Orders', 'Spend', 'Last order', 'Consent', ''].map(h => (
+                        {['Customer', 'Segments', 'Orders', 'Net spend (EUR)', 'Last order', 'Consent', ''].map(h => (
                           <th key={h} style={thStyle}>{h}</th>
                         ))}
                       </tr>
@@ -264,6 +293,7 @@ export default function CustomersPage() {
                               {c.firstName || c.lastName ? `${c.firstName} ${c.lastName}`.trim() : c.email}
                             </Link>
                             <div style={{ fontSize: 11, color: 'var(--admin-ink-muted)', marginTop: 1 }}>{c.email}</div>
+                            <div style={{ fontSize: 11, color: 'var(--admin-ink-muted)', marginTop: 2 }}>{c.emailVerified ? 'Email verified' : c.profileSource === 'order' ? 'Guest buyer · email not verified' : 'Contact · email not verified'}</div>
                           </td>
                           <td style={tdStyle}>
                             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
@@ -300,8 +330,8 @@ export default function CustomersPage() {
                 {total > 50 && (
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 16 }}>
                     <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '6px 12px', border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12 }}>← Prev</button>
-                    <span style={{ padding: '6px 12px', fontSize: 12, color: 'var(--admin-ink-muted)' }}>Page {page}</span>
-                    <button onClick={() => setPage(p => p + 1)} disabled={customers.length < 50} style={{ padding: '6px 12px', border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12 }}>Next →</button>
+                    <span style={{ padding: '6px 12px', fontSize: 12, color: 'var(--admin-ink-muted)' }}>Page {page} of {pages}</span>
+                    <button onClick={() => setPage(p => p + 1)} disabled={page >= pages} style={{ padding: '6px 12px', border: '1px solid var(--admin-line)', background: 'var(--admin-surface)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12 }}>Next →</button>
                   </div>
                 )}
               </>

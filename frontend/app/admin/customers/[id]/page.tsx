@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
 import { toast } from '@/lib/adminToast';
+import { api } from '@/lib/api';
 import AdminErrorBanner from '@/components/AdminErrorBanner';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -66,8 +67,10 @@ export default function CustomerDetailPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const res = await fetch(`${API}/api/admin/customers/${id}`, { credentials: 'include' });
+      if (!res.ok) throw new Error(res.status === 404 ? 'Customer not found' : 'Customer request failed');
       const data = await res.json();
       setCustomer(data.customer);
       setOrders(data.orders || []);
@@ -92,58 +95,43 @@ export default function CustomerDetailPage() {
   useEffect(() => { load(); }, [load]);
 
   async function saveEdit() {
-    await fetch(`${API}/api/admin/customers/${id}`, {
-      method: 'PUT', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    try {
+      await api.put(`/api/admin/customers/${id}`, {
         firstName: editForm.firstName, lastName: editForm.lastName, phone: editForm.phone,
         customerType: editForm.customerType,
         internalRating: editForm.internalRating ? Number(editForm.internalRating) : null,
         tags: editForm.tags.split(',').map(t => t.trim()).filter(Boolean),
-      }),
-    });
-    setEditing(false);
-    load();
+      });
+      setEditing(false); await load();
+    } catch (err) { toast(err instanceof Error ? err.message : 'Could not save customer', 'error'); }
   }
-
   async function addNote() {
-    if (!noteInput.trim()) return;
+    if (!noteInput.trim() || savingNote) return;
     setSavingNote(true);
-    await fetch(`${API}/api/admin/customers/${id}/notes`, {
-      method: 'POST', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body: noteInput }),
-    });
-    setNoteInput('');
-    setSavingNote(false);
-    load();
+    try {
+      await api.post(`/api/admin/customers/${id}/notes`, { body: noteInput });
+      setNoteInput(''); await load();
+    } catch (err) { toast(err instanceof Error ? err.message : 'Could not save note', 'error'); }
+    finally { setSavingNote(false); }
   }
-
   async function deleteNote(noteId: string) {
-    await fetch(`${API}/api/admin/customers/${id}/notes/${noteId}`, { method: 'DELETE', credentials: 'include' });
-    load();
+    try { await api.delete(`/api/admin/customers/${id}/notes/${noteId}`); await load(); }
+    catch (err) { toast(err instanceof Error ? err.message : 'Could not remove note', 'error'); }
   }
-
   async function generatePromo() {
-    const res = await fetch(`${API}/api/admin/customers/${id}/promo-code`, {
-      method: 'POST', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: promoForm.type,
-        value: Number(promoForm.value),
-        minOrderValue: Number(promoForm.minOrderValue),
+    try {
+      const data = await api.post<PromoCode>(`/api/admin/customers/${id}/promo-code`, {
+        type: promoForm.type, value: Number(promoForm.value), minOrderValue: Number(promoForm.minOrderValue),
         validDays: promoForm.validDays ? Number(promoForm.validDays) : null,
-      }),
-    });
-    const data = await res.json();
-    setGeneratedPromo(data);
-    setGenPromo(false);
+      });
+      setGeneratedPromo(data); setGenPromo(false);
+    } catch (err) { toast(err instanceof Error ? err.message : 'Could not create promo', 'error'); }
   }
 
   async function gdprExport() {
     const { downloadBlob } = await import('@/lib/api');
     try {
-      await downloadBlob(`/api/admin/customers/${id}/gdpr-export`, `gdpr-export-${id}.json`);
+      await downloadBlob(`/api/admin/customers/${id}/gdpr-export`, `gdpr-export-${id}.json`, { method: 'GET' });
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Export failed', 'error');
     }
@@ -151,8 +139,10 @@ export default function CustomerDetailPage() {
 
   async function gdprDelete() {
     if (!confirm('This will anonymise all PII for this customer. Order history is preserved. This cannot be undone. Continue?')) return;
-    await fetch(`${API}/api/admin/customers/${id}/gdpr`, { method: 'DELETE', credentials: 'include' });
-    router.push('/admin/customers');
+    try {
+      await api.delete(`/api/admin/customers/${id}/gdpr`);
+      router.push('/admin/customers');
+    } catch (err) { toast(err instanceof Error ? err.message : 'Erasure failed', 'error'); }
   }
 
   // Abandoned cart = a pending order older than 2h (#7)
@@ -227,9 +217,9 @@ export default function CustomerDetailPage() {
         {/* At-a-glance stat band */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
           {[
-            { label: 'Total spent', value: fmtMoney(totalSpend) },
-            { label: 'Orders', value: String(orders.length) },
-            { label: 'Avg order value', value: orders.length > 0 ? fmtMoney(totalSpend / orders.length) : '—' },
+            { label: 'Net spend (EUR)', value: fmtMoney(totalSpend) },
+            { label: 'Paid orders', value: String(customer.orderCount || 0) },
+            { label: 'Avg order value', value: customer.orderCount > 0 ? fmtMoney(totalSpend / customer.orderCount) : '—' },
             { label: 'Customer since', value: fmtDate(customer.createdAt) },
           ].map(({ label: l, value }) => (
             <div key={l} style={{ background: 'var(--admin-surface)', border: '1px solid var(--admin-line)', padding: '14px 18px' }}>

@@ -95,6 +95,9 @@ const orderSchema = new mongoose.Schema({
   }],
 
   customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null },
+  customerSyncVersion: { type: Number, default: 0 },
+  customerSyncPending: { type: Boolean, default: true },
+  customerSyncStatus: { type: String, default: '' },
 
   attribution: {
     source:      { type: String, default: 'direct' },

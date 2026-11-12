@@ -894,7 +894,10 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
         await Order.updateOne({ _id: order._id }, { $set: { confirmationEmailSentAt: new Date() } }).catch(() => {});
       }
     } catch (err) {
-      console.error('[checkoutV2 webhook] error:', err.message);
+      console.error('[checkoutV2 webhook] order processing failed:', err.code || err.name);
+      // Acknowledge only a saved order. A 2xx here used to permanently discard
+      // failed order creation; Stripe retries a 5xx with the same event/intent.
+      return res.status(500).json({ error: 'Order processing failed; retry required' });
     }
   }
 

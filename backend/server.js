@@ -273,6 +273,15 @@ app.use('/api/stock-notify', require('./routes/stockNotify'));
 mongoose.connect(process.env.MONGODB_URI)
   .then(function() {
     console.log('Connected to MongoDB');
+    // Repair historical guest orders and retry any later failed customer synchronization.
+    // Bounded, idempotent, no emails/payments; a failed run never prevents serving checkout.
+    const syncCustomers = () => require('./services/customerOrders').reconcileCustomerOrders()
+      .then(r => { if (r.scanned) console.log('[customer-sync]', JSON.stringify(r)); })
+      .catch(err => console.error('[customer-sync] retry scheduled', err.code || err.name));
+    syncCustomers();
+    const customerSyncTimer = setInterval(syncCustomers, 60 * 1000);
+    customerSyncTimer.unref();
+
     // Pull admin-edited shipping-rate overrides into the in-memory cache so
     // checkout reads stay synchronous. Non-fatal — defaults apply if it fails.
     loadShippingOverrides();

@@ -43,7 +43,11 @@ const customerSchema = new mongoose.Schema({
   customerType: { type: String, enum: ['retail', 'wholesale', 'vip', 'internal'], default: 'retail' },
   internalRating: { type: Number, min: 1, max: 5, default: null },
 
-  // Order-derived stats (updated by backfill + webhook)
+  profileSource: { type: String, enum: ['order', 'manual', 'account'], default: 'account' },
+  orderSyncRevision: { type: Number, default: 0 },
+  erasedEmailHash: { type: String, default: null },
+
+  // Order-derived stats (updated by reconciliation and order changes)
   firstOrderAt: { type: Date, default: null },
   lastOrderAt: { type: Date, default: null },
   orderCount: { type: Number, default: 0 },
@@ -76,13 +80,13 @@ customerSchema.index({ segments: 1 });
 customerSchema.index({ lastOrderAt: -1 });
 customerSchema.index({ totalSpend: -1 });
 
-// F22: sparse index on the magic-link token. Removes the linear collection
+// F22: partial index on the magic-link token. Removes the linear collection
 // scan that findOne({ emailVerificationToken }) used to do, and closes the
 // per-character timing channel that scan introduced. Partial filter keeps
 // the index small — only customers with a pending token appear in it.
 customerSchema.index(
   { emailVerificationToken: 1 },
-  { sparse: true, partialFilterExpression: { emailVerificationToken: { $type: 'string' } } }
+  { partialFilterExpression: { emailVerificationToken: { $type: 'string' } } }
 );
 
 module.exports = mongoose.model('Customer', customerSchema);

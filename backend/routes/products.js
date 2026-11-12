@@ -408,7 +408,8 @@ router.get('/related/:id', async function(req, res) {
     // The ANCHOR may be sold out — its page still renders, so it still needs
     // suggestions. The related products themselves stay on PUBLIC_FILTER:
     // recommending more things nobody can buy helps no one.
-    const product = await Product.findOne({ ...DETAIL_FILTER, _id: req.params.id }).select(PUBLIC_PROJECTION);
+    const ref = /^[0-9a-fA-F]{24}$/.test(req.params.id) ? { _id: req.params.id } : { slug: req.params.id };
+    const product = await Product.findOne({ ...DETAIL_FILTER, ...ref }).select(PUBLIC_PROJECTION);
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
     let related = await Product.find({

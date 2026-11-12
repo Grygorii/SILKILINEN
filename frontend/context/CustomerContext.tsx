@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { api } from '@/lib/api';
 import { googleLogout } from '@react-oauth/google';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -52,10 +53,10 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         setCustomer(data);
-        localStorage.setItem(CUSTOMER_ID_KEY, data._id);
+        try { localStorage.setItem(CUSTOMER_ID_KEY, data._id); } catch { /* Storage is optional; the verified session is not. */ }
       } else {
         setCustomer(null);
-        localStorage.removeItem(CUSTOMER_ID_KEY);
+        try { localStorage.removeItem(CUSTOMER_ID_KEY); } catch { /* storage blocked */ }
       }
     } catch {
       setCustomer(null);
@@ -67,10 +68,11 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { refresh(); }, [refresh]);
 
   const signOut = useCallback(async () => {
-    await fetch(`${API}/api/customers/logout`, { method: 'POST', credentials: 'include' });
-    googleLogout(); // clear Google Identity Services session to prevent auto re-auth
+    // Only report a completed sign-out after the server confirms cookie removal.
+    await api.post('/api/customers/logout');
+    googleLogout();
     setCustomer(null);
-    localStorage.removeItem(CUSTOMER_ID_KEY);
+    try { localStorage.removeItem(CUSTOMER_ID_KEY); } catch { /* storage blocked */ }
   }, []);
 
   return (

@@ -1,7 +1,13 @@
 const express = require('express');
 const router = express.Router();
+router.param('id', (req, res, next, id) => {
+  if (!/^[0-9a-fA-F]{24}$/.test(id)) return res.status(400).json({ error: 'Invalid order ID' });
+  next();
+});
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Order = require('../models/Order');
+const { syncAfterOrderChange } = require('../services/customerOrders');
+const { PURCHASE_STATUSES, netOrderSpend } = require('../utils/customerOrderStats');
 const { requireAuth } = require('../middleware/auth');
 const { recordAudit } = require('../services/auditLog');
 const {
@@ -11,26 +17,7 @@ const {
   sendCancelledEmail,
 } = require('../services/email');
 
-const VALID_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'refunded'];
-
-// Which statuses may follow which. The enum stopped an INVALID status; nothing
-// stopped an impossible JOURNEY, so "cancelled" -> "shipped" and "refunded" ->
-// "paid" were both accepted — and each of those fires a customer email. One
-// mis-click told someone their cancelled order was on its way.
-//
-// Terminal states (delivered, refunded) have no forward moves. `returned` can
-// still be refunded, because that is the real sequence.
-const STATUS_TRANSITIONS = {
-  pending:    ['paid', 'failed', 'cancelled'],
-  paid:       ['processing', 'shipped', 'cancelled', 'refunded'],
-  processing: ['shipped', 'cancelled', 'refunded'],
-  shipped:    ['delivered', 'returned', 'refunded'],
-  delivered:  ['returned', 'refunded'],
-  returned:   ['refunded'],
-  cancelled:  [],
-  refunded:   [],
-  failed:     ['pending', 'cancelled'],
-};
+const { VALID_STATUSES, STATUS_TRANSITIONS } = require('../utils/orderStates');
 
 const STATUS_EMAIL_FNS = {
   processing: sendProcessingEmail,
@@ -48,14 +35,14 @@ router.get('/stats', requireAuth, async function(req, res) {
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
 
     const [thisMonthOrders, lastMonthOrders, allPaidOrders, recentOrders] = await Promise.all([
-      Order.find({ status: 'paid', createdAt: { $gte: startOfMonth } }),
-      Order.find({ status: 'paid', createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth } }),
-      Order.find({ status: { $nin: ['pending', 'failed'] } }),
-      Order.find({ status: { $nin: ['pending', 'failed'] } }).sort({ createdAt: -1 }).limit(5),
+      Order.find({ status: { $in: PURCHASE_STATUSES }, createdAt: { $gte: startOfMonth } }),
+      Order.find({ status: { $in: PURCHASE_STATUSES }, createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth } }),
+      Order.find({ status: { $in: PURCHASE_STATUSES } }),
+      Order.find({ status: { $in: PURCHASE_STATUSES } }).sort({ createdAt: -1 }).limit(5),
     ]);
 
-    const revenueThisMonth = thisMonthOrders.reduce((s, o) => s + (o.total || 0), 0);
-    const revenueLastMonth = lastMonthOrders.reduce((s, o) => s + (o.total || 0), 0);
+    const revenueThisMonth = thisMonthOrders.reduce((s, o) => s + netOrderSpend(o), 0);
+    const revenueLastMonth = lastMonthOrders.reduce((s, o) => s + netOrderSpend(o), 0);
     const revenueChange = revenueLastMonth > 0
       ? ((revenueThisMonth - revenueLastMonth) / revenueLastMonth) * 100
       : null;
@@ -67,7 +54,7 @@ router.get('/stats', requireAuth, async function(req, res) {
       : null;
 
     const aov = allPaidOrders.length
-      ? allPaidOrders.reduce((s, o) => s + (o.total || 0), 0) / allPaidOrders.length
+      ? allPaidOrders.reduce((s, o) => s + netOrderSpend(o), 0) / allPaidOrders.length
       : 0;
 
     const thirtyDaysAgo = new Date(now);
@@ -81,7 +68,7 @@ router.get('/stats', requireAuth, async function(req, res) {
     }
     for (const o of last30Orders) {
       const day = new Date(o.createdAt).toISOString().slice(0, 10);
-      if (dailyMap[day] !== undefined) dailyMap[day] += o.total || 0;
+      if (dailyMap[day] !== undefined) dailyMap[day] += netOrderSpend(o);
     }
     const salesChart = Object.entries(dailyMap).map(([date, revenue]) => ({ date, revenue }));
 
@@ -122,8 +109,8 @@ router.get('/stats', requireAuth, async function(req, res) {
 // GET /api/orders/recent-activity — public endpoint for JustSoldPopup social proof widget
 router.get('/recent-activity', async function(req, res) {
   try {
-    const orders = await Order.find({ status: { $nin: ['pending', 'failed'] } })
-      .sort({ createdAt: -1 }).limit(10);
+    const orders = await Order.find({ status: { $in: ['paid', 'processing', 'shipped', 'delivered'] } })
+      .select('items.name createdAt').sort({ createdAt: -1 }).limit(10);
     const activity = orders.map(o => ({
       item: o.items?.[0]?.name || 'a product',
       createdAt: o.createdAt,
@@ -210,6 +197,7 @@ router.post('/manual', requireAuth, async function(req, res) {
       attribution: { source: 'manual', medium: 'admin', campaign: 'none' },
     });
 
+    await syncAfterOrderChange(order);
     res.status(201).json(order);
   } catch (err) {
     console.error('[orders] manual create error:', err.message);
@@ -291,12 +279,15 @@ router.get('/:id', requireAuth, async function(req, res) {
 router.put('/:id/status', requireAuth, async function(req, res) {
   try {
     const { status, note, sendEmail = true, force = false } = req.body;
+    if (typeof force !== 'boolean' || typeof sendEmail !== 'boolean' || (note !== undefined && (typeof note !== 'string' || note.length > 5000))) return res.status(400).json({ error: 'Invalid status update' });
     if (!VALID_STATUSES.includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
 
-    const current = await Order.findById(req.params.id).select('status').lean();
+    const current = await Order.findById(req.params.id).lean();
     if (!current) return res.status(404).json({ error: 'Not found' });
+
+    if (current.status === status) return res.json(current);
 
     // Re-selecting the same status is a no-op, not an illegal move.
     if (current.status !== status) {
@@ -318,7 +309,7 @@ router.put('/:id/status', requireAuth, async function(req, res) {
     }
 
     const update = {
-      status,
+      status, customerSyncPending: true,
       $push: {
         statusHistory: {
           status,
@@ -333,8 +324,9 @@ router.put('/:id/status', requireAuth, async function(req, res) {
     if (status === 'shipped') update.shippedAt = new Date();
     if (status === 'delivered') update.deliveredAt = new Date();
 
-    const order = await Order.findByIdAndUpdate(req.params.id, update, { new: true });
-    if (!order) return res.status(404).json({ error: 'Not found' });
+    const order = await Order.findOneAndUpdate({ _id: req.params.id, status: current.status }, update, { returnDocument: 'after', runValidators: true });
+    if (!order) return res.status(409).json({ error: 'Order changed; refresh before trying again' });
+    await syncAfterOrderChange(order);
 
     recordAudit(req, 'order.status', {
       targetType: 'Order',
@@ -367,7 +359,7 @@ router.put('/:id/tracking', requireAuth, async function(req, res) {
       update.estimatedDelivery = estimatedDelivery ? new Date(estimatedDelivery) : null;
     }
 
-    const order = await Order.findByIdAndUpdate(req.params.id, update, { new: true });
+    const order = await Order.findByIdAndUpdate(req.params.id, update, { returnDocument: 'after' });
     if (!order) return res.status(404).json({ error: 'Not found' });
     res.json(order);
   } catch (err) {
@@ -384,7 +376,7 @@ router.put('/:id/notes', requireAuth, async function(req, res) {
     if (customerNote !== undefined) update.customerNote = customerNote;
     if (internalNote !== undefined) update.internalNote = internalNote;
 
-    const order = await Order.findByIdAndUpdate(req.params.id, update, { new: true });
+    const order = await Order.findByIdAndUpdate(req.params.id, update, { returnDocument: 'after' });
     if (!order) return res.status(404).json({ error: 'Not found' });
     res.json(order);
   } catch (err) {
@@ -412,7 +404,7 @@ router.post('/:id/recovery-email', requireAuth, async function(req, res) {
     const updated = await Order.findByIdAndUpdate(
       req.params.id,
       { $push: { recoveryEmails: { seq, sentAt: new Date() } } },
-      { new: true }
+      { returnDocument: 'after' }
     );
     res.json({ sent: seq, recoveryEmails: updated.recoveryEmails });
   } catch (err) {
@@ -433,6 +425,14 @@ router.post('/:id/refund', requireAuth, async function(req, res) {
     if (!order) return res.status(404).json({ error: 'Not found' });
     if (!['paid', 'processing', 'shipped', 'delivered', 'partially_refunded'].includes(order.status)) {
       return res.status(400).json({ error: 'Order cannot be refunded in its current status' });
+    }
+
+    if ((order.displayCurrency || 'EUR').toUpperCase() !== 'EUR') {
+      return res.status(409).json({ error: 'This order was charged in another currency. Use Stripe to refund in the original charge currency; this EUR-only refund action cannot safely convert it.' });
+    }
+    const remaining = Math.max(0, (order.total || 0) - (order.refundedAmount || 0));
+    if (!Number.isFinite(amount) || Math.round(amount * 100) <= 0 || Math.round(amount * 100) > Math.round(remaining * 100)) {
+      return res.status(400).json({ error: 'Refund exceeds the remaining paid amount or is not a valid cent amount' });
     }
 
     // Determine which Stripe identifier to refund against
@@ -460,6 +460,8 @@ router.post('/:id/refund', requireAuth, async function(req, res) {
 
     const update = {
       refundedAmount: totalRefunded,
+      'costs.refundedAmount': totalRefunded,
+      customerSyncPending: true,
       refundedAt: new Date(),
       refundReason: reason || '',
       status: isFullRefund ? 'refunded' : 'partially_refunded',
@@ -479,7 +481,8 @@ router.post('/:id/refund', requireAuth, async function(req, res) {
       },
     };
 
-    const updated = await Order.findByIdAndUpdate(req.params.id, update, { new: true });
+    const updated = await Order.findByIdAndUpdate(req.params.id, update, { returnDocument: 'after' });
+    await syncAfterOrderChange(updated);
     // Independent, append-only record of the refund — survives later edits to
     // the order document.
     recordAudit(req, 'order.refund', {

@@ -1,19 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
-// Mirrors STATUS_TRANSITIONS in routes/orders.js. Each illegal move that slips
-// through sends a real customer email — "your order has shipped" for something
-// cancelled — so the map is worth pinning.
-const STATUS_TRANSITIONS = {
-  pending:    ['paid', 'failed', 'cancelled'],
-  paid:       ['processing', 'shipped', 'cancelled', 'refunded'],
-  processing: ['shipped', 'cancelled', 'refunded'],
-  shipped:    ['delivered', 'returned', 'refunded'],
-  delivered:  ['returned', 'refunded'],
-  returned:   ['refunded'],
-  cancelled:  [],
-  refunded:   [],
-  failed:     ['pending', 'cancelled'],
-};
+import states from '../utils/orderStates.js';
+const { STATUS_TRANSITIONS } = states;
 
 const can = (from, to) => from === to || (STATUS_TRANSITIONS[from] ?? []).includes(to);
 
