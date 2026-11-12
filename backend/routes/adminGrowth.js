@@ -28,13 +28,18 @@ const runLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 12, standardHeaders:
 const briefLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false });
 
 router.use(requireAuth);
+router.use((req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
+router.get('/evidence', async (req, res) => {
+  try { res.json(await require('../services/growthEvidence').growthEvidence()); }
+  catch { res.status(503).json({ error: 'Business evidence unavailable; no zero-data recommendation generated.' }); }
+});
 
 // GET /api/admin/growth — agents (with toggles + last run) and the pulse feed.
 router.get('/', async function(req, res) {
   try {
     const [agents, actions] = await Promise.all([
       describeAgents(),
-      GrowthAction.find().sort({ createdAt: -1 }).limit(50).lean(),
+      GrowthAction.find(typeof req.query.agent === 'string' && /^[a-zA-Z]{1,40}$/.test(req.query.agent) ? { agent: req.query.agent } : {}).sort({ createdAt: -1 }).limit(50).lean(),
     ]);
     res.json({ agents, actions });
   } catch (err) {
@@ -207,6 +212,7 @@ router.put('/settings', async function(req, res) {
 router.post('/run', runLimit, async function(req, res) {
   try {
     const result = await runGrowthEngine({ force: true, only: req.body?.agent || null });
+    if (result.busy) return res.status(409).json({ error: 'A pulse is already running. No duplicate was started.' });
     res.json({ ok: true, ...result });
   } catch (err) {
     console.error('[growth] manual run error:', err.message);
@@ -375,6 +381,7 @@ router.get('/self-test', async function(req, res) {
 router.post('/davinci', davinciLimit, async function(req, res) {
   try {
     const result = await unleashDaVinci();
+    if (result.busy) return res.status(409).json({ error: 'A strategy is already being generated.' });
     if (result.error) return res.status(400).json({ error: result.error });
     res.json({ ok: true, composition: result.composition });
   } catch (err) {
@@ -387,6 +394,8 @@ router.post('/davinci', davinciLimit, async function(req, res) {
 router.post('/brief', briefLimit, async function(req, res) {
   try {
     const result = await generateBrief();
+    if (result.busy) return res.status(409).json({ error: 'A brief is already being generated.' });
+    if (result.error) return res.status(503).json({ error: result.error });
     if (result.skipped) return res.status(400).json({ error: result.skipped });
     res.json({ ok: true, brief: result.brief });
   } catch (err) {

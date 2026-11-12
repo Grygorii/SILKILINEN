@@ -1,231 +1,59 @@
 'use client';
-
-import { useEffect, useState, useCallback } from 'react';
-import market from './MarketTable.module.css';
+import { useEffect, useState } from 'react';
 import styles from '../../page.module.css';
-
+import market from './MarketTable.module.css';
 const API = process.env.NEXT_PUBLIC_API_URL;
-
 type Totals = { clicks: number; impressions: number; ctr: number; position: number };
-// `better` already accounts for position being inverted (lower is better), so
-// the colour here never has to know which metric it is rendering.
-type Change = { delta: number; pct: number; better: boolean; flat: boolean } | null;
-type Changes = { clicks: Change; impressions: Change; ctr: Change; position: Change } | null;
-type Row = { key: string; clicks: number; impressions: number };
-type PerfData = {
-  configured: boolean;
-  connected: boolean;
-  sitemaps?: { sitemaps: number; submitted: number; indexed: number } | null;
-  performance?: {
-    range: { startDate: string; endDate: string; days: number };
-    totals: Totals;
-    previous?: Totals | null;
-    change?: Changes;
-    topQueries: Row[];
-    topPages: Row[];
-  } | null;
-  // Ranked and banded by the backend (utils/marketInsight): the market to act on
-  // is first, and anything under the impressions floor is 'watch' — shown, but
-  // never dressed up as a win.
-  countries?: { code?: string; country?: string; name?: string; clicks: number; impressions: number; position: number; share?: number; band?: 'lever' | 'foothold' | 'watch' }[];
-  marketHeadline?: string | null;
-};
-
-const COUNTRY: Record<string, string> = {
-  gbr: 'United Kingdom', usa: 'United States', irl: 'Ireland', aus: 'Australia', can: 'Canada',
-  deu: 'Germany', fra: 'France', nld: 'Netherlands', esp: 'Spain', ita: 'Italy', ind: 'India',
-  are: 'UAE', sgp: 'Singapore', che: 'Switzerland', swe: 'Sweden', nor: 'Norway', dnk: 'Denmark',
-  bel: 'Belgium', nzl: 'New Zealand', jpn: 'Japan', hkg: 'Hong Kong', zaf: 'South Africa',
-};
-const countryName = (c: string) => COUNTRY[String(c || '').toLowerCase()] || String(c || '').toUpperCase();
-
-function Stat({ label, value, change }: { label: string; value: string; change?: Change }) {
-  // A level with nothing to compare it against cannot be read: 718 impressions
-  // after 300 and after 1200 are opposite situations. A move under 5% is shown
-  // as flat rather than dressed up as a trend.
-  const arrow = !change ? null : change.flat ? '·' : change.better ? '▲' : '▼';
-  const colour = !change || change.flat
-    ? 'var(--admin-ink-muted)'
-    : change.better ? 'var(--admin-success)' : 'var(--admin-danger)';
-  return (
-    <div style={{ flex: 1, minWidth: 110, border: '1px solid var(--admin-line)', padding: '12px 14px' }}>
-      <p style={{ margin: 0, fontSize: 22, fontFamily: 'Georgia, serif', color: 'var(--admin-ink)' }}>{value}</p>
-      <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--admin-ink-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</p>
-      {change && (
-        <p style={{ margin: '4px 0 0', fontSize: 11, color: colour }}>
-          {arrow} {change.flat ? 'flat' : `${change.pct > 0 ? '+' : ''}${change.pct}%`}
-          <span style={{ color: 'var(--admin-ink-muted)' }}> vs previous 28d</span>
-        </p>
-      )}
-    </div>
-  );
+type Row = { key: string; clicks: number; impressions: number; ctr?: number; position?: number };
+type Perf = { range: { startDate: string; endDate: string; days: number }; previousRange?: { startDate: string; endDate: string }; totals: Totals; previous?: Totals | null; topQueries: Row[]; topPages: Row[]; priorities?: (Row & { kind: string; action: string; evidence: string })[] };
+type Data = { configured: boolean; connected: boolean; performance?: Perf | null; marketHeadline?: string; countries?: { code?: string; country?: string; name?: string; clicks: number; impressions: number; position: number; share?: number; band?: string }[] };
+function displayPath(value: string) { try { const url = new URL(value, 'https://www.silkilinen.com'); return url.pathname + url.search; } catch { return value; } }
+function safePage(value: string) { try { const url = new URL(value, 'https://www.silkilinen.com'); return ['www.silkilinen.com','silkilinen.com'].includes(url.hostname) && url.protocol === 'https:' ? url.pathname + url.search : null; } catch { return null; } }
+function delta(key: keyof Totals, now: number, before?: number) {
+  if (before == null) return 'No comparable baseline';
+  const difference = now - before, signed = (n: number) => `${n > 0 ? '+' : ''}${n.toFixed(1)}`;
+  if (key === 'ctr') return `${signed(difference * 100)} percentage points`;
+  if (key === 'position') return `${signed(difference)} positions · lower is better`;
+  return `${difference >= 0 ? '+' : ''}${Math.round(difference)}${before > 0 ? ` (${signed(difference / before * 100)}%)` : ''}`;
 }
-
-// Live Google Search Console data — search performance + sitemap indexing.
-// Shows a Connect button until OAuth is completed (see docs/
-// google-search-console-oauth-setup.md).
 export default function SearchPerformancePanel() {
-  const [data, setData] = useState<PerfData | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const fetchPerf = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API}/api/admin/google/search-console/performance`, { credentials: 'include' });
-      if (res.ok) setData(await res.json());
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchPerf(); }, [fetchPerf]);
-
-  // Don't render anything until we know the state (keeps the dashboard clean
-  // when Search Console hasn't been set up at all).
-  if (!data && !loading) return null;
-
-  return (
-    <div className={styles.section}>
-      <div className={styles.healthHeader}>
-        <p className={styles.sectionTitle} style={{ margin: 0 }}>Search performance</p>
-        {data?.connected && data.performance && (
-          <span className={styles.healthMeta}>
-            {data.performance.range.days} days · to {data.performance.range.endDate}
-          </span>
-        )}
-      </div>
-
-      {loading && !data && <p className={styles.loading}>Loading Search Console…</p>}
-
-      {/* Not set up at all — point to the guide. */}
-      {data && !data.configured && (
-        <p className={styles.healthCheckDetail} style={{ marginTop: 12 }}>
-          Search Console isn’t connected. See <code>docs/google-search-console-oauth-setup.md</code>, then set the OAuth env vars in Railway.
-        </p>
-      )}
-
-      {/* Configured but not yet authorised — one click. */}
-      {data && data.configured && !data.connected && (
-        <div style={{ marginTop: 12 }}>
-          <p className={styles.healthCheckDetail} style={{ marginBottom: 10 }}>
-            Connect Search Console to see live clicks, impressions and which pages Google indexed.
-          </p>
-          <a
-            href={`${API}/api/admin/google/search-console/connect`}
-            className={styles.healthRefreshBtn}
-            style={{ textDecoration: 'none', display: 'inline-block' }}
-          >
-            Connect Search Console
-          </a>
-        </div>
-      )}
-
-      {/* Connected — show the live data. */}
-      {data && data.connected && (
-        <div style={{ marginTop: 12 }}>
-          {data.performance ? (
-            <>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
-                <Stat label="Clicks" value={data.performance.totals.clicks.toLocaleString()} change={data.performance.change?.clicks} />
-                <Stat label="Impressions" value={data.performance.totals.impressions.toLocaleString()} change={data.performance.change?.impressions} />
-                <Stat label="CTR" value={`${(data.performance.totals.ctr * 100).toFixed(1)}%`} change={data.performance.change?.ctr} />
-                <Stat label="Avg position" value={data.performance.totals.position.toFixed(1)} change={data.performance.change?.position} />
-              </div>
-
-              <p className={styles.healthCheckDetail} style={{ marginTop: -6, marginBottom: 16, fontSize: 12 }}>
-                Finalised figures — these trail Google’s live Search Console view by ~2 days (Google keeps revising the most recent days), so for the same dates the totals here can read slightly lower than the GSC dashboard. The total can also exceed the queries listed: Google hides rare/anonymised queries from the per-query list but still counts them in the total.
-              </p>
-
-              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, minWidth: 220 }}>
-                  <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--admin-ink-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Top queries</p>
-                  {data.performance.topQueries.length === 0 && <p className={styles.healthCheckDetail}>No data yet.</p>}
-                  {data.performance.topQueries.map((q, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--admin-line)' }}>
-                      <span style={{ color: 'var(--admin-ink)' }}>{q.key}</span>
-                      <span style={{ color: 'var(--admin-ink-muted)', whiteSpace: 'nowrap', marginLeft: 12 }}>{q.clicks} clk · {q.impressions} imp</span>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ flex: 1, minWidth: 220 }}>
-                  <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--admin-ink-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Top pages</p>
-                  {data.performance.topPages.length === 0 && <p className={styles.healthCheckDetail}>No data yet.</p>}
-                  {data.performance.topPages.map((p, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--admin-line)' }}>
-                      <span style={{ color: 'var(--admin-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.key.replace(/^https?:\/\/[^/]+/, '') || '/'}</span>
-                      <span style={{ color: 'var(--admin-ink-muted)', whiteSpace: 'nowrap', marginLeft: 12 }}>{p.clicks} clk · {p.impressions} imp</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {data.countries && data.countries.length > 0 && (
-                <div style={{ marginTop: 16 }}>
-                  <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--admin-ink-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>By country — where Google shows the shop</p>
-
-                  {/* The conclusion, before the table. */}
-                  {data.marketHeadline && <p className={market.headline}>{data.marketHeadline}</p>}
-
-                  {/* A table, because these are numbers to compare. As wrapped
-                      tiles, a market's figures sat at a different horizontal
-                      position in every row and long verdicts broke across three
-                      lines. */}
-                  <div className={market.wrap}>
-                    <table className={market.table}>
-                      <thead>
-                        <tr>
-                          <th className={market.market}>Market</th>
-                          <th>Verdict</th>
-                          <th className={market.num}>Clicks</th>
-                          <th className={market.num}>Impressions</th>
-                          <th className={market.num}>Share</th>
-                          <th className={market.num}>Avg position</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.countries.slice(0, 12).map((c, i) => {
-                          // An OLDER backend returns no band at all. Defaulting
-                          // to 'watch' would label every market "too small to
-                          // judge" from deploy timing alone — Vercel and Railway
-                          // ship independently. No band means no verdict.
-                          const band = c.band;
-                          const cls = band === 'lever' ? market.lever
-                            : band === 'foothold' ? market.foothold
-                            : market.watch;
-                          const label = band === 'lever' ? 'work this one'
-                            : band === 'foothold' ? 'ranks well'
-                            : band === 'watch' ? 'too small to judge'
-                            : '';
-                          return (
-                            <tr key={i} className={band === 'watch' ? market.muted : undefined}>
-                              <td className={market.market}>{c.name ?? countryName(c.country ?? '')}</td>
-                              <td>{label && <span className={`${market.verdict} ${cls}`}>{label}</span>}</td>
-                              <td className={market.num}>{c.clicks}</td>
-                              <td className={market.num}>{c.impressions}</td>
-                              <td className={market.num}>{typeof c.share === 'number' ? `${c.share}%` : '—'}</td>
-                              <td className={market.num}>{c.position}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <p className={styles.healthCheckDetail}>Connected, but no performance data returned yet (new sites take days to accumulate).</p>
-          )}
-
-          {data.sitemaps && (
-            <p className={styles.healthCheckDetail} style={{ marginTop: 14 }}>
-              Sitemap: Google last read {data.sitemaps.submitted.toLocaleString()} URLs. It re-fetches on its own
-              schedule — a sitemap cannot be pushed to Google (the ping endpoint was retired in 2023), so a
-              number trailing the live sitemap just means Google has not been back yet.
-            </p>
-          )}
-        </div>
-      )}
-    </div>
-  );
+  const [data, setData] = useState<Data | null>(null), [error, setError] = useState(''), [loading, setLoading] = useState(true), [revision, setRevision] = useState(0);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${API}/api/admin/google/search-console/performance`, { credentials: 'include', signal: controller.signal })
+      .then(async response => { if (!response.ok) throw new Error('Search performance is unavailable.'); return response.json(); })
+      .then(value => { if (!controller.signal.aborted) { setData(value); setError(''); } })
+      .catch(reason => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : 'Search performance is unavailable.'); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [revision]);
+  const p = data?.performance;
+  return <section className={styles.section}>
+    <div className={styles.healthHeader}><h2 className={styles.sectionTitle}>Search performance · evidence before action</h2><button className={styles.healthRefreshBtn} onClick={() => { setLoading(true); setError(''); setRevision(value => value + 1); }} disabled={loading}>{loading ? 'Loading…' : 'Refresh'}</button></div>
+    {error && <p role="alert">{error} Existing figures, if shown, are from the previous successful fetch.</p>}
+    {data && !data.connected && <p style={{ marginTop: 12 }}>Search Console is not connected. {data.configured && <a href={`${API}/api/admin/google/search-console/connect`}>Connect Search Console</a>}</p>}
+    {p && <>
+      <p style={{ fontSize: 12, margin: '10px 0 16px', color: 'var(--admin-ink-muted)' }}>{p.range.startDate}–{p.range.endDate} · {p.range.days} inclusive days · Pacific dates · finalised web-search data.{p.previousRange && <> Compared with {p.previousRange.startDate}–{p.previousRange.endDate}.</>}</p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>{(['clicks','impressions','ctr','position'] as const).map(key => <div key={key} style={{ flex: 1, minWidth: 145, padding: 16, border: '1px solid var(--admin-line)' }}>
+        <strong style={{ fontSize: 25, fontFamily: 'Georgia, serif' }}>{key === 'ctr' ? `${(p.totals[key] * 100).toFixed(1)}%` : key === 'position' ? p.totals.impressions ? p.totals[key].toFixed(1) : '—' : p.totals[key].toLocaleString()}</strong>
+        <p style={{ fontSize: 12, marginTop: 5 }}>{({ clicks: 'Google clicks', impressions: 'Search impressions', ctr: 'Click-through rate', position: 'Average position' })[key]}</p>
+        <p style={{ fontSize: 11, marginTop: 4, color: 'var(--admin-ink-muted)' }}>{key === 'position' && (!p.totals.impressions || !p.previous?.impressions) ? 'No comparable position baseline' : delta(key, p.totals[key], p.previous?.[key])}</p>
+      </div>)}</div>
+      <p style={{ margin: '14px 0', fontSize: 13, lineHeight: 1.7 }}>Search appearances and clicks are not unique shoppers, orders or profit. Average position mixes queries, devices and countries; it is not a fixed page rank. A changing query mix can move the average without every page improving or worsening.</p>
+      {!!p.priorities?.length && <div style={{ marginBlock: 24 }}><h3 style={{ fontSize: 16 }}>Pages worth reviewing next</h3><p style={{ fontSize: 12, color: 'var(--admin-ink-muted)' }}>Shopping pages first, then existing editorial traffic. The 50-impression screen is a prioritisation heuristic, not statistical proof.</p>
+        {p.priorities.map(row => <article key={row.key} style={{ padding: '14px 0', borderBottom: '1px solid var(--admin-line)' }}>
+          <p style={{ fontSize: 14, overflowWrap: 'anywhere' }}>{safePage(row.key) ? <a href={safePage(row.key)!} target="_blank" rel="noopener noreferrer">{displayPath(row.key)} ↗</a> : displayPath(row.key)}</p>
+          <p style={{ fontSize: 12, color: 'var(--admin-ink-muted)', marginBlock: 5 }}>{row.kind} · {row.clicks} clicks / {row.impressions} impressions · CTR {((row.ctr || 0) * 100).toFixed(1)}% · avg. position {row.position?.toFixed(1) ?? '—'}</p>
+          <p style={{ fontSize: 13, maxWidth: '95ch', lineHeight: 1.7 }}>{row.action}</p>
+        </article>)}
+      </div>}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>{[{ title: 'Queries', rows: p.topQueries },{ title: 'Pages', rows: p.topPages }].map(({ title, rows }) => <div key={title} style={{ flex: 1, minWidth: 250 }}>
+        <h3 style={{ fontSize: 15, marginBottom: 10 }}>Top {title.toLowerCase()} by clicks</h3>
+        {rows.map(row => <div key={row.key} style={{ padding: '8px 0', borderBottom: '1px solid var(--admin-line)', fontSize: 13, overflowWrap: 'anywhere' }}><p>{title === 'Pages' ? displayPath(row.key) : row.key}</p><p style={{ fontSize: 11, color: 'var(--admin-ink-muted)' }}>{row.clicks} clicks · {row.impressions} impressions · {((row.ctr ?? (row.impressions ? row.clicks / row.impressions : 0)) * 100).toFixed(1)}% CTR · position {row.position?.toFixed(1) ?? '—'}{row.impressions < 50 ? ' · small sample' : ''}</p></div>)}
+      </div>)}</div>
+      {!!data?.countries?.length && <div style={{ marginTop: 24 }}><h3 style={{ fontSize: 15 }}>Country visibility—not a market verdict</h3><p className={market.headline}>{data.marketHeadline}</p><div className={market.wrap}><table className={market.table}><thead><tr><th>Country</th><th>Review cue</th><th>Clicks</th><th>Impressions</th><th>CTR</th><th>Avg. position</th></tr></thead><tbody>{data.countries.slice(0,12).map((row,i) => <tr key={row.code || i}><td>{row.name || row.country}</td><td>{row.band === 'lever' ? 'Inspect query/page mix' : row.band === 'foothold' ? 'Inspect click-through' : 'Small sample'}</td><td>{row.clicks}</td><td>{row.impressions}</td><td>{(row.clicks / Math.max(1,row.impressions) * 100).toFixed(1)}%</td><td>{row.position}</td></tr>)}</tbody></table></div></div>}
+      <p style={{ fontSize: 12, color: 'var(--admin-ink-muted)', lineHeight: 1.7, marginTop: 18 }}>Google may omit anonymised queries and limit returned rows. Lists need not add up to property totals. Review the same query, page, country and device before changing titles; do not bulk-rewrite successful pages from a site-wide average.</p>
+    </>}
+    {data?.connected && !p && !loading && <p>Search Console returned no performance report. This is not proof of zero traffic.</p>}
+  </section>;
 }

@@ -76,9 +76,9 @@ describe('which market to work on', () => {
     const by = n => markets.find(m => m.name === n);
     // Volume, page two -> the work is ranking.
     expect(by('United Kingdom').band).toBe('lever');
-    expect(by('Ireland').band).toBe('lever');
+    expect(by('Ireland').band).toBe('watch');
     // Volume, page one -> the work is demand.
-    expect(by('Spain').band).toBe('foothold');
+    expect(by('Spain').band).toBe('watch');
     // Good position but too few impressions to claim either.
     expect(by('Netherlands').band).toBe('watch');
   });
@@ -88,7 +88,7 @@ describe('which market to work on', () => {
     expect(line).toMatch(/United Kingdom/);
     expect(line).toMatch(/36%/);
     expect(line).toMatch(/everything Google shows/);
-    expect(line).toMatch(/page two/);
+    expect(line).toMatch(/not a search-results page number/);
     // And it names the other basis when that is the one it used.
     expect(marketHeadline(rankMarkets(LIVE))).toMatch(/attributes to a country/);
   });
@@ -99,8 +99,8 @@ describe('which market to work on', () => {
       { country: 'mlt', clicks: 1, impressions: 1, position: 2 },
     ]));
     // Nothing to fix in ranking — the limit is how many people search.
-    expect(line).toMatch(/already ranks well/);
-    expect(line).toMatch(/how many people search/);
+    expect(line).toMatch(/Inspect relevant queries/);
+    expect(line).toMatch(/do not establish sales potential/);
   });
 
   it('says nothing at all when no market clears the floor', () => {

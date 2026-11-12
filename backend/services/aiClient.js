@@ -10,6 +10,8 @@ const OpenAI = require('openai');
 const client = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY || 'not-set',
   baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
+  timeout: 90000,
+  maxRetries: 0,
 });
 
 // Shared cost policy: a persistent (restart-surviving) daily cap on DeepSeek

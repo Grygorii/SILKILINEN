@@ -188,18 +188,15 @@ function describeChange(now, was, { metric = 'count' } = {}) {
 }
 
 async function getSearchPerformance(days = 28) {
-  const startDate = dateStr(days + 2);
-  const endDate = dateStr(2);
-  const base = { startDate, endDate };
-  // The window immediately before this one, same length — so the panel can say
-  // whether a number is a CHANGE rather than only a level. 718 impressions means
-  // nothing on its own; 718 after 300 and 718 after 1200 are opposite situations.
-  const prevBase = { startDate: dateStr(days * 2 + 2), endDate: startDate };
+  const { current, previous: priorWindow } = require('../utils/searchEvidence').searchWindows(days);
+  const { startDate, endDate } = current;
+  const base = { ...current, dataState: 'final', type: 'web' };
+  const prevBase = { ...priorWindow, dataState: 'final', type: 'web' };
 
   const [totals, byQuery, byPage, prevTotals] = await Promise.all([
     apiPost(`sites/${siteSegment()}/searchAnalytics/query`, base),
-    apiPost(`sites/${siteSegment()}/searchAnalytics/query`, { ...base, dimensions: ['query'], rowLimit: 5 }),
-    apiPost(`sites/${siteSegment()}/searchAnalytics/query`, { ...base, dimensions: ['page'], rowLimit: 5 }),
+    apiPost(`sites/${siteSegment()}/searchAnalytics/query`, { ...base, dimensions: ['query'], rowLimit: 250 }),
+    apiPost(`sites/${siteSegment()}/searchAnalytics/query`, { ...base, dimensions: ['page'], rowLimit: 250 }),
     // Fails soft on its own: a missing baseline must not cost the live figures.
     apiPost(`sites/${siteSegment()}/searchAnalytics/query`, prevBase).catch(() => null),
   ]);
@@ -214,7 +211,10 @@ async function getSearchPerformance(days = 28) {
   } : null;
 
   return {
-    range: { startDate, endDate, days },
+    range: { startDate, endDate, days, timezone: 'America/Los_Angeles', dataState: 'final' },
+    previousRange: priorWindow,
+    collectedAt: new Date().toISOString(),
+    priorities: require('../utils/searchEvidence').searchPriorities((byPage?.rows || []).map(r => ({ key: r.keys[0], clicks: Math.round(r.clicks || 0), impressions: Math.round(r.impressions || 0), ctr: r.ctr || 0, position: r.position || 0 }))),
     totals: {
       clicks: Math.round(t.clicks || 0),
       impressions: Math.round(t.impressions || 0),
@@ -228,8 +228,8 @@ async function getSearchPerformance(days = 28) {
       ctr: describeChange(t.ctr, previous.ctr),
       position: describeChange(t.position, previous.position, { metric: 'position' }),
     } : null,
-    topQueries: (byQuery?.rows || []).map(r => ({ key: r.keys[0], clicks: Math.round(r.clicks || 0), impressions: Math.round(r.impressions || 0) })),
-    topPages: (byPage?.rows || []).map(r => ({ key: r.keys[0], clicks: Math.round(r.clicks || 0), impressions: Math.round(r.impressions || 0) })),
+    topQueries: (byQuery?.rows || []).slice(0, 10).map(r => ({ key: r.keys[0], clicks: Math.round(r.clicks || 0), impressions: Math.round(r.impressions || 0), ctr: r.ctr || 0, position: r.position || 0 })),
+    topPages: (byPage?.rows || []).slice(0, 10).map(r => ({ key: r.keys[0], clicks: Math.round(r.clicks || 0), impressions: Math.round(r.impressions || 0), ctr: r.ctr || 0, position: r.position || 0 })),
   };
 }
 
@@ -240,8 +240,8 @@ async function getSearchPerformance(days = 28) {
 // from nothing.
 async function getQueryOpportunities(days = 28) {
   const body = {
-    startDate: dateStr(days + 2),
-    endDate: dateStr(2),
+    ...require('../utils/searchEvidence').searchWindows(days).current,
+    dataState: 'final',
     dimensions: ['query'],
     rowLimit: 25,
   };
@@ -269,8 +269,8 @@ async function getQueryOpportunities(days = 28) {
 async function getQueryStrings(days = 28, limit = 1000) {
   try {
     const body = {
-      startDate: dateStr(days + 2),
-      endDate: dateStr(2),
+      ...require('../utils/searchEvidence').searchWindows(days).current,
+      dataState: 'final',
       dimensions: ['query'],
       rowLimit: limit,
     };
@@ -292,8 +292,8 @@ async function getQueryStrings(days = 28, limit = 1000) {
 async function getQueryPagePairs(days = 28) {
   try {
     const body = {
-      startDate: dateStr(days + 2),
-      endDate: dateStr(2),
+      ...require('../utils/searchEvidence').searchWindows(days).current,
+      dataState: 'final',
       dimensions: ['query', 'page'],
       rowLimit: 250,
     };
@@ -344,8 +344,8 @@ async function inspectUrl(url) {
 // Returns ISO-3 country codes (gbr, usa, irl…) with clicks/impressions/position.
 async function getCountryBreakdown(days = 28) {
   const res = await apiPost(`sites/${siteSegment()}/searchAnalytics/query`, {
-    startDate: dateStr(days + 2),
-    endDate: dateStr(2),
+    ...require('../utils/searchEvidence').searchWindows(days).current,
+    dataState: 'final',
     dimensions: ['country'],
     rowLimit: 12,
   }).catch(() => null);

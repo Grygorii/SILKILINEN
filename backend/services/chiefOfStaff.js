@@ -22,23 +22,17 @@ const Order = require('../models/Order');
 const Visit = require('../models/Visit');
 const Product = require('../models/Product');
 const JournalArticle = require('../models/JournalArticle');
-const { mergeLearnings, playbookPromptBlock } = require('./playbook');
+const { playbookPromptBlock } = require('./playbook');
 
 const client = require('./aiClient'); // shared DeepSeek client
 const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 
 const NORTH_STAR_KEY = 'growthNorthStar';
-const PAID = ['paid', 'shipped', 'delivered'];
+const PAID = require('../utils/customerOrderStats').PURCHASE_STATUSES;
 const DAY = 86400000;
 
-// Cities that are search-engine / cloud data centres, not shoppers. The brain
-// must remember what we proved: a chunk of "visits" are bots. Reasoning on
-// human visits keeps it from mistaking crawler traffic for demand.
-const DATA_CENTRE_CITIES = [
-  'San Jose', 'Mountain View', 'The Dalles', 'Council Bluffs',
-  'Ashburn', 'Boardman', 'Columbus', 'Santa Clara',
-];
-const humanVisitMatch = (range) => ({ ...range, city: { $nin: DATA_CENTRE_CITIES } });
+// Browser identity is unverified; geography alone is not a bot classification.
+const humanVisitMatch = range => range; // Compatibility name, not a human count.
 
 // One brief used to make Search Console's getSearchPerformance() three times.
 // Memoise for 60s so a single generation hits the network once, not thrice —
@@ -90,10 +84,10 @@ async function northStarStatus() {
   const pct = current != null && target > 0 ? Math.round((current / target) * 100) : null;
   const label = METRICS[ns.metric].label;
   const now = Date.now();
-  const setAt = ns.setAt ? new Date(ns.setAt).getTime() : now;
+  // Rolling-window targets are not cumulative progress toward a deadline.
   // Month input ("2026-11") or full date — normalise to a timestamp.
   const deadline = ns.deadline
-    ? new Date(ns.deadline.length === 7 ? `${ns.deadline}-01` : ns.deadline).getTime()
+    ? new Date(ns.deadline.length === 7 ? new Date(Date.UTC(Number(ns.deadline.slice(0,4)), Number(ns.deadline.slice(5)), 0, 23, 59, 59)) : ns.deadline).getTime()
     : null;
 
   let pace = 'measuring';
@@ -103,19 +97,9 @@ async function northStarStatus() {
   } else if (pct >= 100) {
     pace = 'achieved';
     guidance = `You've reached it — ${current} vs ${target}. Time to raise the star higher.`;
-  } else if (deadline && deadline > setAt) {
-    const elapsed = Math.min(1, Math.max(0, (now - setAt) / (deadline - setAt)));
-    const expectedPct = Math.round(elapsed * 100);
-    const monthsLeft = Math.max(0, (deadline - now) / (30 * DAY));
-    const gap = Math.max(0, Math.round((target - current) * 100) / 100);
-    if (pct + 8 >= expectedPct) {
-      pace = 'on track';
-      guidance = `On pace — ${current} of ${target} ${label.toLowerCase()} (${pct}%). Hold the course: keep approving the engine's moves.`;
-    } else {
-      pace = 'drifting';
-      const perMonth = monthsLeft >= 1 ? `~${(gap / monthsLeft).toFixed(1)}/month` : 'this month';
-      guidance = `Drifting — ${pct}% of target but ${expectedPct}% of the time to ${ns.deadline} is gone. You need +${gap} more (${perMonth}). Open this week's brief — that's your correction.`;
-    }
+  } else if (deadline) {
+    pace = now > deadline ? 'drifting' : 'measuring';
+    guidance = `${current} versus a target of ${target} (${pct}%). This is a rolling-window metric, not cumulative progress; a linear time-elapsed forecast would be misleading. ${now > deadline ? 'The target date has passed; review the goal and evidence.' : 'Review the observed trend before judging whether the goal is on track.'}`;
   } else {
     pace = 'no deadline';
     guidance = `${pct ?? 0}% there (${current}/${target}). Add a "by when" date and I'll watch your pace and warn you the moment you drift.`;
@@ -133,7 +117,7 @@ async function currentValue(metric) {
   if (metric === 'revenue_per_month') {
     const r = await Order.aggregate([
       { $match: { status: { $in: PAID }, createdAt: { $gte: since30 } } },
-      { $group: { _id: null, v: { $sum: '$total' } } },
+      { $group: { _id: null, v: { $sum: { $cond: [{ $eq: ['$status', 'refunded'] }, 0, { $max: [0, { $subtract: [{ $ifNull: ['$total', 0] }, { $max: [{ $ifNull: ['$refundedAmount', 0] }, { $ifNull: ['$costs.refundedAmount', 0] }] }] }] }] } } } },
     ]);
     return Math.round((r[0]?.v || 0) * 100) / 100;
   }
@@ -162,18 +146,18 @@ async function measure() {
   const [ordersThis, ordersPrev, revThis, revPrev, visThis, visPrev, priceStats, anomalies, activeProducts] = await Promise.all([
     Order.countDocuments({ status: { $in: PAID }, createdAt: { $gte: since7 } }),
     Order.countDocuments({ status: { $in: PAID }, createdAt: { $gte: since14, $lt: since7 } }),
-    Order.aggregate([{ $match: { status: { $in: PAID }, createdAt: { $gte: since7 } } }, { $group: { _id: null, v: { $sum: '$total' } } }]),
-    Order.aggregate([{ $match: { status: { $in: PAID }, createdAt: { $gte: since14, $lt: since7 } } }, { $group: { _id: null, v: { $sum: '$total' } } }]),
+    Order.aggregate([{ $match: { status: { $in: PAID }, createdAt: { $gte: since7 } } }, { $group: { _id: null, v: { $sum: { $cond: [{ $eq: ['$status', 'refunded'] }, 0, { $max: [0, { $subtract: [{ $ifNull: ['$total', 0] }, { $max: [{ $ifNull: ['$refundedAmount', 0] }, { $ifNull: ['$costs.refundedAmount', 0] }] }] }] }] } } } }]),
+    Order.aggregate([{ $match: { status: { $in: PAID }, createdAt: { $gte: since14, $lt: since7 } } }, { $group: { _id: null, v: { $sum: { $cond: [{ $eq: ['$status', 'refunded'] }, 0, { $max: [0, { $subtract: [{ $ifNull: ['$total', 0] }, { $max: [{ $ifNull: ['$refundedAmount', 0] }, { $ifNull: ['$costs.refundedAmount', 0] }] }] }] }] } } } }]),
     // Visitors, bot-aware: exclude data-centre cities so crawlers aren't counted as shoppers.
     Visit.aggregate([{ $match: humanVisitMatch({ createdAt: { $gte: since7 } }) }, { $group: { _id: '$sessionId' } }, { $count: 'n' }]),
     Visit.aggregate([{ $match: humanVisitMatch({ createdAt: { $gte: since14, $lt: since7 } }) }, { $group: { _id: '$sessionId' } }, { $count: 'n' }]),
     // Catalogue price floor — priced products only, so one unpriced/draft row
     // can't drag the floor (and the whole "is this a real sale" check) to €0.
     Product.aggregate([{ $match: { status: { $in: ['active', 'sold_out'] }, price: { $gt: 0 } } }, { $group: { _id: null, min: { $min: '$price' }, max: { $max: '$price' }, avg: { $avg: '$price' } } }]),
-    // Orders whose total is below the cheapest product = test / refund / data anomaly, NOT real sales.
+    // Below-current-floor orders are a review cue, not proof of test or invalid sales.
     Order.aggregate([
       { $match: { status: { $in: PAID }, createdAt: { $gte: since30 } } },
-      { $group: { _id: null, total: { $sum: 1 }, revenue: { $sum: '$total' }, minOrder: { $min: '$total' } } },
+      { $group: { _id: null, total: { $sum: 1 }, revenue: { $sum: { $cond: [{ $eq: ['$status', 'refunded'] }, 0, { $max: [0, { $subtract: [{ $ifNull: ['$total', 0] }, { $max: [{ $ifNull: ['$refundedAmount', 0] }, { $ifNull: ['$costs.refundedAmount', 0] }] }] }] }] } }, minOrder: { $min: '$total' } } },
     ]),
     // Active catalogue size — the authoritative "do we have products" signal, so
     // the brain never mistakes a €0 price-floor glitch for an empty catalogue.
@@ -216,7 +200,9 @@ async function measure() {
   // no agent read this; the brain reasons over it alongside orders and GSC.
   const clickstream = await require('./clickstream').getClickstreamSignals(14).catch(() => null);
 
+  const commerce = require('./commerceEvidence').publicEvidence(await require('./commerceEvidence').loadEvidence(30));
   return {
+    commerce,
     orders: { last7: ordersThis, prev7: ordersPrev },
     revenue: { last7: Math.round((revThis[0]?.v || 0) * 100) / 100, prev7: Math.round((revPrev[0]?.v || 0) * 100) / 100 },
     humanVisitors: { last7: visThis[0]?.n || 0, prev7: visPrev[0]?.n || 0 },
@@ -224,8 +210,8 @@ async function measure() {
     priceFloorEUR: Math.round(floor * 100) / 100,
     priceCeilingEUR: Math.round((priceStats[0]?.max || 0) * 100) / 100,
     avgPriceEUR: Math.round((priceStats[0]?.avg || 0) * 100) / 100,
-    anomalousOrders30d: anomalyCount, // orders below the cheapest product → test/refund/data, not sales
-    sources: sources.map(s => ({ source: s._id || 'direct', sessions: s.n })),
+    anomalousOrders30d: anomalyCount, // review cue only; never an automatic exclusion
+    sources: commerce.sources.filter(row => row.visitors > 0).map(row => ({ source: row.displayLabel, sessions: row.visitors })),
     topProducts: topProducts.map(p => ({ name: p._id, units: p.units })),
     search,
     clickstream,
@@ -255,9 +241,9 @@ async function contentOutcomes() {
       title: a.title,
       target: a.keywords?.[0] || '',
       ageDays,
-      clicks: stats?.clicks ?? 0,
-      impressions: stats?.impressions ?? 0,
-      verdict: stats && stats.impressions > 20 ? 'gaining traction' : (ageDays && ageDays > 30 ? 'not ranking yet' : 'too early'),
+      clicks: stats?.clicks ?? null,
+      impressions: stats?.impressions ?? null,
+      verdict: !stats ? 'not present in returned top-page rows; performance unknown' : stats.impressions > 20 ? 'recorded search visibility; check shopping intent' : 'small sample',
     };
   });
 }
@@ -316,7 +302,7 @@ const BRIEF_SYSTEM = `You are the Chief of Staff / co-CEO for SILKILINEN, a QUIE
 
 THREE NON-NEGOTIABLE WAYS OF THINKING:
 
-1. INTERROGATE THE DATA — never parrot it. You are told the catalogue price floor. If revenue or average-order-value is below the cheapest product, those are TEST orders, refunds, or a data glitch — say so plainly and exclude them; do NOT call €5 of revenue a "first revenue week". You are told how many visits are likely search-engine/data-centre BOTS — discount them; never call bot traffic "demand" or "a channel working". If a number looks impossible for this business, flag it as suspect rather than building a story on it.
+1. INTERROGATE THE DATA. Ledger purchases are observed sales. Price alone cannot distinguish a discounted or older order from a test: flag uncertainty, do not exclude it without evidence. Browser IDs are not people or timed sessions; geography alone does not prove bots. Missing attribution means UNKNOWN, never zero. Separate facts, hypotheses and measurable experiments. Two orders cannot prove a winning channel.
 
 2. PROTECT THE LUXURY POSITION — this is the cardinal rule. NEVER recommend competing on price, discounts, "we're cheaper than [premium brand]", or comparison-to-rival pages framed around being the affordable option. That destroys luxury equity (it is the Lidl-vs-Aldi move and it is forbidden). Differentiate ONLY through specificity, fabric/craft detail, story, service, and owning a niche the field ignores. Aspire upward, never undercut.
 
@@ -342,42 +328,11 @@ Rules: 3-4 moves max, each tied to a real number. buildIdeas only from the compe
 // founder is never left with a stale brief. Applies the same skepticism the
 // prompt demands: discount sub-floor "revenue", treat near-zero human traffic
 // as no audience, never suggest undercutting.
-function fallbackBriefFields(m, ns, competitors) {
-  const realRevenue = m.anomalousOrders30d > 0
-    ? `€${m.revenue.last7} of reported revenue this week is at or below your €${m.priceFloorEUR} price floor, so it is test/refund/anomalous — not real sales.`
-    : `€${m.revenue.last7} revenue this week from ${m.orders.last7} paid order(s).`;
-  const audience = (m.humanVisitors.last7 || 0) < 5
-    ? `Real human visitors are essentially zero this week (${m.humanVisitors.last7}, bots excluded) — there is no audience to convert yet, so the job is attracting people, not optimising.`
-    : `${m.humanVisitors.last7} human visitors this week (bots excluded).`;
-  const progressLine = ns
-    ? `You're at ${ns.current ?? 0} of ${ns.target} ${ns.label?.toLowerCase() || 'on your goal'} (${ns.pct ?? 0}%).`
-    : 'No goal set yet — set your AI Star so the engine has a target.';
-  return {
-    headline: m.orders.last7 > 0 && m.anomalousOrders30d === 0
-      ? `${m.orders.last7} real order(s) this week — early but real.`
-      : `Pre-traction: the work right now is attracting your first real visitors.`,
-    progress: `${progressLine} ${realRevenue}`,
-    whatChanged: `${audience} Direct/own-network and bots dominate; no organic channel is firing yet.`,
-    whatsWorking: m.search && m.search.totals.impressions > 0
-      ? `Google shows ${m.search.totals.impressions} impressions but ${m.search.totals.clicks} clicks — you're being seen for a few queries; nothing is converting to traffic yet.`
-      : `Nothing is driving real traffic yet — content and demand-building are the levers, not conversion tweaks.`,
-    marketRead: `You sit in a crowded field of ${competitors.length} silk/sleepwear brands. Don't fight on price — own a specific niche (fabric story, considered service, a tightly-defined aesthetic) the big names ignore.`,
-    moves: [
-      { title: 'Publish the strongest drafted SEO article', agent: 'content', why: 'Each ranked article is a permanent door for new visitors — your only free traffic engine right now.' },
-      { title: 'Run the Demand Scout and act on one rising search', agent: 'demand', why: 'Build content/products around real demand instead of guessing.' },
-      { title: 'Approve the queued social drafts', agent: 'social', why: 'Keep the owned channels alive while organic builds.' },
-    ],
-    founderActions: [
-      'Share the shop (and the new Style Finder) with your own network — the only warm audience you have today.',
-      m.anomalousOrders30d > 0 ? 'Check the sub-floor orders in admin — confirm they are tests/refunds and not a pricing bug.' : 'Take the Style Finder yourself and sanity-check the recommendations.',
-    ],
-    buildIdeas: [],
-    learnings: [],
-  };
-}
+const { fallbackBriefFields } = require('./growthEvidence');
 
 // Safe metrics shape so the brief can always render even if a query fails.
 const SAFE_METRICS = {
+  unavailable: true,
   orders: { last7: 0, prev7: 0 }, revenue: { last7: 0, prev7: 0 },
   humanVisitors: { last7: 0, prev7: 0 }, activeProducts: 0, priceFloorEUR: 0, priceCeilingEUR: 0, avgPriceEUR: 0,
   anomalousOrders30d: 0, sources: [], topProducts: [], search: null,
@@ -407,26 +362,14 @@ const coerceStrings = (arr) => (Array.isArray(arr) ? arr.slice(0, 3).map(asStr).
 async function generateBrief() {
   if (!process.env.DEEPSEEK_API_KEY) return { skipped: 'AI not configured' };
   try {
-    return await generateBriefCore();
+    return await require('./workflowLease').withWorkflowLease('growth-brief', generateBriefCore);
   } catch (err) {
-    console.error('[chief] generateBrief failed entirely, writing minimal brief:', err.message);
-    try {
-      const m = await measure().catch(() => SAFE_METRICS);
-      const fb = fallbackBriefFields(m, null, []);
-      const brief = await CEOBrief.create({
-        headline: fb.headline, progress: fb.progress, whatChanged: fb.whatChanged,
-        whatsWorking: fb.whatsWorking, marketRead: fb.marketRead,
-        moves: coerceMoves(fb.moves), founderActions: coerceStrings(fb.founderActions),
-        buildIdeas: [], metrics: { usedFallback: true },
-      });
-      return { brief };
-    } catch (e2) {
-      return { error: e2.message };
-    }
+    console.error('[chief] generation failed; previous brief retained:', err.code || err.name);
+    return { error: 'Brief could not be generated. Previous brief retained.' };
   }
 }
 
-async function generateBriefCore() {
+async function generateBriefCore(assertLease = () => {}) {
   const { getCompetitors } = require('./competitorIntel');
   // Every gather is fail-soft — one slow/broken query can never sink the brief.
   const [northStar, metrics, outcomes, ideas, recentActions, competitors, clerks] = await Promise.all([
@@ -434,10 +377,12 @@ async function generateBriefCore() {
     measure().catch(e => { console.warn('[chief] measure failed:', e.message); return SAFE_METRICS; }),
     contentOutcomes().catch(() => []),
     buildIdeaCandidates().catch(() => []),
-    GrowthAction.find().sort({ createdAt: -1 }).limit(20).select('agent type title status').lean().catch(() => []),
+    GrowthAction.find({ createdAt: { $gte: new Date(Date.now() - 30 * DAY) }, status: { $nin: ['error', 'rejected'] } }).sort({ createdAt: -1 }).limit(20).select('agent type title status').lean().catch(() => []),
     getCompetitors().catch(() => []),
     clerksVerdict().catch(() => null),
   ]);
+
+  if (metrics.unavailable) return { error: 'Authoritative metrics unavailable. Previous brief retained; no zero-data story generated.' };
 
   // Resilience guard. measure() is fail-soft to all-zeros (SAFE_METRICS) — but a
   // false "0 active products" would write a "pre-launch / no products" panic AND
@@ -459,7 +404,7 @@ async function generateBriefCore() {
   // chiefOfStaff↔davinci cycle. Only used if a composition is recent (≤100d).
   const composition = await require('./davinci').latestComposition().catch(() => null);
   const compAgeDays = composition?.createdAt ? Math.round((Date.now() - new Date(composition.createdAt).getTime()) / DAY) : null;
-  const directionLine = (composition && compAgeDays != null && compAgeDays <= 100)
+  const directionLine = (composition && compAgeDays != null && compAgeDays < 90)
     ? `ACTIVE 90-DAY DIRECTION (Da Vinci's vision, ${compAgeDays}d ago — make this week's moves serve it): ${composition.grandIdea?.title ? `"${composition.grandIdea.title}" — ` : ''}${(composition.vision || '').slice(0, 300)}`
     : '';
 
@@ -479,26 +424,27 @@ async function generateBriefCore() {
 
   const userPayload = [
     learned, learned ? '' : '',
+    metrics.commerce ? require('./commerceEvidence').evidencePrompt(metrics.commerce) : 'Acquisition evidence unavailable.',
     nsBlock, '',
     directionLine, '',
     metrics.activeProducts > 0
-      ? `CATALOGUE REALITY (sanity-check all money against this): the store has ${metrics.activeProducts} ACTIVE product(s) priced €${metrics.priceFloorEUR}–€${metrics.priceCeilingEUR}, average €${metrics.avgPriceEUR}. The catalogue is LIVE — do NOT call this "pre-launch", "a catalogue with no products", or claim there is nothing to sell. The cheapest product is €${metrics.priceFloorEUR}, so any order or AOV below that is NOT a real sale.`
+      ? `CATALOGUE REALITY (sanity-check all money against this): the store has ${metrics.activeProducts} ACTIVE product(s) priced €${metrics.priceFloorEUR}–€${metrics.priceCeilingEUR}, average €${metrics.avgPriceEUR}. The catalogue is LIVE — do NOT call this "pre-launch", "a catalogue with no products", or claim there is nothing to sell. The current minimum price does not prove that older or discounted orders are invalid.`
       : `CATALOGUE REALITY: no ACTIVE products were detected. This may be genuinely pre-launch OR a data glitch — say "no active products detected, verify the catalogue" and flag it to check; do NOT assert the catalogue is empty as established fact.`,
     metrics.anomalousOrders30d > 0
-      ? `⚠ DATA WARNING: ${metrics.anomalousOrders30d} order(s) in the last 30d are below the €${metrics.priceFloorEUR} price floor — treat these as test/refund/anomalous and EXCLUDE them from any "revenue" or "first sales" claim.`
+      ? `⚠ DATA WARNING: ${metrics.anomalousOrders30d} order(s) in the last 30d are below the €${metrics.priceFloorEUR} price floor — flag these for review, not exclusion; test status requires payment or founder evidence.`
       : '',
     '',
     `THIS WEEK vs LAST WEEK:`,
     `- Paid orders: ${metrics.orders.last7} (prev ${metrics.orders.prev7})`,
     `- Revenue: €${metrics.revenue.last7} (prev €${metrics.revenue.prev7}) — sanity-check against the €${metrics.priceFloorEUR} floor above before describing it.`,
-    `- Human visitors (data-centre bot cities already excluded): ${metrics.humanVisitors.last7} (prev ${metrics.humanVisitors.prev7}). These exclude known crawler traffic; if this is near zero, there is essentially no real audience yet — do not infer demand from it.`,
-    `- Traffic sources (30d): ${metrics.sources.map(s => `${s.source} ${s.sessions}`).join(', ') || 'none'} (note: 'direct' at this stage is mostly the founder's own network or bots, not organic demand).`,
+    `- Tracked browser IDs (not verified people): ${metrics.humanVisitors.last7} (prev ${metrics.humanVisitors.prev7}). These IDs persist across visits and may include automation. Do not infer human counts or buying demand.`,
+    `- Traffic sources (30d): ${metrics.sources.map(s => `${s.source} ${s.sessions}`).join(', ') || 'none'} (Direct may include missing referrers or unclassified acquisition; its origin is not established).`,
     `- Top products (30d): ${metrics.topProducts.map(p => `${p.name} ×${p.units}`).join(', ') || 'no sales yet'}`,
     '',
     `COMPETITOR FIELD (${competitors.length} brands you compete with — reason about the MARKET, not one brand): ${competitors.slice(0, 60).map(c => c.name).join(', ')}${competitors.length > 60 ? `, +${competitors.length - 60} more` : ''}.`,
     '',
     metrics.search
-      ? `GOOGLE SEARCH (real internet demand, 28d): ${metrics.search.totals.clicks} clicks, ${metrics.search.totals.impressions} impressions, avg position ${Math.round(metrics.search.totals.position)}. Queries you appear for: ${metrics.search.topQueries.map(q => `"${q.key}"(${q.impressions}imp)`).join(', ') || 'none yet'}. Opportunities (impressions but weak position): ${metrics.search.opportunities.filter(o => o.position > 8).map(o => `"${o.query}" pos ${o.position}`).slice(0, 6).join(', ') || 'none'}.`
+      ? `GOOGLE SEARCH (search visibility, not proof of buying demand; 28d): ${metrics.search.totals.clicks} clicks, ${metrics.search.totals.impressions} impressions, avg position ${Math.round(metrics.search.totals.position)}. Queries you appear for: ${metrics.search.topQueries.map(q => `"${q.key}"(${q.impressions}imp)`).join(', ') || 'none yet'}. Opportunities (impressions but weak position): ${metrics.search.opportunities.filter(o => o.position > 8).map(o => `"${o.query}" pos ${o.position}`).slice(0, 6).join(', ') || 'none'}.`
       : 'GOOGLE SEARCH: not connected / no data yet.',
     metrics.search?.countries?.length
       ? `GEOGRAPHIC FOOTHOLDS (where Google actually shows the shop — ISO codes; the brand ships worldwide): ${metrics.search.countries.map(c => `${String(c.country).toUpperCase()} ${c.impressions}imp/${c.clicks}clk`).join(', ')}. Note any market warming up, and any with impressions but ~no clicks (seen but not chosen there).`
@@ -533,7 +479,7 @@ async function generateBriefCore() {
         max_tokens: 1200,
         response_format: { type: 'json_object' },
       },
-      { timeout: 40000, maxRetries: 1 },
+      { timeout: 40000, maxRetries: 0 },
     );
     parsed = JSON.parse(res.choices[0]?.message?.content || '{}');
     if (!parsed || !parsed.headline) parsed = null; // empty/garbage → fallback
@@ -573,27 +519,23 @@ async function generateBriefCore() {
         findings.map(f => `claimed ${f.claim}, but ${f.truth}`).join('; ') + '. Treat with caution.';
       doc.clerksVerdict = note + (doc.clerksVerdict ? ' · ' + doc.clerksVerdict : '');
       console.warn('[chief]', note);
-      const archivarius = require('./archivarius');
-      for (const f of findings) {
-        await archivarius.remember({
-          kind: 'pitfall',
-          text: `Never claim ${f.claim}: ground truth is that ${f.truth}. Check the live count/data before asserting it.`,
-          detail: 'Caught by the Ground-Truth Auditor on a Chief weekly brief.',
-          source: 'ground-truth-auditor',
-          tags: ['data-integrity', 'chief'],
-        }).catch(() => {});
-      }
+      await GrowthAction.create({ agent: 'chief', type: 'ground_truth_review',
+        title: 'Review the brief against source data before acting', detail: note,
+        status: 'needs_approval', href: '/admin/growth', meta: { findings, unverified: true },
+      }).catch(() => {});
     }
   } catch (auditErr) {
     console.warn('[chief] ground-truth auditor skipped:', auditErr.message);
   }
 
   let brief;
+  assertLease();
   try {
     brief = await CEOBrief.create(doc);
   } catch (saveErr) {
     console.warn('[chief] brief save failed, retrying with safe fields:', saveErr.message);
     const fb = fallbackBriefFields(metrics, nsForStore, competitors);
+    assertLease();
     brief = await CEOBrief.create({
       headline: fb.headline, northStar: nsForStore, clerksVerdict: clerks?.line || '', progress: fb.progress,
       whatChanged: fb.whatChanged, whatsWorking: fb.whatsWorking, marketRead: fb.marketRead,
@@ -602,12 +544,10 @@ async function generateBriefCore() {
     });
   }
 
-  // Update the shared Playbook — the distilled learnings every agent will read
-  // and apply next cycle. This is the loop that makes the team adaptive: the
-  // brain teaches the workers what's working, automatically, every week.
+  // Generated learnings are hypotheses. Require review before sharing as facts.
   if (Array.isArray(parsed.learnings) && parsed.learnings.length) {
-    // Merge (not overwrite) so Hermes' and the clerks' running learnings survive.
-    await mergeLearnings(parsed.learnings).catch(() => {});
+    const candidates = parsed.learnings.filter(value => typeof value === 'string').map(value => value.slice(0, 500)).slice(0, 5);
+    if (candidates.length) await GrowthAction.create({ agent: 'chief', type: 'learning_review', title: 'Review proposed learnings before adding them to the playbook', detail: candidates.join('\n'), status: 'needs_approval', href: '/admin/growth', meta: { candidates, briefId: brief._id, unverified: true } }).catch(() => {});
   }
 
   // Drop a pinned action in the pulse feed so the brief is impossible to miss.
@@ -633,10 +573,10 @@ async function runChiefIfDue({ force = false } = {}) {
   const result = await generateBrief();
   // A retryable skip (data unreliable this run) must NOT consume the weekly slot
   // — leave lastRun untouched so the next cron tick retries on healthy data.
-  if (!result?.retry) {
+  if (result?.brief) {
     await SystemState.findOneAndUpdate({ key }, { value: new Date().toISOString() }, { upsert: true });
   }
-  return { ran: !result?.retry, ...result };
+  return { ran: Boolean(result?.brief), ...result };
 }
 
 module.exports = {

@@ -82,7 +82,7 @@ async function getClickstreamSignals(days = 14) {
       viewedProduct: byKey.viewedProduct || 0,
       addedToCart: byKey.addedToCart || 0,
       beganCheckout: byKey.reachedCheckout || 0,
-      purchased: byKey.purchased || 0,
+      purchased: full?.overallConversion == null ? null : (byKey.purchased || 0),
     },
     // The rich view — biggest leak, who it is, which products, what moved.
     // Kept whole so prompts can quote specifics rather than just totals.
@@ -95,7 +95,7 @@ async function getClickstreamSignals(days = 14) {
     // Searches that failed when they were made but resolve now — a conversion
     // loss that already happened, not a range gap.
     nowFindable,
-    hasData: totalSessions > 0 || topSearches.length > 0 || topClicked.length > 0,
+    hasData: full?.hasData || totalSessions > 0 || topSearches.length > 0 || topClicked.length > 0,
   };
 }
 
@@ -112,17 +112,18 @@ async function getClickstreamSignals(days = 14) {
 function clickstreamPromptLine(cs) {
   if (!cs || !cs.hasData) return '';
   const f = cs.funnel;
-  const drop = f.viewedProduct > 0 ? Math.round((f.addedToCart / f.viewedProduct) * 100) : 0;
+  const drop = cs.full?.stages?.find(stage => stage.key === 'addedToCart')?.rate ?? null;
   const searches = cs.topSearches.length ? cs.topSearches.map(s => `"${s.term}"(${s.count})`).join(', ') : 'none';
   const clicked = cs.topClicked.length ? cs.topClicked.map(c => `${c.name}(${c.count})`).join(', ') : 'none';
 
   const parts = [
-    `FIRST-PARTY CLICKSTREAM (last ${cs.days}d, our own site): ${f.sessions} sessions → ${f.viewedProduct} viewed a product → ${f.addedToCart} added to cart (${drop}% of viewers) → ${f.beganCheckout} began checkout → ${f.purchased} purchased.`,
+    cs.full?.evidence ? require('./commerceEvidence').evidencePrompt(cs.full.evidence) : 'Funnel and attribution evidence unavailable. The placeholder zero stage counts below are not measured zeros.',
+    `FIRST-PARTY CLICKSTREAM (last ${cs.days}d, our own site): ${f.sessions} tracked browser IDs (not verified people) → ${f.viewedProduct} viewed a product → ${f.addedToCart} added to cart (${drop == null ? 'progression unknown' : drop + '% same-browser progression'}) → ${f.beganCheckout} began checkout → ${f.purchased == null ? 'purchase conversion unknown' : f.purchased + ' linked purchasing browsers'}.`,
   ];
 
   const full = cs.full;
   if (full?.biggestLeak) {
-    parts.push(`WORST STEP: "${full.biggestLeak.label}" loses ${full.biggestLeak.lost} people (${100 - full.biggestLeak.rate}% of those who reach it).`);
+    parts.push(`WORST STEP: "${full.biggestLeak.label}" has ${full.biggestLeak.lost} browsers without the next recorded step (${100 - full.biggestLeak.rate}% of those who reach it).`);
   }
   const d = full?.diagnosis;
   if (d?.device) {
@@ -139,18 +140,18 @@ function clickstreamPromptLine(cs) {
     parts.push(`CHANGE vs the previous ${cs.days}d: "${sh.label}" went ${sh.ratePrev}% → ${sh.rateNow}% (${sh.delta > 0 ? '+' : ''}${sh.delta} pts).`);
   }
 
-  parts.push(`On-site SEARCHES (real demand, what visitors typed): ${searches}.`);
+  parts.push(`Recorded on-site searches (expressed interest, not proven sales demand): ${searches}.`);
   parts.push(`Most-CLICKED products (interest): ${clicked}.`);
   if (cs.unmetSearches?.length) {
-    parts.push(`SEARCHED BUT FOUND NOTHING, and still finds nothing today (demand we did not meet): ${cs.unmetSearches.map(u => `"${u.term}" (${u.people} ${u.people === 1 ? 'person' : 'people'})`).join(', ')}. Each was re-run against the live catalogue, so these are real gaps rather than search misses.`);
+    parts.push(`SEARCHED BUT FOUND NOTHING, and still finds nothing today (catalogue or naming review candidate): ${cs.unmetSearches.map(u => `"${u.term}" (${u.people} ${u.people === 1 ? 'browser ID' : 'browser IDs'})`).join(', ')}. Each was re-run against the live catalogue, so these are real gaps rather than search misses.`);
   }
   if (cs.nowFindable?.length) {
-    parts.push(`SEARCHES THAT FAILED THEN AND WORK NOW: ${cs.nowFindable.map(u => `"${u.term}" (${u.people} ${u.people === 1 ? 'person' : 'people'}, now ${u.nowFinds} result${u.nowFinds === 1 ? '' : 's'})`).join(', ')}. Do NOT treat these as demand to stock — the product was there and the search failed to surface it. They are evidence of sales already lost to search, not of a missing range.`);
+    parts.push(`SEARCHES THAT FAILED THEN AND WORK NOW: ${cs.nowFindable.map(u => `"${u.term}" (${u.people} ${u.people === 1 ? 'browser ID' : 'browser IDs'}, now ${u.nowFinds} result${u.nowFinds === 1 ? '' : 's'})`).join(', ')}. Do NOT treat these as demand to stock — the product was there and the search failed to surface it. They show a past search mismatch, not proof of a lost sale or a missing range.`);
   }
   // Anything absent above was withheld by a sample gate, not by absence of a
   // problem — say so, or an agent will read silence as "all fine".
   if (full?.blindSpots?.length) {
-    parts.push(`INSTRUMENTATION GAP — do NOT read these as customer behaviour: ${full.blindSpots.map(b => `"${b.label}" (${b.event}) has never been recorded`).join('; ')}. Treat those stages as unknown.`);
+    parts.push(`INSTRUMENTATION GAP — do NOT read these as customer behaviour: ${full.blindSpots.map(b => `"${b.label}" (${b.event}): ${b.note}`).join('; ')}. Treat those stages as unknown.`);
   }
   parts.push('Any breakdown not listed was withheld for insufficient sample, not because it is healthy.');
   return parts.join(' ');

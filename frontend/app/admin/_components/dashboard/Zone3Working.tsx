@@ -13,6 +13,7 @@ type TrafficSource = {
   visitors: number; buyers: number;
   conversionPercent: number | null;
   percentOfTraffic: number | null;
+  attributedOrders?: number;
 };
 type BestConverting = {
   productId: string; productName: string; imageUrl: string | null;
@@ -28,6 +29,7 @@ type Zone3Data = {
   topCities30d:             GeoCity[];
   bestConvertingProduct30d: BestConverting;
   showConversion:           boolean;
+  attribution?: { summary: { orders: number; netRevenueEUR: number; linkedOrders: number; unlinkedOrders: number }; orders: { id: string; orderNumber: string; totalEUR: number; sourceLabel: string; basis: string; linkTo: string }[] };
 };
 
 function fmtCents(cents: number) {
@@ -42,6 +44,14 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
 
   return (
     <Card title="WHAT'S WORKING">
+      {data.attribution && <div style={{ padding: 16, marginBottom: 20, background: 'var(--admin-bg)', fontSize: 13, lineHeight: 1.8 }}>
+        <strong>{data.attribution.summary.orders} purchases · €{data.attribution.summary.netRevenueEUR.toFixed(2)} net order value (30 days)</strong><br />
+        {data.attribution.summary.linkedOrders} orders linked to browsers; {data.attribution.summary.unlinkedOrders} website orders unlinked.
+        {data.attribution.summary.unlinkedOrders > 0 && <> Source conversion is <strong>unknown, not 0%</strong>. Historical default “direct” is not proof of acquisition.</>}
+        <details style={{ marginTop: 8 }}><summary style={{ cursor: 'pointer' }}>Where each order came from</summary>
+          {data.attribution.orders.map(order => <p key={order.id}><a href={order.linkTo}>{order.orderNumber}</a> · €{order.totalEUR.toFixed(2)} · {order.sourceLabel} <span style={{ color: 'var(--admin-ink-muted)' }}>({order.basis.replaceAll('_', ' ')})</span></p>)}
+        </details>
+      </div>}
       <div className={styles.grid}>
 
         {/* Top products */}
@@ -95,7 +105,7 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
           {/* Traffic sources */}
           <div>
             <p style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 12 }}>
-              Top sources (30 days)
+              Observed sources (30 days)
             </p>
             {topTrafficSources30d.length === 0 ? (
               <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', fontStyle: 'italic' }}>
@@ -126,7 +136,7 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
                     </span>
                     {showConversion && (
                       <span style={{ width: 56, textAlign: 'right', color: 'var(--admin-ink-muted)', fontSize: 12 }}>
-                        {s.conversionPercent != null ? `${s.conversionPercent.toFixed(1)}%` : '—'}
+                        {s.conversionPercent != null ? `${s.conversionPercent.toFixed(1)}%` : 'Unknown'}
                       </span>
                     )}
                   </div>
@@ -139,7 +149,7 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
           {topCountries30d.length > 0 && (
             <div>
               <p style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 12 }}>
-                Top countries (30 days)
+                Recorded locations (30 days)
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                 {topCountries30d.map(c => (
@@ -158,7 +168,7 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
           {topCities30d.length > 0 && (
             <div>
               <p style={{ fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)', marginBottom: 12 }}>
-                Top cities (30 days)
+                Recorded cities (30 days)
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                 {topCities30d.map(c => (
@@ -180,7 +190,7 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
             </p>
             {bestConvertingProduct30d === null ? (
               <p style={{ fontSize: 13, color: 'var(--admin-ink-muted)', fontStyle: 'italic' }}>
-                Best-converting product surfaces once any product crosses 50 unique visits.
+                Not ranked: reliable product-to-purchase linkage is not yet established. Sales above remain available.
               </p>
             ) : (
               <button
@@ -218,6 +228,7 @@ export default function Zone3Working({ data }: { data: Zone3Data }) {
         </div>
 
       </div>
+      <p style={{ marginTop: 16, fontSize: 12, color: 'var(--admin-ink-muted)' }}>Traffic shares use tracked browser IDs, not verified people or timed sessions. Location is not proof of buyer demand or bots. Product sales above are units and gross line values, not order counts or net revenue.</p>
     </Card>
   );
 }

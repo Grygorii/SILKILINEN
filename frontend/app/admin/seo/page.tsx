@@ -51,7 +51,7 @@ export default function SeoHubPage() {
 
   const loadHermes = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/api/admin/growth`, { credentials: 'include' });
+      const res = await fetch(`${API}/api/admin/growth?agent=hermes`, { credentials: 'include' });
       if (!res.ok) return;
       const data = await res.json();
       const actions: Action[] = Array.isArray(data.actions) ? data.actions : [];
@@ -84,16 +84,17 @@ export default function SeoHubPage() {
       const res = await fetch(`${API}/api/admin/growth/run`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' },
         body: JSON.stringify({ agent: 'hermes' }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || 'Run failed');
       }
-      toast('Hermes is mapping your search footholds…', 'success');
-      // Give the run a moment to write its actions, then refresh.
-      setTimeout(loadHermes, 1500);
+      const result = await res.json();
+      if (result.failed?.length) toast('Hermes could not complete. Previous recommendations retained; check engine status.', 'error');
+      else toast('Hermes completed. Review the evidence behind each recommendation.', 'success');
+      await loadHermes();
     } catch (e: unknown) {
       toast(e instanceof Error ? e.message : 'Could not run Hermes.', 'error');
     } finally {

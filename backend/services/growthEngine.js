@@ -11,9 +11,11 @@
 
 const SystemState = require('../models/SystemState');
 const GrowthAction = require('../models/GrowthAction');
+const { withWorkflowLease } = require('./workflowLease');
 
 const SETTINGS_KEY = 'growthEngineSettings';
 const LASTRUN_KEY = 'growthEngineLastRun';
+const ATTEMPTS_KEY = 'growthEngineAttempts';
 
 // Registered specialist agents. Each module exports:
 //   { name, label, description, cadenceHours, defaultEnabled, run }
@@ -59,13 +61,11 @@ async function getSettings() {
 
 async function setAgentEnabled(name, enabled) {
   if (!AGENTS.some(a => a.name === name)) throw new Error(`Unknown agent: ${name}`);
-  const saved = await getState(SETTINGS_KEY);
-  saved[name] = { ...(saved[name] || {}), enabled: Boolean(enabled) };
-  await setState(SETTINGS_KEY, saved);
+  await SystemState.updateOne({ key: SETTINGS_KEY }, { $set: { [`value.${name}.enabled`]: Boolean(enabled) } }, { upsert: true });
 }
 
 async function describeAgents() {
-  const [settings, lastRuns] = await Promise.all([getSettings(), getState(LASTRUN_KEY)]);
+  const [settings, lastRuns, attempts] = await Promise.all([getSettings(), getState(LASTRUN_KEY), getState(ATTEMPTS_KEY)]);
   return AGENTS.map(a => ({
     name: a.name,
     label: a.label,
@@ -73,6 +73,7 @@ async function describeAgents() {
     cadenceHours: a.cadenceHours,
     enabled: settings[a.name].enabled,
     lastRun: lastRuns[a.name] || null,
+    lastAttempt: attempts[a.name] || null,
   }));
 }
 
@@ -81,53 +82,42 @@ async function describeAgents() {
  * Returns { ran: [names], actionCount }.
  */
 async function runGrowthEngine({ force = false, only = null } = {}) {
-  const [settings, lastRuns] = await Promise.all([getSettings(), getState(LASTRUN_KEY)]);
-  const now = Date.now();
-  const ran = [];
-  let actionCount = 0;
-
-  for (const agent of AGENTS) {
-    if (only && agent.name !== only) continue;
-    if (!settings[agent.name].enabled) continue;
-    const last = lastRuns[agent.name] ? new Date(lastRuns[agent.name]).getTime() : 0;
-    const due = now - last >= agent.cadenceHours * 3600 * 1000;
-    if (!force && !due) continue;
-
-    try {
-      const actions = (await agent.run()) || [];
-      for (const act of actions) {
-        await GrowthAction.create({
-          agent: agent.name,
-          type: act.type || 'info',
-          title: act.title,
-          detail: act.detail || '',
-          href: act.href || '',
-          status: act.status || 'info',
-          meta: act.meta,
-        });
-        actionCount++;
+  if (only && !AGENTS.some(agent => agent.name === only)) throw new Error('Unknown growth agent');
+  return withWorkflowLease('growth-pulse', async assertLease => {
+    const [settings, lastRuns, attempts] = await Promise.all([getSettings(), getState(LASTRUN_KEY), getState(ATTEMPTS_KEY)]);
+    const ran = [], failed = [], skipped = []; let actionCount = 0;
+    for (const agent of AGENTS) {
+      assertLease();
+      if ((only && agent.name !== only) || !settings[agent.name].enabled) continue;
+      const last = lastRuns[agent.name] ? new Date(lastRuns[agent.name]).getTime() : 0, attempt = attempts[agent.name];
+      const retry = attempt && attempt.status !== 'succeeded' && Date.now() - new Date(attempt.at).getTime() >= 3600000;
+      const backingOff = attempt && attempt.status !== 'succeeded' && !retry;
+      if (!force && (backingOff || (!retry && Date.now() - last < agent.cadenceHours * 3600000))) { skipped.push(agent.name); continue; }
+      let status = 'succeeded', detail = '';
+      try {
+        const actions = (await agent.run()) || [];
+        if (!Array.isArray(actions)) throw new Error('Agent returned an invalid action list');
+        assertLease();
+        for (const action of actions) {
+          if (!action?.title || typeof action.title !== 'string') throw new Error('Agent action is missing a title');
+          const degraded = action.type === 'error' || action.status === 'error' || /couldn.t|could not|unavailable|not configured|failed to|could not reach/i.test(action.title);
+          if (degraded) { status = 'degraded'; detail = action.title.slice(0, 200); }
+          if (action.status === 'needs_approval' && await GrowthAction.exists({ agent: agent.name, title: action.title, href: action.href || '', status: 'needs_approval', createdAt: { $gte: new Date(Date.now() - 7 * 86400000) } })) continue;
+          await GrowthAction.create({ agent: agent.name, type: action.type || 'info', title: action.title,
+            detail: action.detail || '', href: action.href || '', status: degraded ? 'error' : action.status || 'info', meta: action.meta });
+          actionCount++;
+        }
+        if (status === 'succeeded') { ran.push(agent.name); await SystemState.updateOne({ key: LASTRUN_KEY }, { $set: { [`value.${agent.name}`]: new Date().toISOString() } }, { upsert: true }); }
+        else failed.push({ agent: agent.name, status, detail });
+      } catch (error) {
+        status = 'failed'; detail = 'Agent failed; review backend logs before retrying.';
+        failed.push({ agent: agent.name, status, detail });
+        console.error(`[growth] ${agent.name} failed`, error.code || error.name);
+        await GrowthAction.create({ agent: agent.name, type: 'error', title: `${agent.label} could not complete`, detail, status: 'error' }).catch(() => {});
       }
-      ran.push(agent.name);
-    } catch (err) {
-      console.error(`[growth] agent ${agent.name} failed:`, err.message);
-      await GrowthAction.create({
-        agent: agent.name,
-        type: 'error',
-        title: `${agent.label} hit an error`,
-        detail: err.message.slice(0, 300),
-        status: 'error',
-      }).catch(() => {});
+      await SystemState.updateOne({ key: ATTEMPTS_KEY }, { $set: { [`value.${agent.name}`]: { at: new Date().toISOString(), status, detail } } }, { upsert: true });
     }
-
-    lastRuns[agent.name] = new Date().toISOString();
-    await setState(LASTRUN_KEY, lastRuns);
-  }
-
-  // Archivarius learns from this pulse — the clerks/watchdog flags become
-  // pitfalls the agents will see (and avoid) next cycle — then stays sharp.
-  await require('./archivarius').tick().catch(() => {});
-
-  return { ran, actionCount };
+    return { ran, failed, skipped, actionCount };
+  });
 }
-
 module.exports = { runGrowthEngine, getSettings, setAgentEnabled, describeAgents };

@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { getFunnel } = require('../services/funnel');
+const { loadEvidence, publicEvidence } = require('../services/commerceEvidence');
+const { PURCHASE_STATUSES, netOrderSpend } = require('../utils/customerOrderStats');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Visit = require('../models/Visit');
@@ -163,7 +165,7 @@ async function getZone1Data({ twoHoursAgo, sevenDaysAgo }) {
 
 // ── Zone 2 ────────────────────────────────────────────────────────────────────
 
-const PAID_STATUSES = ['paid', 'shipped', 'delivered'];
+const PAID_STATUSES = PURCHASE_STATUSES;
 
 async function sumRevenue(startDate, endDate) {
   const match = {
@@ -177,7 +179,7 @@ async function sumRevenue(startDate, endDate) {
     { $group: {
       _id: null,
       // Order.total is in EUR. Subtract refundedAmount if present.
-      revenue: { $sum: { $subtract: ['$total', { $ifNull: ['$refundedAmount', 0] }] } },
+      revenue: { $sum: { $cond: [{ $eq: ['$status', 'refunded'] }, 0, { $max: [0, { $subtract: [{ $ifNull: ['$total', 0] }, { $max: [{ $ifNull: ['$refundedAmount', 0] }, { $ifNull: ['$costs.refundedAmount', 0] }] }] }] }] } },
       orders:  { $sum: 1 },
     }},
   ]);
@@ -200,7 +202,7 @@ async function getZone2Data(windows) {
       Order.find({
         status: { $in: PAID_STATUSES },
         createdAt: { $gte: new Date(now.getTime() - 30 * 24 * 3600 * 1000) },
-      }).select('total refundedAmount createdAt').lean(),
+      }).select('status total refundedAmount costs.refundedAmount createdAt').lean(),
     ]);
 
   // Build 30-day chart — one entry per day, oldest first, no gaps
@@ -211,7 +213,7 @@ async function getZone2Data(windows) {
   for (const order of orders30d) {
     const key = getDublinDateStr(new Date(order.createdAt));
     if (key in chartMap) {
-      chartMap[key] += Math.round((order.total - (order.refundedAmount || 0)) * 100);
+      chartMap[key] += Math.round(netOrderSpend(order) * 100);
     }
   }
 
@@ -285,142 +287,23 @@ async function getZone3Data({ thirtyDaysAgo }) {
     };
   });
 
-  // Total paid orders in window (used for showConversion flag)
-  const totalOrdersInWindow = await Order.countDocuments({
-    status: { $in: PAID_STATUSES },
-    createdAt: { $gte: thirtyDaysAgo },
-  });
-  const showConversion = totalOrdersInWindow > 0;
-
-  // Traffic sources, best-converting product, and geo breakdown from Visit model
-  const [sourcesData, bestConvertingData, topCountriesData, topCitiesData, totalVisitorCount, totalGeoVisitorCount] = await Promise.all([
-    // Group visits by sessionId (first source seen = first-touch attribution).
-    // Then $lookup orders by browserSessionId so conversion is always live
-    // from the Orders collection — no need to maintain Visit.convertedToOrder.
-    Visit.aggregate([
-      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
-      { $sort: { createdAt: 1 } },
-      { $group: {
-        _id:    '$sessionId',
-        source: { $first: '$source' },
-      }},
-      { $lookup: {
-        from:     'orders',
-        let:      { sid: '$_id' },
-        pipeline: [
-          { $match: { $expr: { $and: [
-            { $eq: ['$browserSessionId', '$$sid'] },
-            { $in: ['$status', PAID_STATUSES] },
-          ]}}},
-          { $limit: 1 },
-        ],
-        as: 'matchedOrders',
-      }},
-      { $group: {
-        _id:      '$source',
-        visitors: { $sum: 1 },
-        buyers:   { $sum: { $cond: [{ $gt: [{ $size: '$matchedOrders' }, 0] }, 1, 0] } },
-      }},
-      { $sort: { visitors: -1 } },
-      { $limit: 5 },
-    ]),
-
-    Visit.aggregate([
-      { $match: { createdAt: { $gte: thirtyDaysAgo }, productId: { $exists: true, $ne: null } } },
-      { $group: {
-        _id:    '$productId',
-        visits: { $sum: 1 },
-        orders: { $sum: { $cond: [{ $ne: ['$convertedToOrder', null] }, 1, 0] } },
-      }},
-      // 50-visit threshold: below this, conversion rates are noise not signal
-      { $match: { visits: { $gte: 50 }, orders: { $gte: 1 } } },
-      { $addFields: {
-        conversionRate: { $multiply: [{ $divide: ['$orders', '$visits'] }, 100] },
-      }},
-      { $sort: { conversionRate: -1 } },
-      { $limit: 1 },
-    ]),
-
-    Visit.aggregate([
-      { $match: { createdAt: { $gte: thirtyDaysAgo }, country: { $exists: true, $ne: null } } },
-      { $group: { _id: { country: '$country', countryCode: '$countryCode' }, visitors: { $addToSet: '$sessionId' } } },
-      { $project: { country: '$_id.country', countryCode: '$_id.countryCode', visitors: { $size: '$visitors' } } },
-      { $sort: { visitors: -1 } },
-      { $limit: 5 },
-    ]),
-
-    Visit.aggregate([
-      { $match: { createdAt: { $gte: thirtyDaysAgo }, city: { $exists: true, $ne: null } } },
-      { $group: { _id: { city: '$city', country: '$country' }, visitors: { $addToSet: '$sessionId' } } },
-      { $project: { city: '$_id.city', country: '$_id.country', visitors: { $size: '$visitors' } } },
-      { $sort: { visitors: -1 } },
-      { $limit: 5 },
-    ]),
-
-    // Total unique sessions across all sources (denominator for source % of traffic)
-    Visit.aggregate([
-      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
-      { $group: { _id: '$sessionId' } },
-      { $count: 'total' },
-    ]),
-
-    // Total unique sessions with geo data (denominator for country/city % of traffic)
-    Visit.aggregate([
-      { $match: { createdAt: { $gte: thirtyDaysAgo }, country: { $exists: true, $ne: null } } },
-      { $group: { _id: '$sessionId' } },
-      { $count: 'total' },
-    ]),
-  ]);
-
-  const totalVisitors = totalVisitorCount[0]?.total || 0;
-  const totalGeoVisitors = totalGeoVisitorCount[0]?.total || 0;
-
-  const topTrafficSources30d = sourcesData.map(s => ({
-    source:            s._id || 'direct',
-    displayLabel:      displayLabel(s._id || 'direct'),
-    visitors:          s.visitors,
-    buyers:            s.buyers,
-    conversionPercent: calculateConversion(s.buyers, s.visitors),
-    percentOfTraffic:  totalVisitors > 0
-      ? Math.round((s.visitors / totalVisitors) * 1000) / 10
-      : null,
-  }));
-
-  const topCountries30d = topCountriesData.map(c => ({
-    country:          c.country,
-    countryCode:      c.countryCode || null,
-    visitors:         c.visitors,
-    percentOfTraffic: totalGeoVisitors > 0
-      ? Math.round((c.visitors / totalGeoVisitors) * 1000) / 10
-      : null,
-  }));
-
-  const topCities30d = topCitiesData.map(c => ({
-    city:             c.city,
-    country:          c.country || null,
-    visitors:         c.visitors,
-    percentOfTraffic: totalGeoVisitors > 0
-      ? Math.round((c.visitors / totalGeoVisitors) * 1000) / 10
-      : null,
-  }));
-
-  let bestConvertingProduct30d = null;
-  if (bestConvertingData.length > 0) {
-    const best = bestConvertingData[0];
-    const p = await Product.findById(best._id).select('name images').lean();
-    if (p) {
-      const primaryImage = p.images?.find(img => img.isPrimary) || p.images?.[0];
-      bestConvertingProduct30d = {
-        productId:         best._id,
-        productName:       p.name,
-        imageUrl:          primaryImage?.url || null,
-        conversionPercent: Math.round(best.conversionRate * 100) / 100,
-        linkTo:            `/admin/products/${best._id}`,
-      };
+  const evidence = await loadEvidence(30);
+  function geoRows(field) {
+    const grouped = new Map();
+    for (const browser of evidence.browsers.values()) {
+      const value = browser[field]; if (!value) continue;
+      const key = field === 'city' ? `${value}|${browser.country || ''}` : value;
+      const row = grouped.get(key) || { [field]: value, country: browser.country || '', visitors: 0 };
+      row.visitors++; grouped.set(key, row);
     }
+    const total = evidence.browsers.size;
+    return [...grouped.values()].sort((a,b) => b.visitors - a.visitors).slice(0, 5)
+      .map(row => ({ ...row, percentOfTraffic: total ? Math.round(row.visitors / total * 1000) / 10 : null }));
   }
+  return { topProducts30d, topTrafficSources30d: evidence.sources,
+    topCountries30d: geoRows('country'), topCities30d: geoRows('city'),
+    bestConvertingProduct30d: null, showConversion: true, attribution: publicEvidence(evidence) };
 
-  return { topProducts30d, topTrafficSources30d, topCountries30d, topCities30d, bestConvertingProduct30d, showConversion };
 }
 
 // ── Route ─────────────────────────────────────────────────────────────────────

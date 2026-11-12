@@ -1,35 +1,13 @@
 'use strict';
 
-// Which market is actually worth working on.
-//
-// The panel listed ten countries as ten identical tiles, so the founder had to
-// do the reasoning that matters — and the layout actively invited the wrong
-// conclusion. Malta showed "1 clk · 1 imp · pos 2", which reads like the shop's
-// best market, and the United Kingdom showed "2 clk · 260 imp · pos 19", which
-// reads like a failure. It is the other way round: Malta is a single impression
-// (one person, once, and position 2 of a search nobody else ran), while the UK
-// is 36% of everything Google shows the shop, sitting on page two.
-//
-// The rule: a market is only worth naming when it has enough impressions to mean
-// something, and then what matters is whether Google already ranks it well.
-//   • lever    — real volume, poor position. Google shows the shop and shoppers
-//                never scroll that far. The most impressions here is THE market
-//                to work on, because the demand is proven and only the rank is
-//                missing.
-//   • foothold — real volume, good position. Already winning; grow the demand.
-//   • watch    — below the floor. Not a verdict, not a win, just too small.
-//
-// Deliberately conservative in the same way as the funnel's segment gates: a
-// market named on one impression is a coin flip presented as a strategy.
-
-// Below this an average position is a single search away from meaningless.
-const MIN_IMPRESSIONS = 15;
-// Google's first page is ~10 results; beyond it, CTR collapses to near zero, so
-// this is the line between "ranked" and "shown but never seen".
+// A sample-gated review cue, never a statement of proven demand or sales potential.
+const MIN_IMPRESSIONS = 100;
+// A heuristic threshold for a query/page review cue, not a results-page number.
 const PAGE_ONE = 10;
 
 // GSC uses ISO-3; these are the markets the shop actually sees.
 const NAMES = {
+  bra: 'Brazil', sgp: 'Singapore', chn: 'China',
   gbr: 'United Kingdom', irl: 'Ireland', usa: 'United States', deu: 'Germany',
   fra: 'France', esp: 'Spain', ita: 'Italy', nld: 'Netherlands', bel: 'Belgium',
   swe: 'Sweden', dnk: 'Denmark', nor: 'Norway', fin: 'Finland', pol: 'Poland',
@@ -67,14 +45,13 @@ function rankMarkets(countries = [], { totalImpressions: reportedTotal = null } 
     const share = totalImpressions ? Math.round((impressions / totalImpressions) * 100) : 0;
 
     let band = 'watch';
-    if (impressions >= MIN_IMPRESSIONS) band = position > PAGE_ONE ? 'lever' : 'foothold';
+    if (impressions >= MIN_IMPRESSIONS && position > 0) band = position > PAGE_ONE ? 'lever' : 'foothold';
 
     return { code: c.country, name: countryName(c.country), clicks, impressions, position, share, band };
   });
 
-  // Levers first (biggest proven demand that is not converting because of rank),
-  // then footholds, then everything too small to judge. Within a band, the most
-  // impressions — the amount of demand at stake, not the prettiest number.
+  // Review candidates first, then stronger average positions, then small samples.
+  // Impression volume is visibility, not proof of demand or conversions.
   const order = { lever: 0, foothold: 1, watch: 2 };
   markets.sort((a, b) => order[a.band] - order[b.band] || b.impressions - a.impressions);
 
@@ -89,18 +66,18 @@ function rankMarkets(countries = [], { totalImpressions: reportedTotal = null } 
  */
 function marketHeadline(ranked) {
   const { lever, markets, basis } = ranked || {};
-  // Say which total the percentage is a share OF. "36% of everything" and "70%
+  // Say which total the percentage is a share OF. "36% of everything" and "70%"
   // of the traffic Google attributes to a country" are different claims, and a
   // panel that blurs them is one nobody can check.
   const of = basis === 'all'
     ? 'of everything Google shows the shop'
     : 'of the traffic Google attributes to a country';
   if (lever) {
-    return `${lever.name} is ${lever.share}% ${of} — ${lever.impressions} impressions — but sits at position ${lever.position}, which is page two. The demand is already there; only the ranking is missing.`;
+    return `${lever.name} accounts for ${lever.impressions} impressions (${lever.share}% ${of}) at average position ${lever.position}. Review the underlying queries and pages. An average is not a search-results page number or proof of buying demand.`;
   }
   const best = (markets || []).find(m => m.band === 'foothold');
   if (best) {
-    return `${best.name} is the strongest market (${best.impressions} impressions at position ${best.position}) and already ranks well. The limit here is how many people search, not where the shop appears.`;
+    return `${best.name} has ${best.impressions} impressions at average position ${best.position}. Inspect relevant queries and shopping intent; country averages do not establish sales potential.`;
   }
   return null;
 }

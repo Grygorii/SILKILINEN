@@ -1,0 +1,30 @@
+import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
+import { createRequire } from 'node:module';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
+const require=createRequire(import.meta.url),mongoose=require('mongoose'),express=require('express');
+const stripePath=require.resolve('stripe'),original=require('stripe');
+let payment,event;
+const create=vi.fn(async params=>{payment={...params,id:'pi_reportfixture',client_secret:'pi_reportfixture_secret_fixture',status:'succeeded',created:Math.floor(Date.now()/1000),latest_charge:'ch_reportfixture',shipping:{name:'Synthetic Buyer',address:{country:'IE'}}};return payment});
+require.cache[stripePath].exports=()=>({paymentIntents:{create},webhooks:{constructEvent:()=>event}});
+const rates=require('../services/exchangeRates'),email=require('../services/email');
+vi.spyOn(rates,'getRates').mockResolvedValue({EUR:1});
+vi.spyOn(email,'sendOrderConfirmation').mockResolvedValue(false);vi.spyOn(email,'sendAdminOrderNotification').mockResolvedValue(false);
+const {checkoutRouter,webhookRouter}=require('../routes/checkoutV2');require.cache[stripePath].exports=original;
+const Order=require('../models/Order'),Visit=require('../models/Visit'),Product=require('../models/Product'),Collection=require('../models/Collection');
+const {loadEvidence}=require('../services/commerceEvidence');
+let db,server,base;
+beforeAll(async()=>{db=await MongoMemoryReplSet.create({binary:{version:'7.0.24'},replSet:{count:1}});await mongoose.connect(db.getUri(),{dbName:'purchase_reporting_fixture'});await Promise.all([Order,Visit,Product,Collection].map(m=>m.init()));const app=express();app.use('/webhook',webhookRouter);app.use(express.json());app.use('/checkout',checkoutRouter);server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));base=`http://127.0.0.1:${server.address().port}`;});
+afterAll(async()=>{if(server)await new Promise(r=>server.close(r));await mongoose.disconnect();if(db)await db.stop();vi.restoreAllMocks();});
+describe('checkout metadata → webhook → ledger → reporting (all payment/email providers mocked)',()=>{
+ it('preserves the browser identity into a saved order and attributes it without a success-page event',async()=>{
+  const id=new mongoose.Types.ObjectId();await Product.collection.insertOne({_id:id,name:'Fixture silk product',slug:'fixture-silk',price:89,status:'active',totalStock:5,variants:[],collections:[]});
+  await Visit.create({sessionId:'browser-report-fixture',page:'product',productId:id,source:'google',createdAt:new Date(Date.now()-60000)});
+  const response=await fetch(base+'/checkout/create-intent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:[{productId:String(id),quantity:1,name:'Fixture silk product'}],shippingCountry:'IE',currency:'EUR',email:'synthetic@example.invalid',browserSessionId:'browser-report-fixture',attribution:{source:'google',medium:'organic'}})});
+  expect(response.status).toBe(200);expect(payment.metadata.browserSessionId).toBe('browser-report-fixture');expect(payment.metadata.sessionId).toBe('');
+  event={type:'payment_intent.succeeded',data:{object:payment}};
+  const post=()=>fetch(base+'/webhook',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+  expect((await post()).status).toBe(200);expect((await post()).status).toBe(200);
+  expect(await Order.countDocuments()).toBe(1);expect((await Order.findOne().lean()).browserSessionId).toBe('browser-report-fixture');
+  const evidence=await loadEvidence(30,{fresh:true});expect(evidence.summary).toMatchObject({orders:1,linkedOrders:1,unlinkedOrders:0});expect(evidence.orders[0]).toMatchObject({source:'google',linked:true});expect(evidence.quality.purchaseEvents).toBe(0);
+ });
+});

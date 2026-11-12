@@ -7,6 +7,7 @@ import AdminModal from '@/components/AdminModal';
 import { toast } from '@/lib/adminToast';
 import styles from './page.module.css';
 import OpportunitiesPanel from './OpportunitiesPanel';
+import EvidencePanel from './EvidencePanel';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -17,6 +18,7 @@ type Agent = {
   cadenceHours: number;
   enabled: boolean;
   lastRun: string | null;
+  lastAttempt?: { at: string; status: string; detail?: string };
 };
 
 type GrowthAction = {
@@ -115,6 +117,7 @@ function briefDate(iso: string) {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
+      year: 'numeric',
     }).format(new Date(iso));
   } catch {
     return '';
@@ -218,6 +221,7 @@ export default function GrowthEnginePage() {
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
     setNorthStar(data.northStar ?? null);
+    await loadBrain();
     toast('AI Star set \u2014 I\u2019m watching your pace now.');
   }
 
@@ -234,7 +238,7 @@ export default function GrowthEnginePage() {
       if (!res.ok) { toast(data.error || 'Da Vinci stumbled — unleash again.', 'error'); return; }
       setComposition(data.composition ?? null);
       toast('Da Vinci has composed the masterwork.');
-      load(true); // the background pulse will be dropping fresh notes into the feed
+      load(true); // Refresh completed strategy and review actions only.
     } catch {
       toast('Network error — unleash again.', 'error');
     } finally {
@@ -318,7 +322,8 @@ export default function GrowthEnginePage() {
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       const ran: string[] = data.ran || [];
-      toast(`Ran ${ran.length} agent(s) — ${data.actionCount ?? 0} new action(s).`);
+      if (data.failed?.length) toast(`${ran.length} completed; ${data.failed.length} failed or degraded. Review agent status.`, 'error');
+      else toast(`${ran.length} agent(s) completed — ${data.actionCount ?? 0} new action(s).`);
       await load(true);
     } catch {
       toast('The engine could not pulse — try again.', 'error');
@@ -348,7 +353,7 @@ export default function GrowthEnginePage() {
             <p style={{ fontSize: 12, color: 'var(--color-ink-muted)', marginTop: 8 }}>
               <strong style={{ color: 'var(--color-ink)' }}>New here?</strong>{' '}
               ① <strong>Pulse now</strong> wakes the agents → ② <strong>New brief</strong> has your co-CEO read the results →
-              ③ <strong>✺ Unleash Da Vinci</strong> composes the masterwork from everything. Start with Pulse.
+              ③ <strong>✺ Unleash Da Vinci</strong> uses completed, recent results. Review the evidence first; run only the agents needed.
             </p>
           </div>
           <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
@@ -370,7 +375,7 @@ export default function GrowthEnginePage() {
               className={styles.davinciBtn}
               onClick={unleashDaVinci}
               disabled={davinciBusy}
-              title="Make every agent play as one and compose the 90-day masterwork"
+              title="Generate a strategy from current evidence and completed recent agent work"
             >
               {davinciBusy ? 'The studio is composing…' : '✺ Unleash Da Vinci'}
             </button>
@@ -406,7 +411,7 @@ export default function GrowthEnginePage() {
                 </div>
               ))}
             </div>
-            <p style={{ fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--admin-ink-muted)', margin: '0 0 8px' }}>The 10 agents</p>
+            <p style={{ fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--admin-ink-muted)', margin: '0 0 8px' }}>Agent dependency checks</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {selfTest.agents.map(a => (
                 <span key={a.label} title={`last run: ${a.lastRun ? new Date(a.lastRun).toLocaleString('en-IE') : 'never'}`}
@@ -419,7 +424,9 @@ export default function GrowthEnginePage() {
           </div>
         )}
 
-        <DaVinciSection composition={composition} busy={davinciBusy} />
+        {agents.some(agent => agent.lastAttempt && agent.lastAttempt.status !== 'succeeded') && <div role="status" style={{ padding: 16, background: 'var(--admin-warning-soft)', marginTop: 20 }}><strong>Agents needing attention</strong>{agents.filter(agent => agent.lastAttempt && agent.lastAttempt.status !== 'succeeded').map(agent => <p key={agent.name} style={{ fontSize: 13, marginTop: 6 }}>{agent.label}: {agent.lastAttempt?.status} · {agent.lastAttempt?.detail}. Last successful run: {agent.lastRun ? timeAgo(agent.lastRun) : 'not recorded'}.</p>)}</div>}
+        <EvidencePanel revision={`${actions[0]?._id || ''}:${brief?._id || ''}:${composition?._id || ''}`} />
+        {composition && Date.now() - new Date(composition.createdAt).getTime() >= 90 * 86400000 ? <details style={{ marginBottom: 24 }}><summary style={{ cursor: 'pointer', padding: 12 }}>Historical strategy · {composition.createdAt.slice(0,10)} · outside its 90-day window</summary><DaVinciSection composition={composition} busy={davinciBusy} /></details> : <DaVinciSection composition={composition} busy={davinciBusy} />}
 
         {/* AI Star + Co-CEO brief */}
         <NorthStarSection
@@ -898,7 +905,7 @@ function NorthStarSection({ loading, error, onRetry, northStar, starStatus, metr
   }
 
   // Goal set → headline + progress bar.
-  const ns = brief?.northStar;
+  const ns = starStatus || brief?.northStar;
   const metricLabel = ns?.label
     || metrics.find(m => m.key === northStar.metric)?.label
     || northStar.metric;
@@ -1102,7 +1109,7 @@ function BriefSection({ brief, busy, onNewBrief }: { brief: Brief; busy: boolean
                       <span className={styles.ideaSource}>{idea.source}</span>
                     </div>
                     <p className={styles.ideaWhy}>{idea.why}</p>
-                    <span className={styles.ideaBuild}>Tell Claude to build this.</span>
+                    <span className={styles.ideaBuild}>Review this proposal before building.</span>
                   </div>
                 ))}
               </div>
