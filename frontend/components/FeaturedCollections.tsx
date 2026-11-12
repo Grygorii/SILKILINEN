@@ -28,6 +28,15 @@ export default async function FeaturedCollections() {
   const collections = await getFeaturedCollections();
   if (collections.length === 0) return null;
 
+  // Match the actual one/two/three-column layout so wider desktop tiles do
+  // not keep requesting a small 33vw image. The image itself is unchanged.
+  const desktopSizes = collections.length === 1
+    ? '960px'
+    : collections.length === 2
+      ? '(min-width: 1920px) 884px, 47vw'
+      : '(min-width: 1920px) 582px, 31vw';
+  const imageSizes = `(max-width: 540px) 90vw, (max-width: 900px) 44vw, ${desktopSizes}`;
+
   return (
     <section className={styles.section}>
       <h2 className={styles.heading}>Collections</h2>
@@ -41,7 +50,7 @@ export default async function FeaturedCollections() {
                   src={c.heroImage.url}
                   alt={c.heroImage.alt || c.name}
                   fill
-                  sizes="(max-width: 768px) 100vw, 33vw"
+                  sizes={imageSizes}
                   className={styles.img}
                 />
               </div>
