@@ -323,11 +323,8 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
       {/* Trust row — the reassurance a considered buyer wants right at the
           add-to-bag moment (was only on the homepage / hidden in accordions). */}
       <ul
-        style={{
-          listStyle: 'none', margin: '14px 0 0', padding: 0,
-          display: 'flex', flexWrap: 'wrap', gap: '6px 18px',
-          fontSize: 12, lineHeight: 1.6, color: 'var(--color-ink-muted)',
-        }}
+        className={styles.reassurance}
+        aria-label="Order reassurance"
       >
         <li>Free shipping over {format(freeShippingThreshold)}</li>
         <li>14-day returns</li>

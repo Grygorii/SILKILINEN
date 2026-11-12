@@ -137,7 +137,7 @@ function StockBadge({ product }: { product: { inStock?: boolean; totalStock?: nu
   if (total === null) return null;
   if (total === 0) return <p className={styles.stockOut}>Out of stock</p>;
   if (total <= 3) return <p className={styles.stockLow}>Only {total} left</p>;
-  return null;
+  return <p className={styles.stockIn}>In stock</p>;
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
