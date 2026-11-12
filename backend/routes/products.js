@@ -8,6 +8,7 @@ const Review = require('../models/Review');
 const { pickProductFields } = require('../utils/productFields');
 const { buildSearchFilter } = require('../utils/productSearch');
 const { sortSpec } = require('../utils/productSort');
+const { fallbackColourSlugs } = require('../utils/colourFamilies');
 const { upload } = require('../utils/cloudinary');
 const { requireAuth } = require('../middleware/auth');
 const { sendDropAHint } = require('../services/email');
@@ -200,7 +201,7 @@ async function attachRatings(products) {
   if (!products.length) return products;
   const ids = products.map(p => p._id);
   const ratings = await Review.aggregate([
-    { $match: { productId: { $in: ids }, status: 'approved' } },
+    { $match: { productId: { $in: ids }, status: 'approved', source: { $ne: 'seed' } } },
     { $group: { _id: '$productId', avg: { $avg: '$starRating' }, count: { $sum: 1 } } },
   ]);
   const byId = new Map(ratings.map(r => [String(r._id), r]));
@@ -475,6 +476,14 @@ router.get('/:id', async function(req, res) {
     // merely 308 to the slug, splitting signals across two URLs for one page.
     // Resolve each sibling's slug here so links can be canonical from the start.
     const out = typeof product.toObject === 'function' ? product.toObject() : product;
+    const fallbackSlugs = fallbackColourSlugs(out);
+    if (fallbackSlugs.length) {
+      const siblings = await Product.find({ ...DETAIL_FILTER, slug: { $in: fallbackSlugs } })
+        .select('_id slug colorName colours name').maxTimeMS(1500).lean().catch(() => []);
+      out.colorVariants = siblings.map(s => ({
+        productId: s._id, colorName: s.colorName || s.colours?.[0] || s.name, slug: s.slug,
+      }));
+    }
     if (Array.isArray(out.colorVariants) && out.colorVariants.length) {
       const ids = out.colorVariants.map(v => v.productId).filter(Boolean);
       const sibs = ids.length

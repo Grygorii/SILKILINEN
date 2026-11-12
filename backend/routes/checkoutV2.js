@@ -407,6 +407,8 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
       currency: CURRENCIES[dispCurrency].stripe,
       metadata: {
         sessionId: sessionId || '',
+        // Reporting only: must never select a different server-side cart.
+        browserSessionId: typeof req.body.browserSessionId === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(req.body.browserSessionId) ? req.body.browserSessionId : '',
         discountCode: discountCode || '',
         discountAmount: String(discountAmount),
         collectionDiscountAmount: String(collectionDiscountAmount),
@@ -584,12 +586,14 @@ checkoutRouter.post('/update-intent', checkoutRateLimit, async (req, res) => {
 // paid holds (Stripe puts it in the success-page URL). Without a matching
 // secret this returns 403, so it can't be used to enumerate other
 // customers' email/country by guessing pi_ ids.
-checkoutRouter.get('/confirmation', checkoutRateLimit, async (req, res) => {
+async function confirmOrder(req, res) {
+  res.set('Cache-Control', 'no-store');
   try {
-    const paymentIntentId = req.query.payment_intent;
-    const clientSecret = req.query.client_secret;
-    if (!paymentIntentId || !clientSecret) {
-      return res.status(400).json({ error: 'payment_intent and client_secret required' });
+    const input = req.method === 'POST' ? req.body : req.query;
+    const paymentIntentId = input?.payment_intent;
+    const clientSecret = input?.client_secret;
+    if (typeof paymentIntentId !== 'string' || !/^pi_[A-Za-z0-9]+$/.test(paymentIntentId) || typeof clientSecret !== 'string' || clientSecret.length > 500) {
+      return res.status(400).json({ error: 'Valid payment_intent and client_secret required' });
     }
 
     const intent = await stripe.paymentIntents.retrieve(String(paymentIntentId));
@@ -618,7 +622,11 @@ checkoutRouter.get('/confirmation', checkoutRateLimit, async (req, res) => {
     console.error('[checkoutV2] confirmation error:', err.message);
     res.status(500).json({ error: 'Internal server error' });
   }
-});
+}
+// POST keeps receipt credentials out of request URLs and proxy access logs.
+// GET stays temporarily compatible with the previously deployed storefront.
+checkoutRouter.post('/confirmation', checkoutRateLimit, confirmOrder);
+checkoutRouter.get('/confirmation', checkoutRateLimit, confirmOrder);
 
 // POST /api/webhook (mounted at root in server.js — must be before express.json())
 webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -651,9 +659,11 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
       }
 
       const sessionId = meta.sessionId;
+      const browserSessionId = meta.browserSessionId || sessionId;
       const [cart, visit] = await Promise.all([
         sessionId ? Cart.findOne({ sessionId }) : Promise.resolve(null),
-        sessionId ? Visit.findOne({ sessionId }).sort({ createdAt: -1 }).lean() : Promise.resolve(null),
+        // Optional attribution must never prevent a paid order from being saved.
+        browserSessionId ? Visit.findOne({ sessionId: browserSessionId }).sort({ createdAt: -1 }).maxTimeMS(1500).lean().catch(() => null) : Promise.resolve(null),
       ]);
 
       // Generate a readable order number: SL-YYYYMM-XXXXXX
@@ -777,7 +787,7 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
         shippingCost: shippingCost,
         shippingMethod: shipping.label,
         status: 'paid',
-        browserSessionId: sessionId,
+        browserSessionId,
         costs: { cogs: cogsTotal },
         attribution: {
           source:      meta.utm_source   || 'direct',
@@ -846,8 +856,8 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
       }
 
       // Link every visit in this session to the order for source-conversion attribution
-      if (sessionId) {
-        Visit.updateMany({ sessionId }, { convertedToOrder: order._id })
+      if (browserSessionId) {
+        Visit.updateMany({ sessionId: browserSessionId }, { convertedToOrder: order._id })
           .catch(err => console.error('[checkoutV2] visit attribution write failed:', err.message));
       }
 

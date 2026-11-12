@@ -40,7 +40,7 @@ router.get('/', async function(req, res) {
     //     without disclosing that negative ones are suppressed is a listed
     //     unfair practice under the Omnibus Directive and the UK's DMCC.
     // Moderation still applies — pending, rejected and spam never appear.
-    const filter = { status: 'approved' };
+    const filter = { status: 'approved', source: { $ne: 'seed' } };
     if (productId) filter.productId = productId;
 
     if (!page && !limit && sort === 'recent' && !productId) {
@@ -83,7 +83,7 @@ router.get('/summary', async function(req, res) {
     // only meant the number could never fall below 4.0 whatever customers
     // actually said — and this figure feeds aggregateRating in the product
     // JSON-LD, so it was being asserted to Google as fact.
-    const filter = { status: 'approved' };
+    const filter = { status: 'approved', source: { $ne: 'seed' } };
     if (productId) filter.productId = productId;
 
     const all = await Review.find(filter).select('starRating');
@@ -291,7 +291,7 @@ router.post('/from-token', async function(req, res) {
 router.post('/:id/helpful', async function(req, res) {
   try {
     const review = await Review.findOneAndUpdate(
-      { _id: req.params.id, status: 'approved' },
+      { _id: req.params.id, status: 'approved', source: { $ne: 'seed' } },
       { $inc: { helpfulCount: 1 } },
       { new: true, select: 'helpfulCount' }
     );
