@@ -3,13 +3,14 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: var(--ctrl-h-desktop);
+  min-height: var(--ctrl-h-desktop);
+  padding: var(--s-3) var(--s-5);
   border: var(--stroke) solid var(--color-ink);
   border-radius: var(--radius-control);
-  font-family: 'Jost', sans-serif;
-  font-weight: 400;
-  font-size: 12px;
-  letter-spacing: var(--track-utility);
+  font-family: var(--font-jost), sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: var(--track-button);
   text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
@@ -20,7 +21,7 @@
 }
 
 @media (max-width: 767px) {
-  .btn { height: var(--ctrl-h-mobile); }
+  .btn { min-height: var(--ctrl-h-mobile); }
 }
 
 .btn:focus-visible {
@@ -33,7 +34,9 @@
   background: var(--color-ink);
   color: var(--color-bg);
 }
-.primary:hover:not(:disabled) { opacity: 0.85; }
+@media (hover: hover) {
+  .primary:hover:not(:disabled) { background: var(--color-line-inverse); border-color: var(--color-line-inverse); }
+}
 .primary:active:not(:disabled) { opacity: 0.75; }
 
 /* Secondary — outlined */

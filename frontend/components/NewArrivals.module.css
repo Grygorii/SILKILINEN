@@ -1,5 +1,7 @@
 .section {
-  padding: 80px 6%;
+  padding: var(--s-8) 6%;
+  max-width: 1440px;
+  margin-inline: auto;
 }
 
 /* ── Header ───────────────────────────────────────────────────────────────
@@ -19,7 +21,7 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 32px;
   font-weight: 400;
-  letter-spacing: 1px;
+  letter-spacing: var(--track-heading);
   color: var(--color-ink);
   margin: 0;
 }
@@ -27,13 +29,15 @@
 .viewAll {
   flex-shrink: 0;
   font-family: 'Jost', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: var(--track-utility);
   text-transform: uppercase;
   color: var(--color-ink-muted);
   text-decoration: none;
   border-bottom: var(--stroke) solid var(--color-line);
-  padding-bottom: 4px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
 
@@ -88,9 +92,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-control);
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.92);
   color: var(--dark);
@@ -127,19 +131,18 @@
     font-size: 26px;
   }
   .section {
-    padding: 32px 0 56px;
+    padding: var(--s-6) 0 var(--s-7);
   }
-  /* Edge-to-edge, exactly TWO cards per view — no peek, no side gutters — so
-     the photography fills the screen the way it does on the great silk houses'
-     mobile sites. Arrows stay visible as the affordance that there's more. */
+  /* Two generous photographs, a quiet gutter and a native swipe track. */
   .track {
-    gap: 2px;
-    padding: 0;
+    gap: var(--s-3);
+    padding-inline: var(--s-5);
+    scroll-padding-inline: var(--s-5);
     background: var(--color-bg);
     scroll-snap-type: x mandatory;
   }
   .item {
-    flex-basis: calc((100% - 2px) / 2);
+    flex-basis: calc((100% - var(--s-3)) / 2);
     scroll-snap-align: start;
   }
   .arrow {
@@ -147,33 +150,7 @@
   }
 }
 
-/* ── Scroll reveal ──────────────────────────────────────────────────────────
-   The row settles in as you reach it instead of appearing as a block of
-   search results: each card rises a few pixels and fades, staggered along the
-   row, and the silk sheen plays once (see .sheenPlay in ProductCard).
-
-   `.armed` is added by JS on mount, so the hidden state NEVER applies to a
-   server render or a no-JS visitor — the cards simply show. A 2s failsafe in
-   the component also forces the reveal if the observer never fires. */
-.armed .item {
-  opacity: 0;
-  transform: translateY(14px);
-}
-
-.armed.revealed .item {
-  opacity: 1;
-  transform: none;
-  /* Staggered along the row; capped so a long carousel doesn't trail forever. */
-  transition: opacity 0.7s var(--ease, ease), transform 0.7s var(--ease, ease);
-  transition-delay: calc(min(var(--reveal-i, 0), 5) * 90ms);
-}
-
-/* Reduced motion: reveal instantly, no movement. */
-@media (prefers-reduced-motion: reduce) {
-  .armed .item,
-  .armed.revealed .item {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
-}
+/* Products are visible immediately. Keep the existing reveal class contract
+   without an entrance animation or a synthetic highlight over the photograph. */
+.armed .item,
+.armed.revealed .item { opacity: 1; transform: none; transition: none; }

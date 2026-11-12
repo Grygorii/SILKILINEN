@@ -161,6 +161,9 @@ export default async function Home() {
 
       <NewArrivals />
 
+      {/* Product discovery first; shipment history is supporting proof, not the hero. */}
+      <ShippingMap />
+
       {/* Style Finder — a quiet guide for the hesitant first-time visitor.
           Turns "just browsing" into a curated edit (the Warby Parker / Cuyana
           quiz pattern), in the brand's calm voice. The band owns its own
@@ -181,8 +184,6 @@ export default async function Home() {
       <CategoryTiles content={content} />
 
       <StorySection content={content} />
-
-      <ShippingMap />
 
       {withMessage.length > 0 && (
         <section className={styles.reviews}>

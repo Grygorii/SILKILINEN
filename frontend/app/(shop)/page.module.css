@@ -88,47 +88,50 @@
 }
 
 .heroContent h1 {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-cormorant), Georgia, serif;
   font-size: clamp(42px, 7vw, 80px);
   /* 400, not 300 — the hairline weight read as timid; a touch more ink gives the
      headline the quiet presence the Atelier asked for, still refined. */
   font-weight: 400;
   line-height: 1.1;
-  letter-spacing: 2px;
+  letter-spacing: -.015em;
+  max-width: 14ch;
+  text-wrap: balance;
   color: var(--dark);
   margin-bottom: 0;
 }
 
 .heroContent p {
-  font-size: 13px;
-  letter-spacing: var(--track-utility);
-  text-transform: uppercase;
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: var(--track-body);
+  max-width: 38ch;
   color: var(--dark);
   margin-top: 20px;
   margin-bottom: 32px;
 }
 
-/* Solid filled CTA — visible against any hero photo */
+/* The primary link shares the storefront button's quiet proportions. */
 .heroBtn {
-  display: inline-block;
-  padding: 15px 40px;
-  background: var(--dark);
-  border: 1px solid var(--dark);
-  color: var(--warm-white);
-  font-size: 11.5px;
-  letter-spacing: var(--track-utility);
-  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--ctrl-h-desktop);
+  padding: var(--s-3) var(--s-6);
+  border: 1px solid var(--color-ink);
+  border-radius: var(--radius-control);
+  background: var(--color-ink);
+  color: var(--color-bg);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: var(--track-button);
   text-decoration: none;
-  /* A more deliberate, considered hover than a flat opacity fade. */
-  transition: background 0.3s ease, border-color 0.3s ease, letter-spacing 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  transition: background var(--t-base) var(--ease), border-color var(--t-base) var(--ease);
 }
-
-.heroBtn:hover {
-  /* The label breathes open with a quiet lift — motion, not a colour wash. */
-  letter-spacing: 3.6px;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(26, 25, 22, 0.18);
+@media (hover: hover) {
+  .heroBtn:hover { background: var(--color-line-inverse); border-color: var(--color-line-inverse); }
 }
+.heroBtn:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; }
 
 /* ── Reviews section ──────────────────────────────── */
 
@@ -152,7 +155,7 @@
 }
 
 .reviewsTitle {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-cormorant), Georgia, serif;
   font-size: 32px;
   font-weight: 400;
   color: var(--dark);
@@ -197,19 +200,19 @@
     padding-bottom: calc(var(--contact-widget-h) + var(--cookie-bar-h, 0px) + var(--s-3));
   }
 
-  /* Mobile: content sits at bottom, scrim rises from below */
+  /* Warm light behind dark type; a dark scrim lowers its contrast. */
   .hero::before {
     width: 100%;
     height: 55%;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
+    background: linear-gradient(to top, var(--color-bg) 0%, color-mix(in srgb, var(--color-bg) 84%, transparent) 45%, transparent 100%);
   }
 
   .heroContent h1 {
-    font-size: clamp(32px, 9vw, 52px);
+    font-size: clamp(36px, 9.8vw, 48px);
   }
 
   .heroBtn {
-    min-height: 44px;
+    min-height: var(--ctrl-h-mobile);
     display: inline-flex;
     align-items: center;
   }
