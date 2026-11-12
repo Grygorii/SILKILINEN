@@ -40,13 +40,6 @@ function fmt(n: number | null) {
   return `€${n.toFixed(2)}`;
 }
 
-function marginColor(m: number | null) {
-  if (m === null) return styles.tMuted;
-  if (m >= 0.4) return styles.marginBarGreen;
-  if (m >= 0.2) return styles.marginBarAmber;
-  return styles.marginBarRed;
-}
-
 export default function FinanceReportsPage() {
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);

@@ -100,7 +100,6 @@ function isTabActive(tab: (typeof TABS)[number], pathname: string): boolean {
 
 export default function AdminLayout({
   children,
-  active: _ignored,
 }: {
   children: React.ReactNode;
   active?: string;

@@ -125,7 +125,7 @@ export default function ProductCard({ product, showHeart = true, priority = fals
           </button>
         )}
         <ProductImage src={heroUrl} alt={heroAlt} variant="card" loading={priority ? 'eager' : 'lazy'} />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        { }
         {hoverUrl && (
           <img
             src={cloudinaryUrl(hoverUrl, 400)}

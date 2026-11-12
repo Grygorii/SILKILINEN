@@ -158,7 +158,7 @@ export default function SocialIndexPage() {
                     {/* Thumbnail */}
                     <div style={{ height: 130, background: 'var(--admin-bg)', overflow: 'hidden', position: 'relative' }}>
                       {thumb ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+
                         <img src={thumb} alt={post.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useCustomer } from '@/context/CustomerContext';
 import { useWishlist } from '@/context/WishlistContext';
 import Button from '@/components/ui/Button';
@@ -46,24 +47,24 @@ export default function AccountPage() {
           <span className={styles.cardMeta}>{orderCount === null ? '…' : orderCount === 0 ? 'No orders yet' : `${orderCount} order${orderCount === 1 ? '' : 's'}`}</span>
           <span className={styles.cardArrow}>View all →</span>
         </Link>
-        <a href="/account/wishlist" className={styles.card}>
+        <Link href="/account/wishlist" className={styles.card}>
           <span className={styles.cardIcon}><Wishlist size={24} /></span>
           <span className={styles.cardTitle}>Wishlist</span>
           <span className={styles.cardMeta}>{wishlistCount === 0 ? 'Empty' : `${wishlistCount} saved item${wishlistCount === 1 ? '' : 's'}`}</span>
           <span className={styles.cardArrow}>View wishlist →</span>
-        </a>
-        <a href="/account/profile" className={styles.card}>
+        </Link>
+        <Link href="/account/profile" className={styles.card}>
           <span className={styles.cardIcon}><Profile size={24} /></span>
           <span className={styles.cardTitle}>Profile</span>
           <span className={styles.cardMeta}>{[customer.firstName, customer.lastName].filter(Boolean).join(' ') || 'Add your name'}</span>
           <span className={styles.cardArrow}>Edit profile →</span>
-        </a>
-        <a href="/account/addresses" className={styles.card}>
+        </Link>
+        <Link href="/account/addresses" className={styles.card}>
           <span className={styles.cardIcon}><Address size={24} /></span>
           <span className={styles.cardTitle}>Addresses</span>
           <span className={styles.cardMeta}>{customer.defaultShippingAddress?.city || 'No address saved'}</span>
           <span className={styles.cardArrow}>Manage →</span>
-        </a>
+        </Link>
       </div>
 
       <div className={styles.signOutRow}>

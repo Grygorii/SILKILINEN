@@ -55,6 +55,11 @@ function unpackItems(meta) {
   for (let k = 1; meta[`items${k}`] !== undefined; k++) str += meta[`items${k}`];
   try { return JSON.parse(str || '[]'); } catch { return []; }
 }
+
+function parseQuantity(value) {
+  const quantity = Number(value);
+  return Number.isInteger(quantity) && quantity >= 1 && quantity <= 99 ? quantity : null;
+}
 const Expense = require('../models/Expense');
 const Customer = require('../models/Customer');
 const { calculateShipping, getTierForCountry } = require('../services/shipping');
@@ -222,17 +227,17 @@ async function priceOrder(body) {
       // Quantity is the one client value we act on — guard it before it reaches
       // any price arithmetic. A negative/fractional/huge qty would otherwise
       // skew the charged total (negative qty lowers it).
-      const quantity = parseInt(item.quantity, 10);
-      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
+      const quantity = parseQuantity(item.quantity);
+      if (quantity === null) {
         return { status: 400, error: { error: `Invalid quantity for "${item.name || 'item'}"` } };
       }
       if (item.bundleId) {
         const bundle = await Bundle.findOne({
           _id: item.bundleId,
           status: 'active',
-          // variants + totalStock so the children can be availability-checked.
-          // They are decremented on sale like any other line and were never
-          // checked, so a bundle could be sold with its contents out of stock.
+        // variants + totalStock so the children can be availability-checked.
+        // They are decremented on sale like any other line and were never
+        // checked, so a bundle could be sold with its contents out of stock.
         }).populate({ path: 'products.productId', select: 'name price status variants totalStock' });
         if (!bundle) {
           return { status: 400, error: {
@@ -259,7 +264,6 @@ async function priceOrder(body) {
             } };
           }
         }
-
         const pricing = Bundle.computePricing(children, bundle.discountPercent);
         validatedItems.push({
           productId: null,
@@ -441,6 +445,11 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
       colour: i.colour,
       size: i.size,
       quantity: i.quantity,
+      includedProducts: (i.includedProducts || []).map(c => ({
+        productId: String(c.productId),
+        name: c.name,
+        quantity: c.quantity || 1,
+      })),
     })));
     if (email) intentParams.receipt_email = email;
     const intent = await stripe.paymentIntents.create(intentParams);
@@ -924,4 +933,4 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
 // bestCollectionDiscount is exported for tests only: it decides which sale a
 // product gets, which is money, and it was previously unreachable from a test
 // because it did its own database call.
-module.exports = { checkoutRouter, webhookRouter, bestCollectionDiscount };
+module.exports = { checkoutRouter, webhookRouter, bestCollectionDiscount, parseQuantity, packItems, unpackItems };

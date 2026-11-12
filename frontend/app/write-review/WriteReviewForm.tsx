@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { productPath } from '@/lib/urls';
+import Link from 'next/link';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -129,9 +130,9 @@ export default function WriteReviewForm({ token }: { token: string }) {
           The link may have expired or already been used. If you’d like to leave a review,
           reply to the original order email and we’ll send a fresh link.
         </p>
-        <a href="/" style={{ fontSize: 12, letterSpacing: '2.5px', textTransform: 'uppercase', color: '#2A2218', textDecoration: 'underline' }}>
+        <Link href="/" style={{ fontSize: 12, letterSpacing: '2.5px', textTransform: 'uppercase', color: '#2A2218', textDecoration: 'underline' }}>
           ← Back to home
-        </a>
+        </Link>
       </div>
     );
   }
@@ -164,9 +165,9 @@ export default function WriteReviewForm({ token }: { token: string }) {
         <p style={{ fontSize: 15, lineHeight: 1.7, color: '#8A8278', maxWidth: 440, margin: '0 auto 32px' }}>
           A member of our team will read it shortly. Approved reviews appear on the product page within a few days.
         </p>
-        <a href={productPath(product)} style={{ display: 'inline-block', padding: '14px 32px', background: '#2A2218', color: '#FAF8F4', textDecoration: 'none', fontSize: 12, letterSpacing: '2.5px', textTransform: 'uppercase', borderRadius: 2 }}>
+        <Link href={productPath(product)} style={{ display: 'inline-block', padding: '14px 32px', background: '#2A2218', color: '#FAF8F4', textDecoration: 'none', fontSize: 12, letterSpacing: '2.5px', textTransform: 'uppercase', borderRadius: 2 }}>
           View product
-        </a>
+        </Link>
       </div>
     );
   }
@@ -179,7 +180,7 @@ export default function WriteReviewForm({ token }: { token: string }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, marginBottom: 32, background: '#fff', border: '1px solid #E8E2D6', borderRadius: 2 }}>
         {product?.image && (
-          // eslint-disable-next-line @next/next/no-img-element
+
           <img src={product.image} alt="" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 2 }} />
         )}
         <div>

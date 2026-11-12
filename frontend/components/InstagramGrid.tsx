@@ -58,7 +58,7 @@ export default async function InstagramGrid() {
             title={post.caption ? post.caption.slice(0, 100) : undefined}
           >
             {post.media_url && (
-              // eslint-disable-next-line @next/next/no-img-element
+
               <img
                 src={post.media_url}
                 alt={post.caption ? post.caption.slice(0, 80) : 'Instagram post'}

@@ -127,7 +127,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
       />
       {collection.heroImage?.url && (
         <div className={styles.hero}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          { }
           <Image
             src={collection.heroImage.url}
             alt={collection.heroImage.alt || collection.name}

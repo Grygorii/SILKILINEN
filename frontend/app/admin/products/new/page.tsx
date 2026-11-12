@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
 import styles from './page.module.css';
 
@@ -44,7 +45,7 @@ export default function NewProductPage() {
             <p className={styles.creatingText} style={{ color: 'var(--color-danger)' }}>Couldn’t create a new product: {error}</p>
             <p className={styles.creatingText}>
               <button onClick={() => location.reload()} style={{ marginRight: 12, textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', font: 'inherit' }}>Try again</button>
-              <a href="/admin/products" style={{ textDecoration: 'underline' }}>Back to products</a>
+              <Link href="/admin/products" style={{ textDecoration: 'underline' }}>Back to products</Link>
             </p>
           </>
         ) : (

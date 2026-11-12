@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import Link from 'next/link';
 
 function UnsubscribeContent() {
   const params = useSearchParams();
@@ -24,9 +25,9 @@ function UnsubscribeContent() {
         <p>Click the unsubscribe link in your email to confirm.</p>
       )}
 
-      <a href="/" style={{ display: 'inline-block', marginTop: '2rem', color: '#1a1916', textDecoration: 'underline' }}>
+      <Link href="/" style={{ display: 'inline-block', marginTop: '2rem', color: '#1a1916', textDecoration: 'underline' }}>
         Return to SILKILINEN
-      </a>
+      </Link>
     </main>
   );
 }

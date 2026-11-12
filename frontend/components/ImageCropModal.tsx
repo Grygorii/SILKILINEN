@@ -127,7 +127,7 @@ export default function ImageCropModal({ files, onComplete, onClose }: Props) {
           onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerLeave={onUp}
         >
           {src && (
-            // eslint-disable-next-line @next/next/no-img-element
+
             <img ref={imgRef} src={src} alt="" draggable={false}
               style={{ position: 'absolute', left: '50%', top: '50%', width: dispW, height: dispH, maxWidth: 'none', transform: `translate(calc(-50% + ${px}px), calc(-50% + ${py}px))` }} />
           )}

@@ -54,7 +54,7 @@ export default function AdminNotifications() {
     poll();
     const interval = setInterval(poll, POLL_MS);
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
   if (toasts.length === 0) return null;

@@ -330,7 +330,7 @@ export default function AdminCategoryEditPage({ params }: { params: Promise<{ id
 
             {form.heroImageUrl && (
               <div className={styles.heroPreview}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+                { }
                 <img src={form.heroImageUrl} alt={form.heroImageAlt || form.label} />
               </div>
             )}

@@ -125,7 +125,7 @@ export default function SocialComposerPage() {
     }).catch(() => {});
     setSavedAt(new Date());
     setSaving(false);
-  }, [id, title, caption, hashtags, variations]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id, title, caption, hashtags, variations]);
 
   function updateAndSave(fn: () => void) { fn(); scheduleAutosave(); }
 
@@ -265,7 +265,7 @@ export default function SocialComposerPage() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
               {(post.defaultImages || []).map((img, i) => (
                 <div key={i} style={{ position: 'relative', width: 100, height: 100 }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  { }
                   <img src={img.url} alt={img.altText || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   {post.primaryImageIndex === i && (
                     <span style={{ position: 'absolute', top: 3, left: 3, fontSize: 8, background: 'rgba(0,0,0,0.6)', color: 'var(--admin-surface)', padding: '1px 4px', letterSpacing: '0.5px' }}>MAIN</span>
@@ -507,7 +507,7 @@ export default function SocialComposerPage() {
             {/* Image preview */}
             <div style={{ background: 'var(--admin-bg)', aspectRatio: '1/1', overflow: 'hidden' }}>
               {post.defaultImages?.[post.primaryImageIndex ?? 0]?.url ? (
-                // eslint-disable-next-line @next/next/no-img-element
+
                 <img
                   src={post.defaultImages[post.primaryImageIndex ?? 0].url}
                   alt=""

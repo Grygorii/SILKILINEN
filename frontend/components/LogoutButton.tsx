@@ -1,13 +1,10 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import styles from './AdminLayout.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function LogoutButton() {
-  const router = useRouter();
-
   async function handleLogout() {
     // Clear Railway-domain cookie (for client-side API calls)
     await fetch(`${API}/api/auth/logout`, { method: 'POST', credentials: 'include' });

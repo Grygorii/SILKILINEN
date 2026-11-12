@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, use, useCallback } from 'react';
+import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
 import AiPhotoshoot from '@/components/AiPhotoshoot';
 import UploadHint from '@/components/UploadHint';
@@ -274,7 +275,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     setSaveError('');
     clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(() => doSaveRef.current?.(), 7_000);
-  }, []); // eslint-disable-line
+  }, []);
 
   // Load active categories for the category dropdown
   useEffect(() => {
@@ -401,7 +402,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       setSaveState('error');
       setSaveError(err instanceof Error ? err.message : 'Save failed');
     }
-  }, [form, variants, id]); // eslint-disable-line
+  }, [form, variants, id]);
 
   useEffect(() => {
     doSaveRef.current = doSave;
@@ -665,7 +666,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       {/* ── Sticky header ────────────────────────────────────────────────── */}
       <div className={styles.stickyBar}>
         <div className={styles.stickyLeft}>
-          <a href="/admin/products" className={styles.backLink}>← Products</a>
+          <Link href="/admin/products" className={styles.backLink}>← Products</Link>
           <span className={styles.pageTitle}>{form.name || 'Untitled product'}</span>
         </div>
         <div className={styles.stickyRight}>

@@ -45,7 +45,7 @@ export default async function FeaturedCollections() {
           <Link key={c._id} href={`/collections/${c.slug}`} className={styles.tile}>
             {c.heroImage?.url ? (
               <div className={styles.imgWrap}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+                { }
                 <Image
                   src={c.heroImage.url}
                   alt={c.heroImage.alt || c.name}

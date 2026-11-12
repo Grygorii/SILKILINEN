@@ -1,8 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Jost, EB_Garamond } from "next/font/google";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import AnnouncementBar from "@/components/AnnouncementBar";
+import localFont from "next/font/local";
 import AnalyticsLoader from "@/components/AnalyticsLoader";
 import VercelAnalytics from "@/components/VercelAnalytics";
 import EventTracker from "@/components/EventTracker";
@@ -20,21 +17,25 @@ import "./globals.css";
 import { brand } from '@/lib/brand';
 import { shopPath } from '@/lib/urls';
 
-// next/font self-hosts the WOFF2 files and inlines a CSS preload, killing
-// the ~2 second render-blocking @import that PageSpeed flagged. Display
-// swap so text shows in fallback first instead of waiting. The font names
-// are aliased to the same names existing CSS uses so module styles don't
-// need to be rewritten.
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["300", "400", "600"],
+// Keep fonts in the repository so production builds never depend on Google
+// Fonts being reachable. next/font/local emits the preload/CSS; display:swap
+// keeps text visible while each face loads.
+const cormorant = localFont({
+  src: [
+    { path: "../public/fonts/cormorant-garamond-300.ttf", weight: "300" },
+    { path: "../public/fonts/cormorant-garamond-400.ttf", weight: "400" },
+    { path: "../public/fonts/cormorant-garamond-600.ttf", weight: "600" },
+  ],
   display: "swap",
   variable: "--font-cormorant",
 });
 
-const jost = Jost({
-  subsets: ["latin"],
-  weight: ["300", "400", "500"],
+const jost = localFont({
+  src: [
+    { path: "../public/fonts/jost-300.ttf", weight: "300" },
+    { path: "../public/fonts/jost-400.ttf", weight: "400" },
+    { path: "../public/fonts/jost-500.ttf", weight: "500" },
+  ],
   display: "swap",
   variable: "--font-jost",
 });
@@ -43,10 +44,15 @@ const jost = Jost({
 // display face — its hairline strokes look anaemic at body size. EB
 // Garamond is a Garamond cut for text: same classical character, proper
 // ink at 18px. Cormorant stays for large display headings.
-const ebGaramond = EB_Garamond({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
+const ebGaramond = localFont({
+  src: [
+    { path: "../public/fonts/eb-garamond-400.ttf", weight: "400", style: "normal" },
+    { path: "../public/fonts/eb-garamond-500.ttf", weight: "500", style: "normal" },
+    { path: "../public/fonts/eb-garamond-600.ttf", weight: "600", style: "normal" },
+    { path: "../public/fonts/eb-garamond-400-italic.ttf", weight: "400", style: "italic" },
+    { path: "../public/fonts/eb-garamond-500-italic.ttf", weight: "500", style: "italic" },
+    { path: "../public/fonts/eb-garamond-600-italic.ttf", weight: "600", style: "italic" },
+  ],
   display: "swap",
   // Only used below the fold (journal body text, product-card names) — never
   // in the hero. Preloading it competed with the LCP hero image for bandwidth

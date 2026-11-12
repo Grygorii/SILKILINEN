@@ -52,8 +52,8 @@ export default async function BundleStrip({ category }: { category: string }) {
             <Link key={b._id} href={`/bundles/${b.slug}`} className={styles.card}>
               <div className={styles.imgWrap}>
                 {hero ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  // eslint-disable-next-line @next/next/no-img-element
+
+
                   <img
                     src={cloudinaryAuto(hero, 600)}
                     alt={b.heroImage?.alt || b.name}

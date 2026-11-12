@@ -236,7 +236,7 @@ export default function JournalAdminPage() {
                     {/* Thumbnail */}
                     <div style={{ height: 120, background: 'var(--admin-bg)', overflow: 'hidden' }}>
                       {article.heroImage?.url && (
-                        // eslint-disable-next-line @next/next/no-img-element
+
                         <img src={article.heroImage.url} alt={article.heroImage.alt || article.title}
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       )}

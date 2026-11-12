@@ -66,7 +66,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!hydrated.current) return;
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
 

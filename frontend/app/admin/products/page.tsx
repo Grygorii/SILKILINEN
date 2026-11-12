@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
 import AdminErrorBanner from '@/components/AdminErrorBanner';
 import { toast } from '@/lib/adminToast';
@@ -619,7 +620,8 @@ export default function AdminProductsPage() {
   function toggleSelect(id: string) {
     setSelectedIds(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
@@ -836,7 +838,7 @@ export default function AdminProductsPage() {
             {seoGenerating ? '✨ Generating…' : seoConfirming ? 'Confirm — generate SEO?' : '✨ Generate missing SEO'}
           </button>
           {seoResult && <span className={styles.bulkSeoResult}>{seoResult}</span>}
-          <a href="/admin/products/new" className={styles.addBtn}>+ Add product</a>
+          <Link href="/admin/products/new" className={styles.addBtn}>+ Add product</Link>
         </div>
       </div>
 
@@ -980,12 +982,12 @@ export default function AdminProductsPage() {
                       )}
                     </td>
                     <td>
-                      <a href={`/admin/products/${product._id}`} className={styles.productName}>
+                      <Link href={`/admin/products/${product._id}`} className={styles.productName}>
                         {product.name}
                         {product.status !== 'draft' && !product.costing?.totalUnitCost && (
                           <span title="No costing data — Finance tab will show unknown COGS" style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: 'var(--admin-ink-muted)', marginLeft: 6, verticalAlign: 'middle' }} />
                         )}
-                      </a>
+                      </Link>
                       <InlineCategoryEdit product={product} categories={categories} onUpdate={updateProduct} />
                       <IssuePills product={product} />
                     </td>
@@ -1004,7 +1006,7 @@ export default function AdminProductsPage() {
                     <td className={styles.updatedAt}>{fmtDate(product.updatedAt)}</td>
                     <td>
                       <div className={styles.rowActions}>
-                        <a href={`/admin/products/${product._id}`} className={styles.editBtn}>Edit</a>
+                        <Link href={`/admin/products/${product._id}`} className={styles.editBtn}>Edit</Link>
                         <button className={styles.deleteBtn} onClick={() => setDeleteTarget(product)}>Delete</button>
                       </div>
                     </td>
@@ -1033,9 +1035,9 @@ export default function AdminProductsPage() {
                 )}
                 <div className={styles.productCardBody}>
                   <div className={styles.productCardTop}>
-                    <a href={`/admin/products/${product._id}`} className={styles.productCardName}>
+                    <Link href={`/admin/products/${product._id}`} className={styles.productCardName}>
                       {product.name}
-                    </a>
+                    </Link>
                     <span className={`${styles.statusBadge} ${STATUS_CLASS[product.status] ?? ''}`}>
                       {STATUS_LABEL[product.status] ?? product.status}
                     </span>
@@ -1050,7 +1052,7 @@ export default function AdminProductsPage() {
                   </div>
                   <IssuePills product={product} />
                   <div className={styles.productCardActions}>
-                    <a href={`/admin/products/${product._id}`} className={styles.editBtn}>Edit</a>
+                    <Link href={`/admin/products/${product._id}`} className={styles.editBtn}>Edit</Link>
                     <button className={styles.deleteBtn} onClick={() => setDeleteTarget(product)}>Delete</button>
                   </div>
                 </div>

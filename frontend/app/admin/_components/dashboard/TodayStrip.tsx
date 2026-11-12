@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import styles from './TodayStrip.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -90,14 +91,14 @@ export default function TodayStrip() {
               </div>
               <div className={styles.label}>Revenue today</div>
             </div>
-            <a className={styles.tile} href="/admin/orders?status=paid">
+            <Link className={styles.tile} href="/admin/orders?status=paid">
               <div className={styles.number}>{data.pendingFulfilment}</div>
               <div className={styles.label}>To fulfil</div>
-            </a>
-            <a className={styles.tile} href="/admin/reviews">
+            </Link>
+            <Link className={styles.tile} href="/admin/reviews">
               <div className={styles.number}>{data.reviewsPending}</div>
               <div className={styles.label}>Reviews waiting</div>
-            </a>
+            </Link>
           </>
         )}
       </div>

@@ -93,7 +93,7 @@ function presetCost(workflow: WorkflowKey, customJobs: JobSpec[]): number {
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
-export default function AiPhotoshoot({ productId, productCategory, onPhotoApproved }: Props) {
+export default function AiPhotoshoot({ productId, onPhotoApproved }: Props) {
   const [expanded, setExpanded]             = useState(false);
   const [showTooltip, setShowTooltip]       = useState(false);
   const [models, setModels]                 = useState<ModelSummary[]>([]);
@@ -423,7 +423,7 @@ export default function AiPhotoshoot({ productId, productCategory, onPhotoApprov
                       disabled={!!sessionId || isWorking}
                       title={`${m.name}${m.heritage ? ' — ' + m.heritage : ''}`}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      { }
                       {m.referenceImageUrl
                         ? <img src={m.referenceImageUrl} alt={m.name} className={styles.modelOptThumb} />
                         : <div className={styles.modelOptThumbEmpty}>👤</div>}

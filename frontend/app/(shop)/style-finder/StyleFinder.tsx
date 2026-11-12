@@ -498,7 +498,7 @@ export default function StyleFinder({ initialProducts = [] }: { initialProducts?
                     <span className={styles.cardImg}>
                       {isPrimaryPick && <span className={styles.matchMark}>Your match</span>}
                       {img ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+
                         <img src={img} alt={p.name} loading="lazy" />
                       ) : (
                         <span className={styles.imgFallback} aria-hidden="true" />

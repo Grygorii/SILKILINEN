@@ -350,7 +350,7 @@ export default function JournalEditorPage() {
             marginBottom: 40, overflow: 'hidden', position: 'relative',
           }}>
             {article.heroImage?.url ? (
-              // eslint-disable-next-line @next/next/no-img-element
+
               <img src={article.heroImage.url} alt={article.heroImage.alt || title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               <div style={{ textAlign: 'center' }}>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
 import styles from './page.module.css';
 
@@ -58,10 +59,6 @@ function parseCSV(text: string): Record<string, string>[] {
 
 function splitVal(str: string): string {
   return str.split(/[,|]/).map(s => s.trim()).filter(Boolean).join(', ');
-}
-
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function mapRows(records: Record<string, string>[], platform: Platform): PreviewRow[] {
@@ -385,7 +382,7 @@ export default function ImportPage() {
 
           <div className={styles.actions}>
             <button className={styles.cancelBtn} onClick={handleCancel}>Import another file</button>
-            <a href="/admin/products" className={styles.viewBtn}>View products →</a>
+            <Link href="/admin/products" className={styles.viewBtn}>View products →</Link>
           </div>
         </section>
       )}

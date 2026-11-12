@@ -336,7 +336,7 @@ export default function ReviewsModeration() {
                       className={styles.productChip}
                     >
                       {prod.thumb && (
-                        // eslint-disable-next-line @next/next/no-img-element
+
                         <img src={prod.thumb} alt="" />
                       )}
                       <span>{prod.name}</span>

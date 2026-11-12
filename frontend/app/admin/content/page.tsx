@@ -511,7 +511,7 @@ export default function ContentPage() {
                             title={w.surfaceLabel}
                             style={{ padding: 0, border: edit.value === w.url ? '2px solid var(--admin-ink)' : '1px solid var(--admin-line)', background: 'none', cursor: 'pointer', aspectRatio: '1', overflow: 'hidden' }}
                           >
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            { }
                             <img src={w.url} alt={w.surfaceLabel} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                           </button>
                         ))}

@@ -38,7 +38,7 @@ export default function BundlePageClient({ bundle }: { bundle: BundleData }) {
     <main className={styles.page}>
       <section className={styles.hero}>
         {hero ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
+
           <img src={cloudinaryAuto(hero, 1600)} srcSet={cloudinarySrcSet(hero, [768, 1080, 1600])} sizes="100vw" alt={bundle.heroImage?.alt || bundle.name} className={styles.heroImg} />
         ) : (
           <div className={styles.heroPlaceholder} />

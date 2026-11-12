@@ -235,15 +235,15 @@ export default function SideMenu({ isOpen, onClose }: Props) {
         <div className={styles.accountSection}>
           {customer ? (
             <>
-              <a href="/account" className={styles.accountRow} onClick={onClose}>
+              <Link href="/account" className={styles.accountRow} onClick={onClose}>
                 <span>Hello, {customer.firstName || 'Account'}</span>
                 <span className={styles.navArrow}>→</span>
-              </a>
-              <a href="/wishlist" className={styles.accountItem} onClick={onClose}>
+              </Link>
+              <Link href="/wishlist" className={styles.accountItem} onClick={onClose}>
                 <Heart size={13} strokeWidth={1.5} />
                 <span>Wishlist</span>
                 {wishlistCount > 0 && <span className={styles.accountBadge}>{wishlistCount}</span>}
-              </a>
+              </Link>
               <Link href="/account/orders" className={styles.accountItem} onClick={onClose}>
                 <Package size={13} strokeWidth={1.5} />
                 <span>Orders</span>
@@ -258,9 +258,9 @@ export default function SideMenu({ isOpen, onClose }: Props) {
               </button>
             </>
           ) : (
-            <a href="/account/sign-in" className={styles.accountRow} onClick={onClose}>
+            <Link href="/account/sign-in" className={styles.accountRow} onClick={onClose}>
               <span>Sign in</span>
-            </a>
+            </Link>
           )}
         </div>
 

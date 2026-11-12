@@ -95,7 +95,10 @@ export default function ReviewsCarousel({ reviews: incoming }: Props) {
         onTouchStart={e => { touchStartX.current = e.touches[0].clientX; }}
         onTouchEnd={e => {
           const diff = touchStartX.current - e.changedTouches[0].clientX;
-          if (Math.abs(diff) > 40) diff > 0 ? nextCard() : prevCard();
+          if (Math.abs(diff) > 40) {
+            if (diff > 0) nextCard();
+            else prevCard();
+          }
         }}
       >
         <Card review={reviews[index]} />

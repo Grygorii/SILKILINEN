@@ -225,12 +225,12 @@ export default function Navbar() {
                         <div className={styles.dropGreeting}>
                           Hi, {customer.firstName || customer.email}
                         </div>
-                        <a href="/account" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>My account</a>
+                      <Link href="/account" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>My account</Link>
                         <Link href="/account/orders" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>Orders</Link>
-                        <a href="/wishlist" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>
+                      <Link href="/wishlist" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>
                           Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ''}
-                        </a>
-                        <a href="/account/profile" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>Profile</a>
+                        </Link>
+                        <Link href="/account/profile" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>Profile</Link>
                         <div className={styles.dropDivider} />
                         <button
                           className={styles.dropSignOut}
@@ -242,8 +242,8 @@ export default function Navbar() {
                       </>
                     ) : (
                       <>
-                        <a href="/account/sign-in" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>Sign in</a>
-                        <a href="/account/sign-in" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>Create account</a>
+                        <Link href="/account/sign-in" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>Sign in</Link>
+                        <Link href="/account/sign-in" className={styles.dropItem} role="menuitem" onClick={() => setAccountOpen(false)}>Create account</Link>
                       </>
                     )}
                   </div>

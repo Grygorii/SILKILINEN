@@ -20,6 +20,7 @@ const loginLimiter = rateLimit({
   },
   requestWasSuccessful: (_req, res) => res.statusCode < 500,
   skipFailedRequests: true,
+  skip: () => process.env.NODE_ENV === 'test',
 });
 
 router.post('/login', loginLimiter, async function(req, res) {
