@@ -1,5 +1,7 @@
 .section {
-  padding: 80px 6%;
+  padding: var(--s-7) clamp(var(--s-5), 3vw, var(--s-8));
+  max-width: 1920px;
+  margin-inline: auto;
   border-top: 1px solid var(--border);
 }
 
@@ -11,31 +13,29 @@
   text-transform: uppercase;
   color: var(--dark);
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: var(--s-6);
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
 }
 
-/* 2-col for 2 or 4 items looks better — handled via parent count */
+/* One editorial image keeps a sensible measure; two use the full section. */
 @media (min-width: 901px) {
-  /* If only 1 or 2 tiles, centre them */
   .grid:has(> :nth-child(1):last-child) {
-    grid-template-columns: 400px;
+    grid-template-columns: minmax(0, 960px);
     justify-content: center;
   }
   .grid:has(> :nth-child(2):last-child) {
-    grid-template-columns: repeat(2, 1fr);
-    max-width: 860px;
-    margin: 0 auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 .tile {
   display: block;
+  min-width: 0;
   text-decoration: none;
   color: var(--dark);
   transition: opacity 0.2s;
@@ -44,7 +44,7 @@
 .tile:hover .img { transform: scale(1.03); }
 
 .imgWrap {
-  position: relative; /* anchor for next/image fill */
+  position: relative;
   width: 100%;
   aspect-ratio: 3/2;
   overflow: hidden;
@@ -65,9 +65,7 @@
   background: var(--cream);
 }
 
-.tileBody {
-  padding: 16px 0 0;
-}
+.tileBody { padding: 16px 0 0; }
 
 .tileName {
   font-family: 'Cormorant Garamond', Georgia, serif;
@@ -88,7 +86,10 @@
 }
 
 @media (max-width: 900px) {
-  .grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  /* Existing tablet measure; the desktop correction must not widen phones. */
+  .section { padding: 80px 6%; }
+  .heading { margin-bottom: 48px; }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 }
 
 @media (max-width: 540px) {
