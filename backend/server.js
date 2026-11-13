@@ -20,6 +20,7 @@ if (process.env.NODE_ENV === 'production' && !process.env.STRIPE_WEBHOOK_SECRET)
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
+const { isSilkilinenVercelDeployment } = require('./utils/corsOrigins');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const pinoHttp = require('pino-http');
@@ -179,6 +180,7 @@ app.use(cors({
     // Allow requests with no origin (e.g. curl, Stripe webhooks, same-origin)
     if (!origin) return callback(null, true);
     if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    if (process.env.NODE_ENV === 'production' && isSilkilinenVercelDeployment(origin)) return callback(null, true);
     callback(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true,

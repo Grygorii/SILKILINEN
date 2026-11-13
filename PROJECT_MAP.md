@@ -177,6 +177,11 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   nothing links through the 301. It was written 14 times in two forms; customer
   emails used the apex (an extra redirect hop) and two email links ignored the env
   var entirely, so a staging deploy would have linked to production.
+- **Credentialed CORS:** explicit `CORS_ORIGINS` / `FRONTEND_URL` remain the normal
+  allow-list. `backend/utils/corsOrigins.js` also permits only SILKILINEN's own
+  Vercel deployment host pattern so provider smoke checks work; never replace it
+  with `*.vercel.app`, which would expose cookie-authenticated API responses to
+  unrelated Vercel apps.
 - **Site origin (frontend):** `lib/brand.ts` (`brand.url`) is the ONLY place the domain is written.
   `lib/i18n.ts` re-exports it as `SITE`; sitemap/robots/feed/Breadcrumbs/layout read it.
   It had been written out longhand in **16 more places** — every static content page's
