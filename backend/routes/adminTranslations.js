@@ -15,6 +15,16 @@ const Category = require('../models/Category');
 const Collection = require('../models/Collection');
 const { SUPPORTED, LOCALES, configured, translateResource, upsertTranslation } = require('../services/translator');
 
+const RESOURCE_CONFIG = {
+  product: { Model: Product, query: { status: { $in: ['active', 'sold_out'] } }, fields: ['name', 'description', 'metaTitle', 'metaDescription'], label: 'name' },
+  category: { Model: Category, query: { status: 'active' }, fields: ['label', 'description', 'metaTitle', 'metaDescription'], label: 'label' },
+  collection: { Model: Collection, query: { status: 'active' }, fields: ['name', 'description', 'metaTitle', 'metaDescription'], label: 'name' },
+};
+
+function requiredFields(doc, fields) {
+  return fields.filter(field => typeof doc[field] === 'string' && doc[field].trim());
+}
+
 router.use(requireAuth);
 
 // GET / — coverage summary: how much of the catalogue is translated per locale.
@@ -30,9 +40,9 @@ router.get('/', async (req, res) => {
     // wrong. Restricting the numerator to live ids makes both halves describe
     // the same set.
     const [liveProducts, liveCategories, liveCollections] = await Promise.all([
-      Product.find({ status: { $in: ['active', 'sold_out'] } }).select('_id').lean(),
-      Category.find({ status: 'active' }).select('_id').lean(),
-      Collection.find({ status: 'active' }).select('_id').lean(),
+      Product.find(RESOURCE_CONFIG.product.query).select(RESOURCE_CONFIG.product.fields.join(' ')).lean(),
+      Category.find(RESOURCE_CONFIG.category.query).select(RESOURCE_CONFIG.category.fields.join(' ')).lean(),
+      Collection.find(RESOURCE_CONFIG.collection.query).select(RESOURCE_CONFIG.collection.fields.join(' ')).lean(),
     ]);
     const liveIds = {
       product: liveProducts.map(d => String(d._id)),
@@ -43,27 +53,32 @@ router.get('/', async (req, res) => {
     const categories = liveIds.category.length;
     const collections = liveIds.collection.length;
 
-    const byLocale = await Translation.aggregate([
-      {
-        $match: {
-          $or: Object.entries(liveIds).map(([type, ids]) => ({
-            resourceType: type,
-            // Stored as ObjectId or string depending on writer; match both.
-            $expr: { $in: [{ $toString: '$resourceId' }, ids] },
-          })),
-        },
-      },
-      // DISTINCT resource per locale/type: a resource with several translated
-      // FIELDS is still one translated resource, and counting rows inflated it.
-      { $group: { _id: { locale: '$locale', type: '$resourceType', rid: { $toString: '$resourceId' } } } },
-      { $group: { _id: { locale: '$_id.locale', type: '$_id.type' }, n: { $sum: 1 } } },
-    ]);
+    const rows = await Translation.find({
+      $or: Object.entries(liveIds).map(([resourceType, ids]) => ({ resourceType, resourceId: { $in: ids } })),
+    }).lean();
+    const rowMap = new Map(rows.map(row => [`${row.locale}:${row.resourceType}:${String(row.resourceId)}`, row]));
+    const docs = { product: liveProducts, category: liveCategories, collection: liveCollections };
     const translated = {};
-    for (const row of byLocale) {
-      translated[row._id.locale] = translated[row._id.locale] || {};
-      translated[row._id.locale][row._id.type] = row.n;
+    const partial = {};
+    for (const locale of LOCALES) {
+      translated[locale] = {};
+      partial[locale] = {};
+      for (const [type, typeDocs] of Object.entries(docs)) {
+        let complete = 0; let incomplete = 0;
+        for (const doc of typeDocs) {
+          const required = requiredFields(doc, RESOURCE_CONFIG[type].fields);
+          const fields = rowMap.get(`${locale}:${type}:${String(doc._id)}`)?.fields || {};
+          if (required.length && required.every(field => typeof fields[field] === 'string' && fields[field].trim())) complete++;
+          else if (Object.values(fields).some(value => typeof value === 'string' && value.trim())) incomplete++;
+        }
+        translated[locale][type] = complete;
+        partial[locale][type] = incomplete;
+      }
     }
-    res.json({ configured: configured(), locales: SUPPORTED, sourceCounts: { product: products, category: categories, collection: collections }, translated });
+    const resources = Object.entries(docs).flatMap(([type, typeDocs]) => typeDocs.map(doc => ({
+      type, id: String(doc._id), label: doc[RESOURCE_CONFIG[type].label] || String(doc._id),
+    })));
+    res.json({ configured: configured(), locales: SUPPORTED, sourceCounts: { product: products, category: categories, collection: collections }, translated, partial, resources });
   } catch (err) {
     console.error('[translations] summary:', err.message);
     res.status(500).json({ error: 'Internal server error' });
@@ -111,8 +126,12 @@ router.post('/run', aiLimit, async (req, res) => {
 // GET /:type/:id — one resource's translations across locales (for the editor).
 router.get('/:type/:id', async (req, res) => {
   try {
+    const config = RESOURCE_CONFIG[req.params.type];
+    if (!config) return res.status(400).json({ error: 'Unsupported resource type' });
+    const source = await config.Model.findById(req.params.id).select(config.fields.join(' ')).lean();
+    if (!source) return res.status(404).json({ error: 'Resource not found' });
     const rows = await Translation.find({ resourceType: req.params.type, resourceId: String(req.params.id) }).lean();
-    res.json(Object.fromEntries(rows.map(r => [r.locale, { fields: r.fields || {}, source: r.source }])));
+    res.json({ source: Object.fromEntries(config.fields.map(field => [field, source[field] || ''])), translations: Object.fromEntries(rows.map(r => [r.locale, { fields: r.fields || {}, source: r.source }])) });
   } catch (err) {
     console.error('[translations] get:', err.message);
     res.status(500).json({ error: 'Internal server error' });
@@ -123,6 +142,7 @@ router.get('/:type/:id', async (req, res) => {
 router.patch('/', async (req, res) => {
   try {
     const { resourceType, resourceId, locale, fields } = req.body || {};
+    if (!RESOURCE_CONFIG[resourceType]) return res.status(400).json({ error: 'Unsupported resource type' });
     if (!LOCALES.includes(locale)) return res.status(400).json({ error: 'Unsupported locale' });
     const doc = await upsertTranslation(resourceType, resourceId, locale, fields || {}, 'manual');
     res.json({ ok: true, fields: doc.fields, source: doc.source });

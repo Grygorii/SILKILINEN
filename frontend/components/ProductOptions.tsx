@@ -19,6 +19,7 @@ import { ColourSwatchGroup, type Swatch } from '@/components/ui/ColourSwatch';
 import { useCurrency } from '@/context/CurrencyContext';
 import styles from './ProductOptions.module.css';
 import { useFreeShippingThreshold } from '@/lib/useFreeShipping';
+import { getDictionary } from '@/lib/dictionaries';
 
 type Props = {
   colours: string[];
@@ -58,6 +59,7 @@ type Props = {
 };
 
 export default function ProductOptions({ colours, colourHexMap, colorName, colorVariants, locale, sizes, availableSizes = null, sizeVariants, fitNote, productName, productId, price, outOfStock, stock, image }: Props) {
+  const copy = getDictionary(locale ?? 'en').product;
   const { selectedColour, setSelectedColour, selectedSize, setSelectedSize, qty, setQty } = useProductSelection();
   const { format } = useCurrency();
   const freeShippingThreshold = useFreeShippingThreshold();
@@ -91,22 +93,22 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
   let ctaLabel: string;
   let ctaVariant: CtaVariant;
   if (outOfStock) {
-    ctaLabel = 'NOTIFY WHEN AVAILABLE';
+    ctaLabel = copy.notify;
     ctaVariant = 'secondary';
   } else if (addState === 'adding') {
-    ctaLabel = 'ADDING…';
+    ctaLabel = copy.adding;
     ctaVariant = 'primary';
   } else if (addState === 'added') {
-    ctaLabel = 'ADDED TO BAG ✓';
+    ctaLabel = copy.added;
     ctaVariant = 'primary';
   } else if (needsColour) {
-    ctaLabel = 'SELECT A COLOUR';
+    ctaLabel = copy.selectColour;
     ctaVariant = 'disabled';
   } else if (needsSize) {
-    ctaLabel = 'SELECT A SIZE';
+    ctaLabel = copy.selectSize;
     ctaVariant = 'disabled';
   } else {
-    ctaLabel = 'ADD TO BAG';
+    ctaLabel = copy.add;
     ctaVariant = 'primary';
   }
 
@@ -166,14 +168,14 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
   const details = detailRows({ colours, colorName, fitNote, sizes }).map(row => (
     row.key === 'size'
       ? {
-          ...row,
+          ...row, label: copy.size,
           // The chart belongs beside a size the customer cannot change:
           // "one size" is exactly when she wants to know what one size means.
           // A drawer, not a new tab — checking a measurement is not a change of
           // mind about the garment. See SizeChartDrawer.
           aside: <SizeChartDrawer className={styles.sizeGuideLink} />,
         }
-      : row
+      : { ...row, label: row.key === 'colour' ? copy.colour : row.label }
   )) as { key: string; label: string; value: string; aside?: React.ReactNode }[];
 
   return (
@@ -239,8 +241,8 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
       {sizes.length > 1 && (
         <div className={styles.picker}>
           <p className={styles.sizeRow}>
-            <span className={styles.pickerLabel}>SIZE</span>
-            <SizeChartDrawer className={styles.sizeGuideLink} label="Sizing chart" />
+            <span className={styles.pickerLabel}>{copy.size.toUpperCase()}</span>
+            <SizeChartDrawer className={styles.sizeGuideLink} label={copy.sizingChart} />
           </p>
           <OptionPillGroup ariaLabel="Size">
             {sizes.map(size => {
@@ -253,7 +255,7 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
                   onSelect={() => { if (!soldOut) setSelectedSize(size); }}
                   // Say WHY it cannot be chosen — a pill that simply does not
                   // respond reads as a broken page.
-                  ariaLabel={soldOut ? `Size ${size} — sold out` : `Size ${size}`}
+                  ariaLabel={soldOut ? `${copy.size} ${size} — ${copy.soldOut}` : `${copy.size} ${size}`}
                 >
                   {size}
                 </OptionPill>
@@ -273,20 +275,20 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
           row, the same shape as the size fact above it. */}
       {!outOfStock && (
         <div className={styles.stepper}>
-          <span className={styles.detailLabel}>Quantity</span>
+          <span className={styles.detailLabel}>{copy.quantity}</span>
           <div className={styles.stepperControls}>
             <button
               className={styles.stepperBtn}
               onClick={() => setQty(q => Math.max(1, q - 1))}
               disabled={qty <= 1}
-              aria-label="Decrease quantity"
+              aria-label={copy.decrease}
             >−</button>
             <span className={styles.stepperVal}>{qty}</span>
             <button
               className={styles.stepperBtn}
               onClick={() => setQty(q => Math.min(maxQty, q + 1))}
               disabled={qty >= maxQty}
-              aria-label="Increase quantity"
+              aria-label={copy.increase}
             >+</button>
           </div>
         </div>
@@ -324,11 +326,11 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
           add-to-bag moment (was only on the homepage / hidden in accordions). */}
       <ul
         className={styles.reassurance}
-        aria-label="Order reassurance"
+        aria-label={copy.secureCheckout}
       >
-        <li>Free shipping over {format(freeShippingThreshold)}</li>
-        <li>14-day returns</li>
-        <li>Secure checkout</li>
+        <li>{copy.freeShippingOver} {format(freeShippingThreshold)}</li>
+        <li>{copy.returns}</li>
+        <li>{copy.secureCheckout}</li>
         {/* §29's fourth line. It read "From Donegal with love" — the only item
             in a list of operational promises that was a slogan rather than
             something a customer can hold the shop to, and the only one that
@@ -339,13 +341,13 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
             §22's "gift wrapping available" is the wrong wording for it —
             "available" implies an extra to select, and there is nothing to
             select because every order gets it. */}
-        <li>Gift-ready packaging</li>
+        <li>{copy.giftReady}</li>
       </ul>
 
       {/* Drop a Hint — quiet uppercase link with a hairline gift glyph,
           sits at the foot of the panel by design proposal. */}
       <button className={styles.hintBtn} onClick={() => setHintOpen(true)}>
-        <Gift size={16} />&nbsp; DROP A HINT
+        <Gift size={16} />&nbsp; {copy.hint}
       </button>
 
       {hintOpen && (

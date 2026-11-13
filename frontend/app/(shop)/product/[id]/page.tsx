@@ -25,6 +25,7 @@ import { clampMeta } from '@/lib/clampMeta';
 import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, localeHref, type PageLocale } from '@/lib/i18n-server';
 import { productHref, productPath } from '@/lib/urls';
 import { brand } from '@/lib/brand';
+import { getDictionary, type StorefrontDictionary } from '@/lib/dictionaries';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -132,17 +133,18 @@ function getStorySnippet(description?: string): { text: string; truncated: boole
   return { text: d.slice(0, 180) + '…', truncated: true };
 }
 
-function StockBadge({ product }: { product: { inStock?: boolean; totalStock?: number; stockLevel?: number } }) {
+function StockBadge({ product, copy }: { product: { inStock?: boolean; totalStock?: number; stockLevel?: number }; copy: StorefrontDictionary['product'] }) {
   const total = product.totalStock ?? product.stockLevel ?? null;
   if (total === null) return null;
-  if (total === 0) return <p className={styles.stockOut}>Out of stock</p>;
-  if (total <= 3) return <p className={styles.stockLow}>Only {total} left</p>;
-  return <p className={styles.stockIn}>In stock</p>;
+  if (total === 0) return <p className={styles.stockOut}>{copy.soldOut}</p>;
+  if (total <= 3) return <p className={styles.stockLow}>{copy.onlyLeft.replace('{count}', String(total))}</p>;
+  return <p className={styles.stockIn}>{copy.inStock}</p>;
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const locale = await getLocale();
+  const copy = getDictionary(locale);
   const product = await getProduct(id, locale);
   // Canonicalise to the slug URL: if reached via the ObjectId or an old slug,
   // 308-redirect to the current slug so there's exactly one indexable URL
@@ -267,8 +269,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: localeUrl(locale, '/') },
-      { '@type': 'ListItem', position: 2, name: 'Shop', item: localeUrl(locale, '/shop') },
+      { '@type': 'ListItem', position: 1, name: copy.product.home, item: localeUrl(locale, '/') },
+      { '@type': 'ListItem', position: 2, name: copy.nav.shop, item: localeUrl(locale, '/shop') },
       ...(product.category
         ? [{ '@type': 'ListItem', position: 3, name: categoryLabelText as string, item: localeUrl(locale, `/shop?category=${product.category}`) }]
         : []),
@@ -278,9 +280,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   // Visible trail mirroring the JSON-LD above (Home / Shop / Category / Product).
   const crumbs = [
-    { label: 'Home', href: '/' },
-    { label: 'Shop', href: '/shop' },
-    ...(product.category ? [{ label: categoryLabelText as string, href: `/shop?category=${product.category}` }] : []),
+    { label: copy.product.home, href: localeHref(locale, '/') },
+    { label: copy.nav.shop, href: localeHref(locale, '/shop') },
+    ...(product.category ? [{ label: categoryLabelText as string, href: localeHref(locale, `/shop?category=${product.category}`) }] : []),
     { label: product.name },
   ];
 
@@ -344,7 +346,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                   <span className={styles.ratingValue}>{productReviews.summary.average.toFixed(1)}</span>
                   <span className={styles.ratingSep} aria-hidden="true">·</span>
                   <span className={styles.ratingCount}>
-                    {productReviews.summary.count} {productReviews.summary.count === 1 ? 'review' : 'reviews'}
+                    {productReviews.summary.count} {productReviews.summary.count === 1 ? copy.product.review : copy.product.reviews}
                   </span>
                 </a>
               )}
@@ -362,7 +364,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                   sections down behind a closed accordion. */}
               <QualityMarks composition={product.materialComposition} momme={product.momme} />
 
-              <StockBadge product={product} />
+              <StockBadge product={product} copy={copy.product} />
 
               <ProductOptions
                 // Which sizes actually have stock. Without this the picker
@@ -420,7 +422,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 <p className={styles.storySentence}>
                   {snippet.text}
                   {snippet.truncated && (
-                    <>{' '}<a href="#product-details" className={styles.readMore}>Read more</a></>
+                    <>{' '}<a href="#product-details" className={styles.readMore}>{copy.product.readMore}</a></>
                   )}
                 </p>
               )}
@@ -430,7 +432,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               <div id="product-details" className={styles.accordions}>
                 <AccordionGroup>
                   {product.description && (
-                    <AccordionItem label="Product details" defaultOpen>
+                    <AccordionItem label={copy.product.details} defaultOpen>
                       {toParagraphs(product.description).map((para, i) => (
                         <p key={i} className={styles.descPara}>{para}</p>
                       ))}
@@ -440,7 +442,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                     // The momme rides on the closed row: it is the number a
                     // premium silk buyer looks for, and it used to be two
                     // clicks and a paragraph away.
-                    <AccordionItem label="Fabric & care" meta={fabricMeta}>
+                    <AccordionItem label={copy.product.fabricCare} meta={fabricMeta}>
                       <FabricCare
                         composition={product.materialComposition}
                         momme={product.momme}
@@ -448,10 +450,10 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                       />
                     </AccordionItem>
                   )}
-                  <AccordionItem label="Delivery & returns">
+                  <AccordionItem label={copy.product.deliveryReturns}>
                     We ship from Donegal, Ireland worldwide. Standard delivery 5–10 business days. Express shipping available at checkout. Returns accepted within 14 days of delivery for unworn items in their original condition.
                   </AccordionItem>
-                  <AccordionItem label="Gift packaging">
+                  <AccordionItem label={copy.product.giftPackaging}>
                     Every order is wrapped in our signature tissue-lined box with ribbon — ready for gifting. Add a personal note in the order notes at checkout.
                   </AccordionItem>
                 </AccordionGroup>

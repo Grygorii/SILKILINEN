@@ -6,6 +6,7 @@ import SearchTracker from '@/components/SearchTracker';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { clampMeta } from '@/lib/clampMeta';
 import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, type PageLocale } from '@/lib/i18n-server';
+import { getDictionary } from '@/lib/dictionaries';
 import { categoryHref } from '@/lib/urls';
 import ProductGrid from '@/components/ProductGrid';
 import SortLinks, { MIN_PRODUCTS_TO_SORT } from '@/components/SortLinks';
@@ -162,7 +163,7 @@ export default async function ShopPage({
 
   const { items: products, reachable } = await getProducts(category, q, newOnly, locale, sort);
   const copy = categoryContent(category);
-  const heading = copy?.title ?? dbCat?.label ?? (newOnly ? 'New Arrivals' : (q ? `Search: "${q}"` : 'The Collection'));
+  const heading = copy?.title ?? dbCat?.label ?? (newOnly ? 'New Arrivals' : (q ? `Search: "${q}"` : getDictionary(locale).shop.collection));
   const description = copy?.intro ?? (dbCat?.description || null) ?? (newOnly ? 'Our latest pieces — fresh off the atelier table.' : null);
 
   return (

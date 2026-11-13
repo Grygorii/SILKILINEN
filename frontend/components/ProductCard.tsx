@@ -6,7 +6,9 @@ import { Heart, Star } from 'lucide-react';
 import { useWishlist } from '@/context/WishlistContext';
 import { isValidImageUrl, cloudinaryUrl, cloudinarySrcSet } from '@/lib/imageUtils';
 import ProductImage from './products/ProductImage';
-import { productPath } from '@/lib/urls';
+import { productHref } from '@/lib/urls';
+import type { PageLocale } from '@/lib/i18n';
+import { getDictionary } from '@/lib/dictionaries';
 import { fibreLabel, mommeReading } from '@/lib/fabricCare';
 import { cardColour } from '@/lib/productColour';
 import Price from './Price';
@@ -47,6 +49,7 @@ type Props = {
   /** Play the silk sheen once (used on scroll-reveal). The hover sheen is
    *  pointer-only, so without this touch devices never see the effect. */
   playSheen?: boolean;
+  locale?: PageLocale;
 };
 
 /**
@@ -60,7 +63,8 @@ type Props = {
  * wishlist heart, which sits above the overlay. There is no quick-add
  * button; sizing/colour selection happens on the product page.
  */
-export default function ProductCard({ product, showHeart = true, priority = false, playSheen = false }: Props) {
+export default function ProductCard({ product, showHeart = true, priority = false, playSheen = false, locale = 'en' }: Props) {
+  const copy = getDictionary(locale);
   const { toggle, isWished } = useWishlist();
   const [animating, setAnimating] = useState(false);
 
@@ -82,7 +86,7 @@ export default function ProductCard({ product, showHeart = true, priority = fals
   // learn whether a piece is sized or one-size. Multiple variants list as
   // "S · M · L"; a single (or no) variant reads as "One size".
   const sizeList = (product.sizes ?? []).map(s => String(s).trim()).filter(Boolean);
-  const sizeHint = sizeList.length > 1 ? sizeList.join(' · ') : 'One size';
+  const sizeHint = sizeList.length > 1 ? sizeList.join(' · ') : copy.shop.oneSize;
 
   function handleHeart(e: React.MouseEvent) {
     e.preventDefault();
@@ -111,7 +115,7 @@ export default function ProductCard({ product, showHeart = true, priority = fals
           <button
             className={`${styles.heartBtn} ${animating ? styles.heartAnimating : ''}`}
             onClick={handleHeart}
-            aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+            aria-label={wished ? copy.product.removeWishlist : copy.product.addWishlist}
             aria-pressed={wished}
             data-track="wishlist_toggle"
             data-track-product={product._id}
@@ -141,7 +145,7 @@ export default function ProductCard({ product, showHeart = true, priority = fals
             hover, evoking the way silk catches the light. pointer-events:none so
             the stretched card link still receives the click. */}
         <span className={styles.sheen} aria-hidden="true" />
-        {showNew && <span className={styles.newBadge}>new</span>}
+        {showNew && <span className={styles.newBadge}>{copy.shop.new}</span>}
         {/* Size hint — a cream band that lifts up on hover, the lettering
             settling a beat after. Pointer-hover devices only (hidden on phones;
             sizes live on the product page). */}
@@ -152,7 +156,7 @@ export default function ProductCard({ product, showHeart = true, priority = fals
         {/* Stretched link: this anchor's ::after covers the whole card, so a
             click anywhere opens the PDP while keeping a real, crawlable link
             whose accessible name is the product name. */}
-        <Link href={productPath(product)} className={styles.nameLink}>
+        <Link href={productHref(product, locale)} className={styles.nameLink}>
           <h3 className={styles.cardName} title={product.name}>{product.name}</h3>
         </Link>
         {/* The spec line §G asks for: fibre and weight, where a customer
@@ -162,7 +166,7 @@ export default function ProductCard({ product, showHeart = true, priority = fals
         {colour && <p className={styles.colour}>{colour}</p>}
         {specLine && <p className={styles.spec}>{specLine}</p>}
         {product.ratingCount ? (
-          <div className={styles.rating} aria-label={`Rated ${product.ratingAverage} out of 5 from ${product.ratingCount} reviews`}>
+          <div className={styles.rating} aria-label={`${copy.product.rated} ${product.ratingAverage} / 5, ${product.ratingCount} ${copy.product.reviews}`}>
             {[1, 2, 3, 4, 5].map(n => (
               <Star
                 key={n}

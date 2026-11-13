@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { shopPath, type ShopParams } from '@/lib/urls';
 import { localeHref } from '@/lib/i18n';
 import type { PageLocale } from '@/lib/i18n';
+import { getDictionary } from '@/lib/dictionaries';
 import styles from './SortLinks.module.css';
 
 /**
@@ -33,13 +34,6 @@ import styles from './SortLinks.module.css';
  */
 export const MIN_PRODUCTS_TO_SORT = 8;
 
-const OPTIONS: { key: string; label: string }[] = [
-  { key: 'featured', label: 'Featured' },
-  { key: 'newest', label: 'Newest' },
-  { key: 'price-asc', label: 'Price ↑' },
-  { key: 'price-desc', label: 'Price ↓' },
-];
-
 export default function SortLinks({
   current = 'featured',
   params = {},
@@ -50,12 +44,19 @@ export default function SortLinks({
   params?: ShopParams;
   locale?: PageLocale;
 }) {
-  const active = OPTIONS.some(o => o.key === current) ? current : 'featured';
+  const copy = getDictionary(locale).shop;
+  const options = [
+    { key: 'featured', label: copy.featured },
+    { key: 'newest', label: copy.newest },
+    { key: 'price-asc', label: copy.priceLow },
+    { key: 'price-desc', label: copy.priceHigh },
+  ];
+  const active = options.some(o => o.key === current) ? current : 'featured';
 
   return (
-    <nav className={styles.root} aria-label="Sort products">
-      <span className={styles.label}>Sort</span>
-      {OPTIONS.map(o => (
+    <nav className={styles.root} aria-label={copy.sortProducts}>
+      <span className={styles.label}>{copy.sort}</span>
+      {options.map(o => (
         <Link
           key={o.key}
           href={localeHref(locale, shopPath({ ...params, sort: o.key }))}

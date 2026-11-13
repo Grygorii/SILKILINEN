@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useFocusTrap } from '@/lib/useFocusTrap';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { X, Lock } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -11,6 +11,8 @@ import Button from './ui/Button';
 import UKShipBadge from './UKShipBadge';
 import styles from './CartPanel.module.css';
 import { useFreeShippingThreshold } from '@/lib/useFreeShipping';
+import { localeFromPathname, localeHref } from '@/lib/i18n';
+import { getDictionary } from '@/lib/dictionaries';
 
 
 type Props = {
@@ -20,6 +22,8 @@ type Props = {
 
 export default function CartPanel({ isOpen, onClose }: Props) {
   const router = useRouter();
+  const locale = localeFromPathname(usePathname());
+  const copy = getDictionary(locale);
   const { cart, removeFromCart, updateQuantity } = useCart();
   const { format } = useCurrency();
   const freeShippingThreshold = useFreeShippingThreshold();
@@ -123,17 +127,17 @@ export default function CartPanel({ isOpen, onClose }: Props) {
         className={`${styles.panel} ${isOpen ? styles.panelOpen : ''}`}
         role="dialog"
         aria-modal="true"
-        aria-label="Shopping cart"
+        aria-label={copy.common.cart}
       >
         {/* ── Header ── */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <h3 className={styles.headerTitle}>Your cart</h3>
+            <h3 className={styles.headerTitle}>{copy.cart.title}</h3>
             {itemCount > 0 && (
               <span className={styles.headerCount}>{itemCount} {itemCount === 1 ? 'item' : 'items'}</span>
             )}
           </div>
-          <button className={styles.close} onClick={onClose} aria-label="Close cart">
+          <button className={styles.close} onClick={onClose} aria-label={copy.common.close}>
             <X size={18} strokeWidth={1.5} />
           </button>
         </div>
@@ -142,15 +146,14 @@ export default function CartPanel({ isOpen, onClose }: Props) {
         <div className={styles.items}>
           {cart.length === 0 ? (
             <div className={styles.empty}>
-              <p className={styles.emptyTitle}>Your silk awaits.</p>
-              <p className={styles.emptySub}>Nothing here yet — when you add a piece, it&apos;ll live here until you check out.</p>
+              <p className={styles.emptyTitle}>{copy.cart.empty}</p>
               <div className={styles.shopBtnWrap}>
                 {/* This used to call onClose alone: the label promised the
                     collection and the button only dismissed the drawer, so
                     from any page that is not the shop it was a dead end
                     wearing a call to action. */}
-                <Button variant="secondary" onClick={() => { onClose(); router.push('/shop'); }}>
-                  Explore the collection
+                <Button variant="secondary" onClick={() => { onClose(); router.push(localeHref(locale, '/shop')); }}>
+                  {copy.cart.continueShopping}
                 </Button>
               </div>
             </div>
@@ -190,7 +193,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                       <button
                         className={styles.remove}
                         onClick={() => removeFromCart(index)}
-                        aria-label={`Remove ${item.name} from cart`}
+                        aria-label={`${copy.cart.remove}: ${item.name}`}
                       >
                         <X size={13} strokeWidth={1.5} />
                       </button>
@@ -206,14 +209,14 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                         className={styles.stepBtn}
                         onClick={() => updateQuantity(index, -1)}
                         disabled={item.quantity <= 1}
-                        aria-label="Decrease quantity"
+                        aria-label={copy.product.decrease}
                       >−</button>
                       <span className={styles.stepVal}>{item.quantity}</span>
                       <button
                         className={styles.stepBtn}
                         onClick={() => updateQuantity(index, 1)}
                         disabled={item.quantity >= maxQty}
-                        aria-label="Increase quantity"
+                        aria-label={copy.product.increase}
                       >+</button>
                     </div>
                   </div>
@@ -243,7 +246,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
             {/* Totals */}
             <div className={styles.totals}>
               <div className={styles.totalRow}>
-                <span>Subtotal</span>
+                <span>{copy.cart.subtotal}</span>
                 <span>{format(subtotal)}</span>
               </div>
               <div className={styles.totalRow}>
@@ -262,13 +265,13 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                 between them where an unpriced shipping row is staring back. */}
             <div className={styles.ukBadgeRow}><UKShipBadge /></div>
 
-            <Button onClick={() => { onClose(); router.push('/checkout'); }}>
-              CHECKOUT
+            <Button onClick={() => { onClose(); router.push(localeHref(locale, '/checkout')); }}>
+              {copy.cart.checkout.toUpperCase()}
             </Button>
 
             <p className={styles.trust}>
               <Lock size={11} strokeWidth={1.5} aria-hidden="true" />
-              Secure checkout · Stripe
+              {copy.cart.secure} · Stripe
             </p>
           </div>
         )}

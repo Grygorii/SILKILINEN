@@ -19,6 +19,11 @@ export function isLocale(x: string | null | undefined): x is Locale {
   return !!x && (LOCALES as readonly string[]).includes(x);
 }
 
+export function localeFromPathname(pathname: string | null | undefined): PageLocale {
+  const segment = pathname?.split('/')[1];
+  return isLocale(segment) ? segment : 'en';
+}
+
 // A locale-prefixed href: '/de/shop'. English is unprefixed: '/shop'.
 export function localeHref(locale: PageLocale, path: string): string {
   const p = path.startsWith('/') ? path : `/${path}`;

@@ -20,6 +20,9 @@ import GoogleCheckoutSignIn from '@/components/GoogleCheckoutSignIn';
 import UKShipBadge from '@/components/UKShipBadge';
 import styles from './page.module.css';
 import { DELIVERY_COUNTRIES } from '@/lib/deliveryCountries';
+import { usePathname } from 'next/navigation';
+import { localeFromPathname } from '@/lib/i18n';
+import { getDictionary, type StorefrontDictionary } from '@/lib/dictionaries';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -59,6 +62,7 @@ function PaymentForm({
   defaultAddress,
   prefillVersion,
   onBeforeSubmit,
+  copy,
 }: {
   summary: OrderSummary;
   onSuccess: () => void;
@@ -72,6 +76,7 @@ function PaymentForm({
   // their defaults after mount).
   prefillVersion: number;
   onBeforeSubmit: (email: string) => Promise<void>;
+  copy: StorefrontDictionary['checkout'];
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -165,10 +170,10 @@ function PaymentForm({
 
   return (
     <form onSubmit={handleSubmit} className={styles.paymentForm}>
-      <h2 className={styles.sectionTitle}>Contact</h2>
+      <h2 className={styles.sectionTitle}>{copy.contact}</h2>
       <div>
         <label className={styles.fieldLabel} htmlFor="checkout-email">
-          Email address <span className={styles.req} aria-hidden="true">*</span>
+          {copy.email} <span className={styles.req} aria-hidden="true">*</span>
         </label>
         <input
           id="checkout-email"
@@ -188,7 +193,7 @@ function PaymentForm({
       </div>
 
       <div>
-        <h2 className={styles.sectionTitle} style={{ marginBottom: 6 }}>Delivery address</h2>
+        <h2 className={styles.sectionTitle} style={{ marginBottom: 6 }}>{copy.delivery}</h2>
         <p className={styles.requiredNote}>All fields are required unless shown as optional.</p>
       </div>
       <AddressElement
@@ -217,7 +222,7 @@ function PaymentForm({
         type="submit"
         variant={(!stripe || submitting) ? 'disabled' : 'primary'}
       >
-        {submitting ? 'PROCESSING…' : `PAY ${summary.currencySymbol ?? '€'}${summary.total.toFixed(2)}`}
+        {submitting ? copy.processing.toUpperCase() : `${copy.continuePayment.toUpperCase()} · ${summary.currencySymbol ?? '€'}${summary.total.toFixed(2)}`}
       </Button>
     </form>
   );
@@ -226,6 +231,8 @@ function PaymentForm({
 // ── Main checkout page ────────────────────────────────────────────────────────
 
 export default function CheckoutPage() {
+  const locale = localeFromPathname(usePathname());
+  const copy = getDictionary(locale).checkout;
   const { cart, clearCart, removeFromCart } = useCart();
   const { currency, format } = useCurrency();
   const { customer, refresh: refreshCustomer } = useCustomer();
@@ -375,6 +382,7 @@ export default function CheckoutPage() {
           currency,
           attribution,
           browserSessionId,
+          locale,
         }),
       });
 
@@ -488,7 +496,7 @@ export default function CheckoutPage() {
 
   return (
     <main className={styles.page}>
-      <h1 className={styles.heading}>Checkout</h1>
+      <h1 className={styles.heading}>{copy.title}</h1>
 
       <div className={styles.layout}>
         {/* Left — address + payment */}
@@ -561,6 +569,7 @@ export default function CheckoutPage() {
                 } : null}
                 prefillVersion={prefillVersion}
                 onBeforeSubmit={setIntentEmail}
+                copy={copy}
               />
             </Elements>
           ) : summary ? (
@@ -588,7 +597,7 @@ export default function CheckoutPage() {
         {/* Right — order summary */}
         <aside className={styles.summaryCol}>
           <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>Order summary</h2>
+            <h2 className={styles.sectionTitle}>{copy.orderSummary}</h2>
             <ul className={styles.itemList}>
               {(summary?.items ?? cart).map((item, i) => (
                 <li key={i} className={styles.item}>
@@ -635,7 +644,7 @@ export default function CheckoutPage() {
             {summary && (
               <div className={styles.totals}>
                 <div className={styles.totalRow}>
-                  <span>Subtotal</span>
+                  <span>{copy.subtotal}</span>
                   <span>{summary.currencySymbol ?? '€'}{summary.subtotal.toFixed(2)}</span>
                 </div>
                 {summary.discountAmount > 0 && (
@@ -645,11 +654,11 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 <div className={styles.totalRow}>
-                  <span>Shipping — {summary.shipping.label}</span>
-                  <span>{summary.shipping.isFree ? 'FREE' : `${summary.currencySymbol ?? '€'}${summary.shipping.cost.toFixed(2)}`}</span>
+                  <span>{copy.shipping} — {summary.shipping.label}</span>
+                  <span>{summary.shipping.isFree ? copy.free.toUpperCase() : `${summary.currencySymbol ?? '€'}${summary.shipping.cost.toFixed(2)}`}</span>
                 </div>
                 <div className={`${styles.totalRow} ${styles.grandTotal}`}>
-                  <span>Total</span>
+                  <span>{copy.total}</span>
                   <span>{summary.currencySymbol ?? '€'}{summary.total.toFixed(2)}</span>
                 </div>
               </div>

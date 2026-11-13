@@ -62,6 +62,8 @@ type Order = {
   refundedAmount?: number;
   refunds?: RefundEntry[];
   createdAt: string;
+  locale?: 'en' | 'de' | 'fr' | 'it' | 'es';
+  attribution?: { source?: string; medium?: string; campaign?: string; referrer?: string; landingPage?: string };
 };
 
 const VALID_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'refunded', 'partially_refunded'];
@@ -518,6 +520,8 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
             {order.orderNumber && (
               <div className={styles.infoRow}><span>Order #</span><span>{order.orderNumber}</span></div>
             )}
+            <div className={styles.infoRow}><span>Storefront language</span><span>{order.locale?.toUpperCase() || 'Not recorded (legacy order)'}</span></div>
+            <div className={styles.infoRow}><span>Landing page</span><span>{order.attribution?.landingPage || 'Not recorded'}</span></div>
             {order.stripePaymentIntentId && (
               <div className={styles.infoRow}><span>Payment intent</span><span className={styles.sessionId}>{order.stripePaymentIntentId}</span></div>
             )}

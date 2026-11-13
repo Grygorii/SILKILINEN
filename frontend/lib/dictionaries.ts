@@ -1,43 +1,53 @@
 import type { PageLocale } from './i18n';
 
-// UI-chrome strings (the parts NOT stored in the DB). Catalogue content — product
-// names, descriptions, category/collection copy — is localised by the backend
-// read-merge, so it is NOT duplicated here. This is a starter set for the most
-// visible chrome; extend it as more of the UI is wired to t().
-export type Dict = {
+export type StorefrontDictionary = {
   nav: { shop: string; journal: string; about: string };
-  cta: { explore: string; discoverMore: string; readArticle: string; addToBag: string };
-  common: { search: string; account: string; wishlist: string; cart: string; language: string };
+  common: { search: string; account: string; wishlist: string; cart: string; language: string; close: string };
+  shop: { collection: string; sort: string; sortProducts: string; featured: string; newest: string; priceLow: string; priceHigh: string; oneSize: string; new: string; loadError: string; empty: string; browseAll: string };
+  product: { colour: string; size: string; quantity: string; add: string; adding: string; added: string; selectColour: string; selectSize: string; notify: string; sizingChart: string; decrease: string; increase: string; soldOut: string; inStock: string; onlyLeft: string; home: string; details: string; fabricCare: string; deliveryReturns: string; giftPackaging: string; readMore: string; freeShippingOver: string; returns: string; secureCheckout: string; giftReady: string; hint: string; removeWishlist: string; addWishlist: string; rated: string; review: string; reviews: string };
+  cart: { title: string; empty: string; continueShopping: string; subtotal: string; checkout: string; remove: string; secure: string };
+  checkout: { title: string; contact: string; email: string; delivery: string; country: string; firstName: string; lastName: string; address: string; city: string; postcode: string; continuePayment: string; processing: string; orderSummary: string; subtotal: string; shipping: string; total: string; free: string };
 };
 
-const DICTS: Record<PageLocale, Dict> = {
-  en: {
-    nav: { shop: 'Shop', journal: 'Journal', about: 'About' },
-    cta: { explore: 'Explore the collection', discoverMore: 'Discover more', readArticle: 'Read article', addToBag: 'Add to bag' },
-    common: { search: 'Search', account: 'Account', wishlist: 'Wishlist', cart: 'Cart', language: 'Language' },
-  },
+const en: StorefrontDictionary = {
+  nav: { shop: 'Shop', journal: 'Journal', about: 'About' },
+  common: { search: 'Search', account: 'Account', wishlist: 'Wishlist', cart: 'Cart', language: 'Language', close: 'Close' },
+  shop: { collection: 'The Collection', sort: 'Sort', sortProducts: 'Sort products', featured: 'Featured', newest: 'Newest', priceLow: 'Price ↑', priceHigh: 'Price ↓', oneSize: 'One size', new: 'New', loadError: 'We couldn’t load the collection just now. Please refresh in a moment.', empty: 'No products in this category yet — check back soon.', browseAll: 'Browse all products' },
+  product: { colour: 'Colour', size: 'Size', quantity: 'Quantity', add: 'ADD TO BAG', adding: 'ADDING…', added: 'ADDED TO BAG ✓', selectColour: 'SELECT A COLOUR', selectSize: 'SELECT A SIZE', notify: 'NOTIFY WHEN AVAILABLE', sizingChart: 'Sizing chart', decrease: 'Decrease quantity', increase: 'Increase quantity', soldOut: 'sold out', inStock: 'In stock', onlyLeft: 'Only {count} left', home: 'Home', details: 'Product details', fabricCare: 'Fabric & care', deliveryReturns: 'Delivery & returns', giftPackaging: 'Gift packaging', readMore: 'Read more', freeShippingOver: 'Free shipping over', returns: '14-day returns', secureCheckout: 'Secure checkout', giftReady: 'Gift-ready packaging', hint: 'DROP A HINT', removeWishlist: 'Remove from wishlist', addWishlist: 'Add to wishlist', rated: 'Rated', review: 'review', reviews: 'reviews' },
+  cart: { title: 'Your bag', empty: 'Your bag is empty.', continueShopping: 'Continue shopping', subtotal: 'Subtotal', checkout: 'Checkout', remove: 'Remove', secure: 'Secure checkout' },
+  checkout: { title: 'Checkout', contact: 'Contact', email: 'Email address', delivery: 'Delivery address', country: 'Country', firstName: 'First name', lastName: 'Last name', address: 'Address', city: 'City', postcode: 'Postcode', continuePayment: 'Continue to payment', processing: 'Processing…', orderSummary: 'Order summary', subtotal: 'Subtotal', shipping: 'Shipping', total: 'Total', free: 'Free' },
+};
+
+const DICTS: Record<PageLocale, StorefrontDictionary> = {
+  en,
   de: {
-    nav: { shop: 'Shop', journal: 'Journal', about: 'Über uns' },
-    cta: { explore: 'Zur Kollektion', discoverMore: 'Mehr entdecken', readArticle: 'Artikel lesen', addToBag: 'In den Warenkorb' },
-    common: { search: 'Suchen', account: 'Konto', wishlist: 'Merkzettel', cart: 'Warenkorb', language: 'Sprache' },
+    nav: { shop: 'Shop', journal: 'Journal', about: 'Über uns' }, common: { search: 'Suchen', account: 'Konto', wishlist: 'Wunschliste', cart: 'Warenkorb', language: 'Sprache', close: 'Schließen' },
+    shop: { collection: 'Die Kollektion', sort: 'Sortieren', sortProducts: 'Produkte sortieren', featured: 'Empfohlen', newest: 'Neueste', priceLow: 'Preis ↑', priceHigh: 'Preis ↓', oneSize: 'Einheitsgröße', new: 'Neu', loadError: 'Die Kollektion konnte gerade nicht geladen werden. Bitte aktualisieren Sie die Seite gleich noch einmal.', empty: 'In dieser Kategorie gibt es noch keine Produkte.', browseAll: 'Alle Produkte ansehen' },
+    product: { colour: 'Farbe', size: 'Größe', quantity: 'Menge', add: 'IN DEN WARENKORB', adding: 'WIRD HINZUGEFÜGT…', added: 'HINZUGEFÜGT ✓', selectColour: 'FARBE AUSWÄHLEN', selectSize: 'GRÖSSE AUSWÄHLEN', notify: 'BEI VERFÜGBARKEIT INFORMIEREN', sizingChart: 'Größentabelle', decrease: 'Menge verringern', increase: 'Menge erhöhen', soldOut: 'ausverkauft', inStock: 'Auf Lager', onlyLeft: 'Nur noch {count} verfügbar', home: 'Startseite', details: 'Produktdetails', fabricCare: 'Material & Pflege', deliveryReturns: 'Lieferung & Rückgabe', giftPackaging: 'Geschenkverpackung', readMore: 'Mehr lesen', freeShippingOver: 'Kostenloser Versand ab', returns: '14 Tage Rückgaberecht', secureCheckout: 'Sichere Zahlung', giftReady: 'Geschenkfertige Verpackung', hint: 'HINWEIS SENDEN', removeWishlist: 'Von der Wunschliste entfernen', addWishlist: 'Zur Wunschliste hinzufügen', rated: 'Bewertet mit', review: 'Bewertung', reviews: 'Bewertungen' },
+    cart: { title: 'Ihr Warenkorb', empty: 'Ihr Warenkorb ist leer.', continueShopping: 'Weiter einkaufen', subtotal: 'Zwischensumme', checkout: 'Zur Kasse', remove: 'Entfernen', secure: 'Sichere Zahlung' },
+    checkout: { title: 'Kasse', contact: 'Kontakt', email: 'E-Mail-Adresse', delivery: 'Lieferadresse', country: 'Land', firstName: 'Vorname', lastName: 'Nachname', address: 'Adresse', city: 'Ort', postcode: 'Postleitzahl', continuePayment: 'Weiter zur Zahlung', processing: 'Wird verarbeitet…', orderSummary: 'Bestellübersicht', subtotal: 'Zwischensumme', shipping: 'Versand', total: 'Gesamt', free: 'Kostenlos' },
   },
   fr: {
-    nav: { shop: 'Boutique', journal: 'Journal', about: 'À propos' },
-    cta: { explore: 'Découvrir la collection', discoverMore: 'Découvrir plus', readArticle: 'Lire l’article', addToBag: 'Ajouter au panier' },
-    common: { search: 'Rechercher', account: 'Compte', wishlist: 'Favoris', cart: 'Panier', language: 'Langue' },
+    nav: { shop: 'Boutique', journal: 'Journal', about: 'À propos' }, common: { search: 'Rechercher', account: 'Compte', wishlist: 'Favoris', cart: 'Panier', language: 'Langue', close: 'Fermer' },
+    shop: { collection: 'La collection', sort: 'Trier', sortProducts: 'Trier les produits', featured: 'Sélection', newest: 'Nouveautés', priceLow: 'Prix ↑', priceHigh: 'Prix ↓', oneSize: 'Taille unique', new: 'Nouveau', loadError: 'Impossible de charger la collection pour le moment. Veuillez réessayer dans un instant.', empty: 'Aucun produit dans cette catégorie pour le moment.', browseAll: 'Voir tous les produits' },
+    product: { colour: 'Couleur', size: 'Taille', quantity: 'Quantité', add: 'AJOUTER AU PANIER', adding: 'AJOUT EN COURS…', added: 'AJOUTÉ AU PANIER ✓', selectColour: 'CHOISIR UNE COULEUR', selectSize: 'CHOISIR UNE TAILLE', notify: 'M’AVERTIR DU RETOUR', sizingChart: 'Guide des tailles', decrease: 'Diminuer la quantité', increase: 'Augmenter la quantité', soldOut: 'épuisé', inStock: 'En stock', onlyLeft: 'Plus que {count} en stock', home: 'Accueil', details: 'Détails du produit', fabricCare: 'Matière & entretien', deliveryReturns: 'Livraison & retours', giftPackaging: 'Emballage cadeau', readMore: 'Lire la suite', freeShippingOver: 'Livraison offerte dès', returns: 'Retours sous 14 jours', secureCheckout: 'Paiement sécurisé', giftReady: 'Emballage cadeau inclus', hint: 'SUGGÉRER CE CADEAU', removeWishlist: 'Retirer des favoris', addWishlist: 'Ajouter aux favoris', rated: 'Noté', review: 'avis', reviews: 'avis' },
+    cart: { title: 'Votre panier', empty: 'Votre panier est vide.', continueShopping: 'Continuer mes achats', subtotal: 'Sous-total', checkout: 'Passer au paiement', remove: 'Retirer', secure: 'Paiement sécurisé' },
+    checkout: { title: 'Paiement', contact: 'Coordonnées', email: 'Adresse e-mail', delivery: 'Adresse de livraison', country: 'Pays', firstName: 'Prénom', lastName: 'Nom', address: 'Adresse', city: 'Ville', postcode: 'Code postal', continuePayment: 'Continuer vers le paiement', processing: 'Traitement en cours…', orderSummary: 'Récapitulatif', subtotal: 'Sous-total', shipping: 'Livraison', total: 'Total', free: 'Offerte' },
   },
   it: {
-    nav: { shop: 'Negozio', journal: 'Rivista', about: 'Chi siamo' },
-    cta: { explore: 'Scopri la collezione', discoverMore: 'Scopri di più', readArticle: 'Leggi l’articolo', addToBag: 'Aggiungi al carrello' },
-    common: { search: 'Cerca', account: 'Account', wishlist: 'Preferiti', cart: 'Carrello', language: 'Lingua' },
+    nav: { shop: 'Negozio', journal: 'Rivista', about: 'Chi siamo' }, common: { search: 'Cerca', account: 'Account', wishlist: 'Preferiti', cart: 'Carrello', language: 'Lingua', close: 'Chiudi' },
+    shop: { collection: 'La collezione', sort: 'Ordina', sortProducts: 'Ordina i prodotti', featured: 'In evidenza', newest: 'Più recenti', priceLow: 'Prezzo ↑', priceHigh: 'Prezzo ↓', oneSize: 'Taglia unica', new: 'Novità', loadError: 'Non è stato possibile caricare la collezione. Riprova tra poco.', empty: 'Non ci sono ancora prodotti in questa categoria.', browseAll: 'Scopri tutti i prodotti' },
+    product: { colour: 'Colore', size: 'Taglia', quantity: 'Quantità', add: 'AGGIUNGI AL CARRELLO', adding: 'AGGIUNTA…', added: 'AGGIUNTO ✓', selectColour: 'SCEGLI UN COLORE', selectSize: 'SCEGLI UNA TAGLIA', notify: 'AVVISAMI QUANDO DISPONIBILE', sizingChart: 'Guida alle taglie', decrease: 'Riduci quantità', increase: 'Aumenta quantità', soldOut: 'esaurito', inStock: 'Disponibile', onlyLeft: 'Solo {count} disponibili', home: 'Home', details: 'Dettagli prodotto', fabricCare: 'Tessuto & cura', deliveryReturns: 'Spedizione & resi', giftPackaging: 'Confezione regalo', readMore: 'Leggi di più', freeShippingOver: 'Spedizione gratuita da', returns: 'Resi entro 14 giorni', secureCheckout: 'Pagamento sicuro', giftReady: 'Confezione regalo inclusa', hint: 'SUGGERISCI IL REGALO', removeWishlist: 'Rimuovi dai preferiti', addWishlist: 'Aggiungi ai preferiti', rated: 'Valutato', review: 'recensione', reviews: 'recensioni' },
+    cart: { title: 'Il tuo carrello', empty: 'Il carrello è vuoto.', continueShopping: 'Continua lo shopping', subtotal: 'Subtotale', checkout: 'Vai al pagamento', remove: 'Rimuovi', secure: 'Pagamento sicuro' },
+    checkout: { title: 'Pagamento', contact: 'Contatti', email: 'Indirizzo e-mail', delivery: 'Indirizzo di consegna', country: 'Paese', firstName: 'Nome', lastName: 'Cognome', address: 'Indirizzo', city: 'Città', postcode: 'CAP', continuePayment: 'Continua al pagamento', processing: 'Elaborazione…', orderSummary: 'Riepilogo ordine', subtotal: 'Subtotale', shipping: 'Spedizione', total: 'Totale', free: 'Gratuita' },
   },
   es: {
-    nav: { shop: 'Tienda', journal: 'Revista', about: 'Nosotros' },
-    cta: { explore: 'Descubrir la colección', discoverMore: 'Descubrir más', readArticle: 'Leer artículo', addToBag: 'Añadir a la cesta' },
-    common: { search: 'Buscar', account: 'Cuenta', wishlist: 'Favoritos', cart: 'Cesta', language: 'Idioma' },
+    nav: { shop: 'Tienda', journal: 'Revista', about: 'Nosotros' }, common: { search: 'Buscar', account: 'Cuenta', wishlist: 'Favoritos', cart: 'Cesta', language: 'Idioma', close: 'Cerrar' },
+    shop: { collection: 'La colección', sort: 'Ordenar', sortProducts: 'Ordenar productos', featured: 'Destacados', newest: 'Más recientes', priceLow: 'Precio ↑', priceHigh: 'Precio ↓', oneSize: 'Talla única', new: 'Nuevo', loadError: 'No pudimos cargar la colección. Inténtalo de nuevo en un momento.', empty: 'Todavía no hay productos en esta categoría.', browseAll: 'Ver todos los productos' },
+    product: { colour: 'Color', size: 'Talla', quantity: 'Cantidad', add: 'AÑADIR A LA CESTA', adding: 'AÑADIENDO…', added: 'AÑADIDO ✓', selectColour: 'ELIGE UN COLOR', selectSize: 'ELIGE UNA TALLA', notify: 'AVÍSAME CUANDO ESTÉ DISPONIBLE', sizingChart: 'Guía de tallas', decrease: 'Reducir cantidad', increase: 'Aumentar cantidad', soldOut: 'agotado', inStock: 'En stock', onlyLeft: 'Solo quedan {count}', home: 'Inicio', details: 'Detalles del producto', fabricCare: 'Tejido & cuidados', deliveryReturns: 'Envío & devoluciones', giftPackaging: 'Embalaje de regalo', readMore: 'Leer más', freeShippingOver: 'Envío gratuito desde', returns: 'Devoluciones en 14 días', secureCheckout: 'Pago seguro', giftReady: 'Presentación para regalo', hint: 'SUGERIR ESTE REGALO', removeWishlist: 'Quitar de favoritos', addWishlist: 'Añadir a favoritos', rated: 'Valorado con', review: 'reseña', reviews: 'reseñas' },
+    cart: { title: 'Tu cesta', empty: 'Tu cesta está vacía.', continueShopping: 'Seguir comprando', subtotal: 'Subtotal', checkout: 'Ir al pago', remove: 'Eliminar', secure: 'Pago seguro' },
+    checkout: { title: 'Pago', contact: 'Contacto', email: 'Correo electrónico', delivery: 'Dirección de entrega', country: 'País', firstName: 'Nombre', lastName: 'Apellidos', address: 'Dirección', city: 'Ciudad', postcode: 'Código postal', continuePayment: 'Continuar al pago', processing: 'Procesando…', orderSummary: 'Resumen del pedido', subtotal: 'Subtotal', shipping: 'Envío', total: 'Total', free: 'Gratis' },
   },
 };
 
-export function getDictionary(locale: PageLocale): Dict {
-  return DICTS[locale] || DICTS.en;
-}
+export function getDictionary(locale: PageLocale): StorefrontDictionary { return DICTS[locale] ?? en; }

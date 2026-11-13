@@ -9,11 +9,11 @@ const JWT_FORMAT = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
 const LOCALES = ['de', 'fr', 'it', 'es'];
 const LOCALE_COOKIE = 'slk_locale';
 
-// Paths that must NEVER be locale-redirected. Checkout/account/success are
-// money- and session-critical (a redirect mid-flow risks losing state or a
-// Stripe return), admin is English-only, and api/_next/assets aren't pages.
+// Paths that must NEVER be locale-redirected. Stripe returns and account state
+// stay unprefixed; checkout itself is localized before its page mounts, so the
+// cart state is preserved. Admin is English-only; api/_next/assets aren't pages.
 const NO_LOCALE_REDIRECT = [
-  '/checkout', '/success', '/cancel', '/account', '/wishlist',
+  '/success', '/cancel', '/account', '/wishlist',
   '/admin', '/api', '/_next', '/preview',
 ];
 

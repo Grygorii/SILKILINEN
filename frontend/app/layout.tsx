@@ -16,6 +16,7 @@ import { isValidSocialUrl } from "@/lib/socialUrl";
 import "./globals.css";
 import { brand } from '@/lib/brand';
 import { shopPath } from '@/lib/urls';
+import { getLocale } from '@/lib/i18n-server';
 
 // Keep fonts in the repository so production builds never depend on Google
 // Fonts being reachable. next/font/local emits the preload/CSS; display:swap
@@ -162,7 +163,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [reviewSummary, socialUrls] = await Promise.all([getReviewSummary(), getSocialUrls()]);
+  const [reviewSummary, socialUrls, locale] = await Promise.all([getReviewSummary(), getSocialUrls(), getLocale()]);
   // ── JSON-LD structured data ──────────────────────────────────────────
   // Two schemas on the root layout, applied to every page:
   //
@@ -242,7 +243,7 @@ export default async function RootLayout({
   };
 
   return (
-    <html lang="en" className={`${cormorant.variable} ${jost.variable} ${ebGaramond.variable}`}>
+    <html lang={locale} className={`${cormorant.variable} ${jost.variable} ${ebGaramond.variable}`}>
       <head>
         {/* Every image (and the LCP hero) is served from Cloudinary. Opening the
             DNS + TLS connection early takes that round-trip off the LCP image's

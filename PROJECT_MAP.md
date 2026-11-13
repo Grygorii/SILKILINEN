@@ -106,6 +106,12 @@ or change an invariant, update the relevant line here in the same commit.
   = per-page overview that deep-links into it. The **announcement bar** text is `banner_message_1..4`
   (section `banner`); if absent in DB, `components/AnnouncementBar.tsx` falls back to hardcoded
   defaults. Seed/restore with `backend/scripts/seedSiteContent.js` (idempotent).
+- **Storefront languages:** `lib/dictionaries.ts` owns customer-facing shopping
+  chrome for English, German, French, Italian and Spanish. Catalogue fields remain
+  in `Translation`; `/admin/translations` reports complete required fields (not
+  merely existing rows) and provides protected manual edits. Shop, product, cart
+  and checkout preserve the locale prefix; new orders record that locale while
+  legacy orders remain explicitly unknown.
 - **components/** — incl. `inline/InlineEdit.tsx` (WYSIWYG `?edit=1`), `Price.tsx`, `FabricCare.tsx`,
   `ProductReviews.tsx`, `Navbar`, `CurrencySwitcher`, `SiteBreadcrumbs`.
 - **context/** — Cart, Currency, Wishlist, Customer, CookieConsent (nested in `app/layout.tsx`).

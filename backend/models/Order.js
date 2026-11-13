@@ -99,6 +99,10 @@ const orderSchema = new mongoose.Schema({
   customerSyncPending: { type: Boolean, default: true },
   customerSyncStatus: { type: String, default: '' },
 
+  // Storefront language selected when payment was created. Optional so legacy
+  // orders remain honestly "not recorded" instead of being labelled English.
+  locale: { type: String, enum: ['en', 'de', 'fr', 'it', 'es'] },
+
   attribution: {
     source:      { type: String, default: 'direct' },
     medium:      { type: String, default: 'none' },

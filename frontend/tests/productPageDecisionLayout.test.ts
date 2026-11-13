@@ -24,7 +24,7 @@ describe('product page decision layout', () => {
     const component = read('components/ProductOptions.tsx');
     const css = read('components/ProductOptions.module.css');
     expect(component).toContain('className={styles.reassurance}');
-    expect(component).toContain('aria-label="Order reassurance"');
+    expect(component).toContain('aria-label={copy.secureCheckout}');
     expect(css).toContain('grid-template-columns: repeat(2, minmax(0, 1fr))');
   });
 });

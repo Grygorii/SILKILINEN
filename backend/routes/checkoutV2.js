@@ -431,6 +431,7 @@ checkoutRouter.post('/create-intent', checkoutRateLimit, async (req, res) => {
         utm_campaign:  attribution?.campaign ?? 'none',
         referrer:      attribution?.referrer ?? '',
         landing_page:  attribution?.landingPage ?? '',
+        locale: ['en', 'de', 'fr', 'it', 'es'].includes(req.body.locale) ? req.body.locale : '',
         customerEmail: email || '',
       },
       description: `SILKILINEN order — ${validatedItems.length} item(s)`,
@@ -797,6 +798,7 @@ webhookRouter.post('/', express.raw({ type: 'application/json' }), async (req, r
         shippingMethod: shipping.label,
         status: 'paid',
         browserSessionId,
+        locale: ['en', 'de', 'fr', 'it', 'es'].includes(meta.locale) ? meta.locale : undefined,
         costs: { cogs: cogsTotal },
         attribution: {
           source:      meta.utm_source   || 'direct',

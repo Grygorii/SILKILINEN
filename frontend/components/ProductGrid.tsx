@@ -2,6 +2,7 @@ import Link from 'next/link';
 import ProductCard, { type ProductCardData } from './ProductCard';
 import { categoryHref } from '@/lib/urls';
 import type { PageLocale } from '@/lib/i18n';
+import { getDictionary } from '@/lib/dictionaries';
 import styles from './ProductGrid.module.css';
 
 type Product = ProductCardData & {
@@ -46,6 +47,7 @@ export default function ProductGrid({
   reachable?: boolean;
   locale?: PageLocale;
 }) {
+  const copy = getDictionary(locale).shop;
   return (
     <div>
       {products.length === 0 ? (
@@ -55,11 +57,11 @@ export default function ProductGrid({
               during an outage is a lie that costs the visit. */}
           <p className={styles.emptyStateText}>
             {reachable === false
-              ? 'We couldn’t load the collection just now. Please refresh in a moment.'
-              : 'No products in this category yet — check back soon.'}
+              ? copy.loadError
+              : copy.empty}
           </p>
           <Link className={styles.emptyStateBtn} href={categoryHref(null, locale)}>
-            Browse all products
+            {copy.browseAll}
           </Link>
         </div>
       ) : (
@@ -67,7 +69,7 @@ export default function ProductGrid({
           {products.map((product, i) => (
             // First row eager-loads + preloads (the LCP image lives here); the
             // rest lazy-load as the shopper scrolls.
-            <ProductCard key={product._id} product={product} priority={i < 4} />
+            <ProductCard key={product._id} product={product} priority={i < 4} locale={locale} />
           ))}
         </div>
       )}

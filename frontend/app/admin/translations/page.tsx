@@ -22,7 +22,10 @@ type Summary = {
   locales: Record<string, LocaleMeta>;
   sourceCounts: { product: number; category: number; collection: number };
   translated: Record<string, Record<string, number>>; // locale -> type -> count
+  partial: Record<string, Record<string, number>>;
+  resources: { type: string; id: string; label: string }[];
 };
+type EditorData = { source: Record<string, string>; translations: Record<string, { fields: Record<string, string>; source: string }> };
 
 const TYPES: { key: 'product' | 'category' | 'collection'; label: string }[] = [
   { key: 'product', label: 'Products' },
@@ -34,6 +37,10 @@ export default function TranslationsPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
+  const [selected, setSelected] = useState('');
+  const [editor, setEditor] = useState<EditorData | null>(null);
+  const [drafts, setDrafts] = useState<Record<string, Record<string, string>>>({});
+  const [saving, setSaving] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -65,6 +72,29 @@ export default function TranslationsPage() {
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Translation run failed', 'error');
     } finally { setRunning(false); }
+  }
+
+  async function openResource(value: string) {
+    setSelected(value); setEditor(null); setDrafts({});
+    if (!value) return;
+    const [type, id] = value.split(':');
+    const res = await fetch(`${API}/api/admin/translations/${type}/${id}`, { credentials: 'include' });
+    if (!res.ok) return toast('Could not load this translation.', 'error');
+    const data: EditorData = await res.json();
+    setEditor(data);
+    setDrafts(Object.fromEntries(Object.keys(summary?.locales || {}).map(locale => [locale, { ...(data.translations[locale]?.fields || {}) }])));
+  }
+
+  async function saveLocale(locale: string) {
+    const [resourceType, resourceId] = selected.split(':');
+    setSaving(locale);
+    try {
+      const res = await fetch(`${API}/api/admin/translations`, { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ resourceType, resourceId, locale, fields: drafts[locale] || {} }) });
+      if (!res.ok) throw new Error('Save failed');
+      toast(`${summary?.locales[locale]?.label || locale} saved as a manual translation.`, 'success');
+      load();
+    } catch { toast('Translation could not be saved.', 'error'); }
+    finally { setSaving(''); }
   }
 
   const locales = summary ? Object.entries(summary.locales) : [];
@@ -128,6 +158,7 @@ export default function TranslationsPage() {
                         </span>
                       </div>
                     ))}
+                    {TYPES.some(t => (summary?.partial?.[code]?.[t.key] || 0) > 0) && <p style={{ fontSize: 11, color: 'var(--admin-warning)', margin: '8px 0 0' }}>Includes partially translated records</p>}
                   </div>
                 );
               })}
@@ -139,6 +170,27 @@ export default function TranslationsPage() {
               a translation you&apos;ve hand-edited. To spot-check, open your storefront at <code>/de/shop</code> (or
               /fr, /it, /es) — the language switcher is in the footer.
             </p>
+
+            <section style={{ marginTop: 30, borderTop: border, paddingTop: 24 }}>
+              <h2 style={{ fontFamily: serif, fontWeight: 400, fontSize: 22 }}>Review and edit</h2>
+              <p style={{ color: muted, fontSize: 13 }}>Choose a catalogue record to compare every source field and correct any language. A saved edit is protected from later AI runs.</p>
+              <select value={selected} onChange={e => openResource(e.target.value)} style={{ width: '100%', maxWidth: 520, padding: 10, border, background: 'var(--admin-surface)' }}>
+                <option value="">Choose a product, category or collection…</option>
+                {summary?.resources?.map(r => <option key={`${r.type}:${r.id}`} value={`${r.type}:${r.id}`}>{r.type} · {r.label}</option>)}
+              </select>
+              {editor && Object.entries(summary?.locales || {}).map(([locale, meta]) => (
+                <div key={locale} style={{ marginTop: 22, padding: 18, border, background: 'var(--admin-surface)' }}>
+                  <h3 style={{ marginTop: 0 }}>{meta.label}</h3>
+                  {Object.entries(editor.source).filter(([, value]) => value).map(([field, source]) => (
+                    <label key={field} style={{ display: 'block', marginTop: 12, fontSize: 12, color: muted }}>
+                      {field}<span style={{ display: 'block', padding: '7px 0', color: dark }}>{source}</span>
+                      <textarea value={drafts[locale]?.[field] || ''} onChange={e => setDrafts(old => ({ ...old, [locale]: { ...(old[locale] || {}), [field]: e.target.value } }))} rows={field.toLowerCase().includes('description') ? 4 : 2} style={{ width: '100%', padding: 10, border, resize: 'vertical', fontFamily: 'inherit' }} />
+                    </label>
+                  ))}
+                  <button onClick={() => saveLocale(locale)} disabled={saving === locale} style={{ marginTop: 14, padding: '9px 18px', border: 'none', background: dark, color: 'var(--admin-surface)' }}>{saving === locale ? 'Saving…' : `Save ${meta.label}`}</button>
+                </div>
+              ))}
+            </section>
           </>
         )}
       </div>
