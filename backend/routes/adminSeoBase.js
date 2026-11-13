@@ -14,8 +14,9 @@ const { aiLimit } = require('../middleware/rateLimiters');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const Collection = require('../models/Collection');
-const { getPageSeo, savePageSeo, EDITABLE_PATHS } = require('../services/pageSeo');
+const { getPageSeo, EDITABLE_PATHS } = require('../services/pageSeo');
 const { generateProductSEO, generateSEO } = require('../services/aiText');
+const { saveSeoMeta } = require('../services/seoMetadata');
 
 router.use(requireAuth);
 
@@ -114,22 +115,12 @@ router.get('/', async (req, res) => {
 router.patch('/', async (req, res) => {
   try {
     const { type, id } = req.body || {};
-    const metaTitle = String(req.body?.metaTitle || '').slice(0, 70);
-    const metaDescription = String(req.body?.metaDescription || '').slice(0, 165);
-
-    if (type === 'page') {
-      if (!EDITABLE_PATHS.includes(id)) return res.status(400).json({ error: 'Unknown page path' });
-      const saved = await savePageSeo(id, { metaTitle, metaDescription });
-      return res.json({ ok: true, metaTitle: saved.metaTitle, metaDescription: saved.metaDescription });
-    }
-
-    const Model = { product: Product, category: Category, collection: Collection }[type];
-    if (!Model) return res.status(400).json({ error: 'Unknown type' });
-    const doc = await Model.findByIdAndUpdate(id, { metaTitle, metaDescription }, { new: true, runValidators: true })
-      .select('metaTitle metaDescription').lean();
-    if (!doc) return res.status(404).json({ error: 'Not found' });
-    res.json({ ok: true, metaTitle: doc.metaTitle || '', metaDescription: doc.metaDescription || '' });
+    if (!['page', 'product', 'category', 'collection'].includes(type)) return res.status(400).json({ error: 'Unknown type' });
+    if (type === 'page' && !EDITABLE_PATHS.includes(id)) return res.status(400).json({ error: 'Unknown page path' });
+    const saved = await saveSeoMeta({ type, id, metaTitle: req.body?.metaTitle, metaDescription: req.body?.metaDescription });
+    res.json(saved);
   } catch (err) {
+    if (err.message === 'Not found') return res.status(404).json({ error: 'Not found' });
     console.error('[seo-base] save:', err.message);
     res.status(500).json({ error: err.message || 'Save failed' });
   }

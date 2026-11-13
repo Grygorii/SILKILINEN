@@ -233,6 +233,7 @@ app.use('/api/admin/health', adminHealthRoutes);
 app.use('/api/admin/seo-health', adminSeoHealthRoutes);
 app.use('/api/admin/bot-traffic', require('./routes/adminBotTraffic'));
 app.use('/api/admin/seo-base', require('./routes/adminSeoBase'));
+app.use('/api/admin/manual-ai', require('./routes/adminManualAi'));
 app.use('/api/admin/ai-visibility', require('./routes/adminAiVisibility'));
 app.use('/api/admin/translations', require('./routes/adminTranslations'));
 app.use('/api/admin/advisor', adminAdvisorRoutes);
