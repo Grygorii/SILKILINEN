@@ -3,11 +3,22 @@ import { readFileSync } from 'node:fs';
 const read = (path: string) => readFileSync(path, 'utf8');
 
 describe('mobile-first storefront refinement', () => {
-  it('keeps product discovery ahead of the map, and the map ahead of the brand story', () => {
+  it('keeps a concise, product-led homepage hierarchy', () => {
     const home = read('app/(shop)/page.tsx');
-    expect(home.indexOf('<NewArrivals />')).toBeLessThan(home.indexOf('<ShippingMap />'));
-    expect(home.indexOf('<ShippingMap />')).toBeLessThan(home.indexOf('<StorySection'));
+    const sections = [
+      '<NewArrivals />',
+      '<FeaturedCollections />',
+      '<QualityBand />',
+      '<CategoryTiles content={content} />',
+      '<ShippingMap />',
+      '<ReviewsCarousel reviews={withMessage} />',
+      '<NewsletterBand />',
+    ];
+    sections.slice(1).forEach((section, index) => {
+      expect(home.indexOf(sections[index])).toBeLessThan(home.indexOf(section));
+    });
     expect(home.match(/<ShippingMap \/>/g)).toHaveLength(1);
+    expect(home).not.toMatch(/<StyleFinderBand|<ReassuranceRow|<StorySection|<BlogTeaser|<InstagramGrid/);
   });
   it('does not turn country or mode selection into a permanent playback pause', () => {
     const map = read('components/ShippingMap.tsx');

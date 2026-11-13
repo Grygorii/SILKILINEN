@@ -1,5 +1,5 @@
 /* An editorial interlude, not a logistics dashboard. All colour comes from the storefront. */
-.section { padding: var(--s-6) var(--s-5); color: var(--color-ink); background: var(--color-bg); border-block: 1px solid var(--color-line); }
+.section { padding: var(--s-5); color: var(--color-ink); background: var(--color-bg); border-block: 1px solid var(--color-line); }
 .inner { max-width: 1180px; margin-inline: auto; min-width: 0; }
 .copy { max-width: 38ch; }
 .eyebrow { font-size: 11px; line-height: 1.5; letter-spacing: var(--track-utility); text-transform: uppercase; color: var(--color-ink-muted); margin-bottom: var(--s-3); }
@@ -13,7 +13,7 @@
 .modes button { font: inherit; font-size: 13px; line-height: 1.4; min-height: 48px; padding: var(--s-2) var(--s-1); color: var(--color-ink-muted); border: 0; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; transition: color var(--t-base) var(--ease), border-color var(--t-base) var(--ease); }
 .modes button[aria-pressed='true'] { color: var(--color-ink); border-bottom-color: var(--color-ink); }
 .modes button:hover { color: var(--color-ink); }
-.mapFrame { position: relative; height: 185px; overflow: hidden; }
+.mapFrame { position: relative; height: 160px; overflow: hidden; }
 .map { display: block; width: 100%; height: 100%; animation: mapReveal .45s ease both; }
 @keyframes mapReveal { from { opacity: .3; } to { opacity: 1; } }
 .actualDot { fill: var(--color-line-control); }
@@ -38,14 +38,14 @@
 .section :focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (min-width: 900px) {
-  .section { padding: var(--s-8) 6%; }
+  .section { padding: var(--s-6) 6%; }
   .inner { display: grid; grid-template-columns: .8fr 1.35fr; column-gap: var(--s-8); align-items: center; }
   .copy { grid-row: 1 / 3; }
   .copy h2 { max-width: 13ch; }
   .copy .textLink { margin-top: var(--s-4); }
   .atlas { margin-top: 0; }
   .atlas, .notes { grid-column: 2; }
-  .mapFrame { height: 270px; }
+  .mapFrame { height: 220px; }
 }
 @media (max-width: 359px) {
   .section { padding: var(--s-6) var(--s-4); }

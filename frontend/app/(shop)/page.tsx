@@ -4,16 +4,11 @@ import Image from 'next/image';
 import ReviewsCarousel, { MAX_REVIEWS, type ReviewData } from '@/components/ReviewsCarousel';
 import { curateReviews } from '@/lib/reviewCuration';
 import NewArrivals from '@/components/NewArrivals';
-import StyleFinderBand from '@/components/StyleFinderBand';
-import ReassuranceRow from '@/components/ReassuranceRow';
 import QualityBand from '@/components/QualityBand';
 import CategoryTiles from '@/components/CategoryTiles';
 import FeaturedCollections from '@/components/FeaturedCollections';
-import StorySection from '@/components/StorySection';
 import HeroVideo from '@/components/HeroVideo';
-import BlogTeaser from '@/components/BlogTeaser';
 import NewsletterBand from '@/components/NewsletterBand';
-import InstagramGrid from '@/components/InstagramGrid';
 import ShippingMap from '@/components/ShippingMap';
 import { EditableText, EditableImage } from '@/components/inline/InlineEdit';
 import { getContent, val } from '@/lib/content';
@@ -161,29 +156,19 @@ export default async function Home() {
 
       <NewArrivals />
 
-      {/* Product discovery first; shipment history is supporting proof, not the hero. */}
-      <ShippingMap />
-
-      {/* Style Finder — a quiet guide for the hesitant first-time visitor.
-          Turns "just browsing" into a curated edit (the Warby Parker / Cuyana
-          quiz pattern), in the brand's calm voice. The band owns its own
-          scroll-reveal ribbon + animated CTA (client component). */}
-      <StyleFinderBand />
-
-      {/* Why the price is the price. Sits ABOVE ReassuranceRow because the two
-          answer different questions and this is the earlier one: product trust
-          ("is it worth it") comes before service trust ("is it safe to buy").
-          On the warm surface so two icon-ish rows in sequence don't read as one
-          repeated section. */}
-      <QualityBand />
-
-      <ReassuranceRow />
-
+      {/* One editorial campaign follows the product edit; no competing journal
+          or quiz interludes before the core collection has been understood. */}
       <FeaturedCollections />
+
+      {/* Brand/product proof is intentionally one compact section. Shipping,
+          returns and gift wrap remain explicit on product pages and in Help. */}
+      <QualityBand />
 
       <CategoryTiles content={content} />
 
-      <StorySection content={content} />
+      {/* International trust supports shopping; it no longer interrupts the
+          product-to-campaign journey near the top of the page. */}
+      <ShippingMap />
 
       {withMessage.length > 0 && (
         <section className={styles.reviews}>
@@ -203,11 +188,7 @@ export default async function Home() {
         </section>
       )}
 
-      <BlogTeaser />
-
       <NewsletterBand />
-
-      <InstagramGrid />
     </main>
   );
 }

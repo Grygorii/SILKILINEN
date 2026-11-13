@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { orderMoney } from '@/lib/orderMoney';
 import styles from '../../account.module.css';

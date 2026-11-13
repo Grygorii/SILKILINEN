@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { useCustomer } from '@/context/CustomerContext';
 import { useWishlist } from '@/context/WishlistContext';
 import Button from '@/components/ui/Button';

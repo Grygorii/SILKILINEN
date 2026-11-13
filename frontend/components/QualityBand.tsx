@@ -32,10 +32,6 @@ const PILLARS = [
     label: 'Weight you can feel',
     body: 'Silk is sold by momme. Ours is stated on every product page, because a number you can check beats an adjective.',
   },
-  {
-    label: 'Shipped from Ireland',
-    body: 'Sent from Donegal worldwide, wrapped for giving, with 14 days to change your mind.',
-  },
 ];
 
 export default function QualityBand() {

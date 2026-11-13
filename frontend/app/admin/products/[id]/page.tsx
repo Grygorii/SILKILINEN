@@ -8,6 +8,7 @@ import UploadHint from '@/components/UploadHint';
 import { UPLOAD_SPECS } from '@/lib/uploadSpecs';
 import ProductCampaigns from '@/components/admin/ProductCampaigns';
 import ImageCropModal from '@/components/ImageCropModal';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 import styles from './page.module.css';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -212,6 +213,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const altTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const slotInputRef = useRef<HTMLInputElement>(null);
   const pendingSlotRef = useRef<string | undefined>(undefined);
+  const pickerModalRef = useRef<HTMLDivElement>(null);
+  const validationModalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(pickerModalRef, Boolean(pickerSlot));
+  useFocusTrap(validationModalRef, validationErrors.length > 0);
   // Stable ref so markDirty's auto-save timer always calls the latest doSave,
   // not the stale closure from the first render.
   const doSaveRef = useRef<() => Promise<void>>(() => Promise.resolve());
@@ -1422,7 +1427,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       {/* ── Slot picker modal ───────────────────────────────────────────── */}
       {pickerSlot && (
         <div className={styles.modalOverlay} onClick={() => setPickerSlot(null)}>
-          <div className={styles.pickerModal} role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+          <div ref={pickerModalRef} className={styles.pickerModal} role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
             <div className={styles.pickerHeader}>
               <h3 className={styles.pickerTitle}>
                 Choose photo for {IMAGE_SLOTS.find(s => s.key === pickerSlot)?.label ?? pickerSlot}
@@ -1461,7 +1466,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       {/* ── Validation modal ─────────────────────────────────────────────── */}
       {validationErrors.length > 0 && (
         <div className={styles.modalOverlay}>
-          <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="valModalTitle">
+          <div ref={validationModalRef} className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="valModalTitle">
             <h3 id="valModalTitle" className={styles.modalTitle}>Please complete required fields</h3>
             <p className={styles.modalBody}>The following fields are required:</p>
             <ul className={styles.modalList}>
