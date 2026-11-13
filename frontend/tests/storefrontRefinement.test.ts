@@ -7,10 +7,10 @@ describe('mobile-first storefront refinement', () => {
     const home = read('app/(shop)/page.tsx');
     const sections = [
       '<NewArrivals />',
-      '<FeaturedCollections />',
+      '<ShippingMap />',
       '<QualityBand />',
       '<CategoryTiles content={content} />',
-      '<ShippingMap />',
+      '<FeaturedCollections />',
       '<ReviewsCarousel reviews={withMessage} />',
       '<NewsletterBand />',
     ];

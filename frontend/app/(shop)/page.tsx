@@ -156,9 +156,9 @@ export default async function Home() {
 
       <NewArrivals />
 
-      {/* One editorial campaign follows the product edit; no competing journal
-          or quiz interludes before the core collection has been understood. */}
-      <FeaturedCollections />
+      {/* International delivery proof follows the first product edit, making
+          worldwide availability clear before the deeper collection browse. */}
+      <ShippingMap />
 
       {/* Brand/product proof is intentionally one compact section. Shipping,
           returns and gift wrap remain explicit on product pages and in Help. */}
@@ -166,9 +166,9 @@ export default async function Home() {
 
       <CategoryTiles content={content} />
 
-      {/* International trust supports shopping; it no longer interrupts the
-          product-to-campaign journey near the top of the page. */}
-      <ShippingMap />
+      {/* One editorial campaign closes the product-discovery sequence; no
+          competing journal or quiz interludes dilute it. */}
+      <FeaturedCollections />
 
       {withMessage.length > 0 && (
         <section className={styles.reviews}>

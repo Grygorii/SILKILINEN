@@ -95,8 +95,8 @@ or change an invariant, update the relevant line here in the same commit.
 
 ## Frontend layout
 - **app/(shop)/** — storefront. `layout.tsx` mounts InlineEditProvider + SiteBreadcrumbs +
-  UKShippingNotice. Home `page.tsx` is deliberately concise: hero → new arrivals → one
-  campaign → silk proof → categories → compact shipping map → reviews → newsletter
+  UKShippingNotice. Home `page.tsx` is deliberately concise: hero → new arrivals → compact
+  shipping map → silk proof → categories → one campaign → reviews → newsletter
   (hero image is LCP; `HeroVideo.tsx` loads late). Photographic crop, light, colour and
   responsive rules live in `docs/photographic-direction.md`. Key routes:
   product/[id], shop, collections/[slug], checkout, reviews, style-finder, account.
