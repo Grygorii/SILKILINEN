@@ -42,7 +42,12 @@ export function proxy(request: NextRequest) {
     const headers = new Headers(request.headers);
     headers.set('x-locale', seg);
     const res = NextResponse.rewrite(url, { request: { headers } });
-    if (request.cookies.get(LOCALE_COOKIE)?.value !== seg) {
+    // Only a browser navigation may update the preference. A background
+    // request for an older locale can finish after the shopper switches.
+    const documentRequest = request.headers.get('sec-fetch-mode') === 'navigate';
+    const isPrefetch = request.headers.get('purpose') === 'prefetch'
+      || request.headers.get('sec-purpose')?.includes('prefetch');
+    if (documentRequest && !isPrefetch && request.cookies.get(LOCALE_COOKIE)?.value !== seg) {
       res.cookies.set(LOCALE_COOKIE, seg, { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' });
     }
     return res;
