@@ -40,6 +40,7 @@ export default function QuickAddSheet({
   const locale = localeFromPathname(usePathname());
   const copy = getDictionary(locale);
   const panelRef = useRef<HTMLDivElement>(null);
+  const sizePicker = useRef<HTMLDivElement>(null);
   // Declared before the `if (!open) return null` below — a hook cannot sit
   // after an early return.
   useFocusTrap(panelRef, open);
@@ -78,8 +79,12 @@ export default function QuickAddSheet({
   const swatches: Swatch[] = colours.map(name => ({ name, hex: colourHexMap?.[name.toLowerCase()] ?? null }));
 
   function handleAdd() {
+    if (needsSize) {
+      sizePicker.current?.querySelector<HTMLButtonElement>('button[aria-pressed]:not(:disabled)')?.focus();
+      return;
+    }
     if (!canAdd) return;
-    addToCart({ productId, name: productName, price, colour: selectedColour, size: selectedSize, quantity: qty, stock: stock ?? undefined, image });
+    addToCart({ productId, name: productName, price, colour: selectedColour, size: selectedSize, quantity: qty, stock: hasTrackedSizes && selectedSize ? maxQty : stock ?? undefined, image });
     onClose();
   }
 
@@ -111,21 +116,21 @@ export default function QuickAddSheet({
           </div>
         )}
 
-        {sizes.length > 0 && (
-          <div className={styles.section}>
+        {sizes.length > 1 && (
+          <div className={styles.section} ref={sizePicker}>
             <div className={styles.rowLabel}>
               <span className={styles.label}>{copy.product.size}</span>
               <SizeChartDrawer className={styles.sizeGuide} label={copy.product.sizingChart} />
             </div>
             <OptionPillGroup ariaLabel={copy.product.size}>
               {sizes.map(size => {
-                const soldOut = hasTrackedSizes && (bySize[size] ?? 0) === 0;
+                const soldOut = hasTrackedSizes && (bySize[size.trim()] ?? 0) <= 0;
                 return (
                   <OptionPill
                     key={size}
-                    selected={selectedSize === size}
+                    selected={!soldOut && selectedSize === size}
                     disabled={soldOut}
-                    onSelect={() => { if (!soldOut) setSelectedSize(size); }}
+                    onSelect={() => setSelectedSize(selectedSize === size ? '' : size)}
                     ariaLabel={soldOut ? `${copy.product.size} ${size} — ${copy.product.soldOut}` : `${copy.product.size} ${size}`}
                   >
                     {size}
@@ -148,7 +153,7 @@ export default function QuickAddSheet({
         </div>
 
         <div className={styles.cta}>
-          <Button variant={canAdd ? 'primary' : 'disabled'} onClick={handleAdd}>
+          <Button variant={canAdd ? 'primary' : !needsColour && needsSize ? 'prompt' : 'disabled'} onClick={handleAdd}>
             {ctaLabel}
           </Button>
         </div>

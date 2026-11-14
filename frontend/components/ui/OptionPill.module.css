@@ -1,62 +1,56 @@
-/* Pills size to their content within a sensible band rather than dividing the
-   whole row. With `1fr` columns, two or three sizes stretched into slabs that
-   read as buttons rather than options — and a single one filled the row
-   entirely. A size pill should look like a choice, never like a call to
-   action; only ADD TO BAG is allowed that weight. */
 .grid {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--s-3);
+  column-gap: var(--s-1);
+  border-bottom: var(--stroke) solid var(--color-line);
 }
 
 .pill {
-  /* Grows to share the row when there are many, but never past a width that
-     would make it read as a primary button. */
-  flex: 1 1 64px;
-  max-width: 132px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  flex: 1 0 var(--pill-h);
+  max-width: 104px;
+  display: grid;
+  place-items: center;
   min-height: var(--pill-h);
-  padding: 0 var(--s-3);
-  background: var(--color-bg);
-  border: var(--stroke) solid var(--color-line-control);
-  border-radius: var(--radius-control);
+  padding: 0 var(--s-1);
+  border: 0;
+  background: transparent;
   color: var(--color-ink);
-  font-family: 'Jost', sans-serif;
-  font-weight: 400;
-  font-size: 12px;
-  letter-spacing: var(--track-utility);
-  text-transform: uppercase;
+  font: 500 14px/1.2 var(--font-jost), sans-serif;
   cursor: pointer;
-  transition: background var(--t-fast) var(--ease),
-              color var(--t-fast) var(--ease),
-              border-color var(--t-fast) var(--ease);
-  user-select: none;
 }
 
-.pill:hover:not(.disabled):not(.selected) {
-  background: var(--color-surface);
-  border-color: var(--color-ink);
-}
-
-.pill:active:not(.disabled):not(.selected) { background: var(--color-surface-warm); }
-
-.pill:focus-visible {
-  outline: 2px solid var(--color-ink);
-  outline-offset: 3px;
-}
-
-.selected {
+.pill[aria-pressed='true']::after {
+  content: '';
+  position: absolute;
+  bottom: calc(-1 * var(--stroke));
+  left: 50%;
+  width: var(--s-5);
+  height: 2px;
+  transform: translateX(-50%);
   background: var(--color-ink);
-  border-color: var(--color-ink);
-  color: var(--color-bg);
 }
 
-.disabled {
-  cursor: not-allowed;
-  text-decoration: line-through;
-  background: var(--color-surface);
-  border-color: var(--color-line-control);
-  color: var(--color-ink-muted);
+@media (hover: hover) {
+  .pill:hover:not(:disabled):not([aria-pressed='true']) > span {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+.pill:active:not(:disabled) { background: var(--color-surface); }
+.pill:disabled { cursor: not-allowed; opacity: 1; }
+.pill:disabled > span { opacity: .42; }
+
+.pill:disabled::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  bottom: auto;
+  width: var(--s-5);
+  height: var(--stroke);
+  transform: translate(-50%, -50%) rotate(-45deg);
+  background: var(--color-ink);
+  pointer-events: none;
 }

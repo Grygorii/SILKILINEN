@@ -1,9 +1,9 @@
 'use client';
 
-import { Fragment, useState, useEffect, useMemo } from 'react';
+import { Fragment, useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { productHref } from '@/lib/urls';
-import type { PageLocale } from '@/lib/i18n';
+import { localeHref, type PageLocale } from '@/lib/i18n';
 import { useCart } from '@/context/CartContext';
 import { useProductSelection } from './ProductSelectionContext';
 import DropAHint from './DropAHint';
@@ -41,9 +41,6 @@ type Props = {
   price: number;
   outOfStock: boolean;
   stock?: number | null;
-  /** Sizes with stock. null means the piece has no variant-level tracking, in
-   *  which case every size stays selectable. */
-  availableSizes?: string[] | null;
   /** Per-SIZE stock rows. Named sizeVariants, not variants: `colorVariants`
    *  above are sibling PRODUCTS, and this file already binds `variants` to
    *  those. Two different things called variants in one component is how the
@@ -58,19 +55,21 @@ type Props = {
   image?: string;
 };
 
-export default function ProductOptions({ colours, colourHexMap, colorName, colorVariants, locale, sizes, availableSizes = null, sizeVariants, fitNote, productName, productId, price, outOfStock, stock, image }: Props) {
-  const copy = getDictionary(locale ?? 'en').product;
+export default function ProductOptions({ colours, colourHexMap, colorName, colorVariants, locale = 'en', sizes, sizeVariants, fitNote, productName, productId, price, outOfStock, stock, image }: Props) {
+  const copy = getDictionary(locale).product;
   const { selectedColour, setSelectedColour, selectedSize, setSelectedSize, qty, setQty } = useProductSelection();
   const { format } = useCurrency();
   const freeShippingThreshold = useFreeShippingThreshold();
   const [addState, setAddState] = useState<'idle' | 'adding' | 'added'>('idle');
   const [hintOpen, setHintOpen] = useState(false);
+  const sizePicker = useRef<HTMLDivElement>(null);
   const { addToCart } = useCart();
 
   // The ceiling for the size actually chosen. Nothing downstream re-checks it:
   // checkoutV2 takes the payment and decrements stock afterwards, fail-soft, so
   // this is the only guard against an order the shop cannot fill.
   const bySize = useMemo(() => stockBySize(sizeVariants), [sizeVariants]);
+  const hasTrackedSizes = Object.keys(bySize).length > 0;
   const maxQty = maxOrderable(bySize, selectedSize, stock);
 
   // Switching to a smaller size must bring the quantity down with it, or a
@@ -81,15 +80,15 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
 
   const needsColour = colours.length > 0 && !selectedColour;
   const needsSize = sizes.length > 0 && !selectedSize;
-  const canAdd = !outOfStock && !needsColour && !needsSize;
+  const canAdd = !outOfStock && !needsColour && !needsSize && maxQty > 0;
 
   // CTA variant + label resolution (design-system v1):
   //   - out of stock → secondary "Notify when available"
   //   - mid-add      → primary disabled "Adding…"
+  //   - needs size   → prompt to focus the first available size
   //   - just added   → primary "Added to bag ✓"
-  //   - needs choice → disabled primary "Select a colour / size"
   //   - default      → primary "Add to bag"
-  type CtaVariant = 'primary' | 'secondary' | 'disabled';
+  type CtaVariant = 'primary' | 'secondary' | 'prompt' | 'disabled';
   let ctaLabel: string;
   let ctaVariant: CtaVariant;
   if (outOfStock) {
@@ -98,15 +97,18 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
   } else if (addState === 'adding') {
     ctaLabel = copy.adding;
     ctaVariant = 'primary';
-  } else if (addState === 'added') {
-    ctaLabel = copy.added;
-    ctaVariant = 'primary';
   } else if (needsColour) {
     ctaLabel = copy.selectColour;
     ctaVariant = 'disabled';
   } else if (needsSize) {
     ctaLabel = copy.selectSize;
+    ctaVariant = 'prompt';
+  } else if (!canAdd) {
+    ctaLabel = copy.soldOut;
     ctaVariant = 'disabled';
+  } else if (addState === 'added') {
+    ctaLabel = copy.added;
+    ctaVariant = 'primary';
   } else {
     ctaLabel = copy.add;
     ctaVariant = 'primary';
@@ -125,10 +127,14 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
       setNotifyOpen(true);
       return;
     }
+    if (needsSize) {
+      sizePicker.current?.querySelector<HTMLButtonElement>('button[aria-pressed]:not(:disabled)')?.focus();
+      return;
+    }
     if (!canAdd || addState !== 'idle') return;
     setAddState('adding');
     setTimeout(() => {
-      addToCart({ productId, name: productName, price, colour: selectedColour, size: selectedSize, quantity: qty, stock: stock ?? undefined, image });
+      addToCart({ productId, name: productName, price, colour: selectedColour, size: selectedSize, quantity: qty, stock: hasTrackedSizes && selectedSize ? maxQty : stock ?? undefined, image });
       setAddState('added');
       setTimeout(() => setAddState('idle'), 3000);
     }, 400);
@@ -173,7 +179,7 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
           // "one size" is exactly when she wants to know what one size means.
           // A drawer, not a new tab — checking a measurement is not a change of
           // mind about the garment. See SizeChartDrawer.
-          aside: <SizeChartDrawer className={styles.sizeGuideLink} />,
+          aside: <SizeChartDrawer className={styles.sizeGuideLink} label={copy.sizingChart} />,
         }
       : { ...row, label: row.key === 'colour' ? copy.colour : row.label }
   )) as { key: string; label: string; value: string; aside?: React.ReactNode }[];
@@ -235,29 +241,22 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
       {/* Sibling colour products, when there was no swatch block to carry them. */}
       {swatches.length <= 1 && variantLinks}
 
-      {/* Size — a genuine choice: the OptionPill grid, with the chart footnote.
-          A SINGLE size is not a choice and is not rendered here; it is a row in
-          the details grid above. Rendered as a pill it stretched to the full
-          row and auto-selected to solid ink, becoming a second full-width dark
-          bar directly above ADD TO BAG — two identical slabs, one of which must
-          not be pressed. */}
+      {/* Single-size pieces show the fit in the details grid above. */}
       {sizes.length > 1 && (
-        <div className={styles.picker}>
-          <p className={styles.sizeRow}>
-            <span className={styles.pickerLabel}>{copy.size.toUpperCase()}</span>
+        <div className={styles.picker} ref={sizePicker}>
+          <div className={styles.sizeRow}>
+            <span className={styles.pickerLabel}>{copy.size}</span>
             <SizeChartDrawer className={styles.sizeGuideLink} label={copy.sizingChart} />
-          </p>
-          <OptionPillGroup ariaLabel="Size">
+          </div>
+          <OptionPillGroup ariaLabel={copy.size}>
             {sizes.map(size => {
-              const soldOut = availableSizes !== null && !availableSizes.includes(size);
+              const soldOut = outOfStock || (hasTrackedSizes && (bySize[size.trim()] ?? 0) <= 0);
               return (
                 <OptionPill
                   key={size}
-                  selected={selectedSize === size}
+                  selected={!soldOut && selectedSize === size}
                   disabled={soldOut}
-                  onSelect={() => { if (!soldOut) setSelectedSize(size); }}
-                  // Say WHY it cannot be chosen — a pill that simply does not
-                  // respond reads as a broken page.
+                  onSelect={() => setSelectedSize(selectedSize === size ? '' : size)}
                   ariaLabel={soldOut ? `${copy.size} ${size} — ${copy.soldOut}` : `${copy.size} ${size}`}
                 >
                   {size}
@@ -350,9 +349,12 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
 
       {/* Drop a Hint — quiet uppercase link with a hairline gift glyph,
           sits at the foot of the panel by design proposal. */}
-      <button className={styles.hintBtn} onClick={() => setHintOpen(true)}>
-        <Gift size={16} />&nbsp; {copy.hint}
-      </button>
+      <div className={styles.extraActions}>
+        <Link href={localeHref(locale, '/contact')} className={styles.helpLink}>{copy.help}</Link>
+        <button type="button" className={styles.hintBtn} onClick={() => setHintOpen(true)}>
+          <Gift size={16} />&nbsp; {copy.hint}
+        </button>
+      </div>
 
       {hintOpen && (
         <DropAHint productId={productId} productName={productName} onClose={() => setHintOpen(false)} />

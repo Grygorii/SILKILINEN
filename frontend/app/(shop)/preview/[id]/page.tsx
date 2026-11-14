@@ -117,6 +117,7 @@ export default async function PreviewPage({
               <ProductOptions
                 colours={product.colours ?? []}
                 sizes={product.sizes ?? []}
+                sizeVariants={product.variants}
                 productName={product.name}
                 productId={product._id}
                 price={product.price}
@@ -142,6 +143,7 @@ export default async function PreviewPage({
             image={galleryImages[0]?.url}
             colours={product.colours ?? []}
             sizes={product.sizes ?? []}
+            sizeVariants={product.variants}
           />
         </ProductSelectionProvider>
       </main>

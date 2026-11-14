@@ -1,31 +1,27 @@
-/* Brand tokens only. Quiet by design — this sits directly under the price and
-   must not compete with it; it is the footnote that justifies the number. */
-
 .marks {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  margin: 8px 0 0;
-  font-family: 'Jost', sans-serif;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
+  align-items: center;
+  column-gap: 7px;
   color: var(--color-ink-muted);
+  font: italic 500 19px/1.2 var(--font-eb-garamond), Georgia, serif;
 }
 
-/* A mark never breaks mid-phrase: "DESIGNED IN" / "IRELAND" across two lines
-   reads as a mistake rather than as a wrap. */
-.mark {
+.weight {
   display: inline-flex;
-  align-items: baseline;
-  white-space: nowrap;
+  align-items: center;
+  gap: 7px;
 }
 
-/* Padding rather than a row gap so the dot hugs both marks evenly. Being a
-   sibling of the marks, a wrap now leaves it at the END of the line it belongs
-   to instead of carrying it down to open the next one. */
-.sep {
-  padding: 0 8px;
-  color: var(--color-line);
+.weightLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--pill-h);
+  white-space: nowrap;
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-decoration-thickness: var(--stroke);
+  text-underline-offset: 3px;
 }
+
+.weightLink:hover { text-decoration-thickness: 2px; }

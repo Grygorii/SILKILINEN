@@ -56,6 +56,16 @@
 }
 .secondary:active:not(:disabled) { background: var(--color-surface); }
 
+.prompt {
+  background: var(--color-surface-warm);
+  color: var(--color-ink);
+  border-color: var(--color-surface-warm);
+}
+@media (hover: hover) {
+  .prompt:hover:not(:disabled) { border-color: var(--color-line-control); }
+}
+.prompt:active:not(:disabled) { background: var(--color-surface); }
+
 /* Disabled primary — warm-beige fill.
    Was 0.5 opacity, which put the label at 2.96:1 against its own fill: below
    the 4.5:1 text minimum, on the LARGEST element of the product page. That one

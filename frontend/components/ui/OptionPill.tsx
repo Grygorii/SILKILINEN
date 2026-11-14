@@ -2,9 +2,7 @@
 
 import styles from './OptionPill.module.css';
 
-// Single pill — for sizes, generic options. States: default / selected /
-// disabled (sold out). 44px min hit target, charcoal fill on select,
-// line-through on disabled.
+// Size choices can be cleared by pressing the selected button again.
 export function OptionPill({
   selected,
   disabled,
@@ -21,19 +19,13 @@ export function OptionPill({
   return (
     <button
       type="button"
-      role="radio"
-      aria-checked={!!selected}
-      aria-disabled={disabled || undefined}
+      aria-pressed={!!selected}
       aria-label={ariaLabel}
       disabled={disabled}
       onClick={disabled ? undefined : onSelect}
-      className={[
-        styles.pill,
-        selected ? styles.selected : '',
-        disabled ? styles.disabled : '',
-      ].filter(Boolean).join(' ')}
+      className={styles.pill}
     >
-      {children}
+      <span>{children}</span>
     </button>
   );
 }
@@ -48,7 +40,7 @@ export function OptionPillGroup({
   ariaLabel?: string;
 }) {
   return (
-    <div role="radiogroup" aria-label={ariaLabel} className={styles.grid}>
+    <div role="group" aria-label={ariaLabel} className={styles.grid}>
       {children}
     </div>
   );

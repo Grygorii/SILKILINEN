@@ -64,13 +64,13 @@
 /* ── Product name ─────────────────────────────────── */
 
 .productName {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 36px;
-  font-weight: 400;
-  letter-spacing: 0.5px;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(33px, 3vw, 44px);
+  font-weight: 500;
+  letter-spacing: -.012em;
   color: var(--dark);
   margin-bottom: 8px;
-  line-height: 1.15;
+  line-height: 1.04;
 }
 
 /* ── Material subtitle ────────────────────────────── */
@@ -146,9 +146,10 @@
 }
 
 .price {
-  font-size: 20px;
+  font: 500 17px/1.4 var(--font-jost), sans-serif;
+  font-variant-numeric: tabular-nums;
   color: var(--dark);
-  margin-bottom: 6px;
+  margin-bottom: var(--s-5);
   display: flex;
   align-items: baseline;
   gap: 10px;
@@ -161,34 +162,7 @@
 }
 
 .priceCompare {
-  font-size: 20px;
   color: var(--dark);
-}
-
-/* ── Stock ────────────────────────────────────────── */
-
-.stockLow {
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--color-gold);
-  margin-bottom: 20px;
-}
-
-.stockOut {
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 20px;
-}
-
-.stockIn {
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--color-ink-muted);
-  margin-bottom: 20px;
 }
 
 /* ── Accordions wrapper — visual styling lives in Accordion.module.css.
@@ -228,23 +202,18 @@
     padding: 32px clamp(20px, 6vw, 44px) 88px;
     position: static;
   }
-  .productName { font-size: clamp(30px, 7vw, 36px); }
+  .productName { font-size: clamp(30px, 8.5vw, 36px); }
 }
 
 @media (max-width: 480px) {
   .infoCol { padding: 26px 20px 88px; }
-  .productName { font-size: 30px; }
   .ratingLine { margin-bottom: 12px; }
-  .price { font-size: 19px; }
+  .price { font-size: 15px; }
 }
 
 @media (min-width: 901px) and (max-height: 820px) {
   .infoCol { position: static; }
 }
-
-/* "momme" glossary — the silk-weight unit is jargon to a first-time visitor.
-   A brief inline note explains it (visible on touch too, unlike a hover-only
-   tooltip). */
 
 /* Description paragraphs. The founder writes the story with blank-line breaks;
    JSX collapsed them, so it rendered as one block. Each paragraph is its own

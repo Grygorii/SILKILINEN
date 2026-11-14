@@ -3,15 +3,16 @@
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 import styles from './Button.module.css';
 
-type Variant = 'primary' | 'secondary' | 'disabled';
+type Variant = 'primary' | 'secondary' | 'prompt' | 'disabled';
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Variant;
 };
 
-// The single button component for the storefront. Three variants:
+// The single button component for the storefront.
 //   - primary  (filled charcoal) — default
 //   - secondary (outlined)
+//   - prompt (warm-beige fill, invites the shopper to make a selection)
 //   - disabled (warm-beige fill, 0.5 text opacity, inert)
 // Full-width by default; wrap in a sized container if you need otherwise.
 const Button = forwardRef<HTMLButtonElement, Props>(function Button(
@@ -21,6 +22,7 @@ const Button = forwardRef<HTMLButtonElement, Props>(function Button(
   const isDisabled = variant === 'disabled' || disabled;
   const variantClass =
     variant === 'secondary' ? styles.secondary
+    : variant === 'prompt' ? styles.prompt
     : variant === 'disabled' ? styles.disabledPrimary
     : styles.primary;
 

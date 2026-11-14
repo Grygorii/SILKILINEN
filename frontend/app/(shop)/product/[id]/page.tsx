@@ -25,7 +25,7 @@ import { clampMeta } from '@/lib/clampMeta';
 import { getLocale, apiLocaleQuery, hreflangAlternates, localeUrl, localeHref, type PageLocale } from '@/lib/i18n-server';
 import { productHref, productPath } from '@/lib/urls';
 import { brand } from '@/lib/brand';
-import { getDictionary, type StorefrontDictionary } from '@/lib/dictionaries';
+import { getDictionary } from '@/lib/dictionaries';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -131,14 +131,6 @@ function getStorySnippet(description?: string): { text: string; truncated: boole
   const cutoff = d.lastIndexOf('. ', 180);
   if (cutoff > 60) return { text: d.slice(0, cutoff + 1), truncated: true };
   return { text: d.slice(0, 180) + '…', truncated: true };
-}
-
-function StockBadge({ product, copy }: { product: { inStock?: boolean; totalStock?: number; stockLevel?: number }; copy: StorefrontDictionary['product'] }) {
-  const total = product.totalStock ?? product.stockLevel ?? null;
-  if (total === null) return null;
-  if (total === 0) return <p className={styles.stockOut}>{copy.soldOut}</p>;
-  if (total <= 3) return <p className={styles.stockLow}>{copy.onlyLeft.replace('{count}', String(total))}</p>;
-  return <p className={styles.stockIn}>{copy.inStock}</p>;
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -351,6 +343,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 </a>
               )}
 
+              <QualityMarks composition={product.materialComposition} momme={product.momme} locale={locale} />
+
               <p className={styles.price}>
                 <Price eur={Number(product.price)} className={product.compareAtPrice && product.compareAtPrice > product.price ? styles.priceSale : ''} />
                 {product.compareAtPrice && product.compareAtPrice > product.price && (
@@ -358,36 +352,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 )}
               </p>
 
-              {/* The value answer at the moment the price is read. The same
-                  facts live in the Fabric & care panel below, but a customer
-                  deciding whether €168 is reasonable decides here, not three
-                  sections down behind a closed accordion. */}
-              <QualityMarks composition={product.materialComposition} momme={product.momme} />
-
-              <StockBadge product={product} copy={copy.product} />
-
               <ProductOptions
-                // Which sizes actually have stock. Without this the picker
-                // offered every size, so a customer could choose one that was
-                // gone, add it, and only be refused at checkout — the last
-                // place you want to tell someone no. The collections route
-                // already exposed this for its "shop the set" pickers; the
-                // product page did not.
                 fitNote={product.fitNote}
-                // Per-size stock, so the quantity ceiling follows the size the
-                // customer picked rather than the product's total.
                 sizeVariants={product.variants}
-                availableSizes={
-                  Array.isArray(product.variants) && product.variants.length
-                    ? [...new Set<string>(
-                        product.variants
-                          .filter((v: { size?: string; stockLevel?: number }) => (v.stockLevel ?? 0) > 0 && v.size)
-                          .map((v: { size?: string }) => String(v.size)),
-                      )]
-                    // No variant data at all means stock is untracked for this
-                    // piece, not that everything is sold out.
-                    : null
-                }
                 colours={product.colours ?? []}
                 // Colour lives in ONE place on this page now — see the block in
                 // ProductOptions. It used to be stated here as well, under its

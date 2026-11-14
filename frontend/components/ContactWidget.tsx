@@ -6,6 +6,7 @@ import { MessageCircle } from 'lucide-react';
 import styles from './ContactWidget.module.css';
 import { useSiteSettings } from '@/lib/useSiteSettings';
 import { useDeferredReveal } from '@/lib/useDeferredReveal';
+import { localeFromPathname, localeHref } from '@/lib/i18n';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 const BLOCKED_PATHS = ['/admin', '/checkout'];
@@ -24,6 +25,8 @@ function handleFromUrl(url: string): string {
 
 export default function ContactWidget() {
   const pathname = usePathname();
+  const prefix = localeHref(localeFromPathname(pathname), '/');
+  const path = prefix === '/' ? pathname : pathname.slice(prefix.length) || '/';
   const { supportEmail } = useSiteSettings();
   // Not on the first screen. The hero is a photograph, a sentence and one
   // button; a chat bubble parked in the corner of it is competing with the only
@@ -65,15 +68,13 @@ export default function ContactWidget() {
     },
   ];
 
-  if (BLOCKED_PATHS.some(p => pathname.startsWith(p))) return null;
+  if (BLOCKED_PATHS.some(p => path.startsWith(p)) || path.startsWith('/product/')) return null;
   // After the blocked-path check, before render: the hooks above must run on
   // every path or their order changes between renders.
   if (!revealed) return null;
 
-  const isProductPage = pathname.startsWith('/product/');
-
   return (
-    <div className={`${styles.root} ${isProductPage ? styles.rootAboveBar : ''}`}>
+    <div className={styles.root}>
       {open && (
         <>
           <div className={styles.backdrop} onClick={() => setOpen(false)} />

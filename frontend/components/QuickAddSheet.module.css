@@ -104,10 +104,11 @@
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  font-family: 'Jost', sans-serif;
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: 400 14px/1.4 var(--font-jost), sans-serif;
   color: var(--color-ink);
   text-decoration: underline;
   text-underline-offset: 3px;

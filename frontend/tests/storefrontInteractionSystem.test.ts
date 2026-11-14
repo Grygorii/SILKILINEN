@@ -51,10 +51,20 @@ describe('storefront interaction system', () => {
     const options = read('components/ProductOptions.module.css');
 
     expect(option).toContain('min-height: var(--pill-h);');
-    expect(option).toContain('background: var(--color-ink);');
+    expect(option).toMatch(/\.pill\[aria-pressed='true'\]::after\s*\{[^}]*bottom:[^}]*background: var\(--color-ink\);/);
     expect(swatch).toContain('width: var(--pill-h);');
     expect(swatch).toContain('outline: 1px solid var(--color-ink);');
     expect(options).toContain('width: 44px;');
+  });
+
+  it('fades only the unavailable size text and keeps its diagonal visible', () => {
+    const option = read('components/ui/OptionPill.module.css');
+    const sizeButton = read('components/ui/OptionPill.tsx');
+
+    expect(sizeButton).toContain('aria-pressed={!!selected}');
+    expect(sizeButton).toContain('disabled={disabled}');
+    expect(option).toContain('.pill:disabled > span { opacity: .42; }');
+    expect(option).toMatch(/\.pill:disabled::after\s*\{[^}]*rotate\(-45deg\)[^}]*background: var\(--color-ink\);/);
   });
 
   it('uses semantic controls and safe hit areas for product, bag, and guidance utilities', () => {

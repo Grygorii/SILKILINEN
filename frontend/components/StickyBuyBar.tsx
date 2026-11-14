@@ -116,7 +116,7 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
 
   // The label hints what the sheet will ask for; the button is always active
   // (it was previously greyed out and read as dead when a size was required).
-  type CtaVariant = 'primary' | 'secondary';
+  type CtaVariant = 'primary' | 'secondary' | 'prompt';
   let label: string;
   let variant: CtaVariant;
   if (outOfStock) {
@@ -127,7 +127,7 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
     variant = 'primary';
   } else if (needsSize) {
     label = copy.product.selectSize;
-    variant = 'primary';
+    variant = 'prompt';
   } else {
     label = copy.product.add;
     variant = 'primary';
@@ -144,7 +144,7 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
         </div>
       )}
 
-      <div className={`${styles.bar} ${showBar ? '' : styles.barHidden}`} aria-hidden={!showBar}>
+      <div className={`${styles.bar} ${showBar ? '' : styles.barHidden}`} aria-hidden={!showBar} inert={!showBar}>
         <div className={styles.info}>
           <span className={styles.name}>{productName}</span>
           <Price eur={Number(price)} className={styles.price} />
