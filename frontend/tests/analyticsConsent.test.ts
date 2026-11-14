@@ -9,7 +9,8 @@ import {
   hasAnalyticsConsent,
 } from '@/lib/analyticsConsent';
 import { checkoutAnalytics } from '@/lib/checkoutAttribution';
-import { getSessionId, trackClientEvent, trackVisit } from '@/lib/track';
+import { ANALYTICS_BROWSER_EXCLUSION_STORAGE_KEY } from '@/lib/analyticsExclude';
+import { getSessionId, getStoredSessionId, trackClientEvent, trackVisit } from '@/lib/track';
 import { trackEvent } from '@/lib/analytics';
 
 type MemoryStorage = {
@@ -111,6 +112,24 @@ describe('analytics consent', () => {
     expect(localStorage.getItem).not.toHaveBeenCalledWith(ANALYTICS_SESSION_STORAGE_KEY);
   });
 
+  it('does not recreate an excluded browser identity or attach it to checkout', () => {
+    const localStorage = storage({
+      [COOKIE_CONSENT_STORAGE_KEY]: 'accepted',
+      [ANALYTICS_SESSION_STORAGE_KEY]: 'owner-browser-id',
+      [ANALYTICS_BROWSER_EXCLUSION_STORAGE_KEY]: 'true',
+    });
+    const sessionStorage = storage({ attr_source: 'google' });
+    vi.stubGlobal('window', { localStorage, sessionStorage });
+    vi.stubGlobal('localStorage', localStorage);
+
+    expect(getStoredSessionId()).toBe('owner-browser-id');
+    expect(getSessionId()).toBe('');
+    expect(localStorage.removeItem).toHaveBeenCalledWith(ANALYTICS_SESSION_STORAGE_KEY);
+    expect(checkoutAnalytics()).toEqual({ attribution: {}, browserSessionId: '' });
+    expect(sessionStorage.getItem).not.toHaveBeenCalled();
+    expect(localStorage.setItem).not.toHaveBeenCalledWith(ANALYTICS_SESSION_STORAGE_KEY, expect.any(String));
+  });
+
   it('still creates the reporting identity and attribution after explicit analytics consent', () => {
     const localStorage = storage({ [COOKIE_CONSENT_STORAGE_KEY]: 'accepted' });
     const sessionStorage = storage({ attr_source: 'google', attr_medium: 'organic' });
@@ -134,6 +153,9 @@ describe('analytics consent', () => {
     ]) {
       expect(readFileSync(file, 'utf8')).toContain('allowsAnalytics(consent, preferences)');
     }
+    const loader = readFileSync('components/AnalyticsLoader.tsx', 'utf8');
+    expect(loader).toContain('isBrowserExcludedFromAnalytics');
+    expect(loader).not.toContain('<Analytics />');
   });
 
   it('clears analytics persistence when the preferences UI saves analytics off', () => {

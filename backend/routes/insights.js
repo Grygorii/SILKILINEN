@@ -3,8 +3,9 @@ const router = express.Router();
 const Order = require('../models/Order');
 const Event = require('../models/Event');
 const Visit = require('../models/Visit');
+const AnalyticsExclusion = require('../models/AnalyticsExclusion');
 const { requireAuth } = require('../middleware/auth');
-const { loadEvidence } = require('../services/commerceEvidence');
+const { loadEvidence, clearEvidenceCache } = require('../services/commerceEvidence');
 const { stagesFromEvidence } = require('../services/funnel');
 
 let cache = { data: null, at: 0 };
@@ -257,6 +258,35 @@ router.get('/journeys', requireAuth, async function(req, res) {
   } catch (err) {
     console.error('[insights/journeys]', err.message);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// The owner chooses this only from their signed-in admin browser. It deliberately
+// purges behavioural telemetry, not the account, wishlist or order ledger.
+// Keeping the opaque ID for the telemetry-retention window prevents a late
+// sendBeacon from recreating the thread after the purge.
+router.post('/journeys/exclude-browser-session', requireAuth, async function(req, res) {
+  const sessionId = typeof req.body?.sessionId === 'string' ? req.body.sessionId.trim() : '';
+  if (!sessionId || sessionId.length > 128) {
+    return res.status(400).json({ error: 'A valid browser session is required.' });
+  }
+
+  try {
+    await AnalyticsExclusion.updateOne(
+      { sessionId },
+      { $setOnInsert: { sessionId, createdAt: new Date() } },
+      { upsert: true },
+    );
+    const [visits, events] = await Promise.all([
+      Visit.deleteMany({ sessionId }),
+      Event.deleteMany({ sessionId }),
+    ]);
+    clearEvidenceCache();
+    cache = { data: null, at: 0 };
+    res.json({ ok: true, removed: { visits: visits.deletedCount, events: events.deletedCount } });
+  } catch (err) {
+    console.error('[insights/exclude-browser-session]', err.message);
+    res.status(500).json({ error: 'Could not remove this browser session.' });
   }
 });
 

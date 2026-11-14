@@ -1,7 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
 import AdminLayout from '@/components/AdminLayout';
+import { clearAnalyticsPersistence } from '@/lib/analyticsConsent';
+import { isBrowserExcludedFromAnalytics, setBrowserAnalyticsExcluded, subscribeToBrowserAnalyticsExclusion } from '@/lib/analyticsExclude';
+import { getStoredSessionId } from '@/lib/track';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -49,6 +52,9 @@ export default function JourneysPage() {
   const [outcome, setOutcome] = useState<'abandoned' | 'purchased'>('abandoned');
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(true);
+  const [updatingBrowser, setUpdatingBrowser] = useState(false);
+  const [browserMessage, setBrowserMessage] = useState('');
+  const browserExcluded = useSyncExternalStore(subscribeToBrowserAnalyticsExclusion, isBrowserExcludedFromAnalytics, () => false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -86,6 +92,38 @@ export default function JourneysPage() {
     setDays(next);
   }
 
+  async function updateBrowserExclusion(next: boolean) {
+    if (updatingBrowser) return;
+    setUpdatingBrowser(true);
+    setBrowserMessage('');
+
+    // Capture before clearing: excluding must never create an ID simply to
+    // delete it, but it should remove the current browser thread if one exists.
+    const sessionId = next ? getStoredSessionId() : '';
+    setBrowserAnalyticsExcluded(next);
+
+    if (!next || !sessionId) {
+      clearAnalyticsPersistence();
+      window.location.reload();
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API}/api/admin/insights/journeys/exclude-browser-session`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' },
+        body: JSON.stringify({ sessionId }),
+      });
+      if (!response.ok) throw new Error('Could not remove browser activity');
+      clearAnalyticsPersistence();
+      window.location.reload();
+    } catch {
+      setBrowserMessage('Future browsing is excluded, but the earlier browser activity could not be removed. Please try again.');
+      setUpdatingBrowser(false);
+    }
+  }
+
   return (
     <AdminLayout>
       <div style={{ padding: '32px 40px', maxWidth: 1100 }}>
@@ -116,6 +154,27 @@ export default function JourneysPage() {
               ))}
             </div>
           </div>
+        </div>
+
+        <div style={{ marginTop: 24, padding: '16px 18px', background: 'var(--admin-surface)', border, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20 }}>
+          <div>
+            <h2 style={{ fontFamily: serif, fontSize: 18, fontWeight: 500, color: dark, margin: 0 }}>
+              {browserExcluded ? 'This browser is excluded' : 'Exclude this browser'}
+            </h2>
+            <p style={{ fontSize: 12, color: muted, lineHeight: 1.55, margin: '5px 0 0', maxWidth: 620 }}>
+              {browserExcluded
+                ? 'New browsing from this browser stays out of Session Replay and your store analytics. Turning it back on starts a new browser ID; removed history cannot be restored.'
+                : 'Remove this browser’s recorded page views and actions, then stop new tracking here. It does not change your account, wishlist, orders, or any other device.'}
+            </p>
+            {browserMessage && <p role="status" style={{ fontSize: 12, color: 'var(--admin-danger)', margin: '8px 0 0' }}>{browserMessage}</p>}
+          </div>
+          <button
+            onClick={() => updateBrowserExclusion(browserMessage ? true : !browserExcluded)}
+            disabled={updatingBrowser}
+            style={{ padding: '8px 13px', fontSize: 12, border, cursor: updatingBrowser ? 'wait' : 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', background: browserExcluded ? 'var(--admin-surface)' : dark, color: browserExcluded ? dark : 'var(--admin-surface)', opacity: updatingBrowser ? 0.7 : 1 }}
+          >
+            {updatingBrowser ? 'Updating…' : browserMessage ? 'Try again' : browserExcluded ? 'Include again' : 'Exclude this browser'}
+          </button>
         </div>
 
         {loading ? (

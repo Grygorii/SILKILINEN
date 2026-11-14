@@ -1,5 +1,6 @@
 import { trackClientEvent } from './track';
 import { hasAnalyticsConsent } from './analyticsConsent';
+import { isBrowserExcludedFromAnalytics } from './analyticsExclude';
 
 // window.pintrk is declared globally in components/PinterestTag.tsx.
 declare global {
@@ -37,7 +38,7 @@ const PINTEREST_EVENTS: Record<string, { event: string; map: (p: Record<string, 
 export function trackEvent(name: string, properties: Record<string, unknown> = {}, productId?: string) {
   // The first-party event stream is analytics too: it can join a browser's
   // page views to an order, so it must use the same consent gate as pixels.
-  if (!hasAnalyticsConsent()) return;
+  if (!hasAnalyticsConsent() || isBrowserExcludedFromAnalytics()) return;
   trackClientEvent(name, properties, productId);
 
   gtagFire(name, properties);

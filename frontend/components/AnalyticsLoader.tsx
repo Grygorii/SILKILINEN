@@ -1,37 +1,36 @@
 'use client';
 
 import Script from 'next/script';
-import { Analytics } from '@vercel/analytics/react';
+import { useSyncExternalStore } from 'react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { useCookieConsent } from '@/context/CookieConsentContext';
 import { allowsAnalytics } from '@/lib/analyticsConsent';
+import { isBrowserExcludedFromAnalytics, subscribeToBrowserAnalyticsExclusion } from '@/lib/analyticsExclude';
 
 // Both default to the founder's OWN, confirmed properties (GA4 G-XZG6XTZ3S8 and
 // Clarity x940yl1bn0), so analytics works zero-config. The NEXT_PUBLIC_* env vars
 // still override either. Both load only after cookie consent (see below).
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-XZG6XTZ3S8';
 const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || 'x940yl1bn0';
-// Vercel Web Analytics + Speed Insights require the project-level toggle
-// in the Vercel dashboard. When the toggle is OFF, `/_vercel/insights/script.js`
-// 404s and the browser logs MIME-type errors. Gate the components behind an
-// explicit env flag so they only mount once the dashboard has been enabled.
-// To turn on: set NEXT_PUBLIC_ENABLE_VERCEL_ANALYTICS=true in Vercel env vars
-// AND enable Web Analytics + Speed Insights in the Vercel project dashboard.
+// Vercel Web Analytics mounts in VercelAnalytics.tsx so its shared exclusion
+// filter cannot be bypassed here. Speed Insights needs the project-level toggle
+// in the Vercel dashboard. When it is OFF, `/_vercel/insights/script.js` 404s,
+// so gate that component behind an explicit environment flag.
+// To turn it on: set NEXT_PUBLIC_ENABLE_VERCEL_ANALYTICS=true in Vercel env
+// vars and enable Web Analytics + Speed Insights in the Vercel project dashboard.
 const VERCEL_ANALYTICS_ENABLED = process.env.NEXT_PUBLIC_ENABLE_VERCEL_ANALYTICS === 'true';
 
 export default function AnalyticsLoader() {
   const { consent, preferences } = useCookieConsent();
   const allowed = allowsAnalytics(consent, preferences);
+  const browserExcluded = useSyncExternalStore(subscribeToBrowserAnalyticsExclusion, isBrowserExcludedFromAnalytics, () => false);
 
-  if (!allowed) return null;
+  if (!allowed || browserExcluded) return null;
 
   return (
     <>
       {VERCEL_ANALYTICS_ENABLED && (
-        <>
-          <Analytics />
-          <SpeedInsights />
-        </>
+        <SpeedInsights />
       )}
       {GA_ID && (
         <>

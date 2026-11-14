@@ -1,8 +1,9 @@
 'use client';
 
 import Script from 'next/script';
-import { useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { useCookieConsent } from '@/context/CookieConsentContext';
+import { isBrowserExcludedFromAnalytics, subscribeToBrowserAnalyticsExclusion } from '@/lib/analyticsExclude';
 
 // Defaults to the founder's own confirmed Pinterest tag (2612639946416) so it
 // works zero-config; NEXT_PUBLIC_PINTEREST_TAG_ID (Vercel) still overrides.
@@ -22,13 +23,15 @@ declare global {
 }
 
 export function trackPinEvent(event: string, params?: Record<string, unknown>) {
-  if (typeof window === 'undefined' || !window.pintrk) return;
+  if (typeof window === 'undefined' || isBrowserExcludedFromAnalytics() || !window.pintrk) return;
   window.pintrk('track', event, params || {});
 }
 
 export default function PinterestTag() {
   const { consent, preferences } = useCookieConsent();
-  const allowed = consent === 'accepted' || (consent === 'customised' && preferences?.marketing === true);
+  const browserExcluded = useSyncExternalStore(subscribeToBrowserAnalyticsExclusion, isBrowserExcludedFromAnalytics, () => false);
+  const allowed = !browserExcluded
+    && (consent === 'accepted' || (consent === 'customised' && preferences?.marketing === true));
 
   useEffect(() => {
     if (allowed && typeof window !== 'undefined' && window.pintrk) {

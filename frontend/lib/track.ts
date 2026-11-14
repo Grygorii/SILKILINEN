@@ -1,4 +1,4 @@
-import { isExcludedFromAnalytics } from './analyticsExclude';
+import { isBrowserExcludedFromAnalytics, isExcludedFromAnalytics } from './analyticsExclude';
 import {
   ANALYTICS_SESSION_STORAGE_KEY,
   clearAnalyticsPersistence,
@@ -7,8 +7,23 @@ import {
 
 const SESSION_KEY = ANALYTICS_SESSION_STORAGE_KEY;
 
+// Read only: the owner exclusion control must be able to remove the current
+// browser thread without accidentally creating a fresh identifier.
+export function getStoredSessionId(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    return window.localStorage.getItem(SESSION_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
 export function getSessionId(): string {
   if (typeof window === 'undefined') return '';
+  if (isBrowserExcludedFromAnalytics()) {
+    clearAnalyticsPersistence();
+    return '';
+  }
   if (!hasAnalyticsConsent()) {
     clearAnalyticsPersistence();
     return '';

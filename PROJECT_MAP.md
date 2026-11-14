@@ -376,7 +376,13 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   beacon did not, so founder previews polluted the clickstream that feeds the funnel and
   advisor. Covers `/admin`, `/journal/preview`, `/preview/`, and **`?edit=1`** (InlineEdit
   turns the real storefront into a work surface — the path looks like shopping). Strips a
-  leading locale, reading `LOCALES`, so `/de/...` can't reopen the hole.
+  leading locale, reading `LOCALES`, so `/de/...` can't reopen the hole. It also owns the
+  browser-local `silkilinen:analyticsExcluded` switch on Session Replay: it blocks new
+  owned tracking on that browser, while authenticated `POST /api/admin/insights/journeys/
+  exclude-browser-session` deletes only its Visit/Event history and clears the evidence
+  cache. `AnalyticsExclusion` retains the opaque former ID for the 90-day telemetry window
+  so a late beacon cannot recreate it. Never infer this from an email, wishlist or order;
+  account/wishlist data and the financial Order ledger are deliberately untouched.
 - **Analytics consent:** `frontend/lib/analyticsConsent.ts` is the ONE rule for
   analytics permission. The first-party Visit/Event stream, its persistent
   browser ID, UTM/order attribution, Vercel Analytics and third-party pixels

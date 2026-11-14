@@ -1,7 +1,8 @@
 'use client';
 
 import { Analytics } from '@vercel/analytics/next';
-import { isExcludedFromAnalytics } from '@/lib/analyticsExclude';
+import { useSyncExternalStore } from 'react';
+import { isBrowserExcludedFromAnalytics, isExcludedFromAnalytics, subscribeToBrowserAnalyticsExclusion } from '@/lib/analyticsExclude';
 import { allowsAnalytics } from '@/lib/analyticsConsent';
 import { useCookieConsent } from '@/context/CookieConsentContext';
 
@@ -22,7 +23,8 @@ import { useCookieConsent } from '@/context/CookieConsentContext';
 // a dashboard query.
 export default function VercelAnalytics() {
   const { consent, preferences } = useCookieConsent();
-  if (!allowsAnalytics(consent, preferences)) return null;
+  const browserExcluded = useSyncExternalStore(subscribeToBrowserAnalyticsExclusion, isBrowserExcludedFromAnalytics, () => false);
+  if (!allowsAnalytics(consent, preferences) || browserExcluded) return null;
 
   return (
     <Analytics

@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const Visit = require('../models/Visit');
 const Event = require('../models/Event');
 const BotHit = require('../models/BotHit');
+const AnalyticsExclusion = require('../models/AnalyticsExclusion');
 
 const trackLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -21,6 +22,10 @@ const trackLimiter = rateLimit({
 // stripped). 24h TTL is fine for the fallback's hit rate.
 const geoCache = new Map();
 const GEO_TTL = 24 * 60 * 60 * 1000;
+
+async function isExcludedSession(sessionId) {
+  return Boolean(sessionId && await AnalyticsExclusion.exists({ sessionId }));
+}
 
 /**
  * Convert an ISO 3166-1 alpha-2 country code to its English display
@@ -93,8 +98,10 @@ router.post('/visit', trackLimiter, async function(req, res) {
       return res.json({ ok: true });
     }
 
-    const { sessionId, page, productId, utm, referrer, device, source, geo: vercelGeo } = req.body;
+    const { sessionId: rawSessionId, page, productId, utm, referrer, device, source, geo: vercelGeo } = req.body;
+    const sessionId = typeof rawSessionId === 'string' ? rawSessionId.slice(0, 128) : '';
     if (sessionId && page) {
+      if (await isExcludedSession(sessionId)) return res.json({ ok: true });
       // Tier C: prefer Vercel's per-request geo headers (forwarded by
       // the Next.js proxy at frontend/app/api/track/visit). Instant,
       // free, no API call. Fall back to ipapi.co only when the proxy
@@ -166,12 +173,14 @@ function safeProps(props) {
 
 router.post('/event', trackLimiter, async function(req, res) {
   try {
-    const { sessionId, type, page, productId, props, source, device } = req.body;
+    const { sessionId: rawSessionId, type, page, productId, props, source, device } = req.body;
+    const sessionId = typeof rawSessionId === 'string' ? rawSessionId.slice(0, 128) : '';
     // type + sessionId are the minimum that makes an event joinable; drop the
     // rest silently (never error — tracking must not surface to the customer).
     if (sessionId && type && String(type).length <= 64) {
+      if (await isExcludedSession(sessionId)) return res.json({ ok: true });
       await Event.create({
-        sessionId: String(sessionId).slice(0, 128),
+        sessionId,
         type: String(type).slice(0, 64),
         page: page ? String(page).slice(0, 512) : undefined,
         // Only pass a valid ObjectId; a bad value would otherwise throw a

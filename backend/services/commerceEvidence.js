@@ -105,6 +105,9 @@ async function loadEvidence(days = 30, { offsetDays = 0, now = new Date(), fresh
   if (cache.size >= 100) cache.delete(cache.keys().next().value);
   cache.set(key, { at: Date.now(), value }); return value;
 }
+function clearEvidenceCache() {
+  cache.clear();
+}
 function publicEvidence(evidence) {
   const { stage, browsers, ...plain } = evidence;
   return { ...plain, orders: plain.orders.slice(0, 50), orderListTruncated: plain.orders.length > 50 };
@@ -112,4 +115,4 @@ function publicEvidence(evidence) {
 function evidencePrompt({ since, until, summary: s, quality: q }) {
   return `COMMERCE EVIDENCE (${since} to ${until}): ${s.orders} ledger purchases; EUR ${s.netRevenueEUR} net order value. ${s.linkedOrders}/${s.websiteOrders} website orders link to a browser in this window; ${s.sourceUnresolvedOrders} sources are unknown or direct/unclassified. ${q.browsers} tracked browser IDs, NOT verified people or timed sessions. ${q.productPagesWithoutViewEvent}/${q.productPageBrowsers} product-page browsers lack a view_item event. Conversion is ${s.conversionPercent === null ? 'UNKNOWN; do not say 0%' : s.conversionPercent + '% observed linked-browser rate'}. Do not infer a buyer source from timing, geography or default direct. Missing events are not proof of abandonment; small samples do not establish a cause.`;
 }
-module.exports = { buildEvidence, loadEvidence, publicEvidence, evidencePrompt, STAGE_KEYS, sourceName, displayLabel };
+module.exports = { buildEvidence, loadEvidence, clearEvidenceCache, publicEvidence, evidencePrompt, STAGE_KEYS, sourceName, displayLabel };

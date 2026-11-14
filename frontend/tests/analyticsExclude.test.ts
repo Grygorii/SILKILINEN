@@ -1,5 +1,12 @@
-import { describe, it, expect } from 'vitest';
-import { isExcludedFromAnalytics as excluded } from '@/lib/analyticsExclude';
+import { afterEach, describe, it, expect, vi } from 'vitest';
+import {
+  ANALYTICS_BROWSER_EXCLUSION_STORAGE_KEY,
+  isBrowserExcludedFromAnalytics,
+  isExcludedFromAnalytics as excluded,
+  setBrowserAnalyticsExcluded,
+} from '@/lib/analyticsExclude';
+
+afterEach(() => vi.unstubAllGlobals());
 
 // Both trackers read this rule (lib/track.ts and components/VercelAnalytics.tsx),
 // so a hole here pollutes the clickstream that feeds the funnel, the advisor and
@@ -55,5 +62,24 @@ describe('what analytics must not count', () => {
 
   it('survives a missing query string, since one caller has only a pathname', () => {
     expect(() => excluded('/product/x')).not.toThrow();
+  });
+
+  it('lets the owner exclude one ordinary storefront browser without guessing from identity', () => {
+    const values = new Map<string, string>();
+    const localStorage = {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+      removeItem: (key: string) => values.delete(key),
+    };
+    vi.stubGlobal('window', { localStorage });
+
+    expect(excluded('/product/silk-robe')).toBe(false);
+    setBrowserAnalyticsExcluded(true);
+    expect(values.get(ANALYTICS_BROWSER_EXCLUSION_STORAGE_KEY)).toBe('true');
+    expect(isBrowserExcludedFromAnalytics()).toBe(true);
+    expect(excluded('/product/silk-robe')).toBe(true);
+
+    setBrowserAnalyticsExcluded(false);
+    expect(isBrowserExcludedFromAnalytics()).toBe(false);
   });
 });
