@@ -49,10 +49,12 @@ describe('mobile-first storefront refinement', () => {
     expect(css).not.toContain('@keyframes sheenSweep');
     expect(css).not.toContain('@keyframes badgeShimmer');
   });
-  it('keeps hero button hover from shifting its label or position', () => {
+  it('uses an editorial hero action while keeping its tap target intact', () => {
     const css = read('app/(shop)/page.module.css');
-    const hover = css.slice(css.indexOf('.heroBtn:hover'), css.indexOf('.heroBtn:focus-visible'));
-    expect(hover).not.toMatch(/letter-spacing|transform|box-shadow/);
+    expect(css).toContain('border-bottom: 1px solid currentColor;');
+    expect(css).toContain("content: '↗';");
+    expect(css).toContain('.heroBtn:hover::after');
+    expect(css).toContain('min-height: var(--ctrl-h-desktop);');
     expect(read('components/ui/Button.module.css')).toContain('min-height: var(--ctrl-h-mobile)');
   });
 });

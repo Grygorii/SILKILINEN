@@ -69,4 +69,23 @@ describe('storefront control contracts', () => {
 
     expect(button).toMatch(/\.primary:active:not\(:disabled\)\s*\{[\s\S]*?background:\s*var\(--color-ink-muted\);/);
   });
+
+  it('uses the signature direction mark only on the purchase path', () => {
+    const button = read('components/ui/Button.tsx');
+    const buttonCss = read('components/ui/Button.module.css');
+    const options = read('components/ProductOptions.tsx');
+    const sticky = read('components/StickyBuyBar.tsx');
+    const cart = read('components/CartPanel.tsx');
+    const checkout = read('app/(shop)/checkout/page.tsx');
+
+    expect(button).toContain('showArrow?: boolean;');
+    expect(button).toContain('<span className={styles.arrow} aria-hidden="true">→</span>');
+    expect(buttonCss).toContain('.withArrow');
+    expect(options).toContain("showArrow={canAdd && addState === 'idle'}");
+    // The sticky mobile CTA is deliberately narrow (150px), so its label stays
+    // legible instead of sacrificing it for a decorative direction mark.
+    expect(sticky).not.toContain('showArrow=');
+    expect(cart).toContain('<Button showArrow onClick');
+    expect(checkout).toContain('showArrow={!loading}');
+  });
 });

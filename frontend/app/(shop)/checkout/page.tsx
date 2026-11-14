@@ -221,6 +221,7 @@ function PaymentForm({
       <Button
         type="submit"
         variant={(!stripe || submitting) ? 'disabled' : 'primary'}
+        showArrow={Boolean(stripe) && !submitting}
       >
         {submitting ? copy.processing.toUpperCase() : `${copy.continuePayment.toUpperCase()} · ${summary.currencySymbol ?? '€'}${summary.total.toFixed(2)}`}
       </Button>
@@ -586,6 +587,7 @@ export default function CheckoutPage() {
               <Button
                 variant={loading ? 'disabled' : 'primary'}
                 onClick={() => { if (!loading) createIntent(); }}
+                showArrow={!loading}
               >
                 {loading ? copy.processing.toUpperCase() : copy.continuePayment.toUpperCase()}
               </Button>

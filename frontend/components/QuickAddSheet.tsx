@@ -148,7 +148,7 @@ export default function QuickAddSheet({
         </div>
 
         <div className={styles.cta}>
-          <Button variant={canAdd ? 'primary' : 'disabled'} onClick={handleAdd}>
+          <Button variant={canAdd ? 'primary' : 'disabled'} onClick={handleAdd} showArrow={canAdd}>
             {ctaLabel}
           </Button>
         </div>

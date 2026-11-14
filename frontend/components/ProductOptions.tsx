@@ -306,6 +306,7 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
           onClick={handleAdd}
           disabled={addState === 'adding'}
           aria-busy={addState === 'adding' || undefined}
+          showArrow={canAdd && addState === 'idle'}
         >
           {ctaLabel}
         </Button>

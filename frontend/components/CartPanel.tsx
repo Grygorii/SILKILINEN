@@ -267,7 +267,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                 between them where an unpriced shipping row is staring back. */}
             <div className={styles.ukBadgeRow}><UKShipBadge /></div>
 
-            <Button onClick={() => { onClose(); router.push(localeHref(locale, '/checkout')); }}>
+            <Button showArrow onClick={() => { onClose(); router.push(localeHref(locale, '/checkout')); }}>
               {copy.cart.checkout.toUpperCase()}
             </Button>
 
