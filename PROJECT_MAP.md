@@ -82,6 +82,13 @@ or change an invariant, update the relevant line here in the same commit.
   (image)/journalWriter/competitor\*/seoIntel/merchantCenter/searchConsole**. Each has a
   matching `adminX` route + `/admin/X` page. `aiClient.js`=DeepSeek, `aiImageRouter.js`=image providers.
 - Gemini gated by `GEMINI_API_KEY`; agents are fail-soft/inert without their key.
+- **Competitor pricing advice:** `services/competitorPricing.js` is the one owner for
+  `/api/admin/growth/competitors/advice`. It is deterministic and review-only: it
+  accepts only current, currency-confirmed like-for-like competitor samples, uses
+  `costing.totalUnitCost` (never legacy `costPrice`) as the finance fact, and may
+  never write a product price, description or campaign. Whole-catalogue averages
+  remain browsing context, not a product price benchmark; unknown/stale/sparse
+  evidence must say so rather than invent a numerical proposal.
 
 ## Backend layout
 - **routes/** — public + `adminX.js` (admin, behind `requireAuth`). Mounts in `server.js`

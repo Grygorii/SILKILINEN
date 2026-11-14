@@ -8,6 +8,8 @@ const Category = require('../models/Category');
 const Collection = require('../models/Collection');
 const { runGrowthEngine, setAgentEnabled, describeAgents } = require('../services/growthEngine');
 const { getCompetitors, setCompetitors } = require('../services/competitorIntel');
+const { buildCompetitorPricingAdvice } = require('../services/competitorPricing');
+const { getRates } = require('../services/exchangeRates');
 const { discoverCompetitors } = require('../services/competitorDiscovery');
 const CEOBrief = require('../models/CEOBrief');
 const { getNorthStar, setNorthStar, northStarStatus, generateBrief, runChiefIfDue, METRICS } = require('../services/chiefOfStaff');
@@ -273,6 +275,62 @@ router.get('/competitors/profiles', async function(req, res) {
   } catch (err) {
     console.error('[growth] profiles error:', err.message);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/growth/competitors/advice — review-only price and positioning
+// work. It deliberately returns evidence and recommendations, never a product
+// mutation or an automatic discount.
+router.get('/competitors/advice', async function(req, res) {
+  try {
+    const CompetitorProfile = require('../models/CompetitorProfile');
+    const Order = require('../models/Order');
+    const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const paidStatuses = ['paid', 'processing', 'shipped', 'delivered'];
+    const [profiles, products, sales, rates, marketIdeas] = await Promise.all([
+      CompetitorProfile.find().select('domain name platform currency sampleProducts lastScrapedAt productCountCapped').lean(),
+      Product.find({ status: { $in: ['active', 'sold_out'] }, price: { $gt: 0 } })
+        .select('_id name price costPrice costing.totalUnitCost category description materialComposition momme fitNote status colorVariants').lean(),
+      Order.aggregate([
+        { $match: { status: { $in: paidStatuses }, createdAt: { $gte: since } } },
+        { $unwind: '$items' },
+        { $match: { 'items.productId': { $ne: null } } },
+        {
+          $group: {
+            _id: '$items.productId',
+            units: { $sum: { $ifNull: ['$items.quantity', 1] } },
+            revenue: {
+              $sum: {
+                $multiply: [
+                  { $ifNull: ['$items.price', 0] },
+                  { $ifNull: ['$items.quantity', 1] },
+                ],
+              },
+            },
+          },
+        },
+      ]),
+      getRates(),
+      GrowthAction.find({ agent: { $in: ['competitor', 'storefront'] }, status: { $nin: ['rejected', 'error'] } })
+        .sort({ createdAt: -1 }).limit(3).select('title detail href createdAt').lean(),
+    ]);
+
+    const salesByProduct = Object.fromEntries(sales.map(row => [String(row._id), {
+      units: row.units || 0,
+      revenue: row.revenue || 0,
+    }]));
+    res.json({
+      ...buildCompetitorPricingAdvice({ products, profiles, rates, salesByProduct }),
+      marketIdeas: marketIdeas.map(idea => ({
+        title: idea.title,
+        detail: idea.detail,
+        href: idea.href,
+        createdAt: idea.createdAt,
+      })),
+    });
+  } catch (err) {
+    console.error('[growth] competitor advice error:', err.message);
+    res.status(500).json({ error: 'Could not build competitor advice.' });
   }
 });
 

@@ -1,0 +1,372 @@
+.page {
+  max-width: 1180px;
+  padding: 32px 40px 56px;
+}
+
+.header,
+.benchmark,
+.tabs,
+.filterRow,
+.adviceHeader,
+.productTop,
+.productMeta,
+.evidenceTop,
+.ideaTop {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.header {
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 30px;
+  font-weight: 300;
+  letter-spacing: 1px;
+}
+
+.intro {
+  max-width: 720px;
+  margin: 6px 0 0;
+  color: var(--admin-ink-muted);
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.scanButton,
+.tab,
+.filter,
+.openProduct,
+.marketLink {
+  min-height: 40px;
+  border: 1px solid var(--color-line-control);
+  font: inherit;
+  letter-spacing: .7px;
+  text-decoration: none;
+}
+
+.scanButton {
+  padding: 10px 18px;
+  color: var(--color-bg);
+  background: var(--color-ink);
+  cursor: pointer;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.scanButton:disabled {
+  cursor: not-allowed;
+  opacity: .7;
+}
+
+.benchmark {
+  gap: 28px;
+  margin: 18px 0;
+  padding: 14px 18px;
+  border: 1px solid var(--color-line);
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-size: 14px;
+}
+
+.benchmarkLabel,
+.metricLabel,
+.sectionEyebrow,
+.badge {
+  color: var(--admin-ink-muted);
+  font-size: 11px;
+  letter-spacing: 1.25px;
+  text-transform: uppercase;
+}
+
+.scanStatus {
+  margin-left: auto;
+  color: var(--admin-ink-muted);
+  font-size: 12.5px;
+}
+
+.tabs,
+.filterRow {
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.tab,
+.filter {
+  padding: 7px 12px;
+  color: var(--color-ink);
+  background: var(--admin-surface);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.tabActive,
+.filterActive {
+  color: var(--color-bg);
+  background: var(--color-ink);
+}
+
+.advisory,
+.empty,
+.productCard,
+.evidenceCard,
+.marketIdea,
+.metric {
+  border: 1px solid var(--color-line);
+  background: var(--admin-surface);
+}
+
+.advisory {
+  margin-bottom: 16px;
+  padding: 16px 18px;
+}
+
+.advisoryTitle,
+.sectionTitle,
+.productName,
+.ideaTitle {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 400;
+}
+
+.advisoryTitle,
+.sectionTitle {
+  font-size: 22px;
+}
+
+.advisoryCopy,
+.method,
+.productDetail,
+.dataNote,
+.empty p,
+.ideaDetail {
+  color: var(--admin-ink-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.advisoryCopy,
+.method,
+.productDetail,
+.dataNote,
+.empty p,
+.ideaDetail {
+  margin: 7px 0 0;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.metric {
+  min-height: 92px;
+  padding: 14px;
+}
+
+.metricValue {
+  margin-top: 8px;
+  color: var(--color-ink);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 28px;
+}
+
+.adviceHeader {
+  justify-content: space-between;
+  gap: 12px;
+  margin: 28px 0 10px;
+}
+
+.adviceCount {
+  color: var(--admin-ink-muted);
+  font-size: 12px;
+}
+
+.adviceList,
+.evidenceList,
+.ideaList {
+  display: grid;
+  gap: 10px;
+}
+
+.productCard,
+.evidenceCard,
+.marketIdea {
+  padding: 16px;
+}
+
+.productTop,
+.evidenceTop,
+.ideaTop {
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.productName {
+  font-size: 19px;
+}
+
+.productCategory,
+.price,
+.position,
+.confidence,
+.recommendation,
+.evidenceHeading,
+.evidenceItem,
+.marketLink {
+  font-size: 12.5px;
+}
+
+.productCategory,
+.dataNote {
+  color: var(--admin-ink-muted);
+}
+
+.price {
+  color: var(--color-ink);
+  font-size: 17px;
+  white-space: nowrap;
+}
+
+.productMeta {
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 1px 7px;
+  border: 1px solid var(--color-line-control);
+}
+
+.badge[data-tone='strong'],
+.badge[data-tone='hold'] {
+  color: var(--admin-success);
+  border-color: var(--admin-success);
+}
+
+.badge[data-tone='limited'],
+.badge[data-tone='review'] {
+  color: var(--admin-warning);
+  border-color: var(--admin-warning);
+}
+
+.badge[data-tone='insufficient'] {
+  color: var(--admin-ink-muted);
+}
+
+.recommendation {
+  margin: 14px 0 0;
+  color: var(--color-ink);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.recommendation strong {
+  font-weight: 600;
+}
+
+.review {
+  margin-top: 14px;
+  border-top: 1px solid var(--color-line);
+  padding-top: 12px;
+}
+
+.review summary {
+  width: fit-content;
+  color: var(--color-ink);
+  cursor: pointer;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.reviewContent {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 13px;
+}
+
+.reviewContent h3,
+.evidenceHeading {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.reviewContent p {
+  margin: 6px 0 0;
+  color: var(--admin-ink-muted);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.evidenceItems {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.evidenceItem {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--admin-ink-muted);
+}
+
+.evidenceItem a {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.openProduct,
+.marketLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  margin-top: 14px;
+  padding: 7px 10px;
+  color: var(--color-ink);
+  background: var(--color-bg);
+}
+
+.marketIdeasTitle {
+  margin: 34px 0 10px;
+}
+
+.ideaTitle {
+  font-size: 18px;
+}
+
+.loading {
+  color: var(--admin-ink-muted);
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  .page { padding: 24px 18px 42px; }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .reviewContent { grid-template-columns: 1fr; }
+  .scanStatus { width: 100%; margin-left: 0; }
+}

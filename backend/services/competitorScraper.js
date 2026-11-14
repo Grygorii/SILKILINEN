@@ -15,6 +15,11 @@ const { liveProductSample } = require('./competitorIntel');
 const UA = 'Mozilla/5.0 (compatible; SilkilinenBot/1.0; +https://www.silkilinen.com)';
 const num = v => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
 
+function currencyFromCart(cart) {
+  const currency = String(cart?.currency || '').trim().toUpperCase();
+  return /^[A-Z]{3}$/.test(currency) ? currency : null;
+}
+
 async function getJson(url, ms = 7000) {
   await assertPublicUrl(url);
   const res = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/json' }, signal: AbortSignal.timeout(ms) });
@@ -33,6 +38,17 @@ function priceStats(prices) {
   return { priceMin: r(Math.min(...prices)), priceMax: r(Math.max(...prices)), priceAvg: r(prices.reduce((s, n) => s + n, 0) / prices.length) };
 }
 
+// Shopify's products.json gives price values but not the shop's currency. The
+// public cart endpoint normally does. When it does not, retain the browseable
+// profile but leave currency unknown so it cannot enter EUR price advice.
+async function shopifyCurrency(domain) {
+  try {
+    return currencyFromCart(await getJson(`https://${domain}/cart.js`));
+  } catch {
+    return null;
+  }
+}
+
 // ── 1. Shopify ───────────────────────────────────────────────────────────────
 async function scrapeShopify(domain) {
   const all = [];
@@ -45,6 +61,7 @@ async function scrapeShopify(domain) {
   }
   if (!all.length) return null;
   const prices = [], types = new Set(), sampleProducts = [];
+  const currency = await shopifyCurrency(domain);
   for (const p of all) {
     const vp = (p.variants || []).map(v => num(v.price)).filter(n => n > 0);
     const min = vp.length ? Math.min(...vp) : null;
@@ -54,7 +71,7 @@ async function scrapeShopify(domain) {
   }
   const newest = [...all].filter(p => p.published_at).sort((a, b) => new Date(b.published_at) - new Date(a.published_at)).slice(0, 5)
     .map(p => { const vp = (p.variants || []).map(v => num(v.price)).filter(n => n > 0); return { title: String(p.title || '').slice(0, 120), price: vp.length ? Math.min(...vp) : null, url: `https://${domain}/products/${p.handle}`, publishedAt: new Date(p.published_at) }; });
-  return { platform: 'shopify', currency: null, productCount: all.length, productCountCapped: all.length >= 500, ...priceStats(prices), productTypes: [...types].slice(0, 12), sampleProducts, newest };
+  return { platform: 'shopify', currency, productCount: all.length, productCountCapped: all.length >= 500, ...priceStats(prices), productTypes: [...types].slice(0, 12), sampleProducts, newest };
 }
 
 // ── 2. WooCommerce Store API ──────────────────────────────────────────────────
@@ -143,4 +160,4 @@ async function scrapeCompetitor({ name, domain }) {
   return { ...base, platform: 'unknown', lastError: 'no public product data found' };
 }
 
-module.exports = { scrapeShopify, scrapeWoo, scrapeJsonLd, scrapeCompetitor };
+module.exports = { currencyFromCart, scrapeShopify, scrapeWoo, scrapeJsonLd, scrapeCompetitor };
