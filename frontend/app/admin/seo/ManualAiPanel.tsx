@@ -50,7 +50,7 @@ export default function ManualAiPanel() {
     try {
       const [base, tasks] = await Promise.all([
         fetch(`${API}/api/admin/seo-base`, { credentials: 'include' }),
-        fetch(`${API}/api/admin/manual-ai/tasks`, { credentials: 'include' }),
+        fetch(`${API}/api/admin/manual-ai/tasks?taskType=seo_meta_v1`, { credentials: 'include' }),
       ]);
       const baseData = await base.json();
       const taskData = await tasks.json();

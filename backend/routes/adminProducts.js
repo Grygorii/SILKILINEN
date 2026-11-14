@@ -106,6 +106,7 @@ function autoGenerateSEO(product) {
 // `lastUpdatedBy`, `_id`, timestamps, etc. are server-controlled.
 // If you add a new schema field that admins should be able to edit, add it here.
 const { PRODUCT_ALLOWED_FIELDS, pickProductFields } = require('../utils/productFields');
+const { validateCostingInput } = require('../services/financeCosting');
 
 // ── Validation helpers ─────────────────────────────────────────────────────────
 
@@ -344,7 +345,34 @@ router.post('/', async function(req, res) {
   }
 });
 
-// PUT /api/admin/products/:id — full update (variants included, images managed separately)
+// PATCH /api/admin/products/:id/costing — narrow, validated finance write.
+// Costing deliberately does not travel through the general product updater:
+// this keeps the product allowlist closed and makes the finance calculation
+// server-owned (including the derived total and timestamp).
+router.patch('/:id/costing', async function(req, res) {
+  const validation = validateCostingInput(req.body?.costing);
+  if (!validation.ok) return res.status(400).json({ error: validation.error });
+
+  try {
+    const costing = {
+      ...validation.costing,
+      lastUpdated: new Date(),
+      updatedBy: String(req.user?.userId || 'admin'),
+    };
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { $set: { costing, lastUpdatedBy: req.user.userId } },
+      { new: true, runValidators: true }
+    ).select('_id costing updatedAt');
+    if (!product) return res.status(404).json({ error: 'Not found' });
+    res.json(product);
+  } catch (err) {
+    console.error('[products/costing]', err.message);
+    res.status(500).json({ error: 'Could not save product costing.' });
+  }
+});
+
+// Full product update (variants included, images managed separately).
 router.put('/:id', async function(req, res) {
   try {
     const safeFields = pickProductFields(req.body);

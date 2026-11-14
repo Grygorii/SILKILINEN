@@ -9,6 +9,7 @@ const Expense = require('../models/Expense');
 const Receipt = require('../models/Receipt');
 const { requireAuth } = require('../middleware/auth');
 const { EXPENSE_CATEGORIES } = require('../models/Expense');
+const { currentProductIdsForMissingCogs, withResolvedMissingCogs } = require('../services/financeCosting');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
@@ -39,9 +40,31 @@ function last30() {
   return { start, end };
 }
 
+// Cost captured on an order is authoritative. When an older order was made
+// before costing existed, fill only that missing value from the live product
+// costing so a newly saved cost is reflected by Finance on the next request.
+// Existing order snapshots are never changed or recalculated.
+async function resolveMissingFinanceCogs(...orderGroups) {
+  const ids = currentProductIdsForMissingCogs(orderGroups.flat());
+  if (!ids.length) return orderGroups;
+
+  const products = await Product.find({ _id: { $in: ids } })
+    .select('_id costing.totalUnitCost')
+    .lean();
+  const costByProductId = new Map();
+  for (const product of products) {
+    const cost = product.costing?.totalUnitCost;
+    if (Number.isFinite(cost) && cost >= 0) {
+      costByProductId.set(String(product._id), cost);
+    }
+  }
+  return orderGroups.map(orders => withResolvedMissingCogs(orders, costByProductId));
+}
+
 // ── GET /api/admin/finance/overview ──────────────────────────────────────────
 router.get('/overview', requireAuth, async (req, res) => {
   try {
+    res.set('Cache-Control', 'no-store');
     const { start: mStart, end: mEnd }       = monthBounds(0);
     const { start: pmStart, end: pmEnd }     = monthBounds(1);
     const { start: l30Start, end: l30End }   = last30();
@@ -53,12 +76,15 @@ router.get('/overview', requireAuth, async (req, res) => {
     })();
 
     // ── Revenue from orders ────────────────────────────────────────────────
-    const [mOrders, pmOrders, l30Orders, pl30Orders] = await Promise.all([
+    const [rawMOrders, rawPmOrders, rawL30Orders, rawPl30Orders] = await Promise.all([
       Order.find({ status: { $in: PAID_STATUSES }, createdAt: { $gte: mStart, $lte: mEnd } }).lean(),
       Order.find({ status: { $in: PAID_STATUSES }, createdAt: { $gte: pmStart, $lte: pmEnd } }).lean(),
       Order.find({ status: { $in: PAID_STATUSES }, createdAt: { $gte: l30Start, $lte: l30End } }).lean(),
       Order.find({ status: { $in: PAID_STATUSES }, createdAt: { $gte: pl30Start, $lte: pl30End } }).lean(),
     ]);
+    const [mOrders, pmOrders, l30Orders, pl30Orders] = await resolveMissingFinanceCogs(
+      rawMOrders, rawPmOrders, rawL30Orders, rawPl30Orders
+    );
 
     function sumRevenue(orders) { return orders.reduce((s, o) => s + (o.total || 0), 0); }
     function sumCosts(orders) {
@@ -86,10 +112,10 @@ router.get('/overview', requireAuth, async (req, res) => {
     const pl30Revenue = sumRevenue(pl30Orders);
 
     // ── Per-order profitability (recent 50) ────────────────────────────────
-    const recentOrders = await Order.find({ status: { $in: PAID_STATUSES } })
+    const rawRecentOrders = await Order.find({ status: { $in: PAID_STATUSES } })
       .sort({ createdAt: -1 }).limit(50)
-      .populate('items.productId', 'name costing')
       .lean();
+    const [recentOrders] = await resolveMissingFinanceCogs(rawRecentOrders);
 
     const perOrderRows = recentOrders.map(o => {
       const stripeFee   = o.costs?.stripeFee    ?? null;
@@ -425,6 +451,7 @@ router.delete('/receipts/:id', requireAuth, async (req, res) => {
 // ── GET /api/admin/finance/reports ───────────────────────────────────────────
 router.get('/reports', requireAuth, async (req, res) => {
   try {
+    res.set('Cache-Control', 'no-store');
     const now = new Date();
     const months = [];
     for (let i = 11; i >= 0; i--) {
@@ -433,12 +460,21 @@ router.get('/reports', requireAuth, async (req, res) => {
     }
 
     // ── Monthly P&L ────────────────────────────────────────────────────────
-    const monthlyPL = await Promise.all(months.map(async ({ start, end, label }) => {
-      const [orders, expenses] = await Promise.all([
-        Order.find({ status: { $in: PAID_STATUSES }, createdAt: { $gte: start, $lte: end } }).lean(),
-        Expense.find({ date: { $gte: start, $lte: end } }).lean(),
-      ]);
-
+    const ninetyDaysAgo = new Date(now);
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    const [rawMonthlyOrderGroups, monthlyExpenseGroups, rawRecentOrders] = await Promise.all([
+      Promise.all(months.map(({ start, end }) =>
+        Order.find({ status: { $in: PAID_STATUSES }, createdAt: { $gte: start, $lte: end } }).lean()
+      )),
+      Promise.all(months.map(({ start, end }) => Expense.find({ date: { $gte: start, $lte: end } }).lean())),
+      Order.find({ status: { $in: PAID_STATUSES }, createdAt: { $gte: ninetyDaysAgo } }).lean(),
+    ]);
+    const resolvedOrderGroups = await resolveMissingFinanceCogs(...rawMonthlyOrderGroups, rawRecentOrders);
+    const monthlyOrderGroups = resolvedOrderGroups.slice(0, months.length);
+    const recentOrders = resolvedOrderGroups[months.length];
+    const monthlyPL = months.map(({ label }, index) => {
+      const orders = monthlyOrderGroups[index];
+      const expenses = monthlyExpenseGroups[index];
       const revenue   = orders.reduce((s, o) => s + (o.total || 0), 0);
       const refunds   = orders.reduce((s, o) => s + (o.refundedAmount || 0), 0);
       const stripeFees= orders.reduce((s, o) => s + (o.costs?.stripeFee || 0), 0);
@@ -449,17 +485,9 @@ router.get('/reports', requireAuth, async (req, res) => {
       const netProfit     = netRevenue - stripeFees - cogs - shippingCosts - expenseTotal;
 
       return { label, revenue, refunds, netRevenue, stripeFees, cogs, shippingCosts, expenseTotal, netProfit, orderCount: orders.length };
-    }));
+    });
 
     // ── Margin by product (last 90 days) ──────────────────────────────────
-    const ninetyDaysAgo = new Date(now);
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-
-    const recentOrders = await Order.find({
-      status: { $in: PAID_STATUSES },
-      createdAt: { $gte: ninetyDaysAgo },
-    }).lean();
-
     const productMap = {};
     for (const o of recentOrders) {
       for (const item of (o.items || [])) {

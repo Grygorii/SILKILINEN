@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 const panel = readFileSync('app/admin/seo/ManualAiPanel.tsx', 'utf8');
 const seoPage = readFileSync('app/admin/seo/page.tsx', 'utf8');
 const manualAiPage = readFileSync('app/admin/manual-ai/page.tsx', 'utf8');
+const additional = readFileSync('app/admin/manual-ai/ManualAiAdditionalWorkflows.tsx', 'utf8');
 const adminLayout = readFileSync('components/AdminLayout.tsx', 'utf8');
 
 describe('Manual AI SEO workspace', () => {
@@ -23,5 +24,21 @@ describe('Manual AI SEO workspace', () => {
     expect(panel).toContain('/apply`');
     expect(panel).toContain("'X-CSRF-Token': '1'");
     expect(panel).not.toContain('/api/admin/seo-base`, {\n        method: \'PATCH\'');
+  });
+
+  it('keeps translations, catalogue copy and image-alt text as separate protected workflows', () => {
+    expect(manualAiPage).toContain("import ManualAiAdditionalWorkflows from './ManualAiAdditionalWorkflows'");
+    expect(manualAiPage).toContain('<ManualAiAdditionalWorkflows />');
+    expect(additional).toContain('translation_v1');
+    expect(additional).toContain('catalogue_copy_v1');
+    expect(additional).toContain('image_alt_v1');
+    expect(additional).toContain('/api/admin/manual-ai/tasks/options/${workflow}');
+    expect(additional).toContain('/api/admin/manual-ai/tasks/${config.route}/prepare');
+    expect(additional).toContain('/import`');
+    expect(additional).toContain('/apply`');
+    expect(additional).toContain("'X-CSRF-Token': '1'");
+    expect(additional).toContain('Attach these exact images');
+    expect(additional).not.toContain('/api/admin/translations`');
+    expect(additional).not.toContain('/api/admin/products/');
   });
 });

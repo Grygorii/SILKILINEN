@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 
 const targetSchema = new mongoose.Schema({
   key: { type: String, required: true },
-  type: { type: String, enum: ['product', 'category', 'collection'], required: true },
+  type: { type: String, enum: ['product', 'category', 'collection', 'image'], required: true },
   resourceId: { type: String, required: true },
   label: { type: String, required: true },
   url: { type: String, required: true },
@@ -21,6 +21,12 @@ const targetSchema = new mongoose.Schema({
   proposal: {
     metaTitle: { type: String, default: '' },
     metaDescription: { type: String, default: '' },
+    // The additional review-only workflows use one of these explicit shapes:
+    // `fields` for a protected translation object and `text` for one approved
+    // product-description or image-alt change. They are never treated as a
+    // generic patch payload.
+    fields: { type: mongoose.Schema.Types.Mixed, default: null },
+    text: { type: String, default: '' },
     warnings: { type: [String], default: [] },
     appliedAt: { type: Date, default: null },
     stale: { type: Boolean, default: false },
@@ -28,8 +34,11 @@ const targetSchema = new mongoose.Schema({
 }, { _id: false });
 
 const manualAiRunSchema = new mongoose.Schema({
-  taskType: { type: String, enum: ['seo_meta_v1'], required: true, index: true },
+  taskType: { type: String, enum: ['seo_meta_v1', 'translation_v1', 'catalogue_copy_v1', 'image_alt_v1'], required: true, index: true },
   schemaVersion: { type: Number, default: 1 },
+  // Translation tasks are intentionally one locale at a time so every review
+  // compares like-for-like source and destination text.
+  locale: { type: String, default: '' },
   status: { type: String, enum: ['prepared', 'imported', 'partially_applied', 'applied'], default: 'prepared', index: true },
   targets: { type: [targetSchema], default: [] },
   provider: { type: String, default: '' },

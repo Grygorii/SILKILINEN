@@ -58,6 +58,10 @@ or change an invariant, update the relevant line here in the same commit.
 - Stripe PaymentIntent metadata caps each value at 500 chars → `packItems/unpackItems`
   chunk the cart JSON across `items`/`items1`/`items2`. Intent currency is fixed for life.
 - Order doc carries canonical EUR + `displayCurrency`, `exchangeRate`, `chargedTotal`.
+- **Finance COGS:** product costing saves only through `PATCH /api/admin/products/:id/costing`;
+  its three non-negative components are validated and the server derives `totalUnitCost`.
+  Finance reads are uncached and fill an older order's *missing* COGS from the current
+  product cost on read, but never overwrite a COGS snapshot captured at checkout.
 - Frontend: `context/CurrencyContext.tsx` + `components/Price.tsx` (`<Price eur={}/>`),
   persists `slk_currency`. Checkout `app/(shop)/checkout/page.tsx` re-creates the intent
   on currency/cart change (cartKey effect + `<Elements key={clientSecret}>`).
@@ -139,8 +143,12 @@ or change an invariant, update the relevant line here in the same commit.
   selected live catalogue snapshots, prepares a task-ID prompt, validates the exact response
   contract (including length and origin-claim rules), then re-reads each source before an
   explicit per-item apply. `services/seoMetadata.js` is the shared owner for SEO Base and
-  Manual AI writes, including IndexNow notification. New workflows need their own source
-  loader, validator and write owner; never add a generic "AI can edit anything" importer.
+  Manual AI writes, including IndexNow notification. `services/manualAiAdditionalWorkflows.js`
+  separately owns Translation, catalogue-copy append and image-alt packets: Translation
+  writes only via `upsertTranslation(..., 'manual')`; copy only appends a validated paragraph;
+  image alt only updates its still-matching image after the founder attaches it to the chosen
+  external vision AI. `translationResources.js` defines the shared live catalogue scope.
+  Never add a generic "AI can edit anything" importer.
 - **Hermes invariant:** a run must never propose NEW content for a query it also
   flags as cannibalised (a third page splits the signal further). `hermes.js`
   enforces it after assembling both lists — `kind:'content'` plays whose `target`

@@ -15,9 +15,9 @@ const MAX_RESPONSE_CHARS = 100000;
 
 const TASK_CAPABILITIES = [
   { id: SEO_TASK, label: 'SEO metadata', status: 'ready', description: 'Reviewable meta titles and descriptions for catalogue pages.' },
-  { id: 'translation_v1', label: 'Translations', status: 'next', description: 'Will write only through the protected translation store.' },
-  { id: 'catalogue_copy_v1', label: 'Catalogue copy', status: 'next', description: 'Will protect prices, stock, slugs and verified product facts.' },
-  { id: 'image_alt_v1', label: 'Image alt text', status: 'next', description: 'Will update text for existing product images only.' },
+  { id: 'translation_v1', label: 'Translations', status: 'ready', description: 'Writes only reviewed catalogue translations through the protected translation store.' },
+  { id: 'catalogue_copy_v1', label: 'Catalogue copy', status: 'ready', description: 'Adds one reviewed product-description paragraph without touching prices, stock or slugs.' },
+  { id: 'image_alt_v1', label: 'Image alt text', status: 'ready', description: 'Writes reviewed alt text only to the selected existing product image.' },
 ];
 
 function targetKey(type, id) { return `${type}:${String(id)}`; }

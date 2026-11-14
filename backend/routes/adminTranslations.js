@@ -10,20 +10,8 @@ const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { aiLimit } = require('../middleware/rateLimiters');
 const Translation = require('../models/Translation');
-const Product = require('../models/Product');
-const Category = require('../models/Category');
-const Collection = require('../models/Collection');
 const { SUPPORTED, LOCALES, configured, translateResource, upsertTranslation } = require('../services/translator');
-
-const RESOURCE_CONFIG = {
-  product: { Model: Product, query: { status: { $in: ['active', 'sold_out'] } }, fields: ['name', 'description', 'metaTitle', 'metaDescription'], label: 'name' },
-  category: { Model: Category, query: { status: 'active' }, fields: ['label', 'description', 'metaTitle', 'metaDescription'], label: 'label' },
-  collection: { Model: Collection, query: { status: 'active' }, fields: ['name', 'description', 'metaTitle', 'metaDescription'], label: 'name' },
-};
-
-function requiredFields(doc, fields) {
-  return fields.filter(field => typeof doc[field] === 'string' && doc[field].trim());
-}
+const { RESOURCE_CONFIG, requiredFields } = require('../services/translationResources');
 
 router.use(requireAuth);
 

@@ -420,27 +420,17 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     const lab = Number(costing.laborCost) || 0;
     const pkg = Number(costing.packagingCost) || 0;
     try {
-      const res = await fetch(`${API}/api/admin/products/${id}`, {
-        method: 'PUT',
+      const res = await fetch(`${API}/api/admin/products/${id}/costing`, {
+        method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...form,
-          price: Number(form.price) || 0,
-          compareAtPrice: form.compareAtPrice ? Number(form.compareAtPrice) : undefined,
-          costPrice: form.costPrice ? Number(form.costPrice) : undefined,
-          tags: form.tags.split(',').map((t: string) => t.trim()).filter(Boolean),
-          keywords: form.keywords.split(',').map((k: string) => k.trim()).filter(Boolean),
-          certifications: form.certifications.split(',').map((c: string) => c.trim()).filter(Boolean),
           costing: {
             materialCost:  mat,
             laborCost:     lab,
             packagingCost: pkg,
-            totalUnitCost: mat + lab + pkg,
             notes: costing.notes,
-            lastUpdated: new Date().toISOString(),
           },
-          variants,
         }),
       });
       if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
@@ -1254,7 +1244,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               <span>Costing{(!costing.materialCost && !costing.laborCost && !costing.packagingCost) && <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--admin-danger)', fontWeight: 500 }}>⚠ Missing</span>}</span>
               <span style={{ fontSize: 12, color: 'var(--admin-ink-muted)' }}>▾</span>
             </summary>
-            <p style={{ fontSize: 12, color: 'var(--admin-ink-muted)', margin: '8px 0 16px' }}>Used for COGS tracking in the Finance tab. Snapshotted at order creation time.</p>
+            <p style={{ fontSize: 12, color: 'var(--admin-ink-muted)', margin: '8px 0 16px' }}>Used for COGS tracking in Finance. New orders snapshot this cost; older orders with no saved cost update in Finance as soon as you save.</p>
             <div className={styles.frow}>
               <div className={styles.fg}>
                 <label className={styles.label}>Material cost (€/unit)</label>
