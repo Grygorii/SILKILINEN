@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 import { usePathname, useRouter } from 'next/navigation';
 import { X, Lock } from 'lucide-react';
@@ -20,6 +21,10 @@ type Props = {
   onClose: () => void;
 };
 
+const subscribeToPortal = () => () => {};
+const getPortal = () => document.body;
+const getServerPortal = () => null;
+
 export default function CartPanel({ isOpen, onClose }: Props) {
   const router = useRouter();
   const locale = localeFromPathname(usePathname());
@@ -27,6 +32,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
   const { cart, removeFromCart, updateQuantity } = useCart();
   const { format } = useCurrency();
   const freeShippingThreshold = useFreeShippingThreshold();
+  const portal = useSyncExternalStore(subscribeToPortal, getPortal, getServerPortal);
   const panelRef = useRef<HTMLDivElement>(null);
   // Focus behaviour for the aria-modal below. This file and SideMenu each
   // carried their own copy, identical down to the selector string and the 50ms
@@ -116,7 +122,10 @@ export default function CartPanel({ isOpen, onClose }: Props) {
   const toFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
   const freeShippingPct = Math.min(100, (subtotal / freeShippingThreshold) * 100);
 
-  return (
+  if (!portal) return null;
+
+  // Leave the transformed mobile header so the drawer is fixed to the viewport.
+  return createPortal(
     <>
       <div
         className={`${styles.overlay} ${isOpen ? styles.overlayOpen : ''}`}
@@ -128,6 +137,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label={copy.common.cart}
+        inert={!isOpen}
       >
         {/* ── Header ── */}
         <div className={styles.header}>
@@ -278,6 +288,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
           </div>
         )}
       </div>
-    </>
+    </>,
+    portal,
   );
 }

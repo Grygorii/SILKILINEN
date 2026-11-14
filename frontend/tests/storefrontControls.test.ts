@@ -54,12 +54,15 @@ describe('storefront control contracts', () => {
     const sticky = read('components/StickyBuyBar.tsx');
     const stickyCss = read('components/StickyBuyBar.module.css');
     const cartCss = read('components/CartPanel.module.css');
+    const cart = read('components/CartPanel.tsx');
     const quickAddCss = read('components/QuickAddSheet.module.css');
 
     expect(sticky).toContain('if (colours.length <= 1 && sizes.length <= 1)');
     expect(stickyCss).toContain('bottom: var(--cookie-bar-h, 0px);');
     expect(stickyCss).toContain('bottom: calc(var(--sticky-buy-h, 0px) + var(--cookie-bar-h, 0px));');
     expect(cartCss).toContain('z-index: 10001;');
+    expect(cart).toContain('return createPortal(');
+    expect(cart).toContain('inert={!isOpen}');
     expect(quickAddCss).toContain('z-index: 10000;');
   });
 
