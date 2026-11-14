@@ -129,7 +129,7 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
 
         {/* Footer */}
         <div style={{ marginTop: 64, paddingTop: 32, borderTop: '1px solid var(--color-line)' }}>
-          <Link href="/journal" style={{ fontSize: 13, color: '#5c35a8', textDecoration: 'none', letterSpacing: '0.5px' }}>
+          <Link href="/journal" className={styles.backLink}>
             ← Back to Journal
           </Link>
         </div>

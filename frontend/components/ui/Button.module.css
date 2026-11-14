@@ -16,8 +16,13 @@
   cursor: pointer;
   transition: background var(--t-fast) var(--ease),
               color var(--t-fast) var(--ease),
-              opacity var(--t-fast) var(--ease);
+              border-color var(--t-fast) var(--ease),
+              transform var(--t-fast) var(--ease);
   user-select: none;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
 }
 
 @media (max-width: 767px) {
@@ -37,15 +42,16 @@
 @media (hover: hover) {
   .primary:hover:not(:disabled) { background: var(--color-line-inverse); border-color: var(--color-line-inverse); }
 }
-.primary:active:not(:disabled) { opacity: 0.75; }
 
 /* Secondary — outlined */
 .secondary {
   background: transparent;
   color: var(--color-ink);
 }
-.secondary:hover:not(:disabled) { background: var(--color-surface); }
-.secondary:active:not(:disabled) { background: var(--color-surface); opacity: 0.85; }
+@media (hover: hover) {
+  .secondary:hover:not(:disabled) { background: var(--color-surface); }
+}
+.secondary:active:not(:disabled) { background: var(--color-surface-warm); }
 
 /* Disabled primary — warm-beige fill.
    Was 0.5 opacity, which put the label at 2.96:1 against its own fill: below

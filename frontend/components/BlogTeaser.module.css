@@ -19,12 +19,17 @@
 }
 
 .viewAll {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-size: 12px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--dark);
   text-decoration: underline;
+  text-decoration-thickness: 1px;
   text-underline-offset: 4px;
+  transition: color var(--t-fast) var(--ease), text-underline-offset var(--t-fast) var(--ease);
 }
 
 .grid {
@@ -42,12 +47,25 @@
   transition: box-shadow 0.2s ease;
 }
 
-.card:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+.card:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 4px;
 }
 
-.card:hover .imgWrap {
-  opacity: 0.88;
+@media (hover: hover) {
+  .card:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  }
+
+  .card:hover .imgWrap {
+    opacity: 0.88;
+  }
+
+  .viewAll:hover,
+  .card:hover .readMore {
+    color: var(--color-ink-muted);
+    text-underline-offset: 5px;
+  }
 }
 
 .imgWrap {
@@ -94,7 +112,9 @@
   text-transform: uppercase;
   color: var(--dark);
   text-decoration: underline;
+  text-decoration-thickness: 1px;
   text-underline-offset: 3px;
+  transition: color var(--t-fast) var(--ease), text-underline-offset var(--t-fast) var(--ease);
 }
 
 @media (max-width: 900px) {

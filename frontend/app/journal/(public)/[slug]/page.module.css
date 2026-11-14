@@ -20,3 +20,27 @@
 .articleBody h2 { font-size: 30px; margin: 44px 0 14px; }
 .articleBody h3 { font-size: 23px; margin: 32px 0 10px; }
 .articleBody h4 { font-size: 19px; margin: 24px 0 8px; }
+
+.articleBody a,
+.backLink {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color var(--t-fast) var(--ease), text-underline-offset var(--t-fast) var(--ease);
+}
+
+.articleBody a:hover,
+.backLink:hover {
+  color: var(--color-ink-muted);
+  text-underline-offset: 5px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}

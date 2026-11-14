@@ -126,7 +126,9 @@
   font-weight: 500;
   letter-spacing: var(--track-button);
   text-decoration: none;
-  transition: background var(--t-base) var(--ease), border-color var(--t-base) var(--ease);
+  transition: background var(--t-base) var(--ease),
+              border-color var(--t-base) var(--ease),
+              transform var(--t-fast) var(--ease);
 }
 @media (hover: hover) {
   .heroBtn:hover { background: var(--color-line-inverse); border-color: var(--color-line-inverse); }

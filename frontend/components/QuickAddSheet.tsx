@@ -53,7 +53,8 @@ export default function QuickAddSheet({
   }, [maxQty, qty, setQty]);
   const needsColour = colours.length > 0 && !selectedColour;
   const needsSize = sizes.length > 0 && !selectedSize;
-  const canAdd = !needsColour && !needsSize;
+  const hasTrackedSizes = Object.keys(bySize).length > 0;
+  const canAdd = !needsColour && !needsSize && maxQty > 0;
 
   // Escape closes; lock background scroll while open.
   useEffect(() => {
@@ -77,7 +78,7 @@ export default function QuickAddSheet({
     onClose();
   }
 
-  const ctaLabel = needsColour ? 'SELECT A COLOUR' : needsSize ? 'SELECT A SIZE' : 'ADD TO BAG';
+  const ctaLabel = needsColour ? 'SELECT A COLOUR' : needsSize ? 'SELECT A SIZE' : canAdd ? 'ADD TO BAG' : 'UNAVAILABLE';
 
   return (
     <div className={styles.overlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
@@ -105,11 +106,20 @@ export default function QuickAddSheet({
               <SizeChartDrawer className={styles.sizeGuide} label="Sizing chart" />
             </div>
             <OptionPillGroup ariaLabel="Size">
-              {sizes.map(size => (
-                <OptionPill key={size} selected={selectedSize === size} onSelect={() => setSelectedSize(size)} ariaLabel={`Size ${size}`}>
-                  {size}
-                </OptionPill>
-              ))}
+              {sizes.map(size => {
+                const soldOut = hasTrackedSizes && (bySize[size] ?? 0) === 0;
+                return (
+                  <OptionPill
+                    key={size}
+                    selected={selectedSize === size}
+                    disabled={soldOut}
+                    onSelect={() => { if (!soldOut) setSelectedSize(size); }}
+                    ariaLabel={soldOut ? `Size ${size} — sold out` : `Size ${size}`}
+                  >
+                    {size}
+                  </OptionPill>
+                );
+              })}
             </OptionPillGroup>
           </div>
         )}
@@ -126,7 +136,7 @@ export default function QuickAddSheet({
         </div>
 
         <div className={styles.cta}>
-          <Button variant={canAdd ? 'primary' : 'disabled'} onClick={handleAdd} aria-disabled={!canAdd}>
+          <Button variant={canAdd ? 'primary' : 'disabled'} onClick={handleAdd}>
             {ctaLabel}
           </Button>
         </div>

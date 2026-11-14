@@ -34,7 +34,9 @@
   background: var(--color-surface);
   cursor: pointer;
   padding: 0;
-  transition: opacity var(--t-fast) var(--ease);
+  transition: opacity var(--t-fast) var(--ease),
+              box-shadow var(--t-fast) var(--ease),
+              transform var(--t-fast) var(--ease);
 }
 
 .swatch:focus-visible {

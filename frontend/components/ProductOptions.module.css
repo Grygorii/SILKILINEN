@@ -105,18 +105,25 @@
   display: inline-block;
   padding: 8px 14px;
   background: var(--color-bg);
-  border: var(--stroke, 1px) solid var(--color-line);
+  border: var(--stroke, 1px) solid var(--color-line-control);
   border-radius: var(--radius-control, 2px);
   color: var(--color-ink);
   font-size: 11px;
   letter-spacing: 1px;
   text-decoration: none;
-  transition: border-color var(--t-fast, 120ms) var(--ease, ease), background var(--t-fast, 120ms) var(--ease, ease);
+  transition: border-color var(--t-fast, 120ms) var(--ease, ease),
+              background var(--t-fast, 120ms) var(--ease, ease),
+              transform var(--t-fast, 120ms) var(--ease, ease);
 }
 
 .variantLink:hover {
   border-color: var(--color-ink);
   background: var(--color-surface);
+}
+
+.variantLink:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
 }
 
 /* Quantity stepper — not part of the four-primitive set, retained
@@ -143,7 +150,7 @@
   display: flex;
   align-items: center;
   width: fit-content;
-  border: var(--stroke, 1px) solid var(--color-line);
+  border: var(--stroke, 1px) solid var(--color-line-control);
   border-radius: var(--radius-control, 2px);
 }
 
@@ -159,11 +166,12 @@
   align-items: center;
   justify-content: center;
   font-family: inherit;
-  transition: background var(--t-fast, 120ms) var(--ease, ease);
+  transition: background var(--t-fast, 120ms) var(--ease, ease),
+              transform var(--t-fast, 120ms) var(--ease, ease);
 }
 
 .stepperBtn:hover:not(:disabled) { background: var(--color-surface); }
-.stepperBtn:disabled { color: var(--color-ink-muted); cursor: default; }
+.stepperBtn:disabled { color: var(--color-ink-muted); cursor: not-allowed; }
 
 .stepperVal {
   width: 44px;
@@ -225,7 +233,11 @@
   transition: color var(--t-fast, 120ms) var(--ease, ease);
 }
 
-.hintBtn:hover { color: var(--color-ink); }
+.hintBtn:hover {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
 
 
 /* Waitlist form, revealed under the CTA when the piece is sold out. */

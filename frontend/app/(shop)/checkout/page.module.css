@@ -47,7 +47,7 @@
 .select {
   width: 100%;
   padding: 12px 14px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-line-control);
   font-size: 14px;
   font-family: inherit;
   color: var(--dark);
@@ -70,14 +70,19 @@
 }
 
 .shopLink {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   margin-top: 16px;
   font-size: 12px;
   letter-spacing: 1px;
   color: var(--dark);
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color var(--t-fast) var(--ease), text-underline-offset var(--t-fast) var(--ease);
 }
-.shopLink:hover { text-decoration: underline; }
+.shopLink:hover { color: var(--color-ink-muted); text-underline-offset: 5px; }
 
 /* Loading / error */
 .loadingMsg {
@@ -97,15 +102,20 @@
 .emailInput {
   width: 100%;
   padding: 12px 14px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-line-control);
   font-size: 14px;
   font-family: inherit;
   color: var(--dark);
   background: white;
   box-sizing: border-box;
-  outline: none;
 }
-.emailInput:focus { border-color: var(--dark); }
+.emailInput:focus-visible,
+.select:focus-visible,
+.discountInput:focus-visible {
+  border-color: var(--color-ink);
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
 
 /* Field label + required marker (custom fields outside Stripe's iframe) */
 .fieldLabel {
@@ -197,12 +207,11 @@
 .discountInput {
   flex: 1;
   padding: 10px 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-line-control);
   font-size: 13px;
   font-family: inherit;
   color: var(--dark);
 }
-.discountInput:focus { outline: none; border-color: var(--dark); }
 
 /* Apply-discount Button — sized container so the primitive doesn't
    stretch the whole row. */

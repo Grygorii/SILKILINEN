@@ -31,7 +31,8 @@
   cursor: pointer;
   transition: background var(--t-fast) var(--ease),
               color var(--t-fast) var(--ease),
-              opacity var(--t-fast) var(--ease);
+              border-color var(--t-fast) var(--ease),
+              transform var(--t-fast) var(--ease);
   user-select: none;
 }
 
@@ -52,5 +53,7 @@
 .disabled {
   cursor: not-allowed;
   text-decoration: line-through;
-  opacity: 0.5;
+  background: var(--color-surface);
+  border-color: var(--color-line-control);
+  color: var(--color-ink-muted);
 }

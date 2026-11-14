@@ -20,7 +20,14 @@
   color: var(--dark);
   font-weight: 500;
   text-decoration: underline;
+  text-decoration-thickness: 1px;
   text-underline-offset: 3px;
+  transition: color var(--t-fast) var(--ease), text-underline-offset var(--t-fast) var(--ease);
+}
+
+.bannerLink:hover {
+  color: var(--color-ink-muted);
+  text-underline-offset: 5px;
 }
 
 .bannerClose {
@@ -30,13 +37,20 @@
   cursor: pointer;
   font-size: 14px;
   line-height: 1;
+  width: 44px;
+  height: 44px;
+  margin: -9px -10px -9px 0;
   padding: 0;
   flex-shrink: 0;
-  transition: color 0.15s ease;
+  border-radius: var(--radius-control);
+  display: grid;
+  place-items: center;
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 
 .bannerClose:hover {
   color: var(--dark);
+  background: var(--color-surface-warm);
 }
 
 .inner {
@@ -74,10 +88,18 @@
 }
 
 .shopLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-size: 13px;
   color: var(--dark);
   text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color var(--t-fast) var(--ease), text-underline-offset var(--t-fast) var(--ease);
 }
+
+.shopLink:hover { color: var(--color-ink-muted); text-underline-offset: 5px; }
 
 .muted {
   color: var(--muted);

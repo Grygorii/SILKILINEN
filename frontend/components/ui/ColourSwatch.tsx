@@ -32,7 +32,7 @@ export function ColourSwatch({
       role="radio"
       aria-checked={!!selected}
       aria-label={swatch.name + (swatch.soldOut ? ' (sold out)' : '')}
-      aria-disabled={swatch.soldOut || undefined}
+      disabled={swatch.soldOut}
       onClick={swatch.soldOut ? undefined : onSelect}
       style={{ background: bg }}
       className={[

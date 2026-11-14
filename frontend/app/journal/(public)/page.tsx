@@ -6,6 +6,7 @@ import { clampMeta } from '@/lib/clampMeta';
 import { isValidImageUrl } from '@/lib/imageUtils';
 import ArticleImage from '@/components/ArticleImage';
 import { SITE } from '@/lib/i18n';
+import styles from './page.module.css';
 
 export async function generateMetadata(): Promise<Metadata> {
   const o = await getPageMeta('/journal');
@@ -56,7 +57,7 @@ export default async function JournalPage() {
             <Link
               key={a._id}
               href={`/journal/${a.slug}`}
-              style={{ textDecoration: 'none', color: 'inherit' }}
+              className={styles.articleLink}
               data-track="journal_article_click"
               data-track-article={a.slug}
               data-track-surface="journal_index"
@@ -86,7 +87,7 @@ export default async function JournalPage() {
                 {/* Matches BlogTeaser's .readMore. This was a hardcoded violet
                     (#5c35a8) — the one hardcoded hex on the page and a storefront
                     convention break; it read as a default browser link. */}
-                <span style={{ fontSize: 11, color: 'var(--color-ink)', letterSpacing: '2px', textTransform: 'uppercase', textDecoration: 'underline', textUnderlineOffset: 3 }}>Read article →</span>
+                <span className={styles.readMore}>Read article →</span>
               </article>
             </Link>
           ))}
