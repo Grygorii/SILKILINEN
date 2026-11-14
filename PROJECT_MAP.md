@@ -133,8 +133,9 @@ or change an invariant, update the relevant line here in the same commit.
   show grey (`muted`), not red. The Base auto-fix is the one place meta is filled
   automatically (missing meta is strictly worse than AI meta); the **Fix-it tab** is now
   only Hermes' strategic Rebuild plan (approve-first), not gap-filling.
-- **Manual AI Workspace:** `backend/routes/adminManualAi.js` + `models/ManualAiRun.js`
-  own provider-neutral, review-first external-AI hand-offs. SEO metadata v1 resolves only
+- **Manual AI Workspace:** `frontend/app/admin/manual-ai/page.tsx` owns the separate
+  sidebar workspace; `backend/routes/adminManualAi.js` + `models/ManualAiRun.js` own
+  provider-neutral, review-first external-AI hand-offs. SEO metadata v1 resolves only
   selected live catalogue snapshots, prepares a task-ID prompt, validates the exact response
   contract (including length and origin-claim rules), then re-reads each source before an
   explicit per-item apply. `services/seoMetadata.js` is the shared owner for SEO Base and

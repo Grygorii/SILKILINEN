@@ -33,6 +33,7 @@ const NAV_ITEMS: { label: string; href: string }[] = [
   { label: 'Finance',     href: '/admin/finance' },
   { label: 'Settings',    href: '/admin/settings' },
   { label: 'Ask AI',      href: '/admin/analyst' },
+  { label: 'Manual AI',   href: '/admin/manual-ai' },
   { label: 'New order',   href: '/admin/orders/new' },
   { label: 'New product', href: '/admin/products/new' },
 ];

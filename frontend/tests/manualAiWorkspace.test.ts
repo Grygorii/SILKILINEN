@@ -3,11 +3,15 @@ import { readFileSync } from 'node:fs';
 
 const panel = readFileSync('app/admin/seo/ManualAiPanel.tsx', 'utf8');
 const seoPage = readFileSync('app/admin/seo/page.tsx', 'utf8');
+const manualAiPage = readFileSync('app/admin/manual-ai/page.tsx', 'utf8');
+const adminLayout = readFileSync('components/AdminLayout.tsx', 'utf8');
 
 describe('Manual AI SEO workspace', () => {
-  it('lives inside SEO and keeps the workflow review-first', () => {
-    expect(seoPage).toContain("import ManualAiPanel from './ManualAiPanel'");
-    expect(seoPage).toContain('Manual AI');
+  it('has its own left-menu workspace and keeps the workflow review-first', () => {
+    expect(manualAiPage).toContain("import ManualAiPanel from '../seo/ManualAiPanel'");
+    expect(manualAiPage).toContain('Manual AI');
+    expect(adminLayout).toContain("href: '/admin/manual-ai'");
+    expect(seoPage).not.toContain("import ManualAiPanel from './ManualAiPanel'");
     expect(panel).toContain('Prepare prompt');
     expect(panel).toContain('Validate response');
     expect(panel).toContain('Apply selected');

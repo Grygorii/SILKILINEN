@@ -45,6 +45,7 @@ const NAV: NavEntry[] = [
   // The house of agents — all of them, one group.
   { section: 'Studio' },
   { label: 'Ask AI',      href: '/admin/analyst',     icon: Sparkles },
+  { label: 'Manual AI',   href: '/admin/manual-ai',   icon: FileText },
   { label: 'Growth Engine', href: '/admin/growth',    icon: Zap },
   { label: 'The Atelier', href: '/admin/atelier',     icon: Gem },
   { label: 'Site Audit',  href: '/admin/settings/advanced/site-audit', icon: Activity },

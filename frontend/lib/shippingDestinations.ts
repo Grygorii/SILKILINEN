@@ -4,7 +4,7 @@ export type Destination = { code: string; name: string; longitude: number; latit
 export type ShipmentMode = 'shipped' | 'available';
 // Country-level illustrative positions, never customer coordinates.
 export const ORIGIN = { longitude: -7.6, latitude: 55 };
-export const CONFIRMED_DESTINATIONS = ['IE','GB','FR','DE','AT','IT','DK','FI','US','CA','AU'] as const;
+export const CONFIRMED_DESTINATIONS = ['IE','GB','FR','DE','AT','IT','DK','FI','SE','CH','US','CA','AU'] as const;
 const PLACES: Record<string, [string, number, number]> = {
   IE: ['Ireland',-8,53.1], GB:['United Kingdom',-2.5,54], FR:['France',2.2,46.5],
   DE:['Germany',10.3,51], AT:['Austria',14.5,47.5], IT:['Italy',12.6,42.8],

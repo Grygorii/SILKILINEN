@@ -154,7 +154,7 @@ export default function ManualAiPanel() {
   return (
     <div>
       <section style={{ border, background: 'var(--admin-surface)', padding: 18 }}>
-        <h2 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: 21, color: ink }}>Manual AI workspace</h2>
+        <h2 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: 21, color: ink }}>SEO metadata</h2>
         <p style={{ margin: '7px 0 0', color: muted, fontSize: 13, lineHeight: 1.55, maxWidth: 760 }}>
           Use any AI subscription you already have. This workspace prepares the facts, checks the response against the selected pages,
           and never publishes anything until you choose the individual changes to apply.
@@ -238,7 +238,7 @@ export default function ManualAiPanel() {
       </section>}
 
       {capabilities.filter(capability => capability.status === 'next').length > 0 && <section style={{ marginTop: 20, borderTop: border, paddingTop: 16 }}>
-        <h3 style={{ margin: 0, fontSize: 14, color: ink }}>Next workflows using this same protected process</h3>
+        <h3 style={{ margin: 0, fontSize: 14, color: ink }}>Other backend AI workflows</h3>
         <p style={{ margin: '5px 0 0', fontSize: 12.5, color: muted }}>These will be added one at a time with their own field rules—never as a broad “AI can edit anything” connection.</p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>{capabilities.filter(capability => capability.status === 'next').map(capability => <span key={capability.id} title={capability.description} style={{ border, padding: '6px 9px', fontSize: 12, color: muted }}>{capability.label} · next</span>)}</div>
       </section>}

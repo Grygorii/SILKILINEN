@@ -7,7 +7,6 @@ import SeoHealthPanel from '../_components/dashboard/SeoHealthPanel';
 import SearchPerformancePanel from '../_components/dashboard/SearchPerformancePanel';
 import RebuildSeoModal from './RebuildSeoModal';
 import SeoBasePanel from './SeoBasePanel';
-import ManualAiPanel from './ManualAiPanel';
 import AiVisibilityPanel from './AiVisibilityPanel';
 import CrawlerPanel from './CrawlerPanel';
 import SubmitIndexNowButton from '@/components/SubmitIndexNowButton';
@@ -19,7 +18,7 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 // shows the shop and whether people click. It composes the existing health and
 // Search Console panels, surfaces Hermes' (the search-performance agent's)
 // recommendations, and gathers the one-click fixes in a single place.
-type Tab = 'overview' | 'recommendations' | 'base' | 'manual' | 'ai' | 'fix';
+type Tab = 'overview' | 'recommendations' | 'base' | 'ai' | 'fix';
 
 type Action = {
   _id: string;
@@ -144,14 +143,6 @@ export default function SeoHubPage() {
           Base
         </button>
         <button
-          className={`${styles.tab} ${tab === 'manual' ? styles.tabActive : ''}`}
-          onClick={() => setTab('manual')}
-          role="tab"
-          aria-selected={tab === 'manual'}
-        >
-          Manual AI
-        </button>
-        <button
           className={`${styles.tab} ${tab === 'ai' ? styles.tabActive : ''}`}
           onClick={() => setTab('ai')}
           role="tab"
@@ -217,12 +208,6 @@ export default function SeoHubPage() {
       {tab === 'base' && (
         <div className={styles.panel}>
           <SeoBasePanel />
-        </div>
-      )}
-
-      {tab === 'manual' && (
-        <div className={styles.panel}>
-          <ManualAiPanel />
         </div>
       )}
 

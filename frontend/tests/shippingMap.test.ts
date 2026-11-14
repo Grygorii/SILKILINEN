@@ -5,9 +5,9 @@ import { DELIVERY_COUNTRIES } from '../lib/deliveryCountries';
 const component = readFileSync('components/ShippingMap.tsx','utf8');
 
 describe('truthful shipping map', () => {
-  it('starts with exactly the eleven founder-confirmed countries', () => {
-    expect(destinationsFor('shipped').map(d=>d.code).sort()).toEqual(['AT','AU','CA','DE','DK','FI','FR','GB','IE','IT','US']);
-    expect(CONFIRMED_DESTINATIONS).toHaveLength(11);
+  it('starts with exactly the thirteen founder-confirmed countries', () => {
+    expect(destinationsFor('shipped').map(d=>d.code).sort()).toEqual(['AT','AU','CA','CH','DE','DK','FI','FR','GB','IE','IT','SE','US']);
+    expect(CONFIRMED_DESTINATIONS).toHaveLength(13);
   });
   it('offers precisely the same countries as checkout, not an invented worldwide promise', () => {
     expect(destinationsFor('available').map(d=>d.code)).toEqual([...DELIVERY_COUNTRIES]);
@@ -15,7 +15,7 @@ describe('truthful shipping map', () => {
   });
   it('adds confirmed website shipment countries without duplicating or trusting unknown values', () => {
     const actual=destinationsFor('shipped',['FR','NZ','XX','<script>']);
-    expect(actual).toHaveLength(12);
+    expect(actual).toHaveLength(14);
     expect(actual.some(d=>d.code==='NZ')).toBe(true);
     expect(destinationsFor('shipped').some(d=>d.code==='NZ')).toBe(false);
   });
