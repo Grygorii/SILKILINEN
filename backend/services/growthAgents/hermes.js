@@ -83,7 +83,10 @@ async function assessOutcomes(currentPositions) {
   return { wins, losses, measured: wins + losses, winLines: winLines.slice(0, 4) };
 }
 
-const SYSTEM = `You are Hermes, a senior search-performance strategist for SILKILINEN — a quiet-luxury silk & linen house, with 20 years' on-page and content-SEO judgement. You read the shop's REAL Google Search Console data (and, when given, the live SERP) and turn it into a short, ranked plan. You never invent numbers; you reason only over the figures handed to you.
+// Kept separate from the response schema so the reviewed external-AI hand-off
+// can use the exact same strategic rules without inheriting the live agent's
+// DeepSeek-only JSON contract.
+const SYSTEM_RULES = `You are Hermes, a senior search-performance strategist for SILKILINEN — a quiet-luxury silk & linen house, with 20 years' on-page and content-SEO judgement. You read the shop's REAL Google Search Console data (and, when given, the live SERP) and turn it into a short, ranked plan. You never invent numbers; you reason only over the figures handed to you.
 
 How you think, in priority order:
 1. SEARCH INTENT FIRST. Classify each target query as "informational" (how/why/care/guide), "commercial" (compare/best/vs), or "transactional" (buy/shop/specific product). The right PAGE TYPE must match the intent: transactional → a product/category page; informational → a JOURNAL guide. This decides everything below.
@@ -106,7 +109,9 @@ Your plan is EXECUTED by a one-button "Rebuild SEO" pipeline, so each play must 
 - "kind" is "meta" only when rewriting an EXISTING page's meta title/description fixes it (pipeline generates+applies). Use "content" for anything else — a new guide, more on-page words, an internal link, consolidating cannibalised pages, schema (pipeline drafts/flags it).
 - "entityType" + "entityRef": product → exact product NAME; category/collection → SLUG; page → an exact editable path. For a content-gap guide, use entityType "page", entityRef "/journal".
 - AT MOST ONE play per entity. Dedupe ruthlessly.
-- If a query is listed under CANNIBALISATION below, do NOT propose new content for it — another page targeting that query deepens the split. Either recommend consolidating to one page, or pick a different, uncannibalised query.
+- If a query is listed under CANNIBALISATION below, do NOT propose new content for it — another page targeting that query deepens the split. Either recommend consolidating to one page, or pick a different, uncannibalised query.`;
+
+const SYSTEM = `${SYSTEM_RULES}
 
 Respond ONLY with valid JSON:
 {
@@ -116,6 +121,32 @@ Respond ONLY with valid JSON:
   "lesson": "OPTIONAL: one durable, reusable rule for the other agents. Omit if nothing durable yet."
 }
 Give at most 6 plays, highest leverage first, one per entity.`;
+
+function createCanonicalPageResolver(products = [], categories = []) {
+  // Which page a URL Google remembers actually IS today. Built from live data —
+  // a product's own previousSlugs and the active category list — rather than a
+  // hardcoded rename list, so a redirect is never mistaken for a second page.
+  const currentPathBySlug = new Map();
+  for (const product of products) {
+    if (!product.slug) continue;
+    const path = `/product/${product.slug}`;
+    currentPathBySlug.set(product.slug, path);
+    if (product._id) currentPathBySlug.set(String(product._id), path);
+    for (const old of product.previousSlugs || []) currentPathBySlug.set(old, path);
+  }
+  const liveCategorySlugs = new Set(categories.map(category => category.slug));
+  return (page) => {
+    const path = String(page || '').replace(/^https?:\/\/[^/]+/, '') || '/';
+    const product = path.match(/^\/product\/([^/?#]+)/);
+    if (product) return currentPathBySlug.get(product[1]) || null;
+    const category = path.match(/^\/shop\?category=([^&#]+)/);
+    if (category) {
+      const slug = decodeURIComponent(category[1]);
+      return liveCategorySlugs.has(slug) ? `/shop?category=${slug}` : null;
+    }
+    return path;
+  };
+}
 
 async function run() {
   if (!process.env.DEEPSEEK_API_KEY) {
@@ -161,43 +192,7 @@ async function run() {
     return (m && productByKey.get(m[1])) || path;
   };
 
-  // Which page a URL Google remembers actually IS today. Built from live data —
-  // a product's own previousSlugs and the active category list — rather than a
-  // hardcoded list of what was renamed, so it keeps working after the next
-  // rename without anyone updating it.
-  //
-  // Search Console keeps reporting a URL for weeks after it starts redirecting,
-  // so without this a rename looks exactly like cannibalisation: the old URL and
-  // the new one are counted as two pages competing for the same query.
-  const currentPathBySlug = new Map();   // any slug a product has ever had -> its path today
-  for (const pr of products) {
-    if (!pr.slug) continue;
-    const path = `/product/${pr.slug}`;
-    currentPathBySlug.set(pr.slug, path);
-    if (pr._id) currentPathBySlug.set(String(pr._id), path);
-    for (const old of pr.previousSlugs || []) currentPathBySlug.set(old, path);
-  }
-  const liveCategorySlugs = new Set(categories.map(c => c.slug));
-  const canonicalPage = (page) => {
-    const path = String(page || '').replace(/^https?:\/\/[^/]+/, '') || '/';
-
-    const prod = path.match(/^\/product\/([^/?#]+)/);
-    if (prod) {
-      // A slug we have never heard of is a deleted product: it is not a page, so
-      // it cannot be competing with one.
-      return currentPathBySlug.get(prod[1]) || null;
-    }
-
-    // A category view whose slug is not an active category was merged away and
-    // now 301s (see RETIRED_CATEGORIES in the shop route). Drop it.
-    const cat = path.match(/^\/shop\?category=([^&#]+)/);
-    if (cat) {
-      const slug = decodeURIComponent(cat[1]);
-      return liveCategorySlugs.has(slug) ? `/shop?category=${slug}` : null;
-    }
-
-    return path;
-  };
+  const canonicalPage = createCanonicalPageResolver(products, categories);
 
   // Detected only now that a URL can be resolved to the page it is today.
   const cannibal = detectCannibalisation(pairs, { canonical: canonicalPage });
@@ -435,4 +430,7 @@ module.exports = {
   cadenceHours: 72,
   defaultEnabled: true,
   run,
+  SYSTEM_RULES,
+  gatherContext,
+  createCanonicalPageResolver,
 };

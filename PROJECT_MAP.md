@@ -156,7 +156,12 @@ or change an invariant, update the relevant line here in the same commit.
   writes only via `upsertTranslation(..., 'manual')`; copy only appends a validated paragraph;
   image alt only updates its still-matching image after the founder attaches it to the chosen
   external vision AI. `translationResources.js` defines the shared live catalogue scope.
-  Never add a generic "AI can edit anything" importer.
+  `models/ManualHermesRun.js` + `services/manualHermes.js` add the equivalent
+  evidence-only hand-off for Hermes: the server freezes current Search Console and
+  catalogue facts without calling DeepSeek; a pasted response must match that exact
+  snapshot, and only founder-selected recommendations may enter the existing SEO review
+  queue as `GrowthAction`s. It never changes a product, page, price, metadata or
+  Archivarius learning. Never add a generic "AI can edit anything" importer.
 - **Hermes invariant:** a run must never propose NEW content for a query it also
   flags as cannibalised (a third page splits the signal further). `hermes.js`
   enforces it after assembling both lists — `kind:'content'` plays whose `target`

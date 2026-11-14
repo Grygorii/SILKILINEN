@@ -260,8 +260,9 @@ export default function RebuildSeoModal({ onClose }: { onClose: () => void }) {
             Hermes hasn&rsquo;t mapped a plan yet. Run him first — he reads your Search Console data and decides what to fix.
             <div className={styles.reviewActions} style={{ justifyContent: 'center', marginTop: 14 }}>
               <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={runHermes} disabled={runningHermes}>
-                {runningHermes ? 'Hermes is mapping…' : 'Run Hermes now'}
+                {runningHermes ? 'Hermes is mapping…' : 'Run connected Hermes'}
               </button>
+              <a className={styles.btn} href="/admin/manual-ai#hermes" onClick={onClose}>Prepare prompt for Codex</a>
             </div>
           </div>
         )}

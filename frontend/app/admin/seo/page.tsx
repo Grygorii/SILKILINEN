@@ -180,9 +180,12 @@ export default function SeoHubPage() {
                   {hermesAgent?.lastRun && <> Last mapped {timeAgo(hermesAgent.lastRun)}.</>}
                 </p>
               </div>
-              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={runHermes} disabled={running}>
-                {running ? 'Running…' : 'Run Hermes now'}
-              </button>
+              <div className={styles.cardActions}>
+                <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={runHermes} disabled={running}>
+                  {running ? 'Running…' : 'Run connected Hermes'}
+                </button>
+                <a className={styles.btn} href="/admin/manual-ai#hermes">Prepare prompt for Codex</a>
+              </div>
             </div>
 
             {hermes.length === 0 ? (

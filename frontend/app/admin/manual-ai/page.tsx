@@ -1,6 +1,7 @@
 import AdminLayout from '@/components/AdminLayout';
 import ManualAiPanel from '../seo/ManualAiPanel';
 import ManualAiAdditionalWorkflows from './ManualAiAdditionalWorkflows';
+import ManualHermesPanel from './ManualHermesPanel';
 import styles from '../seo/page.module.css';
 
 export default function ManualAiPage() {
@@ -15,6 +16,7 @@ export default function ManualAiPage() {
       </div>
       <div className={styles.panel}>
         <ManualAiPanel />
+        <ManualHermesPanel />
         <ManualAiAdditionalWorkflows />
       </div>
     </AdminLayout>

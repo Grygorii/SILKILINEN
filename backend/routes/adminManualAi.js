@@ -7,6 +7,8 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const ManualAiRun = require('../models/ManualAiRun');
+const ManualHermesRun = require('../models/ManualHermesRun');
+const GrowthAction = require('../models/GrowthAction');
 const { readSeoTarget, saveSeoMeta } = require('../services/seoMetadata');
 const { recordAudit } = require('../services/auditLog');
 const { findOriginClaims } = require('../utils/originClaims');
@@ -19,6 +21,10 @@ const {
   getWorkflowOptions, prepareWorkflow, buildWorkflowPrompt, validateWorkflowImport,
   applyWorkflowTarget, hasProposal,
 } = require('../services/manualAiAdditionalWorkflows');
+const {
+  HERMES_CONTRACT, prepareManualHermes, buildManualHermesPrompt,
+  validateManualHermesImport, growthActionFor,
+} = require('../services/manualHermes');
 
 const TASK_TYPES = new Set([SEO_TASK, TRANSLATION_TASK, COPY_TASK, IMAGE_ALT_TASK]);
 
@@ -69,6 +75,49 @@ function compactContext(context) {
 async function getRun(id) {
   try { return await ManualAiRun.findById(id); }
   catch { return null; }
+}
+
+async function getHermesRun(id) {
+  try { return await ManualHermesRun.findById(id); }
+  catch { return null; }
+}
+
+function serialiseHermes(run) {
+  const doc = typeof run.toObject === 'function' ? run.toObject() : run;
+  const snapshot = doc.snapshot || {};
+  return {
+    id: String(doc._id),
+    contract: doc.contract || HERMES_CONTRACT,
+    schemaVersion: doc.schemaVersion,
+    status: doc.status,
+    snapshotId: doc.snapshotId,
+    createdAt: doc.createdAt,
+    importedAt: doc.importedAt,
+    publishedAt: doc.publishedAt,
+    snapshot: {
+      preparedAt: snapshot.preparedAt || '',
+      range: snapshot.range || {},
+      totals: snapshot.totals || {},
+      queryCount: Array.isArray(snapshot.queries) ? snapshot.queries.length : 0,
+    },
+    read: doc.read || '',
+    plays: (doc.plays || []).map(play => ({
+      key: play.key,
+      target: play.target,
+      intent: play.intent,
+      kind: play.kind,
+      entityType: play.entityType,
+      entityRef: play.entityRef,
+      position: play.position,
+      impressions: play.impressions,
+      issue: play.issue,
+      action: play.action,
+      leverage: play.leverage,
+      warnings: play.warnings || [],
+      publishedAt: play.publishedAt,
+      publishedActionId: play.publishedActionId || '',
+    })),
+  };
 }
 
 // GET /tasks — the task registry plus a short history, so an unfinished hand-off
@@ -154,6 +203,105 @@ router.post('/tasks/seo-meta/prepare', async (req, res) => {
     console.error('[manual-ai] prepare:', err.message);
     res.status(500).json({ error: 'Could not prepare the SEO prompt.' });
   }
+});
+
+// Manual Hermes is intentionally outside the generic task importer. It is a
+// search-strategy hand-off: live evidence goes out, a strict reply comes back,
+// and the founder selects which recommendations enter GrowthAction review.
+router.get('/hermes/runs', async (req, res) => {
+  try {
+    const runs = await ManualHermesRun.find().sort({ createdAt: -1 }).limit(12).lean();
+    res.json({ runs: runs.map(serialiseHermes) });
+  } catch (err) {
+    console.error('[manual-hermes] list:', err.message);
+    res.status(500).json({ error: 'Could not load Manual Hermes tasks.' });
+  }
+});
+
+router.post('/hermes/prepare', async (req, res) => {
+  try {
+    const prepared = await prepareManualHermes();
+    const run = await ManualHermesRun.create({
+      snapshotId: prepared.snapshotId,
+      snapshot: prepared.snapshot,
+      createdBy: req.user?.email || String(req.user?.userId || 'admin'),
+    });
+    await recordAudit(req, 'manual_hermes.prepared', {
+      targetType: 'ManualHermesRun', targetId: run._id,
+      meta: { queryCount: run.snapshot?.queries?.length || 0, impressions: run.snapshot?.totals?.impressions || 0 },
+    });
+    res.status(201).json({ task: serialiseHermes(run), prompt: buildManualHermesPrompt(run) });
+  } catch (err) {
+    console.error('[manual-hermes] prepare:', err.message);
+    res.status(err.status || 500).json({ error: err.status ? err.message : 'Could not prepare the Manual Hermes prompt.' });
+  }
+});
+
+router.get('/hermes/runs/:id', async (req, res) => {
+  const run = await getHermesRun(req.params.id);
+  if (!run) return res.status(404).json({ error: 'Manual Hermes task not found.' });
+  res.json({ task: serialiseHermes(run), prompt: buildManualHermesPrompt(run) });
+});
+
+router.post('/hermes/runs/:id/import', async (req, res) => {
+  const run = await getHermesRun(req.params.id);
+  if (!run) return res.status(404).json({ error: 'Manual Hermes task not found.' });
+  if (run.status === 'published' || run.status === 'partially_published') {
+    return res.status(409).json({ error: 'This task has already published recommendations. Prepare a fresh prompt for a new review.' });
+  }
+  const checked = validateManualHermesImport(req.body?.response, run);
+  if (!checked.ok) return res.status(422).json({ error: 'The pasted response did not pass the Manual Hermes safety check.', errors: checked.errors });
+
+  run.read = checked.read;
+  run.plays = checked.plays;
+  run.provider = typeof req.body?.provider === 'string' ? req.body.provider.trim().slice(0, 80) : '';
+  run.importedResponse = String(req.body.response).trim();
+  run.importedAt = new Date();
+  run.status = 'imported';
+  await run.save();
+  await recordAudit(req, 'manual_hermes.imported', {
+    targetType: 'ManualHermesRun', targetId: run._id,
+    meta: { count: run.plays.length, provider: run.provider || 'unspecified' },
+  });
+  res.json({ task: serialiseHermes(run) });
+});
+
+router.post('/hermes/runs/:id/publish', async (req, res) => {
+  const run = await getHermesRun(req.params.id);
+  if (!run) return res.status(404).json({ error: 'Manual Hermes task not found.' });
+  if (run.status === 'prepared') return res.status(409).json({ error: 'Import and validate a Manual Hermes response before publishing recommendations.' });
+  const keys = Array.isArray(req.body?.keys) ? req.body.keys.filter(key => typeof key === 'string') : [];
+  if (!keys.length) return res.status(400).json({ error: 'Select at least one validated recommendation to publish.' });
+  if (new Set(keys).size !== keys.length) return res.status(400).json({ error: 'A recommendation was selected more than once.' });
+
+  const plays = new Map((run.plays || []).map(play => [play.key, play]));
+  if (keys.some(key => !plays.has(key))) return res.status(400).json({ error: 'One selected recommendation does not belong to this task.' });
+
+  const report = [];
+  for (const key of keys) {
+    const play = plays.get(key);
+    if (play.publishedAt) {
+      report.push({ key, status: 'skipped', reason: 'Already published.' });
+      continue;
+    }
+    try {
+      const action = await GrowthAction.create(growthActionFor(play, run));
+      play.publishedAt = new Date();
+      play.publishedActionId = String(action._id);
+      report.push({ key, status: 'published', actionId: String(action._id) });
+    } catch (err) {
+      report.push({ key, status: 'failed', reason: err.message || 'Could not publish this recommendation.' });
+    }
+  }
+  const published = (run.plays || []).filter(play => play.publishedAt).length;
+  run.status = published === run.plays.length ? 'published' : 'partially_published';
+  run.publishedAt = new Date();
+  await run.save();
+  const publishedCount = report.filter(item => item.status === 'published').length;
+  if (publishedCount) await recordAudit(req, 'manual_hermes.published', {
+    targetType: 'ManualHermesRun', targetId: run._id, meta: { count: publishedCount },
+  });
+  res.json({ task: serialiseHermes(run), report });
 });
 
 router.get('/tasks/:id', async (req, res) => {
