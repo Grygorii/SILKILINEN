@@ -128,6 +128,7 @@ or change an invariant, update the relevant line here in the same commit.
 - **components/** — incl. `inline/InlineEdit.tsx` (WYSIWYG `?edit=1`), `Price.tsx`, `FabricCare.tsx`,
   `ProductReviews.tsx`, `Navbar`, `CurrencySwitcher`, `SiteBreadcrumbs`.
 - **context/** — Cart, Currency, Wishlist, Customer, CookieConsent (nested in `app/layout.tsx`).
+- **Cart persistence:** `CartContext` reads the saved bag before its stateful hydration gate allows a write. Do not replace that gate with a ref: React effects would otherwise write the initial empty bag before the saved state renders.
 - **lib/** — `clampMeta` (≤160 meta desc), `cloudinaryLoader` (f_auto,q_auto transforms),
   `content`/`pageSeo` (CMS + SEO fetch), `safeJsonLd`, `orderMoney`, `uploadSpecs`.
 

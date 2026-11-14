@@ -134,7 +134,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
           <div className={styles.headerLeft}>
             <h3 className={styles.headerTitle}>{copy.cart.title}</h3>
             {itemCount > 0 && (
-              <span className={styles.headerCount}>{itemCount} {itemCount === 1 ? 'item' : 'items'}</span>
+              <span className={styles.headerCount}>{itemCount} {itemCount === 1 ? copy.cart.item : copy.cart.items}</span>
             )}
           </div>
           <button className={styles.close} onClick={onClose} aria-label={copy.common.close}>
@@ -165,14 +165,16 @@ export default function CartPanel({ isOpen, onClose }: Props) {
               return (
                 <div key={index} className={styles.item}>
                   {/* Thumbnail — 4:5 portrait */}
-                  <ProductImage src={item.image} alt={item.name} variant="cart" wrapClassName={styles.itemImg} />
+                  <div className={styles.itemImg}>
+                    <ProductImage src={item.image} alt={item.name} variant="cart" />
+                  </div>
 
                   {/* Info column */}
                   <div className={styles.itemInfo}>
                     <p className={styles.itemName}>{item.name}</p>
                     {isBundle ? (
                       <>
-                        <p className={styles.itemDetails}>Bundle</p>
+                        <p className={styles.itemDetails}>{copy.cart.bundle}</p>
                         {item.includedProducts && item.includedProducts.length > 0 && (
                           <ul className={styles.bundleList}>
                             {item.includedProducts.map((c, i) => (
@@ -200,7 +202,7 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                     </div>
 
                     {atStockLimit && (
-                      <p className={styles.stockNote}>Only {item.stock} available</p>
+                      <p className={styles.stockNote}>{copy.cart.onlyAvailable.replace('{count}', String(item.stock))}</p>
                     )}
 
                     {/* Quantity stepper */}
@@ -236,11 +238,11 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                   <div className={styles.freeShippingFill} style={{ width: `${freeShippingPct}%` }} />
                 </div>
                 <p className={styles.freeShippingText}>
-                  {format(toFreeShipping)} more for free shipping
+                  {format(toFreeShipping)} {copy.cart.moreForFreeShipping}
                 </p>
               </div>
             ) : (
-              <p className={styles.freeShippingMet}>Free shipping unlocked ✓</p>
+              <p className={styles.freeShippingMet}>{copy.cart.freeShippingUnlocked}</p>
             )}
 
             {/* Totals */}
@@ -250,11 +252,11 @@ export default function CartPanel({ isOpen, onClose }: Props) {
                 <span>{format(subtotal)}</span>
               </div>
               <div className={styles.totalRow}>
-                <span>Shipping</span>
-                <span className={styles.shippingNote}>Calculated at checkout</span>
+                <span>{copy.cart.shipping}</span>
+                <span className={styles.shippingNote}>{copy.cart.calculatedAtCheckout}</span>
               </div>
               <div className={styles.totalRowFinal}>
-                <span>Total</span>
+                <span>{copy.cart.total}</span>
                 <span>{format(subtotal)}</span>
               </div>
             </div>

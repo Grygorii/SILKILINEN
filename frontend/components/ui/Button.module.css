@@ -42,6 +42,11 @@
 @media (hover: hover) {
   .primary:hover:not(:disabled) { background: var(--color-line-inverse); border-color: var(--color-line-inverse); }
 }
+.primary:active:not(:disabled) {
+  background: var(--color-ink-muted);
+  border-color: var(--color-ink-muted);
+  transform: translateY(1px);
+}
 
 /* Secondary — outlined */
 .secondary {

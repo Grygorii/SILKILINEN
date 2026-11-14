@@ -1,13 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useProductSelection } from './ProductSelectionContext';
+import { useCart } from '@/context/CartContext';
 import Button from '@/components/ui/Button';
 import QuickAddSheet from './QuickAddSheet';
 import NotifyWhenBack from './NotifyWhenBack';
 import type { VariantLike } from '@/lib/variantStock';
 import Price from './Price';
 import styles from './StickyBuyBar.module.css';
+import { localeFromPathname } from '@/lib/i18n';
+import { getDictionary } from '@/lib/dictionaries';
 
 type Props = {
   productId: string;
@@ -22,7 +26,10 @@ type Props = {
 };
 
 export default function StickyBuyBar({ productId, productName, price, outOfStock, stock, image, colours, sizes, sizeVariants }: Props) {
+  const locale = localeFromPathname(usePathname());
+  const copy = getDictionary(locale);
   const { selectedColour, selectedSize } = useProductSelection();
+  const { addToCart } = useCart();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [notifyOpen, setNotifyOpen] = useState(false);
 
@@ -75,9 +82,10 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
   const needsColour = colours.length > 0 && !selectedColour;
   const needsSize = sizes.length > 0 && !selectedSize;
 
-  // Tapping the bar opens the quick-add sheet (colour + size + quantity), so a
-  // size-required product is actionable and any product can have its quantity
-  // chosen.
+  // Choice-free products should add on the first tap. Opening a sheet whose
+  // only action is another identical "Add to bag" button makes a simple item
+  // take two taps for no customer benefit. Products with real choices still
+  // use the sheet so a size/colour and quantity can be confirmed there.
   //
   // Sold out used to send the visitor to a mailto:, which ProductOptions had
   // already replaced on desktop and explained why: with no mail client
@@ -90,6 +98,19 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
       setNotifyOpen(v => !v);
       return;
     }
+    if (colours.length <= 1 && sizes.length <= 1) {
+      addToCart({
+        productId,
+        name: productName,
+        price,
+        colour: selectedColour,
+        size: selectedSize,
+        quantity: 1,
+        stock: stock ?? undefined,
+        image,
+      });
+      return;
+    }
     setSheetOpen(true);
   }
 
@@ -99,16 +120,16 @@ export default function StickyBuyBar({ productId, productName, price, outOfStock
   let label: string;
   let variant: CtaVariant;
   if (outOfStock) {
-    label = 'NOTIFY';
+    label = copy.product.notify;
     variant = 'secondary';
   } else if (needsColour) {
-    label = 'CHOOSE COLOUR';
+    label = copy.product.selectColour;
     variant = 'primary';
   } else if (needsSize) {
-    label = 'CHOOSE SIZE';
+    label = copy.product.selectSize;
     variant = 'primary';
   } else {
-    label = 'ADD TO BAG';
+    label = copy.product.add;
     variant = 'primary';
   }
 

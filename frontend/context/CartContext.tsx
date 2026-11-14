@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { trackAddToCart, trackRemoveFromCart } from '@/lib/analytics';
 
 // A cart line is either a regular product OR a bundle — never both. Bundle
@@ -55,19 +55,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // under StrictMode's double-invoked effects the window is hit every time.
   //
   // The writer now waits until hydration has actually happened.
-  const hydrated = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem('cart');
       if (saved) setCart(JSON.parse(saved));
     } catch { /* corrupt JSON — start with an empty cart rather than crashing */ }
-    hydrated.current = true;
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem('cart', JSON.stringify(cart));
-  }, [cart]);
+  }, [cart, hydrated]);
 
   function addToCart(item: CartItem) {
     // productId is what makes the per-product funnel analysis possible — which

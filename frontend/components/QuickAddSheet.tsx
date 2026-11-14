@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 import { useCart } from '@/context/CartContext';
 import { useProductSelection } from './ProductSelectionContext';
@@ -11,6 +12,8 @@ import Price from './Price';
 import { maxOrderable, stockBySize, type VariantLike } from '@/lib/variantStock';
 import SizeChartDrawer from './SizeChartDrawer';
 import styles from './QuickAddSheet.module.css';
+import { localeFromPathname } from '@/lib/i18n';
+import { getDictionary } from '@/lib/dictionaries';
 
 type Props = {
   open: boolean;
@@ -34,6 +37,8 @@ type Props = {
 export default function QuickAddSheet({
   open, onClose, colours, colourHexMap, sizes, productName, productId, price, stock, sizeVariants, image,
 }: Props) {
+  const locale = localeFromPathname(usePathname());
+  const copy = getDictionary(locale);
   const panelRef = useRef<HTMLDivElement>(null);
   // Declared before the `if (!open) return null` below — a hook cannot sit
   // after an early return.
@@ -78,11 +83,11 @@ export default function QuickAddSheet({
     onClose();
   }
 
-  const ctaLabel = needsColour ? 'SELECT A COLOUR' : needsSize ? 'SELECT A SIZE' : canAdd ? 'ADD TO BAG' : 'UNAVAILABLE';
+  const ctaLabel = needsColour ? copy.product.selectColour : needsSize ? copy.product.selectSize : canAdd ? copy.product.add : copy.product.soldOut.toUpperCase();
 
   return (
     <div className={styles.overlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div ref={panelRef} className={styles.sheet} role="dialog" aria-modal="true" aria-label={`Add ${productName} to bag`}>
+      <div ref={panelRef} className={styles.sheet} role="dialog" aria-modal="true" aria-label={`${copy.product.add}: ${productName}`}>
         <div className={styles.handle} aria-hidden="true" />
 
         <div className={styles.header}>
@@ -90,22 +95,29 @@ export default function QuickAddSheet({
             <p className={styles.name}>{productName}</p>
             <p className={styles.price}><Price eur={Number(price)} /></p>
           </div>
-          <button className={styles.close} onClick={onClose} aria-label="Close">✕</button>
+          <button className={styles.close} onClick={onClose} aria-label={copy.common.close}>✕</button>
         </div>
 
         {colours.length > 0 && (
           <div className={styles.section}>
-            <ColourSwatchGroup swatches={swatches} selectedName={selectedColour || undefined} onSelect={setSelectedColour} />
+            <ColourSwatchGroup
+              swatches={swatches}
+              selectedName={selectedColour || undefined}
+              onSelect={setSelectedColour}
+              label={copy.product.colour}
+              ariaLabel={copy.product.colour}
+              soldOutLabel={copy.product.soldOut}
+            />
           </div>
         )}
 
         {sizes.length > 0 && (
           <div className={styles.section}>
             <div className={styles.rowLabel}>
-              <span className={styles.label}>SIZE</span>
-              <SizeChartDrawer className={styles.sizeGuide} label="Sizing chart" />
+              <span className={styles.label}>{copy.product.size}</span>
+              <SizeChartDrawer className={styles.sizeGuide} label={copy.product.sizingChart} />
             </div>
-            <OptionPillGroup ariaLabel="Size">
+            <OptionPillGroup ariaLabel={copy.product.size}>
               {sizes.map(size => {
                 const soldOut = hasTrackedSizes && (bySize[size] ?? 0) === 0;
                 return (
@@ -114,7 +126,7 @@ export default function QuickAddSheet({
                     selected={selectedSize === size}
                     disabled={soldOut}
                     onSelect={() => { if (!soldOut) setSelectedSize(size); }}
-                    ariaLabel={soldOut ? `Size ${size} — sold out` : `Size ${size}`}
+                    ariaLabel={soldOut ? `${copy.product.size} ${size} — ${copy.product.soldOut}` : `${copy.product.size} ${size}`}
                   >
                     {size}
                   </OptionPill>
@@ -126,11 +138,11 @@ export default function QuickAddSheet({
 
         <div className={styles.section}>
           <div className={styles.rowLabel}>
-            <span className={styles.label}>QUANTITY</span>
+            <span className={styles.label}>{copy.product.quantity}</span>
             <div className={styles.stepper}>
-              <button className={styles.stepBtn} onClick={() => setQty(q => Math.max(1, q - 1))} disabled={qty <= 1} aria-label="Decrease quantity">−</button>
+              <button className={styles.stepBtn} onClick={() => setQty(q => Math.max(1, q - 1))} disabled={qty <= 1} aria-label={copy.product.decrease}>−</button>
               <span className={styles.qtyVal}>{qty}</span>
-              <button className={styles.stepBtn} onClick={() => setQty(q => Math.min(maxQty, q + 1))} disabled={qty >= maxQty} aria-label="Increase quantity">+</button>
+              <button className={styles.stepBtn} onClick={() => setQty(q => Math.min(maxQty, q + 1))} disabled={qty >= maxQty} aria-label={copy.product.increase}>+</button>
             </div>
           </div>
         </div>

@@ -196,6 +196,9 @@ export default function ProductOptions({ colours, colourHexMap, colorName, color
             swatches={swatches}
             selectedName={selectedColour || undefined}
             onSelect={setSelectedColour}
+            label={copy.colour}
+            ariaLabel={copy.colour}
+            soldOutLabel={copy.soldOut}
           />
           {variantLinks}
         </div>

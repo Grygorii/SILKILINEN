@@ -20,10 +20,12 @@ export function ColourSwatch({
   swatch,
   selected,
   onSelect,
+  soldOutLabel = 'sold out',
 }: {
   swatch: Swatch;
   selected?: boolean;
   onSelect?: () => void;
+  soldOutLabel?: string;
 }) {
   const bg = swatch.hex || colourToHex(swatch.name) || 'var(--color-surface-warm)';
   return (
@@ -31,7 +33,7 @@ export function ColourSwatch({
       type="button"
       role="radio"
       aria-checked={!!selected}
-      aria-label={swatch.name + (swatch.soldOut ? ' (sold out)' : '')}
+      aria-label={swatch.name + (swatch.soldOut ? ` (${soldOutLabel})` : '')}
       disabled={swatch.soldOut}
       onClick={swatch.soldOut ? undefined : onSelect}
       style={{ background: bg }}
@@ -50,24 +52,31 @@ export function ColourSwatchGroup({
   swatches,
   selectedName,
   onSelect,
+  label = 'Colour',
+  ariaLabel = label,
+  soldOutLabel,
 }: {
   swatches: Swatch[];
   selectedName?: string;
   onSelect?: (name: string) => void;
+  label?: string;
+  ariaLabel?: string;
+  soldOutLabel?: string;
 }) {
   return (
     <div>
       <div className={styles.label}>
-        <span>Colour ·</span>
+        <span>{label} ·</span>
         <span className={styles.labelName}>{selectedName || swatches[0]?.name || ''}</span>
       </div>
-      <div role="radiogroup" aria-label="Colour" className={styles.row}>
+      <div role="radiogroup" aria-label={ariaLabel} className={styles.row}>
         {swatches.map(s => (
           <ColourSwatch
             key={s.name}
             swatch={s}
             selected={selectedName === s.name}
             onSelect={() => onSelect?.(s.name)}
+            soldOutLabel={soldOutLabel}
           />
         ))}
       </div>
