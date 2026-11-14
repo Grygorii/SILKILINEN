@@ -21,6 +21,8 @@ const MODEL = process.env.DEEPSEEK_MODEL_ANALYST || 'deepseek-chat';
 const MarketingPlan = require('../models/MarketingPlan');
 const GrowthAction = require('../models/GrowthAction');
 const SystemState = require('../models/SystemState');
+const Newsletter = require('../models/Newsletter');
+const Campaign = require('../models/Campaign');
 const { describeAgents } = require('./growthEngine');
 const { measure, getNorthStar, METRICS } = require('./chiefOfStaff');
 const { playbookPromptBlock } = require('./playbook');
@@ -43,12 +45,12 @@ const AGENT_HOME = {
 };
 const CHANNEL_HOME = {
   SEO: '/admin/seo', Content: '/admin/journal', Social: '/admin/social',
-  Email: '/admin/marketing/campaigns', 'On-site': '/admin/content', Product: '/admin/products',
+  Email: '/admin/marketing/campaigns', Paid: '/admin/marketing', 'On-site': '/admin/content', Product: '/admin/products',
 };
 
 // ── Gather: the real material the Coordinator reasons over ─────────────────────
 async function gatherContext(focus) {
-  const [agents, metrics, northStar, recentActions, competitors, playbook, brief] = await Promise.all([
+  const [agents, metrics, northStar, recentActions, competitors, playbook, brief, subscriberSources, campaigns, priorPlans] = await Promise.all([
     describeAgents().catch(() => []),
     measure().catch(() => null),
     getNorthStar().catch(() => null),
@@ -58,6 +60,17 @@ async function gatherContext(focus) {
     // The chain: the latest Chief of Staff brief — the week's read. A plan
     // should SERVE this, not re-decide the week from scratch.
     require('../models/CEOBrief').findOne().sort({ createdAt: -1 }).lean().catch(() => null),
+    // Aggregate only: the Coordinator needs marketing evidence, never private
+    // email addresses. The audit health-check address is not a lead.
+    Newsletter.aggregate([
+      { $match: { isUnsubscribed: { $ne: true }, source: { $ne: 'audit' } } },
+      { $group: { _id: '$source', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]).catch(() => []),
+    Campaign.find({}).sort({ createdAt: -1 }).limit(8)
+      .select('name channel status spend budget orders revenue roas createdAt').lean().catch(() => []),
+    MarketingPlan.find({}).sort({ createdAt: -1 }).limit(6)
+      .select('objective status usedFallback successMetric plays.title plays.tasks.done createdAt').lean().catch(() => []),
   ]);
 
   // The latest line from each specialist — their current "input" to the plan.
@@ -67,7 +80,13 @@ async function gatherContext(focus) {
     if (byAgent[a.agent].length < 3) byAgent[a.agent].push(`${a.type}: ${a.title}`);
   }
 
-  return { agents, metrics, northStar, byAgent, competitors, playbook, brief, focus: focus || '' };
+  const subscribers = (subscriberSources || []).map(item => ({ source: item._id || 'unknown', count: item.count }));
+  const subscriberTotal = subscribers.reduce((sum, item) => sum + item.count, 0);
+
+  return {
+    agents, metrics, northStar, byAgent, competitors, playbook, brief, focus: focus || '',
+    marketing: { subscribers: { total: subscriberTotal, bySource: subscribers }, campaigns, priorPlans },
+  };
 }
 
 const SYSTEM = `You are the MARKETING COORDINATOR for SILKILINEN — a QUIET-LUXURY Mulberry-silk & European-linen intimates brand, one founder, currency EUR. You are the team LEAD: you do not do the work yourself, you DELEGATE to the right specialist agents and compose their work into ONE coordinated campaign plan toward the founder's goal.
@@ -86,7 +105,7 @@ Respond ONLY with valid JSON:
   "engagedAgents": ["the exact specialist names you are delegating to"],
   "plays": [
     {
-      "channel": "SEO|Content|Social|Email|On-site|Product",
+      "channel": "SEO|Content|Social|Email|Paid|On-site|Product",
       "agent": "the owning specialist's exact name from the roster",
       "title": "the play in a few words",
       "rationale": "one line tied to a real signal — never a price/discount move",
@@ -96,9 +115,11 @@ Respond ONLY with valid JSON:
   "timeline": "a realistic phasing in plain words (e.g. 'this week → next 2 weeks')",
   "successMetric": "the ONE number that tells us this worked"
 }
-Rules: 3-5 plays, each a different lever, each owned by a relevant specialist. 2-4 tasks per play, each concrete and doable. Tie every play to the data.`;
+Rules: 3-5 plays, each a different lever, each owned by a relevant specialist. 2-4 tasks per play, each concrete and doable. Tie every play to the data.
+5. Read the prior Coordinator plans. Do not repeat an existing or completed plan unless a fresh signal makes the repeat necessary; say exactly what changed.
+6. A Paid play may prepare tracking, consent, creative, landing page, budget and a stop rule, but it must NEVER launch ads, spend money, or claim that a campaign is ready without those signals.`;
 
-const VERIFY_SYSTEM = `You are the verification clerk for SILKILINEN's marketing plans. Check the plan below against two things ONLY: (1) is every claim grounded in the data provided, or does it assert things the data doesn't support? (2) does ANY part violate the luxury position (discounting, price-competing, undercutting)? Respond ONLY with JSON: {"ok": true|false, "verdict": "one plain sentence — what holds up and what to watch"}. Be skeptical but fair.`;
+const VERIFY_SYSTEM = `You are the verification clerk for SILKILINEN's marketing plans. Check the plan below against four things ONLY: (1) is every claim grounded in the data provided, or does it assert things the data doesn't support? (2) does ANY part violate the luxury position (discounting, price-competing, undercutting)? (3) does it repeat a prior plan without naming a fresh reason? (4) does a Paid play try to launch or spend rather than prepare its prerequisites? Respond ONLY with JSON: {"ok": true|false, "verdict": "one plain sentence — what holds up and what to watch"}. Be skeptical but fair.`;
 
 function buildUserPayload(ctx, goal) {
   const m = ctx.metrics;
@@ -107,6 +128,15 @@ function buildUserPayload(ctx, goal) {
     : 'No North Star goal set.';
   const roster = (ctx.agents || []).map(a => `- ${a.name}: ${a.description}`).join('\n');
   const agentIntel = Object.entries(ctx.byAgent || {}).map(([k, v]) => `${k}: ${v.join(' | ')}`).join('\n') || 'no recent agent activity';
+  const marketing = ctx.marketing || { subscribers: { total: 0, bySource: [] }, campaigns: [], priorPlans: [] };
+  const subscriberSources = (marketing.subscribers.bySource || []).map(item => `${item.source} ${item.count}`).join(', ') || 'none';
+  const campaignEvidence = (marketing.campaigns || []).map(c => `${c.channel || 'unknown'}:${c.status || 'unknown'} (spend €${c.spend || 0}, orders ${c.orders || 0})`).join('; ') || 'none recorded';
+  const priorPlans = (marketing.priorPlans || []).map(plan => {
+    const tasks = (plan.plays || []).flatMap(play => play.tasks || []);
+    const complete = tasks.filter(task => task.done).length;
+    const source = plan.usedFallback ? 'fallback' : 'AI';
+    return `${source}/${plan.status}: ${plan.objective || 'untitled'} (${complete}/${tasks.length} tasks complete; success: ${plan.successMetric || 'not set'})`;
+  }).join('\n') || 'no prior Coordinator plans';
   const biz = m ? [
     `Paid orders last 7d: ${m.orders.last7} (prev ${m.orders.prev7}).`,
     `Revenue last 7d: €${m.revenue.last7} (price floor €${m.priceFloorEUR}, avg €${m.avgPriceEUR} — anything below floor is test/refund).`,
@@ -115,6 +145,8 @@ function buildUserPayload(ctx, goal) {
     `Top products (30d): ${(m.topProducts || []).map(p => `${p.name}×${p.units}`).join(', ') || 'no sales yet'}.`,
     m.search ? `Google (28d): ${m.search.totals.clicks} clicks, ${m.search.totals.impressions} impressions; opportunities: ${(m.search.opportunities || []).filter(o => o.position > 8).map(o => `"${o.query}"`).slice(0, 6).join(', ') || 'none'}.` : 'Google Search: not connected.',
     require('./clickstream').clickstreamPromptLine(m.clickstream) || 'First-party clickstream: no on-site behaviour captured yet.',
+    `Email capture records (not email-verified): ${marketing.subscribers.total}; sources: ${subscriberSources}.`,
+    `Campaign evidence: ${campaignEvidence}.`,
   ].join('\n') : 'Business data unavailable.';
 
   return [
@@ -125,6 +157,7 @@ function buildUserPayload(ctx, goal) {
     `COMPETITOR FIELD: ${ctx.competitors.length} brands — reason about the market & white space, not one rival.`, '',
     `YOUR TEAM (delegate to these — use exact names):\n${roster}`, '',
     `WHAT EACH SPECIALIST RECENTLY PRODUCED:\n${agentIntel}`, '',
+    `PRIOR COORDINATOR PLANS (continue or measure them; do not repeat them blindly):\n${priorPlans}`, '',
     ctx.brief ? `THIS WEEK'S READ — Chief of Staff brief (align the plan to it; don't contradict it): "${ctx.brief.headline}". Top moves: ${(ctx.brief.moves || []).slice(0, 3).map(m => m.title).join('; ') || '—'}.` : '',
     ctx.playbook ? `PLAYBOOK (what we've learned works):\n${ctx.playbook}` : '',
     '', 'Compose the coordinated plan JSON now.',
@@ -169,11 +202,18 @@ async function verifyPlan(plan, ctx, goal) {
   const violation = luxuryViolation(plan.plays);
   if (violation) return { ok: false, verdict: `Flagged: "${violation}" risks the luxury position (discount/undercut language) — revise before acting.` };
   try {
+    const priorPlans = (ctx.marketing?.priorPlans || []).map(plan => ({
+      objective: plan.objective,
+      status: plan.status,
+      usedFallback: Boolean(plan.usedFallback),
+    }));
+    const leadCount = ctx.marketing?.subscribers?.total ?? 0;
+    const campaignCount = ctx.marketing?.campaigns?.length ?? 0;
     const res = await client.chat.completions.create({
       model: MODEL,
       messages: [
         { role: 'system', content: VERIFY_SYSTEM },
-        { role: 'user', content: `GOAL: ${goal}\n\nDATA SUMMARY: orders ${ctx.metrics?.orders?.last7 ?? '?'}/wk, visitors ${ctx.metrics?.humanVisitors?.last7 ?? '?'}/wk.\n\nPLAN:\n${JSON.stringify({ objective: plan.objective, insight: plan.insight, plays: plan.plays.map(p => ({ title: p.title, rationale: p.rationale })) })}` },
+        { role: 'user', content: `GOAL: ${goal}\n\nDATA SUMMARY: orders ${ctx.metrics?.orders?.last7 ?? '?'}/wk, visitors ${ctx.metrics?.humanVisitors?.last7 ?? '?'}/wk, email capture records ${leadCount} (not email-verified), recorded campaigns ${campaignCount}.\n\nPRIOR PLANS:\n${JSON.stringify(priorPlans)}\n\nPLAN:\n${JSON.stringify({ objective: plan.objective, insight: plan.insight, plays: plan.plays.map(p => ({ channel: p.channel, title: p.title, rationale: p.rationale, tasks: p.tasks.map(t => t.text) })) })}` },
       ],
       temperature: 0.2, max_tokens: 200, response_format: { type: 'json_object' },
     }, { timeout: 25000, maxRetries: 1 });
@@ -279,7 +319,7 @@ async function weeklyCoordinator({ force = false } = {}) {
   let goal, focus;
   if (briefFresh && (brief.moves || []).length) {
     const top = brief.moves[0];
-    goal = `Execute this week's priority from the Chief of Staff's brief — "${top.title}"${nsTail}. Turn it into a delegated, executable plan.`;
+    goal = `Use this week's Chief of Staff priority as the starting point — "${top.title}"${nsTail}. Decide whether it is still the best next move after reviewing the evidence and prior Coordinator plans; do not create a duplicate plan when the earlier move is active, completed, or awaiting measurement.`;
     focus = top.agent || '';
   } else {
     goal = ns && METRICS[ns.metric]

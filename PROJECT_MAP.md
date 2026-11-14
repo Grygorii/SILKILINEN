@@ -691,6 +691,11 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   and an account/admin preference revoke both remove matching account/newsletter permission.
   Transactional mail (including
   magic-link sign-in) is exempt.
+- **Marketing subscriber visibility:** `/api/admin/marketing/subscribers` returns only
+  aggregate customer-lead counts; `/subscribers/recent` returns names only after the
+  founder explicitly opens the private list. Both are admin-only and `private, no-store`.
+  The Site Audit's synthetic `source:'audit'` address stays in the database as a health
+  check but is never counted or exported as a customer marketing lead.
 - **Server fetches:** storefront server components use `lib/apiFetch.ts` (4s timeout).
   A bare `fetch` in a server component holds the render until Vercel's function timeout.
   Use `apiListResult` where an outage must not read as an empty catalogue.

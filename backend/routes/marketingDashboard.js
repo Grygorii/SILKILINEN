@@ -11,6 +11,12 @@ const Newsletter = require('../models/Newsletter');
 const { generateAnalysis } = require('../services/marketingAnalysis');
 
 const PAID_STATUSES = ['paid', 'processing', 'shipped', 'delivered'];
+// The Site Audit creates a synthetic newsletter address to health-check the
+// public form. Keep it in the database for audit history, but never present it
+// as a customer lead or export it into a marketing tool.
+const ACTIVE_CUSTOMER_SUBSCRIBERS = { isUnsubscribed: { $ne: true }, source: { $ne: 'audit' } };
+const CUSTOMER_UNSUBSCRIBERS = { isUnsubscribed: true, source: { $ne: 'audit' } };
+const ACTIVE_AUDIT_SUBSCRIBERS = { isUnsubscribed: { $ne: true }, source: 'audit' };
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -257,26 +263,40 @@ router.get('/founder', requireAuth, async (req, res) => {
 // Without this the Style Finder & popup leads sit in the DB unseen.
 router.get('/subscribers', requireAuth, async (req, res) => {
   try {
-    const [total, unsubscribed, bySource, recent] = await Promise.all([
-      Newsletter.countDocuments({ isUnsubscribed: { $ne: true } }),
-      Newsletter.countDocuments({ isUnsubscribed: true }),
+    const [total, unsubscribed, bySource, auditExcluded] = await Promise.all([
+      Newsletter.countDocuments(ACTIVE_CUSTOMER_SUBSCRIBERS),
+      Newsletter.countDocuments(CUSTOMER_UNSUBSCRIBERS),
       Newsletter.aggregate([
-        { $match: { isUnsubscribed: { $ne: true } } },
+        { $match: ACTIVE_CUSTOMER_SUBSCRIBERS },
         { $group: { _id: '$source', n: { $sum: 1 } } },
         { $sort: { n: -1 } },
       ]),
-      Newsletter.find({ isUnsubscribed: { $ne: true } })
-        .sort({ subscribedAt: -1 }).limit(20)
-        .select('email source subscribedAt discountCodeUsed').lean(),
+      Newsletter.countDocuments(ACTIVE_AUDIT_SUBSCRIBERS),
     ]);
+    res.set('Cache-Control', 'private, no-store');
     res.json({
       total,
       unsubscribed,
+      auditExcluded,
       bySource: bySource.map(s => ({ source: s._id || 'unknown', count: s.n })),
-      recent,
     });
   } catch (err) {
     console.error('[marketing] subscribers error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/marketing/subscribers/recent — names are personal data, so
+// they are fetched only after the founder explicitly opens the private list.
+router.get('/subscribers/recent', requireAuth, async (req, res) => {
+  try {
+    const subscribers = await Newsletter.find(ACTIVE_CUSTOMER_SUBSCRIBERS)
+      .sort({ subscribedAt: -1 }).limit(50)
+      .select('email source subscribedAt discountCodeUsed').lean();
+    res.set('Cache-Control', 'private, no-store');
+    res.json({ subscribers });
+  } catch (err) {
+    console.error('[marketing] subscriber list error:', err.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -285,7 +305,7 @@ router.get('/subscribers', requireAuth, async (req, res) => {
 // import into the founder's email tool (the Newsletter Drafter writes the copy).
 router.get('/subscribers/export.csv', requireAuth, async (req, res) => {
   try {
-    const subs = await Newsletter.find({ isUnsubscribed: { $ne: true } })
+    const subs = await Newsletter.find(ACTIVE_CUSTOMER_SUBSCRIBERS)
       .sort({ subscribedAt: -1 }).select('email source subscribedAt').lean();
     const rows = ['email,source,subscribedAt'];
     for (const s of subs) {
@@ -294,6 +314,7 @@ router.get('/subscribers/export.csv', requireAuth, async (req, res) => {
     }
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="subscribers.csv"');
+    res.setHeader('Cache-Control', 'private, no-store');
     res.send(rows.join('\n'));
   } catch (err) {
     console.error('[marketing] subscribers export error:', err.message);

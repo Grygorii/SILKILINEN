@@ -12,7 +12,7 @@ type Plan = {
   _id: string; mode: 'interactive' | 'weekly'; goal: string; focus?: string;
   objective: string; insight: string; audience: string; engagedAgents: string[];
   plays: Play[]; timeline: string; successMetric: string; verdict: string;
-  status: string; createdAt: string;
+  status: string; usedFallback?: boolean; createdAt: string;
 };
 
 const dark = 'var(--color-ink)';
@@ -51,7 +51,7 @@ export default function MarketingCoordinatorPage() {
     try {
       const res = await fetch(`${API}/api/admin/marketing-coordinator`, {
         method: 'POST', credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' },
         body: JSON.stringify({ goal: goal.trim(), focus: focus.trim() || undefined }),
       });
       const data = await res.json();
@@ -67,7 +67,7 @@ export default function MarketingCoordinatorPage() {
   async function runWeekly() {
     setWeekly(true);
     try {
-      const res = await fetch(`${API}/api/admin/marketing-coordinator/weekly`, { method: 'POST', credentials: 'include' });
+      const res = await fetch(`${API}/api/admin/marketing-coordinator/weekly`, { method: 'POST', credentials: 'include', headers: { 'X-CSRF-Token': '1' } });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Weekly run failed');
       if (data.plan) { setPlan(data.plan); loadHistory(); toast('Weekly plan written.', 'success'); }
@@ -78,16 +78,23 @@ export default function MarketingCoordinatorPage() {
   }
 
   async function toggleTask(planId: string, taskId: string, done: boolean) {
-    // Optimistic
+    const previous = plan;
     setPlan(p => p && p._id === planId ? {
       ...p, plays: p.plays.map(pl => ({ ...pl, tasks: pl.tasks.map(t => t._id === taskId ? { ...t, done } : t) })),
     } : p);
     try {
-      await fetch(`${API}/api/admin/marketing-coordinator/${planId}/task/${taskId}`, {
+      const res = await fetch(`${API}/api/admin/marketing-coordinator/${planId}/task/${taskId}`, {
         method: 'PATCH', credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ done }),
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' }, body: JSON.stringify({ done }),
       });
-    } catch { /* optimistic stays */ }
+      if (!res.ok) throw new Error('Could not save task');
+      const updated = await res.json() as Plan;
+      setPlan(updated);
+      setHistory(items => items.map(item => item._id === updated._id ? updated : item));
+    } catch {
+      setPlan(previous);
+      toast('Could not save this task. Please try again.', 'error');
+    }
   }
 
   return (
@@ -141,7 +148,7 @@ export default function MarketingCoordinatorPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                     <span style={{ fontSize: 14, color: dark }}>{h.objective || h.goal}</span>
                     <span style={{ fontSize: 11, color: muted, whiteSpace: 'nowrap' }}>
-                      {h.mode === 'weekly' ? 'weekly' : 'brief'} · {timeAgo(h.createdAt)}
+                      {h.usedFallback ? 'fallback' : h.mode === 'weekly' ? 'weekly' : 'brief'} · {timeAgo(h.createdAt)}
                     </span>
                   </div>
                 </button>
@@ -161,6 +168,11 @@ function PlanView({ plan, onToggle }: { plan: Plan; onToggle: (p: string, t: str
         <h2 style={{ fontFamily: serif, fontSize: 22, fontWeight: 400, color: dark, margin: 0, lineHeight: 1.3 }}>{plan.objective}</h2>
         <span style={{ fontSize: 11, color: muted, whiteSpace: 'nowrap' }}>{plan.mode === 'weekly' ? 'Weekly plan' : 'Brief'}</span>
       </div>
+      {plan.usedFallback && (
+        <p style={{ margin: '12px 0 0', padding: '10px 12px', background: 'var(--admin-warning-soft)', color: dark, fontSize: 12, lineHeight: 1.5 }}>
+          Fallback plan — the coordinator could not produce a fresh data-specific recommendation. Treat this as a safe starting point, not a new decision.
+        </p>
+      )}
       {plan.insight && <p style={{ fontSize: 14, color: dark, marginTop: 10, lineHeight: 1.6 }}><strong style={{ color: muted, fontWeight: 400 }}>Insight — </strong>{plan.insight}</p>}
       {plan.audience && <p style={{ fontSize: 13, color: muted, marginTop: 4 }}>Audience: {plan.audience}</p>}
 

@@ -43,6 +43,20 @@ type DashData = {
   geoCountries: { country: string; visitors: number }[];
 };
 
+type SubscriberSummary = {
+  total: number;
+  unsubscribed: number;
+  auditExcluded: number;
+  bySource: { source: string; count: number }[];
+};
+
+type Subscriber = {
+  email: string;
+  source: string;
+  subscribedAt: string;
+  discountCodeUsed: boolean;
+};
+
 function fmt(n: number) {
   return `€${n.toFixed(2)}`;
 }
@@ -74,12 +88,25 @@ function timeAgo(iso: string) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
+function sourceLabel(source: string) {
+  const labels: Record<string, string> = {
+    website: 'Website',
+    popup: 'Popup',
+    'style-finder': 'Style Finder',
+  };
+  return labels[source] || source || 'Unknown';
+}
+
 export default function MarketingDashboardPage() {
   const [data, setData] = useState<DashData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [regenerating, setRegenerating] = useState(false);
-  const [subs, setSubs] = useState<{ total: number; unsubscribed: number; bySource: { source: string; count: number }[] } | null>(null);
+  const [subs, setSubs] = useState<SubscriberSummary | null>(null);
+  const [subscriberList, setSubscriberList] = useState<Subscriber[] | null>(null);
+  const [subscriberLoading, setSubscriberLoading] = useState(false);
+  const [subscriberError, setSubscriberError] = useState('');
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     fetch(`${API}/api/admin/marketing/subscribers`, { credentials: 'include' })
@@ -87,8 +114,38 @@ export default function MarketingDashboardPage() {
   }, []);
 
   async function exportSubs() {
-    const { downloadBlob } = await import('@/lib/api');
-    await downloadBlob('/api/admin/marketing/subscribers/export.csv', 'subscribers.csv');
+    setExporting(true);
+    setSubscriberError('');
+    try {
+      const { downloadBlob } = await import('@/lib/api');
+      await downloadBlob('/api/admin/marketing/subscribers/export.csv', 'subscribers.csv', { method: 'GET' });
+    } catch {
+      setSubscriberError('The subscriber export could not be downloaded. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function toggleSubscriberList() {
+    if (subscriberList) {
+      setSubscriberList(null);
+      return;
+    }
+    setSubscriberLoading(true);
+    setSubscriberError('');
+    try {
+      const res = await fetch(`${API}/api/admin/marketing/subscribers/recent`, {
+        credentials: 'include',
+        cache: 'no-store',
+      });
+      if (!res.ok) throw new Error('Could not load subscribers');
+      const payload = await res.json() as { subscribers?: Subscriber[] };
+      setSubscriberList(payload.subscribers || []);
+    } catch {
+      setSubscriberError('The private subscriber list could not be loaded. Please try again.');
+    } finally {
+      setSubscriberLoading(false);
+    }
   }
 
   const fetchDash = useCallback(async () => {
@@ -157,14 +214,42 @@ export default function MarketingDashboardPage() {
               </div>
               <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' }}>
                 {subs.bySource.slice(0, 4).map(s => (
-                  <span key={s.source} style={{ fontSize: 12.5, color: 'var(--admin-ink-muted)' }}>{s.source}: <strong style={{ color: 'var(--color-ink)' }}>{s.count}</strong></span>
+                  <span key={s.source} style={{ fontSize: 12.5, color: 'var(--admin-ink-muted)' }}>{sourceLabel(s.source)}: <strong style={{ color: 'var(--color-ink)' }}>{s.count}</strong></span>
                 ))}
-                <button onClick={exportSubs} disabled={!subs.total} style={{ padding: '8px 14px', background: 'var(--color-ink)', color: 'var(--color-bg)', border: 'none', cursor: subs.total ? 'pointer' : 'default', fontSize: 12, letterSpacing: '0.5px', borderRadius: 3, opacity: subs.total ? 1 : 0.5 }}>Export CSV</button>
+                <button onClick={toggleSubscriberList} disabled={!subs.total || subscriberLoading} style={{ padding: '8px 14px', background: 'var(--color-bg)', color: 'var(--color-ink)', border: '1px solid var(--color-ink)', cursor: subs.total && !subscriberLoading ? 'pointer' : 'default', fontSize: 12, letterSpacing: '0.5px', borderRadius: 3, opacity: subs.total ? 1 : 0.5 }}>
+                  {subscriberLoading ? 'Loading…' : subscriberList ? 'Hide contacts' : 'View contacts'}
+                </button>
+                <button onClick={exportSubs} disabled={!subs.total || exporting} style={{ padding: '8px 14px', background: 'var(--color-ink)', color: 'var(--color-bg)', border: 'none', cursor: subs.total && !exporting ? 'pointer' : 'default', fontSize: 12, letterSpacing: '0.5px', borderRadius: 3, opacity: subs.total ? 1 : 0.5 }}>{exporting ? 'Exporting…' : 'Export CSV'}</button>
               </div>
             </div>
             <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--admin-ink-muted)' }}>
-              Captured from the Style Finder, popup &amp; footer — export to your email tool (the Newsletter Drafter writes the copy).{subs.unsubscribed > 0 ? ` ${subs.unsubscribed} unsubscribed, excluded.` : ''}
+              Active capture records — not proof that an inbox belongs to a real shopper. New sign-ups should be email-confirmed before using them for advertising. {subs.auditExcluded > 0 ? `${subs.auditExcluded} internal audit record${subs.auditExcluded === 1 ? ' is' : 's are'} excluded.` : ''}{subs.unsubscribed > 0 ? ` ${subs.unsubscribed} unsubscribed record${subs.unsubscribed === 1 ? ' is' : 's are'} excluded.` : ''}
             </p>
+            {subscriberError && <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--color-danger)' }}>{subscriberError}</p>}
+            {subscriberList && (
+              <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--color-line)', overflowX: 'auto' }}>
+                <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--admin-ink-muted)' }}>Private list — latest {subscriberList.length} active capture record{subscriberList.length === 1 ? '' : 's'}.</p>
+                <table style={{ width: '100%', minWidth: 600, borderCollapse: 'collapse', fontSize: 12.5 }}>
+                  <thead>
+                    <tr>
+                      {['Email', 'Source', 'Joined', 'Welcome offer'].map(heading => (
+                        <th key={heading} scope="col" style={{ padding: '8px 10px', borderBottom: '1px solid var(--color-line)', color: 'var(--admin-ink-muted)', fontSize: 10, letterSpacing: '0.8px', textAlign: 'left', textTransform: 'uppercase' }}>{heading}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subscriberList.map(subscriber => (
+                      <tr key={subscriber.email}>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid var(--color-line)', color: 'var(--color-ink)' }}>{subscriber.email}</td>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid var(--color-line)', color: 'var(--admin-ink-muted)' }}>{sourceLabel(subscriber.source)}</td>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid var(--color-line)', color: 'var(--admin-ink-muted)' }}>{subscriber.subscribedAt ? new Date(subscriber.subscribedAt).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</td>
+                        <td style={{ padding: '9px 10px', borderBottom: '1px solid var(--color-line)', color: 'var(--admin-ink-muted)' }}>{subscriber.discountCodeUsed ? 'Used' : 'Not used'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
