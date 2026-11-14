@@ -109,10 +109,12 @@ or change an invariant, update the relevant line here in the same commit.
 ## Frontend layout
 - **app/(shop)/** — storefront. `layout.tsx` mounts InlineEditProvider + SiteBreadcrumbs +
   UKShippingNotice. Home `page.tsx` is deliberately concise: hero → new arrivals → compact
-  shipping map → silk proof → categories → one campaign → reviews → newsletter
+  shipping map → silk proof → categories → one campaign → reviews → newsletter in the shared footer
   (hero image is LCP; `HeroVideo.tsx` loads late). Photographic crop, light, colour and
   responsive rules live in `docs/photographic-direction.md`. Key routes:
   product/[id], shop, collections/[slug], checkout, reviews, style-finder, account.
+- **Shared storefront footer:** `components/Footer.tsx` serves the shop and public journal.
+  `lib/siteNav.ts` shares destinations with the drawer, and the footer owns the newsletter sign-up.
 - **app/admin/** — admin console, one folder per agent/feature. `layout.tsx` = AdminLayout
   (nav array lists every page). **Content editing**: `/admin/content` ("Site Content" nav) =
   the CMS editor (SiteContent KV, tabs Banner/Homepage/Categories/About/Instagram); `/admin/pages`

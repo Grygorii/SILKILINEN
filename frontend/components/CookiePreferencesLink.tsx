@@ -2,18 +2,11 @@
 
 import { useCookieConsent } from '@/context/CookieConsentContext';
 
-export default function CookiePreferencesLink() {
+export default function CookiePreferencesLink({ className }: { className: string }) {
   const { openSettings } = useCookieConsent();
 
   return (
-    <button
-      onClick={openSettings}
-      style={{
-        background: 'none', border: 'none', padding: 0, minHeight: 44,
-        cursor: 'pointer', textAlign: 'left', font: 'inherit', color: 'inherit',
-        textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
-      }}
-    >
+    <button type="button" className={className} onClick={openSettings}>
       Cookie preferences
     </button>
   );

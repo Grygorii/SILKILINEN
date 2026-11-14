@@ -12,12 +12,13 @@ describe('mobile-first storefront refinement', () => {
       '<CategoryTiles content={content} />',
       '<FeaturedCollections />',
       '<ReviewsCarousel reviews={withMessage} />',
-      '<NewsletterBand />',
     ];
     sections.slice(1).forEach((section, index) => {
       expect(home.indexOf(sections[index])).toBeLessThan(home.indexOf(section));
     });
     expect(home.match(/<ShippingMap \/>/g)).toHaveLength(1);
+    expect(home).not.toContain('<NewsletterBand');
+    expect(read('components/Footer.tsx')).toContain('<NewsletterBand');
     expect(home).not.toMatch(/<StyleFinderBand|<ReassuranceRow|<StorySection|<BlogTeaser|<InstagramGrid/);
   });
   it('does not turn country or mode selection into a permanent playback pause', () => {

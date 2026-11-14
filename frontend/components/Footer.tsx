@@ -1,16 +1,17 @@
 import type { ReactElement } from 'react';
 import styles from './Footer.module.css';
-import { siteSections } from '@/lib/siteNav';
 import CookiePreferencesLink from './CookiePreferencesLink';
-import FooterCurrency from './FooterCurrency';
-import FooterMobileNav from './FooterMobileNav';
-import LanguageSwitcher from './LanguageSwitcher';
+import FooterPreferences from './FooterPreferences';
+import NewsletterBand from './NewsletterBand';
+import { getDictionary } from '@/lib/dictionaries';
+import { getLocale, localeHref, type PageLocale } from '@/lib/i18n-server';
+import { footerSections, type FooterSection } from '@/lib/siteNav';
 import { isValidSocialUrl } from '@/lib/socialUrl';
 import { getSiteSettings } from '@/lib/settings';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-type SocialPlatform = { key: string; displayName: string; icon: string; brandColor: string; url: string };
+type SocialPlatform = { key: string; displayName: string; icon: string; url: string };
 
 const FOOTER_ICONS: Record<string, ReactElement> = {
   instagram: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>,
@@ -31,12 +32,12 @@ async function getSocialPlatforms(): Promise<SocialPlatform[]> {
       signal: AbortSignal.timeout(3000),
     } as RequestInit);
     if (!res.ok) return [];
-    return res.json();
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
   } catch { return []; }
 }
 
-// Live categories for the footer Shop column, so it tracks the real categories
-// (with products) instead of a hardcoded list.
+// Keep the footer in sync with the categories that have products.
 async function getFooterCategories(): Promise<{ slug: string; label: string; count: number }[]> {
   try {
     const res = await fetch(`${API}/api/categories`, {
@@ -49,73 +50,82 @@ async function getFooterCategories(): Promise<{ slug: string; label: string; cou
   } catch { return []; }
 }
 
-export default async function Footer() {
-  const socialPlatforms = (await getSocialPlatforms()).filter(p => isValidSocialUrl(p.url));
-  const shopCategories = (await getFooterCategories()).filter(c => c.count > 0).slice(0, 6);
-  const { supportEmail, brandTagline, brandLocation } = await getSiteSettings();
-  const socialRow = socialPlatforms.length > 0 ? (
-    <div className={styles.socialRow}>
-      {socialPlatforms.map(p => (
-        <a
-          key={p.key}
-          href={p.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          title={p.displayName}
-          className={styles.socialIcon}
-        >
-          {FOOTER_ICONS[p.icon] ?? <span style={{ fontSize: 11 }}>{p.displayName}</span>}
+function FooterLinks({ section, locale }: { section: FooterSection; locale: PageLocale }) {
+  return (
+    <div className={styles.links}>
+      {section.links.map(({ href, label }) => (
+        <a key={href} href={href.startsWith('/') ? localeHref(locale, href) : href} className={styles.navLink}>
+          {label}
         </a>
       ))}
+      {section.hasCookieLink && <CookiePreferencesLink className={styles.navLink} />}
     </div>
-  ) : null;
+  );
+}
 
+export default async function Footer() {
+  const [platforms, categories, settings, locale] = await Promise.all([
+    getSocialPlatforms(), getFooterCategories(), getSiteSettings(), getLocale(),
+  ]);
+  const { supportEmail, brandLocation, welcomeOfferPercent } = settings;
+  const sections = footerSections(categories.filter(category => category.count > 0).slice(0, 6), supportEmail);
+  const socialPlatforms = platforms.filter(platform => isValidSocialUrl(platform.url));
+  const { language, currency } = getDictionary(locale).common;
   return (
-    <footer className={styles.footer}>
-      {/* Desktop column grid — hidden on mobile */}
+    <footer id="storefront-footer" className={styles.footer}>
       <div className={styles.inner}>
-        <div className={styles.brand}>
-          <h3>SILKILINEN</h3>
-          <p>{brandTagline},<br />shipped worldwide from Donegal.</p>
-          <p className={styles.address}>
-            {brandLocation}<br />
-            <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
-          </p>
-          {socialRow}
-        </div>
-        {siteSections(shopCategories).map(section => (
-          <div key={section.id} className={styles.col}>
-            <h4>{section.title}</h4>
-            {section.links.map(l => (
-              <a key={l.href} href={l.href}>{l.label}</a>
-            ))}
-            {section.hasCookieLink && <CookiePreferencesLink />}
+        <div className={styles.main}>
+          <div>
+            <div className={styles.identity}>
+              <a href={localeHref(locale, '/')} className={styles.wordmark}>SILKILINEN</a>
+              <p className={styles.location}>{brandLocation}</p>
+            </div>
+            <NewsletterBand
+              welcomeOfferPercent={welcomeOfferPercent}
+              privacyHref={localeHref(locale, '/privacy-policy')}
+            />
           </div>
-        ))}
-      </div>
-
-      {/* Mobile brand — hidden on desktop */}
-      <div className={styles.mobileBrand}>
-        <h3>SILKILINEN</h3>
-        <p>{brandTagline},<br />shipped worldwide from Donegal.</p>
-        <p className={styles.address}>
-          {brandLocation}<br />
-          <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
-        </p>
-        {socialRow}
-      </div>
-
-      {/* Mobile accordion — hidden on desktop */}
-      <FooterMobileNav />
-
-      <div style={{ display: 'flex', gap: 16, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
-        <FooterCurrency />
-        <LanguageSwitcher />
-      </div>
-
-      <div className={styles.bottom}>
-        <p>© {new Date().getFullYear()} SILKILINEN. All rights reserved.</p>
-        <p>Registered in Donegal, Ireland · VAT not applicable — small business exemption (Ireland)</p>
+          <nav className={styles.desktopNav} aria-label="Footer links">
+            {sections.map(section => (
+              <div key={section.id}>
+                <h2 className={styles.sectionTitle}>{section.title}</h2>
+                <FooterLinks section={section} locale={locale} />
+              </div>
+            ))}
+          </nav>
+          <nav className={styles.mobileNav} aria-label="Footer links">
+            {sections.map(section => (
+              <details key={section.id}>
+                <summary className={styles.sectionTitle}>
+                  {section.title}
+                  <span className={styles.caret} aria-hidden="true" />
+                </summary>
+                <FooterLinks section={section} locale={locale} />
+              </details>
+            ))}
+          </nav>
+        </div>
+        {socialPlatforms.length > 0 && (
+          <div className={styles.socialRow} role="group" aria-label="Social links">
+            {socialPlatforms.map(platform => (
+              <a
+                key={platform.key}
+                href={platform.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={platform.displayName}
+                className={styles.socialIcon}
+              >
+                <span aria-hidden="true">{FOOTER_ICONS[platform.icon] ?? platform.displayName}</span>
+              </a>
+            ))}
+          </div>
+        )}
+        <FooterPreferences locale={locale} languageLabel={language} currencyLabel={currency} />
+        <div className={styles.bottom}>
+          <p>© {new Date().getFullYear()} SILKILINEN</p>
+          <p>Registered in Donegal, Ireland · VAT not applicable — small business exemption (Ireland)</p>
+        </div>
       </div>
     </footer>
   );

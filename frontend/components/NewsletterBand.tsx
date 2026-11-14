@@ -1,20 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import styles from './NewsletterBand.module.css';
-import { useSiteSettings } from '@/lib/useSiteSettings';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-export default function NewsletterBand() {
-  const { welcomeOfferPercent, welcomeOfferCode } = useSiteSettings();
+type NewsletterBandProps = {
+  welcomeOfferPercent: number;
+  privacyHref: string;
+};
+
+export default function NewsletterBand({ welcomeOfferPercent, privacyHref }: NewsletterBandProps) {
+  const consentId = useId();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email) return;
+    if (!email || status === 'loading') return;
     setStatus('loading');
     try {
       const res = await fetch(`${API}/api/newsletter`, {
@@ -22,10 +26,11 @@ export default function NewsletterBand() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Something went wrong');
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || 'We couldn’t subscribe you. Please try again.');
+      }
       setStatus('success');
-      setMessage(data.message || "You're on the list!");
     } catch (err) {
       setStatus('error');
       setMessage(err instanceof Error ? err.message : 'Something went wrong');
@@ -33,48 +38,42 @@ export default function NewsletterBand() {
   }
 
   return (
-    <section className={styles.section}>
-      <div className={styles.inner}>
-        {status === 'success' ? (
-          <div className={styles.success}>
-            <p className={styles.successTitle}>Thank you for joining.</p>
-            <p className={styles.successSub}>
-              Your welcome gift — <strong>{welcomeOfferPercent}% off</strong> with code <strong>{welcomeOfferCode}</strong> — is on its way.
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className={styles.text}>
-              <h2 className={styles.title}>Join the circle</h2>
-              <p className={styles.sub}>
-                First access to new silk drops, seasonal pre-orders, and a {welcomeOfferPercent}% welcome offer.
-              </p>
-            </div>
-            <form className={styles.form} onSubmit={handleSubmit}>
-              <input
-                type="email"
-                name="email"
-                autoComplete="email"
-                aria-label="Email address"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="Your email address"
-                className={styles.input}
-                required
-                disabled={status === 'loading'}
-              />
-              <button
-                type="submit"
-                className={styles.submit}
-                disabled={status === 'loading'}
-              >
-                {status === 'loading' ? 'Joining…' : 'Join'}
-              </button>
-            </form>
-            {status === 'error' && <p className={styles.error}>{message}</p>}
-          </>
+    <section aria-label="Newsletter sign-up">
+      <div role="status">
+        {status === 'success' && (
+          <h2 className={styles.title}>Thank you for joining.</h2>
         )}
       </div>
+      {status !== 'success' && (
+        <>
+          <h2 className={styles.title}>Join the circle</h2>
+          <p className={styles.description}>
+            First access to new silk pieces, seasonal pre-orders and a {welcomeOfferPercent}% welcome offer.
+          </p>
+          <form className={styles.form} method="post" onSubmit={handleSubmit}>
+            <input
+              type="email"
+              name="email"
+              autoComplete="email"
+              aria-label="Email address"
+              aria-describedby={consentId}
+              value={email}
+              onChange={event => setEmail(event.target.value)}
+              placeholder="Your email address"
+              className={styles.input}
+              required
+              readOnly={status === 'loading'}
+            />
+            <button type="submit" className={styles.submit} disabled={status === 'loading'}>
+              {status === 'loading' ? 'Subscribing…' : 'Subscribe'}
+            </button>
+          </form>
+          <p id={consentId} className={styles.consent}>
+            By subscribing, you agree to receive our newsletter. <a href={privacyHref}>Privacy policy</a>
+          </p>
+          {status === 'error' && <p className={styles.error} role="alert">{message}</p>}
+        </>
+      )}
     </section>
   );
 }

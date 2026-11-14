@@ -8,7 +8,6 @@ import QualityBand from '@/components/QualityBand';
 import CategoryTiles from '@/components/CategoryTiles';
 import FeaturedCollections from '@/components/FeaturedCollections';
 import HeroVideo from '@/components/HeroVideo';
-import NewsletterBand from '@/components/NewsletterBand';
 import ShippingMap from '@/components/ShippingMap';
 import { EditableText, EditableImage } from '@/components/inline/InlineEdit';
 import { getContent, val } from '@/lib/content';
@@ -187,8 +186,6 @@ export default async function Home() {
           </div>
         </section>
       )}
-
-      <NewsletterBand />
     </main>
   );
 }

@@ -1,24 +1,6 @@
-// The site's secondary navigation, once.
-//
-// It existed twice, then three times. Footer.tsx held the desktop columns
-// inline, FooterMobileNav.tsx kept its own INFO_LINKS and LEGAL_LINKS arrays,
-// and the hamburger drawer had neither — it offered SHOP, the categories and
-// ABOUT, so the Silk Standard, Style Finder, Journal, size guide, care guide,
-// shipping, returns and contact were unreachable from mobile navigation
-// entirely. On a phone the drawer IS the navigation, and half the site was not
-// in it.
-//
-// One list, three renderings: desktop columns, a mobile accordion, and the
-// drawer. Named for the site rather than the footer now that the drawer reads
-// it too — a name that describes only its first caller is how the second
-// caller ends up writing its own copy.
-//
-// The shape follows the UI brief's §19: Shop · Discover · Help · About. The old
-// "Info" column carried About, Help and Discover together in a list of seven,
-// which is a list rather than a map — someone hunting the care guide scanned
-// past Reviews and the Silk Standard to reach it. Splitting it also gives the
-// education pages a permanent home in the internal linking, which §68 asks for:
-// every page on the site now links to the Standard and the Care Guide.
+import { categoryPath, collectionPath, shopPath } from './urls';
+
+// Shared destinations for the navigation drawer and the storefront footer.
 
 export type FooterLink = { label: string; href: string };
 
@@ -32,54 +14,78 @@ export type FooterSection = {
 
 export type ShopCategory = { slug: string; label: string };
 
-/**
- * @param categories live categories, so the Shop column reflects the actual
- *        shape of the catalogue rather than a hardcoded list that goes stale
- *        the first time a category is merged
- */
+const allProducts = { label: 'All products', href: shopPath() };
+const newArrivals = { label: 'New arrivals', href: shopPath({ isNew: true }) };
+const bridal = { label: 'Bridal', href: '/bridal' };
+const ourStory = { label: 'Our story', href: '/about' };
+const silkStandard = { label: 'The Silk Standard', href: '/silk-standard' };
+const styleFinder = { label: 'Style Finder', href: '/style-finder' };
+const journal = { label: 'Journal', href: '/journal' };
+const reviews = { label: 'Reviews', href: '/reviews' };
+const shipping = { label: 'Shipping', href: '/shipping' };
+const returns = { label: 'Returns', href: '/returns' };
+const sizeGuide = { label: 'Size guide', href: '/size-guide' };
+const careGuide = { label: 'Care guide', href: '/care-guide' };
+const contact = { label: 'Contact', href: '/contact' };
+const legalLinks = [
+  { label: 'Privacy policy', href: '/privacy-policy' },
+  { label: 'Terms & conditions', href: '/terms' },
+];
+
+function categoryLinks(categories: ShopCategory[]): FooterLink[] {
+  return categories.map(({ slug, label }) => ({ label, href: categoryPath(slug) }));
+}
+
 export function siteSections(categories: ShopCategory[] = []): FooterSection[] {
   return [
     {
       id: 'shop',
       title: 'Shop',
-      links: [
-        { label: 'New arrivals', href: '/shop?new=true' },
-        { label: 'All products', href: '/shop' },
-        ...categories.map(c => ({ label: c.label, href: `/shop?category=${c.slug}` })),
-        // The short entry point, which 301s to the collection. Worth a footer
-        // slot: bridal is the one edit with its own search vocabulary.
-        { label: 'Bridal', href: '/bridal' },
-      ],
+      links: [newArrivals, allProducts, ...categoryLinks(categories), bridal],
     },
     {
       id: 'discover',
       title: 'Discover',
-      links: [
-        { label: 'The Silk Standard', href: '/silk-standard' },
-        { label: 'Style Finder', href: '/style-finder' },
-        { label: 'Journal', href: '/journal' },
-        { label: 'Reviews', href: '/reviews' },
-      ],
+      links: [silkStandard, styleFinder, journal, reviews],
     },
     {
       id: 'help',
       title: 'Help',
-      links: [
-        { label: 'Shipping', href: '/shipping' },
-        { label: 'Returns', href: '/returns' },
-        { label: 'Size guide', href: '/size-guide' },
-        { label: 'Care guide', href: '/care-guide' },
-        { label: 'Contact', href: '/contact' },
-      ],
+      links: [shipping, returns, sizeGuide, careGuide, contact],
     },
     {
       id: 'about',
       title: 'About',
+      links: [ourStory, ...legalLinks],
+      hasCookieLink: true,
+    },
+  ];
+}
+
+export function footerSections(categories: ShopCategory[], supportEmail: string): FooterSection[] {
+  return [
+    {
+      id: 'explore',
+      title: 'Explore SILKILINEN',
       links: [
-        { label: 'Our story', href: '/about' },
-        { label: 'Privacy policy', href: '/privacy-policy' },
-        { label: 'Terms & conditions', href: '/terms' },
+        { ...allProducts, label: 'Shop all' }, newArrivals,
+        { ...bridal, href: collectionPath({ slug: 'the-bridal-edit' }) }, ourStory,
+        journal, silkStandard, styleFinder, reviews, ...categoryLinks(categories),
       ],
+    },
+    {
+      id: 'care',
+      title: 'Customer care',
+      links: [
+        { ...shipping, label: 'Delivery' }, returns, sizeGuide, { ...careGuide, label: 'Silk care' },
+        { ...contact, label: 'Contact us' }, { label: 'FAQs', href: '/faq' },
+        { label: 'Email us', href: `mailto:${supportEmail}` },
+      ],
+    },
+    {
+      id: 'legal',
+      title: 'Legal',
+      links: legalLinks,
       hasCookieLink: true,
     },
   ];

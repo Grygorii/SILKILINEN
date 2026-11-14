@@ -2,7 +2,7 @@ import { brand } from './brand';
 // i18n core — CLIENT-SAFE. English is the default and stays UNPREFIXED (/shop);
 // the four extra locales are path-prefixed (/de/shop, /fr/…) and served via
 // middleware. This module must NOT import next/headers (it's imported by client
-// components like LanguageSwitcher); the server-only getLocale() lives in
+// components like FooterPreferences); the server-only getLocale() lives in
 // lib/i18n-server.ts.
 
 export const LOCALES = ['de', 'fr', 'it', 'es'] as const;
