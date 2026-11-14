@@ -21,7 +21,7 @@ import UKShipBadge from '@/components/UKShipBadge';
 import styles from './page.module.css';
 import { DELIVERY_COUNTRIES } from '@/lib/deliveryCountries';
 import { usePathname } from 'next/navigation';
-import { localeFromPathname } from '@/lib/i18n';
+import { localeFromPathname, localeHref } from '@/lib/i18n';
 import { getDictionary, type StorefrontDictionary } from '@/lib/dictionaries';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -480,7 +480,7 @@ export default function CheckoutPage() {
   function handleSuccess() {
     rememberConfirmation(paymentIntentIdRef.current, clientSecretRef.current);
     clearCart();
-    window.location.href = '/success';
+    window.location.href = localeHref(locale, '/success');
   }
 
   if (cart.length === 0) {
@@ -542,6 +542,7 @@ export default function CheckoutPage() {
               stripe={stripePromise}
               options={{
                 clientSecret,
+                locale,
                 appearance: {
                   theme: 'stripe',
                   variables: {
@@ -586,7 +587,7 @@ export default function CheckoutPage() {
                 variant={loading ? 'disabled' : 'primary'}
                 onClick={() => { if (!loading) createIntent(); }}
               >
-                {loading ? 'PREPARING…' : 'CONTINUE TO PAYMENT'}
+                {loading ? copy.processing.toUpperCase() : copy.continuePayment.toUpperCase()}
               </Button>
             </div>
           ) : loading ? (

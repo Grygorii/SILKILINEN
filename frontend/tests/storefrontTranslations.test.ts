@@ -29,6 +29,7 @@ describe('storefront translations', () => {
     const sticky = read('components/StickyBuyBar.tsx');
     const quickAdd = read('components/QuickAddSheet.tsx');
     const cart = read('components/CartPanel.tsx');
+    const checkout = read('app/(shop)/checkout/page.tsx');
 
     expect(sticky).toContain('const copy = getDictionary(locale);');
     expect(sticky).toContain('label = copy.product.add;');
@@ -36,5 +37,7 @@ describe('storefront translations', () => {
     expect(quickAdd).toContain('copy.product.quantity');
     expect(cart).toContain('copy.cart.calculatedAtCheckout');
     expect(cart).toContain('copy.cart.moreForFreeShipping');
+    expect(checkout).toContain('copy.continuePayment.toUpperCase()');
+    expect(checkout).toContain("localeHref(locale, '/success')");
   });
 });
