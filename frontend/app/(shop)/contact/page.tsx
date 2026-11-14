@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import styles from './page.module.css';
+import ContactForm from './ContactForm';
 import { getPageMeta } from '@/lib/pageSeo';
 import { SITE } from '@/lib/i18n';
 
@@ -23,7 +24,7 @@ export default function ContactPage() {
         <div className={styles.info}>
           <div className={styles.block}>
             <h3>Email</h3>
-            <p>hello@silkilinen.com</p>
+            <p><a href="mailto:hello@silkilinen.com">hello@silkilinen.com</a></p>
           </div>
           <div className={styles.block}>
             <h3>Based in</h3>
@@ -34,12 +35,7 @@ export default function ContactPage() {
             <p>Worldwide</p>
           </div>
         </div>
-        <div className={styles.form}>
-          <input type="text" placeholder="Your name" />
-          <input type="email" placeholder="Email address" />
-          <textarea rows={6} placeholder="Your message"></textarea>
-          <button>Send message</button>
-        </div>
+        <ContactForm />
       </div>
     </main>
   );

@@ -17,16 +17,9 @@ input[type="button"], input[type="submit"], input[type="reset"] {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* A press should feel deliberate, not make the control look as if it has
-   failed.  Links keep their reading rhythm; actionable controls move by one
-   pixel and retain their contrast. */
-button:active:not(:disabled),
-[role="button"]:active:not([aria-disabled="true"]),
-input[type="button"]:active:not(:disabled),
-input[type="submit"]:active:not(:disabled),
-input[type="reset"]:active:not(:disabled) {
-  transform: translateY(1px);
-}
+/* Luxury controls should feel composed, not spring-loaded. A universal press
+   transform made every icon, navigation row and selector jump by a pixel. Each
+   control family now owns its own restrained pressed state instead. */
 
 /* Keyboard focus ring — visible only during keyboard navigation */
 *:focus-visible {
@@ -73,6 +66,7 @@ img {
   --color-line-control: #948674;
   --color-ink-muted:    #6B6358;  /* meta, labels — darkened to meet WCAG AA (~5.6:1 on cream) */
   --color-ink:          #2A2218;  /* text, primary fill */
+  --color-ink-hover:    #46392B;  /* warm charcoal for purchase-control hover */
   --color-accent:       #C4A882;  /* rose-gold, used sparingly */
   /* The focus ring. A named role rather than a reuse of --color-ink, because
      it is the one colour whose job is to be SEEN rather than to be quiet — if
@@ -149,8 +143,8 @@ img {
   --ease: cubic-bezier(.2, .6, .2, 1);
 
   /* Control heights */
-  --ctrl-h-desktop: 52px;
-  --ctrl-h-mobile:  56px;
+  --ctrl-h-desktop: 48px;
+  --ctrl-h-mobile:  52px;
   --pill-h:         44px;
 
   /* ── Legacy aliases ───────────────────────────────────────────────────

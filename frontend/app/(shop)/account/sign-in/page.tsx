@@ -112,8 +112,8 @@ export default function SignInPage() {
                   autoFocus
                 />
               </div>
-              {error && <p className={styles.error}>{error}</p>}
-              <button className={styles.btn} disabled={loading}>
+              {error && <p className={styles.error} role="alert">{error}</p>}
+              <button className={styles.btn} disabled={loading} aria-busy={loading}>
                 {loading ? 'Sending…' : 'Send sign-in link'}
               </button>
             </form>

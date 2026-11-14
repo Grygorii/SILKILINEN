@@ -167,13 +167,11 @@ export default function ProductGallery({ images, name, productId, video }: Props
         onTouchEnd={handleTouchEnd}
       >
         {item?.kind === 'image' && (
-          <div
+          <button
+            type="button"
             className={styles.imageWrap}
-            role="button"
-            tabIndex={0}
             aria-label="Zoom image"
             onClick={() => setLightboxOpen(true)}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLightboxOpen(true); } }}
           >
             <Image
               src={item.url}
@@ -184,7 +182,7 @@ export default function ProductGallery({ images, name, productId, video }: Props
               className={styles.heroImg}
               onError={() => setFailedUrls(prev => new Set([...prev, item.url]))}
             />
-          </div>
+          </button>
         )}
 
         {item?.kind === 'video' && (

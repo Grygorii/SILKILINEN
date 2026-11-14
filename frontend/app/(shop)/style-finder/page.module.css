@@ -43,24 +43,24 @@
 }
 
 .beginBtn {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
   border: 1px solid var(--dark);
   background: var(--dark);
   color: var(--cream);
-  padding: 16px 56px;
+  padding: 0 56px;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   letter-spacing: var(--track-utility);
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 300ms cubic-bezier(.2, .6, .2, 1),
-    color 300ms cubic-bezier(.2, .6, .2, 1);
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
 
-.beginBtn:hover {
-  background: transparent;
-  color: var(--dark);
-}
+@media (hover: hover) { .beginBtn:hover { background: var(--color-ink-hover); border-color: var(--color-ink-hover); } }
+.beginBtn:active { background: var(--color-ink-muted); border-color: var(--color-ink-muted); }
 
 /* ── Calm entrance + per-question slide ───────────────── */
 @keyframes sfFadeIn {
@@ -257,31 +257,21 @@
   cursor: pointer;
   min-height: 58px;
   text-align: left;
-  box-shadow: 0 1px 0 rgba(42, 34, 24, 0.02);
-  transition: border-color 240ms cubic-bezier(.2, .6, .2, 1),
-    transform 240ms cubic-bezier(.2, .6, .2, 1),
-    box-shadow 240ms cubic-bezier(.2, .6, .2, 1),
-    background 240ms cubic-bezier(.2, .6, .2, 1);
+  transition: border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 
 .optionLabel {
   flex: 1;
 }
 
-/* Quiet, tactile hover — a small lift, no colour shout. */
-.option:hover {
-  border-color: var(--muted);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(42, 34, 24, 0.06);
-}
+@media (hover: hover) { .option:hover { border-color: var(--dark); background: var(--color-surface); } }
+.option:active { background: var(--color-surface-warm); }
 
-/* Selected = quiet dark border + subtle lift + faint cream wash. */
+/* The answer is clear without turning each choice into a dark button. */
 .optionChosen,
 .optionChosen:hover {
   border-color: var(--dark);
   background: var(--cream);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(42, 34, 24, 0.08);
 }
 
 /* ── Colour swatches (mood question) ──────────────────── */
@@ -309,9 +299,10 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
   background: none;
   border: none;
-  padding: 6px 0;
+  padding: 0 var(--s-2);
   font-family: 'Jost', sans-serif;
   font-size: 12px;
   letter-spacing: 1.5px;
@@ -333,9 +324,13 @@
 }
 
 .textBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
   background: none;
   border: none;
-  padding: 6px 0;
+  padding: 0 var(--s-2);
   font-family: 'Jost', sans-serif;
   font-size: 12px;
   letter-spacing: 1.5px;
@@ -422,8 +417,9 @@
 
 .shareBtn {
   background: none;
-  border: 1px solid var(--border);
-  padding: 11px 30px;
+  border: 1px solid var(--color-line-control);
+  min-height: 48px;
+  padding: 0 30px;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   letter-spacing: 2px;
@@ -431,13 +427,11 @@
   color: var(--dark);
   cursor: pointer;
   min-width: 148px;
-  transition: border-color 220ms cubic-bezier(.2, .6, .2, 1),
-    color 220ms cubic-bezier(.2, .6, .2, 1);
+  transition: border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 
-.shareBtn:hover {
-  border-color: var(--dark);
-}
+@media (hover: hover) { .shareBtn:hover { border-color: var(--dark); background: var(--color-surface); } }
+.shareBtn:active { background: var(--color-surface-warm); }
 
 .editKicker {
   font-family: 'Jost', sans-serif;
@@ -480,12 +474,6 @@
   flex-direction: column;
   text-decoration: none;
   text-align: left;
-  transition: transform 420ms cubic-bezier(.2, .6, .2, 1);
-}
-
-/* Quiet hover lift — the whole card rises a touch. */
-.card:hover {
-  transform: translateY(-6px);
 }
 
 /* The top recommendation, made visually primary: a large hero block at the
@@ -537,7 +525,7 @@
 }
 
 .card:hover .cardImg img {
-  transform: scale(1.04);
+  transform: scale(1.02);
 }
 
 .imgFallback {
@@ -572,20 +560,17 @@
   text-transform: uppercase;
   color: var(--dark);
   opacity: 0;
-  transform: translateY(4px);
-  transition: opacity 280ms cubic-bezier(.2, .6, .2, 1),
-    transform 280ms cubic-bezier(.2, .6, .2, 1);
+  transition: opacity 180ms var(--ease);
 }
 
 .card:hover .cardView,
 .card:focus-visible .cardView {
   opacity: 1;
-  transform: translateY(0);
 }
 
 /* On touch / no-hover devices, keep the affordance always visible. */
 @media (hover: none) {
-  .cardView { opacity: 1; transform: none; }
+  .cardView { opacity: 1; }
 }
 
 /* Controls placed calmly below the reveal, gently set apart so they never
@@ -609,22 +594,23 @@
 }
 
 .ctaOutline {
-  display: inline-block;
-  border: 1px solid var(--dark);
-  padding: 15px 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 44px;
+  border: 0;
+  padding: 0;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--dark);
   text-decoration: none;
-  transition: background 220ms cubic-bezier(.2, .6, .2, 1), color 220ms cubic-bezier(.2, .6, .2, 1);
+  transition: color var(--t-fast) var(--ease);
 }
 
-.ctaOutline:hover {
-  background: var(--dark);
-  color: var(--cream);
-}
+.ctaOutline::after { content: '→'; display: inline-block; font-size: 17px; line-height: 1; transition: transform var(--t-fast) var(--ease); }
+@media (hover: hover) { .ctaOutline:hover { color: var(--color-ink-muted); } .ctaOutline:hover::after { transform: translateX(3px); } }
 
 /* ── Optional save / email ────────────────────────────── */
 .save {
@@ -650,7 +636,7 @@
 
 .saveInput {
   flex: 1;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-line-control);
   background: transparent;
   padding: 14px 16px;
   font-family: 'Jost', sans-serif;
@@ -660,10 +646,7 @@
   min-height: 48px;
 }
 
-.saveInput:focus {
-  outline: none;
-  border-color: var(--dark);
-}
+.saveInput:focus { outline: none; border-color: var(--dark); background: var(--color-surface); }
 
 .saveBtn {
   border: 1px solid var(--dark);
@@ -676,8 +659,11 @@
   text-transform: uppercase;
   cursor: pointer;
   min-height: 48px;
-  transition: opacity 200ms cubic-bezier(.2, .6, .2, 1);
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
+
+@media (hover: hover) { .saveBtn:hover:not(:disabled) { background: var(--color-ink-hover); border-color: var(--color-ink-hover); } }
+.saveBtn:active:not(:disabled) { background: var(--color-ink-muted); border-color: var(--color-ink-muted); }
 
 .saveBtn:disabled {
   opacity: 0.55;
@@ -724,7 +710,7 @@
   .intro { padding: 48px 26px; }
   .introTitle { font-size: 36px; }
   .introSub { margin-bottom: 36px; }
-  .beginBtn { padding: 15px 48px; }
+  .beginBtn { padding: 0 48px; }
   .question { font-size: 26px; }
   .option { padding: 16px 18px; }
   .personaName { font-size: 36px; }

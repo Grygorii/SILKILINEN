@@ -34,7 +34,7 @@ export default function WishlistPage() {
         ) : items.length === 0 ? (
           <div className={styles.empty}>
             <p>Your favourites will live here.</p>
-            <Link href="/shop" className={styles.shopLink}>Browse the collection →</Link>
+            <Link href="/shop" className={styles.shopLink}>Browse the collection</Link>
           </div>
         ) : (
           <div className={styles.grid}>

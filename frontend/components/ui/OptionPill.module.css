@@ -20,7 +20,7 @@
   min-height: var(--pill-h);
   padding: 0 var(--s-3);
   background: var(--color-bg);
-  border: var(--stroke) solid var(--color-ink);
+  border: var(--stroke) solid var(--color-line-control);
   border-radius: var(--radius-control);
   color: var(--color-ink);
   font-family: 'Jost', sans-serif;
@@ -31,14 +31,16 @@
   cursor: pointer;
   transition: background var(--t-fast) var(--ease),
               color var(--t-fast) var(--ease),
-              border-color var(--t-fast) var(--ease),
-              transform var(--t-fast) var(--ease);
+              border-color var(--t-fast) var(--ease);
   user-select: none;
 }
 
 .pill:hover:not(.disabled):not(.selected) {
   background: var(--color-surface);
+  border-color: var(--color-ink);
 }
+
+.pill:active:not(.disabled):not(.selected) { background: var(--color-surface-warm); }
 
 .pill:focus-visible {
   outline: 2px solid var(--color-ink);
@@ -47,6 +49,7 @@
 
 .selected {
   background: var(--color-ink);
+  border-color: var(--color-ink);
   color: var(--color-bg);
 }
 

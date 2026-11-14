@@ -14,7 +14,7 @@
    Design-system v1 puts the chart 10px muted, not a competing button. */
 .sizeRow {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: var(--s-3, 12px);
   gap: var(--s-3, 12px);
@@ -30,6 +30,9 @@
 }
 
 .sizeGuideLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-family: 'Jost', sans-serif;
   font-weight: 400;
   font-size: 10px;
@@ -102,8 +105,10 @@
 }
 
 .variantLink {
-  display: inline-block;
-  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
   background: var(--color-bg);
   border: var(--stroke, 1px) solid var(--color-line-control);
   border-radius: var(--radius-control, 2px);
@@ -113,7 +118,7 @@
   text-decoration: none;
   transition: border-color var(--t-fast, 120ms) var(--ease, ease),
               background var(--t-fast, 120ms) var(--ease, ease),
-              transform var(--t-fast, 120ms) var(--ease, ease);
+              color var(--t-fast, 120ms) var(--ease, ease);
 }
 
 .variantLink:hover {
@@ -167,10 +172,11 @@
   justify-content: center;
   font-family: inherit;
   transition: background var(--t-fast, 120ms) var(--ease, ease),
-              transform var(--t-fast, 120ms) var(--ease, ease);
+              color var(--t-fast, 120ms) var(--ease, ease);
 }
 
 .stepperBtn:hover:not(:disabled) { background: var(--color-surface); }
+.stepperBtn:active:not(:disabled) { background: var(--color-surface-warm); }
 .stepperBtn:disabled { color: var(--color-ink-muted); cursor: not-allowed; }
 
 .stepperVal {

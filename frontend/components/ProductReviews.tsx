@@ -184,14 +184,17 @@ export default function ProductReviews({ productId, productName }: { productId: 
           </div>
 
           <div className={styles.fields}>
-            <input id="rv-name" className={styles.input} placeholder="Your name" value={name} onChange={e => setName(e.target.value)} maxLength={80} autoComplete="name" />
-            <input className={styles.input} placeholder="Sum it up (optional)" value={title} onChange={e => setTitle(e.target.value)} maxLength={120} />
-            <textarea className={styles.textarea} placeholder="How does it feel to wear? What did you love?" value={message} onChange={e => setMessage(e.target.value)} maxLength={2000} rows={4} />
+            <label className={styles.srOnly} htmlFor="rv-name">Your name</label>
+            <input id="rv-name" className={styles.input} placeholder="Your name" value={name} onChange={e => setName(e.target.value)} maxLength={80} autoComplete="name" required />
+            <label className={styles.srOnly} htmlFor="rv-title">Review title (optional)</label>
+            <input id="rv-title" className={styles.input} placeholder="Sum it up (optional)" value={title} onChange={e => setTitle(e.target.value)} maxLength={120} />
+            <label className={styles.srOnly} htmlFor="rv-message">Your review</label>
+            <textarea id="rv-message" className={styles.textarea} placeholder="How does it feel to wear? What did you love?" value={message} onChange={e => setMessage(e.target.value)} maxLength={2000} rows={4} />
             {/* Honeypot — hidden from real users */}
             <input className={styles.hp} tabIndex={-1} autoComplete="off" value={website} onChange={e => setWebsite(e.target.value)} aria-hidden="true" />
           </div>
 
-          {error && <p className={styles.error}>{error}</p>}
+          {error && <p className={styles.error} role="alert">{error}</p>}
 
           <div className={styles.formActions}>
             <button type="submit" className={styles.submit} disabled={submitting}>{submitting ? 'Posting…' : 'Post review'}</button>
@@ -208,7 +211,7 @@ export default function ProductReviews({ productId, productName }: { productId: 
             <span className={styles.listCount}>{count} review{count !== 1 ? 's' : ''}</span>
             <div className={styles.sortRow}>
               {(['recent', 'helpful', 'highest'] as Sort[]).map(s => (
-                <button key={s} className={`${styles.sortBtn} ${sort === s ? styles.sortOn : ''}`} onClick={() => setSort(s)}>
+                <button key={s} type="button" aria-pressed={sort === s} className={`${styles.sortBtn} ${sort === s ? styles.sortOn : ''}`} onClick={() => setSort(s)}>
                   {s === 'recent' ? 'Most recent' : s === 'helpful' ? 'Most helpful' : 'Highest rated'}
                 </button>
               ))}
@@ -234,7 +237,7 @@ export default function ProductReviews({ productId, productName }: { productId: 
                   {r.reviewer}
                   {reviewSourceLabel(r) && <span className={styles.verified}>{r.source === 'order' && r.verifiedPurchase && <BadgeCheck size={13} strokeWidth={2} />} {reviewSourceLabel(r)}</span>}
                 </span>
-                <button className={`${styles.helpful} ${voted.has(r._id) ? styles.helpfulOn : ''}`} onClick={() => markHelpful(r._id)} disabled={voted.has(r._id)}>
+                <button type="button" className={`${styles.helpful} ${voted.has(r._id) ? styles.helpfulOn : ''}`} onClick={() => markHelpful(r._id)} disabled={voted.has(r._id)}>
                   <ThumbsUp size={13} strokeWidth={1.6} /> Helpful{r.helpfulCount ? ` (${r.helpfulCount})` : ''}
                 </button>
               </div>

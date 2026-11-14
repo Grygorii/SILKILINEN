@@ -102,6 +102,8 @@ export default function ReviewsPage() {
                   const pct = total ? (count / total) * 100 : 0;
                   return (
                     <button
+                      type="button"
+                      aria-pressed={filter === star}
                       key={star}
                       className={`${styles.distRow} ${filter === star ? styles.distRowActive : ''}`}
                       onClick={() => setFilter(filter === star ? null : star)}
@@ -123,7 +125,7 @@ export default function ReviewsPage() {
         {filter && (
           <div className={styles.filterBar}>
             <span>Showing {filter}-star reviews</span>
-            <button className={styles.clearFilter} onClick={() => setFilter(null)}>Clear filter ✕</button>
+            <button type="button" className={styles.clearFilter} onClick={() => setFilter(null)}>Clear filter</button>
           </div>
         )}
 

@@ -66,10 +66,13 @@
   color: var(--dark);
   padding: 0;
   margin-right: -10px;
-  transition: opacity 0.15s;
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 
-.closeBtn:hover { opacity: 0.6; }
+@media (hover: hover) {
+  .closeBtn:hover { background: var(--color-surface); }
+}
+.closeBtn:active { background: var(--color-surface-warm); }
 
 /* ── Search ───────────────────────────────────────── */
 
@@ -80,11 +83,11 @@
 
 .searchInput {
   width: 100%;
-  background: var(--cream);
-  border: none;
-  border-bottom: 1px solid var(--border);
+  min-height: 48px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-line-control);
   outline: none;
-  padding: 12px 16px;
+  padding: 0 16px;
   font-size: 13px;
   font-family: inherit;
   color: var(--dark);
@@ -92,7 +95,7 @@
   transition: border-color 0.15s;
 }
 
-.searchInput:focus { border-bottom-color: var(--dark); }
+.searchInput:focus { border-color: var(--dark); }
 
 .searchInput::placeholder {
   color: var(--muted);
@@ -115,14 +118,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 0;
+  min-height: 48px;
+  padding: 0;
   font-size: 12px;
   letter-spacing: var(--track-utility);
   font-weight: 400;
   color: var(--dark);
   text-decoration: none;
   border-bottom: 1px solid var(--border);
-  transition: opacity 0.15s;
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 
 .navLink:first-child { border-top: 1px solid var(--border); }
@@ -144,7 +148,10 @@
 
 .navLinkSkeleton:first-of-type { border-top: 1px solid var(--border); }
 
-.navLink:hover { opacity: 0.55; }
+@media (hover: hover) {
+  .navLink:hover { background: var(--color-surface); }
+}
+.navLink:active { background: var(--color-surface-warm); }
 
 .navLinkFeatured {
   color: var(--dark);
@@ -173,31 +180,39 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 0;
+  min-height: 48px;
+  padding: 0;
   font-size: 12px;
   letter-spacing: var(--track-utility);
   color: var(--dark);
   text-decoration: none;
   border-bottom: 1px solid var(--border);
-  transition: opacity 0.15s;
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 
-.accountRow:hover { opacity: 0.55; }
+@media (hover: hover) {
+  .accountRow:hover { background: var(--color-surface); }
+}
+.accountRow:active { background: var(--color-surface-warm); }
 
 .accountItem {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 11px 0;
+  min-height: 44px;
+  padding: 0;
   font-size: 12px;
   letter-spacing: 0.5px;
   color: var(--dark);
   text-decoration: none;
   border-bottom: 1px solid var(--border);
-  transition: opacity 0.15s;
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 
-.accountItem:hover { opacity: 0.6; }
+@media (hover: hover) {
+  .accountItem:hover { background: var(--color-surface); }
+}
+.accountItem:active { background: var(--color-surface-warm); }
 
 .accountItem .navArrow {
   margin-left: auto;
@@ -248,16 +263,20 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 0;
+  min-height: 48px;
+  padding: 0;
   font-size: 12px;
   letter-spacing: 0.5px;
   color: var(--dark);
   text-decoration: none;
   border-bottom: 1px solid var(--border);
-  transition: opacity 0.15s;
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 
-.footerLink:hover { opacity: 0.6; }
+@media (hover: hover) {
+  .footerLink:hover { background: var(--color-surface); }
+}
+.footerLink:active { background: var(--color-surface-warm); }
 
 .social {
   display: flex;

@@ -91,11 +91,11 @@
 
 .arrow {
   background: none;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-line-control);
   color: var(--dark);
-  width: 36px;
-  height: 36px;
-  font-size: 22px;
+  width: 44px;
+  height: 44px;
+  font-size: 20px;
   line-height: 1;
   cursor: pointer;
   display: flex;
@@ -104,9 +104,8 @@
   transition: background 0.15s ease;
 }
 
-.arrow:hover {
-  background: var(--cream);
-}
+@media (hover: hover) { .arrow:hover { background: var(--color-surface); border-color: var(--color-ink); } }
+.arrow:active { background: var(--color-surface-warm); }
 
 .mobileCount {
   font-size: 12px;

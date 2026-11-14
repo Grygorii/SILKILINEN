@@ -70,7 +70,9 @@
 }
 
 .link {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   margin-top: 12px;
   font-size: 12px;
   letter-spacing: 2px;

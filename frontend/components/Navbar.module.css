@@ -86,10 +86,13 @@
   text-decoration: none;
   padding: 0;
   flex-shrink: 0;
-  transition: opacity 0.2s ease;
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 
-.iconBtn:hover { opacity: 0.6; }
+@media (hover: hover) {
+  .iconBtn:hover { color: var(--color-ink-muted); }
+}
+.iconBtn:active { color: var(--color-ink-muted); }
 
 /* ── Badge ────────────────────────────────────────── */
 

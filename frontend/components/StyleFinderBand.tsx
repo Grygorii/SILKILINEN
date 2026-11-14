@@ -2,8 +2,9 @@ import { QUESTION_COUNT_WORD } from '@/lib/styleFinder';
 import styles from './StyleFinderBand.module.css';
 
 /**
- * Homepage Style Finder entry band. The CTA's gradient drifts copper→blush and
- * lifts with a shine sweep on hover, evoking the way silk catches the light.
+ * Homepage Style Finder entry band. The whole band is the invitation; its
+ * visible cue stays a quiet editorial action rather than a second, competing
+ * button inside the link.
  * Click tracking is handled globally via the data-track attribute.
  */
 export default function StyleFinderBand() {
@@ -16,7 +17,7 @@ export default function StyleFinderBand() {
       <span className={styles.finderCue}>
         Answer {QUESTION_COUNT_WORD} quiet questions and we&rsquo;ll gather the pieces made for you.
       </span>
-      <span className={styles.finderBtn}>Take the Style Finder &rarr;</span>
+      <span className={styles.finderBtn}>Take the Style Finder</span>
     </a>
   );
 }

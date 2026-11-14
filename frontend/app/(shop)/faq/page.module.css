@@ -100,13 +100,16 @@
 }
 
 .ctaLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--dark);
   text-decoration: none;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 2px;
+  padding: 0;
   transition: border-color 0.15s;
 }
 .ctaLink:hover { border-color: var(--dark); }

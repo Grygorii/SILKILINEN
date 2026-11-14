@@ -48,14 +48,19 @@
   border: none;
   cursor: pointer;
   color: var(--muted);
-  padding: 4px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   display: flex;
   align-items: center;
   transition: color 0.15s;
   margin-top: 2px;
   margin-right: -4px;
 }
-.close:hover { color: var(--dark); }
+@media (hover: hover) {
+  .close:hover { color: var(--dark); background: var(--color-surface); }
+}
+.close:active { background: var(--color-surface-warm); }
 
 .subtitle {
   font-size: 13px;
@@ -89,18 +94,21 @@
 
 .input,
 .textarea {
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-line-control);
   background: var(--warm-white);
   color: var(--dark);
   font-size: 14px;
   font-family: inherit;
-  padding: 12px 14px;
+  min-height: 48px;
+  padding: 0 14px;
   outline: none;
   resize: vertical;
   transition: border-color 0.15s;
   width: 100%;
   box-sizing: border-box;
 }
+
+.textarea { min-height: 120px; padding: 12px 14px; }
 
 .input:focus,
 .textarea:focus {
@@ -129,10 +137,11 @@
   text-transform: uppercase;
   font-family: inherit;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
   margin-top: 4px;
 }
-.submitBtn:hover:not(:disabled) { opacity: 0.85; }
+.submitBtn:hover:not(:disabled) { background: var(--color-ink-hover); }
+.submitBtn:active:not(:disabled) { background: var(--color-ink-muted); }
 .submitBtn:disabled { opacity: 0.5; cursor: default; }
 
 .productRef {

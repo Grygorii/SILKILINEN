@@ -47,7 +47,10 @@
   justify-content: center;
   transition: color 0.15s;
 }
-.close:hover { color: var(--dark); }
+@media (hover: hover) {
+  .close:hover { color: var(--dark); background: var(--color-surface); }
+}
+.close:active { background: var(--color-surface-warm); }
 
 .eyebrow {
   font-size: 9px;
@@ -81,9 +84,10 @@
 }
 
 .input {
-  padding: 13px 16px;
-  border: 1px solid var(--border);
-  background: var(--cream);
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--color-line-control);
+  background: var(--color-bg);
   color: var(--dark);
   font-size: 13px;
   font-family: inherit;

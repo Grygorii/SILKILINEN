@@ -51,23 +51,24 @@ export default function WishlistSignInNudge() {
   return (
     <div className={styles.stack}>
       {showSaveToast && (
-        <div className={styles.toast}>
+        <div className={styles.toast} role="status">
           <div className={styles.body}>
             <p className={styles.title}>Save your wishlist forever</p>
             <p className={styles.sub}>Sign in to access from any device.</p>
           </div>
           <div className={styles.actions}>
             <Link href="/account/sign-in" className={styles.signInLink}>Sign in</Link>
-            <button className={styles.close} onClick={() => setShowSaveToast(false)} aria-label="Dismiss">✕</button>
+            <button type="button" className={styles.close} onClick={() => setShowSaveToast(false)} aria-label="Dismiss">✕</button>
           </div>
         </div>
       )}
       {showMergeToast && (
-        <div className={`${styles.toast} ${styles.toastSuccess}`}>
+        <div className={`${styles.toast} ${styles.toastSuccess}`} role="status">
           <p className={styles.title}>
             ✓ Your {mergedCount} saved item{mergedCount !== 1 ? 's have' : ' has'} been added to your account
           </p>
           <button
+            type="button"
             className={styles.close}
             onClick={() => { setShowMergeToast(false); clearMergeNotice(); }}
             aria-label="Dismiss"

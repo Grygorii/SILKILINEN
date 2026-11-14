@@ -22,12 +22,11 @@ describe('storefront control contracts', () => {
     expect(quickAdd).toContain('copy.product.soldOut.toUpperCase()');
   });
 
-  it('uses a physical press state without globally fading controls', () => {
+  it('keeps controls composed instead of applying one physical press animation everywhere', () => {
     const globals = read('app/globals.css');
     const button = read('components/ui/Button.module.css');
 
-    expect(globals).toContain('transform: translateY(1px);');
-    expect(globals).not.toContain('button:active:not(:disabled) {\n  opacity: 0.75;');
+    expect(globals).not.toContain('transform: translateY(1px);');
     expect(button).toContain('cursor: not-allowed;');
   });
 
@@ -70,22 +69,15 @@ describe('storefront control contracts', () => {
     expect(button).toMatch(/\.primary:active:not\(:disabled\)\s*\{[\s\S]*?background:\s*var\(--color-ink-muted\);/);
   });
 
-  it('uses the signature direction mark only on the purchase path', () => {
+  it('keeps purchase controls plain and reserves the direction mark for editorial links', () => {
     const button = read('components/ui/Button.tsx');
     const buttonCss = read('components/ui/Button.module.css');
-    const options = read('components/ProductOptions.tsx');
-    const sticky = read('components/StickyBuyBar.tsx');
-    const cart = read('components/CartPanel.tsx');
-    const checkout = read('app/(shop)/checkout/page.tsx');
+    const hero = read('app/(shop)/page.module.css');
 
-    expect(button).toContain('showArrow?: boolean;');
-    expect(button).toContain('<span className={styles.arrow} aria-hidden="true">→</span>');
-    expect(buttonCss).toContain('.withArrow');
-    expect(options).toContain("showArrow={canAdd && addState === 'idle'}");
-    // The sticky mobile CTA is deliberately narrow (150px), so its label stays
-    // legible instead of sacrificing it for a decorative direction mark.
-    expect(sticky).not.toContain('showArrow=');
-    expect(cart).toContain('<Button showArrow onClick');
-    expect(checkout).toContain('showArrow={!loading}');
+    expect(button).not.toContain('showArrow');
+    expect(buttonCss).not.toContain('.withArrow');
+    expect(buttonCss).not.toContain('.primary::before');
+    expect(hero).toContain("content: '→';");
+    expect(hero).not.toContain("content: '↗';");
   });
 });

@@ -16,14 +16,16 @@
 }
 
 .link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   letter-spacing: 1px;
   color: var(--color-ink-muted);
   text-decoration: none;
   white-space: nowrap;
-  /* 44px tap target without a 44px-tall row on desktop. */
-  padding: 12px 0;
+  padding: 0;
   transition: color var(--t-fast) var(--ease);
 }
 

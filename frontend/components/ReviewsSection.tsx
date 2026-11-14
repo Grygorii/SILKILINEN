@@ -182,6 +182,7 @@ export default function ReviewsSection() {
                     <span className={styles.reviewerName}>{r.reviewer.split(' ')[0]}</span>
                     <span className={styles.reviewDate}>{timeAgo(r.dateReviewed)}</span>
                     <button
+                      type="button"
                       className={`${styles.helpfulBtn} ${voted.has(r._id) ? styles.helpfulVoted : ''}`}
                       onClick={() => markHelpful(r._id)}
                       disabled={voted.has(r._id)}
@@ -193,7 +194,7 @@ export default function ReviewsSection() {
               ))}
             </div>
             {page < totalPages && (
-              <button className={styles.loadMore} onClick={loadMore} disabled={loadingMore}>
+              <button type="button" className={styles.loadMore} onClick={loadMore} disabled={loadingMore}>
                 {loadingMore ? 'Loading…' : 'Load more reviews'}
               </button>
             )}

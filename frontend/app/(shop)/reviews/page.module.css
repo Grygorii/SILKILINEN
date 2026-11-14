@@ -71,21 +71,21 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 2px;
-  transition: background 0.15s ease;
+  min-height: 44px;
+  padding: 0 8px;
+  border-radius: var(--radius-control);
+  transition: background var(--t-fast) var(--ease), outline-color var(--t-fast) var(--ease);
   width: 100%;
   text-align: left;
 }
 
-.distRow:hover {
-  background: var(--cream);
-}
+@media (hover: hover) { .distRow:hover { background: var(--cream); } }
 
 .distRowActive {
   background: var(--cream);
-  outline: 1px solid var(--border);
+  outline: 1px solid var(--dark);
 }
+.distRow:active { background: var(--color-surface-warm); }
 
 .distLabel {
   font-size: 12px;
@@ -143,17 +143,19 @@
 }
 
 .clearFilter {
+  min-height: 44px;
   background: none;
   border: none;
+  padding: 0 var(--s-2);
   font-size: 12px;
   color: var(--muted);
   cursor: pointer;
   letter-spacing: 0.5px;
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 
-.clearFilter:hover {
-  color: var(--dark);
-}
+@media (hover: hover) { .clearFilter:hover { color: var(--dark); background: var(--color-bg); } }
+.clearFilter:active { background: var(--color-surface-warm); }
 
 /* ── Review grid ──────────────────────────────────── */
 

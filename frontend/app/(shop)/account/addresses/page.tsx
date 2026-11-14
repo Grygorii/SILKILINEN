@@ -94,10 +94,10 @@ export default function AddressesPage() {
           </div>
         </div>
 
-        {error && <p className={styles.errorMsg}>{error}</p>}
-        {saved && <p className={styles.successMsg}>✓ Address saved</p>}
+        {error && <p className={styles.errorMsg} role="alert">{error}</p>}
+        {saved && <p className={styles.successMsg} role="status">Address saved</p>}
 
-        <button type="submit" className={styles.saveBtn} disabled={saving}>
+        <button type="submit" className={styles.saveBtn} disabled={saving} aria-busy={saving}>
           {saving ? 'Saving…' : 'Save address'}
         </button>
       </form>

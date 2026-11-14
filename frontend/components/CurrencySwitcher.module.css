@@ -13,7 +13,8 @@
   font-size: 11px;
   letter-spacing: 1px;
   color: var(--muted);
-  padding: 6px 4px;
+  min-height: 44px;
+  padding: 0 6px;
   transition: color 0.15s;
 }
 .trigger:hover { color: var(--dark); }
@@ -50,7 +51,8 @@
   font-size: 12px;
   letter-spacing: 0.5px;
   color: var(--muted);
-  padding: 8px 10px;
+  min-height: 44px;
+  padding: 0 10px;
   text-align: left;
 }
 .item:hover { background: var(--color-surface); color: var(--dark); }

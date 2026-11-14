@@ -88,8 +88,9 @@
 .addBtn {
   background: var(--color-ink);
   color: var(--color-bg);
-  border: none;
-  padding: 16px 32px;
+  border: 1px solid var(--color-ink);
+  min-height: 52px;
+  padding: 0 32px;
   font-family: 'Jost', sans-serif;
   font-size: 12px;
   letter-spacing: 2px;
@@ -97,10 +98,11 @@
   cursor: pointer;
   width: 100%;
   max-width: 340px;
-  transition: opacity 0.2s ease;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
-.addBtn:hover:not(:disabled) { opacity: 0.85; }
-.addBtn:disabled { opacity: 0.4; cursor: default; }
+@media (hover: hover) { .addBtn:hover:not(:disabled) { background: var(--color-ink-hover); border-color: var(--color-ink-hover); } }
+.addBtn:active:not(:disabled) { background: var(--color-ink-muted); border-color: var(--color-ink-muted); }
+.addBtn:disabled { color: var(--color-ink-muted); background: var(--color-surface-warm); border-color: var(--color-line-control); cursor: not-allowed; }
 
 /* ── Included products ───────────────────────────────
    Grid of children, each rendered as a canonical ProductCard so the

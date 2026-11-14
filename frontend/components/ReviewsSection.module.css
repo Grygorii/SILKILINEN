@@ -146,24 +146,29 @@
 }
 
 .select {
-  border: 1px solid var(--border);
+  min-height: 44px;
+  border: 1px solid var(--color-line-control);
   background: var(--warm-white);
   color: var(--dark);
   font-size: 12px;
   font-family: inherit;
-  padding: 6px 10px;
+  padding: 0 10px;
   cursor: pointer;
-  outline: none;
+  transition: border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
+.select:hover { border-color: var(--color-ink); }
+.select:focus-visible { border-color: var(--color-ink); background: var(--color-surface); }
 
 .checkLabel {
   display: flex;
   align-items: center;
+  min-height: 44px;
   gap: 8px;
   font-size: 12px;
   color: var(--dark);
   cursor: pointer;
 }
+.checkLabel input { width: 18px; height: 18px; accent-color: var(--color-ink); }
 
 /* ── Review cards ────────────────────────────────── */
 
@@ -229,18 +234,20 @@
 }
 
 .helpfulBtn {
+  min-height: 44px;
   background: none;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-line-control);
   color: var(--muted);
   font-size: 11px;
   font-family: inherit;
-  padding: 3px 10px;
+  padding: 0 10px;
   cursor: pointer;
   border-radius: 2px;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
   margin-left: auto;
 }
-.helpfulBtn:hover:not(:disabled) { color: var(--dark); border-color: var(--dark); }
+.helpfulBtn:hover:not(:disabled) { color: var(--dark); border-color: var(--dark); background: var(--color-surface); }
+.helpfulBtn:active:not(:disabled) { background: var(--color-surface-warm); }
 .helpfulVoted { color: var(--color-success) !important; border-color: var(--color-success-soft) !important; cursor: default !important; }
 
 /* ── Load more ───────────────────────────────────── */
@@ -248,6 +255,7 @@
 .loadMore {
   display: block;
   margin: 32px auto 0;
+  min-height: 48px;
   background: transparent;
   border: 1px solid var(--dark);
   color: var(--dark);
@@ -255,11 +263,12 @@
   letter-spacing: 2px;
   text-transform: uppercase;
   font-family: inherit;
-  padding: 12px 32px;
+  padding: 0 32px;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
 }
 .loadMore:hover:not(:disabled) { background: var(--dark); color: var(--warm-white); }
+.loadMore:active:not(:disabled) { background: var(--color-ink-muted); border-color: var(--color-ink-muted); }
 .loadMore:disabled { opacity: 0.5; cursor: default; }
 
 .loadingText {

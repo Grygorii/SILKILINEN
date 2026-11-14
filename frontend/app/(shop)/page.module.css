@@ -111,18 +111,16 @@
   margin-bottom: 32px;
 }
 
-/* The homepage invitation is deliberately editorial rather than another dark
-   rectangle. A restrained rule and direction mark make the action clear while
-   letting the image and typography stay in charge. Purchase actions remain
-   filled buttons once the customer is choosing a product or paying. */
+/* A story-led action is typography, not a software control. Luxury fashion
+   references use a concise invitation beside the image; purchase actions stay
+   filled only when a shopper is choosing or paying. */
 .heroBtn {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
-  min-height: var(--ctrl-h-desktop);
-  padding: 0 0 8px;
+  gap: var(--s-2);
+  min-height: 44px;
+  padding: 6px 0;
   border: 0;
-  border-bottom: 1px solid currentColor;
   background: transparent;
   color: var(--color-ink);
   font-size: 12px;
@@ -130,23 +128,19 @@
   letter-spacing: var(--track-button);
   text-transform: uppercase;
   text-decoration: none;
-  transition: color var(--t-base) var(--ease), border-color var(--t-base) var(--ease);
+  transition: color var(--t-fast) var(--ease);
 }
 .heroBtn::after {
-  content: '↗';
-  width: 30px;
-  height: 30px;
-  display: grid;
-  place-items: center;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-  font-size: 15px;
+  content: '→';
+  display: inline-block;
+  font-size: 18px;
+  font-weight: 400;
   line-height: 1;
-  transition: transform var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+  transition: transform var(--t-fast) var(--ease);
 }
 @media (hover: hover) {
   .heroBtn:hover { color: var(--color-ink-muted); }
-  .heroBtn:hover::after { transform: translate(2px, -2px); background: color-mix(in srgb, var(--color-bg) 68%, transparent); }
+  .heroBtn:hover::after { transform: translateX(3px); }
 }
 .heroBtn:active { color: var(--color-ink-muted); }
 .heroBtn:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 4px; }
@@ -230,7 +224,7 @@
   }
 
   .heroBtn {
-    min-height: var(--ctrl-h-mobile);
+    min-height: 44px;
     display: inline-flex;
     align-items: center;
   }

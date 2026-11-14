@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const messages = [];
-const { sendMagicLink, sendWinbackReminder, sendWishlistReminder } = await import('../services/email.js');
+const { sendContactMessage, sendMagicLink, sendWinbackReminder, sendWishlistReminder } = await import('../services/email.js');
 
 beforeEach(() => {
   messages.length = 0;
@@ -62,5 +62,26 @@ describe('marketing email templates', () => {
       product: { name: 'Silk brief', slug: 'silk-brief' },
       offer: { code: 'SILK10', percent: 10 },
     })).rejects.toThrow('Mailbox rejected');
+  });
+
+  it('sends contact messages only to the fixed studio recipient and escapes visitor copy', async () => {
+    vi.stubEnv('ADMIN_EMAIL', 'studio@example.test');
+
+    await expect(sendContactMessage({
+      name: '<Aoife>',
+      email: 'visitor@example.test',
+      message: 'Could I ask about <sizing>?\nThank you.',
+    })).resolves.toBe(true);
+
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toMatchObject({
+      to: 'studio@example.test',
+      reply_to: 'visitor@example.test',
+      subject: 'New message from the SILKILINEN contact page',
+    });
+    expect(messages[0].html).toContain('&lt;Aoife&gt;');
+    expect(messages[0].html).toContain('&lt;sizing&gt;?');
+    expect(messages[0].html).toContain('<br>Thank you.');
+    expect(messages[0].html).not.toContain('<Aoife>');
   });
 });

@@ -37,8 +37,9 @@
 
 .input {
   flex: 1;
-  padding: 15px 18px;
-  border: 1px solid var(--border);
+  min-height: var(--ctrl-h-desktop);
+  padding: 0 18px;
+  border: 1px solid var(--color-line-control);
   border-right: none;
   font-family: 'Jost', sans-serif;
   font-size: 13px;
@@ -57,6 +58,7 @@
 
 .submit {
   flex-shrink: 0;
+  min-height: var(--ctrl-h-desktop);
   padding: 0 28px;
   border: 1px solid var(--dark);
   background: var(--dark);
@@ -66,11 +68,10 @@
   letter-spacing: 1.5px;
   text-transform: uppercase;
   cursor: pointer;
-  transition: opacity 0.2s ease;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
-.submit:hover {
-  opacity: 0.85;
-}
+.submit:hover { background: var(--color-ink-hover); border-color: var(--color-ink-hover); }
+.submit:active { background: var(--color-ink-muted); border-color: var(--color-ink-muted); }
 .submit:disabled {
   opacity: 0.5;
   cursor: default;
@@ -106,5 +107,7 @@
   }
   .submit {
     padding: 0 20px;
+    min-height: var(--ctrl-h-mobile);
   }
+  .input { min-height: var(--ctrl-h-mobile); }
 }

@@ -25,7 +25,7 @@
      corner without competing with the page. It comes fully forward on hover. */
   box-shadow: 0 3px 14px rgba(26, 25, 22, 0.14);
   opacity: 0.82;
-  transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+  transition: background var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -33,7 +33,6 @@
 }
 
 .trigger:hover {
-  transform: scale(1.05);
   opacity: 1;
 }
 
@@ -84,11 +83,16 @@
   font-size: 14px;
   color: var(--muted);
   cursor: pointer;
-  padding: 4px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   line-height: 1;
   transition: color 0.15s;
 }
-.panelClose:hover { color: var(--dark); }
+@media (hover: hover) {
+  .panelClose:hover { color: var(--dark); background: var(--color-surface); }
+}
+.panelClose:active { background: var(--color-surface-warm); }
 
 .panelSub {
   font-size: 12px;

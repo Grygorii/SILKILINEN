@@ -134,6 +134,9 @@
 }
 
 .link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--color-ink);
   text-decoration: underline;
   text-underline-offset: 3px;

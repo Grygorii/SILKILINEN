@@ -48,11 +48,15 @@
   color: var(--color-bg);
   background: var(--dark);
   border: none;
-  padding: 13px 28px;
+  min-height: var(--ctrl-h-desktop);
+  padding: 0 28px;
   cursor: pointer;
-  transition: opacity 0.2s ease;
+  transition: background var(--t-fast) var(--ease);
 }
-.downloadBtn:hover { opacity: 0.85; }
+@media (hover: hover) {
+  .downloadBtn:hover { background: var(--color-ink-hover); }
+}
+.downloadBtn:active { background: var(--color-ink-muted); }
 
 /* Sections */
 .section {

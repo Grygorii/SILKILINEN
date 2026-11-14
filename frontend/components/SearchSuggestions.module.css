@@ -95,6 +95,7 @@
   text-align: left;
   cursor: pointer;
 }
+.viewAll { min-height: 44px; }
 .viewAll:hover { background: var(--color-surface-warm); }
 
 .empty {

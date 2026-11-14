@@ -30,6 +30,12 @@
   outline-offset: 3px;
 }
 
+@media (hover: hover) {
+  .row:hover { background: var(--color-surface); }
+}
+
+.row:active { background: var(--color-surface-warm); }
+
 .chev {
   display: inline-flex;
   width: 14px;

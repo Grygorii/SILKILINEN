@@ -517,7 +517,7 @@ export default function StyleFinder({ initialProducts = [] }: { initialProducts?
                 Your edit is ready to be explored in full.
               </p>
               <Link href="/shop" className={styles.ctaOutline}>
-                Explore the collection →
+                Explore the collection
               </Link>
             </div>
           )}
@@ -593,7 +593,7 @@ export default function StyleFinder({ initialProducts = [] }: { initialProducts?
               We couldn’t gather your pieces just now — but the collection is waiting.
             </p>
             <Link href="/shop" className={styles.ctaOutline}>
-              Explore the collection →
+              Explore the collection
             </Link>
           </div>
           <div className={styles.afterReveal}>

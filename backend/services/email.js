@@ -340,6 +340,34 @@ async function sendWishlistReminder({ email, firstName, customerId, product, off
   return result;
 }
 
+// The contact form is transactional correspondence, not a marketing capture:
+// it goes only to the studio inbox and uses the visitor's validated address as
+// Reply-To. No customer or newsletter record is created anywhere on this path.
+async function sendContactMessage({ name, email, message }) {
+  const replyTo = String(email || '').trim().toLowerCase();
+  const recipient = String(process.env.ADMIN_EMAIL || supportEmail() || '').trim();
+  if (!process.env.RESEND_API_KEY || !recipient || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(replyTo)) return false;
+
+  const safeName = esc(name || 'Website visitor');
+  const safeEmail = esc(replyTo);
+  const safeMessage = esc(message || '').replace(/\r?\n/g, '<br>');
+  const result = await getResend().emails.send({
+    from: FROM,
+    to: recipient,
+    replyTo,
+    subject: 'New message from the SILKILINEN contact page',
+    html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:40px 16px;"><tr><td align="center">
+<table cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+<tr><td style="background:#1a1916;padding:28px 36px;text-align:center;"><p style="margin:0;font-family:Georgia,serif;font-size:20px;letter-spacing:5px;color:#faf8f4;">SILKILINEN</p></td></tr>
+<tr><td style="background:#faf8f4;padding:36px;"><p style="margin:0 0 22px;font-family:Georgia,serif;font-size:24px;color:#1a1916;">A new website message</p><p style="margin:0 0 8px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#8a8680;">From</p><p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#1a1916;"><strong>${safeName}</strong><br><a href="mailto:${safeEmail}" style="color:#1a1916;">${safeEmail}</a></p><p style="margin:0 0 8px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#8a8680;">Message</p><p style="margin:0;font-size:14px;line-height:1.75;color:#1a1916;">${safeMessage}</p></td></tr>
+</table></td></tr></table></body></html>`,
+  });
+  if (result?.error) throw new Error(result.error.message || 'Email provider rejected contact message');
+  return true;
+}
+
 function buildStatusHtml({ order, heading, body, trackingBlock }) {
   const id = shortId(order._id);
   const firstName = order.customerName ? esc(order.customerName.split(' ')[0]) : 'there';
@@ -839,4 +867,4 @@ async function sendBackInStock({ email, product, size, colour }) {
   }
 }
 
-module.exports = { sendBackInStock, sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail, sendDropAHint, sendCartRecoveryEmail, sendWinbackReminder, sendWishlistReminder, sendReviewRequest, sendAdvisorDigest };
+module.exports = { sendBackInStock, sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail, sendDropAHint, sendCartRecoveryEmail, sendWinbackReminder, sendWishlistReminder, sendContactMessage, sendReviewRequest, sendAdvisorDigest };

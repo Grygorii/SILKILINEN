@@ -25,9 +25,9 @@ export default function FloatingCartBar() {
   }
 
   return (
-    <button className={styles.bar} onClick={openCart} aria-label="View cart">
-      <span className={styles.label}>View cart ({count})</span>
-      <span className={styles.price}><Price eur={total} /> →</span>
+    <button className={styles.bar} onClick={openCart} aria-label="View bag">
+      <span className={styles.label}>View bag ({count})</span>
+      <span className={styles.price}><Price eur={total} /></span>
     </button>
   );
 }

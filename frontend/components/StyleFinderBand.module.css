@@ -1,8 +1,4 @@
-/* ── Style Finder entry band ───────────────────────────────────────────
-   A calm copper→blush CTA that catches the light: the button's gradient
-   drifts continuously and lifts with a shine sweep on hover. Quiet-luxury
-   restraint — no decorative chrome.
-*/
+/* ── Style Finder entry band ─────────────────────────────────────────── */
 .finderBand {
   display: flex;
   flex-direction: column;
@@ -12,12 +8,12 @@
   padding: 44px 24px;
   margin: 0;
   text-decoration: none;
-  background: linear-gradient(160deg, var(--color-line) 0%, var(--color-surface-warm) 100%);
+  background: var(--color-surface-warm);
   border-top: 1px solid var(--color-line);
   border-bottom: 1px solid var(--color-line);
-  transition: background 0.3s ease;
+  transition: background var(--t-fast) var(--ease);
 }
-.finderBand:hover { background: linear-gradient(160deg, var(--color-surface-warm) 0%, var(--color-surface-warm) 100%); }
+@media (hover: hover) { .finderBand:hover { background: var(--color-surface); } }
 
 .finderEyebrow {
   font-size: 11px;
@@ -38,51 +34,30 @@
   letter-spacing: 0.3px;
 }
 
-/* ── CTA button — copper→blush silk that drifts in the light ────────────
-   Ink text on a pale metallic gradient keeps the luxe contrast. The gradient
-   drifts continuously; on hover the button lifts and a shine streak sweeps
-   across. */
+/* The band itself is the link, so this is only a composed reading cue. */
 .finderBtn {
-  position: relative;
-  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 44px;
   margin-top: 16px;
-  padding: 13px 30px;
+  padding: 0;
   font-size: 12px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--color-ink);
-  background: linear-gradient(115deg, var(--color-accent) 0%, var(--color-surface-warm) 50%, var(--color-accent) 100%);
-  background-size: 220% 100%;
-  background-position: 0% 0;
-  border: 1px solid rgba(42, 34, 24, 0.22);
-  box-shadow: 0 2px 10px rgba(196, 168, 130, 0.35);
-  animation: finderShift 6s ease-in-out infinite;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: transparent;
+  border: 0;
 }
-/* A clear shine streak sweeps across on hover. */
 .finderBtn::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
-  transform: translateX(-130%);
-  transition: transform 0.7s ease;
+  content: '→';
+  display: inline-block;
+  font-size: 17px;
+  line-height: 1;
+  transition: transform var(--t-fast) var(--ease);
 }
-.finderBand:hover .finderBtn {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 26px rgba(196, 168, 130, 0.5);
-}
-.finderBand:hover .finderBtn::after {
-  transform: translateX(130%);
-}
-
-@keyframes finderShift {
-  0%, 100% { background-position: 0% 0; }
-  50%      { background-position: 100% 0; }
-}
+@media (hover: hover) { .finderBand:hover .finderBtn::after { transform: translateX(3px); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .finderBtn { animation: none; transition: none; }
-  .finderBtn::after { display: none; }
-  .finderBand:hover .finderBtn { transform: none; }
+  .finderBtn::after { transition: none; }
 }

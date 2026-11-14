@@ -77,10 +77,10 @@ export default function ProfilePage() {
           Receive offers, new arrivals, and style updates by email
         </label>
 
-        {error && <p className={styles.errorMsg}>{error}</p>}
-        {saved && <p className={styles.successMsg}>✓ Changes saved</p>}
+        {error && <p className={styles.errorMsg} role="alert">{error}</p>}
+        {saved && <p className={styles.successMsg} role="status">Changes saved</p>}
 
-        <button type="submit" className={styles.saveBtn} disabled={saving}>
+        <button type="submit" className={styles.saveBtn} disabled={saving} aria-busy={saving}>
           {saving ? 'Saving…' : 'Save changes'}
         </button>
       </form>

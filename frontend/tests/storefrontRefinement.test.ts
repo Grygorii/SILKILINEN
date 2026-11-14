@@ -51,10 +51,10 @@ describe('mobile-first storefront refinement', () => {
   });
   it('uses an editorial hero action while keeping its tap target intact', () => {
     const css = read('app/(shop)/page.module.css');
-    expect(css).toContain('border-bottom: 1px solid currentColor;');
-    expect(css).toContain("content: '↗';");
+    expect(css).not.toContain('border-bottom: 1px solid currentColor;');
+    expect(css).toContain("content: '→';");
     expect(css).toContain('.heroBtn:hover::after');
-    expect(css).toContain('min-height: var(--ctrl-h-desktop);');
+    expect(css).toContain('min-height: 44px;');
     expect(read('components/ui/Button.module.css')).toContain('min-height: var(--ctrl-h-mobile)');
   });
 });

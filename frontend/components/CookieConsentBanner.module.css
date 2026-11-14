@@ -63,7 +63,8 @@
   background: transparent;
   color: var(--color-ink);
   border: 1px solid var(--color-ink);
-  padding: 8px 20px;
+  min-height: 44px;
+  padding: 0 20px;
   font-size: 11px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -89,7 +90,8 @@
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  padding: 0;
+  min-height: 44px;
+  padding: 0 4px;
   transition: color 0.15s;
 }
 

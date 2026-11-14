@@ -73,12 +73,21 @@
   font-size: 16px;
   line-height: 1;
   color: var(--color-ink-muted);
-  /* A 44px target without a 44px-looking button. */
-  padding: 12px;
-  margin: -12px;
+  /* A real 44px hit target that remains visually quiet. */
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin: -10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 
-.close:hover { color: var(--color-ink); }
+@media (hover: hover) {
+  .close:hover { color: var(--color-ink); background: var(--color-surface); }
+}
+.close:active { background: var(--color-surface-warm); }
 
 .body {
   padding: var(--s-5);
@@ -101,6 +110,9 @@
 }
 
 .link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--color-ink);
   text-decoration: underline;
   text-underline-offset: 3px;

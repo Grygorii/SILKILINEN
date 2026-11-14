@@ -74,7 +74,12 @@
   font-size: 16px;
   color: var(--color-ink-muted);
   cursor: pointer;
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
+@media (hover: hover) {
+  .close:hover { color: var(--color-ink); background: var(--color-surface); }
+}
+.close:active { background: var(--color-surface-warm); }
 
 .section {
   margin-bottom: 20px;
@@ -96,6 +101,9 @@
 }
 
 .sizeGuide {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   letter-spacing: 1px;
@@ -113,20 +121,27 @@
 
 .stepBtn {
   width: 44px;
-  height: 40px;
+  height: 44px;
   background: none;
   border: none;
   font-size: 18px;
   color: var(--color-ink);
   cursor: pointer;
+  transition: background var(--t-fast) var(--ease);
 }
+.stepBtn:hover:not(:disabled) { background: var(--color-surface); }
+.stepBtn:active:not(:disabled) { background: var(--color-surface-warm); }
 .stepBtn:disabled { color: var(--color-ink-muted); cursor: not-allowed; }
 
 .qtyVal {
-  min-width: 40px;
+  min-width: 44px;
+  height: 44px;
   text-align: center;
   font-size: 15px;
+  line-height: 44px;
   color: var(--color-ink);
+  border-left: 1px solid var(--color-line-control);
+  border-right: 1px solid var(--color-line-control);
 }
 
 .cta {

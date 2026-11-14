@@ -53,6 +53,8 @@
   background: var(--color-surface-warm);
 }
 
+.bannerClose:active { background: var(--color-line); }
+
 .inner {
   max-width: 900px;
 }
@@ -100,6 +102,9 @@
 }
 
 .shopLink:hover { color: var(--color-ink-muted); text-underline-offset: 5px; }
+.shopLink:active { color: var(--color-ink-muted); }
+.shopLink::after { content: '→'; margin-left: var(--s-2); font-size: 16px; line-height: 1; transition: transform var(--t-fast) var(--ease); }
+.shopLink:hover::after { transform: translateX(3px); }
 
 .muted {
   color: var(--muted);

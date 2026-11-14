@@ -34,6 +34,10 @@
 }
 
 .viewBtn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-block: -6px;
   background: none;
   border: none;
   color: #c8b89a;
@@ -42,7 +46,7 @@
   letter-spacing: 1px;
   text-transform: uppercase;
   cursor: pointer;
-  padding: 0;
+  padding: 0 2px;
   text-decoration: underline;
   text-underline-offset: 3px;
 }

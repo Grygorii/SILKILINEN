@@ -57,6 +57,7 @@ export default function BundlePageClient({ bundle }: { bundle: BundleData }) {
           </div>
 
           <button
+            type="button"
             className={styles.addBtn}
             onClick={handleAdd}
             disabled={bundle.products.length === 0}

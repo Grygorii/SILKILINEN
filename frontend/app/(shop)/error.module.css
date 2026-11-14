@@ -1,0 +1,123 @@
+.page {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0 0 24px;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.title {
+  max-width: 640px;
+  margin: 0 0 16px;
+  color: var(--color-ink);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 300;
+  line-height: 1.15;
+}
+
+.copy {
+  max-width: 460px;
+  margin: 0 0 40px;
+  color: var(--color-ink-muted);
+  font-family: 'Jost', sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.primaryAction,
+.secondaryAction {
+  min-height: var(--ctrl-h-desktop);
+  padding: 0 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-ink);
+  border-radius: 0;
+  cursor: pointer;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.6px;
+  line-height: 1;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+.primaryAction {
+  background: var(--color-ink);
+  color: var(--color-bg);
+}
+
+.secondaryAction {
+  background: transparent;
+  color: var(--color-ink);
+}
+
+@media (hover: hover) {
+  .primaryAction:hover {
+    background: var(--color-ink-hover);
+    border-color: var(--color-ink-hover);
+  }
+
+  .secondaryAction:hover {
+    background: var(--color-surface-warm);
+  }
+}
+
+.primaryAction:active {
+  background: var(--color-ink-muted);
+  border-color: var(--color-ink-muted);
+}
+
+.secondaryAction:active {
+  background: var(--color-surface);
+}
+
+.primaryAction:focus-visible,
+.secondaryAction:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  .page {
+    min-height: 56vh;
+    padding: 64px 20px;
+  }
+
+  .copy {
+    margin-bottom: 32px;
+  }
+
+  .actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .primaryAction,
+  .secondaryAction {
+    width: 100%;
+    min-height: var(--ctrl-h-mobile);
+  }
+}

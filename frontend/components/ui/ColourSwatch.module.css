@@ -25,18 +25,17 @@
   position: relative;
   width: var(--pill-h);
   height: var(--pill-h);
-  /* A swatch is a CONTROL, and pale shades need an edge: a Cream swatch is
-     1.06:1 against the page, so with a 1.22:1 border the whole square was
-     invisible — you could not see where to click. This is the one place the
-     control-boundary token earns itself. */
-  border: var(--stroke) solid var(--color-line-control);
+  /* The colour itself is a 36px square inside a 44px hit target. That gives
+     pale shades an intentional paper edge and avoids oversized colour tiles. */
+  border: 4px solid var(--color-bg);
   border-radius: var(--radius-control);
-  background: var(--color-surface);
+  background-clip: padding-box;
+  box-shadow: inset 0 0 0 var(--stroke) var(--color-line-control);
   cursor: pointer;
   padding: 0;
   transition: opacity var(--t-fast) var(--ease),
               box-shadow var(--t-fast) var(--ease),
-              transform var(--t-fast) var(--ease);
+              outline-color var(--t-fast) var(--ease);
 }
 
 .swatch:focus-visible {
@@ -44,9 +43,11 @@
   outline-offset: 3px;
 }
 
-/* Selected — 2px offset charcoal ring so the swatch itself doesn't jiggle */
+/* Selected — one precise outer ink ring; no bouncing tile or ornamental chrome. */
 .selected {
-  box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 calc(2px + 1px) var(--color-ink);
+  outline: 1px solid var(--color-ink);
+  outline-offset: 1px;
+  box-shadow: inset 0 0 0 var(--stroke) var(--color-ink);
 }
 
 /* Sold out — diagonal slash + reduced opacity */

@@ -31,7 +31,8 @@
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   letter-spacing: 0.5px;
-  padding: 6px 28px 6px 11px;
+  min-height: 44px;
+  padding: 0 28px 0 11px;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
 }

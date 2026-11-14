@@ -30,8 +30,7 @@ export default function AccountPage() {
       {/* HUMAN: review proposed copy in UX-PUBLIC.md H4 before changing */}
       {isWelcome && (
         <div className={styles.welcomeBanner}>
-          Welcome to SILKILINEN, {customer.firstName || customer.email.split('@')[0]}! Your account is ready.
-          Use code <strong>SILK10</strong> for 10% off your first order.
+          Welcome to SILKILINEN, {customer.firstName || customer.email.split('@')[0]}. Use code <strong>SILK10</strong> for 10% off your first order.
         </div>
       )}
       <div className={styles.pageHeader}>

@@ -27,7 +27,8 @@
   font-size: 11px;
   letter-spacing: 0.5px;
   color: var(--color-ink-inverse-muted);
-  padding: 6px 11px;
+  min-height: 44px;
+  padding: 0 11px;
   transition: color 0.15s, border-color 0.15s;
 }
 .opt:hover { color: var(--warm-white); }

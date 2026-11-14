@@ -55,7 +55,8 @@
   width: 150px;
 }
 .btnWrap > button {
-  height: 48px;
+  min-height: var(--ctrl-h-mobile);
+  height: var(--ctrl-h-mobile);
   font-size: 11px;
 }
 

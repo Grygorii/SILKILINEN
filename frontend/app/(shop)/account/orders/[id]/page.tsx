@@ -173,7 +173,7 @@ export default function OrderDetailPage() {
             )}
 
             <button className={styles.reorderBtn} onClick={reorder}>
-              Reorder →
+              Add these items to bag
             </button>
           </div>
         </>

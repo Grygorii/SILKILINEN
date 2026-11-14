@@ -33,16 +33,19 @@
 
 /* Back link */
 .back {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0;
   font-size: 12px;
-  letter-spacing: 1px;
-  color: var(--muted);
+  letter-spacing: var(--track-utility);
+  color: var(--color-ink-muted);
   text-decoration: none;
   margin-bottom: 32px;
-  transition: color 0.2s ease;
+  transition: color var(--t-fast) var(--ease), text-decoration-color var(--t-fast) var(--ease);
 }
 
-.back:hover { color: var(--dark); }
+.back:hover { color: var(--color-ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 
 /* Card grid (dashboard) */
 .cardGrid {
@@ -52,26 +55,30 @@
 }
 
 .card {
-  border: 1px solid var(--border);
+  min-height: 188px;
+  border: 1px solid var(--color-line-control);
   padding: 28px;
   text-decoration: none;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  background: var(--warm-white);
+  transition: border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+  background: var(--color-bg);
 }
 
 .card:hover {
-  border-color: var(--dark);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  border-color: var(--color-ink);
+  background: var(--color-surface);
 }
+
+.card:active { background: var(--color-surface-warm); }
 
 .cardIcon {
   font-size: 24px;
   margin-bottom: 4px;
   display: block;
   line-height: 0;
+  color: var(--color-ink);
 }
 
 .cardTitle {
@@ -116,18 +123,21 @@
 }
 
 .field input, .field select, .field textarea {
-  padding: 10px 14px;
-  border: 1px solid var(--border);
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--color-line-control);
   font-family: 'Jost', sans-serif;
   font-size: 13px;
-  color: var(--dark);
+  color: var(--color-ink);
   background: var(--color-bg);
   outline: none;
 }
 
 .field input:focus, .field select:focus, .field textarea:focus {
-  border-color: var(--dark);
+  border-color: var(--color-ink);
 }
+
+.field textarea { min-height: 120px; padding: 12px 14px; resize: vertical; }
 
 .fieldRow {
   display: grid;
@@ -138,28 +148,36 @@
 .checkRow {
   display: flex;
   align-items: center;
+  min-height: 44px;
   gap: 10px;
   font-size: 13px;
   color: var(--dark);
   cursor: pointer;
 }
 
+.checkRow input { width: 18px; height: 18px; accent-color: var(--color-ink); }
+
 .saveBtn {
-  padding: 12px 28px;
-  background: var(--dark);
-  color: var(--warm-white);
+  min-height: var(--ctrl-h-desktop);
+  padding: 0 28px;
+  background: var(--color-ink);
+  color: var(--color-bg);
   border: none;
   font-family: 'Jost', sans-serif;
   font-size: 12px;
-  letter-spacing: 1.5px;
+  letter-spacing: var(--track-button);
   text-transform: uppercase;
   cursor: pointer;
-  transition: opacity 0.2s ease;
+  transition: background var(--t-fast) var(--ease);
   align-self: flex-start;
 }
 
-.saveBtn:hover:not(:disabled) { opacity: 0.8; }
-.saveBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+@media (hover: hover) {
+  .saveBtn:hover:not(:disabled) { background: var(--color-ink-hover); }
+}
+
+.saveBtn:active:not(:disabled) { background: var(--color-ink-muted); }
+.saveBtn:disabled { color: var(--color-ink-muted); background: var(--color-surface-warm); cursor: not-allowed; }
 
 .successMsg {
   font-size: 13px;
@@ -190,13 +208,15 @@
   align-items: center;
   gap: 20px;
   padding: 18px 20px;
-  background: var(--warm-white);
+  min-height: 72px;
+  background: var(--color-bg);
   text-decoration: none;
   color: var(--dark);
-  transition: background 0.15s ease;
+  transition: background var(--t-fast) var(--ease);
 }
 
 .orderRow:hover { background: var(--color-surface); }
+.orderRow:active { background: var(--color-surface-warm); }
 
 .orderNum {
   font-family: 'Cormorant Garamond', Georgia, serif;
@@ -302,10 +322,18 @@
 }
 
 .trackingLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-size: 14px;
   color: var(--dark);
   text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color var(--t-fast) var(--ease), text-underline-offset var(--t-fast) var(--ease);
 }
+
+.trackingLink:hover { color: var(--color-ink-muted); text-underline-offset: 5px; }
 
 .trackingMeta {
   font-size: 12px;
@@ -384,19 +412,24 @@
 }
 
 .reorderBtn {
-  padding: 12px 28px;
-  background: var(--dark);
-  color: var(--warm-white);
+  min-height: var(--ctrl-h-desktop);
+  padding: 0 28px;
+  background: var(--color-ink);
+  color: var(--color-bg);
   border: none;
   font-family: 'Jost', sans-serif;
   font-size: 12px;
-  letter-spacing: 1.5px;
+  letter-spacing: var(--track-button);
   text-transform: uppercase;
   cursor: pointer;
-  transition: opacity 0.2s ease;
+  transition: background var(--t-fast) var(--ease);
 }
 
-.reorderBtn:hover { opacity: 0.8; }
+@media (hover: hover) {
+  .reorderBtn:hover { background: var(--color-ink-hover); }
+}
+
+.reorderBtn:active { background: var(--color-ink-muted); }
 
 /* Wishlist grid — each cell is a ProductCard, so the container only
    needs to manage columns + spacing. The card itself owns its visuals. */
@@ -418,16 +451,41 @@
 }
 
 .emptyState a {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   margin-top: 16px;
-  padding: 10px 24px;
-  background: var(--dark);
-  color: var(--warm-white);
+  padding: 0;
+  color: var(--color-ink);
   text-decoration: none;
-  font-size: 11px;
-  letter-spacing: 1.5px;
+  font-size: 12px;
+  letter-spacing: var(--track-button);
   text-transform: uppercase;
+  transition: color var(--t-fast) var(--ease);
 }
+
+.emptyState a::after { content: '→'; margin-left: var(--s-2); font-size: 16px; line-height: 1; transition: transform var(--t-fast) var(--ease); }
+.emptyState a:hover { color: var(--color-ink-muted); }
+.emptyState a:hover::after { transform: translateX(3px); }
+
+.retryLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  color: var(--color-ink);
+  background: transparent;
+  font: 500 12px/1 var(--font-jost, 'Jost', sans-serif);
+  letter-spacing: var(--track-button);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--t-fast) var(--ease);
+}
+
+.retryLink::after { content: '→'; margin-left: var(--s-2); font-size: 16px; font-weight: 400; transition: transform var(--t-fast) var(--ease); }
+.retryLink:hover { color: var(--color-ink-muted); }
+.retryLink:hover::after { transform: translateX(3px); }
 
 /* Welcome banner */
 .welcomeBanner {
@@ -457,6 +515,18 @@
   .cardGrid { grid-template-columns: 1fr; }
   .wishGrid { grid-template-columns: repeat(2, 1fr); }
   .fieldRow { grid-template-columns: 1fr; }
+  .saveBtn, .reorderBtn { min-height: var(--ctrl-h-mobile); }
+}
+
+@media (max-width: 480px) {
+  .orderRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 12px;
+  }
+
+  .orderDate { grid-column: 1 / -1; }
+  .orderStatus { grid-column: 2; grid-row: 1; }
 }
 
 @media (max-width: 400px) {

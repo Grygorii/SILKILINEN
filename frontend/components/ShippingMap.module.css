@@ -10,9 +10,10 @@
 .textLink:hover { text-decoration-color: var(--color-ink); }
 .atlas { min-width: 0; margin-top: var(--s-4); }
 .modes { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--color-line); }
-.modes button { font: inherit; font-size: 13px; line-height: 1.4; min-height: 48px; padding: var(--s-2) var(--s-1); color: var(--color-ink-muted); border: 0; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; transition: color var(--t-base) var(--ease), border-color var(--t-base) var(--ease); }
+.modes button { font: inherit; font-size: 13px; line-height: 1.4; min-height: 48px; padding: var(--s-2) var(--s-1); color: var(--color-ink-muted); border: 0; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease); }
 .modes button[aria-pressed='true'] { color: var(--color-ink); border-bottom-color: var(--color-ink); }
-.modes button:hover { color: var(--color-ink); }
+@media (hover: hover) { .modes button:hover { color: var(--color-ink); background: var(--color-surface); } }
+.modes button:active { background: var(--color-surface-warm); }
 .mapFrame { position: relative; height: 160px; overflow: hidden; }
 .map { display: block; width: 100%; height: 100%; animation: mapReveal .45s ease both; }
 @keyframes mapReveal { from { opacity: .3; } to { opacity: 1; } }
@@ -26,9 +27,11 @@
 .selection { display: flex; align-items: flex-end; gap: var(--s-4); padding-top: var(--s-2); border-top: 1px solid var(--color-line); }
 .destination { flex: 1; min-width: 0; }
 .destination label { display: block; font-size: 11px; line-height: 1.5; color: var(--color-ink-muted); }
-.destination select { display: block; width: 100%; min-width: 0; min-height: 44px; padding: var(--s-2) var(--s-5) var(--s-2) 0; border: 0; border-bottom: 1px solid var(--color-line-control); border-radius: 0; color: var(--color-ink); background: transparent; font: 400 16px/1.4 var(--font-jost), sans-serif; cursor: pointer; }
-.motionButton { display: inline-flex; gap: var(--s-2); align-items: center; justify-content: center; min-width: 76px; min-height: 44px; padding: var(--s-2); font: inherit; font-size: 12px; border: 1px solid var(--color-line-control); border-radius: var(--radius-control); color: var(--color-ink); background: transparent; cursor: pointer; transition: background var(--t-base) var(--ease); }
-.motionButton:hover:not(:disabled) { background: var(--color-surface); }
+.destination select { display: block; width: 100%; min-width: 0; min-height: 48px; padding: var(--s-2) var(--s-5) var(--s-2) 0; border: 0; border-bottom: 1px solid var(--color-line-control); border-radius: 0; color: var(--color-ink); background: transparent; font: 400 16px/1.4 var(--font-jost), sans-serif; cursor: pointer; }
+.destination select:focus-visible { border-bottom-color: var(--color-ink); }
+.motionButton { display: inline-flex; gap: var(--s-2); align-items: center; justify-content: center; min-width: 76px; min-height: 44px; padding: var(--s-2) var(--s-3); font: inherit; font-size: 12px; border: 1px solid var(--color-line-control); border-radius: var(--radius-control); color: var(--color-ink); background: transparent; cursor: pointer; transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease); }
+@media (hover: hover) { .motionButton:hover:not(:disabled) { background: var(--color-surface); border-color: var(--color-ink); } }
+.motionButton:active:not(:disabled) { background: var(--color-surface-warm); }
 .motionButton:disabled { color: var(--color-ink-muted); cursor: default; }
 .status { margin-top: var(--s-3); color: var(--color-ink-muted); font-size: 12px; line-height: 1.6; }
 .notes { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--s-2) var(--s-4); margin-top: var(--s-3); font-size: 12px; line-height: 1.7; color: var(--color-ink-muted); }

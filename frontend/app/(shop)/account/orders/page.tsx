@@ -59,7 +59,7 @@ export default function OrdersPage() {
       {!loading && error && (
         <div className={styles.emptyState}>
           <p>We couldn&apos;t load your orders. Please try again.</p>
-          <button onClick={load} style={{ cursor: 'pointer', textDecoration: 'underline', background: 'none', border: 'none', font: 'inherit' }}>Retry</button>
+          <button onClick={load} className={styles.retryLink}>Try again</button>
         </div>
       )}
 
