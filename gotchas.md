@@ -35,7 +35,7 @@ Things that have bitten us before. Read before debugging anything that looks lik
 
 ## Infrastructure
 
-**Railway Railpack BuildKit bug.** Backend deploys break on default Railpack builder. Workaround: `backend/railway.toml` forces Nixpacks. Remove this file once Railway fixes the underlying bug.
+**Railway build path.** The API and backup cron explicitly use `backend/Dockerfile`, avoiding the failed Nixpacks-driver download. Keep `backend/.dockerignore`: it prevents local `node_modules` and `.env` from entering the Linux image. Railway still needs its Docker build service and the Node base image, so a wider Railway outage can still stop a deployment.
 
 **Rate limiter behind reverse proxy.** Must call `app.set('trust proxy', 1)` in Express or the rate limiter sees Railway's proxy IP for every request and either locks out everyone or no one. Already set; don't remove.
 

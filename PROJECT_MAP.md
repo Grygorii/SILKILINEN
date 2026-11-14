@@ -15,6 +15,8 @@ or change an invariant, update the relevant line here in the same commit.
 - No PHP anywhere. Node engine (backend): `>=20 <25`.
 
 ## Deploy / git
+- Railway's API and backup cron share `backend/Dockerfile` (Debian/Node 20); their
+  `railway*.toml` configs intentionally use `DOCKERFILE` rather than Nixpacks.
 - Work commits to **master** this session (topic branches `claude/*` merged in).
 - Co-author footer required on commits. Model id must NOT appear in commits/code.
 - **Egress is blocked** to silkilinen.com / api.silkilinen.com — cannot test live;

@@ -11,7 +11,7 @@
 - **Framework:** Express on Railway
 - **URL:** `https://silkilinen-production.up.railway.app`
 - **Node:** 20+ pinned via `package.json` engines and `backend/.nvmrc`
-- **Builder:** Nixpacks forced via `backend/railway.toml` (workaround for Railway Railpack BuildKit bug — remove once Railway fixes it)
+- **Builder:** Dockerfile (`backend/Dockerfile`, selected by `backend/railway.toml`) to avoid Railway's Nixpacks download dependency
 - **Reverse proxy:** `app.set('trust proxy', 1)` set in Express so rate limiter reads real client IP
 
 ## Database

@@ -36,7 +36,7 @@ The site exists primarily to **escape Etsy's fee burden** (Etsy takes ~15-20% ef
 ## Operational hardening shipped
 
 - Node 20+ pinned via `package.json` engines + `backend/.nvmrc`
-- `backend/railway.toml` forces Nixpacks builder (workaround for Railway Railpack BuildKit bug — remove once Railway fixes it)
+- `backend/Dockerfile` is used by both Railway backend services, avoiding the Nixpacks download dependency
 - `app.set('trust proxy', 1)` in Express so rate-limiter reads real client IP behind Railway's reverse proxy
 - Rate limiter is 5xx-aware (`requestWasSuccessful + skipFailedRequests`) — won't lock customers out during infrastructure outages
 - Resend health check uses configuration validation (not live API call), compatible with the send-only API key
