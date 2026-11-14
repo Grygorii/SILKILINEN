@@ -17,7 +17,7 @@ async function eraseCustomer(customerId) {
     }, { session, timestamps: false });
     await Customer.updateOne({ _id: customer._id }, { $set: {
       email: anonEmail, erasedEmailHash: erasedEmailHash(email), firstName: '[Deleted]', lastName: '', phone: '',
-      defaultShippingAddress: null, passwordHash: null, googleId: null, wishlist: [], tags: [], notes: [], emailLog: [],
+      defaultShippingAddress: null, passwordHash: null, googleId: null, wishlist: [], tags: [], notes: [], emailLog: [], lastWishlistReminderAttemptedAt: null,
       marketingConsent: false, consent: 'rejected', emailVerified: false, emailVerificationToken: null,
       emailVerificationExpiry: null, passwordResetToken: null, passwordResetExpiry: null, lastLogin: null,
       country: '', city: '', acquisitionSource: '', acquisitionMedium: '', acquisitionCampaign: '',
@@ -26,8 +26,10 @@ async function eraseCustomer(customerId) {
     const carts = await require('../models/Cart').updateMany({ email }, { $set: { email: null, recoveryUnsubscribed: true } }, { session });
     const subs = await require('../models/Newsletter').deleteMany({ email }, { session });
     const waitlist = await require('../models/StockNotification').deleteMany({ email }, { session });
+    const wishlistInterests = await require('../models/WishlistInterest').deleteMany({ customerId: customer._id }, { session });
     result = { success: true, anonEmail, purged: { carts: carts.modifiedCount, newsletter: subs.deletedCount,
-      stockWaitlist: waitlist.deletedCount, ordersRetained: 'financial records retained; excluded from profile reconstruction' } };
+      stockWaitlist: waitlist.deletedCount, wishlistInterests: wishlistInterests.deletedCount,
+      ordersRetained: 'financial records retained; excluded from profile reconstruction' } };
   });
   return result;
 }

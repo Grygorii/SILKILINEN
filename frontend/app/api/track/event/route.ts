@@ -23,6 +23,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
+  const xff = req.headers.get('x-forwarded-for')
+    || req.headers.get('x-real-ip')
+    || '';
+
   try {
     await fetch(`${API}/api/track/event`, {
       method: 'POST',
@@ -34,6 +38,7 @@ export async function POST(req: NextRequest) {
         // visitors over 14 days while our own Visit collection stayed empty.
         // See app/api/admin-session/route.ts, which has carried this since F8.
         'X-CSRF-Token': '1',
+        ...(xff ? { 'X-Forwarded-For': xff } : {}),
       },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(4000),

@@ -267,6 +267,16 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   Gates: `MIN_SEGMENT` 8 sessions to name a segment, `SHIFT_POINTS` 10 to report a
   week-over-week move. **Silence means "not enough data", never "no problem"** — say so
   in any surface that renders it, or agents read absence as health.
+- **Session Replay:** `/api/admin/insights/journeys` reads `commerceEvidence`, not raw
+  `purchase` browser events. Paid orders are linked only when the ledger’s
+  `browserSessionId` has an observed browser in-range; unlinked website orders and
+  manual/offline orders stay in the ledger but cannot appear as a replay. Default threads
+  are explicitly incomplete, only use a Visit-backed tracked browser ID, and derive their
+  stop point from the same stages as the funnel (including product-page Visits without a
+  `view_item` event). A raw `purchase` event is labelled as a purchase-page event, never
+  paid; completed mode shows only ledger-linked paid journeys and appends `paid_order`.
+  Breadcrumbs are always bounded to the selected range and show the newest forty
+  activities across Visits and Events, rendered in chronological order.
 - **Selling loop (added this session):** on-site search is recorded WITH its result
   count (`components/SearchTracker.tsx`) — zero-result searches are surfaced as unmet
   demand in the advisor + agents, and product search matches name/description/category/
@@ -274,6 +284,17 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   `models/StockNotification` + `routes/stockNotify.js` + `services/stockNotify.js`
   (hourly sweep, claims the row BEFORE sending). Checkout email persists on BLUR, not at
   submit, or cart recovery can only reach people who already paid.
+- **Wishlist intelligence:** `Customer.wishlist` remains the shopper-facing source of
+  truth. Guest saves are browser-local and anonymous; only a signed-in account save creates
+  a dated `WishlistInterest` lifecycle row. Storefront account wishlist writes carry the
+  CSRF header; failure re-fetches server state. `/admin/marketing/wishlist` is read-only
+  and reports current account saves and reminder status. The hourly job waits 7 days, scans
+  past old ineligible rows, claims before email, then rechecks verified email, marketing
+  consent, current save, active product, no later purchase, redemption and GDPR status.
+  It uses only a current public, unlimited 1–100% offer, with its expiry and minimum shown,
+  one reminder per recorded save and a 30-day account cooldown stored on the account (so
+  remove/re-save cannot bypass it). Never backfill existing
+  saves with invented timestamps or send a reminder from a clickstream toggle.
 - **Shop listing order:** `backend/utils/productSort.js` `sortSpec(value)` is the ONE
   whitelist (`featured`/`newest`/`price-asc`/`price-desc`, plus legacy `-createdAt` which
   `NewArrivals` still links with). The route held a single `if (sort === '-createdAt')`,
@@ -354,6 +375,12 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   advisor. Covers `/admin`, `/journal/preview`, `/preview/`, and **`?edit=1`** (InlineEdit
   turns the real storefront into a work surface — the path looks like shopping). Strips a
   leading locale, reading `LOCALES`, so `/de/...` can't reopen the hole.
+- **Analytics consent:** `frontend/lib/analyticsConsent.ts` is the ONE rule for
+  analytics permission. The first-party Visit/Event stream, its persistent
+  browser ID, UTM/order attribution, Vercel Analytics and third-party pixels
+  all require either “accept all” or a customised choice with analytics
+  explicitly enabled. Rejecting analytics clears the browser ID and stored
+  attribution; the checkout sends neither attribution nor a browser ID.
 - **Two visitor counts, one guard:** `backend/services/vercelAnalytics.js` reads Vercel Web
   Analytics (`/v1/query/web-analytics/...`, env-gated on `VERCEL_API_TOKEN` +
   `VERCEL_PROJECT_ID`, cached 15min, stale-on-failure, error NOT cached). Route
@@ -368,8 +395,9 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   reported 78 visitors in 14 days, and our `Visit` count was ZERO. Cause below — the check
   did exactly its job, and without it the shop looked like it had no traffic at all.
 - **Server-to-server writes must carry a CSRF header:** `backend/middleware/csrf.js`
-  requires `X-CSRF-Token` or `X-Requested-With` on every non-safe method and exempts ONLY
-  the Stripe webhook. Three Next route handlers POST to the backend;
+  requires `X-CSRF-Token` or `X-Requested-With` on every non-safe method. The only
+  non-webhook exception is the exact signed `POST /api/customers/unsubscribe` endpoint
+  required for mailbox-provider one-click opt-out. Three Next route handlers POST to the backend;
   `app/api/admin-session/route.ts` had carried the header since F8 **with a comment saying
   why**, and BOTH tracking proxies (`app/api/track/visit`, `app/api/track/event`) did not.
   So every visit and every clickstream event was 403'd — invisibly, by construction: the
@@ -583,9 +611,10 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   retention has never once run — and `products` carries `slug_1` with `sparse` but
   WITHOUT `unique`, so nothing is stopping two products claiming one URL today.
 - **GDPR erasure:** `DELETE /api/admin/customers/:id/gdpr` must purge every store holding
-  the address — Customer (anonymise), Cart (blank + unsubscribe), Newsletter and
-  StockNotification (delete). Orders are RETAINED (financial record). Miss one and cart
-  recovery or the restock sweep keeps emailing someone who asked to be deleted.
+  the address — Customer (anonymise), Cart (blank + unsubscribe), Newsletter,
+  StockNotification and WishlistInterest (delete). Orders are RETAINED (financial record).
+  Miss one and cart recovery, the restock sweep or a wishlist reminder keeps emailing
+  someone who asked to be deleted.
 - **UK shipping claim:** `frontend/lib/ukShipping.ts` — the copy AND the show/hide rule.
   Dispatch is **Derry for UK orders, Donegal for everywhere else**, so every line is
   scoped (`UK orders ship from Derry…`): unscoped, it is a false claim about the shop.
@@ -628,7 +657,12 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   in `app/admin/products/[id]/page.tsx` that doesn't route through `AdminModal`.
 - **Marketing email:** every marketing message needs an opt-out (GDPR Art. 21, PECR).
   `utils/unsubscribeSign.js` signs the link; pass a `scope` so a link minted for one
-  purpose can't be replayed against another. Transactional mail is exempt.
+  purpose can't be replayed against another. Marketing sends use visible opt-out links
+  and `List-Unsubscribe` headers; the customer endpoint also honours the signed RFC 8058
+  one-click POST and suppresses matching newsletter records; a standard newsletter opt-out
+  and an account/admin preference revoke both remove matching account/newsletter permission.
+  Transactional mail (including
+  magic-link sign-in) is exempt.
 - **Server fetches:** storefront server components use `lib/apiFetch.ts` (4s timeout).
   A bare `fetch` in a server component holds the render until Vercel's function timeout.
   Use `apiListResult` where an outage must not read as an empty catalogue.

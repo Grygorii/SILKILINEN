@@ -119,6 +119,7 @@ export default function ProductCard({ product, showHeart = true, priority = fals
             aria-pressed={wished}
             data-track="wishlist_toggle"
             data-track-product={product._id}
+            data-track-action={wished ? 'remove' : 'add'}
           >
             <Heart
               size={18}

@@ -110,17 +110,16 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         const syncedCount = localIds.length;
         fetch(`${API}/api/customers/me/wishlist/sync`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '1' },
           credentials: 'include',
           body: JSON.stringify({ ids: localIds }),
         })
           .then(res => {
             // Only clear the guest's saved items once the server confirms the
             // merge — otherwise a failed sync would silently wipe them.
-            if (res.ok) {
-              lsSet([]);
-              setMergedCount(syncedCount);
-            }
+            if (!res.ok) throw new Error('Could not merge wishlist');
+            lsSet([]);
+            setMergedCount(syncedCount);
           })
           .catch(() => { /* keep local items on failure */ })
           .finally(() => { fetchFromApi(); });
@@ -149,14 +148,29 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       // Optimistic remove
       setWishlist(prev => prev.filter(x => x !== id));
       setItems(prev => prev.filter(p => p._id !== id));
-      fetch(`${API}/api/customers/me/wishlist/${id}`, { method: 'DELETE', credentials: 'include' })
-        .catch(() => fetchFromApi()); // revert on network error
+      fetch(`${API}/api/customers/me/wishlist/${id}`, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-Token': '1' },
+        credentials: 'include',
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Could not remove wishlist item');
+          return fetchFromApi();
+        })
+        .catch(() => fetchFromApi());
     } else {
       // Optimistic add (ID only; fetch to get populated data)
       setWishlist(prev => [...prev, id]);
-      fetch(`${API}/api/customers/me/wishlist/${id}`, { method: 'POST', credentials: 'include' })
-        .then(() => fetchFromApi())
-        .catch(() => setWishlist(prev => prev.filter(x => x !== id)));
+      fetch(`${API}/api/customers/me/wishlist/${id}`, {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': '1' },
+        credentials: 'include',
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Could not add wishlist item');
+          return fetchFromApi();
+        })
+        .catch(() => fetchFromApi());
     }
   }, [customer, wishlist, fetchFromApi]);
 

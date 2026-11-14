@@ -2,6 +2,8 @@
 
 import { Analytics } from '@vercel/analytics/next';
 import { isExcludedFromAnalytics } from '@/lib/analyticsExclude';
+import { allowsAnalytics } from '@/lib/analyticsConsent';
+import { useCookieConsent } from '@/context/CookieConsentContext';
 
 // Vercel Analytics, filtered to the STOREFRONT.
 //
@@ -19,6 +21,9 @@ import { isExcludedFromAnalytics } from '@/lib/analyticsExclude';
 // so admin URLs never reach Vercel at all rather than being filtered later in
 // a dashboard query.
 export default function VercelAnalytics() {
+  const { consent, preferences } = useCookieConsent();
+  if (!allowsAnalytics(consent, preferences)) return null;
+
   return (
     <Analytics
       beforeSend={event => {

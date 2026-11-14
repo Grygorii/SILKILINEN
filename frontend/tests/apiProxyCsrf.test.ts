@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -33,6 +33,12 @@ function routeFiles(dir: string, out: string[] = []): string[] {
 describe('Next route handlers writing to the backend', () => {
   const files = routeFiles(API_DIR);
 
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
+
   it('finds the route handlers', () => {
     expect(files.length).toBeGreaterThan(2);
   });
@@ -50,5 +56,24 @@ describe('Next route handlers writing to the backend', () => {
     }).map(f => f.slice(f.indexOf('app/api')));
 
     expect(missing, 'these writes are refused by backend/middleware/csrf.js').toEqual([]);
+  });
+
+  it('forwards the visitor IP with clickstream events for backend rate limits', async () => {
+    vi.stubEnv('NEXT_PUBLIC_API_URL', 'https://api.example.test');
+    const send = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', send);
+    const { POST } = await import('../app/api/track/event/route');
+    const post = async (headers: Record<string, string>) => {
+      await POST(new Request('https://shop.example.test/api/track/event', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'user-agent': 'Mozilla/5.0', ...headers },
+        body: '{}',
+      }) as never);
+      const options = send.mock.calls.at(-1)?.[1] as RequestInit;
+      return new Headers(options.headers).get('X-Forwarded-For');
+    };
+
+    expect(await post({ 'x-forwarded-for': '203.0.113.7' })).toBe('203.0.113.7');
+    expect(await post({ 'x-real-ip': '198.51.100.8' })).toBe('198.51.100.8');
   });
 });

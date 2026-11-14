@@ -17,6 +17,7 @@ const Cart = require('../models/Cart');
 const Newsletter = require('../models/Newsletter');
 const PromoCode = require('../models/PromoCode');
 const Segment = require('../models/Segment');
+const WishlistInterest = require('../models/WishlistInterest');
 const { recomputeAll, ensureSegmentDocs } = require('../services/segments');
 const { maskEmail } = require('../utils/maskEmail');
 
@@ -154,6 +155,12 @@ router.put('/:id', async (req, res) => {
     const update = validateProfile(req.body, true);
     const customer = await Customer.findOneAndUpdate({ _id: req.params.id, gdprDeletedAt: null }, { $set: update }, { returnDocument: 'after', runValidators: true }).select(ADMIN_CUSTOMER_FIELDS);
     if (!customer) return res.status(404).json({ error: 'Not found' });
+    if (update.marketingConsent === false) {
+      await Newsletter.updateMany(
+        { $or: [{ customerId: customer._id }, { email: customer.email }] },
+        { $set: { isUnsubscribed: true } },
+      );
+    }
     res.json(adminCustomerView(customer));
   } catch (err) {
     console.error(err);
@@ -231,7 +238,10 @@ router.get('/:id/gdpr-export', async (req, res) => {
   try {
     const customer = await Customer.findOne({ _id: req.params.id, gdprDeletedAt: null }).select(ADMIN_CUSTOMER_FIELDS).lean();
     if (!customer) return res.status(404).json({ error: 'Not found' });
-    const orders = await Order.find(ordersForCustomer(customer)).lean();
+    const [orders, wishlistInterests] = await Promise.all([
+      Order.find(ordersForCustomer(customer)).lean(),
+      WishlistInterest.find({ customerId: customer._id }).select('productId savedAt removedAt completedAt reminderAttemptedAt reminderSentAt').lean(),
+    ]);
 
     const payload = {
       exportedAt: new Date().toISOString(),
@@ -242,9 +252,12 @@ router.get('/:id/gdpr-export', async (req, res) => {
         phone: customer.phone,
         defaultShippingAddress: customer.defaultShippingAddress,
         marketingConsent: customer.marketingConsent,
+        lastWishlistReminderAttemptedAt: customer.lastWishlistReminderAttemptedAt,
         createdAt: customer.createdAt,
         lastLogin: customer.lastLogin,
+        wishlist: customer.wishlist || [],
       },
+      wishlistReminderHistory: wishlistInterests,
       orders: orders.map(o => ({
         orderNumber: o.orderNumber,
         total: o.total,

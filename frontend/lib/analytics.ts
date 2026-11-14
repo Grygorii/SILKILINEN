@@ -1,4 +1,5 @@
 import { trackClientEvent } from './track';
+import { hasAnalyticsConsent } from './analyticsConsent';
 
 // window.pintrk is declared globally in components/PinterestTag.tsx.
 declare global {
@@ -6,19 +7,6 @@ declare global {
     gtag?: (...args: unknown[]) => void;
     clarity?: (...args: unknown[]) => void;
   }
-}
-
-function hasConsent(): boolean {
-  if (typeof window === 'undefined') return false;
-  // Aligns with CookieConsentContext's STORAGE_KEY. (Was checking the legacy
-  // 'silkilinen_cookie_consent'='all' key that the current banner no longer
-  // writes — which silently blocked every third-party event.) Per-pixel guards
-  // below give the precise gating: a script's global only exists once its own
-  // consent category was accepted.
-  try {
-    const v = localStorage.getItem('silkilinen:cookieConsent');
-    return v === 'accepted' || v === 'customised';
-  } catch { return false; }
 }
 
 function gtagFire(event: string, params: Record<string, unknown>) {
@@ -47,13 +35,11 @@ const PINTEREST_EVENTS: Record<string, { event: string; map: (p: Record<string, 
 };
 
 export function trackEvent(name: string, properties: Record<string, unknown> = {}, productId?: string) {
-  // First-party store ALWAYS records the event (same posture as Visit tracking)
-  // — it's same-origin, owned, and the one signal that can't be ad-blocked or
-  // silently flow to someone else's account. Third-party tools below stay gated
-  // behind cookie consent.
+  // The first-party event stream is analytics too: it can join a browser's
+  // page views to an order, so it must use the same consent gate as pixels.
+  if (!hasAnalyticsConsent()) return;
   trackClientEvent(name, properties, productId);
 
-  if (!hasConsent()) return;
   gtagFire(name, properties);
   clarityFire(name);
   const pin = PINTEREST_EVENTS[name];

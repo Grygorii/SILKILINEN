@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
-const Visit = require('../models/Visit');
 const Event = require('../models/Event');
+const Visit = require('../models/Visit');
 const { requireAuth } = require('../middleware/auth');
+const { loadEvidence } = require('../services/commerceEvidence');
+const { stagesFromEvidence } = require('../services/funnel');
 
 let cache = { data: null, at: 0 };
 const CACHE_TTL = 5 * 60 * 1000;
@@ -131,138 +133,125 @@ function generateInsights({ todayRevenue, todayOrderCount, abandonedCount, attri
   return insights;
 }
 
-// ── The brain: read the first-party event spine ───────────────────────────────
-// Turns the raw clickstream (Event) + visits (Visit) + orders (Order) into the
-// funnel, the top signals, and a few real session journeys — all joined on the
-// sessionId thread. Revenue-bearing order statuses (not failed/cancelled/refunded).
-const REVENUE_STATUSES = ['paid', 'processing', 'shipped', 'delivered'];
-
+// Session replay uses the same order-ledger/browser-link evidence as the
+// conversion funnel. A success-page event is optional browser telemetry, not
+// proof of a paid order, so we never manufacture one from a webhook.
 router.get('/journeys', requireAuth, async function(req, res) {
   try {
     const days = Math.min(Math.max(parseInt(req.query.days, 10) || 30, 1), 90);
-    const since = new Date(Date.now() - days * 86400000);
+    const now = new Date();
+    const since = new Date(now.getTime() - days * 86400000);
+    const range = { $gte: since, $lt: now };
 
-    // Funnel = distinct SESSIONS that reached each stage (not raw event counts,
-    // so a refresh-happy visitor doesn't inflate a step).
-    const STAGES = ['view_item', 'add_to_cart', 'begin_checkout', 'purchase'];
-
-    const [
-      sessionAgg, funnelAgg, searches, clicks, sources, revenue, recentPurchases,
-    ] = await Promise.all([
-      // Total sessions in the window (distinct sessionId across visits).
-      Visit.aggregate([
-        { $match: { createdAt: { $gte: since } } },
-        { $group: { _id: '$sessionId' } },
-        { $count: 'sessions' },
-      ]),
-      // Distinct sessions per funnel stage.
+    const [evidence, searches, clicks] = await Promise.all([
+      loadEvidence(days, { now }),
       Event.aggregate([
-        { $match: { createdAt: { $gte: since }, type: { $in: STAGES } } },
-        { $group: { _id: { type: '$type', s: '$sessionId' } } },
-        { $group: { _id: '$_id.type', sessions: { $sum: 1 } } },
-      ]),
-      // Top search terms (trackSearch fires { search_term }).
-      Event.aggregate([
-        { $match: { createdAt: { $gte: since }, type: 'search' } },
+        { $match: { createdAt: range, type: 'search' } },
         { $group: { _id: '$props.search_term', count: { $sum: 1 } } },
         { $match: { _id: { $nin: [null, ''] } } },
         { $sort: { count: -1 } }, { $limit: 15 },
       ]),
-      // Most-clicked products from the card_click events.
       Event.aggregate([
-        { $match: { createdAt: { $gte: since }, type: 'card_click' } },
+        { $match: { createdAt: range, type: 'card_click' } },
         { $group: { _id: '$props.name', count: { $sum: 1 } } },
         { $match: { _id: { $nin: [null, ''] } } },
         { $sort: { count: -1 } }, { $limit: 15 },
       ]),
-      // Sessions by traffic source.
-      Visit.aggregate([
-        { $match: { createdAt: { $gte: since } } },
-        { $group: { _id: '$source', sessions: { $addToSet: '$sessionId' } } },
-        { $project: { source: '$_id', _id: 0, sessions: { $size: '$sessions' } } },
-        { $sort: { sessions: -1 } }, { $limit: 10 },
-      ]),
-      // Revenue by acquisition source (the money view).
-      Order.aggregate([
-        { $match: { createdAt: { $gte: since }, status: { $in: REVENUE_STATUSES } } },
-        { $group: { _id: '$attribution.source', orders: { $sum: 1 }, revenue: { $sum: '$total' } } },
-        { $project: { source: '$_id', _id: 0, orders: 1, revenue: 1 } },
-        { $sort: { revenue: -1 } }, { $limit: 10 },
-      ]),
-      // A handful of real converting sessions to "follow the thread".
-      Event.find({ type: 'purchase', createdAt: { $gte: since } })
-        .sort({ createdAt: -1 }).limit(5).select('sessionId createdAt').lean(),
     ]);
 
-    const totalSessions = sessionAgg[0]?.sessions || 0;
-    const stageMap = Object.fromEntries(funnelAgg.map(s => [s._id, s.sessions]));
-    const funnel = [
-      { stage: 'Sessions', sessions: totalSessions },
-      { stage: 'Viewed a product', sessions: stageMap.view_item || 0 },
-      { stage: 'Added to cart', sessions: stageMap.add_to_cart || 0 },
-      { stage: 'Began checkout', sessions: stageMap.begin_checkout || 0 },
-      { stage: 'Purchased', sessions: stageMap.purchase || 0 },
-    ].map((s, i, arr) => ({
-      ...s,
-      // Conversion vs the top of funnel, and step-over-step retention.
-      ofSessions: totalSessions ? Math.round((s.sessions / totalSessions) * 1000) / 10 : 0,
-      ofPrev: i === 0 || !arr[i - 1].sessions ? 100 : Math.round((s.sessions / arr[i - 1].sessions) * 1000) / 10,
+    const totalSessions = evidence.stage.sessions.size;
+    const funnel = stagesFromEvidence(evidence).map(stage => ({
+      key: stage.key,
+      stage: stage.label,
+      sessions: stage.count,
+      ofSessions: totalSessions ? Math.round(stage.count / totalSessions * 1000) / 10 : 0,
+      ofPrev: stage.rate,
+      reliability: stage.reliability,
     }));
+    const sources = evidence.sources
+      .filter(source => source.visitors > 0)
+      .slice(0, 10)
+      .map(source => ({ source: source.source, label: source.displayLabel, sessions: source.visitors }));
+    const revenueBySource = evidence.sources
+      .filter(source => source.attributedOrders > 0)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10)
+      .map(source => ({
+        source: source.source,
+        label: source.displayLabel,
+        orders: source.attributedOrders,
+        revenue: Math.round(source.revenue) / 100,
+      }));
 
-    // Which sessions to reconstruct.
-    //
-    // This only ever sampled sessions that PURCHASED, which inverts the value:
-    // with no sales the page is empty, and the sessions worth watching are
-    // precisely the ones that left. ?outcome=abandoned (the default) samples
-    // sessions that reached a stage and never took the next step; ?stage=
-    // narrows to one step, so the funnel's "Watch a session" link can land on
-    // the exact leak it is describing.
     const outcome = req.query.outcome === 'purchased' ? 'purchased' : 'abandoned';
-    const STEP_AFTER = {
-      view_item: 'add_to_cart',
-      add_to_cart: 'begin_checkout',
-      begin_checkout: 'reached_payment',
-      reached_payment: 'purchase',
-    };
-    const wantStage = STEP_AFTER[req.query.stage] ? req.query.stage : null;
+    const replayStages = [
+      { query: 'reached_payment', key: 'startedPayment', next: 'purchased' },
+      { query: 'begin_checkout', key: 'reachedCheckout', next: 'startedPayment' },
+      { query: 'add_to_cart', key: 'addedToCart', next: 'reachedCheckout' },
+      { query: 'view_item', key: 'viewedProduct', next: 'addedToCart' },
+    ];
+    const selectedStage = replayStages.find(stage => stage.query === req.query.stage);
+    const paidSessions = [...evidence.stage.purchased.entries()]
+      .map(([sessionId, times]) => ({ sessionId, at: new Date(Math.max(...times)) }))
+      .sort((a, b) => b.at - a.at);
+    const completedIds = new Set(paidSessions.map(item => item.sessionId));
 
     let sampleSessions;
     if (outcome === 'purchased') {
-      sampleSessions = recentPurchases.map(p => ({ sessionId: p.sessionId, at: p.createdAt }));
+      sampleSessions = paidSessions.slice(0, 8);
     } else {
-      const reachedTypes = wantStage ? [wantStage] : Object.keys(STEP_AFTER);
-      const nextTypes = wantStage ? [STEP_AFTER[wantStage]] : ['purchase'];
-      const reached = await Event.aggregate([
-        { $match: { createdAt: { $gte: since }, type: { $in: reachedTypes } } },
-        { $group: { _id: '$sessionId', at: { $max: '$createdAt' } } },
-        { $sort: { at: -1 } },
-        { $limit: 200 },
-      ]).catch(() => []);
-      const converted = new Set(
-        await Event.distinct('sessionId', { createdAt: { $gte: since }, type: { $in: nextTypes } }).catch(() => []),
-      );
-      sampleSessions = reached
-        .filter(r => !converted.has(r._id))
-        .slice(0, 8)
-        .map(r => ({ sessionId: r._id, at: r.at }));
+      const candidates = new Map();
+      for (const stage of selectedStage ? [selectedStage] : replayStages) {
+        for (const [sessionId, times] of evidence.stage[stage.key]) {
+          if (!evidence.browsers.has(sessionId) || completedIds.has(sessionId) || candidates.has(sessionId)) continue;
+          const firstAt = Math.min(...times);
+          const progressed = (evidence.stage[stage.next].get(sessionId) || []).some(at => at >= firstAt);
+          if (!progressed) candidates.set(sessionId, { sessionId, at: new Date(Math.max(...times)) });
+        }
+      }
+      sampleSessions = [...candidates.values()].sort((a, b) => b.at - a.at).slice(0, 8);
     }
 
-    // Reconstruct each sample session's ordered path (bounded).
     const journeys = [];
-    for (const p of sampleSessions) {
-      const path = await Event.find({ sessionId: p.sessionId })
-        .sort({ createdAt: 1 }).limit(40).select('type page props createdAt -_id').lean();
-      journeys.push({ sessionId: p.sessionId, at: p.at, steps: path, outcome });
+    for (const sample of sampleSessions) {
+      const [eventSteps, visitSteps] = await Promise.all([
+        Event.find({ sessionId: sample.sessionId, createdAt: range })
+          .sort({ createdAt: -1 }).limit(40).select('type page props createdAt -_id').lean(),
+        Visit.find({ sessionId: sample.sessionId, createdAt: range })
+          .sort({ createdAt: -1 }).limit(40).select('page productId createdAt -_id').lean(),
+      ]);
+      const steps = [
+        ...visitSteps.map(visit => ({
+          type: 'page_view', page: visit.page, props: visit.productId ? { productId: String(visit.productId) } : {}, createdAt: visit.createdAt,
+        })),
+        ...eventSteps,
+      ]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 40)
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      if (outcome === 'purchased') {
+        steps.push({ type: 'paid_order', props: { source: 'order_ledger' }, createdAt: sample.at });
+        steps.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      }
+      journeys.push({ sessionId: sample.sessionId, at: sample.at, steps, outcome });
     }
 
     res.json({
       range: { days, since },
+      outcome,
       totalSessions,
+      reporting: {
+        paidOrders: evidence.summary.orders,
+        linkedOrders: evidence.summary.linkedOrders,
+        unlinkedOrders: evidence.summary.unlinkedOrders,
+        manualOrders: evidence.summary.manualOrders,
+        netRevenueEUR: evidence.summary.netRevenueEUR,
+      },
       funnel,
-      topSearches: searches.map(s => ({ term: s._id, count: s.count })),
-      topProducts: clicks.map(c => ({ name: c._id, count: c.count })),
+      topSearches: searches.map(search => ({ term: search._id, count: search.count })),
+      topProducts: clicks.map(click => ({ name: click._id, count: click.count })),
       sources,
-      revenueBySource: revenue,
+      revenueBySource,
       journeys,
     });
   } catch (err) {

@@ -4,6 +4,7 @@ import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { useCookieConsent } from '@/context/CookieConsentContext';
+import { allowsAnalytics } from '@/lib/analyticsConsent';
 
 // Both default to the founder's OWN, confirmed properties (GA4 G-XZG6XTZ3S8 and
 // Clarity x940yl1bn0), so analytics works zero-config. The NEXT_PUBLIC_* env vars
@@ -20,7 +21,7 @@ const VERCEL_ANALYTICS_ENABLED = process.env.NEXT_PUBLIC_ENABLE_VERCEL_ANALYTICS
 
 export default function AnalyticsLoader() {
   const { consent, preferences } = useCookieConsent();
-  const allowed = consent === 'accepted' || (consent === 'customised' && preferences?.analytics === true);
+  const allowed = allowsAnalytics(consent, preferences);
 
   if (!allowed) return null;
 

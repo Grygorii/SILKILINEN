@@ -1,10 +1,17 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import {
+  clearAnalyticsPersistence,
+  COOKIE_CONSENT_STORAGE_KEY,
+  COOKIE_PREFERENCES_STORAGE_KEY,
+  type AnalyticsPreferences,
+  type CookieConsentValue,
+} from '@/lib/analyticsConsent';
 
-type ConsentValue = 'accepted' | 'rejected' | 'customised' | null;
+type ConsentValue = CookieConsentValue;
 
-export type CategoryPrefs = {
+export type CategoryPrefs = AnalyticsPreferences & {
   functional: boolean;
   analytics: boolean;
   marketing: boolean;
@@ -23,8 +30,8 @@ interface CookieConsentContextType {
   savePreferences: (prefs: CategoryPrefs) => void;
 }
 
-const STORAGE_KEY = 'silkilinen:cookieConsent';
-const PREFS_KEY = 'silkilinen:cookiePrefs';
+const STORAGE_KEY = COOKIE_CONSENT_STORAGE_KEY;
+const PREFS_KEY = COOKIE_PREFERENCES_STORAGE_KEY;
 
 const CookieConsentContext = createContext<CookieConsentContextType | null>(null);
 
@@ -40,8 +47,14 @@ export function CookieConsentProvider({ children }: { children: React.ReactNode 
       setConsent(stored);
       if (stored === 'customised') {
         try {
-          setPreferences(JSON.parse(localStorage.getItem(PREFS_KEY) || '{}'));
-        } catch {}
+          const saved = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') as CategoryPrefs;
+          setPreferences(saved);
+          if (saved.analytics !== true) clearAnalyticsPersistence();
+        } catch {
+          clearAnalyticsPersistence();
+        }
+      } else if (stored === 'rejected') {
+        clearAnalyticsPersistence();
       }
     } else {
       // Migrate from old key
@@ -52,7 +65,9 @@ export function CookieConsentProvider({ children }: { children: React.ReactNode 
       } else if (legacy === 'essential') {
         localStorage.setItem(STORAGE_KEY, 'rejected');
         setConsent('rejected');
+        clearAnalyticsPersistence();
       } else {
+        clearAnalyticsPersistence();
         setShowBanner(true);
       }
     }
@@ -67,6 +82,7 @@ export function CookieConsentProvider({ children }: { children: React.ReactNode 
 
   function reject() {
     localStorage.setItem(STORAGE_KEY, 'rejected');
+    clearAnalyticsPersistence();
     setConsent('rejected');
     setShowBanner(false);
     setShowSettings(false);
@@ -89,6 +105,7 @@ export function CookieConsentProvider({ children }: { children: React.ReactNode 
   function savePreferences(prefs: CategoryPrefs) {
     localStorage.setItem(STORAGE_KEY, 'customised');
     localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+    if (!prefs.analytics) clearAnalyticsPersistence();
     setConsent('customised');
     setPreferences(prefs);
     setShowBanner(false);

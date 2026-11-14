@@ -48,6 +48,19 @@ function shortId(mongoId) {
   return String(mongoId).slice(-8).toUpperCase();
 }
 
+function customerUnsubscribeLink(customerId) {
+  if (!customerId) return '';
+  const backend = process.env.BACKEND_URL || 'https://silkilinen-production.up.railway.app';
+  const customer = String(customerId);
+  return `${backend}/api/customers/unsubscribe?cid=${Buffer.from(customer).toString('base64url')}&sig=${signUnsub(customer, 'customer')}`;
+}
+
+function marketingHeaders(unsubscribeLink) {
+  return unsubscribeLink
+    ? { 'List-Unsubscribe': `<${unsubscribeLink}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }
+    : undefined;
+}
+
 function buildItemsRows(items, m) {
   return items.map(item => `
     <tr>
@@ -219,7 +232,6 @@ async function sendMagicLink({ email, link }) {
 </td></tr>
 <tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
 <p style="margin:0;font-size:11px;color:#aca8a2;">${brandLocation()} &nbsp;·&nbsp; ${supportEmail()}</p>
-${unsubLink ? `<p style="margin:8px 0 0;font-size:11px;color:#aca8a2;"><a href="${unsubLink}" style="color:#aca8a2;">Unsubscribe from offers</a></p>` : ''}
 </td></tr>
 </table></td></tr></table></body></html>`,
   });
@@ -267,14 +279,11 @@ async function sendWinbackReminder({ email, firstName, customerId }) {
   // The audience was already gated on marketingConsent, but a recipient had no
   // way to withdraw it short of writing to us. Scoped signature so the link
   // cannot be replayed against the cart-recovery unsubscribe.
-  const unsubLink = customerId
-    ? `${process.env.BACKEND_URL || 'https://silkilinen-production.up.railway.app'}/api/customers/unsubscribe`
-      + `?cid=${Buffer.from(String(customerId)).toString('base64url')}`
-      + `&sig=${signUnsub(customerId, 'customer')}`
-    : '';
+  const unsubLink = customerUnsubscribeLink(customerId);
   await getResend().emails.send({
     from: FROM,
     to: email,
+    headers: marketingHeaders(unsubLink),
     subject: `We saved your spot — ${offerPct()}% off when you’re ready`,
     html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
@@ -293,9 +302,42 @@ async function sendWinbackReminder({ email, firstName, customerId }) {
 </td></tr>
 <tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;">
 <p style="margin:0;font-size:11px;color:#aca8a2;">${brandLocation()} &nbsp;·&nbsp; ${supportEmail()}</p>
+${unsubLink ? `<p style="margin:8px 0 0;font-size:11px;color:#aca8a2;"><a href="${unsubLink}" style="color:#aca8a2;">Unsubscribe from offers</a></p>` : ''}
 </td></tr>
 </table></td></tr></table></body></html>`,
   });
+}
+
+async function sendWishlistReminder({ email, firstName, customerId, product, offer }) {
+  if (!process.env.RESEND_API_KEY || !email || !product || !offer) return;
+  const name = esc(firstName || 'there');
+  const productName = esc(product.name || 'a piece you saved');
+  const code = esc(offer.code);
+  const percent = Number.isFinite(Number(offer.percent)) ? Number(offer.percent) : 0;
+  const minimumOrderValue = Math.max(0, Number(offer.minimumOrderValue) || 0);
+  const expiry = offer.validUntil && !Number.isNaN(new Date(offer.validUntil).getTime())
+    ? new Date(offer.validUntil).toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+  const minimumOrderNote = `${minimumOrderValue ? ` on orders of €${minimumOrderValue.toFixed(2)} or more` : ''}${expiry ? `. Offer valid until ${expiry}` : ''}`;
+  const productPath = product.slug ? `/product/${encodeURIComponent(product.slug)}` : '/wishlist';
+  const unsubLink = customerUnsubscribeLink(customerId);
+
+  const result = await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: `A piece you saved — ${percent}% off when you’re ready`,
+    headers: marketingHeaders(unsubLink),
+    html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0ede8;font-family:Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ede8;padding:40px 16px;"><tr><td align="center">
+<table cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;">
+<tr><td style="background:#1a1916;padding:32px 40px;text-align:center;"><p style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;letter-spacing:6px;color:#faf8f4;">SILKILINEN</p><p style="margin:8px 0 0;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#7a7670;">Silk &amp; Linen Intimates</p></td></tr>
+<tr><td style="background:#faf8f4;padding:48px 40px;"><p style="margin:0 0 16px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1916;">Still thinking of this piece?</p><p style="margin:0 0 24px;font-size:13px;color:#5a5650;line-height:1.8;">Hi ${name}, you saved <strong style="color:#1a1916;">${productName}</strong> a little while ago. If it still feels right, use <strong style="color:#1a1916;letter-spacing:1px;">${code}</strong> for ${percent}% off${minimumOrderNote}.</p><a href="${siteUrl(productPath)}" style="display:inline-block;background:#1a1916;color:#faf8f4;text-decoration:none;padding:14px 36px;font-size:12px;letter-spacing:2px;text-transform:uppercase;">View the piece</a><p style="margin:32px 0 0;font-size:12px;color:#8a8680;line-height:1.7;">This is a one-time reminder about an item you saved. No pressure — we will not send another reminder for it.</p></td></tr>
+<tr><td style="background:#f0ede8;padding:24px 40px;text-align:center;"><p style="margin:0;font-size:11px;color:#aca8a2;">${brandLocation()} &nbsp;·&nbsp; ${supportEmail()}</p>${unsubLink ? `<p style="margin:8px 0 0;font-size:11px;color:#aca8a2;"><a href="${unsubLink}" style="color:#aca8a2;">Unsubscribe from offers</a></p>` : ''}</td></tr>
+</table></td></tr></table></body></html>`,
+  });
+  if (result?.error) throw new Error(result.error.message || 'Email provider rejected wishlist reminder');
+  return result;
 }
 
 function buildStatusHtml({ order, heading, body, trackingBlock }) {
@@ -797,4 +839,4 @@ async function sendBackInStock({ email, product, size, colour }) {
   }
 }
 
-module.exports = { sendBackInStock, sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail, sendDropAHint, sendCartRecoveryEmail, sendWinbackReminder, sendReviewRequest, sendAdvisorDigest };
+module.exports = { sendBackInStock, sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail, sendDropAHint, sendCartRecoveryEmail, sendWinbackReminder, sendWishlistReminder, sendReviewRequest, sendAdvisorDigest };

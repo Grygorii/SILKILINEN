@@ -5,14 +5,16 @@ import AdminLayout from '@/components/AdminLayout';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
-type Funnel = { stage: string; sessions: number; ofSessions: number; ofPrev: number };
+type Funnel = { key: string; stage: string; sessions: number; ofSessions: number; ofPrev: number | null; reliability?: string };
 type Count = { term?: string; name?: string; count: number };
-type Source = { source: string; sessions: number };
-type Rev = { source: string; orders: number; revenue: number };
+type Source = { source: string; label?: string; sessions: number };
+type Rev = { source: string; label?: string; orders: number; revenue: number };
 type Step = { type: string; page?: string; props?: Record<string, unknown>; createdAt: string };
-type Journey = { sessionId: string; at: string; steps: Step[] };
+type Journey = { sessionId: string; at: string; steps: Step[]; outcome: 'abandoned' | 'purchased' };
 type Data = {
   totalSessions: number;
+  outcome: 'abandoned' | 'purchased';
+  reporting: { paidOrders: number; linkedOrders: number; unlinkedOrders: number; manualOrders: number; netRevenueEUR: number };
   funnel: Funnel[];
   topSearches: Count[];
   topProducts: Count[];
@@ -44,23 +46,45 @@ function timeAgo(iso: string) {
 
 export default function JourneysPage() {
   const [days, setDays] = useState(30);
+  const [outcome, setOutcome] = useState<'abandoned' | 'purchased'>('abandoned');
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
+    const controller = new AbortController();
     // ?stage= arrives from the funnel panel's "Watch a session" link, so the
     // page opens on the sessions that stopped at the step being described
     // rather than a generic list. Read from location rather than
     // useSearchParams, which would force this page into a Suspense boundary.
     const stage = new URLSearchParams(window.location.search).get('stage') || '';
-    fetch(`${API}/api/admin/insights/journeys?days=${days}${stage ? `&stage=${encodeURIComponent(stage)}` : ''}`, { credentials: 'include' })
+    fetch(`${API}/api/admin/insights/journeys?days=${days}&outcome=${outcome}${stage ? `&stage=${encodeURIComponent(stage)}` : ''}`, { credentials: 'include', signal: controller.signal })
       .then(r => r.json())
-      .then(d => { setData(d?.error ? null : d); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [days]);
+      .then(d => {
+        if (controller.signal.aborted) return;
+        setData(d?.error ? null : d);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setData(null);
+        setLoading(false);
+      });
+    return () => controller.abort();
+  }, [days, outcome]);
 
   const maxFunnel = data?.funnel?.[0]?.sessions || 1;
+
+  function chooseOutcome(next: 'abandoned' | 'purchased') {
+    if (next === outcome) return;
+    setLoading(true);
+    setOutcome(next);
+  }
+
+  function chooseDays(next: number) {
+    if (next === days) return;
+    setLoading(true);
+    setDays(next);
+  }
 
   return (
     <AdminLayout>
@@ -74,13 +98,23 @@ export default function JourneysPage() {
               First-party clickstream, joined to revenue. The eye that can&rsquo;t be blocked.
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 4 }}>
-            {[7, 30, 90].map(d => (
-              <button key={d} onClick={() => setDays(d)} style={{
-                padding: '6px 14px', fontSize: 12, border, cursor: 'pointer', fontFamily: 'inherit',
-                background: days === d ? dark : 'var(--admin-surface)', color: days === d ? 'var(--admin-surface)' : muted,
-              }}>{d}d</button>
-            ))}
+          <div style={{ display: 'grid', gap: 8, justifyItems: 'end' }}>
+            <div style={{ display: 'flex', gap: 4 }} aria-label="Journey type">
+              {([['abandoned', 'Incomplete'], ['purchased', 'Completed']] as const).map(([value, label]) => (
+                <button key={value} onClick={() => chooseOutcome(value)} style={{
+                  padding: '6px 12px', fontSize: 12, border, cursor: 'pointer', fontFamily: 'inherit',
+                  background: outcome === value ? dark : 'var(--admin-surface)', color: outcome === value ? 'var(--admin-surface)' : muted,
+                }}>{label}</button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 4 }} aria-label="Date range">
+              {[7, 30, 90].map(d => (
+                <button key={d} onClick={() => chooseDays(d)} style={{
+                  padding: '6px 14px', fontSize: 12, border, cursor: 'pointer', fontFamily: 'inherit',
+                  background: days === d ? dark : 'var(--admin-surface)', color: days === d ? 'var(--admin-surface)' : muted,
+                }}>{d}d</button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -91,7 +125,7 @@ export default function JourneysPage() {
         ) : (
           <div style={{ display: 'grid', gap: 16, marginTop: 24 }}>
             {/* Funnel */}
-            <Card title={`Funnel · ${data.totalSessions} sessions`}>
+            <Card title={`Funnel · ${data.totalSessions} tracked browser${data.totalSessions === 1 ? '' : 's'}`}>
               <div style={{ display: 'grid', gap: 10 }}>
                 {data.funnel.map((f, i) => (
                   <div key={f.stage} style={{ display: 'grid', gridTemplateColumns: '150px 1fr 120px', alignItems: 'center', gap: 12 }}>
@@ -101,11 +135,18 @@ export default function JourneysPage() {
                       <span style={{ position: 'absolute', left: 8, top: 4, fontSize: 12, color: dark, fontVariantNumeric: 'tabular-nums' }}>{f.sessions}</span>
                     </div>
                     <span style={{ fontSize: 12, color: muted, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                      {f.ofSessions}% all{i > 0 && <span style={{ color: f.ofPrev < 40 ? 'var(--admin-danger)' : muted }}> · {f.ofPrev}% step</span>}
+                      {f.ofSessions}% all{i > 0 && (f.ofPrev === null
+                        ? <span style={{ color: muted }}> · rate unknown</span>
+                        : <span style={{ color: f.ofPrev < 40 ? 'var(--admin-danger)' : muted }}> · {f.ofPrev}% step</span>)}
                     </span>
                   </div>
                 ))}
               </div>
+              <p style={{ fontSize: 12, color: muted, lineHeight: 1.6, margin: '16px 0 0' }}>
+                {data.reporting.paidOrders} paid order{data.reporting.paidOrders === 1 ? '' : 's'} (€{Number(data.reporting.netRevenueEUR || 0).toFixed(0)}) in the order ledger; {data.reporting.linkedOrders} linked to a tracked browser journey.
+                {data.reporting.unlinkedOrders > 0 && ` ${data.reporting.unlinkedOrders} website order${data.reporting.unlinkedOrders === 1 ? '' : 's'} cannot be replayed because no browser link was recorded.`}
+                {data.reporting.manualOrders > 0 && ` ${data.reporting.manualOrders} manual/offline order${data.reporting.manualOrders === 1 ? '' : 's'} ha${data.reporting.manualOrders === 1 ? 's' : 've'} no website journey.`}
+              </p>
             </Card>
 
             {/* Top signals */}
@@ -130,18 +171,18 @@ export default function JourneysPage() {
 
             {/* Sources + money */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <Card title="Sessions by source">
+              <Card title="Tracked browsers by source">
                 {data.sources.map(s => (
                   <div key={s.source} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--admin-bg)' }}>
-                    <span style={{ color: dark }}>{s.source || 'direct'}</span><span style={{ color: muted }}>{s.sessions}</span>
+                    <span style={{ color: dark }}>{s.label || s.source || 'Direct / unclassified'}</span><span style={{ color: muted }}>{s.sessions}</span>
                   </div>
                 ))}
               </Card>
-              <Card title="Revenue by source">
+              <Card title="Ledger revenue by source">
                 {data.revenueBySource.length === 0 ? <p style={{ fontSize: 12, color: muted }}>No revenue in range.</p> :
                   data.revenueBySource.map(r => (
                     <div key={r.source} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--admin-bg)' }}>
-                      <span style={{ color: dark }}>{r.source || 'direct'} <span style={{ color: muted, fontSize: 11 }}>({r.orders})</span></span>
+                      <span style={{ color: dark }}>{r.label || r.source || 'Unknown / unlinked'} <span style={{ color: muted, fontSize: 11 }}>({r.orders})</span></span>
                       <span style={{ color: dark, fontVariantNumeric: 'tabular-nums' }}>€{Number(r.revenue || 0).toFixed(0)}</span>
                     </div>
                   ))}
@@ -149,19 +190,19 @@ export default function JourneysPage() {
             </div>
 
             {/* Real threads */}
-            <Card title="Follow the thread · recent converting sessions">
-              {data.journeys.length === 0 ? <p style={{ fontSize: 12, color: muted }}>No completed journeys yet.</p> :
+            <Card title={`Follow the thread · recent ${data.outcome === 'purchased' ? 'completed browser journeys' : 'incomplete journeys'}`}>
+              {data.journeys.length === 0 ? <p style={{ fontSize: 12, color: muted }}>{data.outcome === 'purchased' ? 'No paid browser journeys were linked in this range.' : 'No incomplete tracked journeys matched this range.'}</p> :
                 <div style={{ display: 'grid', gap: 14 }}>
                   {data.journeys.map(j => (
                     <div key={j.sessionId} style={{ borderLeft: '2px solid var(--admin-danger-soft)', paddingLeft: 14 }}>
-                      <div style={{ fontSize: 11, color: muted, marginBottom: 6 }}>session {j.sessionId.slice(0, 12)}… · purchased {timeAgo(j.at)} · {j.steps.length} steps</div>
+                      <div style={{ fontSize: 11, color: muted, marginBottom: 6 }}>session {j.sessionId.slice(0, 12)}… · {j.outcome === 'purchased' ? 'paid' : 'stopped'} {timeAgo(j.at)} · {j.steps.length} steps</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                         {j.steps.map((st, i) => (
                           <span key={i} title={st.page} style={{
-                            fontSize: 11, padding: '2px 8px', borderRadius: 2, background: st.type === 'purchase' ? 'var(--admin-success-soft)' : 'var(--admin-bg)',
-                            color: st.type === 'purchase' ? 'var(--color-success)' : dark,
+                            fontSize: 11, padding: '2px 8px', borderRadius: 2, background: st.type === 'paid_order' ? 'var(--admin-success-soft)' : 'var(--admin-bg)',
+                            color: st.type === 'paid_order' ? 'var(--color-success)' : dark,
                           }}>
-                            {st.type}{st.props?.search_term ? `: ${st.props.search_term}` : ''}
+                            {st.type === 'paid_order' ? 'paid order' : st.type === 'purchase' ? 'purchase-page event' : st.type}{st.props?.search_term ? `: ${st.props.search_term}` : ''}
                           </span>
                         ))}
                       </div>

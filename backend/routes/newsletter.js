@@ -3,6 +3,7 @@ const { SITE_URL } = require('../config/site');
 const router = express.Router();
 const crypto = require('crypto');
 const Newsletter = require('../models/Newsletter');
+const Customer = require('../models/Customer');
 const PromoCode = require('../models/PromoCode');
 const { sendNewsletterWelcome } = require('../services/email');
 const { publicWriteRateLimit } = require('../middleware/rateLimits');
@@ -78,14 +79,17 @@ router.post('/subscribe', publicWriteRateLimit, handleSubscribe);
 // GET /api/newsletter/unsubscribe/:token
 router.get('/unsubscribe/:token', async function(req, res) {
   try {
-    const record = await Newsletter.findOneAndUpdate(
-      { unsubscribeToken: req.params.token },
-      { isUnsubscribed: true },
-      { new: true }
-    );
+    const record = await Newsletter.findOne({ unsubscribeToken: req.params.token });
     if (!record) {
       return res.redirect(`${FRONTEND}/unsubscribe?status=invalid`);
     }
+    const customerMatch = [{ email: record.email }];
+    if (record.customerId) customerMatch.unshift({ _id: record.customerId });
+    await Customer.updateMany(
+      { $or: customerMatch },
+      { $set: { marketingConsent: false } },
+    );
+    await Newsletter.updateOne({ _id: record._id }, { $set: { isUnsubscribed: true } });
     res.redirect(`${FRONTEND}/unsubscribe?status=success`);
   } catch (err) {
     res.redirect(`${FRONTEND}/unsubscribe?status=error`);

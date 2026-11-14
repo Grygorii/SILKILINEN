@@ -9,12 +9,12 @@ const engine=require('../services/growthEngine'), watchdog=require('../services/
 const ai=require('../services/aiClient'), auditor=require('../services/groundTruthAuditor');
 const chief=require('../services/chiefOfStaff');
 const davinci=require('../services/davinci');
-const dashboard=require('../routes/adminDashboard'), growth=require('../routes/adminGrowth'), {csrf}=require('../middleware/csrf');
+const dashboard=require('../routes/adminDashboard'), growth=require('../routes/adminGrowth'), insights=require('../routes/insights'), {csrf}=require('../middleware/csrf');
 let db,server,base;
 const models=[Visit,Event,Order,Product,SystemState,GrowthAction,CEOBrief,Composition];
 const cookie=`token=${jwt.sign({role:'admin',userId:'012345678901234567890123'},process.env.JWT_SECRET)}`;
 const http=(path,body)=>fetch(base+path,{method:body?'POST':'GET',headers:{cookie,'Content-Type':'application/json','X-CSRF-Token':'1'},...(body?{body:JSON.stringify(body)}:{})});
-beforeAll(async()=>{db=await MongoMemoryReplSet.create({binary:{version:'7.0.24'},replSet:{count:1}});await mongoose.connect(db.getUri(),{dbName:'reporting_fixture'});await Promise.all(models.map(m=>m.init()));const app=express();app.use(express.json());app.use(cookieParser());app.use(csrf);app.use('/api/admin/dashboard',dashboard);app.use('/api/admin/growth',growth);server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));base=`http://127.0.0.1:${server.address().port}`;});
+beforeAll(async()=>{db=await MongoMemoryReplSet.create({binary:{version:'7.0.24'},replSet:{count:1}});await mongoose.connect(db.getUri(),{dbName:'reporting_fixture'});await Promise.all(models.map(m=>m.init()));const app=express();app.use(express.json());app.use(cookieParser());app.use(csrf);app.use('/api/admin/dashboard',dashboard);app.use('/api/admin/growth',growth);app.use('/api/admin/insights',insights);server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));base=`http://127.0.0.1:${server.address().port}`;});
 afterAll(async()=>{if(server)await new Promise(r=>server.close(r));await mongoose.disconnect();if(db)await db.stop();vi.restoreAllMocks();});
 beforeEach(async()=>{await Promise.all(models.map(m=>m.deleteMany({})));vi.restoreAllMocks();});
 describe('database to API',()=>{
@@ -27,6 +27,69 @@ describe('database to API',()=>{
   const f=await(await http('/api/admin/dashboard/funnel?days=14')).json();expect(f.overallConversion).toBeNull();expect(f.evidence.summary.orders).toBe(1);expect(f.stages.find(s=>s.key==='viewedProduct').count).toBe(1);expect(f.biggestLeak).toBeNull();
  });
  it('counts a new linked sale without a success-page event',async()=>{await Visit.create({sessionId:'linked-fixture',page:'product',source:'pinterest',createdAt:new Date(Date.now()-3600000)});await Order.create({browserSessionId:'linked-fixture',status:'processing',total:89,createdAt:new Date(Date.now()-600000)});const e=await loadEvidence(30,{fresh:true});expect(e.summary).toMatchObject({linkedOrders:1,orders:1,netRevenueEUR:89});expect(e.stage.purchased.size).toBe(1);});
+ it('reconciles ledger-paid, raw purchase-page, manual and visit-only journey evidence',async()=>{
+  const now=Date.now(), paidSession='journey-paid-browser', incompleteSession='journey-incomplete-browser', visitOnlySession='journey-visit-only-browser', orphanSession='journey-orphan-event';
+  await Visit.create([
+   {sessionId:paidSession,page:'/product/fixture',source:'google',createdAt:new Date(now-60*60000)},
+   {sessionId:incompleteSession,page:'/product/fixture',source:'google',createdAt:new Date(now-40*60000)},
+   {sessionId:visitOnlySession,page:'/product/fixture',source:'google',createdAt:new Date(now-20*60000)},
+  ]);
+  await Event.create([
+   {sessionId:paidSession,type:'view_item',createdAt:new Date(now-55*60000)},
+   {sessionId:paidSession,type:'add_to_cart',createdAt:new Date(now-50*60000)},
+   {sessionId:paidSession,type:'view_item',props:{probe:'out-of-range'},createdAt:new Date(now-8*86400000)},
+   {sessionId:incompleteSession,type:'reached_payment',createdAt:new Date(now-30*60000)},
+   {sessionId:incompleteSession,type:'purchase',createdAt:new Date(now-29*60000)},
+   {sessionId:orphanSession,type:'add_to_cart',createdAt:new Date(now-25*60000)},
+  ]);
+  await Order.create({orderNumber:'JOURNEY-PAID',browserSessionId:paidSession,status:'paid',total:89,createdAt:new Date(now-15*60000)});
+  await Order.create({orderNumber:'JOURNEY-MANUAL',status:'paid',total:45,attribution:{source:'manual',medium:'admin'},createdAt:new Date(now-10*60000)});
+  expect(await Event.countDocuments({sessionId:paidSession,type:'purchase'})).toBe(0);
+  await loadEvidence(7,{fresh:true});
+
+  const incomplete=await http('/api/admin/insights/journeys?days=7'); expect(incomplete.status).toBe(200);
+  const incompleteData=await incomplete.json();
+  expect(incompleteData.reporting).toMatchObject({paidOrders:2,linkedOrders:1,unlinkedOrders:0,manualOrders:1,netRevenueEUR:134});
+  expect(incompleteData.funnel.find(stage=>stage.key==='purchased')).toMatchObject({sessions:1});
+  expect(incompleteData.outcome).toBe('abandoned');
+  expect(incompleteData.journeys.map(journey=>journey.sessionId)).toContain(incompleteSession);
+  expect(incompleteData.journeys.map(journey=>journey.sessionId)).not.toContain(paidSession);
+  expect(incompleteData.journeys.map(journey=>journey.sessionId)).not.toContain(orphanSession);
+  expect(incompleteData.journeys.find(journey=>journey.sessionId===incompleteSession).steps.map(step=>step.type)).toContain('purchase');
+
+  const viewOnly=await http('/api/admin/insights/journeys?days=7&stage=view_item'); expect(viewOnly.status).toBe(200);
+  const viewOnlyData=await viewOnly.json();
+  const visitOnlyJourney=viewOnlyData.journeys.find(journey=>journey.sessionId===visitOnlySession);
+  expect(visitOnlyJourney).toBeTruthy();
+  expect(visitOnlyJourney.steps.map(step=>step.type)).toContain('page_view');
+
+  const paymentLeak=await http('/api/admin/insights/journeys?days=7&stage=reached_payment'); expect(paymentLeak.status).toBe(200);
+  expect((await paymentLeak.json()).journeys.map(journey=>journey.sessionId)).toContain(incompleteSession);
+
+  const completed=await http('/api/admin/insights/journeys?days=7&outcome=purchased'); expect(completed.status).toBe(200);
+  const completedData=await completed.json();
+  const paidJourney=completedData.journeys.find(journey=>journey.sessionId===paidSession);
+  expect(completedData.outcome).toBe('purchased'); expect(paidJourney).toBeTruthy();
+  expect(paidJourney.steps.map(step=>step.type)).toContain('paid_order');
+  expect(paidJourney.steps.some(step=>step.props?.probe==='out-of-range')).toBe(false);
+ });
+ it('replays the latest forty chronological breadcrumbs, rather than the oldest history',async()=>{
+  const now=Date.now(), sessionId='journey-latest-breadcrumbs';
+  await Visit.create({sessionId,page:'/product/fixture',source:'google',createdAt:new Date(now-100*60000)});
+  await Event.insertMany(Array.from({length:45},(_,index)=>({
+   sessionId,type:'view_item',props:{index},createdAt:new Date(now-(90-index)*60000),
+  })));
+  await loadEvidence(7,{fresh:true});
+
+  const response=await http('/api/admin/insights/journeys?days=7&stage=view_item');
+  expect(response.status).toBe(200);
+  const journey=(await response.json()).journeys.find(item=>item.sessionId===sessionId);
+  expect(journey.steps).toHaveLength(40);
+  expect(journey.steps.map(step=>step.props?.index)).toEqual(Array.from({length:40},(_,index)=>index+5));
+  expect(journey.steps.map(step=>new Date(step.createdAt).getTime())).toEqual([...journey.steps]
+   .sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt))
+   .map(step=>new Date(step.createdAt).getTime()));
+ });
  it('serves current evidence without generating AI or writing orders',async()=>{await Composition.create({vision:'Historical strategy',createdAt:new Date('2026-06-19')});await GrowthAction.create({agent:'fixture',type:'idea',title:'Old idea',status:'needs_approval',createdAt:new Date(Date.now()-45*86400000)});await loadEvidence(30,{fresh:true});const response=await http('/api/admin/growth/evidence');expect(response.status).toBe(200);const e=await response.json();expect(e.composition.status).toBe('stale');expect(e.queue).toMatchObject({total:1,olderThan30Days:1});expect(await Order.countDocuments()).toBe(0);expect(await CEOBrief.countDocuments()).toBe(0);});
  it('retrieves Hermes work even beyond the global fifty-row feed',async()=>{await GrowthAction.create({agent:'hermes',type:'seo',title:'Targeted SEO',status:'needs_approval',createdAt:new Date(Date.now()-86400000)});await GrowthAction.insertMany(Array.from({length:55},(_,i)=>({agent:'social',type:'info',title:`Other ${i}`})));const e=await(await http('/api/admin/growth?agent=hermes')).json();expect(e.actions).toHaveLength(1);expect(e.actions[0].agent).toBe('hermes');});
  it('does not expose reporting publicly',async()=>{expect((await fetch(base+'/api/admin/growth/evidence')).status).toBe(401);});

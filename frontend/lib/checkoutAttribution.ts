@@ -1,4 +1,5 @@
 import { getSessionId } from './track';
+import { hasAnalyticsConsent } from './analyticsConsent';
 
 type Reader = Pick<Storage, 'getItem'>;
 export function readCheckoutAttribution(storage: Reader): Record<string, string> {
@@ -15,6 +16,9 @@ export function readCheckoutAttribution(storage: Reader): Record<string, string>
 
 /** Analytics identity is deliberately NOT the server-cart lookup key. */
 export function checkoutAnalytics() {
+  if (typeof window === 'undefined' || !hasAnalyticsConsent()) {
+    return { attribution: {}, browserSessionId: '' };
+  }
   let attribution: Record<string, string> = {};
   let browserSessionId = '';
   try { attribution = readCheckoutAttribution(window.sessionStorage); } catch { /* storage blocked */ }

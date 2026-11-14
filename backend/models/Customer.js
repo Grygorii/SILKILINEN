@@ -70,6 +70,9 @@ const customerSchema = new mongoose.Schema({
 
   // Email activity log (last 100 entries)
   emailLog: { type: [emailLogSchema], default: [] },
+  // Separate from an individual save's lifecycle so remove/re-save cannot
+  // bypass the account-wide wishlist reminder cooldown.
+  lastWishlistReminderAttemptedAt: { type: Date, default: null },
 
   // GDPR
   gdprDeletedAt: { type: Date, default: null },

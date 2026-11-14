@@ -210,6 +210,10 @@ export default function ProductGallery({ images, name, productId, video }: Props
           className={`${styles.heartBtn} ${animating ? styles.heartAnimating : ''}`}
           onClick={handleHeart}
           aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+          aria-pressed={wished}
+          data-track="wishlist_toggle"
+          data-track-product={productId}
+          data-track-action={wished ? 'remove' : 'add'}
         >
           <Heart size={18} strokeWidth={1.5} fill={wished ? 'currentColor' : 'none'} />
         </button>

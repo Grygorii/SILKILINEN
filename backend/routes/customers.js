@@ -4,6 +4,7 @@ const router = express.Router();
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const Customer = require('../models/Customer');
+const Newsletter = require('../models/Newsletter');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { OAuth2Client } = require('google-auth-library');
@@ -13,6 +14,8 @@ const { CUSTOMER_ORDER_FIELDS, WISHLIST_FIELDS } = require('../utils/customerVie
 const { requireCustomer } = require('../middleware/customerAuth');
 const { authRateLimit } = require('../middleware/rateLimits');
 const { sendMagicLink, sendWelcome } = require('../services/email');
+const { recordWishlistSaves, markWishlistRemoved } = require('../services/wishlistReminders');
+const { verify: verifyUnsubscribe } = require('../utils/unsubscribeSign');
 
 const SECRET = process.env.JWT_CUSTOMER_SECRET; // fatal-exit guard is in middleware/customerAuth.js
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -156,6 +159,12 @@ router.put('/me', requireCustomer, async function(req, res) {
       { $set: update }, { returnDocument: 'after', runValidators: true },
     );
     if (!customer) return res.status(404).json({ error: 'Not found' });
+    if (update.marketingConsent === false) {
+      await Newsletter.updateMany(
+        { $or: [{ customerId: customer._id }, { email: customer.email }] },
+        { $set: { isUnsubscribed: true } },
+      );
+    }
     res.json(safeCustomer(customer));
   } catch (err) {
     console.error(err);
@@ -226,7 +235,12 @@ router.post('/me/wishlist/sync', requireCustomer, async function(req, res) {
     const { ids } = req.body;
     if (!Array.isArray(ids) || ids.length > 100 || ids.some(id => typeof id !== 'string' || !/^[0-9a-fA-F]{24}$/.test(id))) return res.status(400).json({ error: 'At most 100 valid product IDs required' });
     const products = await Product.find({ _id: { $in: [...new Set(ids)] }, status: { $in: ['active', 'sold_out'] } }).select('_id').lean();
-    await Customer.updateOne({ _id: req.customer.customerId, gdprDeletedAt: null }, { $addToSet: { wishlist: { $each: products.map(p => p._id) } } });
+    const current = await Customer.findById(req.customer.customerId).select('wishlist').lean();
+    const currentIds = new Set((current?.wishlist || []).map(String));
+    const addedIds = products.map(product => String(product._id)).filter(id => !currentIds.has(id));
+    const update = await Customer.updateOne({ _id: req.customer.customerId, gdprDeletedAt: null }, { $addToSet: { wishlist: { $each: products.map(p => p._id) } } });
+    if (update.modifiedCount && addedIds.length) await recordWishlistSaves(req.customer.customerId, addedIds)
+      .catch(err => console.error('[wishlist] could not record account save:', err.message));
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -240,7 +254,9 @@ router.post('/me/wishlist/:productId', requireCustomer, async function(req, res)
     const id = req.params.productId;
     if (!/^[0-9a-fA-F]{24}$/.test(id)) return res.status(400).json({ error: 'Invalid product ID' });
     if (!await Product.exists({ _id: id, status: { $in: ['active', 'sold_out'] } })) return res.status(404).json({ error: 'Product not found' });
-    await Customer.updateOne({ _id: req.customer.customerId, gdprDeletedAt: null }, { $addToSet: { wishlist: id } });
+    const update = await Customer.updateOne({ _id: req.customer.customerId, gdprDeletedAt: null }, { $addToSet: { wishlist: id } });
+    if (update.modifiedCount) await recordWishlistSaves(req.customer.customerId, [id])
+      .catch(err => console.error('[wishlist] could not record account save:', err.message));
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -254,6 +270,8 @@ router.delete('/me/wishlist/:productId', requireCustomer, async function(req, re
     await Customer.findByIdAndUpdate(req.customer.customerId, {
       $pull: { wishlist: req.params.productId },
     });
+    await markWishlistRemoved(req.customer.customerId, req.params.productId)
+      .catch(err => console.error('[wishlist] could not record account removal:', err.message));
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -261,7 +279,7 @@ router.delete('/me/wishlist/:productId', requireCustomer, async function(req, re
   }
 });
 
-// GET /api/customers/unsubscribe?cid=<base64url>&sig=<hmac>
+// GET/POST /api/customers/unsubscribe?cid=<base64url>&sig=<hmac>
 //
 // Opt out of MARKETING email (winback, campaigns). GDPR Art. 21(2) and PECR
 // require an opt-out in every marketing message, and the winback email carried
@@ -271,16 +289,28 @@ router.delete('/me/wishlist/:productId', requireCustomer, async function(req, re
 // Scoped signature, so a cart-recovery link cannot be replayed here. No auth:
 // the whole point is that it works from an inbox, and the HMAC is what makes it
 // unforgeable. Never reveals whether the customer exists.
-router.get('/unsubscribe', async function(req, res) {
+async function unsubscribeCustomer(req, res) {
   try {
     const { cid, sig } = req.query;
     if (typeof cid !== 'string' || !cid) return res.status(400).send('Missing reference.');
 
     const customerId = Buffer.from(cid, 'base64url').toString('utf8');
-    const { verify } = require('../utils/unsubscribeSign');
-    if (!verify(customerId, sig, 'customer')) return res.status(403).send('This link is invalid.');
+    if (!/^[0-9a-fA-F]{24}$/.test(customerId) || !verifyUnsubscribe(customerId, sig, 'customer')) {
+      return res.status(403).send('This link is invalid.');
+    }
 
-    await Customer.updateOne({ _id: customerId }, { $set: { marketingConsent: false } }).catch(() => {});
+    const customer = await Customer.findById(customerId).select('_id email').lean();
+    if (customer) {
+      await Customer.updateOne({ _id: customer._id }, { $set: { marketingConsent: false } });
+      await Newsletter.updateMany(
+        { $or: [{ customerId: customer._id }, { email: customer.email }] },
+        { $set: { isUnsubscribed: true } },
+      );
+    }
+
+    // RFC 8058 one-click unsubscribe requests are provider POSTs, not browser
+    // navigation. Return a small successful response without rendering a page.
+    if (req.method === 'POST') return res.status(200).type('text/plain').send('Unsubscribed');
 
     res.set('Content-Type', 'text/html').send(`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>Unsubscribed</title></head>
@@ -293,6 +323,9 @@ router.get('/unsubscribe', async function(req, res) {
     console.error('[customer unsubscribe]', err.message);
     res.status(500).send('Something went wrong. Please try again.');
   }
-});
+}
+
+router.get('/unsubscribe', unsubscribeCustomer);
+router.post('/unsubscribe', unsubscribeCustomer);
 
 module.exports = router;

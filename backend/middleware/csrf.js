@@ -30,6 +30,10 @@ const EXEMPT_PREFIXES = [
 
 function isExempt(req) {
   if (SAFE_METHODS.has(req.method)) return true;
+  // RFC 8058 one-click unsubscribe comes from a mailbox provider, which cannot
+  // add our custom header. The customer route verifies its signed URL and does
+  // not rely on a browser session; keep this exception exact and POST-only.
+  if (req.method === 'POST' && req.path === '/api/customers/unsubscribe') return true;
   if (EXEMPT_PATHS.has(req.path)) return true;
   for (const prefix of EXEMPT_PREFIXES) {
     if (req.path.startsWith(prefix)) return true;

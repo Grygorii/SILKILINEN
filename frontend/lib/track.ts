@@ -1,15 +1,23 @@
 import { isExcludedFromAnalytics } from './analyticsExclude';
+import {
+  ANALYTICS_SESSION_STORAGE_KEY,
+  clearAnalyticsPersistence,
+  hasAnalyticsConsent,
+} from './analyticsConsent';
 
-const SESSION_KEY = 'silkilinen_sid';
+const SESSION_KEY = ANALYTICS_SESSION_STORAGE_KEY;
 
 export function getSessionId(): string {
   if (typeof window === 'undefined') return '';
+  if (!hasAnalyticsConsent()) {
+    clearAnalyticsPersistence();
+    return '';
+  }
   let id = localStorage.getItem(SESSION_KEY);
   if (!id) {
-    // Cryptographically-random UUID (122 bits) — the session id also gates
-    // read/write access to the cart (which holds the captured checkout email),
-    // so it must not be guessable. The old `Date.now()-Math.random()` form was
-    // a public-knowledge timestamp plus a weak 7-char suffix.
+    // Cryptographically-random UUID (122 bits) for the opted-in analytics
+    // browser thread. The old `Date.now()-Math.random()` form was a
+    // public-knowledge timestamp plus a weak 7-char suffix.
     id = (typeof crypto !== 'undefined' && crypto.randomUUID)
       ? crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -62,6 +70,7 @@ function detectDevice(): 'mobile' | 'tablet' | 'desktop' {
 export function trackVisit({ page, productId }: { page: string; productId?: string }) {
   try {
     if (typeof window === 'undefined') return;
+    if (!hasAnalyticsConsent()) return;
     // Same rule Vercel Analytics uses — see lib/analyticsExclude.ts.
     if (isExcludedFromAnalytics(window.location.pathname, window.location.search)) return;
 
@@ -108,6 +117,7 @@ export function trackClientEvent(
 ) {
   try {
     if (typeof window === 'undefined') return;
+    if (!hasAnalyticsConsent()) return;
     // Same rule Vercel Analytics uses — see lib/analyticsExclude.ts.
     if (isExcludedFromAnalytics(window.location.pathname, window.location.search)) return;
 

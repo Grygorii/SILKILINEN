@@ -34,6 +34,9 @@ function buildEvidence({ visits = [], events = [], orders = [], since, until }) 
     if (row.page === 'product' || String(row.page || '').startsWith('/product/') || row.productId) { pageViewIds.add(row.sessionId); add('viewedProduct', row.sessionId, row.createdAt); }
   }
   for (const row of e) {
+    // Funnel stages are explicitly tracked browser IDs. Keep orphan events in
+    // coverage diagnostics, but never let them become a customer journey.
+    if (!browsers.has(row.sessionId)) continue;
     if (EVENT_STAGE[row.type]) add(EVENT_STAGE[row.type], row.sessionId, row.createdAt);
     if (row.type === 'view_item') eventViewIds.add(row.sessionId);
     if (['card_click', 'add_to_cart', 'begin_checkout', 'reached_payment', 'search', 'wishlist_toggle'].includes(row.type)) interactionIds.add(row.sessionId);

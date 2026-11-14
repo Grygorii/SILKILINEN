@@ -78,6 +78,7 @@ const { weeklyCoordinator } = require('./services/marketingCoordinator');
 const { loadShippingOverrides } = require('./services/shipping');
 const cartRecoveryRouter = require('./routes/cartRecovery');
 const { processCartRecovery } = require('./services/cartRecovery');
+const { processWishlistReminders } = require('./services/wishlistReminders');
 const { runAdvisorDigest } = require('./services/advisorDigest');
 const { processReviewRequests } = require('./services/reviewRequests');
 const { withCronLock } = require('./services/cronLock');
@@ -253,6 +254,7 @@ app.use('/api/admin/campaigns', campaignsRouter);
 app.use('/api/admin/marketing', marketingDashboardRouter);
 app.use('/api/admin/pin-studio', pinStudioRouter);
 app.use('/api/admin/customers', adminCustomersRouter);
+app.use('/api/admin/wishlist', require('./routes/adminWishlist'));
 app.use('/api/journal', journalRouter);
 app.use('/api/admin/journal', adminJournalRouter);
 app.use('/api/instagram', instagramRouter);
@@ -412,7 +414,9 @@ const server = app.listen(PORT, function() {
     const runStock = () => withCronLock('stockNotify', LOCK_TTL,
       require('./services/stockNotify').processStockNotifications)
       .catch(err => console.error('[stockNotify] run failed:', err.message));
-    const run = () => (runStock(), withCronLock('cartRecovery', LOCK_TTL, processCartRecovery))
+    const runWishlist = () => withCronLock('wishlistReminder', LOCK_TTL, processWishlistReminders)
+      .catch(err => console.error('[wishlist-reminder] run failed:', err.message));
+    const run = () => (runStock(), runWishlist(), withCronLock('cartRecovery', LOCK_TTL, processCartRecovery))
       .catch(err => console.error('[cart-recovery]', err));
     run();
     cartRecoveryInterval = setInterval(run, 60 * 60 * 1000);
