@@ -53,6 +53,9 @@ export default function NewsletterBand() {
             <form className={styles.form} onSubmit={handleSubmit}>
               <input
                 type="email"
+                name="email"
+                autoComplete="email"
+                aria-label="Email address"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="Your email address"

@@ -13,8 +13,36 @@ describe('storefront interaction system', () => {
     expect(button).toContain('background: var(--color-ink);');
     expect(button).not.toContain('.primary::before');
     expect(button).not.toContain('.withArrow');
-    expect(hero).toContain("content: '→';");
+    expect(hero).toContain('border-bottom: 1px solid currentColor;');
+    expect(hero).not.toContain("content: '→';");
     expect(hero).not.toContain("content: '↗';");
+  });
+
+  it('uses hairline editorial links instead of decorative right arrows for browsing', () => {
+    const blog = read('components/BlogTeaser.tsx');
+    const story = read('components/StorySection.tsx');
+    const shipping = read('components/ShippingMap.tsx');
+    const fabric = read('components/FabricCare.tsx');
+    const quality = read('components/QualityBand.tsx');
+    const journalEdit = read('components/JournalShoppingEdit.tsx');
+    const arrivals = read('components/NewArrivalsCarousel.tsx');
+    const finderBand = read('components/StyleFinderBand.module.css');
+    const finder = read('app/(shop)/style-finder/StyleFinder.tsx');
+    const finderStyles = read('app/(shop)/style-finder/page.module.css');
+
+    expect(blog).not.toContain('Discover more →');
+    expect(blog).not.toContain('Read article →');
+    expect(story).not.toContain('Read our story →');
+    expect(shipping).not.toContain('Delivery details <span aria-hidden="true">→</span>');
+    expect(shipping).toContain('Our Etsy shop <span aria-hidden="true">↗</span>');
+    expect(fabric).not.toContain('measured →');
+    expect(quality).not.toContain('worth it →');
+    expect(journalEdit).not.toContain('collection →');
+    expect(arrivals).not.toContain('new arrivals →');
+    expect(finderBand).not.toContain('.finderBtn::after');
+    expect(finder).not.toContain('View piece →');
+    expect(finder).not.toContain('Shop everything →');
+    expect(finderStyles).not.toContain('.ctaOutline::after');
   });
 
   it('keeps selection controls quiet until selected and large enough to touch', () => {

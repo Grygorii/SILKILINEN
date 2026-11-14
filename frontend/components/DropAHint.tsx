@@ -53,7 +53,7 @@ export default function DropAHint({ productId, productName, onClose }: Props) {
       <div ref={panelRef} className={styles.modal} role="dialog" aria-modal="true" aria-label="Drop a hint">
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>Send a hint</h2>
-          <button className={styles.close} onClick={onClose} aria-label="Close">
+          <button type="button" className={styles.close} onClick={onClose} aria-label="Close">
             <X size={18} strokeWidth={1.5} />
           </button>
         </div>

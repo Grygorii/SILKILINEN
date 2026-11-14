@@ -69,7 +69,7 @@ describe('storefront control contracts', () => {
     expect(button).toMatch(/\.primary:active:not\(:disabled\)\s*\{[\s\S]*?background:\s*var\(--color-ink-muted\);/);
   });
 
-  it('keeps purchase controls plain and reserves the direction mark for editorial links', () => {
+  it('keeps purchase controls plain and gives editorial links a restrained hairline', () => {
     const button = read('components/ui/Button.tsx');
     const buttonCss = read('components/ui/Button.module.css');
     const hero = read('app/(shop)/page.module.css');
@@ -77,7 +77,8 @@ describe('storefront control contracts', () => {
     expect(button).not.toContain('showArrow');
     expect(buttonCss).not.toContain('.withArrow');
     expect(buttonCss).not.toContain('.primary::before');
-    expect(hero).toContain("content: '→';");
+    expect(hero).toContain('border-bottom: 1px solid currentColor;');
+    expect(hero).not.toContain("content: '→';");
     expect(hero).not.toContain("content: '↗';");
   });
 });

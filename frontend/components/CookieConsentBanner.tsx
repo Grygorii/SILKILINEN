@@ -1,27 +1,51 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useCookieConsent } from '@/context/CookieConsentContext';
 import CookieSettingsModal from './CookieSettingsModal';
 import styles from './CookieConsentBanner.module.css';
 
 export default function CookieConsentBanner() {
   const { showBanner, showSettings, accept, openSettings } = useCookieConsent();
+  const bannerRef = useRef<HTMLDivElement>(null);
 
-  // Flag the bar's presence on <html> so whatever else is pinned to the bottom
-  // edge can lift by --cookie-bar-h (globals.css owns the value). Cleared on
-  // unmount so a route change can't leave the page permanently padded.
+  // Keep the shared bottom clearance equal to the bar that is actually on
+  // screen. On a narrow phone the copy can wrap to a different number of
+  // lines, so a guessed fixed height can leave the bag button underneath it.
   useEffect(() => {
     const root = document.documentElement;
-    if (showBanner) root.dataset.cookieBanner = 'true';
-    else delete root.dataset.cookieBanner;
-    return () => { delete root.dataset.cookieBanner; };
+    if (!showBanner) {
+      delete root.dataset.cookieBanner;
+      root.style.removeProperty('--cookie-bar-h');
+      return;
+    }
+
+    root.dataset.cookieBanner = 'true';
+    const banner = bannerRef.current;
+    const syncHeight = () => {
+      const height = banner?.getBoundingClientRect().height ?? 0;
+      if (height > 0) root.style.setProperty('--cookie-bar-h', `${Math.ceil(height)}px`);
+    };
+    syncHeight();
+
+    const observer = typeof ResizeObserver === 'undefined'
+      ? null
+      : new ResizeObserver(syncHeight);
+    if (banner) observer?.observe(banner);
+    window.addEventListener('resize', syncHeight);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', syncHeight);
+      delete root.dataset.cookieBanner;
+      root.style.removeProperty('--cookie-bar-h');
+    };
   }, [showBanner]);
 
   return (
     <>
       {showBanner && (
-        <div className={styles.banner} role="region" aria-label="Cookie consent">
+        <div ref={bannerRef} className={styles.banner} role="region" aria-label="Cookie consent">
           <p className={styles.text}>
             We use cookies to personalise content, measure traffic, and show relevant ads. Read our{' '}
             <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">
@@ -29,10 +53,10 @@ export default function CookieConsentBanner() {
             </a>.
           </p>
           <div className={styles.buttons}>
-            <button className={styles.btnAccept} onClick={accept}>
+            <button type="button" className={styles.btnAccept} onClick={accept}>
               Accept
             </button>
-            <button className={styles.btnText} onClick={openSettings}>
+            <button type="button" className={styles.btnText} onClick={openSettings}>
               Manage
             </button>
           </div>

@@ -183,7 +183,7 @@ export default async function Home() {
           </div>
           <ReviewsCarousel reviews={withMessage} />
           <div className={styles.reviewsFooter}>
-            <a href="/reviews" className={styles.reviewsLink}>Read all reviews →</a>
+            <a href="/reviews" className={styles.reviewsLink}>Read all reviews</a>
           </div>
         </section>
       )}

@@ -122,7 +122,7 @@ export default function NewArrivalsCarousel({ products }: { products: ProductCar
           because it goes to the new-arrivals-only view, not the catalogue. */}
       <div className={styles.header}>
         <h2 id="new-arrivals-heading" className={styles.title}>New arrivals</h2>
-        <Link href="/shop?new=true" className={styles.viewAll}>View all new arrivals →</Link>
+        <Link href="/shop?new=true" className={styles.viewAll}>View all new arrivals</Link>
       </div>
 
       <div className={styles.viewport}>

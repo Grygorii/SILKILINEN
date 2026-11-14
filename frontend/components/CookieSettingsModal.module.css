@@ -69,9 +69,9 @@
 .toggle {
   position: relative;
   width: 44px;
-  height: 24px;
-  border-radius: 12px;
-  background: var(--color-line);
+  height: 44px;
+  border-radius: 0;
+  background: transparent;
   border: none;
   cursor: pointer;
   flex-shrink: 0;
@@ -79,7 +79,19 @@
   padding: 0;
 }
 
-.toggleOn {
+.toggle::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 0;
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--color-line);
+  transition: background 0.2s;
+}
+
+.toggleOn::before {
   background: var(--dark);
 }
 
@@ -88,10 +100,15 @@
   opacity: 0.6;
 }
 
+.toggle:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
 .toggleThumb {
   display: block;
   position: absolute;
-  top: 3px;
+  top: 13px;
   left: 3px;
   width: 18px;
   height: 18px;
@@ -108,13 +125,14 @@
 /* ── Action buttons ───────────────────────────────── */
 
 .actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
   gap: 12px;
 }
 
 .btn {
-  flex: 1;
-  height: 48px;
+  min-height: var(--ctrl-h-desktop);
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -125,14 +143,20 @@
 
 .btnReject {
   background: transparent;
-  border: 1px solid var(--color-line-control);
+  border: none;
   color: var(--muted);
+  padding: 0 4px;
+  text-decoration: underline;
+  text-decoration-color: var(--color-line-control);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
 }
 
-.btnReject:hover {
-  border-color: var(--dark);
-  background: var(--color-surface);
-  color: var(--dark);
+@media (hover: hover) {
+  .btnReject:hover {
+    color: var(--dark);
+    text-decoration-color: currentColor;
+  }
 }
 
 .btnSave {
@@ -140,10 +164,21 @@
   border: 1px solid var(--dark);
   color: var(--warm-white);
 }
+.btnSave:active {
+  background: var(--color-ink-muted);
+  border-color: var(--color-ink-muted);
+}
 
-.btnSave:hover {
-  background: var(--color-ink-hover);
-  border-color: var(--color-ink-hover);
+@media (hover: hover) {
+  .btnSave:hover {
+    background: var(--color-ink-hover);
+    border-color: var(--color-ink-hover);
+  }
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
 }
 
 @media (max-width: 600px) {
@@ -153,6 +188,10 @@
   }
 
   .actions {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+  }
+
+  .btn {
+    min-height: var(--ctrl-h-mobile);
   }
 }

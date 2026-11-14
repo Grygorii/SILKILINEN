@@ -101,7 +101,7 @@ export default function EmailCapturePopup() {
   return (
     <div className={styles.overlay} onClick={e => { if (e.target === e.currentTarget) dismiss(); }}>
       <div ref={modalRef} className={styles.modal} role="dialog" aria-modal="true" aria-label="Newsletter signup">
-        <button className={styles.close} onClick={dismiss} aria-label="Close">✕</button>
+        <button type="button" className={styles.close} onClick={dismiss} aria-label="Close">✕</button>
 
         {status === 'success' ? (
           <div className={styles.success}>
@@ -120,6 +120,9 @@ export default function EmailCapturePopup() {
             <form className={styles.form} onSubmit={handleSubmit}>
               <input
                 type="email"
+                name="email"
+                autoComplete="email"
+                aria-label="Email address"
                 className={styles.input}
                 placeholder="your@email.com"
                 value={email}

@@ -72,14 +72,29 @@
 .link {
   display: inline-flex;
   align-items: center;
+  width: fit-content;
   min-height: 44px;
   margin-top: 12px;
+  padding-bottom: 4px;
   font-size: 12px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--dark);
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-line-control);
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+@media (hover: hover) {
+  .link:hover {
+    color: var(--color-ink-muted);
+    border-color: currentColor;
+  }
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 4px;
 }
 
 @media (max-width: 768px) {

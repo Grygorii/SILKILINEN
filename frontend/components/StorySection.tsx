@@ -37,7 +37,7 @@ export default function StorySection({ content = {} }: { content?: Content }) {
         {/* Story copy lives under one content key, so it edits as a single block.
             `pre-line` keeps the blank-line paragraph breaks when not editing. */}
         <EditableText as="div" className={styles.body} contentKey="homepage_story_text" value={rawText} multiline style={{ whiteSpace: 'pre-line' }} />
-        <Link href="/about" className={styles.link}>Read our story →</Link>
+        <Link href="/about" className={styles.link}>Read our story</Link>
       </div>
     </section>
   );

@@ -31,8 +31,8 @@ describe('account interaction system', () => {
     const css = read('app/(shop)/account/account.module.css');
     const wishlist = read('app/(shop)/wishlist/page.tsx');
 
-    expect(css).toContain('.emptyState a::after');
-    expect(css).toContain("content: '→';");
+    expect(css).toContain('.emptyState a {');
+    expect(css).toContain('text-decoration: underline;');
     expect(wishlist).not.toContain('Browse the collection →');
   });
 });

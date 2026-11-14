@@ -88,7 +88,7 @@ export default function ShippingMap() {
           <p className={styles.eyebrow}>Shipped from Ireland</p>
           <h2 id={`${id}-title`}>From Donegal, <em>to you.</em></h2>
           <p className={styles.intro}>Our pieces have travelled to {destinationsFor('shipped', additional).length} countries.</p>
-          <Link href="/shipping" className={styles.textLink} data-track="shipping_map_delivery">Delivery details <span aria-hidden="true">→</span></Link>
+          <Link href="/shipping" className={styles.textLink} data-track="shipping_map_delivery">Delivery details</Link>
         </div>
 
         <div className={styles.atlas}>

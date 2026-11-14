@@ -506,7 +506,7 @@ export default function StyleFinder({ initialProducts = [] }: { initialProducts?
                     </span>
                     <span className={styles.cardName}>{p.name}</span>
                     <span className={styles.cardPrice}>€{Number(p.price).toFixed(2)}</span>
-                    <span className={styles.cardView} aria-hidden="true">View piece →</span>
+                    <span className={styles.cardView} aria-hidden="true">View piece</span>
                   </Link>
                 );
               })}
@@ -561,8 +561,8 @@ export default function StyleFinder({ initialProducts = [] }: { initialProducts?
               <button type="button" className={styles.textBtn} onClick={restart}>
                 Start again
               </button>
-              <Link href="/shop" className={styles.textBtn}>
-                Shop everything →
+              <Link href="/shop" className={`${styles.textBtn} ${styles.editorialLink}`}>
+                Shop everything
               </Link>
             </div>
           </div>
@@ -601,8 +601,8 @@ export default function StyleFinder({ initialProducts = [] }: { initialProducts?
               <button type="button" className={styles.textBtn} onClick={restart}>
                 Start again
               </button>
-              <Link href="/shop" className={styles.textBtn}>
-                Shop everything →
+              <Link href="/shop" className={`${styles.textBtn} ${styles.editorialLink}`}>
+                Shop everything
               </Link>
             </div>
           </div>

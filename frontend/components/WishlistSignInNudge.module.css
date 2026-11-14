@@ -60,19 +60,15 @@
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--warm-white);
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
   white-space: nowrap;
 }
 
-.signInLink::after {
-  content: ' →';
-  margin-left: 2px;
-  transition: transform 0.18s ease;
-}
-
 @media (hover: hover) {
-  .signInLink:hover::after {
-    transform: translateX(3px);
+  .signInLink:hover {
+    text-underline-offset: 5px;
   }
 }
 

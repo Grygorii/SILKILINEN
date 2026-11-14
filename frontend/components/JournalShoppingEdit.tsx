@@ -19,7 +19,7 @@ export default async function JournalShoppingEdit({ slug }: { slug: string }) {
       <h2 id="journal-shopping-edit">For your next journey</h2>
       <p className={styles.intro}>Explore silk pieces for the journey and the slow mornings that follow.</p>
       <div className={styles.grid}>{chosen.map(product => <ProductCard key={product._id} product={product} showHeart={false} />)}</div>
-      <Link href="/shop" className={styles.link} data-track="journal_shop_collection">Explore the collection →</Link>
+      <Link href="/shop" className={styles.link} data-track="journal_shop_collection">Explore the collection</Link>
     </section>
   );
 }

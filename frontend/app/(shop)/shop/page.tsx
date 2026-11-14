@@ -227,7 +227,7 @@ export default async function ShopPage({
           {copy && (
             <ul className={styles.guideLinks}>
               {GUIDE_LINKS.map(l => (
-                <li key={l.href}><Link href={l.href}>{l.label} →</Link></li>
+                <li key={l.href}><Link href={l.href}>{l.label}</Link></li>
               ))}
             </ul>
           )}

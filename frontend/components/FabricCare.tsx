@@ -81,7 +81,7 @@ export default function FabricCare({
           {/* The number is stated here; what it means in general is one page
               away, rather than repeated on every product. */}
           <p className={styles.note}>
-            <Link href="/silk-standard" className={styles.link}>How silk weight is measured →</Link>
+            <Link href="/silk-standard" className={styles.link}>How silk weight is measured</Link>
           </p>
         </section>
       )}
@@ -110,7 +110,7 @@ export default function FabricCare({
               surface — the Silk Standard, the category guides, the footer —
               linked to /care-guide. The product page did not. */}
           <p className={styles.note}>
-            <Link href="/care-guide" className={styles.link}>How to wash and store silk →</Link>
+            <Link href="/care-guide" className={styles.link}>How to wash and store silk</Link>
           </p>
         </section>
       )}

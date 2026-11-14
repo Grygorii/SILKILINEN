@@ -550,22 +550,26 @@
   color: var(--muted);
 }
 
-/* Quiet "View piece →" affordance — revealed gently on hover/focus. */
+/* Quiet editorial affordance — revealed gently on hover/focus. */
 .cardView {
   display: inline-block;
+  width: fit-content;
   margin-top: 12px;
+  padding-bottom: 3px;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--dark);
+  border-bottom: 1px solid var(--color-line-control);
   opacity: 0;
-  transition: opacity 180ms var(--ease);
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), opacity 180ms var(--ease);
 }
 
 .card:hover .cardView,
 .card:focus-visible .cardView {
   opacity: 1;
+  border-color: currentColor;
 }
 
 /* On touch / no-hover devices, keep the affordance always visible. */
@@ -596,21 +600,28 @@
 .ctaOutline {
   display: inline-flex;
   align-items: center;
-  gap: var(--s-2);
   min-height: 44px;
   border: 0;
-  padding: 0;
+  border-bottom: 1px solid var(--color-line-control);
+  padding: 0 0 4px;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--dark);
   text-decoration: none;
-  transition: color var(--t-fast) var(--ease);
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
 
-.ctaOutline::after { content: '→'; display: inline-block; font-size: 17px; line-height: 1; transition: transform var(--t-fast) var(--ease); }
-@media (hover: hover) { .ctaOutline:hover { color: var(--color-ink-muted); } .ctaOutline:hover::after { transform: translateX(3px); } }
+@media (hover: hover) { .ctaOutline:hover { color: var(--color-ink-muted); border-color: currentColor; } }
+
+.editorialLink {
+  border-bottom: 1px solid var(--color-line-control);
+  padding-bottom: 4px;
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+@media (hover: hover) { .editorialLink:hover { color: var(--color-ink-muted); border-color: currentColor; } }
 
 /* ── Optional save / email ────────────────────────────── */
 .save {

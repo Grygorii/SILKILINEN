@@ -47,7 +47,7 @@ export default function QualityBand() {
         ))}
       </ul>
       <p className={styles.more}>
-        <Link href="/silk-standard" className={styles.moreLink}>What makes silk worth it →</Link>
+        <Link href="/silk-standard" className={styles.moreLink}>What makes silk worth it</Link>
       </p>
     </section>
   );

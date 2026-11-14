@@ -102,6 +102,10 @@
 }
 
 .moreLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-bottom: 4px;
   font-family: 'Jost', sans-serif;
   font-size: 11px;
   letter-spacing: var(--track-utility);
@@ -109,7 +113,6 @@
   color: var(--color-ink);
   text-decoration: none;
   border-bottom: var(--stroke) solid var(--color-line);
-  padding-bottom: 4px;
   transition: border-color var(--t-slow) var(--ease);
 }
 .moreLink:hover { border-color: var(--color-ink); }

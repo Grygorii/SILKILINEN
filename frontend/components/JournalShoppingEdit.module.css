@@ -3,5 +3,6 @@
 .section h2 { font: 400 36px/1.15 var(--font-cormorant),Georgia,serif; color: var(--color-ink); }
 .intro { font-size: 16px; line-height: 1.65; color: var(--color-ink-muted); margin: var(--s-4) 0 var(--s-5); }
 .grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: var(--s-4); }
-.link { display: inline-flex; align-items: center; min-height: 48px; font-size: 14px; color: var(--color-ink); text-decoration: underline; text-underline-offset: 4px; margin-top: var(--s-5); }
+.link { display: inline-flex; align-items: center; min-height: 44px; padding-bottom: 4px; font-size: 14px; color: var(--color-ink); text-decoration: none; border-bottom: 1px solid var(--color-line-control); margin-top: var(--s-5); transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease); }
+@media (hover: hover) { .link:hover { color: var(--color-ink-muted); border-color: currentColor; } }
 @media(max-width:600px) { .grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .grid > :last-child { display: none; } }

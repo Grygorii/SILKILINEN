@@ -156,12 +156,6 @@
   color: var(--muted);
 }
 
-.channelArrow {
-  font-size: 14px;
-  color: var(--muted);
-  flex-shrink: 0;
-}
-
 /* ── Response time ───────────────────────────────────── */
 
 .responseTime {

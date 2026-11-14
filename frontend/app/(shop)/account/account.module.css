@@ -98,6 +98,17 @@
   font-size: 12px;
   color: var(--muted);
   padding-top: 16px;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color var(--t-fast) var(--ease), text-underline-offset var(--t-fast) var(--ease);
+}
+
+@media (hover: hover) {
+  .card:hover .cardArrow {
+    color: var(--color-ink);
+    text-underline-offset: 5px;
+  }
 }
 
 /* Form */
@@ -457,16 +468,16 @@
   margin-top: 16px;
   padding: 0;
   color: var(--color-ink);
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
   font-size: 12px;
   letter-spacing: var(--track-button);
   text-transform: uppercase;
   transition: color var(--t-fast) var(--ease);
 }
 
-.emptyState a::after { content: '→'; margin-left: var(--s-2); font-size: 16px; line-height: 1; transition: transform var(--t-fast) var(--ease); }
-.emptyState a:hover { color: var(--color-ink-muted); }
-.emptyState a:hover::after { transform: translateX(3px); }
+.emptyState a:hover { color: var(--color-ink-muted); text-underline-offset: 5px; }
 
 .retryLink {
   display: inline-flex;
@@ -480,12 +491,13 @@
   letter-spacing: var(--track-button);
   text-transform: uppercase;
   cursor: pointer;
-  transition: color var(--t-fast) var(--ease);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color var(--t-fast) var(--ease), text-underline-offset var(--t-fast) var(--ease);
 }
 
-.retryLink::after { content: '→'; margin-left: var(--s-2); font-size: 16px; font-weight: 400; transition: transform var(--t-fast) var(--ease); }
-.retryLink:hover { color: var(--color-ink-muted); }
-.retryLink:hover::after { transform: translateX(3px); }
+.retryLink:hover { color: var(--color-ink-muted); text-underline-offset: 5px; }
 
 /* Welcome banner */
 .welcomeBanner {

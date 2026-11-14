@@ -175,3 +175,8 @@
   white-space: nowrap;
   border: 0;
 }
+
+@media (max-width: 767px) {
+  .field input { min-height: var(--ctrl-h-mobile); }
+  .form button { min-height: var(--ctrl-h-mobile); }
+}

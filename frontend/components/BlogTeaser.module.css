@@ -26,10 +26,10 @@
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--dark);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 4px;
-  transition: color var(--t-fast) var(--ease), text-underline-offset var(--t-fast) var(--ease);
+  padding-bottom: 4px;
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-line-control);
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
 
 .grid {
@@ -64,7 +64,7 @@
   .viewAll:hover,
   .card:hover .readMore {
     color: var(--color-ink-muted);
-    text-underline-offset: 5px;
+    border-color: currentColor;
   }
 }
 
@@ -107,14 +107,17 @@
 }
 
 .readMore {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--dark);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-  transition: color var(--t-fast) var(--ease), text-underline-offset var(--t-fast) var(--ease);
+  padding-bottom: 3px;
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-line-control);
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
 
 @media (max-width: 900px) {

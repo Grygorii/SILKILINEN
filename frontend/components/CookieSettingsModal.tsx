@@ -54,10 +54,11 @@ export default function CookieSettingsModal() {
         </div>
 
         <div className={styles.actions}>
-          <button className={`${styles.btn} ${styles.btnReject}`} onClick={reject}>
+          <button type="button" className={`${styles.btn} ${styles.btnReject}`} onClick={reject}>
             REJECT ALL
           </button>
           <button
+            type="button"
             className={`${styles.btn} ${styles.btnSave}`}
             onClick={() => savePreferences({ functional, analytics, marketing })}
           >
@@ -89,9 +90,11 @@ function Category({
         <p className={styles.categoryDesc}>{description}</p>
       </div>
       <button
+        type="button"
         className={`${styles.toggle} ${checked ? styles.toggleOn : ''}`}
         role="switch"
         aria-checked={checked}
+        aria-label={`${name} cookies`}
         disabled={disabled}
         onClick={onChange}
       >

@@ -31,7 +31,7 @@ export default async function BlogTeaser() {
     <section className={styles.section}>
       <div className={styles.header}>
         <h2 className={styles.title}>From the Journal</h2>
-        <Link href="/journal" className={styles.viewAll}>Discover more →</Link>
+        <Link href="/journal" className={styles.viewAll}>Discover more</Link>
       </div>
       <div className={styles.grid}>
         {posts.map(post => (
@@ -57,7 +57,7 @@ export default async function BlogTeaser() {
               </p>
               <h3 className={styles.cardTitle}>{post.title}</h3>
               <p className={styles.excerpt}>{post.excerpt}</p>
-              <span className={styles.readMore}>Read article →</span>
+              <span className={styles.readMore}>Read article</span>
             </div>
           </Link>
         ))}

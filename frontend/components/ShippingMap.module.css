@@ -6,8 +6,8 @@
 .copy h2 { font-family: var(--font-cormorant), Georgia, serif; font-size: clamp(34px, 4.2vw, 52px); line-height: 1.08; font-weight: 400; letter-spacing: -.02em; text-wrap: balance; }
 .copy h2 em { font-style: italic; font-weight: 400; white-space: nowrap; }
 .intro { margin-top: var(--s-3); font-size: 15px; line-height: 1.65; color: var(--color-ink-muted); }
-.textLink { display: inline-flex; align-items: center; gap: var(--s-2); min-height: 44px; color: var(--color-ink); font-size: 13px; text-decoration: underline; text-decoration-color: var(--color-line-control); text-underline-offset: 5px; transition: text-decoration-color var(--t-base) var(--ease); }
-.textLink:hover { text-decoration-color: var(--color-ink); }
+.textLink { display: inline-flex; align-items: center; gap: var(--s-2); min-height: 44px; padding-bottom: 4px; color: var(--color-ink); font-size: 13px; text-decoration: none; border-bottom: 1px solid var(--color-line-control); transition: color var(--t-base) var(--ease), border-color var(--t-base) var(--ease); }
+@media (hover: hover) { .textLink:hover { color: var(--color-ink-muted); border-color: currentColor; } }
 .atlas { min-width: 0; margin-top: var(--s-4); }
 .modes { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--color-line); }
 .modes button { font: inherit; font-size: 13px; line-height: 1.4; min-height: 48px; padding: var(--s-2) var(--s-1); color: var(--color-ink-muted); border: 0; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease); }

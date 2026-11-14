@@ -92,7 +92,7 @@ export default function SizeChartDrawer({ label = 'Sizing chart', className }: {
 
               <p className={styles.note}>
                 <Link href="/size-guide" className={styles.link} onClick={close}>
-                  How to measure, and fit notes by garment →
+                  How to measure, and fit notes by garment
                 </Link>
               </p>
             </div>

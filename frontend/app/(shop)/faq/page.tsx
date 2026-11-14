@@ -88,7 +88,7 @@ export default async function FaqPage() {
         </div>
         <div className={styles.cta}>
           <p>Still have questions?</p>
-          <a href={`mailto:${supportEmail}`} className={styles.ctaLink}>Email us →</a>
+          <a href={`mailto:${supportEmail}`} className={styles.ctaLink}>Email us</a>
         </div>
       </div>
     </main>

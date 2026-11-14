@@ -51,19 +51,20 @@
 }
 
 .buttons {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto auto;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   flex-shrink: 0;
 }
 
-/* Primary — a refined outline, not a solid block: muted and minimal, filling
-   with ink only on hover. Reads as an invitation, not a demand. */
+/* The affirmative consent is the only primary action: a calm, plain ink
+   rectangle with a label — no inner frame, icon or directional mark. */
 .btnAccept {
-  background: transparent;
-  color: var(--color-ink);
-  border: 1px solid var(--color-ink);
-  min-height: 44px;
+  background: var(--color-ink);
+  color: var(--color-bg);
+  border: var(--stroke) solid var(--color-ink);
+  min-height: var(--ctrl-h-desktop);
   padding: 0 20px;
   font-size: 11px;
   letter-spacing: 1.5px;
@@ -71,15 +72,14 @@
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
-
-.btnAccept:hover {
-  background: var(--color-ink);
-  color: var(--warm-white);
+@media (hover: hover) {
+  .btnAccept:hover { background: var(--color-ink-hover); border-color: var(--color-ink-hover); }
 }
+.btnAccept:active { background: var(--color-ink-muted); border-color: var(--color-ink-muted); }
 
-/* Secondary — plain text link, no shouting */
+/* Secondary — a true text action with a quiet hairline, not a second button. */
 .btnText {
   background: none;
   border: none;
@@ -90,13 +90,22 @@
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  min-height: 44px;
+  min-height: var(--ctrl-h-desktop);
   padding: 0 4px;
-  transition: color 0.15s;
+  text-decoration: underline;
+  text-decoration-color: var(--color-line-control);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  transition: color var(--t-fast) var(--ease), text-decoration-color var(--t-fast) var(--ease);
+}
+@media (hover: hover) {
+  .btnText:hover { color: var(--dark); text-decoration-color: currentColor; }
 }
 
-.btnText:hover {
-  color: var(--dark);
+.btnAccept:focus-visible,
+.btnText:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
 }
 
 @media (max-width: 600px) {
@@ -108,6 +117,12 @@
   }
 
   .buttons {
-    justify-content: flex-end;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .btnAccept,
+  .btnText {
+    min-height: var(--ctrl-h-mobile);
   }
 }

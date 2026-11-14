@@ -185,7 +185,7 @@ export default async function SilkStandardPage() {
             silk that &ldquo;wore out&rdquo; was laundered to death.
           </p>
           <p>
-            <Link href="/care-guide" className={styles.link}>Read the full care guide →</Link>
+            <Link href="/care-guide" className={styles.link}>Read the full care guide</Link>
           </p>
         </section>
 

@@ -91,7 +91,6 @@ export default function ContactWidget() {
                     <span className={styles.channelLabel}>{ch.label}</span>
                     <span className={styles.channelSub}>{ch.sub}</span>
                   </span>
-                  <span className={styles.channelArrow}>→</span>
                 </a>
               ))}
             </div>

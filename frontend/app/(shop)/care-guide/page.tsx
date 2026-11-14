@@ -126,9 +126,9 @@ export default async function CareGuidePage() {
           <p className={styles.onwardLabel}>The pieces this was written for</p>
           <ul className={styles.onwardList}>
             {onward.map(c => (
-              <li key={c.slug}><Link href={categoryPath(c.slug)}>{c.label} →</Link></li>
+              <li key={c.slug}><Link href={categoryPath(c.slug)}>{c.label}</Link></li>
             ))}
-            <li><Link href="/silk-standard">What makes silk worth it →</Link></li>
+            <li><Link href="/silk-standard">What makes silk worth it</Link></li>
           </ul>
         </nav>
 

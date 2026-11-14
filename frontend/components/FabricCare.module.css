@@ -136,8 +136,15 @@
 .link {
   display: inline-flex;
   align-items: center;
+  width: fit-content;
   min-height: 44px;
+  padding-bottom: 3px;
   color: var(--color-ink);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-line-control);
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+@media (hover: hover) {
+  .link:hover { color: var(--color-ink-muted); border-color: currentColor; }
 }

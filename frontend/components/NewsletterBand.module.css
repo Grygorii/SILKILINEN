@@ -52,6 +52,10 @@
 .input:focus {
   border-color: var(--dark);
 }
+.input:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
 .input:focus + .submit {
   border-color: var(--dark);
 }
@@ -70,8 +74,14 @@
   cursor: pointer;
   transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
-.submit:hover { background: var(--color-ink-hover); border-color: var(--color-ink-hover); }
-.submit:active { background: var(--color-ink-muted); border-color: var(--color-ink-muted); }
+@media (hover: hover) {
+  .submit:hover:not(:disabled) { background: var(--color-ink-hover); border-color: var(--color-ink-hover); }
+}
+.submit:active:not(:disabled) { background: var(--color-ink-muted); border-color: var(--color-ink-muted); }
+.submit:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
 .submit:disabled {
   opacity: 0.5;
   cursor: default;
@@ -101,7 +111,7 @@
   line-height: 1.65;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 767px) {
   .section {
     padding: 60px 5%;
   }
