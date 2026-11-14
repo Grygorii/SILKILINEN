@@ -53,7 +53,14 @@ export default async function JournalPage() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 32 }}>
           {articles.map(a => (
-            <Link key={a._id} href={`/journal/${a.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Link
+              key={a._id}
+              href={`/journal/${a.slug}`}
+              style={{ textDecoration: 'none', color: 'inherit' }}
+              data-track="journal_article_click"
+              data-track-article={a.slug}
+              data-track-surface="journal_index"
+            >
               <article>
                 <div style={{ position: 'relative', height: 200, background: 'var(--color-surface)', overflow: 'hidden', marginBottom: 20 }}>
                   {/* Same owner as the homepage teaser (BlogTeaser). This page used

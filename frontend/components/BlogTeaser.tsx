@@ -35,7 +35,14 @@ export default async function BlogTeaser() {
       </div>
       <div className={styles.grid}>
         {posts.map(post => (
-          <Link key={post._id} href={`/journal/${post.slug}`} className={styles.card}>
+          <Link
+            key={post._id}
+            href={`/journal/${post.slug}`}
+            className={styles.card}
+            data-track="journal_article_click"
+            data-track-article={post.slug}
+            data-track-surface="homepage"
+          >
             <div className={styles.imgWrap}>
               <ArticleImage
                 src={isValidImageUrl(post.heroImage?.url) ? post.heroImage?.url : null}

@@ -15,8 +15,8 @@ import { LOCALES } from './i18n';
 // how it names them.
 
 // Product pages keep their own tracker: it carries the productId, which the
-// layout cannot know. Returning null here is what stops the same visit being
-// recorded twice.
+// layout cannot know. Individual Journal pages do the same so their reading
+// evidence is attributed to the article rather than a generic "journal" bin.
 const OWNED_BY_PAGE = ['/product'];
 
 /**
@@ -35,6 +35,7 @@ export function pageNameFromPath(pathname: string): string | null {
 
   if (OWNED_BY_PAGE.some(p => path === p || path.startsWith(`${p}/`))) return null;
   if (path === '/') return 'home';
+  if (path.startsWith('/journal/')) return null;
 
   const segments = path.split('/').filter(Boolean);
   if (!segments.length) return 'home';

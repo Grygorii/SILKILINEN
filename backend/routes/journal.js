@@ -24,8 +24,10 @@ router.get('/slug/:slug', async (req, res) => {
   try {
     const article = await JournalArticle.findOne({ slug: req.params.slug, status: 'published' }).lean();
     if (!article) return res.status(404).json({ error: 'Not found' });
-    // Increment view count (fire-and-forget)
-    JournalArticle.findByIdAndUpdate(article._id, { $inc: { viewCount: 1 } }).exec();
+    // A read is not an editorial change. With timestamps enabled on the model,
+    // this must explicitly opt out or every view makes an older article appear
+    // newly published in the admin library.
+    JournalArticle.findByIdAndUpdate(article._id, { $inc: { viewCount: 1 } }, { timestamps: false }).exec();
     res.json(article);
   } catch (err) {
     console.error(err);

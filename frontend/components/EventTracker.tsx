@@ -27,6 +27,12 @@ export default function EventTracker() {
           props[attr.name.slice('data-track-'.length)] = attr.value;
         }
       }
+      // Product cards and collection calls-to-action inside a journal article
+      // keep their normal event names, but inherit the article identity so the
+      // Journal Factory can connect the click to the article that earned it.
+      const articleOwner = el.closest('[data-journal-article]');
+      const article = articleOwner?.getAttribute('data-journal-article');
+      if (article && !props.article) props.article = article;
       trackClientEvent(type, props, props.product || props.productId || props['product-id']);
     }
     document.addEventListener('click', onClick, { capture: true });

@@ -31,11 +31,11 @@ describe('naming a visit', () => {
     expect(pageNameFromPath('/de/product/silk-robe-in-garnet')).toBeNull();
   });
 
-  it('records a kind, not a slug, for collections and articles', () => {
-    // One label per article would fragment the funnel into noise while telling
-    // us nothing the page-level events do not.
+  it('records a kind for collections while individual articles own their reading tracking', () => {
+    // Article pages now record their exact path in JournalArticleTracker so the
+    // Journal Factory can connect a reader to the article they read.
     expect(pageNameFromPath('/collections/bridal-edit')).toBe('collection');
-    expect(pageNameFromPath('/journal/how-to-wash-silk')).toBe('journal');
+    expect(pageNameFromPath('/journal/how-to-wash-silk')).toBeNull();
     expect(pageNameFromPath('/bundles/the-sleep-set')).toBe('bundle');
     // The index pages stay distinct from the individual ones.
     expect(pageNameFromPath('/journal')).toBe('journal');

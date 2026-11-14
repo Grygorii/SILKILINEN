@@ -398,6 +398,17 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   all require either “accept all” or a customised choice with analytics
   explicitly enabled. Rejecting analytics clears the browser ID and stored
   attribution; the checkout sends neither attribution nor a browser ID.
+- **Journal Factory:** `backend/services/journalInsights.js` is the ONE owner
+  for Journal decision evidence at `GET /api/admin/journal/insights`: consented
+  first-party article readers/read depth/clicks plus optional Search Console
+  performance and evidence-backed draft or refresh ideas. Individual articles
+  are tracked by `components/JournalArticleTracker.tsx` as `/journal/<slug>`;
+  `RouteTracker` deliberately returns `null` for that route so it cannot create
+  a second generic Journal visit. The figures start at the feature’s deployment
+  and expire with the 90-day Visit/Event window. `viewCount` is legacy display
+  data only: public reads use `{ timestamps: false }` and must never alter an
+  article’s `updatedAt`; published library cards show `publishedAt` rather than
+  a last-edited timestamp.
 - **Two visitor counts, one guard:** `backend/services/vercelAnalytics.js` reads Vercel Web
   Analytics (`/v1/query/web-analytics/...`, env-gated on `VERCEL_API_TOKEN` +
   `VERCEL_PROJECT_ID`, cached 15min, stale-on-failure, error NOT cached). Route

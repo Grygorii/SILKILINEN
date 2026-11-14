@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
+import JournalInsightsPanel from './JournalInsightsPanel';
+import { journalCardTimestamp } from '@/lib/journalDates';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -26,16 +28,6 @@ const STATUS_LABELS: Record<string, { label: string; bg: string; color: string }
 };
 
 const FILTERS = ['all', 'draft', 'preview', 'published'] as const;
-
-function timeAgo(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
 
 export default function JournalAdminPage() {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -89,6 +81,13 @@ export default function JournalAdminPage() {
     }
   }
 
+  function openIdeaDraft(topic: string) {
+    setAiTopic(topic);
+    setAiError('');
+    setAiOpen(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   async function deleteArticle(id: string, title: string) {
     if (!window.confirm(`Delete “${title || 'this article'}”? This can’t be undone.`)) return;
     const res = await fetch(`${API}/api/admin/journal/${id}`, { method: 'DELETE', credentials: 'include' });
@@ -129,6 +128,8 @@ export default function JournalAdminPage() {
             </button>
           </div>
         </div>
+
+        <JournalInsightsPanel onStartDraft={openIdeaDraft} />
 
         {/* AI masterpiece generator */}
         {aiOpen && (
@@ -204,6 +205,7 @@ export default function JournalAdminPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
             {visible.map(article => {
               const st = STATUS_LABELS[article.status];
+              const timestamp = journalCardTimestamp(article);
               return (
                 <div key={article._id} style={{ position: 'relative' }}>
                   {/* Delete — sits above the card link (not nested inside the
@@ -247,7 +249,7 @@ export default function JournalAdminPage() {
                         <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 2, letterSpacing: '0.8px', textTransform: 'uppercase', background: st.bg, color: st.color }}>
                           {st.label}
                         </span>
-                        <span style={{ fontSize: 11, color: 'var(--admin-ink-muted)' }}>{timeAgo(article.updatedAt)}</span>
+                        <span title={timestamp.title} style={{ fontSize: 11, color: 'var(--admin-ink-muted)' }}>{timestamp.label}</span>
                       </div>
                       <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18, fontWeight: 500, color: 'var(--admin-ink)', margin: '0 0 6px', lineHeight: 1.3 }}>
                         {article.title}

@@ -266,6 +266,48 @@ async function getQueryOpportunities(days = 28) {
 //
 // `truncated` is the important half. Absence from a list that hit its row limit
 // is not evidence of absence, so a caller must not conclude anything from it.
+// Journal-only Google performance. The normal overview is site-wide; the
+// Journal Factory needs article evidence without guessing which of the site's
+// other pages an impression belongs to.
+async function getJournalPagePerformance(days = 28) {
+  const body = {
+    ...require('../utils/searchEvidence').searchWindows(days).current,
+    dataState: 'final',
+    type: 'web',
+    dimensions: ['page'],
+    rowLimit: 250,
+    dimensionFilterGroups: [{ filters: [{ dimension: 'page', operator: 'contains', expression: '/journal/' }] }],
+  };
+  const data = await apiPost(`sites/${siteSegment()}/searchAnalytics/query`, body);
+  return (data?.rows || []).map(r => ({
+    page: r.keys[0],
+    clicks: Math.round(r.clicks || 0),
+    impressions: Math.round(r.impressions || 0),
+    ctr: r.ctr || 0,
+    position: Math.round((r.position || 0) * 10) / 10,
+  }));
+}
+
+async function getJournalQueryPerformance(days = 28) {
+  const body = {
+    ...require('../utils/searchEvidence').searchWindows(days).current,
+    dataState: 'final',
+    type: 'web',
+    dimensions: ['query', 'page'],
+    rowLimit: 250,
+    dimensionFilterGroups: [{ filters: [{ dimension: 'page', operator: 'contains', expression: '/journal/' }] }],
+  };
+  const data = await apiPost(`sites/${siteSegment()}/searchAnalytics/query`, body);
+  return (data?.rows || []).map(r => ({
+    query: r.keys[0],
+    page: r.keys[1],
+    clicks: Math.round(r.clicks || 0),
+    impressions: Math.round(r.impressions || 0),
+    ctr: r.ctr || 0,
+    position: Math.round((r.position || 0) * 10) / 10,
+  }));
+}
+
 async function getQueryStrings(days = 28, limit = 1000) {
   try {
     const body = {
@@ -384,6 +426,8 @@ module.exports = {
   getCountryBreakdown,
   getPrimaryMarket,
   getQueryOpportunities,
+  getJournalPagePerformance,
+  getJournalQueryPerformance,
   getQueryStrings,
   describeChange,
   getQueryPagePairs,

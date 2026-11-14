@@ -6,6 +6,7 @@ const cloudinary = require('cloudinary').v2;
 const { requireAuth } = require('../middleware/auth');
 const JournalArticle = require('../models/JournalArticle');
 const { detectImageType } = require('../utils/fileSignature');
+const { getJournalInsights } = require('../services/journalInsights');
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -58,15 +59,35 @@ router.post('/:id/refresh', aiLimit, async (req, res) => {
   }
 });
 
+// Read-only decision evidence for the Journal Factory. Writing remains
+// review-first in the existing draft workflow.
+router.get('/insights', async (req, res) => {
+  try {
+    res.json(await getJournalInsights({ days: req.query.days }));
+  } catch (err) {
+    console.error('[journal insights] error:', err.message);
+    res.status(500).json({ error: 'Could not load Journal insights.' });
+  }
+});
+
 // ── GET / — list all articles ──────────────────────────────────────────────────
 router.get('/', async (req, res) => {
   try {
     const filter = {};
     if (req.query.status) filter.status = req.query.status;
     const articles = await JournalArticle.find(filter)
-      .sort({ updatedAt: -1 })
+      .sort(req.query.status === 'published' ? { publishedAt: -1, updatedAt: -1 } : { updatedAt: -1 })
       .select('title slug excerpt status heroImage publishedAt readingTimeMinutes updatedAt author')
       .lean();
+    // The All view must use the same truthful date for published articles as
+    // the Published view. Drafts and previews still sort by their edit time.
+    if (!req.query.status) {
+      articles.sort((a, b) => {
+        const aAt = new Date(a.status === 'published' && a.publishedAt ? a.publishedAt : a.updatedAt).getTime();
+        const bAt = new Date(b.status === 'published' && b.publishedAt ? b.publishedAt : b.updatedAt).getTime();
+        return bAt - aAt;
+      });
+    }
     res.json(articles);
   } catch (err) {
     console.error(err);

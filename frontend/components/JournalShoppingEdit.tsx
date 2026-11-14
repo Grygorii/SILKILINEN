@@ -14,7 +14,7 @@ export default async function JournalShoppingEdit({ slug }: { slug: string }) {
   }
   if (!chosen.length) return null;
   return (
-    <section className={styles.section} aria-labelledby="journal-shopping-edit" data-track="journal_shopping_edit">
+    <section className={styles.section} aria-labelledby="journal-shopping-edit" data-track="journal_shopping_edit" data-journal-article={slug}>
       <p className={styles.eyebrow}>Take a little silk with you</p>
       <h2 id="journal-shopping-edit">For your next journey</h2>
       <p className={styles.intro}>Explore silk pieces for the journey and the slow mornings that follow.</p>

@@ -6,6 +6,7 @@ import { safeJsonLd } from '@/lib/safeJsonLd';
 import { isValidImageUrl } from '@/lib/imageUtils';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import JournalShoppingEdit from '@/components/JournalShoppingEdit';
+import JournalArticleTracker from '@/components/JournalArticleTracker';
 import styles from './page.module.css';
 import { SITE } from '@/lib/i18n';
 
@@ -97,6 +98,7 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
         </div>
       )}
 
+      <JournalArticleTracker slug={slug}>
       <article style={{ maxWidth: 720, margin: '0 auto', padding: '64px 24px 120px' }}>
         {/* Meta */}
         <div style={{ marginBottom: 32, textAlign: 'center' }}>
@@ -132,6 +134,7 @@ export default async function JournalArticlePage({ params }: { params: Promise<{
           </Link>
         </div>
       </article>
+      </JournalArticleTracker>
     </main>
   );
 }
