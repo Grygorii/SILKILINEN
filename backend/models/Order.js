@@ -68,12 +68,13 @@ const orderSchema = new mongoose.Schema({
   carrier: { type: String },
   shippedAt: { type: Date },
   deliveredAt: { type: Date },
+  customerReceivedAt: { type: Date },
   estimatedDelivery: { type: Date },
 
-  // Set when the post-purchase review-request email goes out — used by
-  // scripts/sendReviewRequests.js to avoid double-sending. One email per
-  // order covers every item in that order.
+  // The delivery check-in shares this marker with the former review request.
   reviewRequestSentAt: { type: Date, default: null, index: true },
+  reviewRequestStartedAt: { type: Date },
+  reviewRequestClaimedAt: { type: Date },
   // Stamped once the buyer's order-confirmation email actually sends, so a
   // Stripe webhook redelivery can re-send a confirmation that failed the first
   // time (transient Resend error / crash) instead of silently never arriving.

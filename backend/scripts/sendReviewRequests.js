@@ -1,13 +1,10 @@
 #!/usr/bin/env node
 /**
- * Manual CLI for the review-request sender. The actual logic lives in
- * services/reviewRequests.js (shared with the in-process daily cron in
- * server.js, which now runs this automatically — you don't need a separate
- * scheduler). Marks reviewRequestSentAt so re-running is a no-op.
+ * Checks for delivery emails due 21 days after dispatch.
+ * The server also does this hourly using the same send claim.
  *
  *   node scripts/sendReviewRequests.js              # dry-run, prints what would send
  *   node scripts/sendReviewRequests.js --send       # actually email + mark
- *   node scripts/sendReviewRequests.js --send --age=7   # change cooldown
  */
 
 'use strict';
@@ -17,8 +14,6 @@ const mongoose = require('mongoose');
 const { processReviewRequests } = require('../services/reviewRequests');
 
 const SEND = process.argv.includes('--send');
-const ageArg = (process.argv.find(a => a.startsWith('--age=')) || '').split('=')[1];
-const AGE_DAYS = Number.isFinite(parseInt(ageArg)) ? parseInt(ageArg) : 14;
 
 async function main() {
   if (!process.env.MONGODB_URI) {
@@ -31,10 +26,8 @@ async function main() {
   }
   await mongoose.connect(process.env.MONGODB_URI);
 
-  const result = await processReviewRequests({ send: SEND, ageDays: AGE_DAYS });
-  console.log(`[review-requests] mode=${SEND ? 'SEND' : 'DRY-RUN'}, eligible=${result.eligible ?? 0}`);
-  for (const line of result.log || []) console.log('  ' + line);
-  console.log(`[review-requests] done. sent=${result.sent ?? 0}, skipped(no-products)=${result.skipped ?? 0}`);
+  const result = await processReviewRequests({ send: SEND });
+  console.log(JSON.stringify({ mode: SEND ? 'send' : 'preview', ...result }));
 
   await mongoose.disconnect();
 }

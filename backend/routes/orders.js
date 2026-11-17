@@ -13,7 +13,6 @@ const { recordAudit } = require('../services/auditLog');
 const {
   sendProcessingEmail,
   sendShippedEmail,
-  sendDeliveredEmail,
   sendCancelledEmail,
 } = require('../services/email');
 
@@ -22,7 +21,6 @@ const { VALID_STATUSES, STATUS_TRANSITIONS } = require('../utils/orderStates');
 const STATUS_EMAIL_FNS = {
   processing: sendProcessingEmail,
   shipped: sendShippedEmail,
-  delivered: sendDeliveredEmail,
   cancelled: sendCancelledEmail,
 };
 

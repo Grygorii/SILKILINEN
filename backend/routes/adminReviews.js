@@ -1,15 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const Review = require('../models/Review');
-const Order = require('../models/Order');
-const Product = require('../models/Product');
 const { requireAuth } = require('../middleware/auth');
 const { emailBlastLimit } = require('../middleware/rateLimiters');
 const { flagLabel } = require('../services/reviewModeration');
-const { signReviewToken } = require('../utils/reviewToken');
-const { sendReviewRequest } = require('../services/email');
-
-const SITE_URL = (process.env.SITE_URL || 'https://www.silkilinen.com').replace(/\/$/, '');
+const { processReviewRequests } = require('../services/reviewRequests');
 
 router.use(requireAuth);
 
@@ -143,87 +138,13 @@ router.delete('/:id', async function(req, res) {
   }
 });
 
-// ── POST /api/admin/reviews/send-pending-requests ────────────────────
-// Manually trigger the post-purchase review-request scan. Same logic as
-// scripts/sendReviewRequests.js but callable from the admin UI so the
-// operator doesn't need shell access. Body: { ageDays?: number, dryRun?: boolean }
-//
-// Returns a `diagnostics` block that breaks down WHY each order didn't
-// qualify — without it "Eligible: 0" is impossible to debug from the
-// admin UI alone. Each non-eligible order falls into exactly one bucket.
+// POST /api/admin/reviews/send-pending-requests — uses the scheduled job's eligibility and claim.
 router.post('/send-pending-requests', emailBlastLimit, async function(req, res) {
   try {
-    const ageDays = Number.isInteger(req.body?.ageDays) ? req.body.ageDays : 14;
-    const dryRun = Boolean(req.body?.dryRun);
-
-    if (!dryRun && !process.env.RESEND_API_KEY) {
-      return res.status(503).json({ error: 'RESEND_API_KEY not configured; cannot send.' });
-    }
-
-    const cutoff = new Date(Date.now() - ageDays * 24 * 60 * 60 * 1000);
-
-    // Pull every order, then bucket on the JS side so we can report on
-    // each disqualification reason. Cheap at <10k orders; revisit if
-    // the order table outgrows that.
-    const allOrders = await Order.find({}).select('_id status customerEmail items createdAt reviewRequestSentAt').lean();
-
-    const diagnostics = {
-      totalOrders: allOrders.length,
-      excludedByStatus: 0,
-      excludedByMissingEmail: 0,
-      excludedByTooFresh: 0,
-      excludedByAlreadySent: 0,
-      excludedByNoItems: 0,
-    };
-    const ELIGIBLE_STATUSES = new Set(['paid', 'processing', 'shipped', 'delivered']);
-    const eligible = [];
-
-    for (const o of allOrders) {
-      // Order of checks mirrors how the operator typically thinks: real
-      // order? cooled down? not already sent? has products?
-      if (!ELIGIBLE_STATUSES.has(o.status)) { diagnostics.excludedByStatus++; continue; }
-      if (!o.customerEmail || o.customerEmail.trim() === '') { diagnostics.excludedByMissingEmail++; continue; }
-      if (!o.createdAt || new Date(o.createdAt) > cutoff) { diagnostics.excludedByTooFresh++; continue; }
-      if (o.reviewRequestSentAt) { diagnostics.excludedByAlreadySent++; continue; }
-      if (!o.items || o.items.length === 0) { diagnostics.excludedByNoItems++; continue; }
-      eligible.push(o);
-    }
-
-    const summary = { eligible: eligible.length, sent: 0, skipped: 0, errors: 0, sample: [], diagnostics };
-
-    for (const order of eligible) {
-      const productIds = [...new Set((order.items || []).map(i => String(i.productId)).filter(Boolean))];
-      if (productIds.length === 0) { summary.skipped++; continue; }
-
-      const products = await Product.find({ _id: { $in: productIds }, status: { $ne: 'archived' } }).select('_id name').lean();
-      if (products.length === 0) { summary.skipped++; continue; }
-
-      const links = products.map(p => ({
-        name: p.name,
-        url: `${SITE_URL}/write-review?token=${signReviewToken({
-          orderId: order._id,
-          productId: p._id,
-          customerEmail: order.customerEmail,
-        })}`,
-      }));
-
-      if (summary.sample.length < 5) {
-        summary.sample.push({ orderId: String(order._id), email: order.customerEmail, items: links.map(l => l.name) });
-      }
-
-      if (!dryRun) {
-        try {
-          await sendReviewRequest({ order, links });
-          await Order.updateOne({ _id: order._id }, { $set: { reviewRequestSentAt: new Date() } });
-          summary.sent++;
-        } catch (err) {
-          console.error(`[adminReviews] send failure for order ${order._id}: ${err.message}`);
-          summary.errors++;
-        }
-      }
-    }
-
-    res.json({ success: true, dryRun, ageDays, ...summary });
+    const dryRun = req.body?.dryRun !== false;
+    const result = await processReviewRequests({ send: !dryRun });
+    if (!result.ran) return res.status(503).json({ error: 'Email service is not configured.' });
+    res.json({ success: true, dryRun, ...result });
   } catch (err) {
     console.error('[adminReviews] send-pending-requests error:', err);
     res.status(500).json({ error: 'Internal server error' });

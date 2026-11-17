@@ -24,7 +24,7 @@ type BrowserStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
 // Matched after any locale prefix is stripped, so /de/journal/preview/x is
 // excluded as surely as /journal/preview/x.
-const EXCLUDED_PREFIXES = ['/admin', '/journal/preview'];
+const EXCLUDED_PREFIXES = ['/admin', '/journal/preview', '/write-review'];
 const EXCLUDED_SEGMENTS = ['/preview/'];
 
 // Strip a leading /de|/fr|/it|/es so a translated page is judged on its real

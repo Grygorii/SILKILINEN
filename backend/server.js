@@ -435,16 +435,14 @@ const server = app.listen(PORT, function() {
     advisorDigestInterval = setInterval(run, 24 * 60 * 60 * 1000);
   }, 10 * 60 * 1000);
 
-  // Review-request emails — runs daily, sending to buyers whose order is ≥14
-  // days old and hasn't had one yet. Idempotent (Order.reviewRequestSentAt),
-  // so daily is safe. First run 15 min after boot. No-op until RESEND_API_KEY
-  // is set. This is what fills the empty product reviews over time.
+  // Delivery check-ins become due 21 days after dispatch. The hourly check
+  // shares the order-level send claim with the admin and CLI.
   reviewRequestsStartTimeout = setTimeout(function() {
     const run = () => withCronLock('reviewRequests', LOCK_TTL, () => processReviewRequests({ send: true }))
       .then(r => { if (r && r.sent) console.log(`[review-requests] sent ${r.sent} of ${r.eligible} eligible`); })
       .catch(err => console.error('[review-requests]', err));
     run();
-    reviewRequestsInterval = setInterval(run, 24 * 60 * 60 * 1000);
+    reviewRequestsInterval = setInterval(run, 60 * 60 * 1000);
   }, 15 * 60 * 1000);
 
   // Growth Engine — the autonomous marketing pulse. Checks every 6h which

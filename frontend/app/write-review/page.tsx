@@ -1,10 +1,15 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import WriteReviewForm from './WriteReviewForm';
+import OrderReceiptForm from './OrderReceiptForm';
+import { getSiteSettings } from '@/lib/settings';
+
+type ReviewParams = Promise<{ token?: string; receipt?: string }>;
 
 export const metadata: Metadata = {
-  title: 'Write a review',
-  description: 'Share your thoughts on your Silkilinen purchase.',
+  title: 'Your SILKILINEN order',
+  description: 'Confirm receipt or share a review of your order.',
+  referrer: 'no-referrer',
   // Token-gated submission flow — not useful in search, opt out of indexing.
   robots: { index: false, follow: false },
 };
@@ -12,7 +17,7 @@ export const metadata: Metadata = {
 export default function WriteReviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string }>;
+  searchParams: ReviewParams;
 }) {
   return (
     <main
@@ -29,7 +34,11 @@ export default function WriteReviewPage({
   );
 }
 
-async function WriteReviewLoader({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
-  const { token } = await searchParams;
+async function WriteReviewLoader({ searchParams }: { searchParams: ReviewParams }) {
+  const { token, receipt } = await searchParams;
+  if (receipt === '1' || receipt === 'review') {
+    const { supportEmail } = await getSiteSettings();
+    return <OrderReceiptForm supportEmail={supportEmail} reviewOnly={receipt === 'review'} />;
+  }
   return <WriteReviewForm token={token || ''} />;
 }

@@ -22,21 +22,13 @@ You don't need to touch any of the above — just review it on the Vercel previe
 
 ---
 
-## 1. Turn on automatic review requests  ⭐ highest impact
-**Why:** Most products have **zero reviews** — the single biggest trust gap for a
-considered buyer. You already have the sender (`backend/scripts/sendReviewRequests.js`);
-it just isn't scheduled. It emails buyers ~14 days after purchase, once per order.
+## 1. Use the automatic delivery check-in
 
-**Do this (Railway, ~3 min):**
-1. Railway → your **backend** service → **Settings → Cron Jobs** (or add a new
-   Cron service pointing at the backend image).
-2. Add a job:
-   - Schedule: `0 9 * * 1` (every Monday 09:00)
-   - Command: `node scripts/sendReviewRequests.js --send`
-3. Save. It's idempotent (marks `reviewRequestSentAt`), so re-runs never double-send.
-
-> Tip: run it once without `--send` first (`node scripts/sendReviewRequests.js`) from a
-> Railway shell to see a dry-run of who would be emailed.
+Mark a parcel **Shipped** when it leaves. The shop checks hourly for orders
+dispatched at least 21 days ago and sends one email asking if the parcel arrived.
+The email links to optional receipt confirmation, product reviews, and support.
+Use **Reviews → Delivery check-ins → Check due orders** to preview the count.
+The CLI `node scripts/sendReviewRequests.js` also previews without sending.
 
 ## 2. Import your existing Etsy reviews onto products  ⭐
 **Why:** You have history and a 4.9★ reputation — but it isn't attached to the

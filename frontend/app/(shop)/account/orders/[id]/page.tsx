@@ -27,6 +27,7 @@ type Order = {
   trackingUrl?: string;
   carrier?: string;
   estimatedDelivery?: string;
+  customerReceivedAt?: string;
   customerNote?: string;
   displayCurrency?: string;
   exchangeRate?: number;
@@ -91,6 +92,13 @@ export default function OrderDetailPage() {
           </div>
 
           <div className={styles.orderDetail}>
+
+            {order.customerReceivedAt && (
+              <div className={styles.section}>
+                <p className={styles.sectionTitle}>Receipt confirmed</p>
+                <p>Confirmed by you on {formatDate(order.customerReceivedAt)}.</p>
+              </div>
+            )}
 
             {/* Tracking */}
             {(order.trackingNumber || order.trackingUrl) && (

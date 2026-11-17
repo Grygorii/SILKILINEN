@@ -5,7 +5,9 @@ const Review = require('../models/Review');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const { flagReview } = require('../services/reviewModeration');
-const { signReviewToken, verifyReviewToken } = require('../utils/reviewToken');
+const { signReviewToken, verifyReviewToken, verifyReceiptToken, tokenMatchesEmail } = require('../utils/reviewToken');
+const { SHIPMENT_STATUSES } = require('../utils/orderStates');
+const { lightRateLimit } = require('../middleware/rateLimits');
 
 // 3 review submissions per IP per hour. Reviews are usually a once-per-
 // product action, so any IP submitting more is either a moderator
@@ -175,11 +177,67 @@ router.post('/', submitRateLimit, async function(req, res) {
   }
 });
 
+// Reading the invitation, including email link previews, never marks receipt.
+router.post('/order-receipt', lightRateLimit, async function(req, res) {
+  res.set('Cache-Control', 'no-store');
+  const { token, action } = req.body || {};
+  if (action !== 'check' && action !== 'confirm') {
+    return res.status(400).json({ error: 'Invalid receipt action.' });
+  }
+  const decoded = verifyReceiptToken(token);
+  const invalidLink = () => res.status(401).json({ error: 'This link is invalid or has expired.' });
+  if (!decoded) return invalidLink();
+
+  try {
+    const match = {
+      _id: decoded.orderId,
+      shippedAt: decoded.shippedAt,
+      status: { $in: SHIPMENT_STATUSES },
+    };
+    const order = await Order.findOne(match).select('customerEmail customerReceivedAt items').lean();
+    if (!order || !tokenMatchesEmail(decoded, order.customerEmail)) return invalidLink();
+
+    let receivedAt = order.customerReceivedAt;
+    if (action === 'confirm' && !receivedAt) {
+      const sameShipment = { ...match, customerEmail: order.customerEmail };
+      const updated = await Order.findOneAndUpdate(
+        { ...sameShipment, customerReceivedAt: null },
+        { $set: { customerReceivedAt: new Date() } },
+        { returnDocument: 'after' }
+      ).select('customerReceivedAt').lean();
+      const recorded = updated || await Order.findOne(sameShipment).select('customerReceivedAt').lean();
+      if (!recorded?.customerReceivedAt) return invalidLink();
+      receivedAt = recorded.customerReceivedAt;
+    }
+
+    const ids = [...new Set((order.items || []).flatMap(item => [
+      item.productId, ...(item.includedProducts || []).map(product => product.productId),
+    ]).filter(Boolean).map(String))];
+    const [products, reviewedIds] = ids.length ? await Promise.all([
+      Product.find({ _id: { $in: ids }, status: { $ne: 'archived' } }).select('name').lean(),
+      Review.distinct('productId', { orderRefId: decoded.orderId, source: 'order' }),
+    ]) : [[], []];
+    const reviewed = new Set(reviewedIds.map(String));
+    const items = products.filter(product => !reviewed.has(String(product._id))).map(product => ({
+      id: String(product._id),
+      name: product.name,
+      href: `/write-review?token=${signReviewToken({
+        orderId: decoded.orderId, productId: product._id, customerEmail: order.customerEmail,
+      })}`,
+    }));
+    res.json({ confirmed: Boolean(receivedAt), items });
+  } catch (err) {
+    console.error('[reviews/order-receipt] failed:', err.code || err.name);
+    res.status(500).json({ error: 'We couldn’t open your order right now. Please try again.' });
+  }
+});
+
 // ── GET /api/reviews/from-token — verify token + return product info ──
 // Used by the public /write-review page to validate a click before
 // showing the form. Returns the product header info and whether this
 // token has already been redeemed.
 router.get('/from-token', async function(req, res) {
+  res.set('Cache-Control', 'no-store');
   try {
     const decoded = verifyReviewToken(req.query.token);
     if (!decoded) return res.status(401).json({ error: 'Invalid or expired link.' });
@@ -195,7 +253,7 @@ router.get('/from-token', async function(req, res) {
     ]);
 
     if (!order || !product) return res.status(404).json({ error: 'Order or product not found.' });
-    if ((order.customerEmail || '').toLowerCase() !== decoded.customerEmail) {
+    if (!tokenMatchesEmail(decoded, order.customerEmail)) {
       return res.status(401).json({ error: 'Token does not match this order.' });
     }
 
@@ -228,7 +286,7 @@ router.post('/from-token', async function(req, res) {
 
     const order = await Order.findById(decoded.orderId).select('_id customerEmail customerName').lean();
     if (!order) return res.status(404).json({ error: 'Order not found.' });
-    if ((order.customerEmail || '').toLowerCase() !== decoded.customerEmail) {
+    if (!tokenMatchesEmail(decoded, order.customerEmail)) {
       return res.status(401).json({ error: 'Token does not match this order.' });
     }
 

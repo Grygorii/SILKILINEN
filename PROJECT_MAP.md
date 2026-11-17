@@ -303,6 +303,10 @@ into several files, then drifting. Each fix is the same shape: one owner + a gua
   paid; completed mode shows only ledger-linked paid journeys and appends `paid_order`.
   Breadcrumbs are always bounded to the selected range and show the newest forty
   activities across Visits and Events, rendered in chronological order.
+- **Delivery check-ins:** `backend/services/reviewRequests.js` is shared by the hourly job,
+  Reviews admin and CLI. A recorded `shippedAt` starts the 21-day wait. The existing sent
+  marker prevents repeat emails. The signed receipt action records `customerReceivedAt`
+  separately from the carrier status and links to the existing verified review form.
 - **Selling loop (added this session):** on-site search is recorded WITH its result
   count (`components/SearchTracker.tsx`) — zero-result searches are surfaced as unmet
   demand in the advisor + agents, and product search matches name/description/category/

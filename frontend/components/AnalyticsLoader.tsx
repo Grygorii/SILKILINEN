@@ -1,11 +1,12 @@
 'use client';
 
 import Script from 'next/script';
+import { usePathname } from 'next/navigation';
 import { useSyncExternalStore } from 'react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { useCookieConsent } from '@/context/CookieConsentContext';
 import { allowsAnalytics } from '@/lib/analyticsConsent';
-import { isBrowserExcludedFromAnalytics, subscribeToBrowserAnalyticsExclusion } from '@/lib/analyticsExclude';
+import { isBrowserExcludedFromAnalytics, isExcludedFromAnalytics, subscribeToBrowserAnalyticsExclusion } from '@/lib/analyticsExclude';
 
 // Both default to the founder's OWN, confirmed properties (GA4 G-XZG6XTZ3S8 and
 // Clarity x940yl1bn0), so analytics works zero-config. The NEXT_PUBLIC_* env vars
@@ -23,9 +24,10 @@ const VERCEL_ANALYTICS_ENABLED = process.env.NEXT_PUBLIC_ENABLE_VERCEL_ANALYTICS
 export default function AnalyticsLoader() {
   const { consent, preferences } = useCookieConsent();
   const allowed = allowsAnalytics(consent, preferences);
+  const pathname = usePathname();
   const browserExcluded = useSyncExternalStore(subscribeToBrowserAnalyticsExclusion, isBrowserExcludedFromAnalytics, () => false);
 
-  if (!allowed || browserExcluded) return null;
+  if (!allowed || browserExcluded || isExcludedFromAnalytics(pathname, window.location.search)) return null;
 
   return (
     <>

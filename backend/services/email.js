@@ -442,20 +442,6 @@ ${order.estimatedDelivery ? `<p style="margin:8px 0 0;font-size:12px;color:#8a86
   });
 }
 
-async function sendDeliveredEmail(order) {
-  if (!process.env.RESEND_API_KEY || !order.customerEmail) return;
-  const id = shortId(order._id);
-  await getResend().emails.send({
-    from: FROM,
-    to: order.customerEmail,
-    subject: `Your SILKILINEN order #${id} has been delivered`,
-    html: buildStatusHtml({
-      order,
-      heading: 'Your order has arrived',
-      body: `your order has been delivered. We hope you love every piece. If anything isn't right, please reach out — we're here to help.`,
-    }),
-  });
-}
 
 async function sendCancelledEmail(order) {
   if (!process.env.RESEND_API_KEY || !order.customerEmail) return;
@@ -674,90 +660,40 @@ ${itemRows}
   });
 }
 
-// ── Post-purchase review request ─────────────────────────────────────────
-// One email per order, sent ~14 days after order creation. Lists each item
-// with a tokenised "Write a review" link that auto-fills productId on the
-// /write-review page and marks the resulting review as verifiedPurchase.
-async function sendReviewRequest({ order, links }) {
-  if (!process.env.RESEND_API_KEY || !order.customerEmail) return;
+// The buyer chooses whether to confirm receipt, leave a review or ask for help.
+async function sendReviewRequest({ order, confirmUrl, reviewUrl }) {
   const id = shortId(order._id);
-  const firstName = esc((order.customerName || '').split(' ')[0] || '');
-
-  // Build one row per item with its review link. Items without a
-  // productId (legacy data or bundle children) are skipped silently.
-  const itemRows = (links || []).map(link => `
-<tr><td style="padding:14px 16px;border-bottom:1px solid #eae8e3;">
-  <table width="100%" cellpadding="0" cellspacing="0">
-    <tr>
-      <td style="vertical-align:middle;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;color:#2a2218;">
-        ${link.name}
-      </td>
-      <td align="right" style="vertical-align:middle;">
-        <a href="${link.url}"
-           style="display:inline-block;padding:10px 22px;background:#2a2218;color:#faf8f4;
-                  text-decoration:none;font-family:'Jost',sans-serif;font-size:11px;
-                  letter-spacing:2px;text-transform:uppercase;border-radius:2px;">
-          Write a review
-        </a>
-      </td>
-    </tr>
-  </table>
-</td></tr>`).join('');
-
-  await getResend().emails.send({
+  const help = supportEmail();
+  const subject = `Has your SILKILINEN order #${id} arrived?`;
+  const { data, error } = await getResend().emails.send({
     from: FROM,
-    to: order.customerEmail,
-    subject: 'A moment for your thoughts — SILKILINEN',
-    html: `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
-<body style="margin:0;padding:0;background:#faf8f4;font-family:'Jost',sans-serif;color:#2a2218;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#faf8f4;padding:40px 16px;">
-<tr><td align="center">
-  <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#faf8f4;">
-
-    <tr><td style="text-align:center;padding-bottom:32px;">
-      <p style="font-family:'Jost',sans-serif;font-size:11px;letter-spacing:2.5px;
-                text-transform:uppercase;color:#8a8278;margin:0;">
-        SILKILINEN · Donegal
-      </p>
-    </td></tr>
-
-    <tr><td style="padding:0 8px 32px;">
-      <h1 style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:300;
-                 font-size:32px;line-height:1.2;color:#2a2218;margin:0 0 20px;">
-        ${firstName ? `${firstName}, how is the silk?` : 'How is the silk?'}
-      </h1>
-      <p style="font-family:'Jost',sans-serif;font-weight:300;font-size:15px;
-                line-height:1.7;color:#2a2218;margin:0 0 12px;">
-        Order #${id} has had a little time to settle. We'd love to hear how
-        the pieces feel — how they drape, how they wash, whether they fit
-        the way you hoped.
-      </p>
-      <p style="font-family:'Jost',sans-serif;font-weight:300;font-size:15px;
-                line-height:1.7;color:#2a2218;margin:0;">
-        A few honest words helps the next person decide. Each review is
-        reviewed by our team before it goes live.
-      </p>
-    </td></tr>
-
-    <tr><td style="border:1px solid #eae8e3;border-radius:2px;background:#fff;">
-      <table width="100%" cellpadding="0" cellspacing="0">
-        ${itemRows}
-      </table>
-    </td></tr>
-
-    <tr><td style="padding-top:32px;text-align:center;">
-      <p style="font-family:'Jost',sans-serif;font-size:11px;color:#8a8278;
-                margin:0;line-height:1.6;">
-        Links expire 90 days from this email. Replies to this address reach
-        a real person.
-      </p>
-    </td></tr>
-
-  </table>
-</td></tr>
-</table>
-</body></html>`,
-  });
+    to: order.customerEmail.trim(),
+    replyTo: help,
+    subject,
+    text: [
+      'We’re checking in on your order from Donegal.',
+      `Confirm you received it: ${confirmUrl}`,
+      `Leave a product review if you’ve had a chance to try it: ${reviewUrl}`,
+      `Still waiting or need help? Reply to this email or contact ${help}.`,
+    ].join('\n\n'),
+    html: `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:28px 16px;background:#faf8f4;color:#2a2218;font-family:Arial,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;"><tr><td>
+    <p style="font:600 18px Georgia,serif;letter-spacing:2px;margin:0 0 24px;">SILKILINEN</p>
+    <h1 style="font:400 30px/1.15 Georgia,serif;margin:0 0 16px;">Has your order arrived?</h1>
+    <p style="font-size:15px;line-height:1.65;margin:0 0 22px;">We’re checking in on order #${id}, sent from Donegal.</p>
+    <p style="margin:0 0 20px;"><a href="${esc(confirmUrl)}" style="display:inline-block;padding:14px 20px;background:#2a2218;color:#faf8f4;text-decoration:none;">Confirm receipt</a></p>
+    <p style="font-size:15px;line-height:1.65;margin:0 0 18px;">If you’ve had a chance to try your pieces, you’re welcome to <a href="${esc(reviewUrl)}" style="color:inherit;">leave a product review</a>.</p>
+    <p style="font-size:14px;line-height:1.65;margin:0;">Still waiting or need help? Reply to this email or contact <a href="mailto:${esc(help)}" style="color:inherit;">${esc(help)}</a>.</p>
+  </td></tr></table>
+</td></tr></table></body></html>`,
+  }, { idempotencyKey: `order-receipt/${order._id}` });
+  if (error || !data?.id) {
+    const failure = new Error('Delivery check-in was not accepted');
+    failure.code = error?.name;
+    throw failure;
+  }
 }
 
 // Weekly "state of the store" digest to the founder — the top priorities from
@@ -867,4 +803,4 @@ async function sendBackInStock({ email, product, size, colour }) {
   }
 }
 
-module.exports = { sendBackInStock, sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendDeliveredEmail, sendCancelledEmail, sendDropAHint, sendCartRecoveryEmail, sendWinbackReminder, sendWishlistReminder, sendContactMessage, sendReviewRequest, sendAdvisorDigest };
+module.exports = { sendBackInStock, sendOrderConfirmation, sendAdminOrderNotification, sendMagicLink, sendWelcome, sendNewsletterWelcome, sendProcessingEmail, sendShippedEmail, sendCancelledEmail, sendDropAHint, sendCartRecoveryEmail, sendWinbackReminder, sendWishlistReminder, sendContactMessage, sendReviewRequest, sendAdvisorDigest };

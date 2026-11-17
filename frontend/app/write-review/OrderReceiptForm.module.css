@@ -1,0 +1,49 @@
+.panel {
+  display: grid;
+  gap: 16px;
+  max-inline-size: 480px;
+  margin-inline: auto;
+  color: var(--color-ink);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.brand {
+  font: 600 19px/1.2 var(--font-cormorant), Georgia, serif;
+  letter-spacing: 0.12em;
+}
+
+.panel h1 {
+  font: 500 clamp(31px, 5vw, 44px)/1.08 var(--font-cormorant), Georgia, serif;
+}
+
+.panel a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.items {
+  list-style: none;
+  border-block-start: 1px solid var(--color-line);
+}
+
+.items li {
+  border-block-end: 1px solid var(--color-line);
+}
+
+.items a {
+  display: flex;
+  align-items: center;
+  min-block-size: 44px;
+  padding-block: 7px;
+}
+
+.help {
+  margin-block-start: 8px;
+  color: var(--color-ink-muted);
+}
+
+.error {
+  color: var(--color-danger);
+}

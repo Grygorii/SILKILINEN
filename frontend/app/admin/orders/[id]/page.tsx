@@ -56,6 +56,8 @@ type Order = {
   carrier?: string;
   shippedAt?: string;
   deliveredAt?: string;
+  customerReceivedAt?: string;
+  reviewRequestSentAt?: string;
   estimatedDelivery?: string;
   customerNote?: string;
   internalNote?: string;
@@ -383,6 +385,15 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
           {/* Tracking */}
           <section className={styles.card}>
             <h3 className={styles.cardTitle}>Tracking</h3>
+            {order.customerReceivedAt && (
+              <div className={styles.infoRow}><span>Customer confirmed receipt</span><span>{formatDate(order.customerReceivedAt)}</span></div>
+            )}
+            {order.reviewRequestSentAt && (
+              <div className={styles.infoRow}><span>Follow-up email sent</span><span>{formatDate(order.reviewRequestSentAt)}</span></div>
+            )}
+            {!order.reviewRequestSentAt && order.shippedAt && ['shipped', 'delivered'].includes(order.status) && order.customerEmail && (
+              <div className={styles.infoRow}><span>Delivery check-in</span><span>Due 21 days after dispatch</span></div>
+            )}
             <div className={styles.formGrid}>
               <label className={styles.label}>
                 Tracking number
@@ -456,7 +467,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
               Change to
               <select className={styles.input} value={newStatus} onChange={e => setNewStatus(e.target.value)}>
                 {VALID_STATUSES.map(s => (
-                  <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                  <option key={s} value={s}>{s === 'delivered' ? 'Delivered (carrier confirmed)' : s.charAt(0).toUpperCase() + s.slice(1)}</option>
                 ))}
               </select>
             </label>
@@ -464,10 +475,12 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
               Note (optional)
               <input className={styles.input} value={statusNote} onChange={e => setStatusNote(e.target.value)} placeholder="e.g. Dispatched via DHL" />
             </label>
-            <label className={styles.checkboxLabel}>
-              <input type="checkbox" checked={sendEmail} onChange={e => setSendEmail(e.target.checked)} />
-              Send email notification
-            </label>
+            {newStatus !== 'delivered' && (
+              <label className={styles.checkboxLabel}>
+                <input type="checkbox" checked={sendEmail} onChange={e => setSendEmail(e.target.checked)} />
+                Send email notification
+              </label>
+            )}
             <div className={styles.cardFooter}>
               {statusMsg && <span className={styles.saveMsg}>{statusMsg}</span>}
               <button

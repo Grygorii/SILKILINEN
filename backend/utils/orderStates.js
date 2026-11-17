@@ -1,5 +1,6 @@
 'use strict';
 const VALID_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'refunded', 'partially_refunded', 'failed'];
+const SHIPMENT_STATUSES = ['shipped', 'delivered'];
 
 // Which statuses may follow which. The enum stopped an INVALID status; nothing
 // stopped an impossible JOURNEY, so "cancelled" -> "shipped" and "refunded" ->
@@ -21,4 +22,4 @@ const STATUS_TRANSITIONS = {
   partially_refunded: ['processing', 'shipped', 'delivered', 'returned', 'refunded'],
 };
 
-module.exports = { VALID_STATUSES, STATUS_TRANSITIONS };
+module.exports = { VALID_STATUSES, STATUS_TRANSITIONS, SHIPMENT_STATUSES };

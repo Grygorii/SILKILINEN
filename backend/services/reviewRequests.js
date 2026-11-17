@@ -1,71 +1,74 @@
 'use strict';
 
-// Review-request sending — shared by the in-process daily cron (server.js) and
-// the manual CLI (scripts/sendReviewRequests.js). Assumes mongoose is already
-// connected (the cron runs inside the live server; the script connects first).
-//
-// Idempotent: each order is marked with reviewRequestSentAt once sent, so
-// re-running never double-emails.
-
 const Order = require('../models/Order');
-const Product = require('../models/Product');
-const { signReviewToken } = require('../utils/reviewToken');
+const { signReceiptToken } = require('../utils/reviewToken');
+const { SHIPMENT_STATUSES } = require('../utils/orderStates');
+const { siteUrl } = require('../config/site');
 const { sendReviewRequest } = require('./email');
 
-const SITE_URL = (process.env.SITE_URL || process.env.PUBLIC_SITE_URL || 'https://www.silkilinen.com').replace(/\/$/, '');
+const DAY_MS = 24 * 60 * 60 * 1000;
+const WAIT_MS = 21 * DAY_MS;
+const CLAIM_MS = 15 * 60 * 1000;
+// Resend keeps idempotency keys for 24 hours. Leave time for the request
+// itself and surface unresolved attempts instead of risking another email.
+const RETRY_MS = 23 * 60 * 60 * 1000;
 
-async function processReviewRequests({ send = true, ageDays = 14 } = {}) {
+async function processReviewRequests({ send = true, now = new Date() } = {}) {
   if (send && !process.env.RESEND_API_KEY) {
     return { ran: false, reason: 'RESEND_API_KEY not set' };
   }
 
-  const cutoff = new Date(Date.now() - ageDays * 24 * 60 * 60 * 1000);
-  // Oldest-eligible first, capped per run: the daily cron then drains any
-  // backlog over a few days instead of firing one unbounded burst the first
-  // time RESEND_API_KEY is enabled on a store with history (Resend rate-limits).
-  const eligible = await Order.find({
-    status: { $in: ['paid', 'processing', 'shipped', 'delivered'] },
-    customerEmail: { $exists: true, $ne: '' },
-    createdAt: { $lte: cutoff },
+  const due = {
+    status: { $in: SHIPMENT_STATUSES },
+    shippedAt: { $type: 'date', $lte: new Date(now.getTime() - WAIT_MS) },
+    customerEmail: { $regex: /\S/ },
     reviewRequestSentAt: null,
-    'items.0': { $exists: true },
-  }).sort({ createdAt: 1 }).limit(100).select('_id customerEmail customerName items createdAt').lean();
+  };
+  const retryCutoff = new Date(now.getTime() - RETRY_MS);
+  const eligibleFilter = {
+    ...due,
+    $and: [
+      { $or: [{ reviewRequestStartedAt: null }, { reviewRequestStartedAt: { $gt: retryCutoff } }] },
+      { $or: [{ reviewRequestClaimedAt: null }, { reviewRequestClaimedAt: { $lte: new Date(now.getTime() - CLAIM_MS) } }] },
+    ],
+  };
+  const [eligible, needsReview] = await Promise.all([
+    Order.find(eligibleFilter).sort({ shippedAt: 1 }).limit(100).select('_id').lean(),
+    Order.countDocuments({ ...due, reviewRequestStartedAt: { $lte: retryCutoff } }),
+  ]);
+  const summary = { ran: true, eligible: eligible.length, sent: 0, skipped: 0, errors: 0, needsReview };
+  if (!send) return summary;
 
-  let sent = 0;
-  let skipped = 0;
-  const log = [];
+  for (const { _id } of eligible) {
+    try {
+      const claimedAt = new Date();
+      const order = await Order.findOneAndUpdate({ ...eligibleFilter, _id }, [{
+        $set: {
+          reviewRequestClaimedAt: claimedAt,
+          reviewRequestStartedAt: { $ifNull: ['$reviewRequestStartedAt', claimedAt] },
+        },
+      }], { returnDocument: 'after', updatePipeline: true })
+        .select('customerEmail shippedAt reviewRequestStartedAt').lean();
+      if (!order) { summary.skipped++; continue; }
 
-  for (const order of eligible) {
-    // One review link per item carrying a real productId (bundles/legacy
-    // items without one are skipped quietly).
-    const productIds = [...new Set((order.items || []).map(i => String(i.productId)).filter(Boolean))];
-    if (productIds.length === 0) { skipped++; continue; }
-
-    const products = await Product.find({ _id: { $in: productIds }, status: { $ne: 'archived' } }).select('_id name').lean();
-    if (products.length === 0) { skipped++; continue; }
-
-    const links = products.map(p => ({
-      name: p.name,
-      url: `${SITE_URL}/write-review?token=${signReviewToken({
-        orderId: order._id,
-        productId: p._id,
-        customerEmail: order.customerEmail,
-      })}`,
-    }));
-    log.push(`order ${order._id} (${order.customerEmail}) — ${links.length} link(s)`);
-
-    if (send) {
-      try {
-        await sendReviewRequest({ order, links });
-        await Order.updateOne({ _id: order._id }, { $set: { reviewRequestSentAt: new Date() } });
-        sent++;
-      } catch (err) {
-        console.error(`[review-requests] failed for order ${order._id}: ${err.message}`);
-      }
+      const token = signReceiptToken(order);
+      await sendReviewRequest({
+        order,
+        confirmUrl: siteUrl(`/write-review?receipt=1#${token}`),
+        reviewUrl: siteUrl(`/write-review?receipt=review#${token}`),
+      });
+      const saved = await Order.updateOne(
+        { _id, reviewRequestSentAt: null, reviewRequestClaimedAt: claimedAt },
+        { $set: { reviewRequestSentAt: new Date() }, $unset: { reviewRequestClaimedAt: 1 } }
+      );
+      if (saved.modifiedCount) summary.sent++;
+    } catch (err) {
+      summary.errors++;
+      console.error('[review-requests] send or save failed for order', _id, err.code || err.name);
     }
   }
 
-  return { ran: true, send, eligible: eligible.length, sent, skipped, log };
+  return summary;
 }
 
 module.exports = { processReviewRequests };

@@ -47,19 +47,7 @@ function Stars({ n }: { n: number }) {
 
 function ReviewRequestTrigger({ onSent }: { onSent: () => void }) {
   const [busy, setBusy] = useState(false);
-  // Days since order required before an order is eligible. 14 is the
-  // sensible default for production (gives the customer time to actually
-  // try the silk). Drop to 0 to test on a fresh order.
-  const [ageDays, setAgeDays] = useState(14);
-  type Diagnostics = {
-    totalOrders: number;
-    excludedByStatus: number;
-    excludedByMissingEmail: number;
-    excludedByTooFresh: number;
-    excludedByAlreadySent: number;
-    excludedByNoItems: number;
-  };
-  const [result, setResult] = useState<{ eligible: number; sent: number; skipped: number; errors: number; diagnostics?: Diagnostics } | null>(null);
+  const [result, setResult] = useState<{ eligible: number; sent: number; errors: number; needsReview?: number } | null>(null);
   const [err, setErr] = useState('');
 
   async function run(dryRun: boolean) {
@@ -70,12 +58,12 @@ function ReviewRequestTrigger({ onSent }: { onSent: () => void }) {
       const res = await fetch(`${API}/api/admin/reviews/send-pending-requests`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dryRun, ageDays }),
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ dryRun }),
       });
-      if (!res.ok) throw new Error(`Request failed (${res.status})`);
       const data = await res.json();
-      setResult({ eligible: data.eligible, sent: data.sent, skipped: data.skipped, errors: data.errors, diagnostics: data.diagnostics });
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+      setResult(data);
       if (!dryRun && data.sent > 0) onSent();
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Request failed');
@@ -88,78 +76,37 @@ function ReviewRequestTrigger({ onSent }: { onSent: () => void }) {
     <div style={{ marginTop: 16, padding: 16, border: '1px solid var(--color-line)', borderRadius: 2, background: 'var(--color-surface)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div>
-          <p style={{ margin: 0, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18 }}>Review requests</p>
+          <p style={{ margin: 0, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 18 }}>Delivery check-ins</p>
           <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--admin-ink-muted)' }}>
-            Send a tokenised &ldquo;how was it?&rdquo; email to every order at least
-            <em style={{ fontStyle: 'normal', fontWeight: 500 }}> {ageDays} {ageDays === 1 ? 'day' : 'days'} </em>
-            old that hasn&rsquo;t received one yet.
+            One email per order, 21 days after dispatch. Customers can confirm receipt or leave a review.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)' }}>
-            Days
-            <input
-              type="number"
-              min={0}
-              max={365}
-              step={1}
-              value={ageDays}
-              onChange={e => setAgeDays(Math.max(0, Math.min(365, parseInt(e.target.value, 10) || 0)))}
-              style={{
-                width: 60, height: 32, padding: '0 8px',
-                border: '1px solid var(--color-line)', background: 'var(--color-bg)',
-                borderRadius: 2, fontFamily: 'Jost, sans-serif', fontSize: 13, color: 'var(--color-ink)',
-              }}
-            />
-          </label>
-          <button onClick={() => run(true)} disabled={busy}
-            style={{ padding: '8px 16px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', border: '1px solid var(--color-line)', background: 'transparent', cursor: 'pointer', borderRadius: 2 }}>
-            {busy ? 'Checking…' : 'Dry run'}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <button type="button" onClick={() => run(true)} disabled={busy}
+            style={{ minHeight: 44, padding: '8px 16px', fontSize: 12, border: '1px solid var(--color-line)', background: 'transparent', cursor: 'pointer', borderRadius: 2 }}>
+            Check due orders
           </button>
-          <button onClick={() => run(false)} disabled={busy}
-            style={{ padding: '8px 16px', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', border: '1px solid var(--color-ink)', background: 'var(--color-ink)', color: 'var(--color-bg)', cursor: 'pointer', borderRadius: 2 }}>
-            {busy ? 'Sending…' : 'Send now'}
+          <button type="button" onClick={() => run(false)} disabled={busy}
+            style={{ minHeight: 44, padding: '8px 16px', fontSize: 12, border: '1px solid var(--color-ink)', background: 'var(--color-ink)', color: 'var(--color-bg)', cursor: 'pointer', borderRadius: 2 }}>
+            Send due emails
           </button>
         </div>
       </div>
+      {busy && <p role="status" style={{ marginTop: 12, fontSize: 12 }}>Checking orders…</p>}
       {result && (
         <>
-          <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--color-ink)' }}>
-            Eligible: <strong>{result.eligible}</strong> · Sent: <strong>{result.sent}</strong> · Skipped (no products): <strong>{result.skipped}</strong>
-            {result.errors > 0 && <> · Errors: <strong style={{ color: 'var(--admin-danger)' }}>{result.errors}</strong></>}
+          <p role="status" style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--color-ink)' }}>
+            Due: <strong>{result.eligible}</strong> · Sent: <strong>{result.sent}</strong>
+            {result.errors > 0 && <> · Send errors: <strong>{result.errors}</strong></>}
           </p>
-          {result.diagnostics && result.eligible === 0 && result.diagnostics.totalOrders > 0 && (
-            <div style={{ marginTop: 8, padding: 10, background: 'var(--color-bg)', border: '1px dashed var(--color-line)', borderRadius: 2 }}>
-              <p style={{ margin: 0, fontSize: 11, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--admin-ink-muted)' }}>
-                Why no orders matched ({result.diagnostics.totalOrders} total)
-              </p>
-              <ul style={{ margin: '6px 0 0', paddingLeft: 16, fontSize: 12, color: 'var(--color-ink)', lineHeight: 1.7 }}>
-                {result.diagnostics.excludedByStatus > 0 && (
-                  <li><strong>{result.diagnostics.excludedByStatus}</strong> not in paid/processing/shipped/delivered status</li>
-                )}
-                {result.diagnostics.excludedByMissingEmail > 0 && (
-                  <li><strong>{result.diagnostics.excludedByMissingEmail}</strong> have no customer email on file</li>
-                )}
-                {result.diagnostics.excludedByTooFresh > 0 && (
-                  <li><strong>{result.diagnostics.excludedByTooFresh}</strong> too fresh (younger than {ageDays} {ageDays === 1 ? 'day' : 'days'})</li>
-                )}
-                {result.diagnostics.excludedByAlreadySent > 0 && (
-                  <li><strong>{result.diagnostics.excludedByAlreadySent}</strong> already received a request</li>
-                )}
-                {result.diagnostics.excludedByNoItems > 0 && (
-                  <li><strong>{result.diagnostics.excludedByNoItems}</strong> have no items on the order</li>
-                )}
-              </ul>
-            </div>
+          {(result.needsReview ?? 0) > 0 && (
+            <p style={{ marginTop: 8, fontSize: 12, color: 'var(--admin-danger)' }}>
+              Check Resend for {result.needsReview} unresolved send attempt(s).
+            </p>
           )}
         </>
       )}
-      {ageDays < 7 && (
-        <p style={{ margin: '8px 0 0', fontSize: 11, color: 'var(--admin-danger)' }}>
-          Low age threshold — useful for testing, but customers usually need ≥7 days to have actually tried the product.
-        </p>
-      )}
-      {err && <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--admin-danger)' }}>{err}</p>}
+      {err && <p role="alert" style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--admin-danger)' }}>{err}</p>}
     </div>
   );
 }
