@@ -18,7 +18,7 @@ describe('storefront locale routing', () => {
     { 'sec-fetch-mode': 'navigate', 'sec-purpose': 'prefetch;prerender' },
   ])('serves translated content without changing the saved language for %j', headers => {
     const response = proxy(new NextRequest('https://www.silkilinen.com/fr/journal', {
-      headers: { ...headers, cookie: 'slk_locale=en' },
+      headers: new Headers({ ...headers, cookie: 'slk_locale=en' }),
     }));
 
     expect(response.headers.get('x-middleware-request-x-locale')).toBe('fr');
